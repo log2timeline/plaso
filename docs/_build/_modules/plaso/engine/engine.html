@@ -1,0 +1,316 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.engine.engine &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.engine.engine</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;The processing engine.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">dfvfs.helpers</span> <span class="kn">import</span> <span class="n">file_system_searcher</span>
+<span class="kn">from</span> <span class="nn">dfvfs.lib</span> <span class="kn">import</span> <span class="n">errors</span> <span class="k">as</span> <span class="n">dfvfs_errors</span>
+<span class="kn">from</span> <span class="nn">dfvfs.path</span> <span class="kn">import</span> <span class="n">factory</span> <span class="k">as</span> <span class="n">path_spec_factory</span>
+<span class="kn">from</span> <span class="nn">dfvfs.resolver</span> <span class="kn">import</span> <span class="n">resolver</span> <span class="k">as</span> <span class="n">path_spec_resolver</span>
+
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">knowledge_base</span>
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">plaso_queue</span>
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">processing_status</span>
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">profiler</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">definitions</span>
+<span class="kn">from</span> <span class="nn">plaso.preprocessors</span> <span class="kn">import</span> <span class="n">interface</span> <span class="k">as</span> <span class="n">preprocess_interface</span>
+<span class="kn">from</span> <span class="nn">plaso.preprocessors</span> <span class="kn">import</span> <span class="n">manager</span> <span class="k">as</span> <span class="n">preprocess_manager</span>
+
+
+<div class="viewcode-block" id="BaseEngine"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.engine.BaseEngine">[docs]</a><span class="k">class</span> <span class="nc">BaseEngine</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that defines the processing engine base.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    knowledge_base: the knowledge base object (instance of KnowledgeBase).</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_spec_queue</span><span class="p">,</span> <span class="n">event_object_queue</span><span class="p">,</span> <span class="n">parse_error_queue</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initialize the engine object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      path_spec_queue: the path specification queue object (instance of Queue).</span>
+<span class="sd">      event_object_queue: the event object queue object (instance of Queue).</span>
+<span class="sd">      parse_error_queue: the parser error queue object (instance of Queue).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_enable_debug_output</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_enable_profiling</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_event_object_queue</span> <span class="o">=</span> <span class="n">event_object_queue</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_path_spec_queue</span> <span class="o">=</span> <span class="n">path_spec_queue</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parse_error_queue</span> <span class="o">=</span> <span class="n">parse_error_queue</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_processing_status</span> <span class="o">=</span> <span class="n">processing_status</span><span class="o">.</span><span class="n">ProcessingStatus</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_profiling_sample_rate</span> <span class="o">=</span> <span class="mi">1000</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_profiling_type</span> <span class="o">=</span> <span class="s1">u&#39;all&#39;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">knowledge_base</span> <span class="o">=</span> <span class="n">knowledge_base</span><span class="o">.</span><span class="n">KnowledgeBase</span><span class="p">()</span>
+
+<div class="viewcode-block" id="BaseEngine.GetSourceFileSystem"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.engine.BaseEngine.GetSourceFileSystem">[docs]</a>  <span class="k">def</span> <span class="nf">GetSourceFileSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_path_spec</span><span class="p">,</span> <span class="n">resolver_context</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the file system of the source.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      source_path_spec: the source path specification (instance of</span>
+<span class="sd">                        dfvfs.PathSpec) of the file system.</span>
+<span class="sd">      resolver_context: optional resolver context (instance of dfvfs.Context).</span>
+<span class="sd">                        The default is None which will use the built in context</span>
+<span class="sd">                        which is not multi process safe. Note that every thread</span>
+<span class="sd">                        or process must have its own resolver context.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A tuple of the file system (instance of dfvfs.FileSystem) and</span>
+<span class="sd">      the mount point path specification (instance of path.PathSpec).</span>
+<span class="sd">      The mount point path specification refers to either a directory or</span>
+<span class="sd">      a volume on a storage media device or image. It is needed by the dfVFS</span>
+<span class="sd">      file system searcher (instance of FileSystemSearcher) to indicate</span>
+<span class="sd">      the base location of the file system.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: if source file system path specification is not set.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">source_path_spec</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">u&#39;Missing source path specification.&#39;</span><span class="p">)</span>
+
+    <span class="n">file_system</span> <span class="o">=</span> <span class="n">path_spec_resolver</span><span class="o">.</span><span class="n">Resolver</span><span class="o">.</span><span class="n">OpenFileSystem</span><span class="p">(</span>
+        <span class="n">source_path_spec</span><span class="p">,</span> <span class="n">resolver_context</span><span class="o">=</span><span class="n">resolver_context</span><span class="p">)</span>
+
+    <span class="n">type_indicator</span> <span class="o">=</span> <span class="n">source_path_spec</span><span class="o">.</span><span class="n">type_indicator</span>
+    <span class="k">if</span> <span class="n">path_spec_factory</span><span class="o">.</span><span class="n">Factory</span><span class="o">.</span><span class="n">IsSystemLevelTypeIndicator</span><span class="p">(</span><span class="n">type_indicator</span><span class="p">):</span>
+      <span class="n">mount_point</span> <span class="o">=</span> <span class="n">source_path_spec</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">mount_point</span> <span class="o">=</span> <span class="n">source_path_spec</span><span class="o">.</span><span class="n">parent</span>
+
+    <span class="k">return</span> <span class="n">file_system</span><span class="p">,</span> <span class="n">mount_point</span></div>
+
+<div class="viewcode-block" id="BaseEngine.PreprocessSources"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.engine.BaseEngine.PreprocessSources">[docs]</a>  <span class="k">def</span> <span class="nf">PreprocessSources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_path_specs</span><span class="p">,</span> <span class="n">resolver_context</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Preprocesses the sources.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      source_path_specs: list of path specifications (instances of</span>
+<span class="sd">                         dfvfs.PathSpec) to process.</span>
+<span class="sd">      resolver_context: optional resolver context (instance of dfvfs.Context).</span>
+<span class="sd">                        The default is None which will use the built in context</span>
+<span class="sd">                        which is not multi process safe. Note that every thread</span>
+<span class="sd">                        or process must have its own resolver context.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">source_path_spec</span> <span class="ow">in</span> <span class="n">source_path_specs</span><span class="p">:</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">file_system</span><span class="p">,</span> <span class="n">mount_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetSourceFileSystem</span><span class="p">(</span>
+            <span class="n">source_path_spec</span><span class="p">,</span> <span class="n">resolver_context</span><span class="o">=</span><span class="n">resolver_context</span><span class="p">)</span>
+      <span class="k">except</span> <span class="p">(</span><span class="ne">RuntimeError</span><span class="p">,</span> <span class="n">dfvfs_errors</span><span class="o">.</span><span class="n">BackEndError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">exception</span><span class="p">)</span>
+        <span class="k">continue</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">searcher</span> <span class="o">=</span> <span class="n">file_system_searcher</span><span class="o">.</span><span class="n">FileSystemSearcher</span><span class="p">(</span>
+            <span class="n">file_system</span><span class="p">,</span> <span class="n">mount_point</span><span class="p">)</span>
+        <span class="n">platform</span> <span class="o">=</span> <span class="n">preprocess_interface</span><span class="o">.</span><span class="n">GuessOS</span><span class="p">(</span><span class="n">searcher</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">platform</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">knowledge_base</span><span class="o">.</span><span class="n">platform</span> <span class="o">=</span> <span class="n">platform</span>
+
+          <span class="n">preprocess_manager</span><span class="o">.</span><span class="n">PreprocessPluginsManager</span><span class="o">.</span><span class="n">RunPlugins</span><span class="p">(</span>
+              <span class="n">platform</span><span class="p">,</span> <span class="n">file_system</span><span class="p">,</span> <span class="n">mount_point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">knowledge_base</span><span class="p">)</span>
+
+      <span class="k">finally</span><span class="p">:</span>
+        <span class="n">file_system</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
+
+      <span class="k">if</span> <span class="n">platform</span><span class="p">:</span>
+        <span class="k">break</span></div>
+
+<div class="viewcode-block" id="BaseEngine.SetEnableDebugOutput"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.engine.BaseEngine.SetEnableDebugOutput">[docs]</a>  <span class="k">def</span> <span class="nf">SetEnableDebugOutput</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enable_debug_output</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Enables or disables debug output.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      enable_debug_output: boolean value to indicate if the debug output</span>
+<span class="sd">                           should be enabled.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_enable_debug_output</span> <span class="o">=</span> <span class="n">enable_debug_output</span></div>
+
+<div class="viewcode-block" id="BaseEngine.SetEnableProfiling"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.engine.BaseEngine.SetEnableProfiling">[docs]</a>  <span class="k">def</span> <span class="nf">SetEnableProfiling</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">enable_profiling</span><span class="p">,</span> <span class="n">profiling_sample_rate</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+      <span class="n">profiling_type</span><span class="o">=</span><span class="s1">u&#39;all&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Enables or disables profiling.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      enable_profiling: boolean value to indicate if the profiling should</span>
+<span class="sd">                        be enabled.</span>
+<span class="sd">      profiling_sample_rate: optional integer indicating the profiling sample</span>
+<span class="sd">                             rate. The value contains the number of files</span>
+<span class="sd">                             processed. The default value is 1000.</span>
+<span class="sd">      profiling_type: optional profiling type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_enable_profiling</span> <span class="o">=</span> <span class="n">enable_profiling</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_profiling_sample_rate</span> <span class="o">=</span> <span class="n">profiling_sample_rate</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_profiling_type</span> <span class="o">=</span> <span class="n">profiling_type</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="BaseEngine.SupportsMemoryProfiling"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.engine.BaseEngine.SupportsMemoryProfiling">[docs]</a>  <span class="k">def</span> <span class="nf">SupportsMemoryProfiling</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a boolean value to indicate if memory profiling is supported.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">profiler</span><span class="o">.</span><span class="n">GuppyMemoryProfiler</span><span class="o">.</span><span class="n">IsSupported</span><span class="p">()</span></div></div>
+
+
+<span class="c1"># TODO: remove this class further in the phased processing refactor.</span>
+<div class="viewcode-block" id="EventObjectQueueConsumer"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.engine.EventObjectQueueConsumer">[docs]</a><span class="k">class</span> <span class="nc">EventObjectQueueConsumer</span><span class="p">(</span><span class="n">plaso_queue</span><span class="o">.</span><span class="n">ItemQueueConsumer</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements an event object queue consumer.</span>
+
+<span class="sd">  The consumer subscribes to updates on the queue.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">queue_object</span><span class="p">,</span> <span class="n">storage_writer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the item queue consumer.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      queue_object: a queue object (instance of Queue).</span>
+<span class="sd">      storage_writer: a storage writer (instance of StorageWriter).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">EventObjectQueueConsumer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">queue_object</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_INITIALIZED</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_storage_writer</span> <span class="o">=</span> <span class="n">storage_writer</span>
+
+  <span class="k">def</span> <span class="nf">_ConsumeItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Consumes an item callback for ConsumeItems.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: an event object (instance of EventObject).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_storage_writer</span><span class="o">.</span><span class="n">AddEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+<div class="viewcode-block" id="EventObjectQueueConsumer.GetStatus"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.engine.EventObjectQueueConsumer.GetStatus">[docs]</a>  <span class="k">def</span> <span class="nf">GetStatus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a dictionary containing the status.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">u&#39;number_of_events&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_consumed_items</span><span class="p">,</span>
+        <span class="s1">u&#39;processing_status&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span><span class="p">,</span>
+        <span class="s1">u&#39;type&#39;</span><span class="p">:</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESS_TYPE_STORAGE_WRITER</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="EventObjectQueueConsumer.Run"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.engine.EventObjectQueueConsumer.Run">[docs]</a>  <span class="k">def</span> <span class="nf">Run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Consumes event object from the queue.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_RUNNING</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">ConsumeItems</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_COMPLETED</span></div></div>
+
+
+<div class="viewcode-block" id="PathSpecQueueProducer"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.engine.PathSpecQueueProducer">[docs]</a><span class="k">class</span> <span class="nc">PathSpecQueueProducer</span><span class="p">(</span><span class="n">plaso_queue</span><span class="o">.</span><span class="n">ItemQueueProducer</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements a path specification queue producer.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_spec_queue</span><span class="p">,</span> <span class="n">storage_writer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a queue producer object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      path_spec_queue: the path specification queue (instance of Queue).</span>
+<span class="sd">                       This queue contains path specifications (instances</span>
+<span class="sd">                       of dfvfs.PathSpec) of the file entries that need</span>
+<span class="sd">                       to be processed.</span>
+<span class="sd">      storage_writer: a storage object (instance of StorageWriter).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">PathSpecQueueProducer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">path_spec_queue</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_INITIALIZED</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_storage_writer</span> <span class="o">=</span> <span class="n">storage_writer</span>
+
+<div class="viewcode-block" id="PathSpecQueueProducer.GetStatus"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.engine.PathSpecQueueProducer.GetStatus">[docs]</a>  <span class="k">def</span> <span class="nf">GetStatus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a dictionary containing the status.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">u&#39;processing_status&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span><span class="p">,</span>
+        <span class="s1">u&#39;produced_number_of_path_specs&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_number_of_produced_items</span><span class="p">,</span>
+        <span class="s1">u&#39;path_spec_queue_port&#39;</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="p">,</span> <span class="s1">u&#39;port&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">),</span>
+        <span class="s1">u&#39;type&#39;</span><span class="p">:</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESS_TYPE_COLLECTOR</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="PathSpecQueueProducer.Run"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.engine.PathSpecQueueProducer.Run">[docs]</a>  <span class="k">def</span> <span class="nf">Run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Produces path specifications onto the queue.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_RUNNING</span>
+    <span class="k">for</span> <span class="n">event_source</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_storage_writer</span><span class="o">.</span><span class="n">GetEventSources</span><span class="p">():</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abort</span><span class="p">:</span>
+        <span class="k">break</span>
+
+      <span class="bp">self</span><span class="o">.</span><span class="n">ProduceItem</span><span class="p">(</span><span class="n">event_source</span><span class="o">.</span><span class="n">path_spec</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abort</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_ABORTED</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_COMPLETED</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

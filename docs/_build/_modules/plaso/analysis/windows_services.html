@@ -1,0 +1,353 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.analysis.windows_services &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.analysis.windows_services</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;A plugin to enable quick triage of Windows Services.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">yaml</span>
+
+<span class="kn">from</span> <span class="nn">plaso.analysis</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.analysis</span> <span class="kn">import</span> <span class="n">manager</span>
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">reports</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">py2to3</span>
+<span class="kn">from</span> <span class="nn">plaso.winnt</span> <span class="kn">import</span> <span class="n">human_readable_service_enums</span>
+
+
+<span class="k">class</span> <span class="nc">WindowsService</span><span class="p">(</span><span class="n">yaml</span><span class="o">.</span><span class="n">YAMLObject</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class to represent a Windows Service.&quot;&quot;&quot;</span>
+  <span class="c1"># This is used for comparison operations and defines attributes that should</span>
+  <span class="c1"># not be used during evaluation of whether two services are the same.</span>
+  <span class="n">COMPARE_EXCLUDE</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s1">u&#39;sources&#39;</span><span class="p">])</span>
+
+  <span class="n">_REGISTRY_KEY_PATH_SEPARATOR</span> <span class="o">=</span> <span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">&#39;</span>
+
+  <span class="c1"># YAML attributes</span>
+  <span class="n">yaml_tag</span> <span class="o">=</span> <span class="s1">u&#39;!WindowsService&#39;</span>
+  <span class="n">yaml_loader</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">SafeLoader</span>
+  <span class="n">yaml_dumper</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">SafeDumper</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">service_type</span><span class="p">,</span> <span class="n">image_path</span><span class="p">,</span> <span class="n">start_type</span><span class="p">,</span> <span class="n">object_name</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span>
+      <span class="n">service_dll</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a Windows service object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      name: A string that contains the name of the service</span>
+<span class="sd">      service_type: The value of the Type value of the service key.</span>
+<span class="sd">      image_path: The value of the ImagePath value of the service key.</span>
+<span class="sd">      start_type: The value of the Start value of the service key.</span>
+<span class="sd">      object_name: The value of the ObjectName value of the service key.</span>
+<span class="sd">      source: A tuple of (pathspec, Registry key) describing where the</span>
+<span class="sd">              service was found</span>
+<span class="sd">      service_dll: Optional string value of the ServiceDll value in the</span>
+<span class="sd">                   service&#39;s Parameters subkey.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      TypeError: If a tuple with two elements is not passed as the &#39;source&#39;</span>
+<span class="sd">                 argument.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">WindowsService</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">anomalies</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">image_path</span> <span class="o">=</span> <span class="n">image_path</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">object_name</span> <span class="o">=</span> <span class="n">object_name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">service_dll</span> <span class="o">=</span> <span class="n">service_dll</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">service_type</span> <span class="o">=</span> <span class="n">service_type</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">start_type</span> <span class="o">=</span> <span class="n">start_type</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+      <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">source</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">u&#39;Source arguments must be tuple of length 2.&#39;</span><span class="p">)</span>
+      <span class="c1"># A service may be found in multiple Control Sets or Registry hives,</span>
+      <span class="c1"># hence the list.</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">sources</span> <span class="o">=</span> <span class="p">[</span><span class="n">source</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">u&#39;Source argument must be a tuple.&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other_service</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Custom equality method so that we match near-duplicates.</span>
+
+<span class="sd">    Compares two service objects together and evaluates if they are</span>
+<span class="sd">    the same or close enough to be considered to represent the same service.</span>
+
+<span class="sd">    For two service objects to be considered the same they need to</span>
+<span class="sd">    have the the same set of attributes and same values for all their</span>
+<span class="sd">    attributes, other than those enumerated as reserved in the</span>
+<span class="sd">    COMPARE_EXCLUDE constant.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      other_service: The service (instance of WindowsService) we are testing</span>
+<span class="sd">      for equality.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A boolean value to indicate the services are equal.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other_service</span><span class="p">,</span> <span class="n">WindowsService</span><span class="p">):</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="n">attributes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="n">other_attributes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">attributes</span> <span class="o">!=</span> <span class="n">other_attributes</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="c1"># We compare the values for all attributes, other than those specifically</span>
+    <span class="c1"># enumerated as not relevant for equality comparisons.</span>
+    <span class="k">for</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="n">attributes</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">COMPARE_EXCLUDE</span><span class="p">):</span>
+      <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">getattr</span><span class="p">(</span>
+          <span class="n">other_service</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">return</span> <span class="bp">True</span>
+
+  <span class="nd">@classmethod</span>
+  <span class="k">def</span> <span class="nf">FromEvent</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">service_event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a service object from an event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      service_event: an event object (instance of EventObject)</span>
+<span class="sd">                     to create a new service object from.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">name</span> <span class="o">=</span> <span class="n">service_event</span><span class="o">.</span><span class="n">key_path</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span>
+        <span class="n">WindowsService</span><span class="o">.</span><span class="n">_REGISTRY_KEY_PATH_SEPARATOR</span><span class="p">)</span>
+    <span class="n">service_type</span> <span class="o">=</span> <span class="n">service_event</span><span class="o">.</span><span class="n">regvalue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;Type&#39;</span><span class="p">)</span>
+    <span class="n">image_path</span> <span class="o">=</span> <span class="n">service_event</span><span class="o">.</span><span class="n">regvalue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;ImagePath&#39;</span><span class="p">)</span>
+    <span class="n">start_type</span> <span class="o">=</span> <span class="n">service_event</span><span class="o">.</span><span class="n">regvalue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;Start&#39;</span><span class="p">)</span>
+    <span class="n">service_dll</span> <span class="o">=</span> <span class="n">service_event</span><span class="o">.</span><span class="n">regvalue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;ServiceDll&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span>
+    <span class="n">object_name</span> <span class="o">=</span> <span class="n">service_event</span><span class="o">.</span><span class="n">regvalue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;ObjectName&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">service_event</span><span class="o">.</span><span class="n">pathspec</span><span class="p">:</span>
+      <span class="n">source</span> <span class="o">=</span> <span class="p">(</span><span class="n">service_event</span><span class="o">.</span><span class="n">pathspec</span><span class="o">.</span><span class="n">location</span><span class="p">,</span> <span class="n">service_event</span><span class="o">.</span><span class="n">key_path</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">source</span> <span class="o">=</span> <span class="p">(</span><span class="s1">u&#39;Unknown&#39;</span><span class="p">,</span> <span class="s1">u&#39;Unknown&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cls</span><span class="p">(</span>
+        <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">service_type</span><span class="o">=</span><span class="n">service_type</span><span class="p">,</span> <span class="n">image_path</span><span class="o">=</span><span class="n">image_path</span><span class="p">,</span>
+        <span class="n">start_type</span><span class="o">=</span><span class="n">start_type</span><span class="p">,</span> <span class="n">object_name</span><span class="o">=</span><span class="n">object_name</span><span class="p">,</span>
+        <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span> <span class="n">service_dll</span><span class="o">=</span><span class="n">service_dll</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">HumanReadableType</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a human readable string describing the type value.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">service_type</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">STRING_TYPES</span><span class="p">):</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">service_type</span>
+    <span class="k">return</span> <span class="n">human_readable_service_enums</span><span class="o">.</span><span class="n">SERVICE_ENUMS</span><span class="p">[</span><span class="s1">u&#39;Type&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">service_type</span><span class="p">,</span> <span class="s1">u&#39;{0:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">service_type</span><span class="p">))</span>
+
+  <span class="k">def</span> <span class="nf">HumanReadableStartType</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a human readable string describing the start_type value.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start_type</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">STRING_TYPES</span><span class="p">):</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_type</span>
+    <span class="k">return</span> <span class="n">human_readable_service_enums</span><span class="o">.</span><span class="n">SERVICE_ENUMS</span><span class="p">[</span><span class="s1">u&#39;Start&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_type</span><span class="p">,</span> <span class="s1">u&#39;{0:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start_type</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="WindowsServiceCollection"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.windows_services.WindowsServiceCollection">[docs]</a><span class="k">class</span> <span class="nc">WindowsServiceCollection</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class to hold and de-duplicate Windows Services.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initialize a collection that holds Windows Service.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">WindowsServiceCollection</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_services</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="WindowsServiceCollection.AddService"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.windows_services.WindowsServiceCollection.AddService">[docs]</a>  <span class="k">def</span> <span class="nf">AddService</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_service</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add a new service to the list of ones we know about.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      new_service: the service object (instance of WindowsService) to add.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">service</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_services</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">new_service</span> <span class="o">==</span> <span class="n">service</span><span class="p">:</span>
+        <span class="c1"># If this service is the same as one we already know about, we</span>
+        <span class="c1"># just want to add where it came from.</span>
+        <span class="n">service</span><span class="o">.</span><span class="n">sources</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_service</span><span class="o">.</span><span class="n">sources</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">return</span>
+
+    <span class="c1"># We only add a new object to our list if we don&#39;t have</span>
+    <span class="c1"># an identical one already.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_services</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_service</span><span class="p">)</span></div>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">services</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get the services in this collection.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_services</span></div>
+
+
+<div class="viewcode-block" id="WindowsServicesPlugin"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.windows_services.WindowsServicesPlugin">[docs]</a><span class="k">class</span> <span class="nc">WindowsServicesPlugin</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">AnalysisPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Provides a single list of for Windows services found in the Registry.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;windows_services&#39;</span>
+
+  <span class="c1"># Indicate that we can run this plugin during regular extraction.</span>
+  <span class="n">ENABLE_IN_EXTRACTION</span> <span class="o">=</span> <span class="bp">True</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_queue</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the Windows Services plugin</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      incoming_queue: A queue to read events from.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">WindowsServicesPlugin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">incoming_queue</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_output_format</span> <span class="o">=</span> <span class="s1">u&#39;text&#39;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_service_collection</span> <span class="o">=</span> <span class="n">WindowsServiceCollection</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">_FormatServiceText</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">service</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Produces a human readable multi-line string representing the service.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      service: The service (instance of WindowsService) to format.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">string_segments</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">service</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+        <span class="s1">u&#39;</span><span class="se">\t</span><span class="s1">Image Path    = {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">service</span><span class="o">.</span><span class="n">image_path</span><span class="p">),</span>
+        <span class="s1">u&#39;</span><span class="se">\t</span><span class="s1">Service Type  = {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">service</span><span class="o">.</span><span class="n">HumanReadableType</span><span class="p">()),</span>
+        <span class="s1">u&#39;</span><span class="se">\t</span><span class="s1">Start Type    = {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">service</span><span class="o">.</span><span class="n">HumanReadableStartType</span><span class="p">()),</span>
+        <span class="s1">u&#39;</span><span class="se">\t</span><span class="s1">Service Dll   = {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">service</span><span class="o">.</span><span class="n">service_dll</span><span class="p">),</span>
+        <span class="s1">u&#39;</span><span class="se">\t</span><span class="s1">Object Name   = {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">service</span><span class="o">.</span><span class="n">object_name</span><span class="p">),</span>
+        <span class="s1">u&#39;</span><span class="se">\t</span><span class="s1">Sources:&#39;</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">source</span> <span class="ow">in</span> <span class="n">service</span><span class="o">.</span><span class="n">sources</span><span class="p">:</span>
+      <span class="n">string_segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\t\t</span><span class="s1">{0:s}:{1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">source</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">source</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="s1">u&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">string_segments</span><span class="p">)</span>
+
+<div class="viewcode-block" id="WindowsServicesPlugin.CompileReport"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.windows_services.WindowsServicesPlugin.CompileReport">[docs]</a>  <span class="k">def</span> <span class="nf">CompileReport</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analysis_mediator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compiles an analysis report.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      analysis_mediator: The analysis mediator object (instance of</span>
+<span class="sd">                         AnalysisMediator).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The analysis report (instance of AnalysisReport).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: move YAML representation out of plugin and into serialization.</span>
+    <span class="n">lines_of_text</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_format</span> <span class="o">==</span> <span class="s1">u&#39;yaml&#39;</span><span class="p">:</span>
+      <span class="n">lines_of_text</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+          <span class="n">yaml</span><span class="o">.</span><span class="n">safe_dump_all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_service_collection</span><span class="o">.</span><span class="n">services</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">lines_of_text</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;Listing Windows Services&#39;</span><span class="p">)</span>
+      <span class="k">for</span> <span class="n">service</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_service_collection</span><span class="o">.</span><span class="n">services</span><span class="p">:</span>
+        <span class="n">lines_of_text</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_FormatServiceText</span><span class="p">(</span><span class="n">service</span><span class="p">))</span>
+        <span class="n">lines_of_text</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;&#39;</span><span class="p">)</span>
+
+    <span class="n">lines_of_text</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;&#39;</span><span class="p">)</span>
+    <span class="n">report_text</span> <span class="o">=</span> <span class="s1">u&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines_of_text</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">reports</span><span class="o">.</span><span class="n">AnalysisReport</span><span class="p">(</span><span class="n">plugin_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">report_text</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WindowsServicesPlugin.ExamineEvent"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.windows_services.WindowsServicesPlugin.ExamineEvent">[docs]</a>  <span class="k">def</span> <span class="nf">ExamineEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analysis_mediator</span><span class="p">,</span> <span class="n">event_object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Analyzes an event_object and creates Windows Services as required.</span>
+
+<span class="sd">      At present, this method only handles events extracted from the Registry.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      analysis_mediator: The analysis mediator object (instance of</span>
+<span class="sd">                         AnalysisMediator).</span>
+<span class="sd">      event_object: The event object (instance of EventObject) to examine.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: Handle event log entries here also (ie, event id 4697).</span>
+    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="s1">u&#39;data_type&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">u&#39;windows:registry:service&#39;</span><span class="p">:</span>
+      <span class="k">return</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="c1"># Create and store the service.</span>
+      <span class="n">service</span> <span class="o">=</span> <span class="n">WindowsService</span><span class="o">.</span><span class="n">FromEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_service_collection</span><span class="o">.</span><span class="n">AddService</span><span class="p">(</span><span class="n">service</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="WindowsServicesPlugin.SetOutputFormat"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.windows_services.WindowsServicesPlugin.SetOutputFormat">[docs]</a>  <span class="k">def</span> <span class="nf">SetOutputFormat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_format</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the output format of the generated report.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      output_format: The format the the plugin should used to produce its</span>
+<span class="sd">                     output, as a string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_output_format</span> <span class="o">=</span> <span class="n">output_format</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">AnalysisPluginManager</span><span class="o">.</span><span class="n">RegisterPlugin</span><span class="p">(</span><span class="n">WindowsServicesPlugin</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

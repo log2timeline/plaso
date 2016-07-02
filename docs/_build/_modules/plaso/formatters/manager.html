@@ -1,0 +1,223 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.formatters.manager &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.formatters.manager</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains the event formatters manager class.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">plaso.formatters</span> <span class="kn">import</span> <span class="n">default</span>
+
+
+<div class="viewcode-block" id="FormattersManager"><a class="viewcode-back" href="../../../plaso.formatters.html#plaso.formatters.manager.FormattersManager">[docs]</a><span class="k">class</span> <span class="nc">FormattersManager</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements the formatters manager.&quot;&quot;&quot;</span>
+
+  <span class="n">_formatter_classes</span> <span class="o">=</span> <span class="p">{}</span>
+  <span class="n">_formatter_objects</span> <span class="o">=</span> <span class="p">{}</span>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FormattersManager.DeregisterFormatter"><a class="viewcode-back" href="../../../plaso.formatters.html#plaso.formatters.manager.FormattersManager.DeregisterFormatter">[docs]</a>  <span class="k">def</span> <span class="nf">DeregisterFormatter</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">formatter_class</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Deregisters a formatter class.</span>
+
+<span class="sd">    The formatter classes are identified based on their lower case data type.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      formatter_class: the class object of the formatter.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      KeyError: if formatter class is not set for the corresponding data type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">formatter_data_type</span> <span class="o">=</span> <span class="n">formatter_class</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">formatter_data_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">_formatter_classes</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+          <span class="s1">u&#39;Formatter class not set for data type: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">formatter_class</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">))</span>
+
+    <span class="k">del</span> <span class="n">cls</span><span class="o">.</span><span class="n">_formatter_classes</span><span class="p">[</span><span class="n">formatter_data_type</span><span class="p">]</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FormattersManager.GetFormatterObject"><a class="viewcode-back" href="../../../plaso.formatters.html#plaso.formatters.manager.FormattersManager.GetFormatterObject">[docs]</a>  <span class="k">def</span> <span class="nf">GetFormatterObject</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">data_type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the formatter object for a specific data type.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      data_type: The data type.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The corresponding formatter (instance of EventFormatter) or</span>
+<span class="sd">      the default formatter (instance of DefaultFormatter) if not available.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data_type</span> <span class="o">=</span> <span class="n">data_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">data_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">_formatter_objects</span><span class="p">:</span>
+      <span class="n">formatter_object</span> <span class="o">=</span> <span class="bp">None</span>
+
+      <span class="k">if</span> <span class="n">data_type</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">_formatter_classes</span><span class="p">:</span>
+        <span class="n">formatter_class</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_formatter_classes</span><span class="p">[</span><span class="n">data_type</span><span class="p">]</span>
+        <span class="c1"># TODO: remove the need to instantiate the Formatter classes</span>
+        <span class="c1"># and use class methods only.</span>
+        <span class="n">formatter_object</span> <span class="o">=</span> <span class="n">formatter_class</span><span class="p">()</span>
+
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">formatter_object</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s1">u&#39;Using default formatter for data type: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">data_type</span><span class="p">))</span>
+        <span class="n">formatter_object</span> <span class="o">=</span> <span class="n">default</span><span class="o">.</span><span class="n">DefaultFormatter</span><span class="p">()</span>
+
+      <span class="n">cls</span><span class="o">.</span><span class="n">_formatter_objects</span><span class="p">[</span><span class="n">data_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">formatter_object</span>
+
+    <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_formatter_objects</span><span class="p">[</span><span class="n">data_type</span><span class="p">]</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FormattersManager.GetMessageStrings"><a class="viewcode-back" href="../../../plaso.formatters.html#plaso.formatters.manager.FormattersManager.GetMessageStrings">[docs]</a>  <span class="k">def</span> <span class="nf">GetMessageStrings</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">formatter_mediator</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the formatted message strings for a specific event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      formatter_mediator: the formatter mediator object (instance of</span>
+<span class="sd">                          FormatterMediator).</span>
+<span class="sd">      event_object: the event object (instance of EventObject).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list that contains both the longer and shorter version of the message</span>
+<span class="sd">      string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">formatter_object</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">GetFormatterObject</span><span class="p">(</span><span class="n">event_object</span><span class="o">.</span><span class="n">data_type</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">formatter_object</span><span class="o">.</span><span class="n">GetMessages</span><span class="p">(</span><span class="n">formatter_mediator</span><span class="p">,</span> <span class="n">event_object</span><span class="p">)</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FormattersManager.GetSourceStrings"><a class="viewcode-back" href="../../../plaso.formatters.html#plaso.formatters.manager.FormattersManager.GetSourceStrings">[docs]</a>  <span class="k">def</span> <span class="nf">GetSourceStrings</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the formatted source strings for a specific event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: the event object (instance of EventObject).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list that contains the source_short and source_long version of the</span>
+<span class="sd">      event.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: change this to return the long variant first so it is consistent</span>
+    <span class="c1"># with GetMessageStrings.</span>
+    <span class="n">formatter_object</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">GetFormatterObject</span><span class="p">(</span><span class="n">event_object</span><span class="o">.</span><span class="n">data_type</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">formatter_object</span><span class="o">.</span><span class="n">GetSources</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FormattersManager.RegisterFormatter"><a class="viewcode-back" href="../../../plaso.formatters.html#plaso.formatters.manager.FormattersManager.RegisterFormatter">[docs]</a>  <span class="k">def</span> <span class="nf">RegisterFormatter</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">formatter_class</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Registers a formatter class.</span>
+
+<span class="sd">    The formatter classes are identified based on their lower case data type.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      formatter_class: the class object of the formatter.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      KeyError: if formatter class is already set for the corresponding</span>
+<span class="sd">                data type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">formatter_data_type</span> <span class="o">=</span> <span class="n">formatter_class</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">formatter_data_type</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">_formatter_classes</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">((</span>
+          <span class="s1">u&#39;Formatter class already set for data type: {0:s}.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">formatter_class</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">))</span>
+
+    <span class="n">cls</span><span class="o">.</span><span class="n">_formatter_classes</span><span class="p">[</span><span class="n">formatter_data_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">formatter_class</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="FormattersManager.RegisterFormatters"><a class="viewcode-back" href="../../../plaso.formatters.html#plaso.formatters.manager.FormattersManager.RegisterFormatters">[docs]</a>  <span class="k">def</span> <span class="nf">RegisterFormatters</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">formatter_classes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Registers formatter classes.</span>
+
+<span class="sd">    The formatter classes are identified based on their lower case data type.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      formatter_classes: a list of class objects of the formatters.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      KeyError: if formatter class is already set for the corresponding</span>
+<span class="sd">                data type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">formatter_class</span> <span class="ow">in</span> <span class="n">formatter_classes</span><span class="p">:</span>
+      <span class="n">cls</span><span class="o">.</span><span class="n">RegisterFormatter</span><span class="p">(</span><span class="n">formatter_class</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

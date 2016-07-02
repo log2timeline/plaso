@@ -1,0 +1,334 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.winreg_plugins.userassist &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../../index.html" />
+    <link rel="up" title="plaso" href="../../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.winreg_plugins.userassist</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;The UserAssist Windows Registry plugin.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">construct</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">winreg</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers.winreg_plugins</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.winnt</span> <span class="kn">import</span> <span class="n">environ_expand</span>
+<span class="kn">from</span> <span class="nn">plaso.winnt</span> <span class="kn">import</span> <span class="n">known_folder_ids</span>
+
+
+<div class="viewcode-block" id="UserAssistWindowsRegistryEvent"><a class="viewcode-back" href="../../../../plaso.parsers.winreg_plugins.html#plaso.parsers.winreg_plugins.userassist.UserAssistWindowsRegistryEvent">[docs]</a><span class="k">class</span> <span class="nc">UserAssistWindowsRegistryEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">FiletimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for an UserAssist Windows Registry event.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    key_path: a string containing the Windows Registry key path.</span>
+<span class="sd">    offset: an integer containing the data offset of the UserAssist</span>
+<span class="sd">            Windows Registry value.</span>
+<span class="sd">    regvalue: a dictionary containing the UserAssist values.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">&#39;windows:registry:userassist&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filetime</span><span class="p">,</span> <span class="n">key_path</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">values_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes an UserAssist Windows Registry event.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      filetime: an integer containing a FILETIME timestamp.</span>
+<span class="sd">      key_path: a string containing the Windows Registry key path.</span>
+<span class="sd">      offset: an integer containing the data offset of the UserAssist</span>
+<span class="sd">              Windows Registry value.</span>
+<span class="sd">      values_dict: dictionary object containing the UserAssist values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: check if last written is correct.</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">UserAssistWindowsRegistryEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">filetime</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">WRITTEN_TIME</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">key_path</span> <span class="o">=</span> <span class="n">key_path</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">offset</span>
+    <span class="c1"># TODO: rename regvalue to ???.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">regvalue</span> <span class="o">=</span> <span class="n">values_dict</span></div>
+
+
+<div class="viewcode-block" id="UserAssistWindowsRegistryKeyPathFilter"><a class="viewcode-back" href="../../../../plaso.parsers.winreg_plugins.html#plaso.parsers.winreg_plugins.userassist.UserAssistWindowsRegistryKeyPathFilter">[docs]</a><span class="k">class</span> <span class="nc">UserAssistWindowsRegistryKeyPathFilter</span><span class="p">(</span>
+    <span class="n">interface</span><span class="o">.</span><span class="n">WindowsRegistryKeyPathFilter</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;UserAssist Windows Registry key path filter.&quot;&quot;&quot;</span>
+
+  <span class="n">_KEY_PATH_FORMAT</span> <span class="o">=</span> <span class="p">(</span>
+      <span class="s1">u&#39;HKEY_CURRENT_USER</span><span class="se">\\</span><span class="s1">Software</span><span class="se">\\</span><span class="s1">Microsoft</span><span class="se">\\</span><span class="s1">Windows</span><span class="se">\\</span><span class="s1">CurrentVersion</span><span class="se">\\</span><span class="s1">&#39;</span>
+      <span class="s1">u&#39;Explorer</span><span class="se">\\</span><span class="s1">UserAssist</span><span class="se">\\</span><span class="s1">{{{0:s}}}&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_assist_guid</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes Windows Registry key filter object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      user_assist_guid: string containing the User Assist GUID.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">key_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_KEY_PATH_FORMAT</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">user_assist_guid</span><span class="p">)</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">UserAssistWindowsRegistryKeyPathFilter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">key_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UserAssistPlugin"><a class="viewcode-back" href="../../../../plaso.parsers.winreg_plugins.html#plaso.parsers.winreg_plugins.userassist.UserAssistPlugin">[docs]</a><span class="k">class</span> <span class="nc">UserAssistPlugin</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">WindowsRegistryPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Plugin that parses an UserAssist key.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;userassist&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for User Assist Registry data.&#39;</span>
+
+  <span class="n">FILTERS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+      <span class="n">UserAssistWindowsRegistryKeyPathFilter</span><span class="p">(</span>
+          <span class="s1">u&#39;FA99DFC7-6AC2-453A-A5E2-5E2AFF4507BD&#39;</span><span class="p">),</span>
+      <span class="n">UserAssistWindowsRegistryKeyPathFilter</span><span class="p">(</span>
+          <span class="s1">u&#39;F4E57C4B-2036-45F0-A9AB-443BCFE33D9F&#39;</span><span class="p">),</span>
+      <span class="n">UserAssistWindowsRegistryKeyPathFilter</span><span class="p">(</span>
+          <span class="s1">u&#39;F2A1CB5A-E3CC-4A2E-AF9D-505A7009D442&#39;</span><span class="p">),</span>
+      <span class="n">UserAssistWindowsRegistryKeyPathFilter</span><span class="p">(</span>
+          <span class="s1">u&#39;CEBFF5CD-ACE2-4F4F-9178-9926F41749EA&#39;</span><span class="p">),</span>
+      <span class="n">UserAssistWindowsRegistryKeyPathFilter</span><span class="p">(</span>
+          <span class="s1">u&#39;CAA59E3C-4792-41A5-9909-6A6A8D32490E&#39;</span><span class="p">),</span>
+      <span class="n">UserAssistWindowsRegistryKeyPathFilter</span><span class="p">(</span>
+          <span class="s1">u&#39;B267E3AD-A825-4A09-82B9-EEC22AA3B847&#39;</span><span class="p">),</span>
+      <span class="n">UserAssistWindowsRegistryKeyPathFilter</span><span class="p">(</span>
+          <span class="s1">u&#39;A3D53349-6E61-4557-8FC7-0028EDCEEBF6&#39;</span><span class="p">),</span>
+      <span class="n">UserAssistWindowsRegistryKeyPathFilter</span><span class="p">(</span>
+          <span class="s1">u&#39;9E04CAB2-CC14-11DF-BB8C-A2F1DED72085&#39;</span><span class="p">),</span>
+      <span class="n">UserAssistWindowsRegistryKeyPathFilter</span><span class="p">(</span>
+          <span class="s1">u&#39;75048700-EF1F-11D0-9888-006097DEACF9&#39;</span><span class="p">),</span>
+      <span class="n">UserAssistWindowsRegistryKeyPathFilter</span><span class="p">(</span>
+          <span class="s1">u&#39;5E6AB780-7743-11CF-A12B-00AA004AE837&#39;</span><span class="p">),</span>
+      <span class="n">UserAssistWindowsRegistryKeyPathFilter</span><span class="p">(</span>
+          <span class="s1">u&#39;0D6D4F41-2994-4BA0-8FEF-620E43CD2812&#39;</span><span class="p">),</span>
+      <span class="n">UserAssistWindowsRegistryKeyPathFilter</span><span class="p">(</span>
+          <span class="s1">u&#39;BCB48336-4DDD-48FF-BB0B-D3190DACB3E2&#39;</span><span class="p">)])</span>
+
+  <span class="n">URLS</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="s1">u&#39;http://blog.didierstevens.com/programs/userassist/&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;https://code.google.com/p/winreg-kb/wiki/UserAssistKeys&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;http://intotheboxes.files.wordpress.com/2010/04&#39;</span>
+      <span class="s1">u&#39;/intotheboxes_2010_q1.pdf&#39;</span><span class="p">]</span>
+
+  <span class="c1"># UserAssist format version used in Windows 2000, XP, 2003, Vista.</span>
+  <span class="n">_USERASSIST_V3_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;userassist_entry&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;count&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;timestamp&#39;</span><span class="p">))</span>
+
+  <span class="c1"># UserAssist format version used in Windows 2008, 7, 8.</span>
+  <span class="n">_USERASSIST_V5_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;userassist_entry&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;count&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;app_focus_count&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;focus_duration&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">44</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;timestamp&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+
+<div class="viewcode-block" id="UserAssistPlugin.GetEntries"><a class="viewcode-back" href="../../../../plaso.parsers.winreg_plugins.html#plaso.parsers.winreg_plugins.userassist.UserAssistPlugin.GetEntries">[docs]</a>  <span class="k">def</span> <span class="nf">GetEntries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">registry_key</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a UserAssist Registry key.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      registry_key: A Windows Registry key (instance of</span>
+<span class="sd">                    dfwinreg.WinRegistryKey).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">version_value</span> <span class="o">=</span> <span class="n">registry_key</span><span class="o">.</span><span class="n">GetValueByName</span><span class="p">(</span><span class="s1">u&#39;Version&#39;</span><span class="p">)</span>
+    <span class="n">count_subkey</span> <span class="o">=</span> <span class="n">registry_key</span><span class="o">.</span><span class="n">GetSubkeyByName</span><span class="p">(</span><span class="s1">u&#39;Count&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">version_value</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span><span class="s1">u&#39;Missing version value&#39;</span><span class="p">)</span>
+      <span class="k">return</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">version_value</span><span class="o">.</span><span class="n">DataIsInteger</span><span class="p">():</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span><span class="s1">u&#39;Unsupported version value data type&#39;</span><span class="p">)</span>
+      <span class="k">return</span>
+
+    <span class="n">format_version</span> <span class="o">=</span> <span class="n">version_value</span><span class="o">.</span><span class="n">GetDataAsObject</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">format_version</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">):</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;Unsupported format version: {0:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">format_version</span><span class="p">))</span>
+      <span class="k">return</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">count_subkey</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span><span class="s1">u&#39;Missing count subkey&#39;</span><span class="p">)</span>
+      <span class="k">return</span>
+
+    <span class="n">userassist_entry_index</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">registry_value</span> <span class="ow">in</span> <span class="n">count_subkey</span><span class="o">.</span><span class="n">GetValues</span><span class="p">():</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">value_name</span> <span class="o">=</span> <span class="n">registry_value</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;rot-13&#39;</span><span class="p">)</span>
+      <span class="k">except</span> <span class="ne">UnicodeEncodeError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">((</span>
+            <span class="s1">u&#39;Unable to decode UserAssist string: {0:s} with error: {1:s}.</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="s1">u&#39;Attempting piecewise decoding.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">registry_value</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+        <span class="n">characters</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">registry_value</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+          <span class="k">if</span> <span class="nb">ord</span><span class="p">(</span><span class="n">char</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">128</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+              <span class="n">characters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">char</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;rot-13&#39;</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">UnicodeEncodeError</span><span class="p">:</span>
+              <span class="n">characters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">char</span><span class="p">)</span>
+          <span class="k">else</span><span class="p">:</span>
+            <span class="n">characters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">char</span><span class="p">)</span>
+
+        <span class="n">value_name</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">characters</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">format_version</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="n">path_segments</span> <span class="o">=</span> <span class="n">value_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">segment_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">path_segments</span><span class="p">)):</span>
+          <span class="c1"># Remove the { } from the path segment to get the GUID.</span>
+          <span class="n">guid</span> <span class="o">=</span> <span class="n">path_segments</span><span class="p">[</span><span class="n">segment_index</span><span class="p">][</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+          <span class="n">path_segments</span><span class="p">[</span><span class="n">segment_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">known_folder_ids</span><span class="o">.</span><span class="n">PATHS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+              <span class="n">guid</span><span class="p">,</span> <span class="n">path_segments</span><span class="p">[</span><span class="n">segment_index</span><span class="p">])</span>
+
+        <span class="n">value_name</span> <span class="o">=</span> <span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_segments</span><span class="p">)</span>
+        <span class="c1"># Check if we might need to substitute values.</span>
+        <span class="k">if</span> <span class="s1">u&#39;%&#39;</span> <span class="ow">in</span> <span class="n">value_name</span><span class="p">:</span>
+          <span class="c1"># TODO: deprecate direct use of pre_obj.</span>
+          <span class="n">value_name</span> <span class="o">=</span> <span class="n">environ_expand</span><span class="o">.</span><span class="n">ExpandWindowsEnvironmentVariables</span><span class="p">(</span>
+              <span class="n">value_name</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">knowledge_base</span><span class="o">.</span><span class="n">pre_obj</span><span class="p">)</span>
+
+      <span class="n">value_data_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">registry_value</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">registry_value</span><span class="o">.</span><span class="n">DataIsBinaryData</span><span class="p">():</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+            <span class="s1">u&#39;Unsupported value data type: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">registry_value</span><span class="o">.</span><span class="n">data_type_string</span><span class="p">))</span>
+
+      <span class="k">elif</span> <span class="n">value_name</span> <span class="o">==</span> <span class="s1">u&#39;UEME_CTLSESSION&#39;</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+      <span class="k">elif</span> <span class="n">format_version</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">value_data_size</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_USERASSIST_V3_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">():</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+              <span class="s1">u&#39;Unsupported value data size: {0:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value_data_size</span><span class="p">))</span>
+
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">parsed_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_USERASSIST_V3_STRUCT</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">registry_value</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+          <span class="n">filetime</span> <span class="o">=</span> <span class="n">parsed_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;timestamp&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+          <span class="n">count</span> <span class="o">=</span> <span class="n">parsed_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;count&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+          <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="n">count</span> <span class="o">-=</span> <span class="mi">5</span>
+
+          <span class="n">values_dict</span> <span class="o">=</span> <span class="p">{}</span>
+          <span class="n">values_dict</span><span class="p">[</span><span class="n">value_name</span><span class="p">]</span> <span class="o">=</span> <span class="s1">u&#39;[Count: {0:d}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
+          <span class="n">event_object</span> <span class="o">=</span> <span class="n">UserAssistWindowsRegistryEvent</span><span class="p">(</span>
+              <span class="n">filetime</span><span class="p">,</span> <span class="n">count_subkey</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">registry_value</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="n">values_dict</span><span class="p">)</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="k">elif</span> <span class="n">format_version</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">value_data_size</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_USERASSIST_V5_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">():</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+              <span class="s1">u&#39;Unsupported value data size: {0:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value_data_size</span><span class="p">))</span>
+
+        <span class="n">parsed_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_USERASSIST_V5_STRUCT</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">registry_value</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="n">userassist_entry_index</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="n">parsed_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;count&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="n">app_focus_count</span> <span class="o">=</span> <span class="n">parsed_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;app_focus_count&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="n">focus_duration</span> <span class="o">=</span> <span class="n">parsed_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;focus_duration&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="n">filetime</span> <span class="o">=</span> <span class="n">parsed_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;timestamp&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">values_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">values_dict</span><span class="p">[</span><span class="n">value_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s1">u&#39;[UserAssist entry: {0:d}, Count: {1:d}, &#39;</span>
+            <span class="s1">u&#39;Application focus count: {2:d}, Focus duration: {3:d}]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">userassist_entry_index</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">app_focus_count</span><span class="p">,</span>
+                <span class="n">focus_duration</span><span class="p">)</span>
+
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">UserAssistWindowsRegistryEvent</span><span class="p">(</span>
+            <span class="n">filetime</span><span class="p">,</span> <span class="n">count_subkey</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">count_subkey</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="n">values_dict</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span></div></div>
+
+
+<span class="n">winreg</span><span class="o">.</span><span class="n">WinRegistryParser</span><span class="o">.</span><span class="n">RegisterPlugin</span><span class="p">(</span><span class="n">UserAssistPlugin</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

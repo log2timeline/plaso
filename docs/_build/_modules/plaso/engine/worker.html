@@ -1,0 +1,827 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.engine.worker &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.engine.worker</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;The event extraction worker.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">from</span> <span class="nn">dfvfs.analyzer</span> <span class="kn">import</span> <span class="n">analyzer</span>
+<span class="kn">from</span> <span class="nn">dfvfs.lib</span> <span class="kn">import</span> <span class="n">definitions</span> <span class="k">as</span> <span class="n">dfvfs_definitions</span>
+<span class="kn">from</span> <span class="nn">dfvfs.lib</span> <span class="kn">import</span> <span class="n">errors</span> <span class="k">as</span> <span class="n">dfvfs_errors</span>
+<span class="kn">from</span> <span class="nn">dfvfs.path</span> <span class="kn">import</span> <span class="n">factory</span> <span class="k">as</span> <span class="n">path_spec_factory</span>
+<span class="kn">from</span> <span class="nn">dfvfs.resolver</span> <span class="kn">import</span> <span class="n">resolver</span> <span class="k">as</span> <span class="n">path_spec_resolver</span>
+
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">extractors</span>
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">plaso_queue</span>
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">profiler</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">definitions</span>
+<span class="kn">from</span> <span class="nn">plaso.hashers</span> <span class="kn">import</span> <span class="n">manager</span> <span class="k">as</span> <span class="n">hashers_manager</span>
+
+
+<div class="viewcode-block" id="BaseEventExtractionWorker"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.worker.BaseEventExtractionWorker">[docs]</a><span class="k">class</span> <span class="nc">BaseEventExtractionWorker</span><span class="p">(</span><span class="n">plaso_queue</span><span class="o">.</span><span class="n">ItemQueueConsumer</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that defines the event extraction worker base.</span>
+
+<span class="sd">  This class is designed to watch a queue for path specifications of files</span>
+<span class="sd">  and directories (file entries) and data streams for which events need to</span>
+<span class="sd">  be extracted.</span>
+
+<span class="sd">  The event extraction worker needs to determine if a parser suitable</span>
+<span class="sd">  for parsing a particular file entry or data stream is available. All</span>
+<span class="sd">  extracted event objects are pushed on a storage queue for further processing.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">_DEFAULT_HASH_READ_SIZE</span> <span class="o">=</span> <span class="mi">4096</span>
+
+  <span class="c1"># TSK metadata files that need special handling.</span>
+  <span class="n">_METADATA_FILE_LOCATIONS_TSK</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+      <span class="c1"># NTFS</span>
+      <span class="s1">u&#39;/$AttrDef&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;/$BadClus&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;/$Bitmap&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;/$Boot&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;/$Extend/$ObjId&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;/$Extend/$Quota&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;/$Extend/$Reparse&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;/$Extend/$RmMetadata/$Repair&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;/$Extend/$RmMetadata/$TxfLog/$Tops&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;/$Extend/$UsnJrnl&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;/$LogFile&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;/$MFT&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;/$MFTMirr&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;/$Secure&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;/$UpCase&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;/$Volume&#39;</span><span class="p">,</span>
+      <span class="c1"># HFS+/HFSX</span>
+      <span class="s1">u&#39;/$ExtentsFile&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;/$CatalogFile&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;/$BadBlockFile&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;/$AllocationFile&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;/$AttributesFile&#39;</span><span class="p">,</span>
+  <span class="p">])</span>
+
+  <span class="c1"># TODO: make this filtering solution more generic. Also see:</span>
+  <span class="c1"># https://github.com/log2timeline/plaso/issues/467</span>
+  <span class="n">_CHROME_CACHE_DATA_FILE_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;^[fF]_[0-9]{6}$&#39;</span><span class="p">)</span>
+  <span class="n">_FIREFOX_CACHE_DATA_FILE_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;^[0-9a-fA-F]{5}[dm][0-9]{2}$&#39;</span><span class="p">)</span>
+  <span class="n">_FIREFOX_CACHE2_DATA_FILE_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;^[0-9a-fA-F]{40}$&#39;</span><span class="p">)</span>
+  <span class="n">_FSEVENTSD_FILE_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;^[0-9a-fA-F]{16}$&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">path_spec_queue</span><span class="p">,</span> <span class="n">event_queue_producer</span><span class="p">,</span>
+      <span class="n">parse_error_queue_producer</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">resolver_context</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event extraction worker object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      identifier: The identifier, usually an incrementing integer.</span>
+<span class="sd">      path_spec_queue: The path specification queue (instance of Queue).</span>
+<span class="sd">                       This queue contains the path specifications (instances</span>
+<span class="sd">                       of dfvfs.PathSpec) of the file entries that need</span>
+<span class="sd">                       to be processed.</span>
+<span class="sd">      event_queue_producer: The event object queue producer (instance of</span>
+<span class="sd">                            ItemQueueProducer).</span>
+<span class="sd">      parse_error_queue_producer: The parse error queue producer (instance of</span>
+<span class="sd">                                  ItemQueueProducer).</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      resolver_context: Optional resolver context (instance of dfvfs.Context).</span>
+<span class="sd">                        The default is None which will use the built in context</span>
+<span class="sd">                        which is not multi process safe. Note that every thread</span>
+<span class="sd">                        or process must have its own resolver context.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">BaseEventExtractionWorker</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">path_spec_queue</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_compressed_stream_path_spec</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_current_display_name</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_current_file_entry</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_enable_debug_mode</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_enable_parsers_profiling</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_event_extractor</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_identifier</span> <span class="o">=</span> <span class="n">identifier</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_identifier_string</span> <span class="o">=</span> <span class="s1">u&#39;Worker_{0:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_hasher_names</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_open_files</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parser_mediator</span> <span class="o">=</span> <span class="n">parser_mediator</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_process_archive_files</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_produced_number_of_path_specs</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_resolver_context</span> <span class="o">=</span> <span class="n">resolver_context</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_event_queue_producer</span> <span class="o">=</span> <span class="n">event_queue_producer</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parse_error_queue_producer</span> <span class="o">=</span> <span class="n">parse_error_queue_producer</span>
+
+    <span class="c1"># Attributes that contain the current status of the worker.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_INITIALIZED</span>
+
+    <span class="c1"># Attributes for profiling.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_enable_profiling</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_memory_profiler</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parsers_profiler</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_profiling_sample</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_profiling_sample_rate</span> <span class="o">=</span> <span class="mi">1000</span>
+
+  <span class="k">def</span> <span class="nf">_CanSkipContentExtraction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines if content extraction of a file entry can be skipped.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: the file entry relating to the data to be hashed (instance of</span>
+<span class="sd">                  dfvfs.FileEntry)</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A boolean value to indicate the content extraction can be skipped.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: make this filtering solution more generic. Also see:</span>
+    <span class="c1"># https://github.com/log2timeline/plaso/issues/467</span>
+    <span class="n">location</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="p">,</span> <span class="s1">u&#39;location&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">location</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="n">data_stream_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="p">,</span> <span class="s1">u&#39;data_stream&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">data_stream_name</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="n">file_system</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetFileSystem</span><span class="p">()</span>
+
+    <span class="n">path_segments</span> <span class="o">=</span> <span class="n">file_system</span><span class="o">.</span><span class="n">SplitPath</span><span class="p">(</span><span class="n">location</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CHROME_CACHE_DATA_FILE_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">path_segments</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+      <span class="n">location_segments</span> <span class="o">=</span> <span class="n">path_segments</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+      <span class="n">location_segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;index&#39;</span><span class="p">)</span>
+      <span class="n">location</span> <span class="o">=</span> <span class="n">file_system</span><span class="o">.</span><span class="n">JoinPath</span><span class="p">(</span><span class="n">location_segments</span><span class="p">)</span>
+      <span class="n">index_path_spec</span> <span class="o">=</span> <span class="n">path_spec_factory</span><span class="o">.</span><span class="n">Factory</span><span class="o">.</span><span class="n">NewPathSpec</span><span class="p">(</span>
+          <span class="n">file_entry</span><span class="o">.</span><span class="n">type_indicator</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="n">location</span><span class="p">,</span>
+          <span class="n">parent</span><span class="o">=</span><span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">file_system</span><span class="o">.</span><span class="n">FileEntryExistsByPathSpec</span><span class="p">(</span><span class="n">index_path_spec</span><span class="p">):</span>
+        <span class="c1"># TODO: improve this check if &quot;index&quot; is a Chrome Cache index file.</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FIREFOX_CACHE_DATA_FILE_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">path_segments</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+      <span class="n">location_segments</span> <span class="o">=</span> <span class="n">path_segments</span><span class="p">[:</span><span class="o">-</span><span class="mi">4</span><span class="p">]</span>
+      <span class="n">location_segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;_CACHE_MAP_&#39;</span><span class="p">)</span>
+      <span class="n">location</span> <span class="o">=</span> <span class="n">file_system</span><span class="o">.</span><span class="n">JoinPath</span><span class="p">(</span><span class="n">location_segments</span><span class="p">)</span>
+      <span class="n">cache_map_path_spec</span> <span class="o">=</span> <span class="n">path_spec_factory</span><span class="o">.</span><span class="n">Factory</span><span class="o">.</span><span class="n">NewPathSpec</span><span class="p">(</span>
+          <span class="n">file_entry</span><span class="o">.</span><span class="n">type_indicator</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="n">location</span><span class="p">,</span>
+          <span class="n">parent</span><span class="o">=</span><span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">file_system</span><span class="o">.</span><span class="n">FileEntryExistsByPathSpec</span><span class="p">(</span><span class="n">cache_map_path_spec</span><span class="p">):</span>
+        <span class="c1"># TODO: improve this check if &quot;_CACHE_MAP_&quot; is a Firefox Cache</span>
+        <span class="c1"># version 1 cache map file.</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FIREFOX_CACHE2_DATA_FILE_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">path_segments</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+      <span class="n">location_segments</span> <span class="o">=</span> <span class="n">path_segments</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+      <span class="n">location_segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;index&#39;</span><span class="p">)</span>
+      <span class="n">location</span> <span class="o">=</span> <span class="n">file_system</span><span class="o">.</span><span class="n">JoinPath</span><span class="p">(</span><span class="n">location_segments</span><span class="p">)</span>
+      <span class="n">index_path_spec</span> <span class="o">=</span> <span class="n">path_spec_factory</span><span class="o">.</span><span class="n">Factory</span><span class="o">.</span><span class="n">NewPathSpec</span><span class="p">(</span>
+          <span class="n">file_entry</span><span class="o">.</span><span class="n">type_indicator</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="n">location</span><span class="p">,</span>
+          <span class="n">parent</span><span class="o">=</span><span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">file_system</span><span class="o">.</span><span class="n">FileEntryExistsByPathSpec</span><span class="p">(</span><span class="n">index_path_spec</span><span class="p">):</span>
+        <span class="c1"># TODO: improve this check if &quot;index&quot; is a Firefox Cache version 2</span>
+        <span class="c1"># index file.</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FSEVENTSD_FILE_RE</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">path_segments</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+      <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">path_segments</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">path_segments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">u&#39;.fseventsd&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">path_segments</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">path_segments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="s1">u&#39;hiberfil.sys&#39;</span><span class="p">,</span> <span class="s1">u&#39;pagefile.sys&#39;</span><span class="p">,</span> <span class="s1">u&#39;swapfile.sys&#39;</span><span class="p">):</span>
+      <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">return</span> <span class="bp">False</span>
+
+  <span class="k">def</span> <span class="nf">_ConsumeItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_spec</span><span class="p">,</span> <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Consumes an item callback for ConsumeItems.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      path_spec: a path specification (instance of dfvfs.PathSpec).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      QueueFull: If a queue is full.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_ProcessPathSpec</span><span class="p">(</span><span class="n">path_spec</span><span class="p">)</span>
+
+    <span class="c1"># TODO: work-around for now the compressed stream path spec</span>
+    <span class="c1"># needs to be processed after the current path spec.</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compressed_stream_path_spec</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_ProcessPathSpec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_compressed_stream_path_spec</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_compressed_stream_path_spec</span> <span class="o">=</span> <span class="bp">None</span>
+
+  <span class="k">def</span> <span class="nf">_DebugProcessPathSpec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Callback for debugging path specification processing failures.&quot;&quot;&quot;</span>
+    <span class="k">return</span>
+
+  <span class="k">def</span> <span class="nf">_HashDataStream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">,</span> <span class="n">data_stream_name</span><span class="o">=</span><span class="s1">u&#39;&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Hashes the contents of a specific data stream of a file entry.</span>
+
+<span class="sd">    The resulting digest hashes are set in the parser mediator as attributes</span>
+<span class="sd">    that are added to produced event objects. Note that some file systems</span>
+<span class="sd">    allow directories to have data streams, e.g. NTFS.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: the file entry relating to the data to be hashed (instance of</span>
+<span class="sd">                  dfvfs.FileEntry)</span>
+<span class="sd">      data_stream_name: optional data stream name. The default is</span>
+<span class="sd">                        an empty string which represents the default</span>
+<span class="sd">                        data stream.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: if the file-like object is missing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hasher_names</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;[HashDataStream] hashing file: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_display_name</span><span class="p">))</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_HASHING</span>
+
+    <span class="n">file_object</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetFileObject</span><span class="p">(</span><span class="n">data_stream_name</span><span class="o">=</span><span class="n">data_stream_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_object</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to retrieve file-like object from file entry.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Make sure frame.f_locals does not keep a reference to file_entry.</span>
+    <span class="n">file_entry</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">digest_hashes</span> <span class="o">=</span> <span class="n">hashers_manager</span><span class="o">.</span><span class="n">HashersManager</span><span class="o">.</span><span class="n">HashFileObject</span><span class="p">(</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_hasher_names</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span>
+          <span class="n">buffer_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_DEFAULT_HASH_READ_SIZE</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="n">file_object</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enable_profiling</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_ProfilingSampleMemory</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">hash_name</span><span class="p">,</span> <span class="n">digest_hash_string</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">digest_hashes</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+      <span class="n">attribute_name</span> <span class="o">=</span> <span class="s1">u&#39;{0:s}_hash&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">hash_name</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_parser_mediator</span><span class="o">.</span><span class="n">AddEventAttribute</span><span class="p">(</span>
+          <span class="n">attribute_name</span><span class="p">,</span> <span class="n">digest_hash_string</span><span class="p">)</span>
+
+      <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+          <span class="s1">u&#39;[HashDataStream] digest {0:s} calculated for file: {1:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">digest_hash_string</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_display_name</span><span class="p">))</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s1">u&#39;[HashDataStream] completed hashing file: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_current_display_name</span><span class="p">))</span>
+
+  <span class="k">def</span> <span class="nf">_IsMetadataFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines if the file entry is a metadata file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: a file entry object (instance of dfvfs.FileEntry).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A boolean value indicating if the file entry is a metadata file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">file_entry</span><span class="o">.</span><span class="n">type_indicator</span> <span class="o">==</span> <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">TYPE_INDICATOR_TSK</span> <span class="ow">and</span>
+        <span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="o">.</span><span class="n">location</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_METADATA_FILE_LOCATIONS_TSK</span><span class="p">):</span>
+      <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">return</span> <span class="bp">False</span>
+
+  <span class="k">def</span> <span class="nf">_ProcessArchiveFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Processes an archive file (file that contains file entries).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: A file entry object (instance of dfvfs.FileEntry).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A boolean indicating if the file is an archive file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">type_indicators</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">Analyzer</span><span class="o">.</span><span class="n">GetArchiveTypeIndicators</span><span class="p">(</span>
+          <span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="p">,</span> <span class="n">resolver_context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_resolver_context</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">((</span>
+          <span class="s1">u&#39;Analyzer failed to determine archive type indicators &#39;</span>
+          <span class="s1">u&#39;for file: {0:s} with error: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">_current_display_name</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+      <span class="c1"># Make sure frame.f_locals does not keep a reference to file_entry.</span>
+      <span class="n">file_entry</span> <span class="o">=</span> <span class="bp">None</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="n">number_of_type_indicators</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">type_indicators</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">number_of_type_indicators</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">if</span> <span class="n">number_of_type_indicators</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">((</span>
+          <span class="s1">u&#39;Found multiple format type indicators: {0:s} for &#39;</span>
+          <span class="s1">u&#39;archive file: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">type_indicators</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_display_name</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">type_indicator</span> <span class="ow">in</span> <span class="n">type_indicators</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">type_indicator</span> <span class="o">==</span> <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">TYPE_INDICATOR_TAR</span><span class="p">:</span>
+        <span class="n">archive_path_spec</span> <span class="o">=</span> <span class="n">path_spec_factory</span><span class="o">.</span><span class="n">Factory</span><span class="o">.</span><span class="n">NewPathSpec</span><span class="p">(</span>
+            <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">TYPE_INDICATOR_TAR</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="s1">u&#39;/&#39;</span><span class="p">,</span>
+            <span class="n">parent</span><span class="o">=</span><span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="p">)</span>
+
+      <span class="k">elif</span> <span class="n">type_indicator</span> <span class="o">==</span> <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">TYPE_INDICATOR_ZIP</span><span class="p">:</span>
+        <span class="n">archive_path_spec</span> <span class="o">=</span> <span class="n">path_spec_factory</span><span class="o">.</span><span class="n">Factory</span><span class="o">.</span><span class="n">NewPathSpec</span><span class="p">(</span>
+            <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">TYPE_INDICATOR_ZIP</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="s1">u&#39;/&#39;</span><span class="p">,</span>
+            <span class="n">parent</span><span class="o">=</span><span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="p">)</span>
+
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">((</span>
+            <span class="s1">u&#39;Unsupported archive format type indicator: {0:s} for &#39;</span>
+            <span class="s1">u&#39;archive file: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">type_indicator</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_display_name</span><span class="p">))</span>
+
+        <span class="n">archive_path_spec</span> <span class="o">=</span> <span class="bp">None</span>
+
+      <span class="k">if</span> <span class="n">archive_path_spec</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_process_archive_files</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+          <span class="c1"># TODO: make sure to handle the abort here.</span>
+
+          <span class="c1"># TODO: change this to pass the archive file path spec to</span>
+          <span class="c1"># the collector process and have the collector implement a maximum</span>
+          <span class="c1"># path spec &quot;depth&quot; to prevent ZIP bombs and equiv.</span>
+          <span class="n">path_spec_extractor</span> <span class="o">=</span> <span class="n">extractors</span><span class="o">.</span><span class="n">PathSpecExtractor</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">_resolver_context</span><span class="p">)</span>
+
+          <span class="k">for</span> <span class="n">path_spec</span> <span class="ow">in</span> <span class="n">path_spec_extractor</span><span class="o">.</span><span class="n">ExtractPathSpecs</span><span class="p">(</span>
+              <span class="p">[</span><span class="n">archive_path_spec</span><span class="p">]):</span>
+            <span class="c1"># TODO: produce event sources to process.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">PushItem</span><span class="p">(</span><span class="n">path_spec</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_produced_number_of_path_specs</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+          <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">u&#39;Unable to process archive file:</span><span class="se">\n</span><span class="s1">{0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">_current_display_name</span><span class="p">))</span>
+
+          <span class="c1"># Make sure frame.f_locals does not keep a reference to file_entry.</span>
+          <span class="n">file_entry</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">return</span> <span class="bp">True</span>
+
+  <span class="k">def</span> <span class="nf">_ProcessCompressedStreamFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Processes an compressed stream file (file that contains file entries).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: A file entry object (instance of dfvfs.FileEntry).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A boolean indicating if the file is a compressed stream file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">type_indicators</span> <span class="o">=</span> <span class="n">analyzer</span><span class="o">.</span><span class="n">Analyzer</span><span class="o">.</span><span class="n">GetCompressedStreamTypeIndicators</span><span class="p">(</span>
+          <span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="p">,</span> <span class="n">resolver_context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_resolver_context</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">((</span>
+          <span class="s1">u&#39;Analyzer failed to determine compressed stream type indicators &#39;</span>
+          <span class="s1">u&#39;for file: {0:s} with error: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">_current_display_name</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+      <span class="c1"># Make sure frame.f_locals does not keep a reference to file_entry.</span>
+      <span class="n">file_entry</span> <span class="o">=</span> <span class="bp">None</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="n">number_of_type_indicators</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">type_indicators</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">number_of_type_indicators</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">if</span> <span class="n">number_of_type_indicators</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">((</span>
+          <span class="s1">u&#39;Found multiple format type indicators: {0:s} for &#39;</span>
+          <span class="s1">u&#39;compressed stream file: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">type_indicators</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_display_name</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">type_indicator</span> <span class="ow">in</span> <span class="n">type_indicators</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">type_indicator</span> <span class="o">==</span> <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">TYPE_INDICATOR_BZIP2</span><span class="p">:</span>
+        <span class="n">compressed_stream_path_spec</span> <span class="o">=</span> <span class="n">path_spec_factory</span><span class="o">.</span><span class="n">Factory</span><span class="o">.</span><span class="n">NewPathSpec</span><span class="p">(</span>
+            <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">TYPE_INDICATOR_COMPRESSED_STREAM</span><span class="p">,</span>
+            <span class="n">compression_method</span><span class="o">=</span><span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">COMPRESSION_METHOD_BZIP2</span><span class="p">,</span>
+            <span class="n">parent</span><span class="o">=</span><span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="p">)</span>
+
+      <span class="k">elif</span> <span class="n">type_indicator</span> <span class="o">==</span> <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">TYPE_INDICATOR_GZIP</span><span class="p">:</span>
+        <span class="n">compressed_stream_path_spec</span> <span class="o">=</span> <span class="n">path_spec_factory</span><span class="o">.</span><span class="n">Factory</span><span class="o">.</span><span class="n">NewPathSpec</span><span class="p">(</span>
+            <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">TYPE_INDICATOR_GZIP</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="p">)</span>
+
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">((</span>
+            <span class="s1">u&#39;Unsupported compressed stream format type indicators: {0:s} for &#39;</span>
+            <span class="s1">u&#39;compressed stream file: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">type_indicator</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_display_name</span><span class="p">))</span>
+
+        <span class="n">compressed_stream_path_spec</span> <span class="o">=</span> <span class="bp">None</span>
+
+      <span class="k">if</span> <span class="n">compressed_stream_path_spec</span><span class="p">:</span>
+        <span class="c1"># TODO: disabled for now since it can cause a deadlock.</span>
+        <span class="c1"># self._queue.PushItem(compressed_stream_path_spec)</span>
+        <span class="c1"># self._produced_number_of_path_specs += 1</span>
+
+        <span class="c1"># TODO: work-around for now the compressed stream path spec</span>
+        <span class="c1"># needs to be processed after the current path spec.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compressed_stream_path_spec</span> <span class="o">=</span> <span class="n">compressed_stream_path_spec</span>
+
+    <span class="k">return</span> <span class="bp">True</span>
+
+  <span class="k">def</span> <span class="nf">_ProcessFileEntry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">,</span> <span class="n">data_stream_name</span><span class="o">=</span><span class="s1">u&#39;&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Processes a specific data stream of a file entry.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: A file entry object (instance of dfvfs.FileEntry).</span>
+<span class="sd">      data_stream_name: optional data stream name. The default is</span>
+<span class="sd">                        an empty string which represents the default</span>
+<span class="sd">                        data stream.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: if the parser object is missing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_current_file_entry</span> <span class="o">=</span> <span class="n">file_entry</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_current_display_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parser_mediator</span><span class="o">.</span><span class="n">GetDisplayName</span><span class="p">(</span>
+        <span class="n">file_entry</span><span class="p">)</span>
+
+    <span class="n">reference_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolver_context</span><span class="o">.</span><span class="n">GetFileObjectReferenceCount</span><span class="p">(</span>
+        <span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parser_mediator</span><span class="o">.</span><span class="n">SetFileEntry</span><span class="p">(</span><span class="n">file_entry</span><span class="p">)</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;[ProcessFileEntry] processing file entry: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_display_name</span><span class="p">))</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_IsMetadataFile</span><span class="p">(</span><span class="n">file_entry</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_event_extractor</span><span class="o">.</span><span class="n">ParseFileEntryMetadata</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parser_mediator</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_event_extractor</span><span class="o">.</span><span class="n">ParseMetadataFile</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_parser_mediator</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">,</span>
+            <span class="n">data_stream_name</span><span class="o">=</span><span class="n">data_stream_name</span><span class="p">)</span>
+
+      <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Not every file entry has a data stream. In such cases we want to</span>
+        <span class="c1"># extract the metadata only.</span>
+        <span class="n">has_data_stream</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">HasDataStream</span><span class="p">(</span><span class="n">data_stream_name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">has_data_stream</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_HashDataStream</span><span class="p">(</span><span class="n">file_entry</span><span class="p">,</span> <span class="n">data_stream_name</span><span class="o">=</span><span class="n">data_stream_name</span><span class="p">)</span>
+
+        <span class="c1"># We always want to extract the file entry metadata but we only want</span>
+        <span class="c1"># to parse it once per file entry, so we only use it if we are</span>
+        <span class="c1"># processing the default (nameless) data stream.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">data_stream_name</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_event_extractor</span><span class="o">.</span><span class="n">ParseFileEntryMetadata</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">_parser_mediator</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">)</span>
+
+        <span class="c1"># Determine if the content of the file entry should not be extracted.</span>
+        <span class="n">skip_content_extraction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CanSkipContentExtraction</span><span class="p">(</span><span class="n">file_entry</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">skip_content_extraction</span><span class="p">:</span>
+          <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">u&#39;Skipping content extraction of: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">_current_display_name</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">is_archive</span> <span class="o">=</span> <span class="bp">False</span>
+          <span class="n">is_compressed_stream</span> <span class="o">=</span> <span class="bp">False</span>
+
+          <span class="k">if</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">IsFile</span><span class="p">():</span>
+            <span class="n">is_compressed_stream</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ProcessCompressedStreamFile</span><span class="p">(</span><span class="n">file_entry</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_compressed_stream</span><span class="p">:</span>
+              <span class="n">is_archive</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ProcessArchiveFile</span><span class="p">(</span><span class="n">file_entry</span><span class="p">)</span>
+
+          <span class="k">if</span> <span class="n">has_data_stream</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_archive</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_compressed_stream</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_event_extractor</span><span class="o">.</span><span class="n">ParseDataStream</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_parser_mediator</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">,</span>
+                <span class="n">data_stream_name</span><span class="o">=</span><span class="n">data_stream_name</span><span class="p">)</span>
+
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">reference_count</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolver_context</span><span class="o">.</span><span class="n">GetFileObjectReferenceCount</span><span class="p">(</span>
+          <span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="p">):</span>
+        <span class="c1"># Clean up after parsers that do not call close explicitly.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolver_context</span><span class="o">.</span><span class="n">ForceRemoveFileObject</span><span class="p">(</span><span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="p">):</span>
+          <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+              <span class="s1">u&#39;File-object not explicitly closed for file: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">_current_display_name</span><span class="p">))</span>
+
+      <span class="c1"># We do not clear self._current_file_entry or self._current_display_name</span>
+      <span class="c1"># here to allow the foreman to see which file was previously processed.</span>
+
+      <span class="bp">self</span><span class="o">.</span><span class="n">_parser_mediator</span><span class="o">.</span><span class="n">ResetFileEntry</span><span class="p">()</span>
+
+      <span class="c1"># Make sure frame.f_locals does not keep a reference to file_entry.</span>
+      <span class="n">file_entry</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enable_profiling</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_ProfilingSampleMemory</span><span class="p">()</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s1">u&#39;[ProcessFileEntry] done processing file entry: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_current_display_name</span><span class="p">))</span>
+
+  <span class="k">def</span> <span class="nf">_ProcessPathSpec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_spec</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Processes a path specification.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      path_spec: A path specification object (instance of dfvfs.PathSpec).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">file_entry</span> <span class="o">=</span> <span class="n">path_spec_resolver</span><span class="o">.</span><span class="n">Resolver</span><span class="o">.</span><span class="n">OpenFileEntry</span><span class="p">(</span>
+          <span class="n">path_spec</span><span class="p">,</span> <span class="n">resolver_context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_resolver_context</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">file_entry</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s1">u&#39;Unable to open file entry with path spec: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">path_spec</span><span class="o">.</span><span class="n">comparable</span><span class="p">))</span>
+        <span class="k">return</span>
+
+      <span class="c1"># Note that data stream can be set but contain None, we&#39;ll set it</span>
+      <span class="c1"># to an empty string here.</span>
+      <span class="n">data_stream_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">path_spec</span><span class="p">,</span> <span class="s1">u&#39;data_stream&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">data_stream_name</span><span class="p">:</span>
+        <span class="n">data_stream_name</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+
+      <span class="bp">self</span><span class="o">.</span><span class="n">_ProcessFileEntry</span><span class="p">(</span><span class="n">file_entry</span><span class="p">,</span> <span class="n">data_stream_name</span><span class="o">=</span><span class="n">data_stream_name</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to process path spec: {0:s} with error: {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">path_spec</span><span class="o">.</span><span class="n">comparable</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">except</span> <span class="n">dfvfs_errors</span><span class="o">.</span><span class="n">CacheFullError</span><span class="p">:</span>
+      <span class="c1"># TODO: signal engine of failure.</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_abort</span> <span class="o">=</span> <span class="bp">True</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">((</span>
+          <span class="s1">u&#39;ABORT: detected cache full error while processing &#39;</span>
+          <span class="s1">u&#39;path spec: {0:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path_spec</span><span class="o">.</span><span class="n">comparable</span><span class="p">))</span>
+
+    <span class="c1"># All exceptions need to be caught here to prevent the worker</span>
+    <span class="c1"># from being killed by an uncaught exception.</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;Unhandled exception while processing path spec: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">path_spec</span><span class="o">.</span><span class="n">comparable</span><span class="p">))</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">exception</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enable_debug_mode</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_DebugProcessPathSpec</span><span class="p">()</span>
+
+    <span class="c1"># Make sure frame.f_locals does not keep a reference to file_entry.</span>
+    <span class="n">file_entry</span> <span class="o">=</span> <span class="bp">None</span>
+
+  <span class="k">def</span> <span class="nf">_ProfilingSampleMemory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a memory profiling sample.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_memory_profiler</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_profiling_sample</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profiling_sample</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_profiling_sample_rate</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_memory_profiler</span><span class="o">.</span><span class="n">Sample</span><span class="p">()</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_profiling_sample</span> <span class="o">=</span> <span class="mi">0</span>
+
+  <span class="k">def</span> <span class="nf">_ProfilingStart</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Starts the profiling.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_profiling_sample</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_memory_profiler</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_memory_profiler</span><span class="o">.</span><span class="n">Start</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enable_parsers_profiling</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_event_extractor</span><span class="o">.</span><span class="n">ProfilingStart</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_identifier</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_ProfilingStop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Stops the profiling.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_memory_profiler</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_memory_profiler</span><span class="o">.</span><span class="n">Sample</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enable_parsers_profiling</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_event_extractor</span><span class="o">.</span><span class="n">ProfilingStop</span><span class="p">()</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">current_path_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The current path specification.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_file_entry</span><span class="p">:</span>
+      <span class="k">return</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_file_entry</span><span class="o">.</span><span class="n">path_spec</span>
+
+<div class="viewcode-block" id="BaseEventExtractionWorker.GetStatus"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.worker.BaseEventExtractionWorker.GetStatus">[docs]</a>  <span class="k">def</span> <span class="nf">GetStatus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a dictionary containing the status.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">u&#39;consumed_number_of_path_specs&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_consumed_items</span><span class="p">,</span>
+        <span class="s1">u&#39;display_name&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_display_name</span><span class="p">,</span>
+        <span class="s1">u&#39;identifier&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_identifier_string</span><span class="p">,</span>
+        <span class="s1">u&#39;number_of_events&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parser_mediator</span><span class="o">.</span><span class="n">number_of_events</span><span class="p">,</span>
+        <span class="s1">u&#39;processing_status&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status</span><span class="p">,</span>
+        <span class="s1">u&#39;produced_number_of_path_specs&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_produced_number_of_path_specs</span><span class="p">,</span>
+        <span class="s1">u&#39;type&#39;</span><span class="p">:</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESS_TYPE_WORKER</span><span class="p">}</span></div>
+
+<div class="viewcode-block" id="BaseEventExtractionWorker.InitializeParserObjects"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.worker.BaseEventExtractionWorker.InitializeParserObjects">[docs]</a>  <span class="k">def</span> <span class="nf">InitializeParserObjects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_filter_expression</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the parser objects.</span>
+
+<span class="sd">    The parser_filter_expression is a comma separated value string that</span>
+<span class="sd">    denotes a list of parser names to include and/or exclude. Each entry</span>
+<span class="sd">    can have the value of:</span>
+
+<span class="sd">    * An exact match of a list of parsers, or a preset (see</span>
+<span class="sd">      plaso/frontend/presets.py for a full list of available presets).</span>
+<span class="sd">    * A name of a single parser (case insensitive), e.g. msiecf.</span>
+<span class="sd">    * A glob name for a single parser, e.g. &#39;*msie*&#39; (case insensitive).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_filter_expression: optional string containing the parser filter</span>
+<span class="sd">                                expression, where None represents all parsers</span>
+<span class="sd">                                and plugins.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_event_extractor</span> <span class="o">=</span> <span class="n">extractors</span><span class="o">.</span><span class="n">EventExtractor</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_resolver_context</span><span class="p">,</span>
+        <span class="n">parser_filter_expression</span><span class="o">=</span><span class="n">parser_filter_expression</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseEventExtractionWorker.Run"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.worker.BaseEventExtractionWorker.Run">[docs]</a>  <span class="k">def</span> <span class="nf">Run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts event objects from file entries.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parser_mediator</span><span class="o">.</span><span class="n">ResetCounters</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enable_profiling</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_ProfilingStart</span><span class="p">()</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_RUNNING</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s1">u&#39;Worker {0:d} (PID: {1:d}) started monitoring process queue.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_identifier</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()))</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">ConsumeItems</span><span class="p">()</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+        <span class="s1">u&#39;Worker {0:d} (PID: {1:d}) stopped monitoring process queue.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_identifier</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()))</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_COMPLETED</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_current_file_entry</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enable_profiling</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_ProfilingStop</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="BaseEventExtractionWorker.SetEnableDebugMode"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.worker.BaseEventExtractionWorker.SetEnableDebugMode">[docs]</a>  <span class="k">def</span> <span class="nf">SetEnableDebugMode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enable_debug_mode</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Enables or disables debug mode.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      enable_debug_mode: boolean value to indicate if the debug mode</span>
+<span class="sd">                         should be enabled.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_enable_debug_mode</span> <span class="o">=</span> <span class="n">enable_debug_mode</span></div>
+
+<div class="viewcode-block" id="BaseEventExtractionWorker.SetEnableProfiling"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.worker.BaseEventExtractionWorker.SetEnableProfiling">[docs]</a>  <span class="k">def</span> <span class="nf">SetEnableProfiling</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">enable_profiling</span><span class="p">,</span> <span class="n">profiling_sample_rate</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+      <span class="n">profiling_type</span><span class="o">=</span><span class="s1">u&#39;all&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Enables or disables profiling.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      enable_profiling: boolean value to indicate if profiling should</span>
+<span class="sd">                        be enabled.</span>
+<span class="sd">      profiling_sample_rate: optional integer indicating the profiling sample</span>
+<span class="sd">                             rate. The value contains the number of files</span>
+<span class="sd">                             processed. The default value is 1000.</span>
+<span class="sd">      profiling_type: optional profiling type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_enable_profiling</span> <span class="o">=</span> <span class="n">enable_profiling</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_profiling_sample_rate</span> <span class="o">=</span> <span class="n">profiling_sample_rate</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enable_profiling</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">profiling_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">u&#39;all&#39;</span><span class="p">,</span> <span class="s1">u&#39;memory&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_memory_profiler</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_memory_profiler</span> <span class="o">=</span> <span class="n">profiler</span><span class="o">.</span><span class="n">GuppyMemoryProfiler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_identifier</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">profiling_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">u&#39;all&#39;</span><span class="p">,</span> <span class="s1">u&#39;parsers&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_enable_parsers_profiling</span> <span class="o">=</span> <span class="bp">True</span></div>
+
+<div class="viewcode-block" id="BaseEventExtractionWorker.SetFilterObject"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.worker.BaseEventExtractionWorker.SetFilterObject">[docs]</a>  <span class="k">def</span> <span class="nf">SetFilterObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the filter object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      filter_object: the filter object (instance of objectfilter.Filter).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parser_mediator</span><span class="o">.</span><span class="n">SetFilterObject</span><span class="p">(</span><span class="n">filter_object</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseEventExtractionWorker.SetHashers"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.worker.BaseEventExtractionWorker.SetHashers">[docs]</a>  <span class="k">def</span> <span class="nf">SetHashers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hasher_names_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the hasher objects.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      hasher_names_string: Comma separated string of names of</span>
+<span class="sd">                           hashers to enable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="n">hashers_manager</span><span class="o">.</span><span class="n">HashersManager</span><span class="o">.</span><span class="n">GetHasherNamesFromString</span><span class="p">(</span>
+        <span class="n">hasher_names_string</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;[SetHashers] Enabling hashers: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">names</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_hasher_names</span> <span class="o">=</span> <span class="n">names</span></div>
+
+<div class="viewcode-block" id="BaseEventExtractionWorker.SetMountPath"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.worker.BaseEventExtractionWorker.SetMountPath">[docs]</a>  <span class="k">def</span> <span class="nf">SetMountPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mount_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the mount path.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      mount_path: string containing the mount path.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parser_mediator</span><span class="o">.</span><span class="n">SetMountPath</span><span class="p">(</span><span class="n">mount_path</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseEventExtractionWorker.SetProcessArchiveFiles"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.worker.BaseEventExtractionWorker.SetProcessArchiveFiles">[docs]</a>  <span class="k">def</span> <span class="nf">SetProcessArchiveFiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process_archive_files</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the process archive files mode.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      process_archive_files: boolean value to indicate if the worker should</span>
+<span class="sd">                             scan for file entries inside files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_process_archive_files</span> <span class="o">=</span> <span class="n">process_archive_files</span></div>
+
+<div class="viewcode-block" id="BaseEventExtractionWorker.SetTextPrepend"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.worker.BaseEventExtractionWorker.SetTextPrepend">[docs]</a>  <span class="k">def</span> <span class="nf">SetTextPrepend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text_prepend</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the text prepend.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      text_prepend: string that contains the text to prepend to every</span>
+<span class="sd">                    event object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parser_mediator</span><span class="o">.</span><span class="n">SetTextPrepend</span><span class="p">(</span><span class="n">text_prepend</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseEventExtractionWorker.SignalAbort"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.worker.BaseEventExtractionWorker.SignalAbort">[docs]</a>  <span class="k">def</span> <span class="nf">SignalAbort</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Signals the worker to abort.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parser_mediator</span><span class="o">.</span><span class="n">SignalAbort</span><span class="p">()</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">BaseEventExtractionWorker</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">SignalAbort</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

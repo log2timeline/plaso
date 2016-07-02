@@ -1,0 +1,403 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.ntfs &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.ntfs</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Parser for NTFS metadata files.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">uuid</span>
+
+<span class="kn">import</span> <span class="nn">construct</span>
+<span class="kn">import</span> <span class="nn">pyfsntfs</span>  <span class="c1"># pylint: disable=wrong-import-order</span>
+
+<span class="kn">from</span> <span class="nn">plaso</span> <span class="kn">import</span> <span class="n">dependencies</span>
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">file_system_events</span>
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">windows_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">specification</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+
+
+<span class="n">dependencies</span><span class="o">.</span><span class="n">CheckModuleVersion</span><span class="p">(</span><span class="s1">u&#39;pyfsntfs&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="NTFSMFTParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.ntfs.NTFSMFTParser">[docs]</a><span class="k">class</span> <span class="nc">NTFSMFTParser</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">FileObjectParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parses a NTFS $MFT metadata file.&quot;&quot;&quot;</span>
+
+  <span class="n">_INITIAL_FILE_OFFSET</span> <span class="o">=</span> <span class="bp">None</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;mft&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for NTFS $MFT metadata files.&#39;</span>
+
+  <span class="n">_MFT_ATTRIBUTE_STANDARD_INFORMATION</span> <span class="o">=</span> <span class="mh">0x00000010</span>
+  <span class="n">_MFT_ATTRIBUTE_FILE_NAME</span> <span class="o">=</span> <span class="mh">0x00000030</span>
+  <span class="n">_MFT_ATTRIBUTE_OBJECT_ID</span> <span class="o">=</span> <span class="mh">0x00000040</span>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="NTFSMFTParser.GetFormatSpecification"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.ntfs.NTFSMFTParser.GetFormatSpecification">[docs]</a>  <span class="k">def</span> <span class="nf">GetFormatSpecification</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the format specification.&quot;&quot;&quot;</span>
+    <span class="n">format_specification</span> <span class="o">=</span> <span class="n">specification</span><span class="o">.</span><span class="n">FormatSpecification</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">NAME</span><span class="p">)</span>
+    <span class="n">format_specification</span><span class="o">.</span><span class="n">AddNewSignature</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;BAAD&#39;</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">format_specification</span><span class="o">.</span><span class="n">AddNewSignature</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;FILE&#39;</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">format_specification</span></div>
+
+  <span class="k">def</span> <span class="nf">_ParseMFTAttribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">mft_entry</span><span class="p">,</span> <span class="n">mft_attribute</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extract data from a NFTS $MFT attribute.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      mft_entry: The MFT entry (instance of pyfsntfs.file_entry).</span>
+<span class="sd">      mft_attribute: The MFT attribute (instance of pyfsntfs.attribute).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">mft_entry</span><span class="o">.</span><span class="n">is_empty</span><span class="p">()</span> <span class="ow">or</span> <span class="n">mft_entry</span><span class="o">.</span><span class="n">base_record_file_reference</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="k">if</span> <span class="n">mft_attribute</span><span class="o">.</span><span class="n">attribute_type</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_MFT_ATTRIBUTE_STANDARD_INFORMATION</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_MFT_ATTRIBUTE_FILE_NAME</span><span class="p">]:</span>
+
+      <span class="n">file_attribute_flags</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span>
+          <span class="n">mft_attribute</span><span class="p">,</span> <span class="s1">u&#39;file_attribute_flags&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+      <span class="n">name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mft_attribute</span><span class="p">,</span> <span class="s1">u&#39;name&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+      <span class="n">parent_file_reference</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span>
+          <span class="n">mft_attribute</span><span class="p">,</span> <span class="s1">u&#39;parent_file_reference&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">creation_time</span> <span class="o">=</span> <span class="n">mft_attribute</span><span class="o">.</span><span class="n">get_creation_time_as_integer</span><span class="p">()</span>
+      <span class="k">except</span> <span class="ne">OverflowError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+            <span class="s1">u&#39;unable to read the creation timestamp from MFT attribute: &#39;</span>
+            <span class="s1">u&#39;0x{0:08x} with error: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">mft_attribute</span><span class="o">.</span><span class="n">attribute_type</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+        <span class="n">creation_time</span> <span class="o">=</span> <span class="bp">None</span>
+
+      <span class="k">if</span> <span class="n">creation_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">file_system_events</span><span class="o">.</span><span class="n">NTFSFileStatEvent</span><span class="p">(</span>
+            <span class="n">creation_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">CREATION_TIME</span><span class="p">,</span>
+            <span class="n">mft_entry</span><span class="o">.</span><span class="n">file_reference</span><span class="p">,</span> <span class="n">mft_attribute</span><span class="o">.</span><span class="n">attribute_type</span><span class="p">,</span>
+            <span class="n">file_attribute_flags</span><span class="o">=</span><span class="n">file_attribute_flags</span><span class="p">,</span>
+            <span class="n">is_allocated</span><span class="o">=</span><span class="n">mft_entry</span><span class="o">.</span><span class="n">is_allocated</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">parent_file_reference</span><span class="o">=</span><span class="n">parent_file_reference</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">modification_time</span> <span class="o">=</span> <span class="n">mft_attribute</span><span class="o">.</span><span class="n">get_modification_time_as_integer</span><span class="p">()</span>
+      <span class="k">except</span> <span class="ne">OverflowError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+            <span class="s1">u&#39;unable to read the modification timestamp from MFT attribute: &#39;</span>
+            <span class="s1">u&#39;0x{0:08x} with error: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">mft_attribute</span><span class="o">.</span><span class="n">attribute_type</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+        <span class="n">modification_time</span> <span class="o">=</span> <span class="bp">None</span>
+
+      <span class="k">if</span> <span class="n">modification_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">file_system_events</span><span class="o">.</span><span class="n">NTFSFileStatEvent</span><span class="p">(</span>
+            <span class="n">modification_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">MODIFICATION_TIME</span><span class="p">,</span>
+            <span class="n">mft_entry</span><span class="o">.</span><span class="n">file_reference</span><span class="p">,</span> <span class="n">mft_attribute</span><span class="o">.</span><span class="n">attribute_type</span><span class="p">,</span>
+            <span class="n">file_attribute_flags</span><span class="o">=</span><span class="n">file_attribute_flags</span><span class="p">,</span>
+            <span class="n">is_allocated</span><span class="o">=</span><span class="n">mft_entry</span><span class="o">.</span><span class="n">is_allocated</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">parent_file_reference</span><span class="o">=</span><span class="n">parent_file_reference</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">access_time</span> <span class="o">=</span> <span class="n">mft_attribute</span><span class="o">.</span><span class="n">get_access_time_as_integer</span><span class="p">()</span>
+      <span class="k">except</span> <span class="ne">OverflowError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+            <span class="s1">u&#39;unable to read the access timestamp from MFT attribute: &#39;</span>
+            <span class="s1">u&#39;0x{0:08x} with error: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">exception</span><span class="p">,</span> <span class="n">mft_attribute</span><span class="o">.</span><span class="n">attribute_type</span><span class="p">))</span>
+        <span class="n">access_time</span> <span class="o">=</span> <span class="bp">None</span>
+
+      <span class="k">if</span> <span class="n">access_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">file_system_events</span><span class="o">.</span><span class="n">NTFSFileStatEvent</span><span class="p">(</span>
+            <span class="n">access_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">ACCESS_TIME</span><span class="p">,</span>
+            <span class="n">mft_entry</span><span class="o">.</span><span class="n">file_reference</span><span class="p">,</span> <span class="n">mft_attribute</span><span class="o">.</span><span class="n">attribute_type</span><span class="p">,</span>
+            <span class="n">file_attribute_flags</span><span class="o">=</span><span class="n">file_attribute_flags</span><span class="p">,</span>
+            <span class="n">is_allocated</span><span class="o">=</span><span class="n">mft_entry</span><span class="o">.</span><span class="n">is_allocated</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">parent_file_reference</span><span class="o">=</span><span class="n">parent_file_reference</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">entry_modification_time</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">mft_attribute</span><span class="o">.</span><span class="n">get_entry_modification_time_as_integer</span><span class="p">())</span>
+      <span class="k">except</span> <span class="ne">OverflowError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+            <span class="s1">u&#39;unable to read the entry modification timestamp from MFT &#39;</span>
+            <span class="s1">u&#39;attribute: 0x{0:08x} with error: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">mft_attribute</span><span class="o">.</span><span class="n">attribute_type</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+        <span class="n">entry_modification_time</span> <span class="o">=</span> <span class="bp">None</span>
+
+      <span class="k">if</span> <span class="n">entry_modification_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">file_system_events</span><span class="o">.</span><span class="n">NTFSFileStatEvent</span><span class="p">(</span>
+            <span class="n">entry_modification_time</span><span class="p">,</span>
+            <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">ENTRY_MODIFICATION_TIME</span><span class="p">,</span>
+            <span class="n">mft_entry</span><span class="o">.</span><span class="n">file_reference</span><span class="p">,</span> <span class="n">mft_attribute</span><span class="o">.</span><span class="n">attribute_type</span><span class="p">,</span>
+            <span class="n">file_attribute_flags</span><span class="o">=</span><span class="n">file_attribute_flags</span><span class="p">,</span>
+            <span class="n">is_allocated</span><span class="o">=</span><span class="n">mft_entry</span><span class="o">.</span><span class="n">is_allocated</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">parent_file_reference</span><span class="o">=</span><span class="n">parent_file_reference</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">mft_attribute</span><span class="o">.</span><span class="n">attribute_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_MFT_ATTRIBUTE_OBJECT_ID</span><span class="p">:</span>
+      <span class="n">display_name</span> <span class="o">=</span> <span class="s1">u&#39;$MFT: {0:d}-{1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">mft_entry</span><span class="o">.</span><span class="n">file_reference</span> <span class="o">&amp;</span> <span class="mh">0xffffffffffff</span><span class="p">,</span>
+          <span class="n">mft_entry</span><span class="o">.</span><span class="n">file_reference</span> <span class="o">&gt;&gt;</span> <span class="mi">48</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">mft_attribute</span><span class="o">.</span><span class="n">droid_file_identifier</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">uuid_object</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">(</span><span class="n">mft_attribute</span><span class="o">.</span><span class="n">droid_file_identifier</span><span class="p">)</span>
+          <span class="k">if</span> <span class="n">uuid_object</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">event_object</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">windows_events</span><span class="o">.</span><span class="n">WindowsDistributedLinkTrackingCreationEvent</span><span class="p">(</span>
+                    <span class="n">uuid_object</span><span class="p">,</span> <span class="n">display_name</span><span class="p">))</span>
+            <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+              <span class="s1">u&#39;unable to read droid file identifier from attribute: 0x{0:08x} &#39;</span>
+              <span class="s1">u&#39;with error: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                  <span class="n">mft_attribute</span><span class="o">.</span><span class="n">attribute_type</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+      <span class="k">if</span> <span class="n">mft_attribute</span><span class="o">.</span><span class="n">birth_droid_file_identifier</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">uuid_object</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">(</span><span class="n">mft_attribute</span><span class="o">.</span><span class="n">birth_droid_file_identifier</span><span class="p">)</span>
+          <span class="k">if</span> <span class="n">uuid_object</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">event_object</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">windows_events</span><span class="o">.</span><span class="n">WindowsDistributedLinkTrackingCreationEvent</span><span class="p">(</span>
+                    <span class="n">uuid_object</span><span class="p">,</span> <span class="n">display_name</span><span class="p">))</span>
+            <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+              <span class="s1">u&#39;unable to read birth droid file identifier from attribute: &#39;</span>
+              <span class="s1">u&#39;0x{0:08x} with error: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                  <span class="n">mft_attribute</span><span class="o">.</span><span class="n">attribute_type</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+  <span class="k">def</span> <span class="nf">_ParseMFTEntry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">mft_entry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extract data from a NFTS $MFT entry.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      mft_entry: The MFT entry (instance of pyfsntfs.file_entry).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">attribute_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mft_entry</span><span class="o">.</span><span class="n">number_of_attributes</span><span class="p">):</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">mft_attribute</span> <span class="o">=</span> <span class="n">mft_entry</span><span class="o">.</span><span class="n">get_attribute</span><span class="p">(</span><span class="n">attribute_index</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ParseMFTAttribute</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">mft_entry</span><span class="p">,</span> <span class="n">mft_attribute</span><span class="p">)</span>
+
+      <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+            <span class="s1">u&#39;unable to parse MFT attribute: {0:d} with error: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">attribute_index</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+<div class="viewcode-block" id="NTFSMFTParser.ParseFileObject"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.ntfs.NTFSMFTParser.ParseFileObject">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a NTFS $MFT metadata file-like object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: A file-like object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">mft_metadata_file</span> <span class="o">=</span> <span class="n">pyfsntfs</span><span class="o">.</span><span class="n">mft_metadata_file</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">mft_metadata_file</span><span class="o">.</span><span class="n">open_file_object</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;unable to open file with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">entry_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mft_metadata_file</span><span class="o">.</span><span class="n">number_of_file_entries</span><span class="p">):</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">mft_entry</span> <span class="o">=</span> <span class="n">mft_metadata_file</span><span class="o">.</span><span class="n">get_file_entry</span><span class="p">(</span><span class="n">entry_index</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ParseMFTEntry</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">mft_entry</span><span class="p">)</span>
+
+      <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+            <span class="s1">u&#39;unable to parse MFT entry: {0:d} with error: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">entry_index</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+    <span class="n">mft_metadata_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="NTFSUsnJrnlParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.ntfs.NTFSUsnJrnlParser">[docs]</a><span class="k">class</span> <span class="nc">NTFSUsnJrnlParser</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">FileObjectParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parses a NTFS USN change journal.&quot;&quot;&quot;</span>
+
+  <span class="n">_INITIAL_FILE_OFFSET</span> <span class="o">=</span> <span class="bp">None</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;usnjrnl&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for NTFS USN change journal ($UsnJrnl).&#39;</span>
+
+  <span class="n">_USN_RECORD_V2</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;usn_record_v2&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;major_version&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;minor_version&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;file_reference&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;parent_file_reference&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;update_sequence_number&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;update_date_time&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;update_reason_flags&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;update_source_flags&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;security_descriptor_identifier&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;file_attribute_flags&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;name_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;name_offset&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;name&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="o">.</span><span class="n">size</span> <span class="o">-</span> <span class="mi">60</span><span class="p">))</span>
+
+  <span class="c1"># TODO: add support for USN_RECORD_V3 when actually seen to be used.</span>
+
+  <span class="k">def</span> <span class="nf">_ParseUSNChangeJournal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">usn_change_journal</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses an USN change journal.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      usn_change_journal: An USN change journal object (instance of</span>
+<span class="sd">                          pyfsntsfs.usn_change_journal).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">usn_change_journal</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">usn_record_data</span> <span class="o">=</span> <span class="n">usn_change_journal</span><span class="o">.</span><span class="n">read_usn_record</span><span class="p">()</span>
+    <span class="k">while</span> <span class="n">usn_record_data</span><span class="p">:</span>
+      <span class="n">current_offset</span> <span class="o">=</span> <span class="n">usn_change_journal</span><span class="o">.</span><span class="n">get_offset</span><span class="p">()</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">usn_record_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_USN_RECORD_V2</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">usn_record_data</span><span class="p">)</span>
+      <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+            <span class="s1">u&#39;unable to parse USN record at offset: 0x{0:08x} &#39;</span>
+            <span class="s1">u&#39;with error: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">current_offset</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+        <span class="k">continue</span>
+
+      <span class="n">name_offset</span> <span class="o">=</span> <span class="n">usn_record_struct</span><span class="o">.</span><span class="n">name_offset</span> <span class="o">-</span> <span class="mi">60</span>
+      <span class="n">utf16_stream</span> <span class="o">=</span> <span class="n">usn_record_struct</span><span class="o">.</span><span class="n">name</span><span class="p">[</span>
+          <span class="n">name_offset</span><span class="p">:</span><span class="n">usn_record_struct</span><span class="o">.</span><span class="n">name_size</span><span class="p">]</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">name_string</span> <span class="o">=</span> <span class="n">utf16_stream</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-16-le&#39;</span><span class="p">)</span>
+      <span class="k">except</span> <span class="p">(</span><span class="ne">UnicodeDecodeError</span><span class="p">,</span> <span class="ne">UnicodeEncodeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">name_string</span> <span class="o">=</span> <span class="n">utf16_stream</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-16-le&#39;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">u&#39;replace&#39;</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+            <span class="s1">u&#39;unable to decode USN record name string with error: &#39;</span>
+            <span class="s1">u&#39;{0:s}. Characters that cannot be decoded will be replaced &#39;</span>
+            <span class="s1">u&#39;with &quot;?&quot; or &quot;</span><span class="se">\\</span><span class="s1">ufffd&quot;.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">file_system_events</span><span class="o">.</span><span class="n">NTFSUSNChangeEvent</span><span class="p">(</span>
+          <span class="n">usn_record_struct</span><span class="o">.</span><span class="n">update_date_time</span><span class="p">,</span> <span class="n">current_offset</span><span class="p">,</span>
+          <span class="n">name_string</span><span class="p">,</span> <span class="n">usn_record_struct</span><span class="o">.</span><span class="n">file_reference</span><span class="p">,</span>
+          <span class="n">usn_record_struct</span><span class="o">.</span><span class="n">update_sequence_number</span><span class="p">,</span>
+          <span class="n">usn_record_struct</span><span class="o">.</span><span class="n">update_source_flags</span><span class="p">,</span>
+          <span class="n">usn_record_struct</span><span class="o">.</span><span class="n">update_reason_flags</span><span class="p">,</span>
+          <span class="n">file_attribute_flags</span><span class="o">=</span><span class="n">usn_record_struct</span><span class="o">.</span><span class="n">file_attribute_flags</span><span class="p">,</span>
+          <span class="n">parent_file_reference</span><span class="o">=</span><span class="n">usn_record_struct</span><span class="o">.</span><span class="n">parent_file_reference</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="n">usn_record_data</span> <span class="o">=</span> <span class="n">usn_change_journal</span><span class="o">.</span><span class="n">read_usn_record</span><span class="p">()</span>
+
+<div class="viewcode-block" id="NTFSUsnJrnlParser.ParseFileObject"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.ntfs.NTFSUsnJrnlParser.ParseFileObject">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a NTFS $UsnJrnl metadata file-like object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: A file-like object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">volume</span> <span class="o">=</span> <span class="n">pyfsntfs</span><span class="o">.</span><span class="n">volume</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">volume</span><span class="o">.</span><span class="n">open_file_object</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;unable to open NTFS volume with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">usn_change_journal</span> <span class="o">=</span> <span class="n">volume</span><span class="o">.</span><span class="n">get_usn_change_journal</span><span class="p">()</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_ParseUSNChangeJournal</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">usn_change_journal</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="n">volume</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParsers</span><span class="p">([</span><span class="n">NTFSMFTParser</span><span class="p">,</span> <span class="n">NTFSUsnJrnlParser</span><span class="p">])</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

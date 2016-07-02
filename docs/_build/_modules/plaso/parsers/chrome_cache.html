@@ -1,0 +1,581 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.chrome_cache &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.chrome_cache</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Parser for Google Chrome and Chromium Cache files.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">construct</span>
+
+<span class="kn">from</span> <span class="nn">dfvfs.resolver</span> <span class="kn">import</span> <span class="n">resolver</span> <span class="k">as</span> <span class="n">path_spec_resolver</span>
+<span class="kn">from</span> <span class="nn">dfvfs.path</span> <span class="kn">import</span> <span class="n">factory</span> <span class="k">as</span> <span class="n">path_spec_factory</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+
+
+<div class="viewcode-block" id="CacheAddress"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.chrome_cache.CacheAddress">[docs]</a><span class="k">class</span> <span class="nc">CacheAddress</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that contains a cache address.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    block_number: an integer containing the block data file number.</span>
+<span class="sd">    block_offset: an integer containing the offset within the block data file.</span>
+<span class="sd">    block_size: an integer containing the block size.</span>
+<span class="sd">    filename: a string containing the name of the block data file.</span>
+<span class="sd">    value: an integer containing the cache address.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">FILE_TYPE_SEPARATE</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="n">FILE_TYPE_BLOCK_RANKINGS</span> <span class="o">=</span> <span class="mi">1</span>
+  <span class="n">FILE_TYPE_BLOCK_256</span> <span class="o">=</span> <span class="mi">2</span>
+  <span class="n">FILE_TYPE_BLOCK_1024</span> <span class="o">=</span> <span class="mi">3</span>
+  <span class="n">FILE_TYPE_BLOCK_4096</span> <span class="o">=</span> <span class="mi">4</span>
+
+  <span class="n">_BLOCK_DATA_FILE_TYPES</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="n">FILE_TYPE_BLOCK_RANKINGS</span><span class="p">,</span>
+      <span class="n">FILE_TYPE_BLOCK_256</span><span class="p">,</span>
+      <span class="n">FILE_TYPE_BLOCK_1024</span><span class="p">,</span>
+      <span class="n">FILE_TYPE_BLOCK_4096</span><span class="p">]</span>
+
+  <span class="n">_FILE_TYPE_BLOCK_SIZES</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">36</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="mi">4096</span><span class="p">]</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cache_address</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a cache address object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      cache_address: an integer containing the cache address.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">CacheAddress</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">block_number</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">block_offset</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">block_size</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">cache_address</span>
+
+    <span class="k">if</span> <span class="n">cache_address</span> <span class="o">&amp;</span> <span class="mh">0x80000000</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">is_initialized</span> <span class="o">=</span> <span class="s1">u&#39;True&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">is_initialized</span> <span class="o">=</span> <span class="s1">u&#39;False&#39;</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">file_type</span> <span class="o">=</span> <span class="p">(</span><span class="n">cache_address</span> <span class="o">&amp;</span> <span class="mh">0x70000000</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">28</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">cache_address</span> <span class="o">==</span> <span class="mh">0x00000000</span><span class="p">:</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">FILE_TYPE_SEPARATE</span><span class="p">:</span>
+        <span class="n">file_selector</span> <span class="o">=</span> <span class="n">cache_address</span> <span class="o">&amp;</span> <span class="mh">0x0fffffff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="s1">u&#39;f_{0:06x}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file_selector</span><span class="p">)</span>
+
+      <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_BLOCK_DATA_FILE_TYPES</span><span class="p">:</span>
+        <span class="n">file_selector</span> <span class="o">=</span> <span class="p">(</span><span class="n">cache_address</span> <span class="o">&amp;</span> <span class="mh">0x00ff0000</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="s1">u&#39;data_{0:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file_selector</span><span class="p">)</span>
+
+        <span class="n">file_block_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FILE_TYPE_BLOCK_SIZES</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">file_type</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block_number</span> <span class="o">=</span> <span class="n">cache_address</span> <span class="o">&amp;</span> <span class="mh">0x0000ffff</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">cache_address</span> <span class="o">&amp;</span> <span class="mh">0x03000000</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">24</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block_size</span> <span class="o">*=</span> <span class="n">file_block_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">block_offset</span> <span class="o">=</span> <span class="mi">8192</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">block_number</span> <span class="o">*</span> <span class="n">file_block_size</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CacheEntry"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.chrome_cache.CacheEntry">[docs]</a><span class="k">class</span> <span class="nc">CacheEntry</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that contains a cache entry.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    creation_time: an integer containing the creation time, in number of</span>
+<span class="sd">                   micro seconds since January 1, 1970, 00:00:00 UTC.</span>
+<span class="sd">    hash: an integer containing the super fast hash of the key.</span>
+<span class="sd">    key: a binary string containing the key.</span>
+<span class="sd">    next: an integer containing the cache address of the next cache entry.</span>
+<span class="sd">    rankings_node: an integer containing the cache address of the rankings</span>
+<span class="sd">                   node.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a cache entry object.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">CacheEntry</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">creation_time</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">hash</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">rankings_node</span> <span class="o">=</span> <span class="bp">None</span></div>
+
+
+<div class="viewcode-block" id="IndexFile"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.chrome_cache.IndexFile">[docs]</a><span class="k">class</span> <span class="nc">IndexFile</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that contains an index file.&quot;&quot;&quot;</span>
+
+  <span class="n">SIGNATURE</span> <span class="o">=</span> <span class="mh">0xc103cac3</span>
+
+  <span class="n">_FILE_HEADER</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;chrome_cache_index_file_header&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;signature&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;minor_version&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;major_version&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;number_of_entries&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;stored_data_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;last_created_file_number&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;unknown1&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;unknown2&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;table_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;unknown3&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;unknown4&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;creation_time&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">208</span><span class="p">))</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the index file object.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">IndexFile</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">creation_time</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">index_table</span> <span class="o">=</span> <span class="p">[]</span>
+
+  <span class="k">def</span> <span class="nf">_ReadFileHeader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads the file header.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      IOError: if the file header cannot be read.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_SET</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">file_header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FILE_HEADER</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unable to parse file header with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">exception</span><span class="p">))</span>
+
+    <span class="n">signature</span> <span class="o">=</span> <span class="n">file_header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;signature&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">signature</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SIGNATURE</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unsupported index file signature&#39;</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="s1">u&#39;{0:d}.{1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">file_header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;major_version&#39;</span><span class="p">),</span>
+        <span class="n">file_header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;minor_version&#39;</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">u&#39;2.0&#39;</span><span class="p">,</span> <span class="s1">u&#39;2.1&#39;</span><span class="p">]:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unsupported index file version: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">))</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">creation_time</span> <span class="o">=</span> <span class="n">file_header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;creation_time&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_ReadIndexTable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads the index table.&quot;&quot;&quot;</span>
+    <span class="n">cache_address_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">cache_address_data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+      <span class="n">value</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;cache_address&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">cache_address_data</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+        <span class="n">cache_address</span> <span class="o">=</span> <span class="n">CacheAddress</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index_table</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cache_address</span><span class="p">)</span>
+
+      <span class="n">cache_address_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+
+<div class="viewcode-block" id="IndexFile.Close"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.chrome_cache.IndexFile.Close">[docs]</a>  <span class="k">def</span> <span class="nf">Close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Closes the index file.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span> <span class="o">=</span> <span class="bp">None</span></div>
+
+<div class="viewcode-block" id="IndexFile.Open"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.chrome_cache.IndexFile.Open">[docs]</a>  <span class="k">def</span> <span class="nf">Open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Opens the index file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_object: the file object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span> <span class="o">=</span> <span class="n">file_object</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_ReadFileHeader</span><span class="p">()</span>
+    <span class="c1"># Skip over the LRU data, which is 112 bytes in size.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">112</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_CUR</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_ReadIndexTable</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="DataBlockFile"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.chrome_cache.DataBlockFile">[docs]</a><span class="k">class</span> <span class="nc">DataBlockFile</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that contains a data block file.&quot;&quot;&quot;</span>
+
+  <span class="n">SIGNATURE</span> <span class="o">=</span> <span class="mh">0xc104cac3</span>
+
+  <span class="n">_FILE_HEADER</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;chrome_cache_data_file_header&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;signature&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;minor_version&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;major_version&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;file_number&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;next_file_number&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;block_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;number_of_entries&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;maximum_number_of_entries&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;emtpy&#39;</span><span class="p">)),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;hints&#39;</span><span class="p">)),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;updating&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;user&#39;</span><span class="p">)))</span>
+
+  <span class="n">_CACHE_ENTRY</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;chrome_cache_entry&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;hash&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;next_address&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;rankings_node_address&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;reuse_count&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;refetch_count&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;state&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;creation_time&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;key_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;long_key_address&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;data_stream_sizes&#39;</span><span class="p">)),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;data_stream_addresses&#39;</span><span class="p">)),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;flags&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;self_hash&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">160</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;key&#39;</span><span class="p">)))</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the data block file object.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">DataBlockFile</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">creation_time</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">block_size</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">number_of_entries</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="bp">None</span>
+
+  <span class="k">def</span> <span class="nf">_ReadFileHeader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads the file header.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      IOError: if the file header cannot be read.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_SET</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">file_header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FILE_HEADER</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unable to parse file header with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">exception</span><span class="p">))</span>
+
+    <span class="n">signature</span> <span class="o">=</span> <span class="n">file_header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;signature&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">signature</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SIGNATURE</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unsupported data block file signature&#39;</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="s1">u&#39;{0:d}.{1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">file_header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;major_version&#39;</span><span class="p">),</span>
+        <span class="n">file_header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;minor_version&#39;</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">u&#39;2.0&#39;</span><span class="p">,</span> <span class="s1">u&#39;2.1&#39;</span><span class="p">]:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unsupported data block file version: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">))</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">block_size</span> <span class="o">=</span> <span class="n">file_header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;block_size&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">number_of_entries</span> <span class="o">=</span> <span class="n">file_header</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;number_of_entries&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DataBlockFile.ReadCacheEntry"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.chrome_cache.DataBlockFile.ReadCacheEntry">[docs]</a>  <span class="k">def</span> <span class="nf">ReadCacheEntry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block_offset</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads a cache entry.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      block_offset: The block offset of the cache entry.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A cache entry (instance of CacheEntry).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">block_offset</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_SET</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">cache_entry_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHE_ENTRY</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unable to parse cache entry with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">exception</span><span class="p">))</span>
+
+    <span class="n">cache_entry</span> <span class="o">=</span> <span class="n">CacheEntry</span><span class="p">()</span>
+
+    <span class="n">cache_entry</span><span class="o">.</span><span class="n">hash</span> <span class="o">=</span> <span class="n">cache_entry_struct</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;hash&#39;</span><span class="p">)</span>
+
+    <span class="n">cache_entry</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">CacheAddress</span><span class="p">(</span><span class="n">cache_entry_struct</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;next_address&#39;</span><span class="p">))</span>
+    <span class="n">cache_entry</span><span class="o">.</span><span class="n">rankings_node</span> <span class="o">=</span> <span class="n">CacheAddress</span><span class="p">(</span><span class="n">cache_entry_struct</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="s1">u&#39;rankings_node_address&#39;</span><span class="p">))</span>
+
+    <span class="n">cache_entry</span><span class="o">.</span><span class="n">creation_time</span> <span class="o">=</span> <span class="n">cache_entry_struct</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;creation_time&#39;</span><span class="p">)</span>
+
+    <span class="n">byte_array</span> <span class="o">=</span> <span class="n">cache_entry_struct</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;key&#39;</span><span class="p">)</span>
+    <span class="n">byte_string</span> <span class="o">=</span> <span class="n">b</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">chr</span><span class="p">,</span> <span class="n">byte_array</span><span class="p">))</span>
+    <span class="n">cache_entry</span><span class="o">.</span><span class="n">key</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">byte_string</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">cache_entry</span></div>
+
+<div class="viewcode-block" id="DataBlockFile.Close"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.chrome_cache.DataBlockFile.Close">[docs]</a>  <span class="k">def</span> <span class="nf">Close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Closes the data block file.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span> <span class="o">=</span> <span class="bp">None</span></div>
+
+<div class="viewcode-block" id="DataBlockFile.Open"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.chrome_cache.DataBlockFile.Open">[docs]</a>  <span class="k">def</span> <span class="nf">Open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Opens the data block file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_object: the file object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span> <span class="o">=</span> <span class="n">file_object</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_ReadFileHeader</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="ChromeCacheEntryEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.chrome_cache.ChromeCacheEntryEvent">[docs]</a><span class="k">class</span> <span class="nc">ChromeCacheEntryEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">WebKitTimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that contains a Chrome Cache event.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;chrome:cache:entry&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">creation_time</span><span class="p">,</span> <span class="n">original_url</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      creation_time: an integer containing the creation time, in number of</span>
+<span class="sd">                     micro seconds since January 1, 1970, 00:00:00 UTC.</span>
+<span class="sd">      original_url: a string containing the original URL or an empty string</span>
+<span class="sd">                    if not available.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">ChromeCacheEntryEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">creation_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">CREATION_TIME</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">original_url</span> <span class="o">=</span> <span class="n">original_url</span></div>
+
+
+<div class="viewcode-block" id="ChromeCacheParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.chrome_cache.ChromeCacheParser">[docs]</a><span class="k">class</span> <span class="nc">ChromeCacheParser</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">FileEntryParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parses Chrome Cache files.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;chrome_cache&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for Chrome Cache files.&#39;</span>
+
+  <span class="k">def</span> <span class="nf">_ParseCacheEntries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">index_file</span><span class="p">,</span> <span class="n">data_block_files</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses Chrome Cache file entries.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      index_file: A Chrome cache index file object (instance of IndexFile).</span>
+<span class="sd">      data_block_files: A dictionary containing the data block files lookup</span>
+<span class="sd">                        table which contains data block file objects (instances</span>
+<span class="sd">                        of DataBlockFile).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Parse the cache entries in the data block files.</span>
+    <span class="k">for</span> <span class="n">cache_address</span> <span class="ow">in</span> <span class="n">index_file</span><span class="o">.</span><span class="n">index_table</span><span class="p">:</span>
+      <span class="n">cache_address_chain_length</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="k">while</span> <span class="n">cache_address</span><span class="o">.</span><span class="n">value</span> <span class="o">!=</span> <span class="mh">0x00000000</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">cache_address_chain_length</span> <span class="o">&gt;=</span> <span class="mi">64</span><span class="p">:</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+              <span class="s1">u&#39;Maximum allowed cache address chain length reached.&#39;</span><span class="p">)</span>
+          <span class="k">break</span>
+
+        <span class="n">data_file</span> <span class="o">=</span> <span class="n">data_block_files</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cache_address</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">data_file</span><span class="p">:</span>
+          <span class="n">message</span> <span class="o">=</span> <span class="s1">u&#39;Cache address: 0x{0:08x} missing data file.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">cache_address</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+          <span class="k">break</span>
+
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">cache_entry</span> <span class="o">=</span> <span class="n">data_file</span><span class="o">.</span><span class="n">ReadCacheEntry</span><span class="p">(</span><span class="n">cache_address</span><span class="o">.</span><span class="n">block_offset</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="ne">UnicodeDecodeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+              <span class="s1">u&#39;Unable to parse cache entry with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                  <span class="n">exception</span><span class="p">))</span>
+          <span class="k">break</span>
+
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">original_url</span> <span class="o">=</span> <span class="n">cache_entry</span><span class="o">.</span><span class="n">key</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;ascii&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+          <span class="n">original_url</span> <span class="o">=</span> <span class="n">cache_entry</span><span class="o">.</span><span class="n">key</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;ascii&#39;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">u&#39;replace&#39;</span><span class="p">)</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+              <span class="s1">u&#39;unable to decode cache entry key at cache address: &#39;</span>
+              <span class="s1">u&#39;0x{0:08x}. Characters that cannot be decoded will be &#39;</span>
+              <span class="s1">u&#39;replaced with &quot;?&quot; or &quot;</span><span class="se">\\</span><span class="s1">ufffd&quot;.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cache_address</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">ChromeCacheEntryEvent</span><span class="p">(</span>
+            <span class="n">cache_entry</span><span class="o">.</span><span class="n">creation_time</span><span class="p">,</span> <span class="n">original_url</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+        <span class="n">cache_address</span> <span class="o">=</span> <span class="n">cache_entry</span><span class="o">.</span><span class="n">next</span>
+        <span class="n">cache_address_chain_length</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="ChromeCacheParser.ParseFileEntry"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.chrome_cache.ChromeCacheParser.ParseFileEntry">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileEntry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses Chrome Cache files.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: a parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_entry: a file entry object (instance of dfvfs.FileEntry).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      UnableToParseFile: when the file cannot be parsed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">index_file</span> <span class="o">=</span> <span class="n">IndexFile</span><span class="p">()</span>
+    <span class="n">file_object</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetFileObject</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">index_file</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">file_object</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+      <span class="n">display_name</span> <span class="o">=</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">GetDisplayName</span><span class="p">()</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;[{0:s}] unable to parse index file {1:s} with error: {2:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">display_name</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">file_system</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetFileSystem</span><span class="p">()</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">ParseIndexFile</span><span class="p">(</span>
+          <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_system</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">,</span> <span class="n">index_file</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="n">index_file</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ChromeCacheParser.ParseIndexFile"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.chrome_cache.ChromeCacheParser.ParseIndexFile">[docs]</a>  <span class="k">def</span> <span class="nf">ParseIndexFile</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_system</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">,</span> <span class="n">index_file</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a Chrome Cache index file object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_system: The file system object (instance of dfvfs.FileSystem).</span>
+<span class="sd">      file_entry: The file entry object (instance of dfvfs.FileEntry).</span>
+<span class="sd">      index_file: An index file object (instance of IndexFile)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Build a lookup table for the data block files.</span>
+    <span class="n">path_segments</span> <span class="o">=</span> <span class="n">file_system</span><span class="o">.</span><span class="n">SplitPath</span><span class="p">(</span><span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="o">.</span><span class="n">location</span><span class="p">)</span>
+
+    <span class="n">data_block_files</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">cache_address</span> <span class="ow">in</span> <span class="n">index_file</span><span class="o">.</span><span class="n">index_table</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">cache_address</span><span class="o">.</span><span class="n">filename</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data_block_files</span><span class="p">:</span>
+        <span class="c1"># Remove the previous filename from the path segments list and</span>
+        <span class="c1"># add one of the data block file.</span>
+        <span class="n">path_segments</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="n">path_segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cache_address</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+
+        <span class="c1"># We need to pass only used arguments to the path specification</span>
+        <span class="c1"># factory otherwise it will raise.</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="o">.</span><span class="n">parent</span><span class="p">:</span>
+          <span class="n">kwargs</span><span class="p">[</span><span class="s1">u&#39;parent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="o">.</span><span class="n">parent</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">u&#39;location&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">file_system</span><span class="o">.</span><span class="n">JoinPath</span><span class="p">(</span><span class="n">path_segments</span><span class="p">)</span>
+
+        <span class="n">data_block_file_path_spec</span> <span class="o">=</span> <span class="n">path_spec_factory</span><span class="o">.</span><span class="n">Factory</span><span class="o">.</span><span class="n">NewPathSpec</span><span class="p">(</span>
+            <span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="o">.</span><span class="n">TYPE_INDICATOR</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">data_block_file_entry</span> <span class="o">=</span> <span class="n">path_spec_resolver</span><span class="o">.</span><span class="n">Resolver</span><span class="o">.</span><span class="n">OpenFileEntry</span><span class="p">(</span>
+              <span class="n">data_block_file_path_spec</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+          <span class="n">message</span> <span class="o">=</span> <span class="p">(</span>
+              <span class="s1">u&#39;Unable to open data block file: {0:s} with error: &#39;</span>
+              <span class="s1">u&#39;{1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">u&#39;location&#39;</span><span class="p">],</span> <span class="n">exception</span><span class="p">))</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+          <span class="n">data_block_file_entry</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">data_block_file_entry</span><span class="p">:</span>
+          <span class="n">message</span> <span class="o">=</span> <span class="s1">u&#39;Missing data block file: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">cache_address</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+          <span class="n">data_block_file</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">data_block_file_object</span> <span class="o">=</span> <span class="n">data_block_file_entry</span><span class="o">.</span><span class="n">GetFileObject</span><span class="p">()</span>
+          <span class="n">data_block_file</span> <span class="o">=</span> <span class="n">DataBlockFile</span><span class="p">()</span>
+
+          <span class="k">try</span><span class="p">:</span>
+            <span class="n">data_block_file</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">data_block_file_object</span><span class="p">)</span>
+          <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+            <span class="n">message</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s1">u&#39;Unable to open data block file: {0:s} with error: &#39;</span>
+                <span class="s1">u&#39;{1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cache_address</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="n">exception</span><span class="p">)</span>
+            <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+            <span class="n">data_block_file</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="n">data_block_files</span><span class="p">[</span><span class="n">cache_address</span><span class="o">.</span><span class="n">filename</span><span class="p">]</span> <span class="o">=</span> <span class="n">data_block_file</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_ParseCacheEntries</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">index_file</span><span class="p">,</span> <span class="n">data_block_files</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">data_block_file</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">data_block_files</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+        <span class="k">if</span> <span class="n">data_block_file</span><span class="p">:</span>
+          <span class="n">data_block_file</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParser</span><span class="p">(</span><span class="n">ChromeCacheParser</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

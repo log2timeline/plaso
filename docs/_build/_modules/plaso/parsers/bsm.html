@@ -1,0 +1,1205 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.bsm &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.bsm</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Basic Security Module Parser.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">binascii</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">socket</span>
+
+<span class="kn">import</span> <span class="nn">construct</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+<span class="kn">from</span> <span class="nn">plaso.unix</span> <span class="kn">import</span> <span class="n">bsmtoken</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+
+<span class="kn">import</span> <span class="nn">pytz</span>  <span class="c1"># pylint: disable=wrong-import-order</span>
+
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)&#39;</span>
+
+
+<span class="c1"># Note that we&#39;re using Array and a helper function here instead of</span>
+<span class="c1"># PascalString because the latter seems to break pickling on Windows.</span>
+
+<span class="k">def</span> <span class="nf">_BsmTokenGetLength</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Construct context parser helper function to replace lambda.&quot;&quot;&quot;</span>
+  <span class="k">return</span> <span class="n">context</span><span class="o">.</span><span class="n">length</span>
+
+
+<span class="c1"># Note that we&#39;re using RepeatUntil and a helper function here instead of</span>
+<span class="c1"># CString because the latter seems to break pickling on Windows.</span>
+
+<span class="k">def</span> <span class="nf">_BsmTokenIsEndOfString</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">unused_context</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Construct context parser helper function to replace lambda.&quot;&quot;&quot;</span>
+  <span class="k">return</span> <span class="n">value</span> <span class="o">==</span> <span class="n">b</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span>
+
+
+<span class="c1"># Note that we&#39;re using Switch and a helper function here instead of</span>
+<span class="c1"># IfThenElse because the latter seems to break pickling on Windows.</span>
+
+<span class="k">def</span> <span class="nf">_BsmTokenGetNetType</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Construct context parser helper function to replace lambda.&quot;&quot;&quot;</span>
+  <span class="k">return</span> <span class="n">context</span><span class="o">.</span><span class="n">net_type</span>
+
+
+<span class="k">def</span> <span class="nf">_BsmTokenGetSocketDomain</span><span class="p">(</span><span class="n">context</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Construct context parser helper function to replace lambda.&quot;&quot;&quot;</span>
+  <span class="k">return</span> <span class="n">context</span><span class="o">.</span><span class="n">socket_domain</span>
+
+
+<div class="viewcode-block" id="MacBsmEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.bsm.MacBsmEvent">[docs]</a><span class="k">class</span> <span class="nc">MacBsmEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">TimestampEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for a Mac OS X BSM event.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;mac:bsm:event&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">event_type</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">extra_tokens</span><span class="p">,</span> <span class="n">return_value</span><span class="p">,</span> <span class="n">record_length</span><span class="p">,</span>
+      <span class="n">offset</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_type: String with the text and ID that represents the event type.</span>
+<span class="sd">      timestamp: The timestamp which is an integer containing the number</span>
+<span class="sd">                 of micro seconds since January 1, 1970, 00:00:00 UTC.</span>
+<span class="sd">      extra_tokens: List of the extra tokens of the entry.</span>
+<span class="sd">      return_value: String with the process return value and exit status.</span>
+<span class="sd">      record_length: Record length in bytes (trailer number).</span>
+<span class="sd">      offset: The offset in bytes to where the record starts in the file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">MacBsmEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">CREATION_TIME</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">event_type</span> <span class="o">=</span> <span class="n">event_type</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">extra_tokens</span> <span class="o">=</span> <span class="n">extra_tokens</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">return_value</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">record_length</span> <span class="o">=</span> <span class="n">record_length</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">offset</span></div>
+
+
+<div class="viewcode-block" id="BsmEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.bsm.BsmEvent">[docs]</a><span class="k">class</span> <span class="nc">BsmEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">TimestampEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for a Generic BSM event.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;bsm:event&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">event_type</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">extra_tokens</span><span class="p">,</span> <span class="n">record_length</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_type: Text and integer ID that represents the type of the event.</span>
+<span class="sd">      timestamp: The timestamp which is an integer containing the number</span>
+<span class="sd">                 of micro seconds since January 1, 1970, 00:00:00 UTC.</span>
+<span class="sd">      extra_tokens: List of the extra tokens of the entry.</span>
+<span class="sd">      record_length: Record length in bytes (trailer number).</span>
+<span class="sd">      offset: The offset in bytes to where the record starts in the file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">BsmEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">CREATION_TIME</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">event_type</span> <span class="o">=</span> <span class="n">event_type</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">extra_tokens</span> <span class="o">=</span> <span class="n">extra_tokens</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">record_length</span> <span class="o">=</span> <span class="n">record_length</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">offset</span></div>
+
+
+<div class="viewcode-block" id="BsmParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.bsm.BsmParser">[docs]</a><span class="k">class</span> <span class="nc">BsmParser</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">FileObjectParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parser for BSM files.&quot;&quot;&quot;</span>
+
+  <span class="n">_INITIAL_FILE_OFFSET</span> <span class="o">=</span> <span class="bp">None</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;bsm_log&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for BSM log files.&#39;</span>
+
+  <span class="c1"># BSM supported version (0x0b = 11).</span>
+  <span class="n">AUDIT_HEADER_VERSION</span> <span class="o">=</span> <span class="mi">11</span>
+
+  <span class="c1"># Magic Trail Header.</span>
+  <span class="n">BSM_TOKEN_TRAILER_MAGIC</span> <span class="o">=</span> <span class="n">b</span><span class="s1">&#39;b105&#39;</span>
+
+  <span class="c1"># IP Version constants.</span>
+  <span class="n">AU_IPv4</span> <span class="o">=</span> <span class="mi">4</span>
+  <span class="n">AU_IPv6</span> <span class="o">=</span> <span class="mi">16</span>
+
+  <span class="n">IPV4_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;ipv4&#39;</span><span class="p">)</span>
+
+  <span class="n">IPV6_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;ipv6&#39;</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;high&#39;</span><span class="p">),</span> <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;low&#39;</span><span class="p">))</span>
+
+  <span class="c1"># Tested structures.</span>
+  <span class="c1"># INFO: I have ommited the ID in the structures declaration.</span>
+  <span class="c1">#       I used the BSM_TYPE first to read the ID, and then, the structure.</span>
+  <span class="c1"># Tokens always start with an ID value that identifies their token</span>
+  <span class="c1"># type and subsequent structure.</span>
+  <span class="n">BSM_TYPE</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;token_id&#39;</span><span class="p">)</span>
+
+  <span class="c1"># Data type structures.</span>
+  <span class="n">BSM_TOKEN_DATA_CHAR</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;value&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+  <span class="n">BSM_TOKEN_DATA_SHORT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;value&#39;</span><span class="p">)</span>
+  <span class="n">BSM_TOKEN_DATA_INTEGER</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;value&#39;</span><span class="p">)</span>
+
+  <span class="c1"># Common structure used by other structures.</span>
+  <span class="c1"># audit_uid: integer, uid that generates the entry.</span>
+  <span class="c1"># effective_uid: integer, the permission user used.</span>
+  <span class="c1"># effective_gid: integer, the permission group used.</span>
+  <span class="c1"># real_uid: integer, user id of the user that execute the process.</span>
+  <span class="c1"># real_gid: integer, group id of the group that execute the process.</span>
+  <span class="c1"># pid: integer, identification number of the process.</span>
+  <span class="c1"># session_id: unknown, need research.</span>
+  <span class="n">BSM_TOKEN_SUBJECT_SHORT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;subject_data&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;audit_uid&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;effective_uid&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;effective_gid&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;real_uid&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;real_gid&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;pid&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;session_id&#39;</span><span class="p">))</span>
+
+  <span class="c1"># Common structure used by other structures.</span>
+  <span class="c1"># Identify the kind of inet (IPv4 or IPv6)</span>
+  <span class="c1"># TODO: instead of 16, AU_IPv6 must be used.</span>
+  <span class="n">BSM_IP_TYPE_SHORT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_ip_type_short&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;net_type&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Switch</span><span class="p">(</span>
+          <span class="s1">u&#39;ip_addr&#39;</span><span class="p">,</span>
+          <span class="n">_BsmTokenGetNetType</span><span class="p">,</span>
+          <span class="p">{</span><span class="mi">16</span><span class="p">:</span> <span class="n">IPV6_STRUCT</span><span class="p">},</span>
+          <span class="n">default</span><span class="o">=</span><span class="n">IPV4_STRUCT</span><span class="p">))</span>
+
+  <span class="c1"># Initial fields structure used by header structures.</span>
+  <span class="c1"># length: integer, the length of the entry, equal to trailer (doc: length).</span>
+  <span class="c1"># version: integer, version of BSM (AUDIT_HEADER_VERSION).</span>
+  <span class="c1"># event_type: integer, the type of event (/etc/security/audit_event).</span>
+  <span class="c1"># modifier: integer, unknown, need research (It is always 0).</span>
+  <span class="n">BSM_HEADER</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_header&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;length&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;version&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;event_type&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;modifier&#39;</span><span class="p">))</span>
+
+  <span class="c1"># First token of one entry.</span>
+  <span class="c1"># timestamp: unsigned integer, number of seconds since</span>
+  <span class="c1">#            January 1, 1970 00:00:00 UTC.</span>
+  <span class="c1"># microsecond: unsigned integer, number of micro seconds.</span>
+  <span class="n">BSM_HEADER32</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_header32&#39;</span><span class="p">,</span>
+      <span class="n">BSM_HEADER</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;timestamp&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;microsecond&#39;</span><span class="p">))</span>
+
+  <span class="n">BSM_HEADER64</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_header64&#39;</span><span class="p">,</span>
+      <span class="n">BSM_HEADER</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;timestamp&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;microsecond&#39;</span><span class="p">))</span>
+
+  <span class="n">BSM_HEADER32_EX</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_header32_ex&#39;</span><span class="p">,</span>
+      <span class="n">BSM_HEADER</span><span class="p">,</span>
+      <span class="n">BSM_IP_TYPE_SHORT</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;timestamp&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;microsecond&#39;</span><span class="p">))</span>
+
+  <span class="c1"># Token TEXT, provides extra information.</span>
+  <span class="n">BSM_TOKEN_TEXT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_text&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;length&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="n">_BsmTokenGetLength</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;text&#39;</span><span class="p">)))</span>
+
+  <span class="c1"># Path of the executable.</span>
+  <span class="n">BSM_TOKEN_PATH</span> <span class="o">=</span> <span class="n">BSM_TOKEN_TEXT</span>
+
+  <span class="c1"># Identified the end of the record (follow by TRAILER).</span>
+  <span class="c1"># status: integer that identifies the status of the exit (BSM_ERRORS).</span>
+  <span class="c1"># return: returned value from the operation.</span>
+  <span class="n">BSM_TOKEN_RETURN32</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_return32&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;status&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;return_value&#39;</span><span class="p">))</span>
+
+  <span class="n">BSM_TOKEN_RETURN64</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_return64&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;status&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;return_value&#39;</span><span class="p">))</span>
+
+  <span class="c1"># Identified the number of bytes that was written.</span>
+  <span class="c1"># magic: 2 bytes that identifies the TRAILER (BSM_TOKEN_TRAILER_MAGIC).</span>
+  <span class="c1"># length: integer that has the number of bytes from the entry size.</span>
+  <span class="n">BSM_TOKEN_TRAILER</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_trailer&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;magic&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;record_length&#39;</span><span class="p">))</span>
+
+  <span class="c1"># A 32-bits argument.</span>
+  <span class="c1"># num_arg: the number of the argument.</span>
+  <span class="c1"># name_arg: the argument&#39;s name.</span>
+  <span class="c1"># text: the string value of the argument.</span>
+  <span class="n">BSM_TOKEN_ARGUMENT32</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_argument32&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;num_arg&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;name_arg&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;length&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="n">_BsmTokenGetLength</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;text&#39;</span><span class="p">)))</span>
+
+  <span class="c1"># A 64-bits argument.</span>
+  <span class="c1"># num_arg: integer, the number of the argument.</span>
+  <span class="c1"># name_arg: text, the argument&#39;s name.</span>
+  <span class="c1"># text: the string value of the argument.</span>
+  <span class="n">BSM_TOKEN_ARGUMENT64</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_argument64&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;num_arg&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;name_arg&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;length&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="n">_BsmTokenGetLength</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;text&#39;</span><span class="p">)))</span>
+
+  <span class="c1"># Identify an user.</span>
+  <span class="c1"># terminal_id: unknown, research needed.</span>
+  <span class="c1"># terminal_addr: unknown, research needed.</span>
+  <span class="n">BSM_TOKEN_SUBJECT32</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_subject32&#39;</span><span class="p">,</span>
+      <span class="n">BSM_TOKEN_SUBJECT_SHORT</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;terminal_port&#39;</span><span class="p">),</span>
+      <span class="n">IPV4_STRUCT</span><span class="p">)</span>
+
+  <span class="c1"># Identify an user using a extended Token.</span>
+  <span class="c1"># terminal_port: unknown, need research.</span>
+  <span class="c1"># net_type: unknown, need research.</span>
+  <span class="n">BSM_TOKEN_SUBJECT32_EX</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_subject32_ex&#39;</span><span class="p">,</span>
+      <span class="n">BSM_TOKEN_SUBJECT_SHORT</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;terminal_port&#39;</span><span class="p">),</span>
+      <span class="n">BSM_IP_TYPE_SHORT</span><span class="p">)</span>
+
+  <span class="c1"># au_to_opaque // AUT_OPAQUE</span>
+  <span class="n">BSM_TOKEN_OPAQUE</span> <span class="o">=</span> <span class="n">BSM_TOKEN_TEXT</span>
+
+  <span class="c1"># au_to_seq // AUT_SEQ</span>
+  <span class="n">BSM_TOKEN_SEQUENCE</span> <span class="o">=</span> <span class="n">BSM_TOKEN_DATA_INTEGER</span>
+
+  <span class="c1"># Program execution with options.</span>
+  <span class="c1"># For each argument we are going to have a string+ &quot;\x00&quot;.</span>
+  <span class="c1"># Example: [00 00 00 02][41 42 43 00 42 42 00]</span>
+  <span class="c1">#          2 Arguments, Arg1: [414243] Arg2: [4242].</span>
+  <span class="n">BSM_TOKEN_EXEC_ARGUMENTS</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;number_arguments&#39;</span><span class="p">)</span>
+
+  <span class="n">BSM_TOKEN_EXEC_ARGUMENT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_exec_argument&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">RepeatUntil</span><span class="p">(</span>
+          <span class="n">_BsmTokenIsEndOfString</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">StaticField</span><span class="p">(</span><span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+
+  <span class="c1"># au_to_in_addr // AUT_IN_ADDR:</span>
+  <span class="n">BSM_TOKEN_ADDR</span> <span class="o">=</span> <span class="n">IPV4_STRUCT</span>
+
+  <span class="c1"># au_to_in_addr_ext // AUT_IN_ADDR_EX:</span>
+  <span class="n">BSM_TOKEN_ADDR_EXT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_addr_ext&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;net_type&#39;</span><span class="p">),</span>
+      <span class="n">IPV6_STRUCT</span><span class="p">)</span>
+
+  <span class="c1"># au_to_ip // AUT_IP:</span>
+  <span class="c1"># TODO: parse this header in the correct way.</span>
+  <span class="n">BSM_TOKEN_IP</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;binary_ipv4_add&#39;</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+
+  <span class="c1"># au_to_ipc // AUT_IPC:</span>
+  <span class="n">BSM_TOKEN_IPC</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_ipc&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;object_type&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;object_id&#39;</span><span class="p">))</span>
+
+  <span class="c1"># au_to_ipc_perm // au_to_ipc_perm</span>
+  <span class="n">BSM_TOKEN_IPC_PERM</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_ipc_perm&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;user_id&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;group_id&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;creator_user_id&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;creator_group_id&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;access_mode&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;slot_seq&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;key&#39;</span><span class="p">))</span>
+
+  <span class="c1"># au_to_iport // AUT_IPORT:</span>
+  <span class="n">BSM_TOKEN_PORT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;port_number&#39;</span><span class="p">)</span>
+
+  <span class="c1"># au_to_file // AUT_OTHER_FILE32:</span>
+  <span class="n">BSM_TOKEN_FILE</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_file&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;timestamp&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;microsecond&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;length&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="n">_BsmTokenGetLength</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;text&#39;</span><span class="p">)))</span>
+
+  <span class="c1"># au_to_subject64 // AUT_SUBJECT64:</span>
+  <span class="n">BSM_TOKEN_SUBJECT64</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_subject64&#39;</span><span class="p">,</span>
+      <span class="n">BSM_TOKEN_SUBJECT_SHORT</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;terminal_port&#39;</span><span class="p">),</span>
+      <span class="n">IPV4_STRUCT</span><span class="p">)</span>
+
+  <span class="c1"># au_to_subject64_ex // AU_IPv4:</span>
+  <span class="n">BSM_TOKEN_SUBJECT64_EX</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_subject64_ex&#39;</span><span class="p">,</span>
+      <span class="n">BSM_TOKEN_SUBJECT_SHORT</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;terminal_port&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;terminal_type&#39;</span><span class="p">),</span>
+      <span class="n">BSM_IP_TYPE_SHORT</span><span class="p">)</span>
+
+  <span class="c1"># au_to_process32 // AUT_PROCESS32:</span>
+  <span class="n">BSM_TOKEN_PROCESS32</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_process32&#39;</span><span class="p">,</span>
+      <span class="n">BSM_TOKEN_SUBJECT_SHORT</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;terminal_port&#39;</span><span class="p">),</span>
+      <span class="n">IPV4_STRUCT</span><span class="p">)</span>
+
+  <span class="c1"># au_to_process64 // AUT_PROCESS32:</span>
+  <span class="n">BSM_TOKEN_PROCESS64</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_process64&#39;</span><span class="p">,</span>
+      <span class="n">BSM_TOKEN_SUBJECT_SHORT</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;terminal_port&#39;</span><span class="p">),</span>
+      <span class="n">IPV4_STRUCT</span><span class="p">)</span>
+
+  <span class="c1"># au_to_process32_ex // AUT_PROCESS32_EX:</span>
+  <span class="n">BSM_TOKEN_PROCESS32_EX</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_process32_ex&#39;</span><span class="p">,</span>
+      <span class="n">BSM_TOKEN_SUBJECT_SHORT</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;terminal_port&#39;</span><span class="p">),</span>
+      <span class="n">BSM_IP_TYPE_SHORT</span><span class="p">)</span>
+
+  <span class="c1"># au_to_process64_ex // AUT_PROCESS64_EX:</span>
+  <span class="n">BSM_TOKEN_PROCESS64_EX</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_process64_ex&#39;</span><span class="p">,</span>
+      <span class="n">BSM_TOKEN_SUBJECT_SHORT</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;terminal_port&#39;</span><span class="p">),</span>
+      <span class="n">BSM_IP_TYPE_SHORT</span><span class="p">)</span>
+
+  <span class="c1"># au_to_sock_inet32 // AUT_SOCKINET32:</span>
+  <span class="n">BSM_TOKEN_AUT_SOCKINET32</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_aut_sockinet32&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;net_type&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;port_number&#39;</span><span class="p">),</span>
+      <span class="n">IPV4_STRUCT</span><span class="p">)</span>
+
+  <span class="c1"># Info: checked against the source code of XNU, but not against</span>
+  <span class="c1">#       real BSM file.</span>
+  <span class="n">BSM_TOKEN_AUT_SOCKINET128</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_aut_sockinet128&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;net_type&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;port_number&#39;</span><span class="p">),</span>
+      <span class="n">IPV6_STRUCT</span><span class="p">)</span>
+
+  <span class="n">INET6_ADDR_TYPE</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;addr_type&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;ip_type&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;source_port&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;saddr_high&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;saddr_low&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;destination_port&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;daddr_high&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;daddr_low&#39;</span><span class="p">))</span>
+
+  <span class="n">INET4_ADDR_TYPE</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;addr_type&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;ip_type&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;source_port&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;source_address&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;destination_port&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;destination_address&#39;</span><span class="p">))</span>
+
+  <span class="c1"># au_to_socket_ex // AUT_SOCKET_EX</span>
+  <span class="c1"># TODO: Change the 26 for unixbsm.BSM_PROTOCOLS.INET6.</span>
+  <span class="n">BSM_TOKEN_AUT_SOCKINET32_EX</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_aut_sockinet32_ex&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;socket_domain&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;socket_type&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Switch</span><span class="p">(</span>
+          <span class="s1">u&#39;structure_addr_port&#39;</span><span class="p">,</span>
+          <span class="n">_BsmTokenGetSocketDomain</span><span class="p">,</span>
+          <span class="p">{</span><span class="mi">26</span><span class="p">:</span> <span class="n">INET6_ADDR_TYPE</span><span class="p">},</span>
+          <span class="n">default</span><span class="o">=</span><span class="n">INET4_ADDR_TYPE</span><span class="p">))</span>
+
+  <span class="c1"># au_to_sock_unix // AUT_SOCKUNIX</span>
+  <span class="n">BSM_TOKEN_SOCKET_UNIX</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_au_to_sock_unix&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;family&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">RepeatUntil</span><span class="p">(</span>
+          <span class="n">_BsmTokenIsEndOfString</span><span class="p">,</span>
+          <span class="n">construct</span><span class="o">.</span><span class="n">StaticField</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+
+  <span class="c1"># au_to_data // au_to_data</span>
+  <span class="c1"># how to print: bsmtoken.BSM_TOKEN_DATA_PRINT.</span>
+  <span class="c1"># type: bsmtoken.BSM_TOKEN_DATA_TYPE.</span>
+  <span class="c1"># unit_count: number of type values.</span>
+  <span class="c1"># BSM_TOKEN_DATA has a end field = type * unit_count</span>
+  <span class="n">BSM_TOKEN_DATA</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_data&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;how_to_print&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;data_type&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;unit_count&#39;</span><span class="p">))</span>
+
+  <span class="c1"># au_to_attr32 // AUT_ATTR32</span>
+  <span class="n">BSM_TOKEN_ATTR32</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_attr32&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;file_mode&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;uid&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;gid&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;file_system_id&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;file_system_node_id&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;device&#39;</span><span class="p">))</span>
+
+  <span class="c1"># au_to_attr64 // AUT_ATTR64</span>
+  <span class="n">BSM_TOKEN_ATTR64</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_attr64&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;file_mode&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;uid&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;gid&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;file_system_id&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;file_system_node_id&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;device&#39;</span><span class="p">))</span>
+
+  <span class="c1"># au_to_exit // AUT_EXIT</span>
+  <span class="n">BSM_TOKEN_EXIT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;bsm_token_exit&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;status&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;return_value&#39;</span><span class="p">))</span>
+
+  <span class="c1"># au_to_newgroups // AUT_NEWGROUPS</span>
+  <span class="c1"># INFO: we must read BSM_TOKEN_DATA_INTEGER for each group.</span>
+  <span class="n">BSM_TOKEN_GROUPS</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;group_number&#39;</span><span class="p">)</span>
+
+  <span class="c1"># au_to_exec_env == au_to_exec_args</span>
+  <span class="n">BSM_TOKEN_EXEC_ENV</span> <span class="o">=</span> <span class="n">BSM_TOKEN_EXEC_ARGUMENTS</span>
+
+  <span class="c1"># au_to_zonename //AUT_ZONENAME</span>
+  <span class="n">BSM_TOKEN_ZONENAME</span> <span class="o">=</span> <span class="n">BSM_TOKEN_TEXT</span>
+
+  <span class="c1"># Token ID.</span>
+  <span class="c1"># List of valid Token_ID.</span>
+  <span class="c1"># Token_ID -&gt; [NAME_STRUCTURE, STRUCTURE]</span>
+  <span class="c1"># Only the checked structures are been added to the valid structures lists.</span>
+  <span class="n">BSM_TYPE_LIST</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="mi">17</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_FILE&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_FILE</span><span class="p">],</span>
+      <span class="mi">19</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_TRAILER&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_TRAILER</span><span class="p">],</span>
+      <span class="mi">20</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_HEADER32&#39;</span><span class="p">,</span> <span class="n">BSM_HEADER32</span><span class="p">],</span>
+      <span class="mi">21</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_HEADER64&#39;</span><span class="p">,</span> <span class="n">BSM_HEADER64</span><span class="p">],</span>
+      <span class="mi">33</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_DATA&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_DATA</span><span class="p">],</span>
+      <span class="mi">34</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_IPC&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_IPC</span><span class="p">],</span>
+      <span class="mi">35</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_PATH&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_PATH</span><span class="p">],</span>
+      <span class="mi">36</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_SUBJECT32&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_SUBJECT32</span><span class="p">],</span>
+      <span class="mi">38</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_PROCESS32&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_PROCESS32</span><span class="p">],</span>
+      <span class="mi">39</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_RETURN32&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_RETURN32</span><span class="p">],</span>
+      <span class="mi">40</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_TEXT&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_TEXT</span><span class="p">],</span>
+      <span class="mi">41</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_OPAQUE&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_OPAQUE</span><span class="p">],</span>
+      <span class="mi">42</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_ADDR&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_ADDR</span><span class="p">],</span>
+      <span class="mi">43</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_IP&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_IP</span><span class="p">],</span>
+      <span class="mi">44</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_PORT&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_PORT</span><span class="p">],</span>
+      <span class="mi">45</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_ARGUMENT32&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_ARGUMENT32</span><span class="p">],</span>
+      <span class="mi">47</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_SEQUENCE&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_SEQUENCE</span><span class="p">],</span>
+      <span class="mi">96</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_ZONENAME&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_ZONENAME</span><span class="p">],</span>
+      <span class="mi">113</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_ARGUMENT64&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_ARGUMENT64</span><span class="p">],</span>
+      <span class="mi">114</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_RETURN64&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_RETURN64</span><span class="p">],</span>
+      <span class="mi">116</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_HEADER32_EX&#39;</span><span class="p">,</span> <span class="n">BSM_HEADER32_EX</span><span class="p">],</span>
+      <span class="mi">119</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_PROCESS64&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_PROCESS64</span><span class="p">],</span>
+      <span class="mi">122</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_SUBJECT32_EX&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_SUBJECT32_EX</span><span class="p">],</span>
+      <span class="mi">127</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_AUT_SOCKINET32_EX&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_AUT_SOCKINET32_EX</span><span class="p">],</span>
+      <span class="mi">128</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_AUT_SOCKINET32&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_AUT_SOCKINET32</span><span class="p">]}</span>
+
+  <span class="c1"># Untested structures.</span>
+  <span class="c1"># When not tested structure is found, we try to parse using also</span>
+  <span class="c1"># these structures.</span>
+  <span class="n">BSM_TYPE_LIST_NOT_TESTED</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="mi">49</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_ATTR32&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_ATTR32</span><span class="p">],</span>
+      <span class="mi">50</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_IPC_PERM&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_IPC_PERM</span><span class="p">],</span>
+      <span class="mi">52</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_GROUPS&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_GROUPS</span><span class="p">],</span>
+      <span class="mi">59</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_GROUPS&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_GROUPS</span><span class="p">],</span>
+      <span class="mi">60</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_EXEC_ARGUMENTS&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_EXEC_ARGUMENTS</span><span class="p">],</span>
+      <span class="mi">61</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_EXEC_ENV&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_EXEC_ENV</span><span class="p">],</span>
+      <span class="mi">62</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_ATTR32&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_ATTR32</span><span class="p">],</span>
+      <span class="mi">82</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_EXIT&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_EXIT</span><span class="p">],</span>
+      <span class="mi">115</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_ATTR64&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_ATTR64</span><span class="p">],</span>
+      <span class="mi">117</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_SUBJECT64&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_SUBJECT64</span><span class="p">],</span>
+      <span class="mi">123</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_PROCESS32_EX&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_PROCESS32_EX</span><span class="p">],</span>
+      <span class="mi">124</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_PROCESS64_EX&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_PROCESS64_EX</span><span class="p">],</span>
+      <span class="mi">125</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_SUBJECT64_EX&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_SUBJECT64_EX</span><span class="p">],</span>
+      <span class="mi">126</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_ADDR_EXT&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_ADDR_EXT</span><span class="p">],</span>
+      <span class="mi">129</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_AUT_SOCKINET128&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_AUT_SOCKINET128</span><span class="p">],</span>
+      <span class="mi">130</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_SOCKET_UNIX&#39;</span><span class="p">,</span> <span class="n">BSM_TOKEN_SOCKET_UNIX</span><span class="p">]}</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a parser object.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">BsmParser</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="c1"># Create the dictionary with all token IDs: tested and untested.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">bsm_type_list_all</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BSM_TYPE_LIST</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">bsm_type_list_all</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BSM_TYPE_LIST_NOT_TESTED</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_CopyByteArrayToBase16String</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">byte_array</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Copies a byte array into a base-16 encoded Unicode string.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      byte_array: A byte array.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A base-16 encoded Unicode string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s1">u&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">u&#39;{0:02x}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">byte</span><span class="p">)</span> <span class="k">for</span> <span class="n">byte</span> <span class="ow">in</span> <span class="n">byte_array</span><span class="p">])</span>
+
+  <span class="k">def</span> <span class="nf">_CopyUtf8ByteArrayToString</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">byte_array</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Copies a UTF-8 encoded byte array into a Unicode string.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      byte_array: A byte array containing an UTF-8 encoded string.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A Unicode string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">byte_stream</span> <span class="o">=</span> <span class="n">b</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">chr</span><span class="p">,</span> <span class="n">byte_array</span><span class="p">))</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">string</span> <span class="o">=</span> <span class="n">byte_stream</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">u&#39;Unable to decode UTF-8 formatted byte array.&#39;</span><span class="p">)</span>
+      <span class="n">string</span> <span class="o">=</span> <span class="n">byte_stream</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">u&#39;ignore&#39;</span><span class="p">)</span>
+
+    <span class="n">string</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">string</span>
+
+  <span class="k">def</span> <span class="nf">_IPv4Format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">address</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Change an integer IPv4 address value for its 4 octets representation.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      address: integer with the IPv4 address.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      IPv4 address in 4 octet representation (class A, B, C, D).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ipv4_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">IPV4_STRUCT</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">address</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">socket</span><span class="o">.</span><span class="n">inet_ntoa</span><span class="p">(</span><span class="n">ipv4_string</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_IPv6Format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">low</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Provide a readable IPv6 IP having the high and low part in 2 integers.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      high: 64 bits integers number with the high part of the IPv6.</span>
+<span class="sd">      low: 64 bits integers number with the low part of the IPv6.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      String with a well represented IPv6.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ipv6_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">IPV6_STRUCT</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+        <span class="n">construct</span><span class="o">.</span><span class="n">Container</span><span class="p">(</span><span class="n">high</span><span class="o">=</span><span class="n">high</span><span class="p">,</span> <span class="n">low</span><span class="o">=</span><span class="n">low</span><span class="p">))</span>
+    <span class="c1"># socket.inet_ntop not supported in Windows.</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">socket</span><span class="p">,</span> <span class="s1">u&#39;inet_ntop&#39;</span><span class="p">):</span>
+      <span class="k">return</span> <span class="n">socket</span><span class="o">.</span><span class="n">inet_ntop</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET6</span><span class="p">,</span> <span class="n">ipv6_string</span><span class="p">)</span>
+
+    <span class="c1"># TODO: this approach returns double &quot;::&quot;, illegal IPv6 addr.</span>
+    <span class="n">str_address</span> <span class="o">=</span> <span class="n">binascii</span><span class="o">.</span><span class="n">hexlify</span><span class="p">(</span><span class="n">ipv6_string</span><span class="p">)</span>
+    <span class="n">address</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">blank</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="k">for</span> <span class="n">pos</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">str_address</span><span class="p">),</span> <span class="mi">4</span><span class="p">):</span>
+      <span class="k">if</span> <span class="n">str_address</span><span class="p">[</span><span class="n">pos</span><span class="p">:</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="s1">u&#39;0000&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">blank</span><span class="p">:</span>
+          <span class="n">address</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;&#39;</span><span class="p">)</span>
+          <span class="n">blank</span> <span class="o">=</span> <span class="bp">True</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">blank</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">address</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">str_address</span><span class="p">[</span><span class="n">pos</span><span class="p">:</span><span class="n">pos</span> <span class="o">+</span> <span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">u&#39;0&#39;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="s1">u&#39;:&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">address</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_RawToUTF8</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">byte_stream</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Copies a UTF-8 byte stream into a Unicode string.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      byte_stream: A byte stream containing an UTF-8 encoded string.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A Unicode string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">string</span> <span class="o">=</span> <span class="n">byte_stream</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;Decode UTF8 failed, the message string may be cut short.&#39;</span><span class="p">)</span>
+      <span class="n">string</span> <span class="o">=</span> <span class="n">byte_stream</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">u&#39;ignore&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">string</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+<div class="viewcode-block" id="BsmParser.ParseFileObject"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.bsm.BsmParser.ParseFileObject">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a BSM file-like object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: A file-like object.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      UnableToParseFile: when the file cannot be parsed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_SET</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">is_bsm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">VerifyFile</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to parse BSM file with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_bsm</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span><span class="s1">u&#39;Not a BSM File, unable to parse.&#39;</span><span class="p">)</span>
+
+    <span class="n">event_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ReadBSMEvent</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">event_object</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="n">event_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ReadBSMEvent</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BsmParser.ReadBSMEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.bsm.BsmParser.ReadBSMEvent">[docs]</a>  <span class="k">def</span> <span class="nf">ReadBSMEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a BsmEvent from a single BSM entry.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: A file-like object.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An event object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># A list of tokens that has the entry.</span>
+    <span class="n">extra_tokens</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">offset</span> <span class="o">=</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span>
+
+    <span class="c1"># Token header, first token for each entry.</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">token_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BSM_TYPE</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">):</span>
+      <span class="k">return</span>
+
+    <span class="n">bsm_type</span><span class="p">,</span> <span class="n">structure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BSM_TYPE_LIST</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">token_id</span><span class="p">,</span> <span class="p">[</span><span class="s1">u&#39;&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_HEADER32&#39;</span><span class="p">:</span>
+      <span class="n">token</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_HEADER64&#39;</span><span class="p">:</span>
+      <span class="n">token</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_HEADER32_EX&#39;</span><span class="p">:</span>
+      <span class="n">token</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;Token ID Header {0} not expected at position 0x{1:X}.&#39;</span>
+          <span class="s1">u&#39;The parsing of the file cannot be continued&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">token_id</span><span class="p">,</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()))</span>
+      <span class="c1"># TODO: if it is a Mac OS X, search for the trailer magic value</span>
+      <span class="c1">#       as a end of the entry can be a possibility to continue.</span>
+      <span class="k">return</span>
+
+    <span class="n">length</span> <span class="o">=</span> <span class="n">token</span><span class="o">.</span><span class="n">bsm_header</span><span class="o">.</span><span class="n">length</span>
+    <span class="n">event_type</span> <span class="o">=</span> <span class="s1">u&#39;{0} ({1})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">bsmtoken</span><span class="o">.</span><span class="n">BSM_AUDIT_EVENT</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">bsm_header</span><span class="o">.</span><span class="n">event_type</span><span class="p">,</span> <span class="s1">u&#39;UNKNOWN&#39;</span><span class="p">),</span>
+        <span class="n">token</span><span class="o">.</span><span class="n">bsm_header</span><span class="o">.</span><span class="n">event_type</span><span class="p">)</span>
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromPosixTimeWithMicrosecond</span><span class="p">(</span>
+        <span class="n">token</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">microsecond</span><span class="p">)</span>
+
+    <span class="c1"># Read until we reach the end of the record.</span>
+    <span class="k">while</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">offset</span> <span class="o">+</span> <span class="n">length</span><span class="p">):</span>
+      <span class="c1"># Check if it is a known token.</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">token_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BSM_TYPE</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+      <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s1">u&#39;Unable to parse the Token ID at position: {0:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()))</span>
+        <span class="k">return</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">token_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">BSM_TYPE_LIST</span><span class="p">:</span>
+        <span class="n">pending</span> <span class="o">=</span> <span class="p">(</span><span class="n">offset</span> <span class="o">+</span> <span class="n">length</span><span class="p">)</span> <span class="o">-</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span>
+        <span class="n">extra_tokens</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">TryWithUntestedStructures</span><span class="p">(</span>
+            <span class="n">file_object</span><span class="p">,</span> <span class="n">token_id</span><span class="p">,</span> <span class="n">pending</span><span class="p">))</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BSM_TYPE_LIST</span><span class="p">[</span><span class="n">token_id</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+        <span class="n">extra_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">FormatToken</span><span class="p">(</span><span class="n">token_id</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">file_object</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">offset</span> <span class="o">+</span> <span class="n">length</span><span class="p">):</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;Token ID {0} not expected at position 0x{1:X}.&#39;</span>
+          <span class="s1">u&#39;Jumping for the next entry.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">token_id</span><span class="p">,</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()))</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">offset</span> <span class="o">+</span> <span class="n">length</span><span class="p">)</span> <span class="o">-</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">(),</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_CUR</span><span class="p">)</span>
+      <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s1">u&#39;Unable to jump to next entry with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+        <span class="k">return</span>
+
+    <span class="c1"># BSM can be in more than one OS: BSD, Solaris and Mac OS X.</span>
+    <span class="k">if</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s1">u&#39;MacOSX&#39;</span><span class="p">:</span>
+      <span class="c1"># In Mac OS X the last two tokens are the return status and the trailer.</span>
+      <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">extra_tokens</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">return_value</span> <span class="o">=</span> <span class="n">extra_tokens</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">return_value</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;[BSM_TOKEN_RETURN32&#39;</span><span class="p">)</span> <span class="ow">or</span>
+            <span class="n">return_value</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;[BSM_TOKEN_RETURN64&#39;</span><span class="p">)):</span>
+          <span class="n">_</span> <span class="o">=</span> <span class="n">extra_tokens</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">extra_tokens</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">return_value</span> <span class="o">=</span> <span class="s1">u&#39;Return unknown&#39;</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">return_value</span> <span class="o">=</span> <span class="s1">u&#39;Return unknown&#39;</span>
+      <span class="k">if</span> <span class="n">extra_tokens</span><span class="p">:</span>
+        <span class="n">trailer</span> <span class="o">=</span> <span class="n">extra_tokens</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">trailer</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;[BSM_TOKEN_TRAILER&#39;</span><span class="p">):</span>
+          <span class="n">_</span> <span class="o">=</span> <span class="n">extra_tokens</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">extra_tokens</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">trailer</span> <span class="o">=</span> <span class="s1">u&#39;Trailer unknown&#39;</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">trailer</span> <span class="o">=</span> <span class="s1">u&#39;Trailer unknown&#39;</span>
+      <span class="k">return</span> <span class="n">MacBsmEvent</span><span class="p">(</span>
+          <span class="n">event_type</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="s1">u&#39;. &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">extra_tokens</span><span class="p">),</span>
+          <span class="n">return_value</span><span class="p">,</span> <span class="n">trailer</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="c1"># Generic BSM format.</span>
+      <span class="k">if</span> <span class="n">extra_tokens</span><span class="p">:</span>
+        <span class="n">trailer</span> <span class="o">=</span> <span class="n">extra_tokens</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">trailer</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;[BSM_TOKEN_TRAILER&#39;</span><span class="p">):</span>
+          <span class="n">_</span> <span class="o">=</span> <span class="n">extra_tokens</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">extra_tokens</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">trailer</span> <span class="o">=</span> <span class="s1">u&#39;Trailer unknown&#39;</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">trailer</span> <span class="o">=</span> <span class="s1">u&#39;Trailer unknown&#39;</span>
+      <span class="k">return</span> <span class="n">BsmEvent</span><span class="p">(</span>
+          <span class="n">event_type</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="s1">u&#39;. &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">extra_tokens</span><span class="p">),</span> <span class="n">trailer</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BsmParser.VerifyFile"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.bsm.BsmParser.VerifyFile">[docs]</a>  <span class="k">def</span> <span class="nf">VerifyFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check if the file is a BSM file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_event: file that we want to check.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      True if this is a valid BSM file, otherwise False.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># First part of the entry is always a Header.</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">token_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BSM_TYPE</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">):</span>
+      <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">if</span> <span class="n">token_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">BSM_TYPE_LIST</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="n">bsm_type</span><span class="p">,</span> <span class="n">structure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BSM_TYPE_LIST</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">token_id</span><span class="p">,</span> <span class="p">[</span><span class="s1">u&#39;&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">])</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_HEADER32&#39;</span><span class="p">:</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+      <span class="k">elif</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_HEADER64&#39;</span><span class="p">:</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+      <span class="k">elif</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_HEADER32_EX&#39;</span><span class="p">:</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">):</span>
+      <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">if</span> <span class="n">header</span><span class="o">.</span><span class="n">bsm_header</span><span class="o">.</span><span class="n">version</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">AUDIT_HEADER_VERSION</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">token_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BSM_TYPE</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">):</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="c1"># If is Mac OS X BSM file, next entry is a  text token indicating</span>
+    <span class="c1"># if it is a normal start or it is a recovery track.</span>
+    <span class="k">if</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s1">u&#39;MacOSX&#39;</span><span class="p">:</span>
+      <span class="n">bsm_type_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BSM_TYPE_LIST</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">token_id</span><span class="p">)</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">bsm_type_list</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+      <span class="k">if</span> <span class="n">bsm_type_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">u&#39;BSM_TOKEN_TEXT&#39;</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">u&#39;It is not a valid first entry for Mac OS X BSM.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BSM_TOKEN_TEXT</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+      <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">):</span>
+        <span class="k">return</span>
+
+      <span class="n">text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CopyUtf8ByteArrayToString</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">text</span> <span class="o">!=</span> <span class="s1">u&#39;launchctl::Audit startup&#39;</span> <span class="ow">and</span>
+          <span class="n">text</span> <span class="o">!=</span> <span class="s1">u&#39;launchctl::Audit recovery&#39;</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">u&#39;It is not a valid first entry for Mac OS X BSM.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">True</span></div>
+
+<div class="viewcode-block" id="BsmParser.TryWithUntestedStructures"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.bsm.BsmParser.TryWithUntestedStructures">[docs]</a>  <span class="k">def</span> <span class="nf">TryWithUntestedStructures</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="n">token_id</span><span class="p">,</span> <span class="n">pending</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Try to parse the pending part of the entry using untested structures.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_object: BSM file.</span>
+<span class="sd">      token_id: integer with the id that comes from the unknown token.</span>
+<span class="sd">      pending: pending length of the entry.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of extra tokens data that can be parsed using non-tested</span>
+<span class="sd">      structures. A message indicating that a structure cannot be parsed</span>
+<span class="sd">      is added for unparsed structures.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Data from the unknown structure.</span>
+    <span class="n">start_position</span> <span class="o">=</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span>
+    <span class="n">start_token_id</span> <span class="o">=</span> <span class="n">token_id</span>
+    <span class="n">extra_tokens</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Read all the &quot;pending&quot; bytes.</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">token_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bsm_type_list_all</span><span class="p">:</span>
+        <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bsm_type_list_all</span><span class="p">[</span><span class="n">token_id</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+        <span class="n">extra_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">FormatToken</span><span class="p">(</span><span class="n">token_id</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">file_object</span><span class="p">))</span>
+        <span class="k">while</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">start_position</span> <span class="o">+</span> <span class="n">pending</span><span class="p">):</span>
+          <span class="c1"># Check if it is a known token.</span>
+          <span class="k">try</span><span class="p">:</span>
+            <span class="n">token_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BSM_TYPE</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+          <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">):</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s1">u&#39;Unable to parse the Token ID at position: {0:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()))</span>
+            <span class="k">return</span>
+          <span class="k">if</span> <span class="n">token_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bsm_type_list_all</span><span class="p">:</span>
+            <span class="k">break</span>
+          <span class="n">token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bsm_type_list_all</span><span class="p">[</span><span class="n">token_id</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span>
+              <span class="n">file_object</span><span class="p">)</span>
+          <span class="n">extra_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">FormatToken</span><span class="p">(</span><span class="n">token_id</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">file_object</span><span class="p">))</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">):</span>
+      <span class="n">token_id</span> <span class="o">=</span> <span class="mi">255</span>
+
+    <span class="n">next_entry</span> <span class="o">=</span> <span class="p">(</span><span class="n">start_position</span> <span class="o">+</span> <span class="n">pending</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">!=</span> <span class="n">next_entry</span><span class="p">:</span>
+      <span class="c1"># Unknown Structure.</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">u&#39;Unknown Token at &quot;0x{0:X}&quot;, ID: {1} (0x{2:X})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">start_position</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">token_id</span><span class="p">,</span> <span class="n">token_id</span><span class="p">))</span>
+      <span class="c1"># TODO: another way to save this information must be found.</span>
+      <span class="n">extra_tokens</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+          <span class="s1">u&#39;Plaso: some tokens from this entry can &#39;</span>
+          <span class="s1">u&#39;not be saved. Entry at 0x{0:X} with unknown &#39;</span>
+          <span class="s1">u&#39;token id &quot;0x{1:X}&quot;.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">start_position</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">start_token_id</span><span class="p">))</span>
+      <span class="c1"># Move to next entry.</span>
+      <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">next_entry</span> <span class="o">-</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">(),</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_CUR</span><span class="p">)</span>
+      <span class="c1"># It returns null list because it doesn&#39;t know witch structure was</span>
+      <span class="c1"># the incorrect structure that makes that it can arrive to the spected</span>
+      <span class="c1"># end of the entry.</span>
+      <span class="k">return</span> <span class="p">[]</span>
+    <span class="k">return</span> <span class="n">extra_tokens</span></div>
+
+  <span class="c1"># TODO: instead of compare the text to know what structure was parsed</span>
+  <span class="c1">#       is better to compare directly the numeric number (token_id),</span>
+  <span class="c1">#       less readable, but better performance.</span>
+<div class="viewcode-block" id="BsmParser.FormatToken"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.bsm.BsmParser.FormatToken">[docs]</a>  <span class="k">def</span> <span class="nf">FormatToken</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">token_id</span><span class="p">,</span> <span class="n">token</span><span class="p">,</span> <span class="n">file_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse the Token depending of the type of the structure.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      token_id: Identification integer of the token_type.</span>
+<span class="sd">      token: Token struct to parse.</span>
+<span class="sd">      file_object: BSM file.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      String with the parsed Token values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">token_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bsm_type_list_all</span><span class="p">:</span>
+      <span class="k">return</span> <span class="s1">u&#39;Type Unknown: {0:d} (0x{0:X})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">token_id</span><span class="p">)</span>
+
+    <span class="n">bsm_type</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bsm_type_list_all</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">token_id</span><span class="p">,</span> <span class="p">[</span><span class="s1">u&#39;&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">bsm_type</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="s1">u&#39;BSM_TOKEN_TEXT&#39;</span><span class="p">,</span> <span class="s1">u&#39;BSM_TOKEN_PATH&#39;</span><span class="p">,</span> <span class="s1">u&#39;BSM_TOKEN_ZONENAME&#39;</span><span class="p">]:</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CopyUtf8ByteArrayToString</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+      <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="n">string</span> <span class="o">=</span> <span class="s1">u&#39;Unknown&#39;</span>
+      <span class="k">return</span> <span class="s1">u&#39;[{0}: {1:s}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bsm_type</span><span class="p">,</span> <span class="n">string</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="s1">u&#39;BSM_TOKEN_RETURN32&#39;</span><span class="p">,</span> <span class="s1">u&#39;BSM_TOKEN_RETURN64&#39;</span><span class="p">,</span> <span class="s1">u&#39;BSM_TOKEN_EXIT&#39;</span><span class="p">]:</span>
+      <span class="k">return</span> <span class="s1">u&#39;[{0}: {1} ({2}), System call status: {3}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">bsm_type</span><span class="p">,</span> <span class="n">bsmtoken</span><span class="o">.</span><span class="n">BSM_ERRORS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="s1">u&#39;Unknown&#39;</span><span class="p">),</span>
+          <span class="n">token</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">return_value</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_SUBJECT32&#39;</span><span class="p">,</span> <span class="s1">u&#39;BSM_TOKEN_SUBJECT64&#39;</span><span class="p">]:</span>
+      <span class="k">return</span> <span class="p">(</span>
+          <span class="s1">u&#39;[{0}: aid({1}), euid({2}), egid({3}), uid({4}), gid({5}), &#39;</span>
+          <span class="s1">u&#39;pid({6}), session_id({7}), terminal_port({8}), &#39;</span>
+          <span class="s1">u&#39;terminal_ip({9})]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">bsm_type</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">audit_uid</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">effective_uid</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">effective_gid</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">real_uid</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">real_gid</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">terminal_port</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_IPv4Format</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">ipv4</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_SUBJECT32_EX&#39;</span><span class="p">,</span> <span class="s1">u&#39;BSM_TOKEN_SUBJECT64_EX&#39;</span><span class="p">]:</span>
+      <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">bsm_ip_type_short</span><span class="o">.</span><span class="n">net_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">AU_IPv6</span><span class="p">:</span>
+        <span class="n">ip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_IPv6Format</span><span class="p">(</span>
+            <span class="n">token</span><span class="o">.</span><span class="n">bsm_ip_type_short</span><span class="o">.</span><span class="n">ip_addr</span><span class="o">.</span><span class="n">high</span><span class="p">,</span>
+            <span class="n">token</span><span class="o">.</span><span class="n">bsm_ip_type_short</span><span class="o">.</span><span class="n">ip_addr</span><span class="o">.</span><span class="n">low</span><span class="p">)</span>
+      <span class="k">elif</span> <span class="n">token</span><span class="o">.</span><span class="n">bsm_ip_type_short</span><span class="o">.</span><span class="n">net_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">AU_IPv4</span><span class="p">:</span>
+        <span class="n">ip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_IPv4Format</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">bsm_ip_type_short</span><span class="o">.</span><span class="n">ip_addr</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">ip</span> <span class="o">=</span> <span class="s1">u&#39;unknown&#39;</span>
+      <span class="k">return</span> <span class="p">(</span>
+          <span class="s1">u&#39;[{0}: aid({1}), euid({2}), egid({3}), uid({4}), gid({5}), &#39;</span>
+          <span class="s1">u&#39;pid({6}), session_id({7}), terminal_port({8}), &#39;</span>
+          <span class="s1">u&#39;terminal_ip({9})]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">bsm_type</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">audit_uid</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">effective_uid</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">effective_gid</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">real_uid</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">real_gid</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">terminal_port</span><span class="p">,</span> <span class="n">ip</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_ARGUMENT32&#39;</span><span class="p">,</span> <span class="s1">u&#39;BSM_TOKEN_ARGUMENT64&#39;</span><span class="p">]:</span>
+      <span class="n">string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CopyUtf8ByteArrayToString</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+      <span class="k">return</span> <span class="s1">u&#39;[{0}: {1:s}({2}) is 0x{3:X}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">bsm_type</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">num_arg</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">name_arg</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_EXEC_ARGUMENTS&#39;</span><span class="p">,</span> <span class="s1">u&#39;BSM_TOKEN_EXEC_ENV&#39;</span><span class="p">]:</span>
+      <span class="n">arguments</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+        <span class="n">sub_token</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BSM_TOKEN_EXEC_ARGUMENT</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+        <span class="n">string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CopyUtf8ByteArrayToString</span><span class="p">(</span><span class="n">sub_token</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="n">arguments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+      <span class="k">return</span> <span class="s1">u&#39;[{0}: {1:s}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bsm_type</span><span class="p">,</span> <span class="s1">u&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">arguments</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_TOKEN_AUT_SOCKINET32&#39;</span><span class="p">:</span>
+      <span class="k">return</span> <span class="p">(</span><span class="s1">u&#39;[{0}: {1} ({2}) open in port {3}. Address {4}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">bsm_type</span><span class="p">,</span> <span class="n">bsmtoken</span><span class="o">.</span><span class="n">BSM_PROTOCOLS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">net_type</span><span class="p">,</span> <span class="s1">u&#39;UNKNOWN&#39;</span><span class="p">),</span>
+          <span class="n">token</span><span class="o">.</span><span class="n">net_type</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">port_number</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_IPv4Format</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">ipv4</span><span class="p">)))</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_TOKEN_AUT_SOCKINET128&#39;</span><span class="p">:</span>
+      <span class="k">return</span> <span class="s1">u&#39;[{0}: {1} ({2}) open in port {3}. Address {4}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">bsm_type</span><span class="p">,</span> <span class="n">bsmtoken</span><span class="o">.</span><span class="n">BSM_PROTOCOLS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">net_type</span><span class="p">,</span> <span class="s1">u&#39;UNKNOWN&#39;</span><span class="p">),</span>
+          <span class="n">token</span><span class="o">.</span><span class="n">net_type</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">port_number</span><span class="p">,</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_IPv6Format</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">ipv6</span><span class="o">.</span><span class="n">high</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">ipv6</span><span class="o">.</span><span class="n">low</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_TOKEN_ADDR&#39;</span><span class="p">:</span>
+      <span class="k">return</span> <span class="s1">u&#39;[{0}: {1}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bsm_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_IPv4Format</span><span class="p">(</span><span class="n">token</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_TOKEN_IP&#39;</span><span class="p">:</span>
+      <span class="k">return</span> <span class="s1">u&#39;[IPv4_Header: 0x{0:s}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">u&#39;hex&#39;</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_TOKEN_ADDR_EXT&#39;</span><span class="p">:</span>
+      <span class="k">return</span> <span class="s1">u&#39;[{0}: {1} ({2}). Address {3}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">bsm_type</span><span class="p">,</span>
+          <span class="n">bsmtoken</span><span class="o">.</span><span class="n">BSM_PROTOCOLS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">net_type</span><span class="p">,</span> <span class="s1">u&#39;UNKNOWN&#39;</span><span class="p">),</span>
+          <span class="n">token</span><span class="o">.</span><span class="n">net_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_IPv6Format</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">ipv6</span><span class="o">.</span><span class="n">high</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">ipv6</span><span class="o">.</span><span class="n">low</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_TOKEN_PORT&#39;</span><span class="p">:</span>
+      <span class="k">return</span> <span class="s1">u&#39;[{0}: {1}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bsm_type</span><span class="p">,</span> <span class="n">token</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_TOKEN_TRAILER&#39;</span><span class="p">:</span>
+      <span class="k">return</span> <span class="s1">u&#39;[{0}: {1}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bsm_type</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">record_length</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_TOKEN_FILE&#39;</span><span class="p">:</span>
+      <span class="c1"># TODO: if this timestamp is usefull, it must be extracted as a separate</span>
+      <span class="c1">#       event object.</span>
+      <span class="n">timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromPosixTimeWithMicrosecond</span><span class="p">(</span>
+          <span class="n">token</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">microsecond</span><span class="p">)</span>
+      <span class="n">date_time</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">CopyToDatetime</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">pytz</span><span class="o">.</span><span class="n">UTC</span><span class="p">)</span>
+      <span class="n">date_time_string</span> <span class="o">=</span> <span class="n">date_time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">u&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span>
+
+      <span class="n">string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CopyUtf8ByteArrayToString</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+      <span class="k">return</span> <span class="s1">u&#39;[{0}: {1:s}, timestamp: {2:s}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">bsm_type</span><span class="p">,</span> <span class="n">string</span><span class="p">,</span> <span class="n">date_time_string</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_TOKEN_IPC&#39;</span><span class="p">:</span>
+      <span class="k">return</span> <span class="s1">u&#39;[{0}: object type {1}, object id {2}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">bsm_type</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">object_type</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">object_id</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_PROCESS32&#39;</span><span class="p">,</span> <span class="s1">u&#39;BSM_TOKEN_PROCESS64&#39;</span><span class="p">]:</span>
+      <span class="k">return</span> <span class="p">(</span>
+          <span class="s1">u&#39;[{0}: aid({1}), euid({2}), egid({3}), uid({4}), gid({5}), &#39;</span>
+          <span class="s1">u&#39;pid({6}), session_id({7}), terminal_port({8}), &#39;</span>
+          <span class="s1">u&#39;terminal_ip({9})]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">bsm_type</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">audit_uid</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">effective_uid</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">effective_gid</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">real_uid</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">real_gid</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">terminal_port</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_IPv4Format</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">ipv4</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_PROCESS32_EX&#39;</span><span class="p">,</span> <span class="s1">u&#39;BSM_TOKEN_PROCESS64_EX&#39;</span><span class="p">]:</span>
+      <span class="k">if</span> <span class="n">token</span><span class="o">.</span><span class="n">bsm_ip_type_short</span><span class="o">.</span><span class="n">net_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">AU_IPv6</span><span class="p">:</span>
+        <span class="n">ip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_IPv6Format</span><span class="p">(</span>
+            <span class="n">token</span><span class="o">.</span><span class="n">bsm_ip_type_short</span><span class="o">.</span><span class="n">ip_addr</span><span class="o">.</span><span class="n">high</span><span class="p">,</span>
+            <span class="n">token</span><span class="o">.</span><span class="n">bsm_ip_type_short</span><span class="o">.</span><span class="n">ip_addr</span><span class="o">.</span><span class="n">low</span><span class="p">)</span>
+      <span class="k">elif</span> <span class="n">token</span><span class="o">.</span><span class="n">bsm_ip_type_short</span><span class="o">.</span><span class="n">net_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">AU_IPv4</span><span class="p">:</span>
+        <span class="n">ip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_IPv4Format</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">bsm_ip_type_short</span><span class="o">.</span><span class="n">ip_addr</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">ip</span> <span class="o">=</span> <span class="s1">u&#39;unknown&#39;</span>
+      <span class="k">return</span> <span class="p">(</span>
+          <span class="s1">u&#39;[{0}: aid({1}), euid({2}), egid({3}), uid({4}), gid({5}), &#39;</span>
+          <span class="s1">u&#39;pid({6}), session_id({7}), terminal_port({8}), &#39;</span>
+          <span class="s1">u&#39;terminal_ip({9})]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">bsm_type</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">audit_uid</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">effective_uid</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">effective_gid</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">real_uid</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">real_gid</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">subject_data</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">terminal_port</span><span class="p">,</span> <span class="n">ip</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_TOKEN_DATA&#39;</span><span class="p">:</span>
+      <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="n">data_type</span> <span class="o">=</span> <span class="n">bsmtoken</span><span class="o">.</span><span class="n">BSM_TOKEN_DATA_TYPE</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">data_type</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s1">u&#39;AUR_CHAR&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">unit_count</span><span class="p">):</span>
+          <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BSM_TOKEN_DATA_CHAR</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">))</span>
+      <span class="k">elif</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s1">u&#39;AUR_SHORT&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">unit_count</span><span class="p">):</span>
+          <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BSM_TOKEN_DAT_SHORT</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">))</span>
+      <span class="k">elif</span> <span class="n">data_type</span> <span class="o">==</span> <span class="s1">u&#39;AUR_INT32&#39;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">unit_count</span><span class="p">):</span>
+          <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BSM_TOKEN_DATA_INTEGER</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">))</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;Unknown type data&#39;</span><span class="p">)</span>
+      <span class="c1"># TODO: the data when it is string ends with &quot;.&quot;, HW a space is return</span>
+      <span class="c1">#       after uses the UTF-8 conversion.</span>
+      <span class="k">return</span> <span class="s1">u&#39;[{0}: Format data: {1}, Data: {2}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">bsm_type</span><span class="p">,</span> <span class="n">bsmtoken</span><span class="o">.</span><span class="n">BSM_TOKEN_DATA_PRINT</span><span class="p">[</span><span class="n">token</span><span class="o">.</span><span class="n">how_to_print</span><span class="p">],</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_RawToUTF8</span><span class="p">(</span><span class="s1">u&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data</span><span class="p">)))</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">u&#39;BSM_TOKEN_ATTR32&#39;</span><span class="p">,</span> <span class="s1">u&#39;BSM_TOKEN_ATTR64&#39;</span><span class="p">]:</span>
+      <span class="k">return</span> <span class="p">(</span>
+          <span class="s1">u&#39;[{0}: Mode: {1}, UID: {2}, GID: {3}, &#39;</span>
+          <span class="s1">u&#39;File system ID: {4}, Node ID: {5}, Device: {6}]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">bsm_type</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">file_mode</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">uid</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">gid</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">file_system_id</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">file_system_node_id</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_TOKEN_GROUPS&#39;</span><span class="p">:</span>
+      <span class="n">arguments</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">token</span><span class="p">):</span>
+        <span class="n">arguments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_RawToUTF8</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">BSM_TOKEN_DATA_INTEGER</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)))</span>
+      <span class="k">return</span> <span class="s1">u&#39;[{0}: {1:s}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bsm_type</span><span class="p">,</span> <span class="s1">u&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">arguments</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_TOKEN_AUT_SOCKINET32_EX&#39;</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">bsmtoken</span><span class="o">.</span><span class="n">BSM_PROTOCOLS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">socket_domain</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">u&#39;INET6&#39;</span><span class="p">:</span>
+        <span class="n">saddr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_IPv6Format</span><span class="p">(</span>
+            <span class="n">token</span><span class="o">.</span><span class="n">structure_addr_port</span><span class="o">.</span><span class="n">saddr_high</span><span class="p">,</span>
+            <span class="n">token</span><span class="o">.</span><span class="n">structure_addr_port</span><span class="o">.</span><span class="n">saddr_low</span><span class="p">)</span>
+        <span class="n">daddr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_IPv6Format</span><span class="p">(</span>
+            <span class="n">token</span><span class="o">.</span><span class="n">structure_addr_port</span><span class="o">.</span><span class="n">daddr_high</span><span class="p">,</span>
+            <span class="n">token</span><span class="o">.</span><span class="n">structure_addr_port</span><span class="o">.</span><span class="n">daddr_low</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">saddr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_IPv4Format</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">structure_addr_port</span><span class="o">.</span><span class="n">source_address</span><span class="p">)</span>
+        <span class="n">daddr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_IPv4Format</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">structure_addr_port</span><span class="o">.</span><span class="n">destination_address</span><span class="p">)</span>
+
+      <span class="k">return</span> <span class="s1">u&#39;[{0}: from {1} port {2} to {3} port {4}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">bsm_type</span><span class="p">,</span> <span class="n">saddr</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">structure_addr_port</span><span class="o">.</span><span class="n">source_port</span><span class="p">,</span>
+          <span class="n">daddr</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">structure_addr_port</span><span class="o">.</span><span class="n">destination_port</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_TOKEN_IPC_PERM&#39;</span><span class="p">:</span>
+      <span class="k">return</span> <span class="p">(</span>
+          <span class="s1">u&#39;[{0}: user id {1}, group id {2}, create user id {3}, &#39;</span>
+          <span class="s1">u&#39;create group id {4}, access {5}]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">bsm_type</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">group_id</span><span class="p">,</span>
+              <span class="n">token</span><span class="o">.</span><span class="n">creator_user_id</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">creator_group_id</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">access_mode</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_TOKEN_SOCKET_UNIX&#39;</span><span class="p">:</span>
+      <span class="n">string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CopyUtf8ByteArrayToString</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+      <span class="k">return</span> <span class="s1">u&#39;[{0}: Family {1}, Path {2:s}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">bsm_type</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">family</span><span class="p">,</span> <span class="n">string</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_TOKEN_OPAQUE&#39;</span><span class="p">:</span>
+      <span class="n">string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CopyByteArrayToBase16String</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+      <span class="k">return</span> <span class="s1">u&#39;[{0}: {1:s}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bsm_type</span><span class="p">,</span> <span class="n">string</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">bsm_type</span> <span class="o">==</span> <span class="s1">u&#39;BSM_TOKEN_SEQUENCE&#39;</span><span class="p">:</span>
+      <span class="k">return</span> <span class="s1">u&#39;[{0}: {1}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bsm_type</span><span class="p">,</span> <span class="n">token</span><span class="p">)</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParser</span><span class="p">(</span><span class="n">BsmParser</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

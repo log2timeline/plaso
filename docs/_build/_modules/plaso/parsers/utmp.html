@@ -1,0 +1,338 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.utmp &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.utmp</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Parser for Linux UTMP files.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">socket</span>
+
+<span class="kn">import</span> <span class="nn">construct</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)&#39;</span>
+
+
+<div class="viewcode-block" id="UtmpEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.utmp.UtmpEvent">[docs]</a><span class="k">class</span> <span class="nc">UtmpEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">PosixTimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for an UTMP event.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;linux:utmp:event&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">posix_time</span><span class="p">,</span> <span class="n">microsecond</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">computer_name</span><span class="p">,</span>
+      <span class="n">terminal</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">ip_address</span><span class="p">,</span> <span class="n">structure</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      posix_time: the POSIX time value, which contains the number of seconds</span>
+<span class="sd">                  since January 1, 1970 00:00:00 UTC.</span>
+<span class="sd">      microsecond: number of micro seconds.</span>
+<span class="sd">      user: active user name.</span>
+<span class="sd">      computer_name: name of the computer.</span>
+<span class="sd">      terminal: type of terminal.</span>
+<span class="sd">      status: login status.</span>
+<span class="sd">      ip_address: ip_address from the connection is done.</span>
+<span class="sd">      structure: entry structure parsed.</span>
+<span class="sd">        exit: integer that represents the exit status.</span>
+<span class="sd">        pid: integer with the process ID.</span>
+<span class="sd">        terminal_id: integer with the Inittab ID.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">UtmpEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">posix_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">START_TIME</span><span class="p">,</span>
+        <span class="n">micro_seconds</span><span class="o">=</span><span class="n">microsecond</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">computer_name</span> <span class="o">=</span> <span class="n">computer_name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">exit</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">exit</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">ip_address</span> <span class="o">=</span> <span class="n">ip_address</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">pid</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">pid</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">status</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">terminal_id</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">terminal_id</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">terminal</span> <span class="o">=</span> <span class="n">terminal</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">user</span></div>
+
+
+<div class="viewcode-block" id="UtmpParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.utmp.UtmpParser">[docs]</a><span class="k">class</span> <span class="nc">UtmpParser</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">FileObjectParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parser for Linux/Unix UTMP files.&quot;&quot;&quot;</span>
+
+  <span class="n">_INITIAL_FILE_OFFSET</span> <span class="o">=</span> <span class="bp">None</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;utmp&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for Linux/Unix UTMP files.&#39;</span>
+
+  <span class="n">LINUX_UTMP_ENTRY</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;utmp_linux&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;type&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;pid&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;terminal&#39;</span><span class="p">,</span> <span class="mi">32</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;terminal_id&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;username&#39;</span><span class="p">,</span> <span class="mi">32</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;hostname&#39;</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;termination&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;exit&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;session&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;timestamp&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;microsecond&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;address_a&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;address_b&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;address_c&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;address_d&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">20</span><span class="p">))</span>
+
+  <span class="n">LINUX_UTMP_ENTRY_SIZE</span> <span class="o">=</span> <span class="n">LINUX_UTMP_ENTRY</span><span class="o">.</span><span class="n">sizeof</span><span class="p">()</span>
+
+  <span class="n">STATUS_TYPE</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="mi">0</span><span class="p">:</span> <span class="s1">u&#39;EMPTY&#39;</span><span class="p">,</span>
+      <span class="mi">1</span><span class="p">:</span> <span class="s1">u&#39;RUN_LVL&#39;</span><span class="p">,</span>
+      <span class="mi">2</span><span class="p">:</span> <span class="s1">u&#39;BOOT_TIME&#39;</span><span class="p">,</span>
+      <span class="mi">3</span><span class="p">:</span> <span class="s1">u&#39;NEW_TIME&#39;</span><span class="p">,</span>
+      <span class="mi">4</span><span class="p">:</span> <span class="s1">u&#39;OLD_TIME&#39;</span><span class="p">,</span>
+      <span class="mi">5</span><span class="p">:</span> <span class="s1">u&#39;INIT_PROCESS&#39;</span><span class="p">,</span>
+      <span class="mi">6</span><span class="p">:</span> <span class="s1">u&#39;LOGIN_PROCESS&#39;</span><span class="p">,</span>
+      <span class="mi">7</span><span class="p">:</span> <span class="s1">u&#39;USER_PROCESS&#39;</span><span class="p">,</span>
+      <span class="mi">8</span><span class="p">:</span> <span class="s1">u&#39;DEAD_PROCESS&#39;</span><span class="p">,</span>
+      <span class="mi">9</span><span class="p">:</span> <span class="s1">u&#39;ACCOUNTING&#39;</span><span class="p">}</span>
+
+  <span class="c1"># Set a default test value for few fields, this is supposed to be a text</span>
+  <span class="c1"># that is highly unlikely to be seen in a terminal field, or a username field.</span>
+  <span class="c1"># It is important that this value does show up in such fields, but otherwise</span>
+  <span class="c1"># it can be a free flowing text field.</span>
+  <span class="n">_DEFAULT_TEST_VALUE</span> <span class="o">=</span> <span class="s1">u&#39;Ekki Fraedilegur Moguleiki, thetta er bull ! = + _&lt;&gt;&#39;</span>
+
+<div class="viewcode-block" id="UtmpParser.ParseFileObject"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.utmp.UtmpParser.ParseFileObject">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses an UTMP file-like object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: The file-like object to extract data from.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      UnableToParseFile: when the file cannot be parsed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_SET</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">structure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">LINUX_UTMP_ENTRY</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to parse UTMP Header with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">structure</span><span class="o">.</span><span class="n">type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">STATUS_TYPE</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">((</span>
+          <span class="s1">u&#39;Not an UTMP file, unknown type &#39;</span>
+          <span class="s1">u&#39;[{0:d}].&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">type</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_VerifyTextField</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">terminal</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Not an UTMP file, unknown terminal.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_VerifyTextField</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">username</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Not an UTMP file, unknown username.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_VerifyTextField</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">hostname</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Not an UTMP file, unknown hostname.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Check few values.</span>
+    <span class="n">terminal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetTextFromNullTerminatedString</span><span class="p">(</span>
+        <span class="n">structure</span><span class="o">.</span><span class="n">terminal</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DEFAULT_TEST_VALUE</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">terminal</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DEFAULT_TEST_VALUE</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Not an UTMP file, no terminal set.&#39;</span><span class="p">)</span>
+
+    <span class="n">username</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetTextFromNullTerminatedString</span><span class="p">(</span>
+        <span class="n">structure</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DEFAULT_TEST_VALUE</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">username</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DEFAULT_TEST_VALUE</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Not an UTMP file, no username set.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">structure</span><span class="o">.</span><span class="n">timestamp</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Not an UTMP file, no timestamp set in the first record.&#39;</span><span class="p">)</span>
+
+    <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_SET</span><span class="p">)</span>
+    <span class="n">event_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ReadUtmpEvent</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">event_object</span><span class="p">:</span>
+      <span class="n">event_object</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ReadUtmpEvent</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span></div>
+
+  <span class="k">def</span> <span class="nf">_VerifyTextField</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check if a byte stream is a null terminated string.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: text field from the structure.</span>
+
+<span class="sd">    Return:</span>
+<span class="sd">      True if it is a null terminated string, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">null_chars</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">null_chars</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">null_chars</span><span class="p">)</span> <span class="o">==</span> <span class="n">null_chars</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_ReadUtmpEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns an UtmpEvent from a single UTMP entry.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_object: a file-like object that points to an UTMP file.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An event object constructed from a single UTMP record or None if we</span>
+<span class="sd">      have reached the end of the file (or EOF).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">offset</span> <span class="o">=</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">file_object</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">LINUX_UTMP_ENTRY_SIZE</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">LINUX_UTMP_ENTRY_SIZE</span><span class="p">:</span>
+      <span class="k">return</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">LINUX_UTMP_ENTRY</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">):</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">((</span>
+          <span class="s1">u&#39;UTMP entry at 0x{0:x} couldn</span><span class="se">\&#39;</span><span class="s1">t be parsed.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">offset</span><span class="p">))</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ReadUtmpEvent</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+
+    <span class="n">user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetTextFromNullTerminatedString</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">username</span><span class="p">)</span>
+    <span class="n">terminal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetTextFromNullTerminatedString</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">terminal</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">terminal</span> <span class="o">==</span> <span class="s1">u&#39;~&#39;</span><span class="p">:</span>
+      <span class="n">terminal</span> <span class="o">=</span> <span class="s1">u&#39;system boot&#39;</span>
+    <span class="n">computer_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetTextFromNullTerminatedString</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">hostname</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">computer_name</span> <span class="o">==</span> <span class="s1">u&#39;N/A&#39;</span> <span class="ow">or</span> <span class="n">computer_name</span> <span class="o">==</span> <span class="s1">u&#39;:0&#39;</span><span class="p">:</span>
+      <span class="n">computer_name</span> <span class="o">=</span> <span class="s1">u&#39;localhost&#39;</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">STATUS_TYPE</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="s1">u&#39;N/A&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">entry</span><span class="o">.</span><span class="n">address_b</span><span class="p">:</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">ip_address</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">inet_ntoa</span><span class="p">(</span>
+            <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;int&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">address_a</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">ip_address</span> <span class="o">==</span> <span class="s1">u&#39;0.0.0.0&#39;</span><span class="p">:</span>
+          <span class="n">ip_address</span> <span class="o">=</span> <span class="s1">u&#39;localhost&#39;</span>
+      <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">error</span><span class="p">):</span>
+        <span class="n">ip_address</span> <span class="o">=</span> <span class="s1">u&#39;N/A&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">ip_address</span> <span class="o">=</span> <span class="s1">u&#39;{0:d}.{1:d}.{2:d}.{3:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">entry</span><span class="o">.</span><span class="n">address_a</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">address_b</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">address_c</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">address_d</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">UtmpEvent</span><span class="p">(</span>
+        <span class="n">entry</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">microsecond</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">computer_name</span><span class="p">,</span> <span class="n">terminal</span><span class="p">,</span>
+        <span class="n">status</span><span class="p">,</span> <span class="n">ip_address</span><span class="p">,</span> <span class="n">entry</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_GetTextFromNullTerminatedString</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">null_terminated_string</span><span class="p">,</span> <span class="n">default_string</span><span class="o">=</span><span class="s1">u&#39;N/A&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get a UTF-8 text from a raw null terminated string.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      null_terminated_string: Raw string terminated with null character.</span>
+<span class="sd">      default_string: The default string returned if the parser fails.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A decoded UTF-8 string or if unable to decode, the supplied default</span>
+<span class="sd">      string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">text</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">null_terminated_string</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;[UTMP] Decode UTF8 failed, the message string may be cut short.&#39;</span><span class="p">)</span>
+      <span class="n">text</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">,</span> <span class="s1">u&#39;ignore&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">text</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">default_string</span>
+    <span class="k">return</span> <span class="n">text</span></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParser</span><span class="p">(</span><span class="n">UtmpParser</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

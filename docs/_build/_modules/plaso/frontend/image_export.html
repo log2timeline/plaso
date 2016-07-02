@@ -1,0 +1,994 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.frontend.image_export &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.frontend.image_export</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;The image export front-end.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">pysigscan</span>
+
+<span class="kn">from</span> <span class="nn">dfvfs.helpers</span> <span class="kn">import</span> <span class="n">file_system_searcher</span>
+<span class="kn">from</span> <span class="nn">dfvfs.path</span> <span class="kn">import</span> <span class="n">factory</span> <span class="k">as</span> <span class="n">path_spec_factory</span>
+<span class="kn">from</span> <span class="nn">dfvfs.resolver</span> <span class="kn">import</span> <span class="n">context</span>
+<span class="kn">from</span> <span class="nn">dfvfs.resolver</span> <span class="kn">import</span> <span class="n">resolver</span> <span class="k">as</span> <span class="n">path_spec_resolver</span>
+
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">extractors</span>
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">knowledge_base</span>
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">utils</span> <span class="k">as</span> <span class="n">engine_utils</span>
+<span class="kn">from</span> <span class="nn">plaso.frontend</span> <span class="kn">import</span> <span class="n">frontend</span>
+<span class="kn">from</span> <span class="nn">plaso.hashers</span> <span class="kn">import</span> <span class="n">manager</span> <span class="k">as</span> <span class="n">hashers_manager</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">py2to3</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">specification</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+<span class="kn">from</span> <span class="nn">plaso.preprocessors</span> <span class="kn">import</span> <span class="n">interface</span> <span class="k">as</span> <span class="n">preprocess_interface</span>
+<span class="kn">from</span> <span class="nn">plaso.preprocessors</span> <span class="kn">import</span> <span class="n">manager</span> <span class="k">as</span> <span class="n">preprocess_manager</span>
+
+
+<div class="viewcode-block" id="FileEntryFilter"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.FileEntryFilter">[docs]</a><span class="k">class</span> <span class="nc">FileEntryFilter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements the file entry filter interface.&quot;&quot;&quot;</span>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="FileEntryFilter.Matches"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.FileEntryFilter.Matches">[docs]</a>  <span class="k">def</span> <span class="nf">Matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compares the file entry against the filter.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: The file entry (instance of dfvfs.FileEntry).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A boolean indicating if the file entry matches the filter or</span>
+<span class="sd">      None if the filter does not apply</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="FileEntryFilter.Print"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.FileEntryFilter.Print">[docs]</a>  <span class="k">def</span> <span class="nf">Print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_writer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Prints a human readable version of the filter.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      output_writer: the output writer object (instance of CLIOutputWriter).</span>
+<span class="sd">    &quot;&quot;&quot;</span></div></div>
+
+
+<div class="viewcode-block" id="DateTimeFileEntryFilter"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.DateTimeFileEntryFilter">[docs]</a><span class="k">class</span> <span class="nc">DateTimeFileEntryFilter</span><span class="p">(</span><span class="n">FileEntryFilter</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements date time-based file entry filter.&quot;&quot;&quot;</span>
+
+  <span class="n">_DATE_TIME_RANGE_TUPLE</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span>
+      <span class="s1">u&#39;date_time_range_tuple&#39;</span><span class="p">,</span> <span class="s1">u&#39;time_value start_timestamp end_timestamp&#39;</span><span class="p">)</span>
+
+  <span class="n">_SUPPORTED_TIME_VALUES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+      <span class="s1">u&#39;atime&#39;</span><span class="p">,</span> <span class="s1">u&#39;bkup&#39;</span><span class="p">,</span> <span class="s1">u&#39;ctime&#39;</span><span class="p">,</span> <span class="s1">u&#39;crtime&#39;</span><span class="p">,</span> <span class="s1">u&#39;dtime&#39;</span><span class="p">,</span> <span class="s1">u&#39;mtime&#39;</span><span class="p">])</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the date time-based file entry filter.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">DateTimeFileEntryFilter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_date_time_ranges</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="DateTimeFileEntryFilter.AddDateTimeRange"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.DateTimeFileEntryFilter.AddDateTimeRange">[docs]</a>  <span class="k">def</span> <span class="nf">AddDateTimeRange</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">time_value</span><span class="p">,</span> <span class="n">start_time_string</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">end_time_string</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add a date time filter range.</span>
+
+<span class="sd">    The time strings are formatted as:</span>
+<span class="sd">    YYYY-MM-DD hh:mm:ss.######[+-]##:##</span>
+<span class="sd">    Where # are numeric digits ranging from 0 to 9 and the seconds</span>
+<span class="sd">    fraction can be either 3 or 6 digits. The time of day, seconds fraction</span>
+<span class="sd">    and timezone offset are optional. The default timezone is UTC.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      time_value: the time value strting e.g. atime, ctime, crtime, dtime,</span>
+<span class="sd">                  bkup and mtime.</span>
+<span class="sd">      start_time_string: the start date and time value string.</span>
+<span class="sd">      end_time_string: the end date and time value string.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      ValueError: If the filter is badly formed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">time_value</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">STRING_TYPES</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Filter type must be a string.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">start_time_string</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">end_time_string</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+          <span class="s1">u&#39;Filter must have either a start or an end date time value.&#39;</span><span class="p">)</span>
+
+    <span class="n">time_value_lower</span> <span class="o">=</span> <span class="n">time_value</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">time_value_lower</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_SUPPORTED_TIME_VALUES</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+          <span class="s1">u&#39;Unsupported time value: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time_value</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">start_time_string</span><span class="p">:</span>
+      <span class="n">start_timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">CopyFromString</span><span class="p">(</span><span class="n">start_time_string</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">start_timestamp</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="n">end_time_string</span><span class="p">:</span>
+      <span class="n">end_timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">CopyFromString</span><span class="p">(</span><span class="n">end_time_string</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">end_timestamp</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="c1"># Make sure that the end timestamp occurs after the beginning.</span>
+    <span class="c1"># If not then we need to reverse the time range.</span>
+    <span class="k">if</span> <span class="p">(</span><span class="bp">None</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">start_timestamp</span><span class="p">,</span> <span class="n">end_timestamp</span><span class="p">]</span> <span class="ow">and</span>
+        <span class="n">start_timestamp</span> <span class="o">&gt;</span> <span class="n">end_timestamp</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+          <span class="s1">u&#39;Invalid date time value start must be earlier than end.&#39;</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_date_time_ranges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_DATE_TIME_RANGE_TUPLE</span><span class="p">(</span>
+        <span class="n">time_value_lower</span><span class="p">,</span> <span class="n">start_timestamp</span><span class="p">,</span> <span class="n">end_timestamp</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="DateTimeFileEntryFilter.Matches"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.DateTimeFileEntryFilter.Matches">[docs]</a>  <span class="k">def</span> <span class="nf">Matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compares the file entry against the filter.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: The file entry (instance of dfvfs.FileEntry).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A boolean indicating if the file entry matches the filter or</span>
+<span class="sd">      None if the filter does not apply.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_date_time_ranges</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">stat_object</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetStat</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">date_time_range</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_date_time_ranges</span><span class="p">:</span>
+      <span class="n">time_value</span> <span class="o">=</span> <span class="n">date_time_range</span><span class="o">.</span><span class="n">time_value</span>
+      <span class="n">timestamp</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stat_object</span><span class="p">,</span> <span class="n">time_value</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">timestamp</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">continue</span>
+
+      <span class="n">nano_time_value</span> <span class="o">=</span> <span class="s1">u&#39;{0:s}_nano&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time_value</span><span class="p">)</span>
+      <span class="n">nano_time_value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stat_object</span><span class="p">,</span> <span class="n">nano_time_value</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+      <span class="n">timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromPosixTime</span><span class="p">(</span><span class="n">timestamp</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">nano_time_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c1"># Note that the _nano values are in intervals of 100th nano seconds.</span>
+        <span class="n">nano_time_value</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">nano_time_value</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">timestamp</span> <span class="o">+=</span> <span class="n">nano_time_value</span>
+
+      <span class="k">if</span> <span class="p">(</span><span class="n">date_time_range</span><span class="o">.</span><span class="n">start_timestamp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span>
+          <span class="n">timestamp</span> <span class="o">&lt;</span> <span class="n">date_time_range</span><span class="o">.</span><span class="n">start_timestamp</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+      <span class="k">if</span> <span class="p">(</span><span class="n">date_time_range</span><span class="o">.</span><span class="n">end_timestamp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span>
+          <span class="n">timestamp</span> <span class="o">&gt;</span> <span class="n">date_time_range</span><span class="o">.</span><span class="n">end_timestamp</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">return</span> <span class="bp">True</span></div>
+
+<div class="viewcode-block" id="DateTimeFileEntryFilter.Print"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.DateTimeFileEntryFilter.Print">[docs]</a>  <span class="k">def</span> <span class="nf">Print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_writer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Prints a human readable version of the filter.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      output_writer: the output writer object (instance of CLIOutputWriter).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_date_time_ranges</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">date_time_range</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_date_time_ranges</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">date_time_range</span><span class="o">.</span><span class="n">start_timestamp</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+          <span class="n">start_time_string</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">CopyToIsoFormat</span><span class="p">(</span>
+              <span class="n">date_time_range</span><span class="o">.</span><span class="n">start_timestamp</span><span class="p">)</span>
+          <span class="n">output_writer</span><span class="o">.</span><span class="n">Write</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\t</span><span class="s1">{0:s} before {1:s}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">date_time_range</span><span class="o">.</span><span class="n">time_value</span><span class="p">,</span> <span class="n">start_time_string</span><span class="p">))</span>
+
+        <span class="k">elif</span> <span class="n">date_time_range</span><span class="o">.</span><span class="n">end_timestamp</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+          <span class="n">end_time_string</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">CopyToIsoFormat</span><span class="p">(</span>
+              <span class="n">date_time_range</span><span class="o">.</span><span class="n">end_timestamp</span><span class="p">)</span>
+          <span class="n">output_writer</span><span class="o">.</span><span class="n">Write</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\t</span><span class="s1">{0:s} after {1:s}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">date_time_range</span><span class="o">.</span><span class="n">time_value</span><span class="p">,</span> <span class="n">end_time_string</span><span class="p">))</span>
+
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">start_time_string</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">CopyToIsoFormat</span><span class="p">(</span>
+              <span class="n">date_time_range</span><span class="o">.</span><span class="n">start_timestamp</span><span class="p">)</span>
+          <span class="n">end_time_string</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">CopyToIsoFormat</span><span class="p">(</span>
+              <span class="n">date_time_range</span><span class="o">.</span><span class="n">end_timestamp</span><span class="p">)</span>
+          <span class="n">output_writer</span><span class="o">.</span><span class="n">Write</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\t</span><span class="s1">{0:s} between {1:s} and {2:s}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">date_time_range</span><span class="o">.</span><span class="n">time_value</span><span class="p">,</span> <span class="n">start_time_string</span><span class="p">,</span>
+              <span class="n">end_time_string</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="ExtensionsFileEntryFilter"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.ExtensionsFileEntryFilter">[docs]</a><span class="k">class</span> <span class="nc">ExtensionsFileEntryFilter</span><span class="p">(</span><span class="n">FileEntryFilter</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements extensions-based file entry filter.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extensions</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the extensions-based file entry filter.</span>
+
+<span class="sd">    An extension is defined as &quot;pdf&quot; as in &quot;document.pdf&quot;.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      extensions: a list of extension strings.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">ExtensionsFileEntryFilter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_extensions</span> <span class="o">=</span> <span class="n">extensions</span>
+
+<div class="viewcode-block" id="ExtensionsFileEntryFilter.Matches"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.ExtensionsFileEntryFilter.Matches">[docs]</a>  <span class="k">def</span> <span class="nf">Matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compares the file entry against the filter.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: The file entry (instance of dfvfs.FileEntry).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A boolean indicating if the file entry matches the filter or</span>
+<span class="sd">      None if the filter does not apply</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">location</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="p">,</span> <span class="s1">u&#39;location&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">location</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">extension</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s1">u&#39;.&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">extension</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">return</span> <span class="n">extension</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extensions</span></div>
+
+<div class="viewcode-block" id="ExtensionsFileEntryFilter.Print"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.ExtensionsFileEntryFilter.Print">[docs]</a>  <span class="k">def</span> <span class="nf">Print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_writer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Prints a human readable version of the filter.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      output_writer: the output writer object (instance of CLIOutputWriter).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extensions</span><span class="p">:</span>
+      <span class="n">output_writer</span><span class="o">.</span><span class="n">Write</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\t</span><span class="s1">extensions: {0:s}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="s1">u&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_extensions</span><span class="p">)))</span></div></div>
+
+
+<div class="viewcode-block" id="NamesFileEntryFilter"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.NamesFileEntryFilter">[docs]</a><span class="k">class</span> <span class="nc">NamesFileEntryFilter</span><span class="p">(</span><span class="n">FileEntryFilter</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements names-based file entry filter.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the names-based file entry filter.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      names: a list of name strings.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">NamesFileEntryFilter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_names</span> <span class="o">=</span> <span class="n">names</span>
+
+<div class="viewcode-block" id="NamesFileEntryFilter.Matches"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.NamesFileEntryFilter.Matches">[docs]</a>  <span class="k">def</span> <span class="nf">Matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compares the file entry against the filter.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: The file entry (instance of dfvfs.FileEntry).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A boolean indicating if the file entry matches the filter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">IsFile</span><span class="p">():</span>
+      <span class="k">return</span>
+
+    <span class="k">return</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span></div>
+
+<div class="viewcode-block" id="NamesFileEntryFilter.Print"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.NamesFileEntryFilter.Print">[docs]</a>  <span class="k">def</span> <span class="nf">Print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_writer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Prints a human readable version of the filter.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      output_writer: the output writer object (instance of CLIOutputWriter).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">:</span>
+      <span class="n">output_writer</span><span class="o">.</span><span class="n">Write</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\t</span><span class="s1">names: {0:s}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="s1">u&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_names</span><span class="p">)))</span></div></div>
+
+
+<div class="viewcode-block" id="SignaturesFileEntryFilter"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.SignaturesFileEntryFilter">[docs]</a><span class="k">class</span> <span class="nc">SignaturesFileEntryFilter</span><span class="p">(</span><span class="n">FileEntryFilter</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements signature-based file entry filter.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">specification_store</span><span class="p">,</span> <span class="n">signature_identifiers</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the signature-based file entry filter.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      specification_store: a specification store (instance of</span>
+<span class="sd">                           FormatSpecificationStore).</span>
+<span class="sd">      signature_identifiers: a list of signature identifiers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">SignaturesFileEntryFilter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_signature_identifiers</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">specification_store</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_file_scanner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetScanner</span><span class="p">(</span>
+          <span class="n">specification_store</span><span class="p">,</span> <span class="n">signature_identifiers</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_file_scanner</span> <span class="o">=</span> <span class="bp">None</span>
+
+  <span class="k">def</span> <span class="nf">_GetScanner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">specification_store</span><span class="p">,</span> <span class="n">signature_identifiers</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the scanner object form the specification store.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      specification_store: a specification store (instance of</span>
+<span class="sd">                           FormatSpecificationStore).</span>
+<span class="sd">      signature_identifiers: a list of signature identifiers.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A scanner object (instance of pysigscan.scanner).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">scanner_object</span> <span class="o">=</span> <span class="n">pysigscan</span><span class="o">.</span><span class="n">scanner</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">format_specification</span> <span class="ow">in</span> <span class="n">specification_store</span><span class="o">.</span><span class="n">specifications</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">format_specification</span><span class="o">.</span><span class="n">identifier</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">signature_identifiers</span><span class="p">:</span>
+        <span class="k">continue</span>
+
+      <span class="k">for</span> <span class="n">signature</span> <span class="ow">in</span> <span class="n">format_specification</span><span class="o">.</span><span class="n">signatures</span><span class="p">:</span>
+        <span class="n">pattern_offset</span> <span class="o">=</span> <span class="n">signature</span><span class="o">.</span><span class="n">offset</span>
+        <span class="k">if</span> <span class="n">pattern_offset</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+          <span class="n">signature_flags</span> <span class="o">=</span> <span class="n">pysigscan</span><span class="o">.</span><span class="n">signature_flags</span><span class="o">.</span><span class="n">NO_OFFSET</span>
+        <span class="k">elif</span> <span class="n">pattern_offset</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+          <span class="n">pattern_offset</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+          <span class="n">signature_flags</span> <span class="o">=</span> <span class="n">pysigscan</span><span class="o">.</span><span class="n">signature_flags</span><span class="o">.</span><span class="n">RELATIVE_FROM_END</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">signature_flags</span> <span class="o">=</span> <span class="n">pysigscan</span><span class="o">.</span><span class="n">signature_flags</span><span class="o">.</span><span class="n">RELATIVE_FROM_START</span>
+
+        <span class="n">scanner_object</span><span class="o">.</span><span class="n">add_signature</span><span class="p">(</span>
+            <span class="n">signature</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="n">pattern_offset</span><span class="p">,</span> <span class="n">signature</span><span class="o">.</span><span class="n">pattern</span><span class="p">,</span>
+            <span class="n">signature_flags</span><span class="p">)</span>
+
+      <span class="bp">self</span><span class="o">.</span><span class="n">_signature_identifiers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">format_specification</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">scanner_object</span>
+
+<div class="viewcode-block" id="SignaturesFileEntryFilter.Matches"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.SignaturesFileEntryFilter.Matches">[docs]</a>  <span class="k">def</span> <span class="nf">Matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compares the file entry against the filter.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: The file entry (instance of dfvfs.FileEntry).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A boolean indicating if the file entry matches the filter or</span>
+<span class="sd">      None if the filter does not apply</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_scanner</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">IsFile</span><span class="p">():</span>
+      <span class="k">return</span>
+
+    <span class="n">file_object</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetFileObject</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_object</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">scan_state</span> <span class="o">=</span> <span class="n">pysigscan</span><span class="o">.</span><span class="n">scan_state</span><span class="p">()</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_file_scanner</span><span class="o">.</span><span class="n">scan_file_object</span><span class="p">(</span><span class="n">scan_state</span><span class="p">,</span> <span class="n">file_object</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="n">file_object</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">scan_state</span><span class="o">.</span><span class="n">number_of_scan_results</span> <span class="o">&gt;</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="SignaturesFileEntryFilter.Print"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.SignaturesFileEntryFilter.Print">[docs]</a>  <span class="k">def</span> <span class="nf">Print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_writer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Prints a human readable version of the filter.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      output_writer: the output writer object (instance of CLIOutputWriter).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_scanner</span><span class="p">:</span>
+      <span class="n">output_writer</span><span class="o">.</span><span class="n">Write</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\t</span><span class="s1">signature identifiers: {0:s}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="s1">u&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_signature_identifiers</span><span class="p">)))</span></div></div>
+
+
+<div class="viewcode-block" id="FileEntryFilterCollection"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.FileEntryFilterCollection">[docs]</a><span class="k">class</span> <span class="nc">FileEntryFilterCollection</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements a collection of file entry filters.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the file entry filter collection object.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">FileEntryFilterCollection</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_filters</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="FileEntryFilterCollection.AddFilter"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.FileEntryFilterCollection.AddFilter">[docs]</a>  <span class="k">def</span> <span class="nf">AddFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_entry_filter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds a file entry filter to the collection.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry_filter: a file entry filter (instance of FileEntryFilter).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_filters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_entry_filter</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FileEntryFilterCollection.HasFilters"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.FileEntryFilterCollection.HasFilters">[docs]</a>  <span class="k">def</span> <span class="nf">HasFilters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines if filters are defined.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A boolean value indicating if filters are defined.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_filters</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FileEntryFilterCollection.Matches"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.FileEntryFilterCollection.Matches">[docs]</a>  <span class="k">def</span> <span class="nf">Matches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compares the file entry against the filter collection.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: The file entry (instance of dfvfs.FileEntry).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A boolean indicating if the file entry matches one of the filters.</span>
+<span class="sd">      If no filters are provided or applicable the result will be True.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filters</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">file_entry_filter</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filters</span><span class="p">:</span>
+      <span class="n">result</span> <span class="o">=</span> <span class="n">file_entry_filter</span><span class="o">.</span><span class="n">Matches</span><span class="p">(</span><span class="n">file_entry</span><span class="p">)</span>
+      <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="bp">True</span> <span class="ow">in</span> <span class="n">results</span> <span class="ow">or</span> <span class="bp">False</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">results</span></div>
+
+<div class="viewcode-block" id="FileEntryFilterCollection.Print"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.FileEntryFilterCollection.Print">[docs]</a>  <span class="k">def</span> <span class="nf">Print</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_writer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Prints a human readable version of the filter.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      output_writer: the output writer object (instance of CLIOutputWriter).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filters</span><span class="p">:</span>
+      <span class="n">output_writer</span><span class="o">.</span><span class="n">Write</span><span class="p">(</span><span class="s1">u&#39;Filters:</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+      <span class="k">for</span> <span class="n">file_entry_filter</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filters</span><span class="p">:</span>
+        <span class="n">file_entry_filter</span><span class="o">.</span><span class="n">Print</span><span class="p">(</span><span class="n">output_writer</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="FileSaver"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.FileSaver">[docs]</a><span class="k">class</span> <span class="nc">FileSaver</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that is used to save files.&quot;&quot;&quot;</span>
+
+  <span class="n">_BAD_CHARACTERS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+      <span class="s1">u&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x01</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x02</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x03</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x04</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x05</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x06</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x07</span><span class="s1">&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;</span><span class="se">\x08</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x09</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x0a</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x0b</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x0c</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x0d</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x0e</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x0f</span><span class="s1">&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;</span><span class="se">\x10</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x11</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x12</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x13</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x14</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x15</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x16</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x17</span><span class="s1">&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;</span><span class="se">\x18</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x19</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x1a</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x1b</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x1c</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x1d</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x1e</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x1f</span><span class="s1">&#39;</span><span class="p">,</span>
+      <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s1">u&#39;!&#39;</span><span class="p">,</span> <span class="s1">u&#39;$&#39;</span><span class="p">,</span> <span class="s1">u&#39;%&#39;</span><span class="p">,</span> <span class="s1">u&#39;&amp;&#39;</span><span class="p">,</span> <span class="s1">u&#39;*&#39;</span><span class="p">,</span> <span class="s1">u&#39;+&#39;</span><span class="p">,</span> <span class="s1">u&#39;:&#39;</span><span class="p">,</span> <span class="s1">u&#39;;&#39;</span><span class="p">,</span> <span class="s1">u&#39;&lt;&#39;</span><span class="p">,</span> <span class="s1">u&#39;&gt;&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;?&#39;</span><span class="p">,</span> <span class="s1">u&#39;@&#39;</span><span class="p">,</span> <span class="s1">u&#39;|&#39;</span><span class="p">,</span> <span class="s1">u&#39;~&#39;</span><span class="p">,</span> <span class="s1">u&#39;</span><span class="se">\x7f</span><span class="s1">&#39;</span><span class="p">])</span>
+
+  <span class="n">_COPY_BUFFER_SIZE</span> <span class="o">=</span> <span class="mi">32768</span>
+  <span class="n">_READ_BUFFER_SIZE</span> <span class="o">=</span> <span class="mi">4096</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">skip_duplicates</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the file saver object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      skip_duplicates: boolean value to indicate if duplicate file content</span>
+<span class="sd">                       should be skipped.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">FileSaver</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_digest_hashes</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_skip_duplicates</span> <span class="o">=</span> <span class="n">skip_duplicates</span>
+
+  <span class="k">def</span> <span class="nf">_CalculateHash</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Calculates a MD5 hash of the contents of given file object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_object: a file-like object.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A hexadecimal string of the MD5 hash.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">hasher_object</span> <span class="o">=</span> <span class="n">hashers_manager</span><span class="o">.</span><span class="n">HashersManager</span><span class="o">.</span><span class="n">GetHasherObject</span><span class="p">(</span><span class="s1">u&#39;sha256&#39;</span><span class="p">)</span>
+    <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_SET</span><span class="p">)</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">file_object</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_READ_BUFFER_SIZE</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">data</span><span class="p">:</span>
+      <span class="n">hasher_object</span><span class="o">.</span><span class="n">Update</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+      <span class="n">data</span> <span class="o">=</span> <span class="n">file_object</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_READ_BUFFER_SIZE</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">hasher_object</span><span class="o">.</span><span class="n">GetStringDigest</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">_CopyFileObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_file_object</span><span class="p">,</span> <span class="n">output_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Copies the content of a file-like object to a file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      input_file_object: the input file-like object.</span>
+<span class="sd">      output_path: the path of the output file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">output_file_object</span><span class="p">:</span>
+      <span class="n">input_file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_SET</span><span class="p">)</span>
+
+      <span class="n">data</span> <span class="o">=</span> <span class="n">input_file_object</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_COPY_BUFFER_SIZE</span><span class="p">)</span>
+      <span class="k">while</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">output_file_object</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">input_file_object</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_COPY_BUFFER_SIZE</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FileSaver.WriteFile"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.FileSaver.WriteFile">[docs]</a>  <span class="k">def</span> <span class="nf">WriteFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_path_spec</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">,</span> <span class="n">filename_prefix</span><span class="o">=</span><span class="s1">u&#39;&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes the contents of the source to the destination file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      source_path_spec: the path specification of the source file.</span>
+<span class="sd">      destination_path: the path of the destination file.</span>
+<span class="sd">      filename_prefix: optional filename prefix.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_entry</span> <span class="o">=</span> <span class="n">path_spec_resolver</span><span class="o">.</span><span class="n">Resolver</span><span class="o">.</span><span class="n">OpenFileEntry</span><span class="p">(</span><span class="n">source_path_spec</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">IsFile</span><span class="p">():</span>
+      <span class="k">return</span>
+
+    <span class="n">file_system</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetFileSystem</span><span class="p">()</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">source_path_spec</span><span class="p">,</span> <span class="s1">u&#39;location&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="n">path_segments</span> <span class="o">=</span> <span class="n">file_system</span><span class="o">.</span><span class="n">SplitPath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+    <span class="c1"># Sanitize each path segment.</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">path_segment</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">path_segments</span><span class="p">):</span>
+      <span class="n">path_segments</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+          <span class="n">character</span> <span class="k">if</span> <span class="n">character</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_BAD_CHARACTERS</span> <span class="k">else</span> <span class="s1">u&#39;_&#39;</span>
+          <span class="k">for</span> <span class="n">character</span> <span class="ow">in</span> <span class="n">path_segment</span><span class="p">])</span>
+
+    <span class="n">target_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">destination_path</span><span class="p">,</span> <span class="o">*</span><span class="n">path_segments</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">filename_prefix</span><span class="p">:</span>
+      <span class="n">target_filename</span> <span class="o">=</span> <span class="s1">u&#39;{0:s}_{1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">filename_prefix</span><span class="p">,</span> <span class="n">path_segments</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">target_filename</span> <span class="o">=</span> <span class="n">path_segments</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">target_directory</span><span class="p">:</span>
+      <span class="n">target_directory</span> <span class="o">=</span> <span class="n">destination_path</span>
+
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">target_directory</span><span class="p">):</span>
+      <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">target_directory</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_skip_duplicates</span> <span class="ow">and</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">IsFile</span><span class="p">():</span>
+      <span class="n">file_object</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetFileObject</span><span class="p">()</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">file_object</span><span class="p">:</span>
+        <span class="k">return</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">digest_hash</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CalculateHash</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+      <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">((</span>
+            <span class="s1">u&#39;[skipping] unable to calculate MD5 of file: {0:s} &#39;</span>
+            <span class="s1">u&#39;with error: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+        <span class="k">return</span>
+      <span class="k">finally</span><span class="p">:</span>
+        <span class="n">file_object</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+      <span class="n">stat</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetStat</span><span class="p">()</span>
+      <span class="n">inode</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stat</span><span class="p">,</span> <span class="s1">u&#39;ino&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">inode</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_digest_hashes</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">digest_hash</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_digest_hashes</span><span class="p">[</span><span class="n">inode</span><span class="p">]:</span>
+          <span class="k">return</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_digest_hashes</span><span class="p">[</span><span class="n">inode</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">digest_hash</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_digest_hashes</span><span class="p">[</span><span class="n">inode</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">digest_hash</span><span class="p">]</span>
+
+    <span class="n">file_object</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetFileObject</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_object</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">target_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">target_directory</span><span class="p">,</span> <span class="n">target_filename</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_CopyFileObject</span><span class="p">(</span><span class="n">file_object</span><span class="p">,</span> <span class="n">target_path</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+          <span class="s1">u&#39;[skipping] unable to export file: {0:s} with error: {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">path</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="n">file_object</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="ImageExportFrontend"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.ImageExportFrontend">[docs]</a><span class="k">class</span> <span class="nc">ImageExportFrontend</span><span class="p">(</span><span class="n">frontend</span><span class="o">.</span><span class="n">Frontend</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements the image export front-end.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the front-end object.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">ImageExportFrontend</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_filter_collection</span> <span class="o">=</span> <span class="n">FileEntryFilterCollection</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_base</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_resolver_context</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
+
+  <span class="c1"># TODO: merge with collector and/or engine.</span>
+  <span class="k">def</span> <span class="nf">_Extract</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">source_path_specs</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">,</span> <span class="n">remove_duplicates</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts files.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      source_path_specs: list of path specifications (instances of</span>
+<span class="sd">                         dfvfs.PathSpec) to process.</span>
+<span class="sd">      destination_path: the path where the extracted files should be stored.</span>
+<span class="sd">      remove_duplicates: optional boolean value to indicate if files with</span>
+<span class="sd">                         duplicate content should be removed. The default</span>
+<span class="sd">                         is True.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">destination_path</span><span class="p">):</span>
+      <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">destination_path</span><span class="p">)</span>
+
+    <span class="n">path_spec_extractor</span> <span class="o">=</span> <span class="n">extractors</span><span class="o">.</span><span class="n">PathSpecExtractor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_resolver_context</span><span class="p">)</span>
+    <span class="n">file_saver</span> <span class="o">=</span> <span class="n">FileSaver</span><span class="p">(</span><span class="n">skip_duplicates</span><span class="o">=</span><span class="n">remove_duplicates</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">path_spec</span> <span class="ow">in</span> <span class="n">path_spec_extractor</span><span class="o">.</span><span class="n">ExtractPathSpecs</span><span class="p">(</span><span class="n">source_path_specs</span><span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_ExtractFile</span><span class="p">(</span><span class="n">file_saver</span><span class="p">,</span> <span class="n">path_spec</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_ExtractFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_saver</span><span class="p">,</span> <span class="n">path_spec</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts a file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_saver: the file saver object (instance of FileSaver)</span>
+<span class="sd">      path_spec: a path specification (instance of dfvfs.PathSpec).</span>
+<span class="sd">      destination_path: the path where the extracted files should be stored.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_entry</span> <span class="o">=</span> <span class="n">path_spec_resolver</span><span class="o">.</span><span class="n">Resolver</span><span class="o">.</span><span class="n">OpenFileEntry</span><span class="p">(</span><span class="n">path_spec</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_collection</span><span class="o">.</span><span class="n">Matches</span><span class="p">(</span><span class="n">file_entry</span><span class="p">):</span>
+      <span class="k">return</span>
+
+    <span class="n">vss_store_number</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">path_spec</span><span class="p">,</span> <span class="s1">u&#39;vss_store_number&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">vss_store_number</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">filename_prefix</span> <span class="o">=</span> <span class="s1">u&#39;vss_{0:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vss_store_number</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">filename_prefix</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+
+    <span class="n">file_saver</span><span class="o">.</span><span class="n">WriteFile</span><span class="p">(</span>
+        <span class="n">path_spec</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">,</span> <span class="n">filename_prefix</span><span class="o">=</span><span class="n">filename_prefix</span><span class="p">)</span>
+
+  <span class="c1"># TODO: merge with collector and/or engine.</span>
+  <span class="k">def</span> <span class="nf">_ExtractWithFilter</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">source_path_specs</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">,</span> <span class="n">filter_file_path</span><span class="p">,</span>
+      <span class="n">remove_duplicates</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts files using a filter expression.</span>
+
+<span class="sd">    This method runs the file extraction process on the image and</span>
+<span class="sd">    potentially on every VSS if that is wanted.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      source_path_specs: list of path specifications (instances of</span>
+<span class="sd">                         dfvfs.PathSpec) to process.</span>
+<span class="sd">      destination_path: The path where the extracted files should be stored.</span>
+<span class="sd">      filter_file_path: The path of the file that contains the filter</span>
+<span class="sd">                        expressions.</span>
+<span class="sd">      remove_duplicates: optional boolean value to indicate if files with</span>
+<span class="sd">                         duplicate content should be removed. The default</span>
+<span class="sd">                         is True.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">source_path_spec</span> <span class="ow">in</span> <span class="n">source_path_specs</span><span class="p">:</span>
+      <span class="n">file_system</span><span class="p">,</span> <span class="n">mount_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetSourceFileSystem</span><span class="p">(</span>
+          <span class="n">source_path_spec</span><span class="p">,</span> <span class="n">resolver_context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_resolver_context</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_base</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_Preprocess</span><span class="p">(</span><span class="n">file_system</span><span class="p">,</span> <span class="n">mount_point</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">destination_path</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">destination_path</span><span class="p">)</span>
+
+      <span class="n">find_specs</span> <span class="o">=</span> <span class="n">engine_utils</span><span class="o">.</span><span class="n">BuildFindSpecsFromFile</span><span class="p">(</span>
+          <span class="n">filter_file_path</span><span class="p">,</span> <span class="n">pre_obj</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_base</span><span class="o">.</span><span class="n">pre_obj</span><span class="p">)</span>
+
+      <span class="c1"># Save the regular files.</span>
+      <span class="n">file_saver</span> <span class="o">=</span> <span class="n">FileSaver</span><span class="p">(</span><span class="n">skip_duplicates</span><span class="o">=</span><span class="n">remove_duplicates</span><span class="p">)</span>
+
+      <span class="n">searcher</span> <span class="o">=</span> <span class="n">file_system_searcher</span><span class="o">.</span><span class="n">FileSystemSearcher</span><span class="p">(</span>
+          <span class="n">file_system</span><span class="p">,</span> <span class="n">mount_point</span><span class="p">)</span>
+      <span class="k">for</span> <span class="n">path_spec</span> <span class="ow">in</span> <span class="n">searcher</span><span class="o">.</span><span class="n">Find</span><span class="p">(</span><span class="n">find_specs</span><span class="o">=</span><span class="n">find_specs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ExtractFile</span><span class="p">(</span><span class="n">file_saver</span><span class="p">,</span> <span class="n">path_spec</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">)</span>
+
+      <span class="n">file_system</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
+
+  <span class="c1"># TODO: refactor, this is a duplicate of the function in engine.</span>
+  <span class="k">def</span> <span class="nf">_GetSourceFileSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_path_spec</span><span class="p">,</span> <span class="n">resolver_context</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the file system of the source.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      source_path_spec: The source path specification (instance of</span>
+<span class="sd">                        dfvfs.PathSpec) of the file system.</span>
+<span class="sd">      resolver_context: Optional resolver context (instance of dfvfs.Context).</span>
+<span class="sd">                        The default is None which will use the built in context</span>
+<span class="sd">                        which is not multi process safe. Note that every thread</span>
+<span class="sd">                        or process must have its own resolver context.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A tuple of the file system (instance of dfvfs.FileSystem) and</span>
+<span class="sd">      the mount point path specification (instance of path.PathSpec).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: if source path specification is not set.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">source_path_spec</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">u&#39;Missing source.&#39;</span><span class="p">)</span>
+
+    <span class="n">file_system</span> <span class="o">=</span> <span class="n">path_spec_resolver</span><span class="o">.</span><span class="n">Resolver</span><span class="o">.</span><span class="n">OpenFileSystem</span><span class="p">(</span>
+        <span class="n">source_path_spec</span><span class="p">,</span> <span class="n">resolver_context</span><span class="o">=</span><span class="n">resolver_context</span><span class="p">)</span>
+
+    <span class="n">type_indicator</span> <span class="o">=</span> <span class="n">source_path_spec</span><span class="o">.</span><span class="n">type_indicator</span>
+    <span class="k">if</span> <span class="n">path_spec_factory</span><span class="o">.</span><span class="n">Factory</span><span class="o">.</span><span class="n">IsSystemLevelTypeIndicator</span><span class="p">(</span><span class="n">type_indicator</span><span class="p">):</span>
+      <span class="n">mount_point</span> <span class="o">=</span> <span class="n">source_path_spec</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">mount_point</span> <span class="o">=</span> <span class="n">source_path_spec</span><span class="o">.</span><span class="n">parent</span>
+
+    <span class="k">return</span> <span class="n">file_system</span><span class="p">,</span> <span class="n">mount_point</span>
+
+  <span class="k">def</span> <span class="nf">_Preprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_system</span><span class="p">,</span> <span class="n">mount_point</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Preprocesses the image.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_system: the file system object (instance of vfs.FileSystem)</span>
+<span class="sd">                   to be preprocessed.</span>
+<span class="sd">      mount_point: the mount point path specification (instance of</span>
+<span class="sd">                   path.PathSpec) that refers to the base location</span>
+<span class="sd">                   of the file system.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_base</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_base</span> <span class="o">=</span> <span class="n">knowledge_base</span><span class="o">.</span><span class="n">KnowledgeBase</span><span class="p">()</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">u&#39;Guessing OS&#39;</span><span class="p">)</span>
+
+    <span class="n">searcher</span> <span class="o">=</span> <span class="n">file_system_searcher</span><span class="o">.</span><span class="n">FileSystemSearcher</span><span class="p">(</span><span class="n">file_system</span><span class="p">,</span> <span class="n">mount_point</span><span class="p">)</span>
+    <span class="n">platform</span> <span class="o">=</span> <span class="n">preprocess_interface</span><span class="o">.</span><span class="n">GuessOS</span><span class="p">(</span><span class="n">searcher</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">u&#39;OS: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">platform</span><span class="p">))</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">u&#39;Running preprocess.&#39;</span><span class="p">)</span>
+
+    <span class="n">preprocess_manager</span><span class="o">.</span><span class="n">PreprocessPluginsManager</span><span class="o">.</span><span class="n">RunPlugins</span><span class="p">(</span>
+        <span class="n">platform</span><span class="p">,</span> <span class="n">file_system</span><span class="p">,</span> <span class="n">mount_point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_base</span><span class="p">)</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">u&#39;Preprocess done, saving files from image.&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ImageExportFrontend.ReadSpecificationFile"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.ImageExportFrontend.ReadSpecificationFile">[docs]</a>  <span class="k">def</span> <span class="nf">ReadSpecificationFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads the format specification file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      path: the path of the format specification file.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The format specification store (instance of FormatSpecificationStore).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">specification_store</span> <span class="o">=</span> <span class="n">specification</span><span class="o">.</span><span class="n">FormatSpecificationStore</span><span class="p">()</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_object</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file_object</span><span class="o">.</span><span class="n">readlines</span><span class="p">():</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;#&#39;</span><span class="p">):</span>
+          <span class="k">continue</span>
+
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">identifier</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">pattern</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+          <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">u&#39;[skipping] invalid line: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">)))</span>
+          <span class="k">continue</span>
+
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">offset</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+          <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">u&#39;[skipping] invalid offset in line: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">)))</span>
+          <span class="k">continue</span>
+
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">pattern</span> <span class="o">=</span> <span class="n">pattern</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;string_escape&#39;</span><span class="p">)</span>
+        <span class="c1"># ValueError is raised e.g. when the patterns contains &quot;\xg1&quot;.</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+          <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+              <span class="s1">u&#39;[skipping] invalid pattern in line: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                  <span class="n">line</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">)))</span>
+          <span class="k">continue</span>
+
+        <span class="n">format_specification</span> <span class="o">=</span> <span class="n">specification</span><span class="o">.</span><span class="n">FormatSpecification</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="n">format_specification</span><span class="o">.</span><span class="n">AddNewSignature</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">offset</span><span class="p">)</span>
+        <span class="n">specification_store</span><span class="o">.</span><span class="n">AddSpecification</span><span class="p">(</span><span class="n">format_specification</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">specification_store</span></div>
+
+<div class="viewcode-block" id="ImageExportFrontend.HasFilters"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.ImageExportFrontend.HasFilters">[docs]</a>  <span class="k">def</span> <span class="nf">HasFilters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines if filters are defined.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A boolean value indicating if filters are defined.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_collection</span><span class="o">.</span><span class="n">HasFilters</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ImageExportFrontend.ParseDateFilters"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.ImageExportFrontend.ParseDateFilters">[docs]</a>  <span class="k">def</span> <span class="nf">ParseDateFilters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date_filters</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses the date filters.</span>
+
+<span class="sd">    A date filter string is formatted as 3 comma separated values:</span>
+<span class="sd">    time value, start date and time (string) and end date and time (string)</span>
+
+<span class="sd">    The time value and either a start or end date and time is required.</span>
+
+<span class="sd">    The date and time strings are formatted as:</span>
+<span class="sd">    YYYY-MM-DD hh:mm:ss.######[+-]##:##</span>
+<span class="sd">    Where # are numeric digits ranging from 0 to 9 and the seconds</span>
+<span class="sd">    fraction can be either 3 or 6 digits. The time of day, seconds fraction</span>
+<span class="sd">    and timezone offset are optional. The default timezone is UTC.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      date_filters: a list of strings containing date filter definitions.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      ValueError: if the date filter definitions are invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">date_filters</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">file_entry_filter</span> <span class="o">=</span> <span class="n">DateTimeFileEntryFilter</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">date_filter</span> <span class="ow">in</span> <span class="n">date_filters</span><span class="p">:</span>
+      <span class="n">date_filter_pieces</span> <span class="o">=</span> <span class="n">date_filter</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">u&#39;,&#39;</span><span class="p">)</span>
+      <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">date_filter_pieces</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">u&#39;Badly formed date filter: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">date_filter</span><span class="p">))</span>
+
+      <span class="n">time_value</span><span class="p">,</span> <span class="n">start_time_string</span><span class="p">,</span> <span class="n">end_time_string</span> <span class="o">=</span> <span class="n">date_filter_pieces</span>
+      <span class="n">time_value</span> <span class="o">=</span> <span class="n">time_value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+      <span class="n">start_time_string</span> <span class="o">=</span> <span class="n">start_time_string</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+      <span class="n">end_time_string</span> <span class="o">=</span> <span class="n">end_time_string</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">file_entry_filter</span><span class="o">.</span><span class="n">AddDateTimeRange</span><span class="p">(</span>
+            <span class="n">time_value</span><span class="p">,</span> <span class="n">start_time_string</span><span class="o">=</span><span class="n">start_time_string</span><span class="p">,</span>
+            <span class="n">end_time_string</span><span class="o">=</span><span class="n">end_time_string</span><span class="p">)</span>
+      <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">u&#39;Badly formed date filter: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">date_filter</span><span class="p">))</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_filter_collection</span><span class="o">.</span><span class="n">AddFilter</span><span class="p">(</span><span class="n">file_entry_filter</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ImageExportFrontend.ParseExtensionsString"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.ImageExportFrontend.ParseExtensionsString">[docs]</a>  <span class="k">def</span> <span class="nf">ParseExtensionsString</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extensions_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses the extensions string.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      extensions_string: a string with comma separated extensions to filter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">extensions_string</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">extensions_string</span> <span class="o">=</span> <span class="n">extensions_string</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">extensions</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">extension</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">extension</span> <span class="ow">in</span> <span class="n">extensions_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">u&#39;,&#39;</span><span class="p">)]</span>
+    <span class="n">file_entry_filter</span> <span class="o">=</span> <span class="n">ExtensionsFileEntryFilter</span><span class="p">(</span><span class="n">extensions</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_filter_collection</span><span class="o">.</span><span class="n">AddFilter</span><span class="p">(</span><span class="n">file_entry_filter</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ImageExportFrontend.ParseNamesString"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.ImageExportFrontend.ParseNamesString">[docs]</a>  <span class="k">def</span> <span class="nf">ParseNamesString</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses the name string.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      names_string: a string with comma separated filenames to filter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">names_string</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">names_string</span> <span class="o">=</span> <span class="n">names_string</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">u&#39;,&#39;</span><span class="p">)]</span>
+    <span class="n">file_entry_filter</span> <span class="o">=</span> <span class="n">NamesFileEntryFilter</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_filter_collection</span><span class="o">.</span><span class="n">AddFilter</span><span class="p">(</span><span class="n">file_entry_filter</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ImageExportFrontend.ParseSignatureIdentifiers"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.ImageExportFrontend.ParseSignatureIdentifiers">[docs]</a>  <span class="k">def</span> <span class="nf">ParseSignatureIdentifiers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_location</span><span class="p">,</span> <span class="n">signature_identifiers</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses the signature identifiers.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      data_location: the location of the format specification file</span>
+<span class="sd">                     (signatures.conf).</span>
+<span class="sd">      signature_identifiers: a string with comma separated signature</span>
+<span class="sd">                             identifiers.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      IOError: if the format specification file could not be read from</span>
+<span class="sd">               the specified data location.</span>
+<span class="sd">      ValueError: if no data location was specified.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">signature_identifiers</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">data_location</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Missing data location.&#39;</span><span class="p">)</span>
+
+    <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_location</span><span class="p">,</span> <span class="s1">u&#39;signatures.conf&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span>
+          <span class="s1">u&#39;No such format specification file: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">specification_store</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ReadSpecificationFile</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">((</span>
+          <span class="s1">u&#39;Unable to read format specification file: {0:s} with error: &#39;</span>
+          <span class="s1">u&#39;{1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+    <span class="n">signature_identifiers</span> <span class="o">=</span> <span class="n">signature_identifiers</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">signature_identifiers</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">identifier</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">signature_identifiers</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">u&#39;,&#39;</span><span class="p">)]</span>
+    <span class="n">file_entry_filter</span> <span class="o">=</span> <span class="n">SignaturesFileEntryFilter</span><span class="p">(</span>
+        <span class="n">specification_store</span><span class="p">,</span> <span class="n">signature_identifiers</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_filter_collection</span><span class="o">.</span><span class="n">AddFilter</span><span class="p">(</span><span class="n">file_entry_filter</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ImageExportFrontend.PrintFilterCollection"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.ImageExportFrontend.PrintFilterCollection">[docs]</a>  <span class="k">def</span> <span class="nf">PrintFilterCollection</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_writer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Prints the filter collection.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      output_writer: the output writer (instance of OutputWriter).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_filter_collection</span><span class="o">.</span><span class="n">Print</span><span class="p">(</span><span class="n">output_writer</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ImageExportFrontend.ProcessSources"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.image_export.ImageExportFrontend.ProcessSources">[docs]</a>  <span class="k">def</span> <span class="nf">ProcessSources</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">source_path_specs</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">,</span> <span class="n">filter_file</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+      <span class="n">remove_duplicates</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Processes the sources.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      source_path_specs: list of path specifications (instances of</span>
+<span class="sd">                         dfvfs.PathSpec) to process.</span>
+<span class="sd">      destination_path: the path where the extracted files should be stored.</span>
+<span class="sd">      filter_file: optional name of of the filter file.</span>
+<span class="sd">      remove_duplicates: optional boolean value to indicate if files with</span>
+<span class="sd">                         duplicate content should be removed. The default</span>
+<span class="sd">                         is True.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">filter_file</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_ExtractWithFilter</span><span class="p">(</span>
+          <span class="n">source_path_specs</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">,</span> <span class="n">filter_file</span><span class="p">,</span>
+          <span class="n">remove_duplicates</span><span class="o">=</span><span class="n">remove_duplicates</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_Extract</span><span class="p">(</span>
+          <span class="n">source_path_specs</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">,</span>
+          <span class="n">remove_duplicates</span><span class="o">=</span><span class="n">remove_duplicates</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

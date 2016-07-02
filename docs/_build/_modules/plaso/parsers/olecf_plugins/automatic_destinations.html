@@ -1,0 +1,358 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.olecf_plugins.automatic_destinations &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../../index.html" />
+    <link rel="up" title="plaso" href="../../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.olecf_plugins.automatic_destinations</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Plugin to parse .automaticDestinations-ms OLECF files.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">uuid</span>
+
+<span class="kn">import</span> <span class="nn">construct</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">windows_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">binary</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">olecf</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">winlnk</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers.olecf_plugins</span> <span class="kn">import</span> <span class="n">interface</span>
+
+
+<div class="viewcode-block" id="AutomaticDestinationsDestListEntryEvent"><a class="viewcode-back" href="../../../../plaso.parsers.olecf_plugins.html#plaso.parsers.olecf_plugins.automatic_destinations.AutomaticDestinationsDestListEntryEvent">[docs]</a><span class="k">class</span> <span class="nc">AutomaticDestinationsDestListEntryEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">FiletimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for an .automaticDestinations-ms DestList entry event.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;olecf:dest_list:entry&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">,</span> <span class="n">entry_offset</span><span class="p">,</span> <span class="n">dest_list_entry</span><span class="p">,</span>
+      <span class="n">droid_volume_identifier</span><span class="p">,</span> <span class="n">droid_file_identifier</span><span class="p">,</span>
+      <span class="n">birth_droid_volume_identifier</span><span class="p">,</span> <span class="n">birth_droid_file_identifier</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timestamp: The FILETIME value for the timestamp.</span>
+<span class="sd">      timestamp_description: The usage string for the timestamp value.</span>
+<span class="sd">      entry_offset: The offset of the DestList entry relative to the start of</span>
+<span class="sd">                    the DestList stream.</span>
+<span class="sd">      droid_volume_identifier: a string containing the droid volume identifier.</span>
+<span class="sd">      droid_file_identifier: a string containing the droid file identifier.</span>
+<span class="sd">      birth_droid_volume_identifier: a string containing the birth droid volume</span>
+<span class="sd">                                     identifier.</span>
+<span class="sd">      birth_droid_file_identifier: a string containing the birth droid file</span>
+<span class="sd">                                   identifier.</span>
+<span class="sd">      dest_list_entry: The DestList entry (instance of construct.Struct).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">AutomaticDestinationsDestListEntryEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">entry_offset</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">entry_number</span> <span class="o">=</span> <span class="n">dest_list_entry</span><span class="o">.</span><span class="n">entry_number</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">hostname</span> <span class="o">=</span> <span class="n">binary</span><span class="o">.</span><span class="n">ByteStreamCopyToString</span><span class="p">(</span>
+        <span class="n">dest_list_entry</span><span class="o">.</span><span class="n">hostname</span><span class="p">,</span> <span class="n">codepage</span><span class="o">=</span><span class="s1">u&#39;ascii&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">binary</span><span class="o">.</span><span class="n">UTF16StreamCopyToString</span><span class="p">(</span><span class="n">dest_list_entry</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">pin_status</span> <span class="o">=</span> <span class="n">dest_list_entry</span><span class="o">.</span><span class="n">pin_status</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">droid_volume_identifier</span> <span class="o">=</span> <span class="n">droid_volume_identifier</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">droid_file_identifier</span> <span class="o">=</span> <span class="n">droid_file_identifier</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">birth_droid_volume_identifier</span> <span class="o">=</span> <span class="n">birth_droid_volume_identifier</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">birth_droid_file_identifier</span> <span class="o">=</span> <span class="n">birth_droid_file_identifier</span></div>
+
+
+<div class="viewcode-block" id="AutomaticDestinationsOlecfPlugin"><a class="viewcode-back" href="../../../../plaso.parsers.olecf_plugins.html#plaso.parsers.olecf_plugins.automatic_destinations.AutomaticDestinationsOlecfPlugin">[docs]</a><span class="k">class</span> <span class="nc">AutomaticDestinationsOlecfPlugin</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">OlecfPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Plugin that parses an .automaticDestinations-ms OLECF file.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;olecf_automatic_destinations&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for *.automaticDestinations-ms OLECF files.&#39;</span>
+
+  <span class="n">REQUIRED_ITEMS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s1">u&#39;DestList&#39;</span><span class="p">])</span>
+
+  <span class="n">_RE_LNK_ITEM_NAME</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;^[1-9a-f][0-9a-f]*$&#39;</span><span class="p">)</span>
+
+  <span class="c1"># We cannot use the parser registry here since winlnk could be disabled.</span>
+  <span class="c1"># TODO: see if there is a more elegant solution for this.</span>
+  <span class="n">_WINLNK_PARSER</span> <span class="o">=</span> <span class="n">winlnk</span><span class="o">.</span><span class="n">WinLnkParser</span><span class="p">()</span>
+
+  <span class="n">_DEST_LIST_STREAM_HEADER</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;dest_list_stream_header&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;format_version&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;number_of_entries&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;number_of_pinned_entries&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;last_entry_number&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;last_revision_number&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+
+  <span class="n">_DEST_LIST_STREAM_HEADER_SIZE</span> <span class="o">=</span> <span class="n">_DEST_LIST_STREAM_HEADER</span><span class="o">.</span><span class="n">sizeof</span><span class="p">()</span>
+
+  <span class="c1"># Using Construct&#39;s utf-16 encoding here will create strings with their</span>
+  <span class="c1"># end-of-string characters exposed. Instead the strings are read as</span>
+  <span class="c1"># binary strings and converted using ReadUTF16().</span>
+  <span class="n">_DEST_LIST_STREAM_ENTRY_V1</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;dest_list_stream_entry_v1&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Bytes</span><span class="p">(</span><span class="s1">u&#39;droid_volume_identifier&#39;</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Bytes</span><span class="p">(</span><span class="s1">u&#39;droid_file_identifier&#39;</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Bytes</span><span class="p">(</span><span class="s1">u&#39;birth_droid_volume_identifier&#39;</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Bytes</span><span class="p">(</span><span class="s1">u&#39;birth_droid_file_identifier&#39;</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;hostname&#39;</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;entry_number&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;last_modification_time&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;pin_status&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;path_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;path&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="o">.</span><span class="n">path_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>
+
+  <span class="n">_DEST_LIST_STREAM_ENTRY_V3</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;dest_list_stream_entry_v3&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Bytes</span><span class="p">(</span><span class="s1">u&#39;droid_volume_identifier&#39;</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Bytes</span><span class="p">(</span><span class="s1">u&#39;droid_file_identifier&#39;</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Bytes</span><span class="p">(</span><span class="s1">u&#39;birth_droid_volume_identifier&#39;</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Bytes</span><span class="p">(</span><span class="s1">u&#39;birth_droid_file_identifier&#39;</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;hostname&#39;</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;entry_number&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;last_modification_time&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;pin_status&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;path_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;path&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="o">.</span><span class="n">path_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+
+<div class="viewcode-block" id="AutomaticDestinationsOlecfPlugin.ParseDestList"><a class="viewcode-back" href="../../../../plaso.parsers.olecf_plugins.html#plaso.parsers.olecf_plugins.automatic_destinations.AutomaticDestinationsOlecfPlugin.ParseDestList">[docs]</a>  <span class="k">def</span> <span class="nf">ParseDestList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">olecf_item</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses the DestList OLECF item.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      olecf_item: An OLECF item (instance of pyolecf.item).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DEST_LIST_STREAM_HEADER</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">olecf_item</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to parse DestList header with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">header</span><span class="o">.</span><span class="n">format_version</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;unsupported format version: {0:d}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">format_version</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">header</span><span class="o">.</span><span class="n">format_version</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+      <span class="n">dest_list_stream_entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DEST_LIST_STREAM_ENTRY_V1</span>
+    <span class="k">elif</span> <span class="n">header</span><span class="o">.</span><span class="n">format_version</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">):</span>
+      <span class="n">dest_list_stream_entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DEST_LIST_STREAM_ENTRY_V3</span>
+
+    <span class="n">entry_offset</span> <span class="o">=</span> <span class="n">olecf_item</span><span class="o">.</span><span class="n">get_offset</span><span class="p">()</span>
+    <span class="k">while</span> <span class="n">entry_offset</span> <span class="o">&lt;</span> <span class="n">olecf_item</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">entry</span> <span class="o">=</span> <span class="n">dest_list_stream_entry</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">olecf_item</span><span class="p">)</span>
+      <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+            <span class="s1">u&#39;Unable to parse DestList entry with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">exception</span><span class="p">))</span>
+
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">entry</span><span class="p">:</span>
+        <span class="k">break</span>
+
+      <span class="n">display_name</span> <span class="o">=</span> <span class="s1">u&#39;Dest list entry at offset: 0x{0:08x}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">entry_offset</span><span class="p">)</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">uuid_object</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">(</span><span class="n">bytes_le</span><span class="o">=</span><span class="n">entry</span><span class="o">.</span><span class="n">droid_volume_identifier</span><span class="p">)</span>
+        <span class="n">droid_volume_identifier</span> <span class="o">=</span> <span class="s1">u&#39;{{{0!s}}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">uuid_object</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">uuid_object</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+          <span class="n">event_object</span> <span class="o">=</span> <span class="p">(</span>
+              <span class="n">windows_events</span><span class="o">.</span><span class="n">WindowsDistributedLinkTrackingCreationEvent</span><span class="p">(</span>
+                  <span class="n">uuid_object</span><span class="p">,</span> <span class="n">display_name</span><span class="p">))</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">droid_volume_identifier</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+            <span class="s1">u&#39;unable to read droid volume identifier with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">exception</span><span class="p">))</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">uuid_object</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">(</span><span class="n">bytes_le</span><span class="o">=</span><span class="n">entry</span><span class="o">.</span><span class="n">droid_file_identifier</span><span class="p">)</span>
+        <span class="n">droid_file_identifier</span> <span class="o">=</span> <span class="s1">u&#39;{{{0!s}}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">uuid_object</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">uuid_object</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+          <span class="n">event_object</span> <span class="o">=</span> <span class="p">(</span>
+              <span class="n">windows_events</span><span class="o">.</span><span class="n">WindowsDistributedLinkTrackingCreationEvent</span><span class="p">(</span>
+                  <span class="n">uuid_object</span><span class="p">,</span> <span class="n">display_name</span><span class="p">))</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">droid_file_identifier</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+            <span class="s1">u&#39;unable to read droid file identifier with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">exception</span><span class="p">))</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">uuid_object</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">(</span><span class="n">bytes_le</span><span class="o">=</span><span class="n">entry</span><span class="o">.</span><span class="n">birth_droid_volume_identifier</span><span class="p">)</span>
+        <span class="n">birth_droid_volume_identifier</span> <span class="o">=</span> <span class="s1">u&#39;{{{0!s}}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">uuid_object</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">uuid_object</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+          <span class="n">event_object</span> <span class="o">=</span> <span class="p">(</span>
+              <span class="n">windows_events</span><span class="o">.</span><span class="n">WindowsDistributedLinkTrackingCreationEvent</span><span class="p">(</span>
+                  <span class="n">uuid_object</span><span class="p">,</span> <span class="n">display_name</span><span class="p">))</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">birth_droid_volume_identifier</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+            <span class="s1">u&#39;unable to read birth droid volume identifier with error: &#39;</span>
+            <span class="s1">u&#39;{0:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">exception</span><span class="p">))</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">uuid_object</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">(</span><span class="n">bytes_le</span><span class="o">=</span><span class="n">entry</span><span class="o">.</span><span class="n">birth_droid_file_identifier</span><span class="p">)</span>
+        <span class="n">birth_droid_file_identifier</span> <span class="o">=</span> <span class="s1">u&#39;{{{0!s}}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">uuid_object</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">uuid_object</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+          <span class="n">event_object</span> <span class="o">=</span> <span class="p">(</span>
+              <span class="n">windows_events</span><span class="o">.</span><span class="n">WindowsDistributedLinkTrackingCreationEvent</span><span class="p">(</span>
+                  <span class="n">uuid_object</span><span class="p">,</span> <span class="n">display_name</span><span class="p">))</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">birth_droid_file_identifier</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+            <span class="s1">u&#39;unable to read birth droid file identifier with error: &#39;</span>
+            <span class="s1">u&#39;{0:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">exception</span><span class="p">))</span>
+
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">AutomaticDestinationsDestListEntryEvent</span><span class="p">(</span>
+          <span class="n">entry</span><span class="o">.</span><span class="n">last_modification_time</span><span class="p">,</span>
+          <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">MODIFICATION_TIME</span><span class="p">,</span> <span class="n">entry_offset</span><span class="p">,</span> <span class="n">entry</span><span class="p">,</span>
+          <span class="n">droid_volume_identifier</span><span class="p">,</span> <span class="n">droid_file_identifier</span><span class="p">,</span>
+          <span class="n">birth_droid_volume_identifier</span><span class="p">,</span> <span class="n">birth_droid_file_identifier</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="n">entry_offset</span> <span class="o">=</span> <span class="n">olecf_item</span><span class="o">.</span><span class="n">get_offset</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="AutomaticDestinationsOlecfPlugin.ParseItems"><a class="viewcode-back" href="../../../../plaso.parsers.olecf_plugins.html#plaso.parsers.olecf_plugins.automatic_destinations.AutomaticDestinationsOlecfPlugin.ParseItems">[docs]</a>  <span class="k">def</span> <span class="nf">ParseItems</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_entry</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">root_item</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses OLECF items.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_entry: Optional file entry object (instance of dfvfs.FileEntry).</span>
+<span class="sd">      root_item: Optional root item of the OLECF file.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      ValueError: If the root_item is not set.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">root_item</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Root item not set.&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">root_item</span><span class="o">.</span><span class="n">sub_items</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">u&#39;DestList&#39;</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ParseDestList</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+
+      <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_RE_LNK_ITEM_NAME</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">file_entry</span><span class="p">:</span>
+          <span class="n">display_name</span> <span class="o">=</span> <span class="s1">u&#39;{0:s} # {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">parser_mediator</span><span class="o">.</span><span class="n">GetDisplayName</span><span class="p">(),</span> <span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">display_name</span> <span class="o">=</span> <span class="s1">u&#39;# {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_WINLNK_PARSER</span><span class="o">.</span><span class="n">Parse</span><span class="p">(</span>
+            <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">display_name</span><span class="o">=</span><span class="n">display_name</span><span class="p">)</span></div></div>
+
+        <span class="c1"># TODO: check for trailing data?</span>
+
+
+<span class="n">olecf</span><span class="o">.</span><span class="n">OleCfParser</span><span class="o">.</span><span class="n">RegisterPlugin</span><span class="p">(</span><span class="n">AutomaticDestinationsOlecfPlugin</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

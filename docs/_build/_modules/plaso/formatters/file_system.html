@@ -1,0 +1,345 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.formatters.file_system &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.formatters.file_system</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;The file system stat event formatter.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">dfvfs.lib</span> <span class="kn">import</span> <span class="n">definitions</span> <span class="k">as</span> <span class="n">dfvfs_definitions</span>
+
+<span class="kn">from</span> <span class="nn">plaso.formatters</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.formatters</span> <span class="kn">import</span> <span class="n">manager</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+
+
+<div class="viewcode-block" id="FileStatEventFormatter"><a class="viewcode-back" href="../../../plaso.formatters.html#plaso.formatters.file_system.FileStatEventFormatter">[docs]</a><span class="k">class</span> <span class="nc">FileStatEventFormatter</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">ConditionalEventFormatter</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;The file system stat event formatter.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;fs:stat&#39;</span>
+
+  <span class="n">FORMAT_STRING_PIECES</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="s1">u&#39;{display_name}&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;Type: {file_entry_type}&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;({unallocated})&#39;</span><span class="p">]</span>
+
+  <span class="n">FORMAT_STRING_SHORT_PIECES</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="s1">u&#39;{filename}&#39;</span><span class="p">]</span>
+
+  <span class="n">SOURCE_SHORT</span> <span class="o">=</span> <span class="s1">u&#39;FILE&#39;</span>
+
+  <span class="n">_FILE_ENTRY_TYPES</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">FILE_ENTRY_TYPE_DEVICE</span><span class="p">:</span> <span class="s1">u&#39;device&#39;</span><span class="p">,</span>
+      <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">FILE_ENTRY_TYPE_DIRECTORY</span><span class="p">:</span> <span class="s1">u&#39;directory&#39;</span><span class="p">,</span>
+      <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">FILE_ENTRY_TYPE_FILE</span><span class="p">:</span> <span class="s1">u&#39;file&#39;</span><span class="p">,</span>
+      <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">FILE_ENTRY_TYPE_LINK</span><span class="p">:</span> <span class="s1">u&#39;link&#39;</span><span class="p">,</span>
+      <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">FILE_ENTRY_TYPE_SOCKET</span><span class="p">:</span> <span class="s1">u&#39;socket&#39;</span><span class="p">,</span>
+      <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">FILE_ENTRY_TYPE_PIPE</span><span class="p">:</span> <span class="s1">u&#39;pipe&#39;</span><span class="p">}</span>
+
+<div class="viewcode-block" id="FileStatEventFormatter.GetMessages"><a class="viewcode-back" href="../../../plaso.formatters.html#plaso.formatters.file_system.FileStatEventFormatter.GetMessages">[docs]</a>  <span class="k">def</span> <span class="nf">GetMessages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unused_formatter_mediator</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines the formatted message strings for an event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      formatter_mediator: the formatter mediator object (instance of</span>
+<span class="sd">                          FormatterMediator).</span>
+<span class="sd">      event_object: the event object (instance of EventObject).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A tuple containing the formatted message string and short message string.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      WrongFormatter: if the event object cannot be formatted by the formatter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">DATA_TYPE</span> <span class="o">!=</span> <span class="n">event_object</span><span class="o">.</span><span class="n">data_type</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">WrongFormatter</span><span class="p">(</span><span class="s1">u&#39;Unsupported data type: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">event_object</span><span class="o">.</span><span class="n">data_type</span><span class="p">))</span>
+
+    <span class="n">event_values</span> <span class="o">=</span> <span class="n">event_object</span><span class="o">.</span><span class="n">CopyToDict</span><span class="p">()</span>
+
+    <span class="n">file_entry_type</span> <span class="o">=</span> <span class="n">event_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;file_entry_type&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">file_entry_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">event_values</span><span class="p">[</span><span class="s1">u&#39;file_entry_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FILE_ENTRY_TYPES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+          <span class="n">file_entry_type</span><span class="p">,</span> <span class="s1">u&#39;UNKNOWN&#39;</span><span class="p">)</span>
+
+    <span class="c1"># The usage of allocated is deprecated in favor of is_allocated but</span>
+    <span class="c1"># is kept here to be backwards compatible.</span>
+    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">event_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;allocated&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span> <span class="ow">and</span>
+        <span class="ow">not</span> <span class="n">event_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;is_allocated&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)):</span>
+      <span class="n">event_values</span><span class="p">[</span><span class="s1">u&#39;unallocated&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">u&#39;unallocated&#39;</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ConditionalFormatMessages</span><span class="p">(</span><span class="n">event_values</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FileStatEventFormatter.GetSources"><a class="viewcode-back" href="../../../plaso.formatters.html#plaso.formatters.file_system.FileStatEventFormatter.GetSources">[docs]</a>  <span class="k">def</span> <span class="nf">GetSources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines the the short and long source for an event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: the event object (instance of EventObject).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A tuple of the short and long source string.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      WrongFormatter: if the event object cannot be formatted by the formatter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">DATA_TYPE</span> <span class="o">!=</span> <span class="n">event_object</span><span class="o">.</span><span class="n">data_type</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">WrongFormatter</span><span class="p">(</span><span class="s1">u&#39;Unsupported data type: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">event_object</span><span class="o">.</span><span class="n">data_type</span><span class="p">))</span>
+
+    <span class="n">file_system_type</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="s1">u&#39;file_system_type&#39;</span><span class="p">,</span> <span class="s1">u&#39;UNKNOWN&#39;</span><span class="p">)</span>
+    <span class="n">timestamp_desc</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="s1">u&#39;timestamp_desc&#39;</span><span class="p">,</span> <span class="s1">u&#39;Time&#39;</span><span class="p">)</span>
+    <span class="n">source_long</span> <span class="o">=</span> <span class="s1">u&#39;{0:s} {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file_system_type</span><span class="p">,</span> <span class="n">timestamp_desc</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">SOURCE_SHORT</span><span class="p">,</span> <span class="n">source_long</span></div></div>
+
+
+<div class="viewcode-block" id="NTFSFileStatEventFormatter"><a class="viewcode-back" href="../../../plaso.formatters.html#plaso.formatters.file_system.NTFSFileStatEventFormatter">[docs]</a><span class="k">class</span> <span class="nc">NTFSFileStatEventFormatter</span><span class="p">(</span><span class="n">FileStatEventFormatter</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;The NTFS file system stat event formatter.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;fs:stat:ntfs&#39;</span>
+
+  <span class="n">FORMAT_STRING_PIECES</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="s1">u&#39;{display_name}&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;File reference: {file_reference}&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;Attribute name: {attribute_name}&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;Name: {name}&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;Parent file reference: {parent_file_reference}&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;({unallocated})&#39;</span><span class="p">]</span>
+
+  <span class="n">FORMAT_STRING_SHORT_PIECES</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="s1">u&#39;{filename}&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;{file_reference}&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;{attribute_name}&#39;</span><span class="p">]</span>
+
+  <span class="n">SOURCE_SHORT</span> <span class="o">=</span> <span class="s1">u&#39;FILE&#39;</span>
+
+  <span class="n">_ATTRIBUTE_NAMES</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="mh">0x00000010</span><span class="p">:</span> <span class="s1">u&#39;$STANDARD_INFORMATION&#39;</span><span class="p">,</span>
+      <span class="mh">0x00000030</span><span class="p">:</span> <span class="s1">u&#39;$FILE_NAME&#39;</span>
+  <span class="p">}</span>
+
+<div class="viewcode-block" id="NTFSFileStatEventFormatter.GetMessages"><a class="viewcode-back" href="../../../plaso.formatters.html#plaso.formatters.file_system.NTFSFileStatEventFormatter.GetMessages">[docs]</a>  <span class="k">def</span> <span class="nf">GetMessages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unused_formatter_mediator</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines the formatted message strings for an event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      formatter_mediator: the formatter mediator object (instance of</span>
+<span class="sd">                          FormatterMediator).</span>
+<span class="sd">      event_object: the event object (instance of EventObject).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A tuple containing the formatted message string and short message string.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      WrongFormatter: if the event object cannot be formatted by the formatter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">DATA_TYPE</span> <span class="o">!=</span> <span class="n">event_object</span><span class="o">.</span><span class="n">data_type</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">WrongFormatter</span><span class="p">(</span><span class="s1">u&#39;Unsupported data type: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">event_object</span><span class="o">.</span><span class="n">data_type</span><span class="p">))</span>
+
+    <span class="n">event_values</span> <span class="o">=</span> <span class="n">event_object</span><span class="o">.</span><span class="n">CopyToDict</span><span class="p">()</span>
+
+    <span class="n">attribute_type</span> <span class="o">=</span> <span class="n">event_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;attribute_type&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">event_values</span><span class="p">[</span><span class="s1">u&#39;attribute_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ATTRIBUTE_NAMES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">attribute_type</span><span class="p">,</span> <span class="s1">u&#39;UNKNOWN&#39;</span><span class="p">)</span>
+
+    <span class="n">file_reference</span> <span class="o">=</span> <span class="n">event_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;file_reference&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">file_reference</span><span class="p">:</span>
+      <span class="n">event_values</span><span class="p">[</span><span class="s1">u&#39;file_reference&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">u&#39;{0:d}-{1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">file_reference</span> <span class="o">&amp;</span> <span class="mh">0xffffffffffff</span><span class="p">,</span> <span class="n">file_reference</span> <span class="o">&gt;&gt;</span> <span class="mi">48</span><span class="p">)</span>
+
+    <span class="n">parent_file_reference</span> <span class="o">=</span> <span class="n">event_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;parent_file_reference&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">parent_file_reference</span><span class="p">:</span>
+      <span class="n">event_values</span><span class="p">[</span><span class="s1">u&#39;parent_file_reference&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">u&#39;{0:d}-{1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">parent_file_reference</span> <span class="o">&amp;</span> <span class="mh">0xffffffffffff</span><span class="p">,</span> <span class="n">parent_file_reference</span> <span class="o">&gt;&gt;</span> <span class="mi">48</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">event_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;is_allocated&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+      <span class="n">event_values</span><span class="p">[</span><span class="s1">u&#39;unallocated&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">u&#39;unallocated&#39;</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ConditionalFormatMessages</span><span class="p">(</span><span class="n">event_values</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="NTFSUSNChangeEventFormatter"><a class="viewcode-back" href="../../../plaso.formatters.html#plaso.formatters.file_system.NTFSUSNChangeEventFormatter">[docs]</a><span class="k">class</span> <span class="nc">NTFSUSNChangeEventFormatter</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">ConditionalEventFormatter</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;The NTFS USN change event formatter.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;fs:ntfs:usn_change&#39;</span>
+
+  <span class="n">FORMAT_STRING_PIECES</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="s1">u&#39;{filename}&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;File reference: {file_reference}&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;Parent file reference: {parent_file_reference}&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;Update source: {update_source}&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;Update reason: {update_reason}&#39;</span><span class="p">]</span>
+
+  <span class="n">FORMAT_STRING_SHORT_PIECES</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="s1">u&#39;{filename}&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;{file_reference}&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;{update_reason}&#39;</span><span class="p">]</span>
+
+  <span class="n">SOURCE_SHORT</span> <span class="o">=</span> <span class="s1">u&#39;FILE&#39;</span>
+
+  <span class="n">_USN_REASON_FLAGS</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="mh">0x00000001</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_DATA_OVERWRITE&#39;</span><span class="p">,</span>
+      <span class="mh">0x00000002</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_DATA_EXTEND&#39;</span><span class="p">,</span>
+      <span class="mh">0x00000004</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_DATA_TRUNCATION&#39;</span><span class="p">,</span>
+      <span class="mh">0x00000010</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_NAMED_DATA_OVERWRITE&#39;</span><span class="p">,</span>
+      <span class="mh">0x00000020</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_NAMED_DATA_EXTEND&#39;</span><span class="p">,</span>
+      <span class="mh">0x00000040</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_NAMED_DATA_TRUNCATION&#39;</span><span class="p">,</span>
+      <span class="mh">0x00000100</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_FILE_CREATE&#39;</span><span class="p">,</span>
+      <span class="mh">0x00000200</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_FILE_DELETE&#39;</span><span class="p">,</span>
+      <span class="mh">0x00000400</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_EA_CHANGE&#39;</span><span class="p">,</span>
+      <span class="mh">0x00000800</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_SECURITY_CHANGE&#39;</span><span class="p">,</span>
+      <span class="mh">0x00001000</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_RENAME_OLD_NAME&#39;</span><span class="p">,</span>
+      <span class="mh">0x00002000</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_RENAME_NEW_NAME&#39;</span><span class="p">,</span>
+      <span class="mh">0x00004000</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_INDEXABLE_CHANGE&#39;</span><span class="p">,</span>
+      <span class="mh">0x00008000</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_BASIC_INFO_CHANGE&#39;</span><span class="p">,</span>
+      <span class="mh">0x00010000</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_HARD_LINK_CHANGE&#39;</span><span class="p">,</span>
+      <span class="mh">0x00020000</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_COMPRESSION_CHANGE&#39;</span><span class="p">,</span>
+      <span class="mh">0x00040000</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_ENCRYPTION_CHANGE&#39;</span><span class="p">,</span>
+      <span class="mh">0x00080000</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_OBJECT_ID_CHANGE&#39;</span><span class="p">,</span>
+      <span class="mh">0x00100000</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_REPARSE_POINT_CHANGE&#39;</span><span class="p">,</span>
+      <span class="mh">0x00200000</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_STREAM_CHANGE&#39;</span><span class="p">,</span>
+      <span class="mh">0x00400000</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_TRANSACTED_CHANGE&#39;</span><span class="p">,</span>
+      <span class="mh">0x80000000</span><span class="p">:</span> <span class="s1">u&#39;USN_REASON_CLOSE&#39;</span><span class="p">}</span>
+
+  <span class="n">_USN_SOURCE_FLAGS</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="mh">0x00000001</span><span class="p">:</span> <span class="s1">u&#39;USN_SOURCE_DATA_MANAGEMENT&#39;</span><span class="p">,</span>
+      <span class="mh">0x00000002</span><span class="p">:</span> <span class="s1">u&#39;USN_SOURCE_AUXILIARY_DATA&#39;</span><span class="p">,</span>
+      <span class="mh">0x00000004</span><span class="p">:</span> <span class="s1">u&#39;USN_SOURCE_REPLICATION_MANAGEMENT&#39;</span><span class="p">}</span>
+
+<div class="viewcode-block" id="NTFSUSNChangeEventFormatter.GetMessages"><a class="viewcode-back" href="../../../plaso.formatters.html#plaso.formatters.file_system.NTFSUSNChangeEventFormatter.GetMessages">[docs]</a>  <span class="k">def</span> <span class="nf">GetMessages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unused_formatter_mediator</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines the formatted message strings for an event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      formatter_mediator: the formatter mediator object (instance of</span>
+<span class="sd">                          FormatterMediator).</span>
+<span class="sd">      event_object: the event object (instance of EventObject).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A tuple containing the formatted message string and short message string.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      WrongFormatter: if the event object cannot be formatted by the formatter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">DATA_TYPE</span> <span class="o">!=</span> <span class="n">event_object</span><span class="o">.</span><span class="n">data_type</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">WrongFormatter</span><span class="p">(</span><span class="s1">u&#39;Unsupported data type: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">event_object</span><span class="o">.</span><span class="n">data_type</span><span class="p">))</span>
+
+    <span class="n">event_values</span> <span class="o">=</span> <span class="n">event_object</span><span class="o">.</span><span class="n">CopyToDict</span><span class="p">()</span>
+
+    <span class="n">file_reference</span> <span class="o">=</span> <span class="n">event_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;file_reference&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">file_reference</span><span class="p">:</span>
+      <span class="n">event_values</span><span class="p">[</span><span class="s1">u&#39;file_reference&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">u&#39;{0:d}-{1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">file_reference</span> <span class="o">&amp;</span> <span class="mh">0xffffffffffff</span><span class="p">,</span> <span class="n">file_reference</span> <span class="o">&gt;&gt;</span> <span class="mi">48</span><span class="p">)</span>
+
+    <span class="n">parent_file_reference</span> <span class="o">=</span> <span class="n">event_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;parent_file_reference&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">parent_file_reference</span><span class="p">:</span>
+      <span class="n">event_values</span><span class="p">[</span><span class="s1">u&#39;parent_file_reference&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">u&#39;{0:d}-{1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">parent_file_reference</span> <span class="o">&amp;</span> <span class="mh">0xffffffffffff</span><span class="p">,</span> <span class="n">parent_file_reference</span> <span class="o">&gt;&gt;</span> <span class="mi">48</span><span class="p">)</span>
+
+    <span class="n">update_reason_flags</span> <span class="o">=</span> <span class="n">event_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;update_reason_flags&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">update_reasons</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">bitmask</span><span class="p">,</span> <span class="n">description</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_USN_REASON_FLAGS</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+      <span class="k">if</span> <span class="n">bitmask</span> <span class="o">&amp;</span> <span class="n">update_reason_flags</span><span class="p">:</span>
+        <span class="n">update_reasons</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
+
+    <span class="n">event_values</span><span class="p">[</span><span class="s1">u&#39;update_reason&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">u&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">update_reasons</span><span class="p">)</span>
+
+    <span class="n">update_source_flags</span> <span class="o">=</span> <span class="n">event_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;update_source_flags&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">update_sources</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">bitmask</span><span class="p">,</span> <span class="n">description</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_USN_SOURCE_FLAGS</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+      <span class="k">if</span> <span class="n">bitmask</span> <span class="o">&amp;</span> <span class="n">update_source_flags</span><span class="p">:</span>
+        <span class="n">update_sources</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
+
+    <span class="n">event_values</span><span class="p">[</span><span class="s1">u&#39;update_source&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">u&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">update_sources</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ConditionalFormatMessages</span><span class="p">(</span><span class="n">event_values</span><span class="p">)</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">FormattersManager</span><span class="o">.</span><span class="n">RegisterFormatters</span><span class="p">([</span>
+    <span class="n">FileStatEventFormatter</span><span class="p">,</span> <span class="n">NTFSFileStatEventFormatter</span><span class="p">,</span>
+    <span class="n">NTFSUSNChangeEventFormatter</span><span class="p">])</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

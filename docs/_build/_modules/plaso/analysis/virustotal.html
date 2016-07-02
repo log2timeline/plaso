@@ -1,0 +1,251 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.analysis.virustotal &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.analysis.virustotal</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Analysis plugin to look up files in VirusTotal and tag events.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">plaso.analysis</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.analysis</span> <span class="kn">import</span> <span class="n">manager</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+
+
+<div class="viewcode-block" id="VirusTotalAnalyzer"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.virustotal.VirusTotalAnalyzer">[docs]</a><span class="k">class</span> <span class="nc">VirusTotalAnalyzer</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">HTTPHashAnalyzer</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that analyzes file hashes by consulting VirusTotal.&quot;&quot;&quot;</span>
+  <span class="n">_VIRUSTOTAL_API_REPORT_URL</span> <span class="o">=</span> <span class="p">(</span>
+      <span class="s1">u&#39;https://www.virustotal.com/vtapi/v2/file/report&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hash_queue</span><span class="p">,</span> <span class="n">hash_analysis_queue</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a VirusTotal Analyzer thread.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      hash_queue: A queue (instance of Queue.queue) that contains hashes to</span>
+<span class="sd">                  be analyzed.</span>
+<span class="sd">      hash_analysis_queue: A queue (instance of Queue.queue) that the analyzer</span>
+<span class="sd">                           will append HashAnalysis objects to.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">VirusTotalAnalyzer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">hash_queue</span><span class="p">,</span> <span class="n">hash_analysis_queue</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_api_key</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_checked_for_old_python_version</span> <span class="o">=</span> <span class="bp">False</span>
+
+<div class="viewcode-block" id="VirusTotalAnalyzer.SetAPIKey"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.virustotal.VirusTotalAnalyzer.SetAPIKey">[docs]</a>  <span class="k">def</span> <span class="nf">SetAPIKey</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">api_key</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the VirusTotal API key to use in queries.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      _api_key: The VirusTotal API key</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_api_key</span> <span class="o">=</span> <span class="n">api_key</span></div>
+
+<div class="viewcode-block" id="VirusTotalAnalyzer.Analyze"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.virustotal.VirusTotalAnalyzer.Analyze">[docs]</a>  <span class="k">def</span> <span class="nf">Analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hashes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Looks up hashes in VirusTotal using the VirusTotal HTTP API.</span>
+
+<span class="sd">    The API is documented here:</span>
+<span class="sd">      https://www.virustotal.com/en/documentation/public-api/</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      hashes: A list of hashes (strings) to look up.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of HashAnalysis objects.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: If the VirusTotal API key has not been set.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_key</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">u&#39;No API key specified for VirusTotal lookup.&#39;</span><span class="p">)</span>
+
+    <span class="n">hash_analyses</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">resource_string</span> <span class="o">=</span> <span class="s1">u&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">hashes</span><span class="p">)</span>
+    <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">u&#39;apikey&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_key</span><span class="p">,</span> <span class="s1">u&#39;resource&#39;</span><span class="p">:</span> <span class="n">resource_string</span><span class="p">}</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">json_response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">MakeRequestAndDecodeJSON</span><span class="p">(</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_VIRUSTOTAL_API_REPORT_URL</span><span class="p">,</span> <span class="s1">u&#39;GET&#39;</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">ConnectionError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+          <span class="p">(</span><span class="s1">u&#39;Error communicating with VirusTotal {0:s}. VirusTotal plugin is &#39;</span>
+           <span class="s1">u&#39;aborting.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">SignalAbort</span><span class="p">()</span>
+      <span class="k">return</span> <span class="n">hash_analyses</span>
+
+    <span class="c1"># The content of the response from VirusTotal has a different structure if</span>
+    <span class="c1"># one or more than one hash is looked up at once.</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">json_response</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+      <span class="c1"># Only one result.</span>
+      <span class="n">resource</span> <span class="o">=</span> <span class="n">json_response</span><span class="p">[</span><span class="s1">u&#39;resource&#39;</span><span class="p">]</span>
+      <span class="n">hash_analysis</span> <span class="o">=</span> <span class="n">interface</span><span class="o">.</span><span class="n">HashAnalysis</span><span class="p">(</span><span class="n">resource</span><span class="p">,</span> <span class="n">json_response</span><span class="p">)</span>
+      <span class="n">hash_analyses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hash_analysis</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">json_response</span><span class="p">:</span>
+        <span class="n">resource</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s1">u&#39;resource&#39;</span><span class="p">]</span>
+        <span class="n">hash_analysis</span> <span class="o">=</span> <span class="n">interface</span><span class="o">.</span><span class="n">HashAnalysis</span><span class="p">(</span><span class="n">resource</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+        <span class="n">hash_analyses</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hash_analysis</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">hash_analyses</span></div></div>
+
+
+<div class="viewcode-block" id="VirusTotalAnalysisPlugin"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.virustotal.VirusTotalAnalysisPlugin">[docs]</a><span class="k">class</span> <span class="nc">VirusTotalAnalysisPlugin</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">HashTaggingAnalysisPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;An analysis plugin for looking up hashes in VirusTotal.&quot;&quot;&quot;</span>
+  <span class="c1"># VirusTotal allows lookups using any of these hash algorithms.</span>
+  <span class="n">REQUIRED_HASH_ATTRIBUTES</span> <span class="o">=</span> <span class="p">[</span><span class="s1">u&#39;sha256_hash&#39;</span><span class="p">,</span> <span class="s1">u&#39;sha1_hash&#39;</span><span class="p">,</span> <span class="s1">u&#39;md5_hash&#39;</span><span class="p">]</span>
+
+  <span class="c1"># TODO: Check if there are other file types worth checking VirusTotal for.</span>
+  <span class="n">DATA_TYPES</span> <span class="o">=</span> <span class="p">[</span><span class="s1">u&#39;pe:compilation:compilation_time&#39;</span><span class="p">]</span>
+
+  <span class="n">URLS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">u&#39;https://virustotal.com&#39;</span><span class="p">]</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;virustotal&#39;</span>
+
+  <span class="n">_VIRUSTOTAL_NOT_PRESENT_RESPONSE_CODE</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="n">_VIRUSTOTAL_PRESENT_RESPONSE_CODE</span> <span class="o">=</span> <span class="mi">1</span>
+  <span class="n">_VIRUSTOTAL_ANALYSIS_PENDING_RESPONSE_CODE</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_queue</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a VirusTotal analysis plugin.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_queue: A queue that is used to listen for incoming events.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">VirusTotalAnalysisPlugin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">event_queue</span><span class="p">,</span> <span class="n">VirusTotalAnalyzer</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_api_key</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="VirusTotalAnalysisPlugin.SetAPIKey"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.virustotal.VirusTotalAnalysisPlugin.SetAPIKey">[docs]</a>  <span class="k">def</span> <span class="nf">SetAPIKey</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">api_key</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the VirusTotal API key to use in queries.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      _api_key: The VirusTotal API key</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_analyzer</span><span class="o">.</span><span class="n">SetAPIKey</span><span class="p">(</span><span class="n">api_key</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="VirusTotalAnalysisPlugin.EnableFreeAPIKeyRateLimit"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.virustotal.VirusTotalAnalysisPlugin.EnableFreeAPIKeyRateLimit">[docs]</a>  <span class="k">def</span> <span class="nf">EnableFreeAPIKeyRateLimit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rate_limit</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Configures Rate limiting for queries to VirusTotal.</span>
+
+<span class="sd">    The default rate limit for free VirusTotal API keys is 4 requests per</span>
+<span class="sd">    minute.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      rate_limit: Whether not to apply the free API key rate limit.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">rate_limit</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_analyzer</span><span class="o">.</span><span class="n">hashes_per_batch</span> <span class="o">=</span> <span class="mi">4</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_analyzer</span><span class="o">.</span><span class="n">wait_after_analysis</span> <span class="o">=</span> <span class="mi">60</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_analysis_queue_timeout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_analyzer</span><span class="o">.</span><span class="n">wait_after_analysis</span> <span class="o">+</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="VirusTotalAnalysisPlugin.GenerateTagStrings"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.virustotal.VirusTotalAnalysisPlugin.GenerateTagStrings">[docs]</a>  <span class="k">def</span> <span class="nf">GenerateTagStrings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hash_information</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generates a list of strings that will be used in the event tag.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      hash_information: A dictionary containing the JSON decoded contents of the</span>
+<span class="sd">                        result of a VirusTotal lookup, as produced by the</span>
+<span class="sd">                        VirusTotalAnalyzer.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of strings describing the results from VirusTotal.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">response_code</span> <span class="o">=</span> <span class="n">hash_information</span><span class="p">[</span><span class="s1">u&#39;response_code&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">response_code</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_VIRUSTOTAL_NOT_PRESENT_RESPONSE_CODE</span><span class="p">:</span>
+      <span class="k">return</span> <span class="p">[</span><span class="s1">u&#39;virustotal_not_present&#39;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">response_code</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_VIRUSTOTAL_PRESENT_RESPONSE_CODE</span><span class="p">:</span>
+      <span class="n">positives</span> <span class="o">=</span> <span class="n">hash_information</span><span class="p">[</span><span class="s1">u&#39;positives&#39;</span><span class="p">]</span>
+      <span class="k">if</span> <span class="n">positives</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s1">u&#39;virustotal_detections_{0:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">positives</span><span class="p">)]</span>
+      <span class="k">return</span> <span class="p">[</span><span class="s1">u&#39;virsutotal_no_detections&#39;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">response_code</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_VIRUSTOTAL_ANALYSIS_PENDING_RESPONSE_CODE</span><span class="p">:</span>
+      <span class="k">return</span> <span class="p">[</span><span class="s1">u&#39;virustotal_analysis_pending&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+          <span class="s1">u&#39;VirusTotal returned unknown response code {0!s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">response_code</span><span class="p">))</span>
+      <span class="k">return</span> <span class="p">[</span><span class="s1">u&#39;virustotal_unknown_response_code_{0:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">response_code</span><span class="p">)]</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">AnalysisPluginManager</span><span class="o">.</span><span class="n">RegisterPlugin</span><span class="p">(</span><span class="n">VirusTotalAnalysisPlugin</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

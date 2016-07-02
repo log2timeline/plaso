@@ -1,0 +1,596 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.mac_keychain &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.mac_keychain</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Parser for Mac OS X Keychain files.&quot;&quot;&quot;</span>
+
+<span class="c1"># INFO: Only supports internet and application passwords,</span>
+<span class="c1">#       because it is the only data that contains timestamp events.</span>
+<span class="c1">#       Keychain can also store &quot;secret notes&quot;. These notes are stored</span>
+<span class="c1">#       in the same type than the application format, then, they are already</span>
+<span class="c1">#       supported. The stored wifi are also application passwords.</span>
+
+<span class="c1"># TODO: the AccessControl for each entry has not been implemented. Until now,</span>
+<span class="c1">#       I know that the AccessControl from Internet and App password are stored</span>
+<span class="c1">#       using other tables (Symmetric, certificates, etc). Access Control</span>
+<span class="c1">#       indicates which specific tool, or all, is able to use this entry.</span>
+
+
+<span class="kn">import</span> <span class="nn">binascii</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">construct</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)&#39;</span>
+
+
+<div class="viewcode-block" id="KeychainInternetRecordEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mac_keychain.KeychainInternetRecordEvent">[docs]</a><span class="k">class</span> <span class="nc">KeychainInternetRecordEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">TimestampEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for an keychain internet record event.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;mac:keychain:internet&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">,</span> <span class="n">entry_name</span><span class="p">,</span> <span class="n">account_name</span><span class="p">,</span>
+      <span class="n">text_description</span><span class="p">,</span> <span class="n">comments</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">protocol</span><span class="p">,</span> <span class="n">type_protocol</span><span class="p">,</span> <span class="n">ssgp_hash</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timestamp: The timestamp which is an integer containing the number</span>
+<span class="sd">                 of micro seconds since January 1, 1970, 00:00:00 UTC.</span>
+<span class="sd">      timestamp_description: The usage string for the timestamp value.</span>
+<span class="sd">      entry_name: Name of the entry.</span>
+<span class="sd">      account_name: Name of the account.</span>
+<span class="sd">      text_description: Short description about the entry.</span>
+<span class="sd">      comments: String that contains the comments added by the user.</span>
+<span class="sd">      where: The domain name or IP where the password is used.</span>
+<span class="sd">      protocol: The internet protocol used (eg. https).</span>
+<span class="sd">      type_protocol: The sub-protocol used (eg. form).</span>
+<span class="sd">      ssgp_hash: String with hexadecimal values from the password / cert hash.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">KeychainInternetRecordEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">account_name</span> <span class="o">=</span> <span class="n">account_name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">comments</span> <span class="o">=</span> <span class="n">comments</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">entry_name</span> <span class="o">=</span> <span class="n">entry_name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">protocol</span> <span class="o">=</span> <span class="n">protocol</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">ssgp_hash</span> <span class="o">=</span> <span class="n">ssgp_hash</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">text_description</span> <span class="o">=</span> <span class="n">text_description</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">type_protocol</span> <span class="o">=</span> <span class="n">type_protocol</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">where</span> <span class="o">=</span> <span class="n">where</span></div>
+
+
+<div class="viewcode-block" id="KeychainApplicationRecordEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mac_keychain.KeychainApplicationRecordEvent">[docs]</a><span class="k">class</span> <span class="nc">KeychainApplicationRecordEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">TimestampEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for an keychain application password record event.&quot;&quot;&quot;</span>
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;mac:keychain:application&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">,</span> <span class="n">entry_name</span><span class="p">,</span> <span class="n">account_name</span><span class="p">,</span>
+      <span class="n">text_description</span><span class="p">,</span> <span class="n">comments</span><span class="p">,</span> <span class="n">ssgp_hash</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timestamp: The timestamp which is an integer containing the number</span>
+<span class="sd">                 of micro seconds since January 1, 1970, 00:00:00 UTC.</span>
+<span class="sd">      timestamp_description: The usage string for the timestamp value.</span>
+<span class="sd">      entry_name: Name of the entry.</span>
+<span class="sd">      account_name: Name of the account.</span>
+<span class="sd">      text_description: Short description about the entry.</span>
+<span class="sd">      comments: String that contains the comments added by the user.</span>
+<span class="sd">      ssgp_hash: String with hexadecimal values from the password / cert hash.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">KeychainApplicationRecordEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">account_name</span> <span class="o">=</span> <span class="n">account_name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">comments</span> <span class="o">=</span> <span class="n">comments</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">entry_name</span> <span class="o">=</span> <span class="n">entry_name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">ssgp_hash</span> <span class="o">=</span> <span class="n">ssgp_hash</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">text_description</span> <span class="o">=</span> <span class="n">text_description</span></div>
+
+
+<div class="viewcode-block" id="KeychainParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mac_keychain.KeychainParser">[docs]</a><span class="k">class</span> <span class="nc">KeychainParser</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">FileObjectParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parser for Keychain files.&quot;&quot;&quot;</span>
+
+  <span class="n">_INITIAL_FILE_OFFSET</span> <span class="o">=</span> <span class="bp">None</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;mac_keychain&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for Mac OS X Keychain files.&#39;</span>
+
+  <span class="n">KEYCHAIN_MAGIC_HEADER</span> <span class="o">=</span> <span class="n">b</span><span class="s1">&#39;kych&#39;</span>
+  <span class="n">KEYCHAIN_MAJOR_VERSION</span> <span class="o">=</span> <span class="mi">1</span>
+  <span class="n">KEYCHAIN_MINOR_VERSION</span> <span class="o">=</span> <span class="mi">0</span>
+
+  <span class="n">RECORD_TYPE_APPLICATION</span> <span class="o">=</span> <span class="mh">0x80000000</span>
+  <span class="n">RECORD_TYPE_INTERNET</span> <span class="o">=</span> <span class="mh">0x80000001</span>
+
+  <span class="c1"># DB HEADER.</span>
+  <span class="n">KEYCHAIN_DB_HEADER</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;db_header&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;magic&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;major_version&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;minor_version&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;header_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;schema_offset&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+
+  <span class="c1"># DB SCHEMA.</span>
+  <span class="n">KEYCHAIN_DB_SCHEMA</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;db_schema&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;number_of_tables&#39;</span><span class="p">))</span>
+
+  <span class="c1"># For each number_of_tables, the schema has a TABLE_OFFSET with the</span>
+  <span class="c1"># offset starting in the DB_SCHEMA.</span>
+  <span class="n">TABLE_OFFSET</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;table_offset&#39;</span><span class="p">)</span>
+
+  <span class="n">TABLE_HEADER</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;table_header&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;table_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;record_type&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;number_of_records&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;first_record&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;index_offset&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;recordnumbercount&#39;</span><span class="p">))</span>
+
+  <span class="n">RECORD_HEADER</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;record_header&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;entry_length&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">12</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;ssgp_length&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;creation_time&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;last_modification_time&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;text_description&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;comments&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;entry_name&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">20</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;account_name&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+
+  <span class="n">RECORD_HEADER_APP</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;record_entry_app&#39;</span><span class="p">,</span>
+      <span class="n">RECORD_HEADER</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">4</span><span class="p">))</span>
+
+  <span class="n">RECORD_HEADER_INET</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;record_entry_inet&#39;</span><span class="p">,</span>
+      <span class="n">RECORD_HEADER</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;where&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;protocol&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;type&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;url&#39;</span><span class="p">))</span>
+
+  <span class="n">TEXT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">PascalString</span><span class="p">(</span>
+      <span class="s1">u&#39;text&#39;</span><span class="p">,</span> <span class="n">length_field</span><span class="o">=</span><span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;length&#39;</span><span class="p">))</span>
+
+  <span class="n">TIME</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;timestamp&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;year&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;month&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;day&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;hour&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;minute&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;second&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+
+  <span class="n">TYPE_TEXT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;type&#39;</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+  <span class="c1"># TODO: add more protocols.</span>
+  <span class="n">_PROTOCOL_TRANSLATION_DICT</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="s1">u&#39;htps&#39;</span><span class="p">:</span> <span class="s1">u&#39;https&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;smtp&#39;</span><span class="p">:</span> <span class="s1">u&#39;smtp&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;imap&#39;</span><span class="p">:</span> <span class="s1">u&#39;imap&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;http&#39;</span><span class="p">:</span> <span class="s1">u&#39;http&#39;</span><span class="p">}</span>
+
+  <span class="k">def</span> <span class="nf">_GetTimestampFromEntry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">structure</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a timestamp from a TIME entry structure.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      structure: TIME entry structure:</span>
+<span class="sd">                 year: String with the number of the year.</span>
+<span class="sd">                 month: String with the number of the month.</span>
+<span class="sd">                 day: String with the number of the day.</span>
+<span class="sd">                 hour: String with the number of the month.</span>
+<span class="sd">                 minute: String with the number of the minute.</span>
+<span class="sd">                 second: String with the number of the second.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      TimestampError: if the timestamp cannot be created from the date and</span>
+<span class="sd">                      time values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">year</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+      <span class="n">month</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+      <span class="n">day</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">day</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+      <span class="n">hours</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">hour</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+      <span class="n">minutes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">minute</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+      <span class="n">seconds</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">second</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">TimestampError</span><span class="p">(</span>
+          <span class="s1">u&#39;Invalid keychain time {0!s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">structure</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromTimeParts</span><span class="p">(</span>
+        <span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">hours</span><span class="p">,</span> <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_ReadEntryApplication</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts the information from an application password entry.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: A file-like object that points to an Keychain file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">offset</span> <span class="o">=</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RECORD_HEADER_APP</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">):</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">((</span>
+          <span class="s1">u&#39;[{0:s}] Unsupported record header at 0x{1:08x} in file: &#39;</span>
+          <span class="s1">u&#39;{2:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">GetDisplayName</span><span class="p">()))</span>
+      <span class="k">return</span>
+
+    <span class="p">(</span><span class="n">ssgp_hash</span><span class="p">,</span> <span class="n">creation_time</span><span class="p">,</span> <span class="n">last_modification_time</span><span class="p">,</span> <span class="n">text_description</span><span class="p">,</span>
+     <span class="n">comments</span><span class="p">,</span> <span class="n">entry_name</span><span class="p">,</span> <span class="n">account_name</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ReadEntryHeader</span><span class="p">(</span>
+         <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">record_header</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+
+    <span class="c1"># Move to the end of the record, and then, prepared for the next record.</span>
+    <span class="n">next_record_offset</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">record</span><span class="o">.</span><span class="n">record_header</span><span class="o">.</span><span class="n">entry_length</span> <span class="o">+</span> <span class="n">offset</span> <span class="o">-</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">())</span>
+    <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">next_record_offset</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_CUR</span><span class="p">)</span>
+
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">KeychainApplicationRecordEvent</span><span class="p">(</span>
+        <span class="n">creation_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">CREATION_TIME</span><span class="p">,</span>
+        <span class="n">entry_name</span><span class="p">,</span> <span class="n">account_name</span><span class="p">,</span> <span class="n">text_description</span><span class="p">,</span> <span class="n">comments</span><span class="p">,</span> <span class="n">ssgp_hash</span><span class="p">)</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">creation_time</span> <span class="o">!=</span> <span class="n">last_modification_time</span><span class="p">:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">KeychainApplicationRecordEvent</span><span class="p">(</span>
+          <span class="n">last_modification_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">MODIFICATION_TIME</span><span class="p">,</span>
+          <span class="n">entry_name</span><span class="p">,</span> <span class="n">account_name</span><span class="p">,</span> <span class="n">text_description</span><span class="p">,</span> <span class="n">comments</span><span class="p">,</span> <span class="n">ssgp_hash</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_ReadEntryHeader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read the common record attributes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_entry: A file entry object (instance of dfvfs.FileEntry).</span>
+<span class="sd">      file_object: A file-like object that points to an Keychain file.</span>
+<span class="sd">      record: Structure with the header of the record.</span>
+<span class="sd">      offset: First byte of the record.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A tuple containing:</span>
+<span class="sd">        ssgp_hash: Hash of the encrypted data (passwd, cert, note).</span>
+<span class="sd">        creation_time: When the entry was created.</span>
+<span class="sd">        last_modification_time: Last time the entry was updated.</span>
+<span class="sd">        text_description: A brief description of the entry.</span>
+<span class="sd">        entry_name: Name of the entry</span>
+<span class="sd">        account_name: Name of the account.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: reduce number of seeks and/or offset calculations needed</span>
+    <span class="c1"># for parsing.</span>
+
+    <span class="c1"># Info: The hash header always start with the string ssgp follow by</span>
+    <span class="c1">#       the hash. Furthermore The fields are always a multiple of four.</span>
+    <span class="c1">#       Then if it is not multiple the value is padded by 0x00.</span>
+    <span class="n">ssgp_hash</span> <span class="o">=</span> <span class="n">binascii</span><span class="o">.</span><span class="n">hexlify</span><span class="p">(</span><span class="n">file_object</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">ssgp_length</span><span class="p">)[</span><span class="mi">4</span><span class="p">:])</span>
+
+    <span class="n">structure_offset</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">creation_time</span> <span class="o">-</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">+</span> <span class="n">offset</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">structure_offset</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_CUR</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">time_structure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+      <span class="n">creation_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetTimestampFromEntry</span><span class="p">(</span><span class="n">time_structure</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">,</span> <span class="n">errors</span><span class="o">.</span><span class="n">TimestampError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">creation_time</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">NONE_TIMESTAMP</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;unable to determine creation time with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">exception</span><span class="p">))</span>
+
+    <span class="n">structure_offset</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">record</span><span class="o">.</span><span class="n">last_modification_time</span> <span class="o">-</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">+</span> <span class="n">offset</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">structure_offset</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_CUR</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">time_structure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+      <span class="n">last_modification_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetTimestampFromEntry</span><span class="p">(</span><span class="n">time_structure</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">,</span> <span class="n">errors</span><span class="o">.</span><span class="n">TimestampError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">last_modification_time</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">NONE_TIMESTAMP</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+          <span class="s1">u&#39;unable to determine last modification time with error: &#39;</span>
+          <span class="s1">u&#39;{0:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+
+    <span class="n">text_description</span> <span class="o">=</span> <span class="s1">u&#39;N/A&#39;</span>
+    <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">text_description</span><span class="p">:</span>
+      <span class="n">structure_offset</span> <span class="o">=</span> <span class="p">(</span>
+          <span class="n">record</span><span class="o">.</span><span class="n">text_description</span> <span class="o">-</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">+</span> <span class="n">offset</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+      <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">structure_offset</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_CUR</span><span class="p">)</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">text_description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEXT</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+      <span class="k">except</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+            <span class="s1">u&#39;unable to parse text description with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">exception</span><span class="p">))</span>
+
+    <span class="n">comments</span> <span class="o">=</span> <span class="s1">u&#39;N/A&#39;</span>
+    <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">comments</span><span class="p">:</span>
+      <span class="n">structure_offset</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">comments</span> <span class="o">-</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">+</span> <span class="n">offset</span> <span class="o">-</span> <span class="mi">1</span>
+      <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">structure_offset</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_CUR</span><span class="p">)</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">comments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEXT</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+      <span class="k">except</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+            <span class="s1">u&#39;unable to parse comments with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+
+    <span class="n">structure_offset</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">entry_name</span> <span class="o">-</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">+</span> <span class="n">offset</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">structure_offset</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_CUR</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">entry_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEXT</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">entry_name</span> <span class="o">=</span> <span class="s1">u&#39;N/A&#39;</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;unable to parse entry name with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+
+    <span class="n">structure_offset</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">account_name</span> <span class="o">-</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">+</span> <span class="n">offset</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">structure_offset</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_CUR</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">account_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEXT</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">account_name</span> <span class="o">=</span> <span class="s1">u&#39;N/A&#39;</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;unable to parse account name with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">ssgp_hash</span><span class="p">,</span> <span class="n">creation_time</span><span class="p">,</span> <span class="n">last_modification_time</span><span class="p">,</span>
+        <span class="n">text_description</span><span class="p">,</span> <span class="n">comments</span><span class="p">,</span> <span class="n">entry_name</span><span class="p">,</span> <span class="n">account_name</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_ReadEntryInternet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts the information from an Internet password entry.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: A file-like object that points to an Keychain file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">offset</span> <span class="o">=</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RECORD_HEADER_INET</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">):</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">((</span>
+          <span class="s1">u&#39;[{0:s}] Unsupported record header at 0x{1:08x} in file: &#39;</span>
+          <span class="s1">u&#39;{2:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">GetDisplayName</span><span class="p">()))</span>
+      <span class="k">return</span>
+
+    <span class="p">(</span><span class="n">ssgp_hash</span><span class="p">,</span> <span class="n">creation_time</span><span class="p">,</span> <span class="n">last_modification_time</span><span class="p">,</span> <span class="n">text_description</span><span class="p">,</span>
+     <span class="n">comments</span><span class="p">,</span> <span class="n">entry_name</span><span class="p">,</span> <span class="n">account_name</span><span class="p">)</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ReadEntryHeader</span><span class="p">(</span>
+         <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">record_header</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">record</span><span class="o">.</span><span class="n">where</span><span class="p">:</span>
+      <span class="n">where</span> <span class="o">=</span> <span class="s1">u&#39;N/A&#39;</span>
+      <span class="n">protocol</span> <span class="o">=</span> <span class="s1">u&#39;N/A&#39;</span>
+      <span class="n">type_protocol</span> <span class="o">=</span> <span class="s1">u&#39;N/A&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span>
+          <span class="n">record</span><span class="o">.</span><span class="n">where</span> <span class="o">-</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">+</span> <span class="n">offset</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_CUR</span><span class="p">)</span>
+      <span class="n">where</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEXT</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+      <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span>
+          <span class="n">record</span><span class="o">.</span><span class="n">protocol</span> <span class="o">-</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">+</span> <span class="n">offset</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_CUR</span><span class="p">)</span>
+      <span class="n">protocol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TYPE_TEXT</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+      <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span>
+          <span class="n">record</span><span class="o">.</span><span class="n">type</span> <span class="o">-</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">+</span> <span class="n">offset</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_CUR</span><span class="p">)</span>
+      <span class="n">type_protocol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEXT</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+      <span class="n">type_protocol</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PROTOCOL_TRANSLATION_DICT</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+          <span class="n">type_protocol</span><span class="p">,</span> <span class="n">type_protocol</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">url</span><span class="p">:</span>
+        <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span>
+            <span class="n">record</span><span class="o">.</span><span class="n">url</span> <span class="o">-</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span> <span class="o">+</span> <span class="n">offset</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_CUR</span><span class="p">)</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEXT</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+        <span class="n">where</span> <span class="o">=</span> <span class="s1">u&#39;{0:s}{1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">where</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
+
+    <span class="c1"># Move to the end of the record, and then, prepared for the next record.</span>
+    <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span>
+        <span class="n">record</span><span class="o">.</span><span class="n">record_header</span><span class="o">.</span><span class="n">entry_length</span> <span class="o">+</span> <span class="n">offset</span> <span class="o">-</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">(),</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">SEEK_CUR</span><span class="p">)</span>
+
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">KeychainInternetRecordEvent</span><span class="p">(</span>
+        <span class="n">creation_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">CREATION_TIME</span><span class="p">,</span>
+        <span class="n">entry_name</span><span class="p">,</span> <span class="n">account_name</span><span class="p">,</span> <span class="n">text_description</span><span class="p">,</span>
+        <span class="n">comments</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">protocol</span><span class="p">,</span> <span class="n">type_protocol</span><span class="p">,</span> <span class="n">ssgp_hash</span><span class="p">)</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">creation_time</span> <span class="o">!=</span> <span class="n">last_modification_time</span><span class="p">:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">KeychainInternetRecordEvent</span><span class="p">(</span>
+          <span class="n">last_modification_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">MODIFICATION_TIME</span><span class="p">,</span>
+          <span class="n">entry_name</span><span class="p">,</span> <span class="n">account_name</span><span class="p">,</span> <span class="n">text_description</span><span class="p">,</span>
+          <span class="n">comments</span><span class="p">,</span> <span class="n">where</span><span class="p">,</span> <span class="n">protocol</span><span class="p">,</span> <span class="n">type_protocol</span><span class="p">,</span> <span class="n">ssgp_hash</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_VerifyStructure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Verify that we are dealing with an Keychain entry.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_object: A file-like object that points to an Keychain file.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of table positions if it is a keychain, None otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># INFO: The HEADER KEYCHAIN:</span>
+    <span class="c1"># [DBHEADER] + [DBSCHEMA] + [OFFSET TABLE A] + ... + [OFFSET TABLE Z]</span>
+    <span class="c1"># Where the table offset is relative to the first byte of the DB Schema,</span>
+    <span class="c1"># then we must add to this offset the size of the [DBHEADER].</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">db_header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">KEYCHAIN_DB_HEADER</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">):</span>
+      <span class="k">return</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">db_header</span><span class="o">.</span><span class="n">minor_version</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">KEYCHAIN_MINOR_VERSION</span> <span class="ow">or</span>
+        <span class="n">db_header</span><span class="o">.</span><span class="n">major_version</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">KEYCHAIN_MAJOR_VERSION</span> <span class="ow">or</span>
+        <span class="n">db_header</span><span class="o">.</span><span class="n">magic</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">KEYCHAIN_MAGIC_HEADER</span><span class="p">):</span>
+      <span class="k">return</span>
+
+    <span class="c1"># Read the database schema and extract the offset for all the tables.</span>
+    <span class="c1"># They are ordered by file position from the top to the bottom of the file.</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">db_schema</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">KEYCHAIN_DB_SCHEMA</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">):</span>
+      <span class="k">return</span>
+    <span class="n">table_offsets</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">db_schema</span><span class="o">.</span><span class="n">number_of_tables</span><span class="p">):</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">table_offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TABLE_OFFSET</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+      <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">):</span>
+        <span class="k">return</span>
+      <span class="n">table_offsets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">table_offset</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">KEYCHAIN_DB_HEADER</span><span class="o">.</span><span class="n">sizeof</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">table_offsets</span>
+
+<div class="viewcode-block" id="KeychainParser.ParseFileObject"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mac_keychain.KeychainParser.ParseFileObject">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a Mac OS X keychain file-like object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: A file-like object.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      UnableToParseFile: when the file cannot be parsed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_SET</span><span class="p">)</span>
+
+    <span class="n">table_offsets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_VerifyStructure</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">table_offsets</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span><span class="s1">u&#39;The file is not a Keychain file.&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">table_offset</span> <span class="ow">in</span> <span class="n">table_offsets</span><span class="p">:</span>
+      <span class="c1"># Skipping X bytes, unknown data at this point.</span>
+      <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">table_offset</span> <span class="o">-</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">(),</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_CUR</span><span class="p">)</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">table</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TABLE_HEADER</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+      <span class="k">except</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">((</span>
+            <span class="s1">u&#39;[{0:s}] Unable to parse table header in file: {1:s} &#39;</span>
+            <span class="s1">u&#39;with error: {2:s}.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">GetDisplayName</span><span class="p">(),</span>
+                <span class="n">exception</span><span class="p">))</span>
+        <span class="k">continue</span>
+
+      <span class="c1"># Table_offset: absolute byte in the file where the table starts.</span>
+      <span class="c1"># table.first_record: first record in the table, relative to the</span>
+      <span class="c1">#                     first byte of the table.</span>
+      <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span>
+          <span class="n">table_offset</span> <span class="o">+</span> <span class="n">table</span><span class="o">.</span><span class="n">first_record</span> <span class="o">-</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">(),</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_CUR</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">table</span><span class="o">.</span><span class="n">record_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">RECORD_TYPE_INTERNET</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">number_of_records</span><span class="p">):</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_ReadEntryInternet</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">)</span>
+
+      <span class="k">elif</span> <span class="n">table</span><span class="o">.</span><span class="n">record_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">RECORD_TYPE_APPLICATION</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">table</span><span class="o">.</span><span class="n">number_of_records</span><span class="p">):</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_ReadEntryApplication</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">)</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParser</span><span class="p">(</span><span class="n">KeychainParser</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

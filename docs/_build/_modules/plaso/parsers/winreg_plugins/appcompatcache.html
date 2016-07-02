@@ -1,0 +1,715 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.winreg_plugins.appcompatcache &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../../index.html" />
+    <link rel="up" title="plaso" href="../../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.winreg_plugins.appcompatcache</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Windows Registry plugin to parse the Application Compatibility Cache key.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">construct</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">binary</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">winreg</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers.winreg_plugins</span> <span class="kn">import</span> <span class="n">interface</span>
+
+
+<div class="viewcode-block" id="AppCompatCacheEvent"><a class="viewcode-back" href="../../../../plaso.parsers.winreg_plugins.html#plaso.parsers.winreg_plugins.appcompatcache.AppCompatCacheEvent">[docs]</a><span class="k">class</span> <span class="nc">AppCompatCacheEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">FiletimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that contains the event object for AppCompatCache entries.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;windows:registry:appcompatcache&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">filetime</span><span class="p">,</span> <span class="n">usage</span><span class="p">,</span> <span class="n">key_name</span><span class="p">,</span> <span class="n">entry_index</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a Windows Registry event.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      filetime: The FILETIME timestamp value.</span>
+<span class="sd">      usage: The description of the usage of the time value.</span>
+<span class="sd">      key_name: The name of the corresponding Windows Registry key.</span>
+<span class="sd">      entry_index: The cache entry index number for the record.</span>
+<span class="sd">      path: The full path to the executable.</span>
+<span class="sd">      offset: The (data) offset of the Windows Registry key or value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">AppCompatCacheEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">filetime</span><span class="p">,</span> <span class="n">usage</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">entry_index</span> <span class="o">=</span> <span class="n">entry_index</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">keyname</span> <span class="o">=</span> <span class="n">key_name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">offset</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span></div>
+
+
+<div class="viewcode-block" id="AppCompatCacheHeader"><a class="viewcode-back" href="../../../../plaso.parsers.winreg_plugins.html#plaso.parsers.winreg_plugins.appcompatcache.AppCompatCacheHeader">[docs]</a><span class="k">class</span> <span class="nc">AppCompatCacheHeader</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that contains the Application Compatibility Cache header.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the header object.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">AppCompatCacheHeader</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">number_of_cached_entries</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">header_size</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+
+<div class="viewcode-block" id="AppCompatCacheCachedEntry"><a class="viewcode-back" href="../../../../plaso.parsers.winreg_plugins.html#plaso.parsers.winreg_plugins.appcompatcache.AppCompatCacheCachedEntry">[docs]</a><span class="k">class</span> <span class="nc">AppCompatCacheCachedEntry</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that contains the Application Compatibility Cache cached entry.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the cached entry object.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">AppCompatCacheCachedEntry</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cached_entry_size</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">file_size</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">insertion_flags</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">last_modification_time</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">last_update_time</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">shim_flags</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="bp">None</span></div>
+
+
+<div class="viewcode-block" id="AppCompatCachePlugin"><a class="viewcode-back" href="../../../../plaso.parsers.winreg_plugins.html#plaso.parsers.winreg_plugins.appcompatcache.AppCompatCachePlugin">[docs]</a><span class="k">class</span> <span class="nc">AppCompatCachePlugin</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">WindowsRegistryPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that parses the Application Compatibility Cache Registry data.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;appcompatcache&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for Application Compatibility Cache Registry data.&#39;</span>
+
+  <span class="n">FILTERS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+      <span class="n">interface</span><span class="o">.</span><span class="n">WindowsRegistryKeyPathFilter</span><span class="p">(</span>
+          <span class="s1">u&#39;HKEY_LOCAL_MACHINE</span><span class="se">\\</span><span class="s1">System</span><span class="se">\\</span><span class="s1">CurrentControlSet</span><span class="se">\\</span><span class="s1">Control</span><span class="se">\\</span><span class="s1">&#39;</span>
+          <span class="s1">u&#39;Session Manager</span><span class="se">\\</span><span class="s1">AppCompatibility&#39;</span><span class="p">),</span>
+      <span class="n">interface</span><span class="o">.</span><span class="n">WindowsRegistryKeyPathFilter</span><span class="p">(</span>
+          <span class="s1">u&#39;HKEY_LOCAL_MACHINE</span><span class="se">\\</span><span class="s1">System</span><span class="se">\\</span><span class="s1">CurrentControlSet</span><span class="se">\\</span><span class="s1">Control</span><span class="se">\\</span><span class="s1">&#39;</span>
+          <span class="s1">u&#39;Session Manager</span><span class="se">\\</span><span class="s1">AppCompatCache&#39;</span><span class="p">)])</span>
+
+  <span class="n">URLS</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="p">(</span><span class="s1">u&#39;https://github.com/libyal/winreg-kb/blob/master/documentation/&#39;</span>
+       <span class="s1">u&#39;Application%20Compatibility%20Cache%20key.asciidoc&#39;</span><span class="p">)]</span>
+
+  <span class="n">_FORMAT_TYPE_2000</span> <span class="o">=</span> <span class="mi">1</span>
+  <span class="n">_FORMAT_TYPE_XP</span> <span class="o">=</span> <span class="mi">2</span>
+  <span class="n">_FORMAT_TYPE_2003</span> <span class="o">=</span> <span class="mi">3</span>
+  <span class="n">_FORMAT_TYPE_VISTA</span> <span class="o">=</span> <span class="mi">4</span>
+  <span class="n">_FORMAT_TYPE_7</span> <span class="o">=</span> <span class="mi">5</span>
+  <span class="n">_FORMAT_TYPE_8</span> <span class="o">=</span> <span class="mi">6</span>
+  <span class="n">_FORMAT_TYPE_10</span> <span class="o">=</span> <span class="mi">7</span>
+
+  <span class="c1"># AppCompatCache format signature used in Windows XP.</span>
+  <span class="n">_HEADER_SIGNATURE_XP</span> <span class="o">=</span> <span class="mh">0xdeadbeef</span>
+
+  <span class="c1"># AppCompatCache format used in Windows XP.</span>
+  <span class="n">_HEADER_XP_32BIT_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;appcompatcache_header_xp&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;signature&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;number_of_cached_entries&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;unknown1&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;unknown2&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">384</span><span class="p">))</span>
+
+  <span class="n">_CACHED_ENTRY_XP_32BIT_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;appcompatcache_cached_entry_xp_32bit&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">528</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">Byte</span><span class="p">(</span><span class="s1">u&#39;path&#39;</span><span class="p">)),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;last_modification_time&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;file_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;last_update_time&#39;</span><span class="p">))</span>
+
+  <span class="c1"># AppCompatCache format signature used in Windows 2003, Vista and 2008.</span>
+  <span class="n">_HEADER_SIGNATURE_2003</span> <span class="o">=</span> <span class="mh">0xbadc0ffe</span>
+
+  <span class="c1"># AppCompatCache format used in Windows 2003.</span>
+  <span class="n">_HEADER_2003_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;appcompatcache_header_2003&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;signature&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;number_of_cached_entries&#39;</span><span class="p">))</span>
+
+  <span class="n">_CACHED_ENTRY_2003_32BIT_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;appcompatcache_cached_entry_2003_32bit&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;path_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;maximum_path_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;path_offset&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;last_modification_time&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;file_size&#39;</span><span class="p">))</span>
+
+  <span class="n">_CACHED_ENTRY_2003_64BIT_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;appcompatcache_cached_entry_2003_64bit&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;path_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;maximum_path_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;unknown1&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;path_offset&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;last_modification_time&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;file_size&#39;</span><span class="p">))</span>
+
+  <span class="c1"># AppCompatCache format used in Windows Vista and 2008.</span>
+  <span class="n">_CACHED_ENTRY_VISTA_32BIT_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;appcompatcache_cached_entry_vista_32bit&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;path_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;maximum_path_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;path_offset&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;last_modification_time&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;insertion_flags&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;shim_flags&#39;</span><span class="p">))</span>
+
+  <span class="n">_CACHED_ENTRY_VISTA_64BIT_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;appcompatcache_cached_entry_vista_64bit&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;path_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;maximum_path_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;unknown1&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;path_offset&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;last_modification_time&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;insertion_flags&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;shim_flags&#39;</span><span class="p">))</span>
+
+  <span class="c1"># AppCompatCache format signature used in Windows 7 and 2008 R2.</span>
+  <span class="n">_HEADER_SIGNATURE_7</span> <span class="o">=</span> <span class="mh">0xbadc0fee</span>
+
+  <span class="c1"># AppCompatCache format used in Windows 7 and 2008 R2.</span>
+  <span class="n">_HEADER_7_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;appcompatcache_header_7&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;signature&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;number_of_cached_entries&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">120</span><span class="p">))</span>
+
+  <span class="n">_CACHED_ENTRY_7_32BIT_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;appcompatcache_cached_entry_7_32bit&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;path_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;maximum_path_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;path_offset&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;last_modification_time&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;insertion_flags&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;shim_flags&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;data_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;data_offset&#39;</span><span class="p">))</span>
+
+  <span class="n">_CACHED_ENTRY_7_64BIT_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;appcompatcache_cached_entry_7_64bit&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;path_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;maximum_path_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;unknown1&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;path_offset&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;last_modification_time&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;insertion_flags&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;shim_flags&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;data_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;data_offset&#39;</span><span class="p">))</span>
+
+  <span class="c1"># AppCompatCache format used in Windows 8.0 and 8.1.</span>
+  <span class="n">_HEADER_SIGNATURE_8</span> <span class="o">=</span> <span class="mh">0x00000080</span>
+
+  <span class="n">_HEADER_8_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;appcompatcache_header_8&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;signature&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">124</span><span class="p">))</span>
+
+  <span class="n">_CACHED_ENTRY_HEADER_8_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;appcompatcache_cached_entry_header_8&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;signature&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;unknown1&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;cached_entry_data_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;path_size&#39;</span><span class="p">))</span>
+
+  <span class="c1"># AppCompatCache format used in Windows 8.0.</span>
+  <span class="n">_CACHED_ENTRY_SIGNATURE_8_0</span> <span class="o">=</span> <span class="n">b</span><span class="s1">&#39;00ts&#39;</span>
+
+  <span class="c1"># AppCompatCache format used in Windows 8.1.</span>
+  <span class="n">_CACHED_ENTRY_SIGNATURE_8_1</span> <span class="o">=</span> <span class="n">b</span><span class="s1">&#39;10ts&#39;</span>
+
+  <span class="c1"># AppCompatCache format used in Windows 10</span>
+  <span class="n">_HEADER_SIGNATURE_10</span> <span class="o">=</span> <span class="mh">0x00000030</span>
+
+  <span class="n">_HEADER_10_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;appcompatcache_header_8&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;signature&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;unknown1&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">28</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;number_of_cached_entries&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
+
+  <span class="k">def</span> <span class="nf">_CheckSignature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value_data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses and validates the signature.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      value_data: a binary string containing the value data.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The format type if successful or None otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">signature</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;signature&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">value_data</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">signature</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HEADER_SIGNATURE_XP</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_XP</span>
+
+    <span class="k">elif</span> <span class="n">signature</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HEADER_SIGNATURE_2003</span><span class="p">:</span>
+      <span class="c1"># TODO: determine which format version is used (2003 or Vista).</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_2003</span>
+
+    <span class="k">elif</span> <span class="n">signature</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HEADER_SIGNATURE_7</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_7</span>
+
+    <span class="k">elif</span> <span class="n">signature</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HEADER_SIGNATURE_8</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">value_data</span><span class="p">[</span><span class="n">signature</span><span class="p">:</span><span class="n">signature</span> <span class="o">+</span> <span class="mi">4</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_SIGNATURE_8_0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_SIGNATURE_8_1</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_8</span>
+
+    <span class="k">elif</span> <span class="n">signature</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HEADER_SIGNATURE_10</span><span class="p">:</span>
+      <span class="c1"># Windows 10 uses the same cache entry signature as Windows 8.1</span>
+      <span class="k">if</span> <span class="n">value_data</span><span class="p">[</span><span class="n">signature</span><span class="p">:</span><span class="n">signature</span> <span class="o">+</span> <span class="mi">4</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_SIGNATURE_8_1</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_10</span>
+
+  <span class="k">def</span> <span class="nf">_DetermineCacheEntrySize</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">format_type</span><span class="p">,</span> <span class="n">value_data</span><span class="p">,</span> <span class="n">cached_entry_offset</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines the size of a cached entry.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      format_type: integer value that contains the format type.</span>
+<span class="sd">      value_data: a binary string containing the value data.</span>
+<span class="sd">      cached_entry_offset: integer value that contains the offset of</span>
+<span class="sd">                           the first cached entry data relative to the start of</span>
+<span class="sd">                           the value data.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The cached entry size if successful or None otherwise.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: if the format type is not supported.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">format_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_XP</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_2003</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_VISTA</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_7</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_10</span><span class="p">]:</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+          <span class="s1">u&#39;[{0:s}] Unsupported format type: {1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">format_type</span><span class="p">))</span>
+
+    <span class="n">cached_entry_data</span> <span class="o">=</span> <span class="n">value_data</span><span class="p">[</span><span class="n">cached_entry_offset</span><span class="p">:]</span>
+    <span class="n">cached_entry_size</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="n">format_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_XP</span><span class="p">:</span>
+      <span class="n">cached_entry_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_XP_32BIT_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">()</span>
+
+    <span class="k">elif</span> <span class="n">format_type</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_2003</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_VISTA</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_7</span><span class="p">]:</span>
+      <span class="n">path_size</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;path_size&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">cached_entry_data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+      <span class="n">maximum_path_size</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;maximum_path_size&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span>
+          <span class="n">cached_entry_data</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">])</span>
+      <span class="n">path_offset_32bit</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;path_offset&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span>
+          <span class="n">cached_entry_data</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">8</span><span class="p">])</span>
+      <span class="n">path_offset_64bit</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;path_offset&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span>
+          <span class="n">cached_entry_data</span><span class="p">[</span><span class="mi">8</span><span class="p">:</span><span class="mi">16</span><span class="p">])</span>
+
+      <span class="k">if</span> <span class="n">maximum_path_size</span> <span class="o">&lt;</span> <span class="n">path_size</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s1">u&#39;[{0:s}] Path size value out of bounds.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">))</span>
+        <span class="k">return</span>
+
+      <span class="n">path_end_of_string_size</span> <span class="o">=</span> <span class="n">maximum_path_size</span> <span class="o">-</span> <span class="n">path_size</span>
+      <span class="k">if</span> <span class="n">path_size</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">path_end_of_string_size</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s1">u&#39;[{0:s}] Unsupported path size values.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">))</span>
+        <span class="k">return</span>
+
+      <span class="c1"># Assume the entry is 64-bit if the 32-bit path offset is 0 and</span>
+      <span class="c1"># the 64-bit path offset is set.</span>
+      <span class="k">if</span> <span class="n">path_offset_32bit</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">path_offset_64bit</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">format_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_2003</span><span class="p">:</span>
+          <span class="n">cached_entry_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_2003_64BIT_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">format_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_VISTA</span><span class="p">:</span>
+          <span class="n">cached_entry_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_VISTA_64BIT_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">format_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_7</span><span class="p">:</span>
+          <span class="n">cached_entry_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_7_64BIT_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">()</span>
+
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">format_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_2003</span><span class="p">:</span>
+          <span class="n">cached_entry_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_2003_32BIT_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">format_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_VISTA</span><span class="p">:</span>
+          <span class="n">cached_entry_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_VISTA_32BIT_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">format_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_7</span><span class="p">:</span>
+          <span class="n">cached_entry_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_7_32BIT_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">()</span>
+
+    <span class="k">elif</span> <span class="n">format_type</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_10</span><span class="p">]:</span>
+      <span class="n">cached_entry_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_HEADER_8_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">cached_entry_size</span>
+
+  <span class="k">def</span> <span class="nf">_ParseHeader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format_type</span><span class="p">,</span> <span class="n">value_data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses the header.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      format_type: integer value that contains the format type.</span>
+<span class="sd">      value_data: a binary string containing the value data.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A header object (instance of AppCompatCacheHeader).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: if the format type is not supported.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">format_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_XP</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_2003</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_VISTA</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_7</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_10</span><span class="p">]:</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+          <span class="s1">u&#39;[{0:s}] Unsupported format type: {1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">format_type</span><span class="p">))</span>
+
+    <span class="c1"># TODO: change to collections.namedtuple or use __slots__ if the overhead</span>
+    <span class="c1"># of a regular object becomes a problem.</span>
+    <span class="n">header_object</span> <span class="o">=</span> <span class="n">AppCompatCacheHeader</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">format_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_XP</span><span class="p">:</span>
+      <span class="n">header_object</span><span class="o">.</span><span class="n">header_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HEADER_XP_32BIT_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">()</span>
+      <span class="n">header_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HEADER_XP_32BIT_STRUCT</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">value_data</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">format_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_2003</span><span class="p">:</span>
+      <span class="n">header_object</span><span class="o">.</span><span class="n">header_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HEADER_2003_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">()</span>
+      <span class="n">header_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HEADER_2003_STRUCT</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">value_data</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">format_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_VISTA</span><span class="p">:</span>
+      <span class="n">header_object</span><span class="o">.</span><span class="n">header_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HEADER_VISTA_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">()</span>
+      <span class="n">header_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HEADER_VISTA_STRUCT</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">value_data</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">format_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_7</span><span class="p">:</span>
+      <span class="n">header_object</span><span class="o">.</span><span class="n">header_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HEADER_7_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">()</span>
+      <span class="n">header_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HEADER_7_STRUCT</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">value_data</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">format_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_8</span><span class="p">:</span>
+      <span class="n">header_object</span><span class="o">.</span><span class="n">header_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HEADER_8_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">()</span>
+      <span class="n">header_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HEADER_8_STRUCT</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">value_data</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">format_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_10</span><span class="p">:</span>
+      <span class="n">header_object</span><span class="o">.</span><span class="n">header_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HEADER_10_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">()</span>
+      <span class="n">header_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HEADER_10_STRUCT</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">value_data</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">format_type</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_XP</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_2003</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_VISTA</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_7</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_10</span><span class="p">]:</span>
+      <span class="n">header_object</span><span class="o">.</span><span class="n">number_of_cached_entries</span> <span class="o">=</span> <span class="n">header_struct</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+          <span class="s1">u&#39;number_of_cached_entries&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">header_object</span>
+
+  <span class="k">def</span> <span class="nf">_ParseCachedEntry</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">format_type</span><span class="p">,</span> <span class="n">value_data</span><span class="p">,</span> <span class="n">cached_entry_offset</span><span class="p">,</span> <span class="n">cached_entry_size</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a cached entry.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      format_type: integer value that contains the format type.</span>
+<span class="sd">      value_data: a binary string containing the value data.</span>
+<span class="sd">      cached_entry_offset: integer value that contains the offset of</span>
+<span class="sd">                           the cached entry data relative to the start of</span>
+<span class="sd">                           the value data.</span>
+<span class="sd">      cached_entry_size: integer value that contains the cached entry data size.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A cached entry object (instance of AppCompatCacheCachedEntry).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: if the format type is not supported.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">format_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_XP</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_2003</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_VISTA</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_7</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_10</span><span class="p">]:</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+          <span class="s1">u&#39;[{0:s}] Unsupported format type: {1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">format_type</span><span class="p">))</span>
+
+    <span class="n">cached_entry_data</span> <span class="o">=</span> <span class="n">value_data</span><span class="p">[</span>
+        <span class="n">cached_entry_offset</span><span class="p">:</span><span class="n">cached_entry_offset</span> <span class="o">+</span> <span class="n">cached_entry_size</span><span class="p">]</span>
+
+    <span class="n">cached_entry_struct</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="n">format_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_XP</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">cached_entry_size</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_XP_32BIT_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">():</span>
+        <span class="n">cached_entry_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_XP_32BIT_STRUCT</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span>
+            <span class="n">cached_entry_data</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">format_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_2003</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">cached_entry_size</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_2003_32BIT_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">():</span>
+        <span class="n">cached_entry_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_2003_32BIT_STRUCT</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span>
+            <span class="n">cached_entry_data</span><span class="p">)</span>
+
+      <span class="k">elif</span> <span class="n">cached_entry_size</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_2003_64BIT_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">():</span>
+        <span class="n">cached_entry_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_2003_64BIT_STRUCT</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span>
+            <span class="n">cached_entry_data</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">format_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_VISTA</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">cached_entry_size</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_VISTA_32BIT_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">():</span>
+        <span class="n">cached_entry_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_VISTA_32BIT_STRUCT</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span>
+            <span class="n">cached_entry_data</span><span class="p">)</span>
+
+      <span class="k">elif</span> <span class="n">cached_entry_size</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_VISTA_64BIT_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">():</span>
+        <span class="n">cached_entry_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_VISTA_64BIT_STRUCT</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span>
+            <span class="n">cached_entry_data</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">format_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_7</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">cached_entry_size</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_7_32BIT_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">():</span>
+        <span class="n">cached_entry_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_7_32BIT_STRUCT</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span>
+            <span class="n">cached_entry_data</span><span class="p">)</span>
+
+      <span class="k">elif</span> <span class="n">cached_entry_size</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_7_64BIT_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">():</span>
+        <span class="n">cached_entry_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_7_64BIT_STRUCT</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span>
+            <span class="n">cached_entry_data</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">format_type</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_10</span><span class="p">]:</span>
+      <span class="k">if</span> <span class="n">cached_entry_data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_SIGNATURE_8_0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_SIGNATURE_8_1</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="s1">u&#39;[{0:s}] Unsupported cache entry signature&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">))</span>
+
+      <span class="k">if</span> <span class="n">cached_entry_size</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_HEADER_8_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">():</span>
+        <span class="n">cached_entry_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_HEADER_8_STRUCT</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span>
+            <span class="n">cached_entry_data</span><span class="p">)</span>
+
+        <span class="n">cached_entry_data_size</span> <span class="o">=</span> <span class="n">cached_entry_struct</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="s1">u&#39;cached_entry_data_size&#39;</span><span class="p">)</span>
+        <span class="n">cached_entry_size</span> <span class="o">=</span> <span class="mi">12</span> <span class="o">+</span> <span class="n">cached_entry_data_size</span>
+
+        <span class="n">cached_entry_data</span> <span class="o">=</span> <span class="n">value_data</span><span class="p">[</span>
+            <span class="n">cached_entry_offset</span><span class="p">:</span><span class="n">cached_entry_offset</span> <span class="o">+</span> <span class="n">cached_entry_size</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">cached_entry_struct</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+          <span class="s1">u&#39;[{0:s}] Unsupported cache entry size: {1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">cached_entry_size</span><span class="p">))</span>
+
+    <span class="n">cached_entry_object</span> <span class="o">=</span> <span class="n">AppCompatCacheCachedEntry</span><span class="p">()</span>
+    <span class="n">cached_entry_object</span><span class="o">.</span><span class="n">cached_entry_size</span> <span class="o">=</span> <span class="n">cached_entry_size</span>
+
+    <span class="n">path_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">data_size</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="n">format_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_XP</span><span class="p">:</span>
+      <span class="n">string_size</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="k">for</span> <span class="n">string_index</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">528</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="n">cached_entry_data</span><span class="p">[</span><span class="n">string_index</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span>
+            <span class="nb">ord</span><span class="p">(</span><span class="n">cached_entry_data</span><span class="p">[</span><span class="n">string_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">):</span>
+          <span class="k">break</span>
+        <span class="n">string_size</span> <span class="o">+=</span> <span class="mi">2</span>
+
+      <span class="n">cached_entry_object</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">binary</span><span class="o">.</span><span class="n">UTF16StreamCopyToString</span><span class="p">(</span>
+          <span class="n">cached_entry_data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">string_size</span><span class="p">])</span>
+
+    <span class="k">elif</span> <span class="n">format_type</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_2003</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_VISTA</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_7</span><span class="p">]:</span>
+      <span class="n">path_size</span> <span class="o">=</span> <span class="n">cached_entry_struct</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;path_size&#39;</span><span class="p">)</span>
+      <span class="n">path_offset</span> <span class="o">=</span> <span class="n">cached_entry_struct</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;path_offset&#39;</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">format_type</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_10</span><span class="p">]:</span>
+      <span class="n">path_size</span> <span class="o">=</span> <span class="n">cached_entry_struct</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;path_size&#39;</span><span class="p">)</span>
+
+      <span class="n">cached_entry_data_offset</span> <span class="o">=</span> <span class="mi">14</span> <span class="o">+</span> <span class="n">path_size</span>
+      <span class="n">cached_entry_object</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">binary</span><span class="o">.</span><span class="n">UTF16StreamCopyToString</span><span class="p">(</span>
+          <span class="n">cached_entry_data</span><span class="p">[</span><span class="mi">14</span><span class="p">:</span><span class="n">cached_entry_data_offset</span><span class="p">])</span>
+
+      <span class="k">if</span> <span class="n">format_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_8</span><span class="p">:</span>
+        <span class="n">remaining_data</span> <span class="o">=</span> <span class="n">cached_entry_data</span><span class="p">[</span><span class="n">cached_entry_data_offset</span><span class="p">:]</span>
+
+        <span class="n">cached_entry_object</span><span class="o">.</span><span class="n">insertion_flags</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span>
+            <span class="s1">u&#39;insertion_flags&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">remaining_data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">])</span>
+        <span class="n">cached_entry_object</span><span class="o">.</span><span class="n">shim_flags</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span>
+            <span class="s1">u&#39;shim_flags&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">remaining_data</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">8</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">cached_entry_data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_SIGNATURE_8_0</span><span class="p">:</span>
+          <span class="n">cached_entry_data_offset</span> <span class="o">+=</span> <span class="mi">8</span>
+
+        <span class="k">elif</span> <span class="n">cached_entry_data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CACHED_ENTRY_SIGNATURE_8_1</span><span class="p">:</span>
+          <span class="n">cached_entry_data_offset</span> <span class="o">+=</span> <span class="mi">10</span>
+
+      <span class="n">remaining_data</span> <span class="o">=</span> <span class="n">cached_entry_data</span><span class="p">[</span><span class="n">cached_entry_data_offset</span><span class="p">:]</span>
+
+    <span class="k">if</span> <span class="n">format_type</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_XP</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_2003</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_VISTA</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_7</span><span class="p">]:</span>
+      <span class="n">cached_entry_object</span><span class="o">.</span><span class="n">last_modification_time</span> <span class="o">=</span> <span class="n">cached_entry_struct</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+          <span class="s1">u&#39;last_modification_time&#39;</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">format_type</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_10</span><span class="p">]:</span>
+      <span class="n">cached_entry_object</span><span class="o">.</span><span class="n">last_modification_time</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span>
+          <span class="s1">u&#39;last_modification_time&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">remaining_data</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">8</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">format_type</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_XP</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_2003</span><span class="p">]:</span>
+      <span class="n">cached_entry_object</span><span class="o">.</span><span class="n">file_size</span> <span class="o">=</span> <span class="n">cached_entry_struct</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;file_size&#39;</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">format_type</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_VISTA</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_7</span><span class="p">]:</span>
+      <span class="n">cached_entry_object</span><span class="o">.</span><span class="n">insertion_flags</span> <span class="o">=</span> <span class="n">cached_entry_struct</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+          <span class="s1">u&#39;insertion_flags&#39;</span><span class="p">)</span>
+      <span class="n">cached_entry_object</span><span class="o">.</span><span class="n">shim_flags</span> <span class="o">=</span> <span class="n">cached_entry_struct</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;shim_flags&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">format_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_XP</span><span class="p">:</span>
+      <span class="n">cached_entry_object</span><span class="o">.</span><span class="n">last_update_time</span> <span class="o">=</span> <span class="n">cached_entry_struct</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+          <span class="s1">u&#39;last_update_time&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">format_type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_7</span><span class="p">:</span>
+      <span class="n">data_offset</span> <span class="o">=</span> <span class="n">cached_entry_struct</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;data_offset&#39;</span><span class="p">)</span>
+      <span class="n">data_size</span> <span class="o">=</span> <span class="n">cached_entry_struct</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;data_size&#39;</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">format_type</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_8</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_TYPE_10</span><span class="p">]:</span>
+      <span class="n">data_offset</span> <span class="o">=</span> <span class="n">cached_entry_offset</span> <span class="o">+</span> <span class="n">cached_entry_data_offset</span> <span class="o">+</span> <span class="mi">12</span>
+      <span class="n">data_size</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;data_size&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">remaining_data</span><span class="p">[</span><span class="mi">8</span><span class="p">:</span><span class="mi">12</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">path_offset</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">path_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="n">path_size</span> <span class="o">+=</span> <span class="n">path_offset</span>
+
+      <span class="n">cached_entry_object</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">binary</span><span class="o">.</span><span class="n">UTF16StreamCopyToString</span><span class="p">(</span>
+          <span class="n">value_data</span><span class="p">[</span><span class="n">path_offset</span><span class="p">:</span><span class="n">path_size</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">data_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="n">data_size</span> <span class="o">+=</span> <span class="n">data_offset</span>
+
+      <span class="n">cached_entry_object</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">value_data</span><span class="p">[</span><span class="n">data_offset</span><span class="p">:</span><span class="n">data_size</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">cached_entry_object</span>
+
+<div class="viewcode-block" id="AppCompatCachePlugin.GetEntries"><a class="viewcode-back" href="../../../../plaso.parsers.winreg_plugins.html#plaso.parsers.winreg_plugins.appcompatcache.AppCompatCachePlugin.GetEntries">[docs]</a>  <span class="k">def</span> <span class="nf">GetEntries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">registry_key</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts event objects from a Application Compatibility Cache key.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      registry_key: A Windows Registry key (instance of</span>
+<span class="sd">                    dfwinreg.WinRegistryKey).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">value</span> <span class="o">=</span> <span class="n">registry_key</span><span class="o">.</span><span class="n">GetValueByName</span><span class="p">(</span><span class="s1">u&#39;AppCompatCache&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">value_data</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">data</span>
+    <span class="n">value_data_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="n">format_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CheckSignature</span><span class="p">(</span><span class="n">value_data</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">format_type</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;Unsupported signature in AppCompatCache key: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">registry_key</span><span class="o">.</span><span class="n">path</span><span class="p">))</span>
+      <span class="k">return</span>
+
+    <span class="n">header_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ParseHeader</span><span class="p">(</span><span class="n">format_type</span><span class="p">,</span> <span class="n">value_data</span><span class="p">)</span>
+
+    <span class="c1"># On Windows Vista and 2008 when the cache is empty it will</span>
+    <span class="c1"># only consist of the header.</span>
+    <span class="k">if</span> <span class="n">value_data_size</span> <span class="o">&lt;=</span> <span class="n">header_object</span><span class="o">.</span><span class="n">header_size</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">cached_entry_offset</span> <span class="o">=</span> <span class="n">header_object</span><span class="o">.</span><span class="n">header_size</span>
+    <span class="n">cached_entry_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DetermineCacheEntrySize</span><span class="p">(</span>
+        <span class="n">format_type</span><span class="p">,</span> <span class="n">value_data</span><span class="p">,</span> <span class="n">cached_entry_offset</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">cached_entry_size</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+          <span class="s1">u&#39;Unsupported cached entry size at offset {0:d} in AppCompatCache &#39;</span>
+          <span class="s1">u&#39;key: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cached_entry_offset</span><span class="p">,</span> <span class="n">registry_key</span><span class="o">.</span><span class="n">path</span><span class="p">))</span>
+      <span class="k">return</span>
+
+    <span class="n">cached_entry_index</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">cached_entry_offset</span> <span class="o">&lt;</span> <span class="n">value_data_size</span><span class="p">:</span>
+      <span class="n">cached_entry_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ParseCachedEntry</span><span class="p">(</span>
+          <span class="n">format_type</span><span class="p">,</span> <span class="n">value_data</span><span class="p">,</span> <span class="n">cached_entry_offset</span><span class="p">,</span> <span class="n">cached_entry_size</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">cached_entry_object</span><span class="o">.</span><span class="n">last_modification_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c1"># TODO: refactor to file modification event.</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">AppCompatCacheEvent</span><span class="p">(</span>
+            <span class="n">cached_entry_object</span><span class="o">.</span><span class="n">last_modification_time</span><span class="p">,</span>
+            <span class="s1">u&#39;File Last Modification Time&#39;</span><span class="p">,</span> <span class="n">registry_key</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+            <span class="n">cached_entry_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">cached_entry_object</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+            <span class="n">cached_entry_offset</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">cached_entry_object</span><span class="o">.</span><span class="n">last_update_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c1"># TODO: refactor to process run event.</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">AppCompatCacheEvent</span><span class="p">(</span>
+            <span class="n">cached_entry_object</span><span class="o">.</span><span class="n">last_update_time</span><span class="p">,</span>
+            <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">LAST_RUNTIME</span><span class="p">,</span> <span class="n">registry_key</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+            <span class="n">cached_entry_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">cached_entry_object</span><span class="o">.</span><span class="n">path</span><span class="p">,</span>
+            <span class="n">cached_entry_offset</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="n">cached_entry_offset</span> <span class="o">+=</span> <span class="n">cached_entry_object</span><span class="o">.</span><span class="n">cached_entry_size</span>
+      <span class="n">cached_entry_index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+      <span class="k">if</span> <span class="p">(</span><span class="n">header_object</span><span class="o">.</span><span class="n">number_of_cached_entries</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span>
+          <span class="n">cached_entry_index</span> <span class="o">&gt;=</span> <span class="n">header_object</span><span class="o">.</span><span class="n">number_of_cached_entries</span><span class="p">):</span>
+        <span class="k">break</span></div></div>
+
+
+<span class="n">winreg</span><span class="o">.</span><span class="n">WinRegistryParser</span><span class="o">.</span><span class="n">RegisterPlugin</span><span class="p">(</span><span class="n">AppCompatCachePlugin</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

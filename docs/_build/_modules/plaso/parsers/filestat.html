@@ -1,0 +1,174 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.filestat &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.filestat</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;File system stat object parser.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">dfvfs.lib</span> <span class="kn">import</span> <span class="n">definitions</span> <span class="k">as</span> <span class="n">dfvfs_definitions</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">file_system_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+
+
+<div class="viewcode-block" id="FileStatParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.filestat.FileStatParser">[docs]</a><span class="k">class</span> <span class="nc">FileStatParser</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">FileEntryParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that defines a file system stat object parser.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;filestat&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for file system stat information.&#39;</span>
+
+  <span class="n">_TIME_ATTRIBUTES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+      <span class="s1">u&#39;atime&#39;</span><span class="p">,</span> <span class="s1">u&#39;bkup_time&#39;</span><span class="p">,</span> <span class="s1">u&#39;ctime&#39;</span><span class="p">,</span> <span class="s1">u&#39;crtime&#39;</span><span class="p">,</span> <span class="s1">u&#39;dtime&#39;</span><span class="p">,</span> <span class="s1">u&#39;mtime&#39;</span><span class="p">])</span>
+
+  <span class="k">def</span> <span class="nf">_GetFileSystemTypeFromFileEntry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a filesystem type string from a file entry object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: A file entry object (instance of vfs.file_entry.FileEntry).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A string indicating the file system type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">type_indicator</span> <span class="o">!=</span> <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">TYPE_INDICATOR_TSK</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">type_indicator</span>
+
+    <span class="c1"># TODO: Implement fs_type in dfVFS and remove this implementation</span>
+    <span class="c1"># once that is in place.</span>
+    <span class="n">file_system</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetFileSystem</span><span class="p">()</span>
+    <span class="n">fs_info</span> <span class="o">=</span> <span class="n">file_system</span><span class="o">.</span><span class="n">GetFsInfo</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">fs_info</span><span class="o">.</span><span class="n">info</span><span class="p">:</span>
+      <span class="n">type_string</span> <span class="o">=</span> <span class="s1">u&#39;{0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fs_info</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">ftype</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">type_string</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;TSK_FS_TYPE&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">type_string</span><span class="p">[</span><span class="mi">12</span><span class="p">:]</span>
+
+<div class="viewcode-block" id="FileStatParser.ParseFileEntry"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.filestat.FileStatParser.ParseFileEntry">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileEntry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a file entry.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_entry: A file entry object (instance of dfvfs.FileEntry).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">stat_object</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetStat</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">stat_object</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">file_system_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetFileSystemTypeFromFileEntry</span><span class="p">(</span><span class="n">file_entry</span><span class="p">)</span>
+
+    <span class="n">is_allocated</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stat_object</span><span class="p">,</span> <span class="s1">u&#39;allocated&#39;</span><span class="p">,</span> <span class="bp">True</span><span class="p">)</span>
+    <span class="n">file_size</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stat_object</span><span class="p">,</span> <span class="s1">u&#39;size&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">),</span>
+
+    <span class="k">for</span> <span class="n">time_attribute</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_TIME_ATTRIBUTES</span><span class="p">:</span>
+      <span class="n">posix_time</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stat_object</span><span class="p">,</span> <span class="n">time_attribute</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">posix_time</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">continue</span>
+
+      <span class="n">nano_time_attribute</span> <span class="o">=</span> <span class="s1">u&#39;{0:s}_nano&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time_attribute</span><span class="p">)</span>
+      <span class="n">nano_time_attribute</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stat_object</span><span class="p">,</span> <span class="n">nano_time_attribute</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+      <span class="n">timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromPosixTime</span><span class="p">(</span><span class="n">posix_time</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">nano_time_attribute</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="c1"># Note that the _nano values are in intervals of 100th nano seconds.</span>
+        <span class="n">micro_time_attribute</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">nano_time_attribute</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="n">timestamp</span> <span class="o">+=</span> <span class="n">micro_time_attribute</span>
+
+      <span class="c1"># TSK will return 0 if the timestamp is not set.</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">file_entry</span><span class="o">.</span><span class="n">type_indicator</span> <span class="o">==</span> <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">TYPE_INDICATOR_TSK</span> <span class="ow">and</span>
+          <span class="ow">not</span> <span class="n">timestamp</span><span class="p">):</span>
+        <span class="k">continue</span>
+
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">file_system_events</span><span class="o">.</span><span class="n">FileStatEvent</span><span class="p">(</span>
+          <span class="n">timestamp</span><span class="p">,</span> <span class="n">time_attribute</span><span class="p">,</span> <span class="n">is_allocated</span><span class="p">,</span> <span class="n">file_size</span><span class="p">,</span> <span class="n">stat_object</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+          <span class="n">file_system_type</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParser</span><span class="p">(</span><span class="n">FileStatParser</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

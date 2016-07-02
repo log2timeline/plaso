@@ -1,0 +1,380 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.opera &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.opera</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Parsers for Opera Browser history files.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">urllib2</span>
+<span class="kn">from</span> <span class="nn">xml.etree</span> <span class="kn">import</span> <span class="n">ElementTree</span>
+
+<span class="kn">from</span> <span class="nn">dfvfs.helpers</span> <span class="kn">import</span> <span class="n">text_file</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+
+
+<div class="viewcode-block" id="OperaTypedHistoryEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.opera.OperaTypedHistoryEvent">[docs]</a><span class="k">class</span> <span class="nc">OperaTypedHistoryEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">TimestampEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;An EventObject for an Opera typed history entry.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;opera:history:typed_entry&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">entry_type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A constructor for the typed history event.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timestamp: The timestamp time value. The timestamp contains the</span>
+<span class="sd">                 number of microseconds since Jan 1, 1970 00:00:00 UTC</span>
+<span class="sd">      url: The url, or the typed hostname.</span>
+<span class="sd">      entry_type: A string indicating whether the URL was directly</span>
+<span class="sd">                  typed in or the result of the user choosing from the</span>
+<span class="sd">                  auto complete (based on prior history).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">OperaTypedHistoryEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">LAST_VISITED_TIME</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">entry_type</span> <span class="o">=</span> <span class="n">entry_type</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
+
+    <span class="k">if</span> <span class="n">entry_type</span> <span class="o">==</span> <span class="s1">u&#39;selected&#39;</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">entry_selection</span> <span class="o">=</span> <span class="s1">u&#39;Filled from autocomplete.&#39;</span>
+    <span class="k">elif</span> <span class="n">entry_type</span> <span class="o">==</span> <span class="s1">u&#39;text&#39;</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">entry_selection</span> <span class="o">=</span> <span class="s1">u&#39;Manually typed.&#39;</span></div>
+
+
+<div class="viewcode-block" id="OperaGlobalHistoryEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.opera.OperaGlobalHistoryEvent">[docs]</a><span class="k">class</span> <span class="nc">OperaGlobalHistoryEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">PosixTimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;An EventObject for an Opera global history entry.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;opera:history:entry&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">popularity_index</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initialize the event object.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">OperaGlobalHistoryEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">PAGE_VISITED</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">DATA_TYPE</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
+    <span class="k">if</span> <span class="n">title</span> <span class="o">!=</span> <span class="n">url</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">title</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">popularity_index</span> <span class="o">=</span> <span class="n">popularity_index</span>
+
+    <span class="k">if</span> <span class="n">popularity_index</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="s1">u&#39;First and Only Visit&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="s1">u&#39;Last Visit&#39;</span></div>
+
+
+<div class="viewcode-block" id="OperaTypedHistoryParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.opera.OperaTypedHistoryParser">[docs]</a><span class="k">class</span> <span class="nc">OperaTypedHistoryParser</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">FileObjectParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parses the Opera typed_history.xml file.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;opera_typed_history&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for Opera typed_history.xml files.&#39;</span>
+
+  <span class="n">_HEADER_READ_SIZE</span> <span class="o">=</span> <span class="mi">128</span>
+
+<div class="viewcode-block" id="OperaTypedHistoryParser.ParseFileObject"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.opera.OperaTypedHistoryParser.ParseFileObject">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses an Opera typed history file-like object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: A file-like object.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      UnableToParseFile: when the file cannot be parsed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">file_object</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_HEADER_READ_SIZE</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;&lt;?xml&#39;</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Not an Opera typed history file [not a XML]&#39;</span><span class="p">)</span>
+
+    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;&lt;typed_history&#39;</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Not an Opera typed history file [wrong XML root key]&#39;</span><span class="p">)</span>
+
+    <span class="c1"># For ElementTree to work we need to work on a file object seeked</span>
+    <span class="c1"># to the beginning.</span>
+    <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_SET</span><span class="p">)</span>
+
+    <span class="n">xml</span> <span class="o">=</span> <span class="n">ElementTree</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">history_item</span> <span class="ow">in</span> <span class="n">xml</span><span class="o">.</span><span class="n">iterfind</span><span class="p">(</span><span class="s1">u&#39;typed_history_item&#39;</span><span class="p">):</span>
+      <span class="n">content</span> <span class="o">=</span> <span class="n">history_item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;content&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span>
+      <span class="n">last_typed_time</span> <span class="o">=</span> <span class="n">history_item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;last_typed&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+      <span class="n">entry_type</span> <span class="o">=</span> <span class="n">history_item</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;type&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">last_typed_time</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span><span class="s1">u&#39;missing last typed time.&#39;</span><span class="p">)</span>
+        <span class="k">continue</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromTimeString</span><span class="p">(</span><span class="n">last_typed_time</span><span class="p">)</span>
+      <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">TimestampError</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+            <span class="s1">u&#39;unsupported last typed time: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">last_typed_time</span><span class="p">))</span>
+        <span class="k">continue</span>
+
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">OperaTypedHistoryEvent</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">content</span><span class="p">,</span> <span class="n">entry_type</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="OperaGlobalHistoryParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.opera.OperaGlobalHistoryParser">[docs]</a><span class="k">class</span> <span class="nc">OperaGlobalHistoryParser</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">FileObjectParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parses the Opera global_history.dat file.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;opera_global&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for Opera global_history.dat files.&#39;</span>
+
+  <span class="n">_SUPPORTED_URL_SCHEMES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s1">u&#39;file&#39;</span><span class="p">,</span> <span class="s1">u&#39;http&#39;</span><span class="p">,</span> <span class="s1">u&#39;https&#39;</span><span class="p">,</span> <span class="s1">u&#39;ftp&#39;</span><span class="p">])</span>
+
+  <span class="k">def</span> <span class="nf">_IsValidUrl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A simple test to see if an URL is considered valid.&quot;&quot;&quot;</span>
+    <span class="n">parsed_url</span> <span class="o">=</span> <span class="n">urllib2</span><span class="o">.</span><span class="n">urlparse</span><span class="o">.</span><span class="n">urlparse</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+
+    <span class="c1"># Few supported first URL entries.</span>
+    <span class="k">if</span> <span class="n">parsed_url</span><span class="o">.</span><span class="n">scheme</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_SUPPORTED_URL_SCHEMES</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">return</span> <span class="bp">False</span>
+
+  <span class="k">def</span> <span class="nf">_ReadRecord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text_file_object</span><span class="p">,</span> <span class="n">max_line_length</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a single record from an Opera global_history file.</span>
+
+<span class="sd">    A single record consists of four lines, with each line as:</span>
+<span class="sd">      Title of page (or the URL if not there).</span>
+<span class="sd">      Website URL.</span>
+<span class="sd">      Timestamp in POSIX time.</span>
+<span class="sd">      Popularity index (-1 if first time visited).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      text_file_object: A text file object (instance of dfvfs.TextFile).</span>
+<span class="sd">      max_line_length: An integer that denotes the maximum byte</span>
+<span class="sd">                       length for each line read.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A tuple of: title, url, timestamp, popularity_index.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      errors.NotAText: If the file being read is not a text file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">max_line_length</span><span class="p">:</span>
+      <span class="n">title_raw</span> <span class="o">=</span> <span class="n">text_file_object</span><span class="o">.</span><span class="n">readline</span><span class="p">(</span><span class="n">max_line_length</span><span class="p">)</span>
+      <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">title_raw</span><span class="p">)</span> <span class="o">==</span> <span class="n">max_line_length</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">title_raw</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">utils</span><span class="o">.</span><span class="n">IsText</span><span class="p">(</span><span class="n">title_raw</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">NotAText</span><span class="p">(</span><span class="s1">u&#39;Title line is not a text.&#39;</span><span class="p">)</span>
+      <span class="n">title</span> <span class="o">=</span> <span class="n">title_raw</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">title</span> <span class="o">=</span> <span class="n">text_file_object</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">title</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+    <span class="n">url</span> <span class="o">=</span> <span class="n">text_file_object</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">url</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+    <span class="n">timestamp_line</span> <span class="o">=</span> <span class="n">text_file_object</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">popularity_line</span> <span class="o">=</span> <span class="n">text_file_object</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">timestamp</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">timestamp_line</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+      <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">timestamp_line</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">30</span><span class="p">:</span>
+        <span class="n">timestamp_line</span> <span class="o">=</span> <span class="n">timestamp_line</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">30</span><span class="p">]</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;Unable to read in timestamp [{0!r}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">timestamp_line</span><span class="p">))</span>
+      <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">popularity_index</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">popularity_line</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;Unable to read in popularity index[{0:s}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">popularity_line</span><span class="p">))</span>
+      <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s1">u&#39;Unable to read in popularity index [unable to print &#39;</span>
+            <span class="s1">u&#39;bad line]&#39;</span><span class="p">)</span>
+      <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+    <span class="c1"># Try to get the data into Unicode.</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">title_unicode</span> <span class="o">=</span> <span class="n">title</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+      <span class="n">partial_title</span> <span class="o">=</span> <span class="n">title</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">u&#39;replace&#39;</span><span class="p">)</span>
+      <span class="c1"># TODO: replace with parse error.</span>
+      <span class="n">title_unicode</span> <span class="o">=</span> <span class="s1">u&#39;Warning: partial line, starts with: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">partial_title</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">title_unicode</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">popularity_index</span>
+
+  <span class="k">def</span> <span class="nf">_ReadRecords</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text_file_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Yield records read from an Opera global_history file.</span>
+
+<span class="sd">    A single record consists of four lines, with each line as:</span>
+<span class="sd">      Title of page (or the URL if not there).</span>
+<span class="sd">      Website URL.</span>
+<span class="sd">      Timestamp in POSIX time.</span>
+<span class="sd">      Popularity index (-1 if first time visited).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      text_file_object: A text file object (instance of dfvfs.TextFile).</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">      A tuple of: title, url, timestamp, popularity_index.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+      <span class="n">title</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">popularity_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ReadRecord</span><span class="p">(</span>
+          <span class="n">text_file_object</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">title</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">StopIteration</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">url</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">StopIteration</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">popularity_index</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">StopIteration</span>
+
+      <span class="k">yield</span> <span class="n">title</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">popularity_index</span>
+
+<div class="viewcode-block" id="OperaGlobalHistoryParser.ParseFileObject"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.opera.OperaGlobalHistoryParser.ParseFileObject">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses an Opera global history file-like object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: A file-like object.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      UnableToParseFile: when the file cannot be parsed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_SET</span><span class="p">)</span>
+
+    <span class="n">text_file_object</span> <span class="o">=</span> <span class="n">text_file</span><span class="o">.</span><span class="n">TextFile</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">title</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">popularity_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ReadRecord</span><span class="p">(</span>
+          <span class="n">text_file_object</span><span class="p">,</span> <span class="mi">400</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">NotAText</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Not an Opera history file [not a text file].&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">title</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Not an Opera history file [no title present].&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_IsValidUrl</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Not an Opera history file [not a valid URL].&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">timestamp</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Not an Opera history file [timestamp does not exist].&#39;</span><span class="p">)</span>
+
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">OperaGlobalHistoryEvent</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">popularity_index</span><span class="p">)</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="c1"># Read in the rest of the history file.</span>
+    <span class="k">for</span> <span class="n">title</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">popularity_index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ReadRecords</span><span class="p">(</span>
+        <span class="n">text_file_object</span><span class="p">):</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">OperaGlobalHistoryEvent</span><span class="p">(</span>
+          <span class="n">timestamp</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">popularity_index</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParsers</span><span class="p">([</span>
+    <span class="n">OperaTypedHistoryParser</span><span class="p">,</span> <span class="n">OperaGlobalHistoryParser</span><span class="p">])</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

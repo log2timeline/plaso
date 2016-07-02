@@ -1,0 +1,444 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.preprocessors.windows &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.preprocessors.windows</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains preprocessors for Windows.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">py2to3</span>
+<span class="kn">from</span> <span class="nn">plaso.preprocessors</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.preprocessors</span> <span class="kn">import</span> <span class="n">manager</span>
+<span class="kn">from</span> <span class="nn">plaso.winnt</span> <span class="kn">import</span> <span class="n">time_zones</span>
+
+
+<div class="viewcode-block" id="WindowsPathPreprocessPlugin"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.windows.WindowsPathPreprocessPlugin">[docs]</a><span class="k">class</span> <span class="nc">WindowsPathPreprocessPlugin</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">PreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Returns a Windows path.&quot;&quot;&quot;</span>
+
+  <span class="n">WEIGHT</span> <span class="o">=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="WindowsPathPreprocessPlugin.GetValue"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.windows.WindowsPathPreprocessPlugin.GetValue">[docs]</a>  <span class="k">def</span> <span class="nf">GetValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">searcher</span><span class="p">,</span> <span class="n">unused_knowledge_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the path as found by the searcher.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      searcher: The file system searcher object (instance of</span>
+<span class="sd">                dfvfs.FileSystemSearcher).</span>
+<span class="sd">      knowledge_base: A knowledge base object (instance of KnowledgeBase),</span>
+<span class="sd">                      which contains information from the source data needed</span>
+<span class="sd">                      for parsing.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The first path location string.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      PreProcessFail: if the path could not be found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path_specs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FindPathSpecs</span><span class="p">(</span><span class="n">searcher</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PATH</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path_specs</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">PreProcessFail</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to find path: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PATH</span><span class="p">))</span>
+
+    <span class="n">relative_path</span> <span class="o">=</span> <span class="n">searcher</span><span class="o">.</span><span class="n">GetRelativePath</span><span class="p">(</span><span class="n">path_specs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">relative_path</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">PreProcessFail</span><span class="p">(</span>
+          <span class="s1">u&#39;Missing relative path for: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PATH</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">relative_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;/&#39;</span><span class="p">):</span>
+      <span class="n">relative_path</span> <span class="o">=</span> <span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">relative_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">u&#39;/&#39;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">relative_path</span></div></div>
+
+
+<div class="viewcode-block" id="WindowsSystemRegistryPath"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.windows.WindowsSystemRegistryPath">[docs]</a><span class="k">class</span> <span class="nc">WindowsSystemRegistryPath</span><span class="p">(</span><span class="n">WindowsPathPreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Get the system registry path.&quot;&quot;&quot;</span>
+  <span class="n">SUPPORTED_OS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">u&#39;Windows&#39;</span><span class="p">]</span>
+  <span class="n">ATTRIBUTE</span> <span class="o">=</span> <span class="s1">u&#39;sysregistry&#39;</span>
+  <span class="n">PATH</span> <span class="o">=</span> <span class="s1">u&#39;/(Windows|WinNT|WINNT35|WTSRV)/System32/config&#39;</span></div>
+
+
+<div class="viewcode-block" id="WindowsSystemRootPath"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.windows.WindowsSystemRootPath">[docs]</a><span class="k">class</span> <span class="nc">WindowsSystemRootPath</span><span class="p">(</span><span class="n">WindowsPathPreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Get the system root path.&quot;&quot;&quot;</span>
+  <span class="n">SUPPORTED_OS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">u&#39;Windows&#39;</span><span class="p">]</span>
+  <span class="n">ATTRIBUTE</span> <span class="o">=</span> <span class="s1">u&#39;systemroot&#39;</span>
+  <span class="n">PATH</span> <span class="o">=</span> <span class="s1">u&#39;/(Windows|WinNT|WINNT35|WTSRV)&#39;</span></div>
+
+
+<div class="viewcode-block" id="WindowsWinDirPath"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.windows.WindowsWinDirPath">[docs]</a><span class="k">class</span> <span class="nc">WindowsWinDirPath</span><span class="p">(</span><span class="n">WindowsPathPreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Get the system path.&quot;&quot;&quot;</span>
+  <span class="n">SUPPORTED_OS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">u&#39;Windows&#39;</span><span class="p">]</span>
+  <span class="n">ATTRIBUTE</span> <span class="o">=</span> <span class="s1">u&#39;windir&#39;</span>
+  <span class="n">PATH</span> <span class="o">=</span> <span class="s1">u&#39;/(Windows|WinNT|WINNT35|WTSRV)&#39;</span></div>
+
+
+<div class="viewcode-block" id="WindowsRegistryPreprocessPlugin"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.windows.WindowsRegistryPreprocessPlugin">[docs]</a><span class="k">class</span> <span class="nc">WindowsRegistryPreprocessPlugin</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">PreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that defines the Windows Registry preprocess plugin object.</span>
+
+<span class="sd">  By default registry needs information about system paths, which excludes</span>
+<span class="sd">  them to run in priority 1, in some cases they may need to run in priority</span>
+<span class="sd">  3, for instance if the Registry key is dependent on which version of Windows</span>
+<span class="sd">  is running, information that is collected during priority 2.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">SUPPORTED_OS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">u&#39;Windows&#39;</span><span class="p">]</span>
+  <span class="n">WEIGHT</span> <span class="o">=</span> <span class="mi">2</span>
+
+  <span class="n">KEY_PATH</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+
+  <span class="nd">@abc.abstractmethod</span>
+  <span class="k">def</span> <span class="nf">_ParseKey</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">registry_key</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a Windows Registry key for the preprocessing attribute.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      registry_key: The Registry key (instance of WinRegistryKey).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The preprocessing attribute value or None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+  <span class="c1"># TODO: remove after refactor interface.</span>
+<div class="viewcode-block" id="WindowsRegistryPreprocessPlugin.GetValue"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.windows.WindowsRegistryPreprocessPlugin.GetValue">[docs]</a>  <span class="k">def</span> <span class="nf">GetValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">searcher</span><span class="p">,</span> <span class="n">knowledge_base</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="WindowsRegistryPreprocessPlugin.Run"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.windows.WindowsRegistryPreprocessPlugin.Run">[docs]</a>  <span class="k">def</span> <span class="nf">Run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">win_registry</span><span class="p">,</span> <span class="n">knowledge_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Runs the plugins to determine the value of the preprocessing attribute.</span>
+
+<span class="sd">    The resulting preprocessing attribute value is stored in the knowledge base.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      win_registry: The Windows Registry object (instance of WinRegistry).</span>
+<span class="sd">      knowledge_base: A knowledge base object (instance of KnowledgeBase),</span>
+<span class="sd">                      which contains information from the source data needed</span>
+<span class="sd">                      for parsing.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      PreProcessFail: If the preprocessing failed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">registry_key</span> <span class="o">=</span> <span class="n">win_registry</span><span class="o">.</span><span class="n">GetKeyByPath</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">KEY_PATH</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">PreProcessFail</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to retrieve Registry key: {0:s} with error: {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">KEY_PATH</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">registry_key</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">attribute_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ParseKey</span><span class="p">(</span><span class="n">registry_key</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">attribute_value</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">knowledge_base</span><span class="o">.</span><span class="n">SetValue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ATTRIBUTE</span><span class="p">,</span> <span class="n">attribute_value</span><span class="p">)</span>
+
+    <span class="c1"># TODO: remove.</span>
+    <span class="n">attribute_value</span> <span class="o">=</span> <span class="n">knowledge_base</span><span class="o">.</span><span class="n">GetValue</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ATTRIBUTE</span><span class="p">,</span> <span class="n">default_value</span><span class="o">=</span><span class="s1">u&#39;N/A&#39;</span><span class="p">)</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">u&#39;[PreProcess] Set attribute: {0:s} to {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ATTRIBUTE</span><span class="p">,</span> <span class="n">attribute_value</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="WindowsUsers"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.windows.WindowsUsers">[docs]</a><span class="k">class</span> <span class="nc">WindowsUsers</span><span class="p">(</span><span class="n">WindowsRegistryPreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Fetch information about user profiles.&quot;&quot;&quot;</span>
+
+  <span class="n">ATTRIBUTE</span> <span class="o">=</span> <span class="s1">u&#39;users&#39;</span>
+  <span class="n">KEY_PATH</span> <span class="o">=</span> <span class="p">(</span>
+      <span class="s1">u&#39;HKEY_LOCAL_MACHINE</span><span class="se">\\</span><span class="s1">Software</span><span class="se">\\</span><span class="s1">Microsoft</span><span class="se">\\</span><span class="s1">Windows NT</span><span class="se">\\</span><span class="s1">CurrentVersion</span><span class="se">\\</span><span class="s1">&#39;</span>
+      <span class="s1">u&#39;ProfileList&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_GetUsernameFromPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the username from a Windows profile path.</span>
+
+<span class="sd">    Trailing path path segment are igored.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      path: a Windows path with \\ as the path segment separator.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The basename (or last path segment).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Strip trailing key separators.</span>
+    <span class="k">while</span> <span class="n">path</span> <span class="ow">and</span> <span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">:</span>
+      <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">path</span><span class="p">:</span>
+      <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span>
+
+  <span class="k">def</span> <span class="nf">_ParseKey</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">registry_key</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a Windows Registry key for the preprocessing attribute.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      registry_key: The Registry key (instance of WinRegistryKey).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The preprocessing attribute value or None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">users</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">subkey</span> <span class="ow">in</span> <span class="n">registry_key</span><span class="o">.</span><span class="n">GetSubkeys</span><span class="p">():</span>
+      <span class="c1"># TODO: create a proper object for this.</span>
+      <span class="n">user</span> <span class="o">=</span> <span class="p">{}</span>
+      <span class="n">user</span><span class="p">[</span><span class="s1">u&#39;sid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">subkey</span><span class="o">.</span><span class="n">name</span>
+      <span class="n">registry_value</span> <span class="o">=</span> <span class="n">subkey</span><span class="o">.</span><span class="n">GetValueByName</span><span class="p">(</span><span class="s1">u&#39;ProfileImagePath&#39;</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">registry_value</span><span class="p">:</span>
+        <span class="n">user</span><span class="p">[</span><span class="s1">u&#39;path&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">registry_value</span><span class="o">.</span><span class="n">GetDataAsObject</span><span class="p">()</span>
+        <span class="n">user</span><span class="p">[</span><span class="s1">u&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetUsernameFromPath</span><span class="p">(</span><span class="n">user</span><span class="p">[</span><span class="s1">u&#39;path&#39;</span><span class="p">])</span>
+
+      <span class="n">users</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">users</span></div>
+
+
+<div class="viewcode-block" id="WindowsRegistryValuePreprocessPlugin"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.windows.WindowsRegistryValuePreprocessPlugin">[docs]</a><span class="k">class</span> <span class="nc">WindowsRegistryValuePreprocessPlugin</span><span class="p">(</span><span class="n">WindowsRegistryPreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that defines a Windows Registry value preprocessing plugin.&quot;&quot;&quot;</span>
+
+  <span class="n">DEFAULT_ATTRIBUTE_VALUE</span> <span class="o">=</span> <span class="bp">None</span>
+  <span class="n">VALUE_NAME</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+
+  <span class="k">def</span> <span class="nf">_ParseKey</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">registry_key</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a Windows Registry key for the preprocessing attribute.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      registry_key: The Registry key (instance of WinRegistryKey).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The preprocessing attribute value or None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">registry_key</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;Registry key: {0:s} does not exist&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">KEY_PATH</span><span class="p">))</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_ATTRIBUTE_VALUE</span>
+
+    <span class="n">registry_value</span> <span class="o">=</span> <span class="n">registry_key</span><span class="o">.</span><span class="n">GetValueByName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">VALUE_NAME</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">registry_value</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;Registry value: {0:s} does not exist&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">VALUE_NAME</span><span class="p">))</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_ATTRIBUTE_VALUE</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ParseValue</span><span class="p">(</span><span class="n">registry_value</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_ParseValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">registry_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a Windows Registry value for the preprocessing attribute.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      registry_value: The Registry value (instance of WinRegistryValue).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The preprocessing attribute value or None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">registry_value</span><span class="o">.</span><span class="n">GetDataAsObject</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="WindowsCodepage"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.windows.WindowsCodepage">[docs]</a><span class="k">class</span> <span class="nc">WindowsCodepage</span><span class="p">(</span><span class="n">WindowsRegistryValuePreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Windows preprocess plugin to determine the codepage.&quot;&quot;&quot;</span>
+
+  <span class="n">ATTRIBUTE</span> <span class="o">=</span> <span class="s1">u&#39;code_page&#39;</span>
+  <span class="n">DEFAULT_ATTRIBUTE_VALUE</span> <span class="o">=</span> <span class="s1">u&#39;cp1252&#39;</span>
+  <span class="n">KEY_PATH</span> <span class="o">=</span> <span class="p">(</span>
+      <span class="s1">u&#39;HKEY_LOCAL_MACHINE</span><span class="se">\\</span><span class="s1">System</span><span class="se">\\</span><span class="s1">CurrentControlSet</span><span class="se">\\</span><span class="s1">Control</span><span class="se">\\</span><span class="s1">Nls</span><span class="se">\\</span><span class="s1">CodePage&#39;</span><span class="p">)</span>
+  <span class="n">VALUE_NAME</span> <span class="o">=</span> <span class="s1">u&#39;ACP&#39;</span>
+
+  <span class="k">def</span> <span class="nf">_ParseValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">registry_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a Windows Registry value for the preprocessing attribute.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      registry_value: The Registry value (instance of WinRegistryValue).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The preprocessing attribute value or None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">value_data</span> <span class="o">=</span> <span class="n">registry_value</span><span class="o">.</span><span class="n">GetDataAsObject</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value_data</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">UNICODE_TYPE</span><span class="p">):</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;Unsupported Registry value: {0:s} data type&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">VALUE_NAME</span><span class="p">))</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_ATTRIBUTE_VALUE</span>
+
+    <span class="c1"># Map the Windows code page name to a Python equivalent name.</span>
+    <span class="c1"># TODO: add a value sanity check.</span>
+    <span class="k">return</span> <span class="s1">u&#39;cp{0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value_data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WindowsHostname"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.windows.WindowsHostname">[docs]</a><span class="k">class</span> <span class="nc">WindowsHostname</span><span class="p">(</span><span class="n">WindowsRegistryValuePreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Windows preprocess plugin to determine the hostname.&quot;&quot;&quot;</span>
+
+  <span class="n">ATTRIBUTE</span> <span class="o">=</span> <span class="s1">u&#39;hostname&#39;</span>
+  <span class="n">DEFAULT_ATTRIBUTE_VALUE</span> <span class="o">=</span> <span class="s1">u&#39;HOSTNAME&#39;</span>
+  <span class="n">KEY_PATH</span> <span class="o">=</span> <span class="p">(</span>
+      <span class="s1">u&#39;HKEY_LOCAL_MACHINE</span><span class="se">\\</span><span class="s1">System</span><span class="se">\\</span><span class="s1">CurrentControlSet</span><span class="se">\\</span><span class="s1">Control</span><span class="se">\\</span><span class="s1">ComputerName</span><span class="se">\\</span><span class="s1">&#39;</span>
+      <span class="s1">u&#39;ComputerName&#39;</span><span class="p">)</span>
+  <span class="n">VALUE_NAME</span> <span class="o">=</span> <span class="s1">u&#39;ComputerName&#39;</span></div>
+
+
+<div class="viewcode-block" id="WindowsTimeZone"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.windows.WindowsTimeZone">[docs]</a><span class="k">class</span> <span class="nc">WindowsTimeZone</span><span class="p">(</span><span class="n">WindowsRegistryValuePreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A preprocessing class that fetches timezone information.&quot;&quot;&quot;</span>
+
+  <span class="n">ATTRIBUTE</span> <span class="o">=</span> <span class="s1">u&#39;time_zone_str&#39;</span>
+  <span class="n">DEFAULT_ATTRIBUTE_VALUE</span> <span class="o">=</span> <span class="s1">u&#39;UTC&#39;</span>
+  <span class="n">KEY_PATH</span> <span class="o">=</span> <span class="p">(</span>
+      <span class="s1">u&#39;HKEY_LOCAL_MACHINE</span><span class="se">\\</span><span class="s1">System</span><span class="se">\\</span><span class="s1">CurrentControlSet</span><span class="se">\\</span><span class="s1">Control</span><span class="se">\\</span><span class="s1">&#39;</span>
+      <span class="s1">u&#39;TimeZoneInformation&#39;</span><span class="p">)</span>
+  <span class="n">VALUE_NAME</span> <span class="o">=</span> <span class="s1">u&#39;StandardName&#39;</span>
+
+  <span class="k">def</span> <span class="nf">_ParseValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">registry_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a Windows Registry value for the preprocessing attribute.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      registry_value: The Registry value (instance of WinRegistryValue).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The preprocessing attribute value or None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">value_data</span> <span class="o">=</span> <span class="n">registry_value</span><span class="o">.</span><span class="n">GetDataAsObject</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value_data</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">UNICODE_TYPE</span><span class="p">):</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;Unsupported Registry value: {0:s} data type&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">VALUE_NAME</span><span class="p">))</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_ATTRIBUTE_VALUE</span>
+
+    <span class="c1"># Map the Windows time zone name to a Python equivalent name.</span>
+    <span class="n">lookup_key</span> <span class="o">=</span> <span class="n">value_data</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">u&#39; &#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">time_zones</span><span class="o">.</span><span class="n">TIME_ZONES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">lookup_key</span><span class="p">,</span> <span class="n">value_data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="WindowsVersion"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.windows.WindowsVersion">[docs]</a><span class="k">class</span> <span class="nc">WindowsVersion</span><span class="p">(</span><span class="n">WindowsRegistryValuePreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Fetch information about the current Windows version.&quot;&quot;&quot;</span>
+
+  <span class="n">ATTRIBUTE</span> <span class="o">=</span> <span class="s1">u&#39;osversion&#39;</span>
+  <span class="n">KEY_PATH</span> <span class="o">=</span> <span class="p">(</span>
+      <span class="s1">u&#39;HKEY_LOCAL_MACHINE</span><span class="se">\\</span><span class="s1">Software</span><span class="se">\\</span><span class="s1">Microsoft</span><span class="se">\\</span><span class="s1">Windows NT</span><span class="se">\\</span><span class="s1">CurrentVersion&#39;</span><span class="p">)</span>
+  <span class="n">VALUE_NAME</span> <span class="o">=</span> <span class="s1">u&#39;ProductName&#39;</span></div>
+
+
+<div class="viewcode-block" id="WindowsRegistryPathEnvironmentValue"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.windows.WindowsRegistryPathEnvironmentValue">[docs]</a><span class="k">class</span> <span class="nc">WindowsRegistryPathEnvironmentValue</span><span class="p">(</span><span class="n">WindowsRegistryValuePreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Windows preprocess plugin to determine a path environment variable.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">_ParseValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">registry_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a Windows Registry value for the preprocessing attribute.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      registry_value: The Registry value (instance of WinRegistryValue).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The preprocessing attribute value or None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">value_data</span> <span class="o">=</span> <span class="n">registry_value</span><span class="o">.</span><span class="n">GetDataAsObject</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value_data</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">UNICODE_TYPE</span><span class="p">):</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;Unsupported Registry value: {0:s} data type&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">VALUE_NAME</span><span class="p">))</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_ATTRIBUTE_VALUE</span>
+
+    <span class="c1"># Here we remove the drive letter, e.g. &quot;C:\Program Files&quot;.</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="n">value_data</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s1">u&#39;:&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span></div>
+
+
+<div class="viewcode-block" id="WindowsProgramFilesPath"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.windows.WindowsProgramFilesPath">[docs]</a><span class="k">class</span> <span class="nc">WindowsProgramFilesPath</span><span class="p">(</span><span class="n">WindowsRegistryPathEnvironmentValue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Windows preprocess plugin to determine the location of Program Files.&quot;&quot;&quot;</span>
+
+  <span class="n">ATTRIBUTE</span> <span class="o">=</span> <span class="s1">u&#39;programfiles&#39;</span>
+  <span class="n">KEY_PATH</span> <span class="o">=</span> <span class="s1">u&#39;HKEY_LOCAL_MACHINE</span><span class="se">\\</span><span class="s1">Software</span><span class="se">\\</span><span class="s1">Microsoft</span><span class="se">\\</span><span class="s1">Windows</span><span class="se">\\</span><span class="s1">CurrentVersion&#39;</span>
+  <span class="n">VALUE_NAME</span> <span class="o">=</span> <span class="s1">u&#39;ProgramFilesDir&#39;</span></div>
+
+
+<div class="viewcode-block" id="WindowsProgramFilesX86Path"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.windows.WindowsProgramFilesX86Path">[docs]</a><span class="k">class</span> <span class="nc">WindowsProgramFilesX86Path</span><span class="p">(</span><span class="n">WindowsRegistryPathEnvironmentValue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Windows preprocess plugin to determine the location of Program Files.&quot;&quot;&quot;</span>
+
+  <span class="n">ATTRIBUTE</span> <span class="o">=</span> <span class="s1">u&#39;programfilesx86&#39;</span>
+  <span class="n">KEY_PATH</span> <span class="o">=</span> <span class="s1">u&#39;HKEY_LOCAL_MACHINE</span><span class="se">\\</span><span class="s1">Software</span><span class="se">\\</span><span class="s1">Microsoft</span><span class="se">\\</span><span class="s1">Windows</span><span class="se">\\</span><span class="s1">CurrentVersion&#39;</span>
+  <span class="n">VALUE_NAME</span> <span class="o">=</span> <span class="s1">u&#39;ProgramFilesDir (x86)&#39;</span></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">PreprocessPluginsManager</span><span class="o">.</span><span class="n">RegisterPlugins</span><span class="p">([</span>
+    <span class="n">WindowsCodepage</span><span class="p">,</span> <span class="n">WindowsHostname</span><span class="p">,</span> <span class="n">WindowsProgramFilesPath</span><span class="p">,</span>
+    <span class="n">WindowsProgramFilesX86Path</span><span class="p">,</span> <span class="n">WindowsSystemRegistryPath</span><span class="p">,</span>
+    <span class="n">WindowsSystemRootPath</span><span class="p">,</span> <span class="n">WindowsTimeZone</span><span class="p">,</span> <span class="n">WindowsUsers</span><span class="p">,</span> <span class="n">WindowsVersion</span><span class="p">,</span>
+    <span class="n">WindowsWinDirPath</span><span class="p">])</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,301 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.analysis.mediator &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.analysis.mediator</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;The analysis plugin mediator object.&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="AnalysisMediator"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.mediator.AnalysisMediator">[docs]</a><span class="k">class</span> <span class="nc">AnalysisMediator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements the analysis plugin mediator.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">analysis_report_queue_producer</span><span class="p">,</span> <span class="n">knowledge_base</span><span class="p">,</span>
+      <span class="n">data_location</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">completion_event</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes an analysis plugin mediator object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      analysis_report_queue_producer: the analysis report queue producer</span>
+<span class="sd">                                      (instance of ItemQueueProducer).</span>
+<span class="sd">      knowledge_base: A knowledge base object (instance of KnowledgeBase),</span>
+<span class="sd">                      which contains information from the source data needed</span>
+<span class="sd">                      for analysis.</span>
+<span class="sd">      data_location: A string containing location of the Plaso data files.</span>
+<span class="sd">      completion_event: An optional event object (instance of</span>
+<span class="sd">                        Multiprocessing.Event, Queue.Event or similar) that will</span>
+<span class="sd">                        be set when the analysis plugin is complete.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">AnalysisMediator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_analysis_report_queue_producer</span> <span class="o">=</span> <span class="n">analysis_report_queue_producer</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_completion_event</span> <span class="o">=</span> <span class="n">completion_event</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_data_location</span> <span class="o">=</span> <span class="n">data_location</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_base</span> <span class="o">=</span> <span class="n">knowledge_base</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">number_of_produced_analysis_reports</span> <span class="o">=</span> <span class="mi">0</span>
+
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">users</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The list of users.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_base</span><span class="o">.</span><span class="n">users</span>
+
+<div class="viewcode-block" id="AnalysisMediator.GetRelativePath"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.mediator.AnalysisMediator.GetRelativePath">[docs]</a>  <span class="k">def</span> <span class="nf">GetRelativePath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_spec</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the relative path of the path spec.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      path_spec: a PathSpec object (instance of dfvfs.PathSpec).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A string containing the relative path or None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: Solve this differently, quite possibly inside dfVFS using mount</span>
+    <span class="c1"># path spec.</span>
+    <span class="n">file_path</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">path_spec</span><span class="p">,</span> <span class="s1">u&#39;location&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="c1"># TODO: Determine if we need to access the mount_path, as for the parser</span>
+    <span class="c1"># mediator.</span>
+    <span class="k">return</span> <span class="n">file_path</span></div>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">data_location</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the path to the Plaso data files as a string.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_location</span>
+
+<div class="viewcode-block" id="AnalysisMediator.GetDisplayName"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.mediator.AnalysisMediator.GetDisplayName">[docs]</a>  <span class="k">def</span> <span class="nf">GetDisplayName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_spec</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the display name for the path spec.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: PathSpec object (instance of dfvfs.PathSpec).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A human readable string that describes the path to the path spec.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">relative_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetRelativePath</span><span class="p">(</span><span class="n">path_spec</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s1">u&#39;{0:s}:{1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path_spec</span><span class="o">.</span><span class="n">type_indicator</span><span class="p">,</span> <span class="n">relative_path</span><span class="p">)</span></div>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">platform</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves platform information for the image being processed.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_base</span><span class="o">.</span><span class="n">platform</span>
+
+<div class="viewcode-block" id="AnalysisMediator.GetPathSegmentSeparator"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.mediator.AnalysisMediator.GetPathSegmentSeparator">[docs]</a>  <span class="k">def</span> <span class="nf">GetPathSegmentSeparator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Given a path give back the path separator as a best guess.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      path: the path.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The path segment separator.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">path</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;:</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">):</span>
+      <span class="k">return</span> <span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">&#39;</span>
+
+    <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;/&#39;</span><span class="p">):</span>
+      <span class="k">return</span> <span class="s1">u&#39;/&#39;</span>
+
+    <span class="k">if</span> <span class="s1">u&#39;/&#39;</span> <span class="ow">and</span> <span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">&#39;</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
+      <span class="c1"># Let&#39;s count slashes and guess which one is the right one.</span>
+      <span class="n">forward_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">u&#39;/&#39;</span><span class="p">))</span>
+      <span class="n">backward_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">))</span>
+
+      <span class="k">if</span> <span class="n">forward_count</span> <span class="o">&gt;</span> <span class="n">backward_count</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">u&#39;/&#39;</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">&#39;</span>
+
+    <span class="c1"># Now we are sure there is only one type of separators yet</span>
+    <span class="c1"># the path does not start with one.</span>
+    <span class="k">if</span> <span class="s1">u&#39;/&#39;</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
+      <span class="k">return</span> <span class="s1">u&#39;/&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">return</span> <span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">&#39;</span></div>
+
+<div class="viewcode-block" id="AnalysisMediator.GetUsernameFromPath"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.mediator.AnalysisMediator.GetUsernameFromPath">[docs]</a>  <span class="k">def</span> <span class="nf">GetUsernameFromPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_paths</span><span class="p">,</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">path_segment_separator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a username based on preprocessing and the path.</span>
+
+<span class="sd">    During preprocessing the tool will gather file paths to where each user</span>
+<span class="sd">    profile is stored, and which user it belongs to. This function takes in</span>
+<span class="sd">    a path to a file and compares it to a list of all discovered usernames</span>
+<span class="sd">    and paths to their profiles in the system. If it finds that the file path</span>
+<span class="sd">    belongs to a user profile it will return the username that the profile</span>
+<span class="sd">    belongs to.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      user_paths: A dictionary object containing the paths per username.</span>
+<span class="sd">      file_path: The full path to the file being analyzed.</span>
+<span class="sd">      path_segment_separator: String containing the path segment separator.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      If possible the responsible username behind the file. Otherwise None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">user_paths</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="k">if</span> <span class="n">path_segment_separator</span> <span class="o">!=</span> <span class="s1">u&#39;/&#39;</span><span class="p">:</span>
+      <span class="n">use_path</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">path_segment_separator</span><span class="p">,</span> <span class="s1">u&#39;/&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">use_path</span> <span class="o">=</span> <span class="n">file_path</span>
+
+    <span class="k">if</span> <span class="n">use_path</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;:/&#39;</span><span class="p">):</span>
+      <span class="n">use_path</span> <span class="o">=</span> <span class="n">use_path</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+
+    <span class="n">use_path</span> <span class="o">=</span> <span class="n">use_path</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">user</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">user_paths</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+      <span class="k">if</span> <span class="n">use_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">user</span></div>
+
+<div class="viewcode-block" id="AnalysisMediator.GetUserPaths"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.mediator.AnalysisMediator.GetUserPaths">[docs]</a>  <span class="k">def</span> <span class="nf">GetUserPaths</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">users</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the user paths.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      users: a list of users.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A dictionary object containing the paths per username or None if no users.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">users</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">user_paths</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">user_separator</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">users</span><span class="p">:</span>
+      <span class="n">name</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;name&#39;</span><span class="p">)</span>
+      <span class="n">path</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;path&#39;</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">name</span><span class="p">:</span>
+        <span class="k">continue</span>
+
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">user_separator</span><span class="p">:</span>
+        <span class="n">user_separator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetPathSegmentSeparator</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">user_separator</span> <span class="o">!=</span> <span class="s1">u&#39;/&#39;</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">user_separator</span><span class="p">,</span> <span class="s1">u&#39;/&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">u&#39;//&#39;</span><span class="p">,</span> <span class="s1">u&#39;/&#39;</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">path</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;:/&#39;</span><span class="p">):</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+
+      <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+      <span class="n">user_paths</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">user_paths</span></div>
+
+<div class="viewcode-block" id="AnalysisMediator.ProcessAnalysisReport"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.mediator.AnalysisMediator.ProcessAnalysisReport">[docs]</a>  <span class="k">def</span> <span class="nf">ProcessAnalysisReport</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analysis_report</span><span class="p">,</span> <span class="n">plugin_name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Processes an analysis report before it is emitted to the queue.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      analysis_report: the analysis report object (instance of AnalysisReport).</span>
+<span class="sd">      plugin_name: Optional name of the plugin.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">analysis_report</span><span class="p">,</span> <span class="s1">u&#39;plugin_name&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="n">plugin_name</span><span class="p">:</span>
+      <span class="n">analysis_report</span><span class="o">.</span><span class="n">plugin_name</span> <span class="o">=</span> <span class="n">plugin_name</span></div>
+
+<div class="viewcode-block" id="AnalysisMediator.ProduceAnalysisReport"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.mediator.AnalysisMediator.ProduceAnalysisReport">[docs]</a>  <span class="k">def</span> <span class="nf">ProduceAnalysisReport</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analysis_report</span><span class="p">,</span> <span class="n">plugin_name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Produces an analysis report onto the queue.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      analysis_report: the analysis report object (instance of AnalysisReport).</span>
+<span class="sd">      plugin_name: Optional name of the plugin.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">ProcessAnalysisReport</span><span class="p">(</span><span class="n">analysis_report</span><span class="p">,</span> <span class="n">plugin_name</span><span class="o">=</span><span class="n">plugin_name</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_analysis_report_queue_producer</span><span class="o">.</span><span class="n">ProduceItem</span><span class="p">(</span><span class="n">analysis_report</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">number_of_produced_analysis_reports</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="AnalysisMediator.ReportingComplete"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.mediator.AnalysisMediator.ReportingComplete">[docs]</a>  <span class="k">def</span> <span class="nf">ReportingComplete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Called by an analysis plugin to signal that it has generated its report.</span>
+
+<span class="sd">    This method signals to report consumers that no further reports will be</span>
+<span class="sd">    produced by the analysis plugin.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_completion_event</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_completion_event</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_analysis_report_queue_producer</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

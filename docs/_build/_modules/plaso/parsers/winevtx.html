@@ -1,0 +1,275 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.winevtx &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.winevtx</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Parser for Windows XML EventLog (EVTX) files.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pyevtx</span>
+
+<span class="kn">from</span> <span class="nn">plaso</span> <span class="kn">import</span> <span class="n">dependencies</span>
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">specification</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+
+
+<span class="n">dependencies</span><span class="o">.</span><span class="n">CheckModuleVersion</span><span class="p">(</span><span class="s1">u&#39;pyevtx&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="WinEvtxRecordEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.winevtx.WinEvtxRecordEvent">[docs]</a><span class="k">class</span> <span class="nc">WinEvtxRecordEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">FiletimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for a Windows XML EventLog (EVTX) record event.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    computer_name: the computer name stored in the event record.</span>
+<span class="sd">    event_identifier: the event identifier.</span>
+<span class="sd">    event_level: the event level.</span>
+<span class="sd">    message_identifier: the event message identifier.</span>
+<span class="sd">    offset: the data offset of the event record with in the file.</span>
+<span class="sd">    record_number: the event record number.</span>
+<span class="sd">    recovered: boolean value to indicate the record was recovered.</span>
+<span class="sd">    source_name: the name of the event source.</span>
+<span class="sd">    strings: array of event strings.</span>
+<span class="sd">    user_sid: the user security identifier (SID) stored in the event record.</span>
+<span class="sd">    xml_string: XML representation of the event.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;windows:evtx:record&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">evtx_record</span><span class="p">,</span> <span class="n">record_number</span><span class="p">,</span> <span class="n">event_identifier</span><span class="p">,</span>
+      <span class="n">event_identifier_qualifiers</span><span class="p">,</span> <span class="n">recovered</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timestamp: the FILETIME value for the timestamp.</span>
+<span class="sd">      evtx_record: the EVTX record (instance of pyevtx.record).</span>
+<span class="sd">      record_number: the event record number.</span>
+<span class="sd">      event_identifier: the event identifier.</span>
+<span class="sd">      event_identifier_qualifiers: the event identifier qualifiers.</span>
+<span class="sd">      recovered: optional boolean value to indicate the record was recovered.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">WinEvtxRecordEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">WRITTEN_TIME</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">evtx_record</span><span class="o">.</span><span class="n">offset</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">recovered</span> <span class="o">=</span> <span class="n">recovered</span>
+
+    <span class="k">if</span> <span class="n">record_number</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">record_number</span> <span class="o">=</span> <span class="n">evtx_record</span><span class="o">.</span><span class="n">identifier</span>
+
+    <span class="k">if</span> <span class="n">event_identifier</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">event_identifier</span> <span class="o">=</span> <span class="n">event_identifier</span>
+
+      <span class="k">if</span> <span class="n">event_identifier_qualifiers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">message_identifier</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">event_identifier_qualifiers</span> <span class="o">&lt;&lt;</span> <span class="mi">16</span><span class="p">)</span> <span class="o">|</span> <span class="n">event_identifier</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">event_level</span> <span class="o">=</span> <span class="n">evtx_record</span><span class="o">.</span><span class="n">event_level</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">source_name</span> <span class="o">=</span> <span class="n">evtx_record</span><span class="o">.</span><span class="n">source_name</span>
+
+    <span class="c1"># Computer name is the value stored in the event record and does not</span>
+    <span class="c1"># necessarily corresponds with the actual hostname.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">computer_name</span> <span class="o">=</span> <span class="n">evtx_record</span><span class="o">.</span><span class="n">computer_name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">user_sid</span> <span class="o">=</span> <span class="n">evtx_record</span><span class="o">.</span><span class="n">user_security_identifier</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">strings</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">evtx_record</span><span class="o">.</span><span class="n">strings</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">xml_string</span> <span class="o">=</span> <span class="n">evtx_record</span><span class="o">.</span><span class="n">xml_string</span></div>
+
+
+<div class="viewcode-block" id="WinEvtxParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.winevtx.WinEvtxParser">[docs]</a><span class="k">class</span> <span class="nc">WinEvtxParser</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">FileObjectParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parses Windows XML EventLog (EVTX) files.&quot;&quot;&quot;</span>
+
+  <span class="n">_INITIAL_FILE_OFFSET</span> <span class="o">=</span> <span class="bp">None</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;winevtx&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for Windows XML EventLog (EVTX) files.&#39;</span>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="WinEvtxParser.GetFormatSpecification"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.winevtx.WinEvtxParser.GetFormatSpecification">[docs]</a>  <span class="k">def</span> <span class="nf">GetFormatSpecification</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the format specification.&quot;&quot;&quot;</span>
+    <span class="n">format_specification</span> <span class="o">=</span> <span class="n">specification</span><span class="o">.</span><span class="n">FormatSpecification</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">NAME</span><span class="p">)</span>
+    <span class="n">format_specification</span><span class="o">.</span><span class="n">AddNewSignature</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;ElfFile</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">format_specification</span></div>
+
+  <span class="k">def</span> <span class="nf">_ParseRecord</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">record_index</span><span class="p">,</span> <span class="n">evtx_record</span><span class="p">,</span> <span class="n">recovered</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extract data from a Windows XML EventLog (EVTX) record.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: a parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      record_index: the event record index.</span>
+<span class="sd">      evtx_record: an event record (instance of pyevtx.record).</span>
+<span class="sd">      recovered: optional boolean value to indicate the record was recovered.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">record_number</span> <span class="o">=</span> <span class="n">evtx_record</span><span class="o">.</span><span class="n">identifier</span>
+    <span class="k">except</span> <span class="ne">OverflowError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+          <span class="s1">u&#39;unable to read record identifier from event record: {0:d} &#39;</span>
+          <span class="s1">u&#39;with error: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">record_index</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+      <span class="n">record_number</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">event_identifier</span> <span class="o">=</span> <span class="n">evtx_record</span><span class="o">.</span><span class="n">event_identifier</span>
+    <span class="k">except</span> <span class="ne">OverflowError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+          <span class="s1">u&#39;unable to read event identifier from event record: {0:d} &#39;</span>
+          <span class="s1">u&#39;with error: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">record_index</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+      <span class="n">event_identifier</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">event_identifier_qualifiers</span> <span class="o">=</span> <span class="n">evtx_record</span><span class="o">.</span><span class="n">event_identifier_qualifiers</span>
+    <span class="k">except</span> <span class="ne">OverflowError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+          <span class="s1">u&#39;unable to read event identifier qualifiers from event record: &#39;</span>
+          <span class="s1">u&#39;{0:d} with error: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">record_index</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+      <span class="n">event_identifier_qualifiers</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">written_time</span> <span class="o">=</span> <span class="n">evtx_record</span><span class="o">.</span><span class="n">get_written_time_as_integer</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">OverflowError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+          <span class="s1">u&#39;unable to read written time from event record: {0:d} &#39;</span>
+          <span class="s1">u&#39;with error: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">record_index</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+      <span class="n">written_time</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="n">written_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">WinEvtxRecordEvent</span><span class="p">(</span>
+          <span class="n">written_time</span><span class="p">,</span> <span class="n">evtx_record</span><span class="p">,</span> <span class="n">record_number</span><span class="p">,</span> <span class="n">event_identifier</span><span class="p">,</span>
+          <span class="n">event_identifier_qualifiers</span><span class="p">,</span> <span class="n">recovered</span><span class="o">=</span><span class="n">recovered</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="c1"># TODO: what if written_time is None.</span>
+
+<div class="viewcode-block" id="WinEvtxParser.ParseFileObject"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.winevtx.WinEvtxParser.ParseFileObject">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a Windows XML EventLog (EVTX) file-like object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: a parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: a file-like object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">evtx_file</span> <span class="o">=</span> <span class="n">pyevtx</span><span class="o">.</span><span class="n">file</span><span class="p">()</span>
+    <span class="n">evtx_file</span><span class="o">.</span><span class="n">set_ascii_codepage</span><span class="p">(</span><span class="n">parser_mediator</span><span class="o">.</span><span class="n">codepage</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">evtx_file</span><span class="o">.</span><span class="n">open_file_object</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;unable to open file with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+      <span class="k">return</span>
+
+    <span class="k">for</span> <span class="n">record_index</span><span class="p">,</span> <span class="n">evtx_record</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">evtx_file</span><span class="o">.</span><span class="n">records</span><span class="p">):</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ParseRecord</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">record_index</span><span class="p">,</span> <span class="n">evtx_record</span><span class="p">)</span>
+      <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+            <span class="s1">u&#39;unable to parse event record: {0:d} with error: {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">record_index</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">record_index</span><span class="p">,</span> <span class="n">evtx_record</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">evtx_file</span><span class="o">.</span><span class="n">recovered_records</span><span class="p">):</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ParseRecord</span><span class="p">(</span>
+            <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">record_index</span><span class="p">,</span> <span class="n">evtx_record</span><span class="p">,</span> <span class="n">recovered</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+      <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+            <span class="s1">u&#39;unable to parse recovered event record: {0:d} with error: &#39;</span>
+            <span class="s1">u&#39;{1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">record_index</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+    <span class="n">evtx_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParser</span><span class="p">(</span><span class="n">WinEvtxParser</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

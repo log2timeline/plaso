@@ -1,0 +1,250 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.selinux &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.selinux</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains SELinux log file parser in plaso.</span>
+
+<span class="sd">   Information updated 16 january 2013.</span>
+
+<span class="sd">   The parser applies to SELinux &#39;audit.log&#39; file.</span>
+<span class="sd">   An entry log file example is the following:</span>
+
+<span class="sd">   type=AVC msg=audit(1105758604.519:420): avc: denied { getattr } for pid=5962</span>
+<span class="sd">   comm=&quot;httpd&quot; path=&quot;/home/auser/public_html&quot; dev=sdb2 ino=921135</span>
+
+<span class="sd">   The Parser will extract the &#39;type&#39; value, the timestamp and the &#39;pid&#39;.</span>
+<span class="sd">   In the previous example, the timestamp is &#39;1105758604.519&#39;, it</span>
+<span class="sd">   contains the number of seconds since January 1, 1970 and the number of</span>
+<span class="sd">   milliseconds after the dot e.g. seconds: 1105758604, milliseconds: 519.</span>
+
+<span class="sd">   The number after the timestamp (420 in the example) is a &#39;serial number&#39;</span>
+<span class="sd">   that can be used to correlate multiple logs generated from the same event.</span>
+
+<span class="sd">   References</span>
+<span class="sd">   http://selinuxproject.org/page/NB_AL</span>
+<span class="sd">   http://blog.commandlinekungfu.com/2010/08/episode-106-epoch-fail.html</span>
+<span class="sd">   http://www.redhat.com/promo/summit/2010/presentations/</span>
+<span class="sd">   taste_of_training/Summit_2010_SELinux.pdf</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">text_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">lexer</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">text_parser</span>
+
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Francesco Picasso (francesco.picasso@gmail.com)&#39;</span>
+
+
+<div class="viewcode-block" id="SELinuxLineEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.selinux.SELinuxLineEvent">[docs]</a><span class="k">class</span> <span class="nc">SELinuxLineEvent</span><span class="p">(</span><span class="n">text_events</span><span class="o">.</span><span class="n">TextEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for a SELinux log line event.&quot;&quot;&quot;</span>
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;selinux:line&#39;</span></div>
+
+
+<div class="viewcode-block" id="SELinuxParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.selinux.SELinuxParser">[docs]</a><span class="k">class</span> <span class="nc">SELinuxParser</span><span class="p">(</span><span class="n">text_parser</span><span class="o">.</span><span class="n">SlowLexicalTextParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parse SELinux audit log files.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;selinux&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for SELinux audit log files.&#39;</span>
+
+  <span class="n">PID_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;pid=([0-9]+)[\s]+&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">DOTALL</span><span class="p">)</span>
+
+  <span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="c1"># Skipping empty lines, both EOLs are considered here and in other states.</span>
+      <span class="n">lexer</span><span class="o">.</span><span class="n">Token</span><span class="p">(</span><span class="s1">u&#39;INITIAL&#39;</span><span class="p">,</span> <span class="s1">r&#39;^\r?\n&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
+      <span class="c1"># FSM entry point (&#39;type=anything msg=audit&#39;), critical to recognize a</span>
+      <span class="c1"># SELinux audit file and used to retrieve the audit type. From there two</span>
+      <span class="c1"># next states are possible: TIME or failure, since TIME state is required.</span>
+      <span class="c1"># An empty type is not accepted and it will cause a failure.</span>
+      <span class="c1"># Examples:</span>
+      <span class="c1">#   type=SYSCALL msg=audit(...): ...</span>
+      <span class="c1">#   type=UNKNOWN[1323] msg=audit(...): ...</span>
+      <span class="n">lexer</span><span class="o">.</span><span class="n">Token</span><span class="p">(</span>
+          <span class="s1">u&#39;INITIAL&#39;</span><span class="p">,</span> <span class="s1">r&#39;^type=([\w]+(\[[0-9]+\])?)[ \t]+msg=audit&#39;</span><span class="p">,</span>
+          <span class="s1">u&#39;ParseType&#39;</span><span class="p">,</span> <span class="s1">u&#39;TIMESTAMP&#39;</span><span class="p">),</span>
+      <span class="n">lexer</span><span class="o">.</span><span class="n">Token</span><span class="p">(</span>
+          <span class="s1">u&#39;TIMESTAMP&#39;</span><span class="p">,</span> <span class="s1">r&#39;\(([0-9]+)\.([0-9]+):([0-9]*)\):&#39;</span><span class="p">,</span> <span class="s1">u&#39;ParseTime&#39;</span><span class="p">,</span>
+          <span class="s1">u&#39;STRING&#39;</span><span class="p">),</span>
+      <span class="c1"># Get the log entry description and stay in the same state.</span>
+      <span class="n">lexer</span><span class="o">.</span><span class="n">Token</span><span class="p">(</span><span class="s1">u&#39;STRING&#39;</span><span class="p">,</span> <span class="s1">r&#39;[ \t]*([^\r\n]+)&#39;</span><span class="p">,</span> <span class="s1">u&#39;ParseString&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">),</span>
+      <span class="c1"># Entry parsed. Note that an empty description is managed and it will not</span>
+      <span class="c1"># raise a parsing failure.</span>
+      <span class="n">lexer</span><span class="o">.</span><span class="n">Token</span><span class="p">(</span><span class="s1">u&#39;STRING&#39;</span><span class="p">,</span> <span class="s1">r&#39;[ \t]*\r?\n&#39;</span><span class="p">,</span> <span class="s1">u&#39;ParseMessage&#39;</span><span class="p">,</span> <span class="s1">u&#39;INITIAL&#39;</span><span class="p">),</span>
+      <span class="c1"># The entry is not formatted as expected, so the parsing failed.</span>
+      <span class="n">lexer</span><span class="o">.</span><span class="n">Token</span><span class="p">(</span><span class="s1">u&#39;.&#39;</span><span class="p">,</span> <span class="s1">r&#39;([^\r\n]+)\r?\n&#39;</span><span class="p">,</span> <span class="s1">u&#39;ParseFailed&#39;</span><span class="p">,</span> <span class="s1">u&#39;INITIAL&#39;</span><span class="p">)</span>
+  <span class="p">]</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a parser object.&quot;&quot;&quot;</span>
+    <span class="c1"># Set local_zone to false, since timestamps are UTC.</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">SELinuxParser</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">local_zone</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span> <span class="o">=</span> <span class="p">{</span><span class="s1">u&#39;audit_type&#39;</span><span class="p">:</span> <span class="s1">u&#39;&#39;</span><span class="p">,</span> <span class="s1">u&#39;pid&#39;</span><span class="p">:</span> <span class="s1">u&#39;&#39;</span><span class="p">,</span> <span class="s1">u&#39;body&#39;</span><span class="p">:</span> <span class="s1">u&#39;&#39;</span><span class="p">}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="SELinuxParser.ParseType"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.selinux.SELinuxParser.ParseType">[docs]</a>  <span class="k">def</span> <span class="nf">ParseType</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">match</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse the audit event type.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      match: The regular expression match object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">u&#39;audit_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SELinuxParser.ParseTime"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.selinux.SELinuxParser.ParseTime">[docs]</a>  <span class="k">def</span> <span class="nf">ParseTime</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">match</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse the log timestamp.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      match: The regular expression match object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: do something with match.group(3) ?</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">number_of_seconds</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="mi">10</span><span class="p">)</span>
+      <span class="n">timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromPosixTime</span><span class="p">(</span><span class="n">number_of_seconds</span><span class="p">)</span>
+      <span class="n">timestamp</span> <span class="o">+=</span> <span class="nb">int</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="mi">10</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">=</span> <span class="n">timestamp</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to retrieve timestamp with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ParseError</span><span class="p">(</span><span class="s1">u&#39;Not a valid timestamp.&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SELinuxParser.ParseString"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.selinux.SELinuxParser.ParseString">[docs]</a>  <span class="k">def</span> <span class="nf">ParseString</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">match</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add a string to the body attribute.</span>
+
+<span class="sd">    This method extends the one from TextParser slightly,</span>
+<span class="sd">    searching for the &#39;pid=[0-9]+&#39; value inside the message body.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      match: The regular expression match object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">u&#39;body&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+      <span class="c1"># TODO: fix it using lexer or remove pid parsing.</span>
+      <span class="c1"># Indeed this is something that lexer is able to manage, but &#39;pid&#39; field</span>
+      <span class="c1"># is non positional: so, by doing the following step, the FSM is kept</span>
+      <span class="c1"># simpler. Left the &#39;to do&#39; as a reminder of possible refactoring.</span>
+      <span class="n">pid_search</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PID_RE</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">u&#39;body&#39;</span><span class="p">])</span>
+      <span class="k">if</span> <span class="n">pid_search</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">u&#39;pid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pid_search</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="s1">u&#39;body&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SELinuxParser.ParseFailed"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.selinux.SELinuxParser.ParseFailed">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFailed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Entry parsing failed callback.&quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ParseError</span><span class="p">(</span><span class="s1">u&#39;Unable to parse SELinux log line.&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SELinuxParser.ParseLine"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.selinux.SELinuxParser.ParseLine">[docs]</a>  <span class="k">def</span> <span class="nf">ParseLine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse a single line from the SELinux audit file.</span>
+
+<span class="sd">    This method extends the one from TextParser slightly, creating a</span>
+<span class="sd">    SELinux event with the timestamp (UTC) taken from log entries.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      TimestampError: if timestamp is not defined.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">TimestampError</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to parse log line - missing timestamp.&#39;</span><span class="p">)</span>
+
+    <span class="n">offset</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">u&#39;entry_offset&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">SELinuxLineEvent</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">)</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">=</span> <span class="mi">0</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParser</span><span class="p">(</span><span class="n">SELinuxParser</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

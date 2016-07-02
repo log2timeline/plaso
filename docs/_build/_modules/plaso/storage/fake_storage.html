@@ -1,0 +1,297 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.storage.fake_storage &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.storage.fake_storage</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;The fake storage intended for testing.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">sessions</span>
+<span class="kn">from</span> <span class="nn">plaso.storage</span> <span class="kn">import</span> <span class="n">interface</span>
+
+
+<div class="viewcode-block" id="FakeStorageWriter"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.fake_storage.FakeStorageWriter">[docs]</a><span class="k">class</span> <span class="nc">FakeStorageWriter</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">StorageWriter</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements a fake storage writer object.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    analysis_reports: a list of analysis reports (instances of AnalysisReport).</span>
+<span class="sd">    errors: a list of error objects (instances of AnalysisError or</span>
+<span class="sd">            ExtractionError).</span>
+<span class="sd">    event_sources: a list of event sources (instances of EventSource).</span>
+<span class="sd">    event_tags: a list of event tags (instances of EventTag).</span>
+<span class="sd">    events: a list of event objects (instances of EventObject).</span>
+<span class="sd">    session_completion: session completion information (instance of</span>
+<span class="sd">                        SessionCompletion).</span>
+<span class="sd">    session_start: session start information (instance of SessionStart).</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a storage writer object.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">FakeStorageWriter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_is_open</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_session_identifier</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">analysis_reports</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">errors</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">event_sources</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">event_tags</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">session_completion</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">session_start</span> <span class="o">=</span> <span class="bp">None</span>
+
+<div class="viewcode-block" id="FakeStorageWriter.AddAnalysisReport"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.fake_storage.FakeStorageWriter.AddAnalysisReport">[docs]</a>  <span class="k">def</span> <span class="nf">AddAnalysisReport</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analysis_report</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds an analysis report to the storage.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      analysis_report: an analysis report object (instance of AnalysisReport).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      IOError: when the storage writer is closed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_open</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unable to write to closed storage writer.&#39;</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">analysis_reports</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">analysis_report</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FakeStorageWriter.AddError"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.fake_storage.FakeStorageWriter.AddError">[docs]</a>  <span class="k">def</span> <span class="nf">AddError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds an error to the storage.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      error: an error object (instance of AnalysisError or ExtractionError).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      IOError: when the storage writer is closed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_open</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unable to write to closed storage writer.&#39;</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">number_of_errors</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="FakeStorageWriter.AddEvent"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.fake_storage.FakeStorageWriter.AddEvent">[docs]</a>  <span class="k">def</span> <span class="nf">AddEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds an event object to the storage.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: an event object (instance of EventObject).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      IOError: when the storage writer is closed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_open</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unable to write to closed storage writer.&#39;</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">number_of_events</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="FakeStorageWriter.AddEventSource"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.fake_storage.FakeStorageWriter.AddEventSource">[docs]</a>  <span class="k">def</span> <span class="nf">AddEventSource</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_source</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds an event source to the storage.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_source: an event source object (instance of EventSource).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      IOError: when the storage writer is closed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_open</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unable to write to closed storage writer.&#39;</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">event_sources</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event_source</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">number_of_event_sources</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="FakeStorageWriter.AddEventTag"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.fake_storage.FakeStorageWriter.AddEventTag">[docs]</a>  <span class="k">def</span> <span class="nf">AddEventTag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_tag</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds an event tag to the storage.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_tag: an event tag object (instance of EventTag).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      IOError: when the storage writer is closed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_open</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unable to write to closed storage writer.&#39;</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">event_tags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event_tag</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FakeStorageWriter.Close"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.fake_storage.FakeStorageWriter.Close">[docs]</a>  <span class="k">def</span> <span class="nf">Close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Closes the storage writer.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      IOError: when the storage writer is closed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_open</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unable to write to closed storage writer.&#39;</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_is_open</span> <span class="o">=</span> <span class="bp">False</span></div>
+
+  <span class="c1"># TODO: remove during phased processing refactor.</span>
+<div class="viewcode-block" id="FakeStorageWriter.ForceClose"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.fake_storage.FakeStorageWriter.ForceClose">[docs]</a>  <span class="k">def</span> <span class="nf">ForceClose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Forces the storage writer to close.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      IOError: when the storage writer is closed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_open</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unable to write to closed storage writer.&#39;</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_is_open</span> <span class="o">=</span> <span class="bp">False</span></div>
+
+  <span class="c1"># TODO: remove during phased processing refactor.</span>
+<div class="viewcode-block" id="FakeStorageWriter.ForceFlush"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.fake_storage.FakeStorageWriter.ForceFlush">[docs]</a>  <span class="k">def</span> <span class="nf">ForceFlush</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Forces the storage writer to flush.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      IOError: when the storage writer is closed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_open</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unable to write to closed storage writer.&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FakeStorageWriter.GetEventSources"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.fake_storage.FakeStorageWriter.GetEventSources">[docs]</a>  <span class="k">def</span> <span class="nf">GetEventSources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the event sources.</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">      An event source object (instance of EventSource).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      IOError: when the storage writer is closed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_open</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unable to write to closed storage writer.&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">event_source</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_sources</span><span class="p">:</span>
+      <span class="k">yield</span> <span class="n">event_source</span></div>
+
+<div class="viewcode-block" id="FakeStorageWriter.Open"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.fake_storage.FakeStorageWriter.Open">[docs]</a>  <span class="k">def</span> <span class="nf">Open</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Opens the storage writer.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      IOError: if the storage writer is already opened.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_open</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Storage writer already opened.&#39;</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_is_open</span> <span class="o">=</span> <span class="bp">True</span></div>
+
+  <span class="c1"># TODO: remove during phased processing refactor.</span>
+<div class="viewcode-block" id="FakeStorageWriter.WritePreprocessObject"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.fake_storage.FakeStorageWriter.WritePreprocessObject">[docs]</a>  <span class="k">def</span> <span class="nf">WritePreprocessObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unused_preprocess_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes a preprocessing object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      preprocess_object: a preprocess object (instance of PreprocessObject).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      IOError: when the storage writer is closed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_open</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unable to write to closed storage writer.&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FakeStorageWriter.WriteSessionCompletion"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.fake_storage.FakeStorageWriter.WriteSessionCompletion">[docs]</a>  <span class="k">def</span> <span class="nf">WriteSessionCompletion</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes session completion information.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      IOError: when the storage writer is closed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_open</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unable to write to closed storage writer.&#39;</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">session_completion</span> <span class="o">=</span> <span class="n">sessions</span><span class="o">.</span><span class="n">SessionCompletion</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session_identifier</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="FakeStorageWriter.WriteSessionStart"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.fake_storage.FakeStorageWriter.WriteSessionStart">[docs]</a>  <span class="k">def</span> <span class="nf">WriteSessionStart</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_start</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes session start information.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      session_start: the session start information (instance of SessionStart).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      IOError: when the storage writer is closed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_open</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unable to write to closed storage writer.&#39;</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">session_start</span> <span class="o">=</span> <span class="n">session_start</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_session_identifier</span> <span class="o">=</span> <span class="n">session_start</span><span class="o">.</span><span class="n">identifier</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

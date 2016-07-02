@@ -1,0 +1,279 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.winlnk &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.winlnk</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Parser for Windows Shortcut (LNK) files.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">uuid</span>
+
+<span class="kn">import</span> <span class="nn">pylnk</span>
+
+<span class="kn">from</span> <span class="nn">plaso</span> <span class="kn">import</span> <span class="n">dependencies</span>
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">windows_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">specification</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers.shared</span> <span class="kn">import</span> <span class="n">shell_items</span>
+
+
+<span class="n">dependencies</span><span class="o">.</span><span class="n">CheckModuleVersion</span><span class="p">(</span><span class="s1">u&#39;pylnk&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="WinLnkLinkEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.winlnk.WinLnkLinkEvent">[docs]</a><span class="k">class</span> <span class="nc">WinLnkLinkEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">FiletimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for a Windows Shortcut (LNK) link event.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    birth_droid_file_identifier: the distributed link tracking brith droid</span>
+<span class="sd">                                 file identifier.</span>
+<span class="sd">    birth_droid_volume_identifier: the distributed link tracking brith droid</span>
+<span class="sd">                                   volume identifier.</span>
+<span class="sd">    command_line_arguments: the command line arguments.</span>
+<span class="sd">    description: the description of the linked item.</span>
+<span class="sd">    drive_serial_number: the drive serial number where the linked item resides.</span>
+<span class="sd">    drive_type: the drive type where the linked item resided.</span>
+<span class="sd">    droid_file_identifier: the distributed link tracking droid file</span>
+<span class="sd">                           identifier.</span>
+<span class="sd">    droid_volume_identifier: the distributed link tracking droid volume</span>
+<span class="sd">                             identifier.</span>
+<span class="sd">    env_var_location: the evironment variables loction.</span>
+<span class="sd">    file_attribute_flags: the file attribute flags of the linked item.</span>
+<span class="sd">    file_size: the size of the linked item.</span>
+<span class="sd">    icon_location: the icon location..</span>
+<span class="sd">    link_target: shell item list of the link target.</span>
+<span class="sd">    local_path: the local path of the linked item.</span>
+<span class="sd">    network_path: the local path of the linked item.</span>
+<span class="sd">    offset: the data offset of the event.</span>
+<span class="sd">    relative_path: the relative path.</span>
+<span class="sd">    volume_label: the volume label where the linked item resided.</span>
+<span class="sd">    working_directory: the working directory.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;windows:lnk:link&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">,</span> <span class="n">lnk_file</span><span class="p">,</span> <span class="n">link_target</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timestamp: The FILETIME value for the timestamp.</span>
+<span class="sd">      timestamp_description: The usage string for the timestamp value.</span>
+<span class="sd">      lnk_file: The LNK file (instance of pylnk.file).</span>
+<span class="sd">      link_target: String representation of the link target shell item list</span>
+<span class="sd">                   or None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">WinLnkLinkEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">file_size</span> <span class="o">=</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">file_size</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">file_attribute_flags</span> <span class="o">=</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">file_attribute_flags</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">drive_type</span> <span class="o">=</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">drive_type</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">drive_serial_number</span> <span class="o">=</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">drive_serial_number</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">description</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">volume_label</span> <span class="o">=</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">volume_label</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">local_path</span> <span class="o">=</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">local_path</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">network_path</span> <span class="o">=</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">network_path</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">command_line_arguments</span> <span class="o">=</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">command_line_arguments</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">env_var_location</span> <span class="o">=</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">environment_variables_location</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">relative_path</span> <span class="o">=</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">relative_path</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">working_directory</span> <span class="o">=</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">working_directory</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">icon_location</span> <span class="o">=</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">icon_location</span>
+
+    <span class="k">if</span> <span class="n">link_target</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">link_target</span> <span class="o">=</span> <span class="n">link_target</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">droid_volume_identifier</span> <span class="o">=</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">droid_volume_identifier</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">droid_file_identifier</span> <span class="o">=</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">droid_file_identifier</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">birth_droid_volume_identifier</span> <span class="o">=</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">birth_droid_volume_identifier</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">birth_droid_file_identifier</span> <span class="o">=</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">birth_droid_file_identifier</span></div>
+
+
+<div class="viewcode-block" id="WinLnkParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.winlnk.WinLnkParser">[docs]</a><span class="k">class</span> <span class="nc">WinLnkParser</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">FileObjectParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parses Windows Shortcut (LNK) files.&quot;&quot;&quot;</span>
+
+  <span class="n">_INITIAL_FILE_OFFSET</span> <span class="o">=</span> <span class="bp">None</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;lnk&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for Windows Shortcut (LNK) files.&#39;</span>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="WinLnkParser.GetFormatSpecification"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.winlnk.WinLnkParser.GetFormatSpecification">[docs]</a>  <span class="k">def</span> <span class="nf">GetFormatSpecification</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the format specification.&quot;&quot;&quot;</span>
+    <span class="n">format_specification</span> <span class="o">=</span> <span class="n">specification</span><span class="o">.</span><span class="n">FormatSpecification</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">NAME</span><span class="p">)</span>
+    <span class="n">format_specification</span><span class="o">.</span><span class="n">AddNewSignature</span><span class="p">(</span>
+        <span class="n">b</span><span class="s1">&#39;</span><span class="se">\x01\x14\x02\x00\x00\x00\x00\x00\xc0\x00\x00\x00\x00\x00\x00\x46</span><span class="s1">&#39;</span><span class="p">,</span>
+        <span class="n">offset</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">format_specification</span></div>
+
+<div class="viewcode-block" id="WinLnkParser.ParseFileObject"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.winlnk.WinLnkParser.ParseFileObject">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileObject</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="n">display_name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a Windows Shortcut (LNK) file-like object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: A file-like object.</span>
+<span class="sd">      display_name: Optional display name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">display_name</span><span class="p">:</span>
+      <span class="n">display_name</span> <span class="o">=</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">GetDisplayName</span><span class="p">()</span>
+
+    <span class="n">lnk_file</span> <span class="o">=</span> <span class="n">pylnk</span><span class="o">.</span><span class="n">file</span><span class="p">()</span>
+    <span class="n">lnk_file</span><span class="o">.</span><span class="n">set_ascii_codepage</span><span class="p">(</span><span class="n">parser_mediator</span><span class="o">.</span><span class="n">codepage</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">lnk_file</span><span class="o">.</span><span class="n">open_file_object</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;unable to open file with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+      <span class="k">return</span>
+
+    <span class="n">link_target</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">link_target_identifier_data</span><span class="p">:</span>
+      <span class="c1"># TODO: change file_entry.name to display name once it is generated</span>
+      <span class="c1"># correctly.</span>
+      <span class="n">display_name</span> <span class="o">=</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">GetFilename</span><span class="p">()</span>
+      <span class="n">shell_items_parser</span> <span class="o">=</span> <span class="n">shell_items</span><span class="o">.</span><span class="n">ShellItemsParser</span><span class="p">(</span><span class="n">display_name</span><span class="p">)</span>
+      <span class="n">shell_items_parser</span><span class="o">.</span><span class="n">ParseByteStream</span><span class="p">(</span>
+          <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">link_target_identifier_data</span><span class="p">,</span>
+          <span class="n">codepage</span><span class="o">=</span><span class="n">parser_mediator</span><span class="o">.</span><span class="n">codepage</span><span class="p">)</span>
+
+      <span class="n">link_target</span> <span class="o">=</span> <span class="n">shell_items_parser</span><span class="o">.</span><span class="n">CopyToPath</span><span class="p">()</span>
+
+    <span class="n">access_time</span> <span class="o">=</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">get_file_access_time_as_integer</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">access_time</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span>
+          <span class="n">WinLnkLinkEvent</span><span class="p">(</span>
+              <span class="n">access_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">ACCESS_TIME</span><span class="p">,</span> <span class="n">lnk_file</span><span class="p">,</span>
+              <span class="n">link_target</span><span class="p">))</span>
+
+    <span class="n">creation_time</span> <span class="o">=</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">get_file_creation_time_as_integer</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">creation_time</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span>
+          <span class="n">WinLnkLinkEvent</span><span class="p">(</span>
+              <span class="n">creation_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">CREATION_TIME</span><span class="p">,</span> <span class="n">lnk_file</span><span class="p">,</span>
+              <span class="n">link_target</span><span class="p">))</span>
+
+    <span class="n">modification_time</span> <span class="o">=</span> <span class="n">lnk_file</span><span class="o">.</span><span class="n">get_file_modification_time_as_integer</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">modification_time</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span>
+          <span class="n">WinLnkLinkEvent</span><span class="p">(</span>
+              <span class="n">modification_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">MODIFICATION_TIME</span><span class="p">,</span>
+              <span class="n">lnk_file</span><span class="p">,</span> <span class="n">link_target</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">access_time</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">creation_time</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">modification_time</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span>
+          <span class="n">WinLnkLinkEvent</span><span class="p">(</span>
+              <span class="mi">0</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">NOT_A_TIME</span><span class="p">,</span> <span class="n">lnk_file</span><span class="p">,</span> <span class="n">link_target</span><span class="p">))</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">uuid_object</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">(</span><span class="n">lnk_file</span><span class="o">.</span><span class="n">droid_file_identifier</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">uuid_object</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">windows_events</span><span class="o">.</span><span class="n">WindowsDistributedLinkTrackingCreationEvent</span><span class="p">(</span>
+                <span class="n">uuid_object</span><span class="p">,</span> <span class="n">display_name</span><span class="p">))</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+      <span class="k">pass</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">uuid_object</span> <span class="o">=</span> <span class="n">uuid</span><span class="o">.</span><span class="n">UUID</span><span class="p">(</span><span class="n">lnk_file</span><span class="o">.</span><span class="n">birth_droid_file_identifier</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">uuid_object</span><span class="o">.</span><span class="n">version</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">windows_events</span><span class="o">.</span><span class="n">WindowsDistributedLinkTrackingCreationEvent</span><span class="p">(</span>
+                <span class="n">uuid_object</span><span class="p">,</span> <span class="n">display_name</span><span class="p">))</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+      <span class="k">pass</span>
+
+    <span class="n">lnk_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParser</span><span class="p">(</span><span class="n">WinLnkParser</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

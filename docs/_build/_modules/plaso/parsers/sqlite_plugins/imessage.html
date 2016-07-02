@@ -1,0 +1,175 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.sqlite_plugins.imessage &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../../index.html" />
+    <link rel="up" title="plaso" href="../../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.sqlite_plugins.imessage</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains a parser for the iMessage database on OSX and iOS.</span>
+
+<span class="sd">iMessage and SMS data in OSX and iOS are stored in SQLite databases named</span>
+<span class="sd">chat.db and sms.db respectively.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">sqlite</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers.sqlite_plugins</span> <span class="kn">import</span> <span class="n">interface</span>
+
+
+<div class="viewcode-block" id="IMessageEvent"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.imessage.IMessageEvent">[docs]</a><span class="k">class</span> <span class="nc">IMessageEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">CocoaTimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for an iMessage and SMS event.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;imessage:event:chat&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">cocoa_time</span><span class="p">,</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">imessage_id</span><span class="p">,</span> <span class="n">read_receipt</span><span class="p">,</span>
+      <span class="n">message_type</span><span class="p">,</span> <span class="n">service</span><span class="p">,</span> <span class="n">attachment_location</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      cocoa_time: an integer containing the Apple Cocoa time value - the number</span>
+<span class="sd">                  of seconds passed since January 1, 2001 00:00:00 GMT.</span>
+<span class="sd">      identifier: an integer containing the row number.</span>
+<span class="sd">      imessage_id: a string containing the mobile number or email address the</span>
+<span class="sd">                   message was sent to or received from.</span>
+<span class="sd">      read_receipt: a boolean indicating that a message read receipt was</span>
+<span class="sd">                    received.</span>
+<span class="sd">      message_type: an integer indicating message was sent (1) or received (0).</span>
+<span class="sd">      service: a string indicating SMS or iMessage.</span>
+<span class="sd">      attachment: a boolean indicating that the message contained an attachment.</span>
+<span class="sd">      text: content of the message.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">IMessageEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">cocoa_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">CREATION_TIME</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">identifier</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">imessage_id</span> <span class="o">=</span> <span class="n">imessage_id</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">read_receipt</span> <span class="o">=</span> <span class="n">read_receipt</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">message_type</span> <span class="o">=</span> <span class="n">message_type</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">service</span> <span class="o">=</span> <span class="n">service</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">attachment_location</span> <span class="o">=</span> <span class="n">attachment_location</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">text</span></div>
+
+
+<div class="viewcode-block" id="IMessagePlugin"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.imessage.IMessagePlugin">[docs]</a><span class="k">class</span> <span class="nc">IMessagePlugin</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">SQLitePlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;SQLite plugin for the iMessage and SMS database.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;imessage&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for the iMessage and SMS SQLite databases on OSX and &#39;</span>\
+                <span class="s1">u&#39;iOS.&#39;</span>
+
+  <span class="c1"># Define the needed queries.</span>
+  <span class="n">QUERIES</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="p">(</span><span class="s1">u&#39;SELECT m.date, m.ROWID, h.id AS imessage_id, m.is_read AS &#39;</span>
+       <span class="s1">u&#39;read_receipt, m.is_from_me AS message_type, m.service, a.filename AS&#39;</span>
+       <span class="s1">u&#39;&quot;attachment_location&quot;, m.text FROM message AS m JOIN handle AS h ON &#39;</span>
+       <span class="s1">u&#39;h.ROWID = m.handle_id LEFT OUTER JOIN message_attachment_join AS maj &#39;</span>
+       <span class="s1">u&#39;ON m.ROWID = maj.message_id LEFT OUTER JOIN attachment AS a ON &#39;</span>
+       <span class="s1">u&#39;maj.attachment_id = a.ROWID&#39;</span><span class="p">,</span> <span class="s1">u&#39;ParseMessageRow&#39;</span><span class="p">)]</span>
+
+  <span class="c1"># The required tables.</span>
+  <span class="n">REQUIRED_TABLES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s1">u&#39;message&#39;</span><span class="p">,</span> <span class="s1">u&#39;handle&#39;</span><span class="p">,</span> <span class="s1">u&#39;attachment&#39;</span><span class="p">,</span>
+                               <span class="s1">u&#39;message_attachment_join&#39;</span><span class="p">])</span>
+
+<div class="viewcode-block" id="IMessagePlugin.ParseMessageRow"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.imessage.IMessagePlugin.ParseMessageRow">[docs]</a>  <span class="k">def</span> <span class="nf">ParseMessageRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a message row.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      row: The row resulting from the query.</span>
+<span class="sd">      query: Optional query string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Note that pysqlite does not accept a Unicode string in row[&#39;string&#39;] and</span>
+    <span class="c1"># will raise &quot;IndexError: Index must be int or string&quot;.</span>
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">IMessageEvent</span><span class="p">(</span>
+        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ROWID&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;imessage_id&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;read_receipt&#39;</span><span class="p">],</span>
+        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;message_type&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;service&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;attachment_location&#39;</span><span class="p">],</span>
+        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">])</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span></div></div>
+
+<span class="n">sqlite</span><span class="o">.</span><span class="n">SQLiteParser</span><span class="o">.</span><span class="n">RegisterPlugin</span><span class="p">(</span><span class="n">IMessagePlugin</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

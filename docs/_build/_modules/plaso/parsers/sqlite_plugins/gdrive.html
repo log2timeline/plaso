@@ -1,0 +1,347 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.sqlite_plugins.gdrive &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../../index.html" />
+    <link rel="up" title="plaso" href="../../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.sqlite_plugins.gdrive</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains a parser for the Google Drive snapshots.</span>
+
+<span class="sd">The Google Drive snapshots are stored in SQLite database files named</span>
+<span class="sd">snapshot.db.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">sqlite</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers.sqlite_plugins</span> <span class="kn">import</span> <span class="n">interface</span>
+
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;David Nides (david.nides@gmail.com)&#39;</span>
+
+
+<div class="viewcode-block" id="GoogleDriveSnapshotCloudEntryEvent"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.gdrive.GoogleDriveSnapshotCloudEntryEvent">[docs]</a><span class="k">class</span> <span class="nc">GoogleDriveSnapshotCloudEntryEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">PosixTimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for a Google Drive snapshot cloud entry.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;gdrive:snapshot:cloud_entry&#39;</span>
+
+  <span class="c1"># TODO: this could be moved to the formatter.</span>
+  <span class="c1"># The following definition for values can be found on Patrick Olson&#39;s blog:</span>
+  <span class="c1"># http://www.sysforensics.org/2012/05/google-drive-forensics-notes.html</span>
+  <span class="n">_DOC_TYPES</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="mi">0</span><span class="p">:</span> <span class="s1">u&#39;FOLDER&#39;</span><span class="p">,</span>
+      <span class="mi">1</span><span class="p">:</span> <span class="s1">u&#39;FILE&#39;</span><span class="p">,</span>
+      <span class="mi">2</span><span class="p">:</span> <span class="s1">u&#39;PRESENTATION&#39;</span><span class="p">,</span>
+      <span class="mi">3</span><span class="p">:</span> <span class="s1">u&#39;UNKNOWN&#39;</span><span class="p">,</span>
+      <span class="mi">4</span><span class="p">:</span> <span class="s1">u&#39;SPREADSHEET&#39;</span><span class="p">,</span>
+      <span class="mi">5</span><span class="p">:</span> <span class="s1">u&#39;DRAWING&#39;</span><span class="p">,</span>
+      <span class="mi">6</span><span class="p">:</span> <span class="s1">u&#39;DOCUMENT&#39;</span><span class="p">,</span>
+      <span class="mi">7</span><span class="p">:</span> <span class="s1">u&#39;TABLE&#39;</span><span class="p">,</span>
+  <span class="p">}</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">posix_time</span><span class="p">,</span> <span class="n">usage</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">doc_type</span><span class="p">,</span> <span class="n">shared</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      posix_time: The POSIX time value.</span>
+<span class="sd">      usage: The description of the usage of the time value.</span>
+<span class="sd">      url: The URL of the file as in the cloud.</span>
+<span class="sd">      path: The path of the file.</span>
+<span class="sd">      size: The size of the file.</span>
+<span class="sd">      doc_type: Integer value containing the document type.</span>
+<span class="sd">      shared: A string indicating whether or not this is a shared document.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">GoogleDriveSnapshotCloudEntryEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">posix_time</span><span class="p">,</span> <span class="n">usage</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">document_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DOC_TYPES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">doc_type</span><span class="p">,</span> <span class="s1">u&#39;UNKNOWN&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">shared</span> <span class="o">=</span> <span class="n">shared</span></div>
+
+
+<div class="viewcode-block" id="GoogleDriveSnapshotLocalEntryEvent"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.gdrive.GoogleDriveSnapshotLocalEntryEvent">[docs]</a><span class="k">class</span> <span class="nc">GoogleDriveSnapshotLocalEntryEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">PosixTimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for a Google Drive snapshot local entry event.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;gdrive:snapshot:local_entry&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">posix_time</span><span class="p">,</span> <span class="n">local_path</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      posix_time: The POSIX time value.</span>
+<span class="sd">      local_path: The local path of the file.</span>
+<span class="sd">      size: The size of the file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">GoogleDriveSnapshotLocalEntryEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">posix_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">MODIFICATION_TIME</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">local_path</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="n">size</span></div>
+
+
+<div class="viewcode-block" id="GoogleDrivePlugin"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.gdrive.GoogleDrivePlugin">[docs]</a><span class="k">class</span> <span class="nc">GoogleDrivePlugin</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">SQLitePlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;SQLite plugin for Google Drive snapshot.db files.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;google_drive&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for Google Drive SQLite database files.&#39;</span>
+
+  <span class="c1"># Define the needed queries.</span>
+  <span class="n">QUERIES</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="p">((</span><span class="s1">u&#39;SELECT cloud_entry.resource_id, cloud_entry.filename, &#39;</span>
+        <span class="s1">u&#39;cloud_entry.modified, cloud_entry.created, cloud_entry.size, &#39;</span>
+        <span class="s1">u&#39;cloud_entry.doc_type, cloud_entry.shared, cloud_entry.checksum, &#39;</span>
+        <span class="s1">u&#39;cloud_entry.url, cloud_relations.parent_resource_id &#39;</span>
+        <span class="s1">u&#39;FROM cloud_entry, cloud_relations &#39;</span>
+        <span class="s1">u&#39;WHERE cloud_relations.child_resource_id = cloud_entry.resource_id &#39;</span>
+        <span class="s1">u&#39;AND cloud_entry.modified IS NOT NULL;&#39;</span><span class="p">),</span>
+       <span class="s1">u&#39;ParseCloudEntryRow&#39;</span><span class="p">),</span>
+      <span class="p">((</span><span class="s1">u&#39;SELECT inode_number, filename, modified, checksum, size &#39;</span>
+        <span class="s1">u&#39;FROM local_entry WHERE modified IS NOT NULL;&#39;</span><span class="p">),</span>
+       <span class="s1">u&#39;ParseLocalEntryRow&#39;</span><span class="p">)]</span>
+
+  <span class="c1"># The required tables.</span>
+  <span class="n">REQUIRED_TABLES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+      <span class="s1">u&#39;cloud_entry&#39;</span><span class="p">,</span> <span class="s1">u&#39;cloud_relations&#39;</span><span class="p">,</span> <span class="s1">u&#39;local_entry&#39;</span><span class="p">,</span> <span class="s1">u&#39;local_relations&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;mapping&#39;</span><span class="p">,</span> <span class="s1">u&#39;overlay_status&#39;</span><span class="p">])</span>
+
+  <span class="c1"># Queries used to build cache.</span>
+  <span class="n">LOCAL_PATH_CACHE_QUERY</span> <span class="o">=</span> <span class="p">(</span>
+      <span class="s1">u&#39;SELECT local_relations.child_inode_number, &#39;</span>
+      <span class="s1">u&#39;local_relations.parent_inode_number, local_entry.filename &#39;</span>
+      <span class="s1">u&#39;FROM local_relations, local_entry &#39;</span>
+      <span class="s1">u&#39;WHERE local_relations.child_inode_number = local_entry.inode_number&#39;</span><span class="p">)</span>
+  <span class="n">CLOUD_PATH_CACHE_QUERY</span> <span class="o">=</span> <span class="p">(</span>
+      <span class="s1">u&#39;SELECT cloud_entry.filename, cloud_entry.resource_id, &#39;</span>
+      <span class="s1">u&#39;cloud_relations.parent_resource_id AS parent &#39;</span>
+      <span class="s1">u&#39;FROM cloud_entry, cloud_relations &#39;</span>
+      <span class="s1">u&#39;WHERE cloud_entry.doc_type = 0 &#39;</span>
+      <span class="s1">u&#39;AND cloud_entry.resource_id = cloud_relations.child_resource_id&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GoogleDrivePlugin.GetLocalPath"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.gdrive.GoogleDrivePlugin.GetLocalPath">[docs]</a>  <span class="k">def</span> <span class="nf">GetLocalPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inode</span><span class="p">,</span> <span class="n">cache</span><span class="p">,</span> <span class="n">database</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return local path for a given inode.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      inode: The inode number for the file.</span>
+<span class="sd">      cache: A cache object (instance of SQLiteCache).</span>
+<span class="sd">      database: A database object (instance of SQLiteDatabase).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A full path, including the filename of the given inode value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">local_path</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="s1">u&#39;local_path&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">local_path</span><span class="p">:</span>
+      <span class="n">results</span> <span class="o">=</span> <span class="n">database</span><span class="o">.</span><span class="n">Query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">LOCAL_PATH_CACHE_QUERY</span><span class="p">)</span>
+
+      <span class="c1"># Note that pysqlite does not accept a Unicode string in row[&#39;string&#39;] and</span>
+      <span class="c1"># will raise &quot;IndexError: Index must be int or string&quot;.</span>
+      <span class="n">cache</span><span class="o">.</span><span class="n">CacheQueryResults</span><span class="p">(</span>
+          <span class="n">results</span><span class="p">,</span> <span class="s1">&#39;local_path&#39;</span><span class="p">,</span> <span class="s1">&#39;child_inode_number&#39;</span><span class="p">,</span>
+          <span class="p">(</span><span class="s1">&#39;parent_inode_number&#39;</span><span class="p">,</span> <span class="s1">&#39;filename&#39;</span><span class="p">))</span>
+      <span class="n">local_path</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="s1">u&#39;local_path&#39;</span><span class="p">)</span>
+
+    <span class="n">parent</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="n">local_path</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">inode</span><span class="p">,</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">])</span>
+
+    <span class="c1"># TODO: Read the local_sync_root from the sync_config.db and use that</span>
+    <span class="c1"># for a root value.</span>
+    <span class="n">root_value</span> <span class="o">=</span> <span class="s1">u&#39;</span><span class="si">%lo</span><span class="s1">cal_sync_root%/&#39;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">root_value</span>
+
+    <span class="n">paths</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">while</span> <span class="n">path</span><span class="p">:</span>
+      <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+      <span class="n">parent</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="n">local_path</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">paths</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">root_value</span>
+
+    <span class="c1"># Paths are built top level to root so we need to reverse the list to</span>
+    <span class="c1"># represent them in the traditional order.</span>
+    <span class="n">paths</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">root_value</span> <span class="o">+</span> <span class="s1">u&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GoogleDrivePlugin.GetCloudPath"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.gdrive.GoogleDrivePlugin.GetCloudPath">[docs]</a>  <span class="k">def</span> <span class="nf">GetCloudPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_id</span><span class="p">,</span> <span class="n">cache</span><span class="p">,</span> <span class="n">database</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return cloud path given a resource id.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      resource_id: The resource_id for the file.</span>
+<span class="sd">      cache: The local cache object.</span>
+<span class="sd">      database: A database object (instance of SQLiteDatabase).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A full path to the resource value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cloud_path</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="s1">u&#39;cloud_path&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">cloud_path</span><span class="p">:</span>
+      <span class="n">results</span> <span class="o">=</span> <span class="n">database</span><span class="o">.</span><span class="n">Query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">CLOUD_PATH_CACHE_QUERY</span><span class="p">)</span>
+
+      <span class="c1"># Note that pysqlite does not accept a Unicode string in row[&#39;string&#39;] and</span>
+      <span class="c1"># will raise &quot;IndexError: Index must be int or string&quot;.</span>
+      <span class="n">cache</span><span class="o">.</span><span class="n">CacheQueryResults</span><span class="p">(</span>
+          <span class="n">results</span><span class="p">,</span> <span class="s1">&#39;cloud_path&#39;</span><span class="p">,</span> <span class="s1">&#39;resource_id&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;filename&#39;</span><span class="p">,</span> <span class="s1">&#39;parent&#39;</span><span class="p">))</span>
+      <span class="n">cloud_path</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="s1">u&#39;cloud_path&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">resource_id</span> <span class="o">==</span> <span class="s1">u&#39;folder:root&#39;</span><span class="p">:</span>
+      <span class="k">return</span> <span class="s1">u&#39;/&#39;</span>
+
+    <span class="n">paths</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">parent_path</span><span class="p">,</span> <span class="n">parent_id</span> <span class="o">=</span> <span class="n">cloud_path</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">resource_id</span><span class="p">,</span> <span class="p">[</span><span class="s1">u&#39;&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">])</span>
+    <span class="k">while</span> <span class="n">parent_path</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">parent_path</span> <span class="o">==</span> <span class="s1">u&#39;folder:root&#39;</span><span class="p">:</span>
+        <span class="k">break</span>
+      <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parent_path</span><span class="p">)</span>
+      <span class="n">parent_path</span><span class="p">,</span> <span class="n">parent_id</span> <span class="o">=</span> <span class="n">cloud_path</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parent_id</span><span class="p">,</span> <span class="p">[</span><span class="s1">u&#39;&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">paths</span><span class="p">:</span>
+      <span class="k">return</span> <span class="s1">u&#39;/&#39;</span>
+
+    <span class="c1"># Paths are built top level to root so we need to reverse the list to</span>
+    <span class="c1"># represent them in the traditional order.</span>
+    <span class="n">paths</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>
+    <span class="k">return</span> <span class="s1">u&#39;/{0:s}/&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">u&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">paths</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="GoogleDrivePlugin.ParseCloudEntryRow"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.gdrive.GoogleDrivePlugin.ParseCloudEntryRow">[docs]</a>  <span class="k">def</span> <span class="nf">ParseCloudEntryRow</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">database</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+      <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a cloud entry row.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      row: The row resulting from the query.</span>
+<span class="sd">      query: Optional query string.</span>
+<span class="sd">      cache: The local cache object.</span>
+<span class="sd">      database: The database object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Note that pysqlite does not accept a Unicode string in row[&#39;string&#39;] and</span>
+    <span class="c1"># will raise &quot;IndexError: Index must be int or string&quot;.</span>
+
+    <span class="n">cloud_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetCloudPath</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;parent_resource_id&#39;</span><span class="p">],</span> <span class="n">cache</span><span class="p">,</span> <span class="n">database</span><span class="p">)</span>
+    <span class="n">cloud_filename</span> <span class="o">=</span> <span class="s1">u&#39;{0:s}{1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cloud_path</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;shared&#39;</span><span class="p">]:</span>
+      <span class="n">shared</span> <span class="o">=</span> <span class="s1">u&#39;Shared&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">shared</span> <span class="o">=</span> <span class="s1">u&#39;Private&#39;</span>
+
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">GoogleDriveSnapshotCloudEntryEvent</span><span class="p">(</span>
+        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;modified&#39;</span><span class="p">],</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">MODIFICATION_TIME</span><span class="p">,</span>
+        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">],</span> <span class="n">cloud_filename</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;doc_type&#39;</span><span class="p">],</span> <span class="n">shared</span><span class="p">)</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;created&#39;</span><span class="p">]:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">GoogleDriveSnapshotCloudEntryEvent</span><span class="p">(</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;created&#39;</span><span class="p">],</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">CREATION_TIME</span><span class="p">,</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">],</span> <span class="n">cloud_filename</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;doc_type&#39;</span><span class="p">],</span> <span class="n">shared</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GoogleDrivePlugin.ParseLocalEntryRow"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.gdrive.GoogleDrivePlugin.ParseLocalEntryRow">[docs]</a>  <span class="k">def</span> <span class="nf">ParseLocalEntryRow</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">database</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+      <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a local entry row.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      row: The row resulting from the query.</span>
+<span class="sd">      query: Optional query string.</span>
+<span class="sd">      cache: The local cache object (instance of SQLiteCache).</span>
+<span class="sd">      database: A database object (instance of SQLiteDatabase).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Note that pysqlite does not accept a Unicode string in row[&#39;string&#39;] and</span>
+    <span class="c1"># will raise &quot;IndexError: Index must be int or string&quot;.</span>
+
+    <span class="n">local_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetLocalPath</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;inode_number&#39;</span><span class="p">],</span> <span class="n">cache</span><span class="p">,</span> <span class="n">database</span><span class="p">)</span>
+
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">GoogleDriveSnapshotLocalEntryEvent</span><span class="p">(</span>
+        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;modified&#39;</span><span class="p">],</span> <span class="n">local_path</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">])</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span></div></div>
+
+
+<span class="n">sqlite</span><span class="o">.</span><span class="n">SQLiteParser</span><span class="o">.</span><span class="n">RegisterPlugin</span><span class="p">(</span><span class="n">GoogleDrivePlugin</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

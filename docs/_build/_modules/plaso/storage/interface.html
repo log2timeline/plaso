@@ -1,0 +1,346 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.storage.interface &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.storage.interface</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;The storage interface classes.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">abc</span>
+
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">profiler</span>
+
+
+<div class="viewcode-block" id="BaseStorage"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.BaseStorage">[docs]</a><span class="k">class</span> <span class="nc">BaseStorage</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that defines the storage interface.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a storage object.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">BaseStorage</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_profiling_sample</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_serializers_profiler</span> <span class="o">=</span> <span class="bp">None</span>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="BaseStorage.AddError"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.BaseStorage.AddError">[docs]</a>  <span class="k">def</span> <span class="nf">AddError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds an error to the storage.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      error: an error (instance of AnalysisError or ExtractionError).</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="BaseStorage.AddEvent"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.BaseStorage.AddEvent">[docs]</a>  <span class="k">def</span> <span class="nf">AddEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds an event to the storage.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: an event object (instance of EventObject).</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="BaseStorage.AddEventSource"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.BaseStorage.AddEventSource">[docs]</a>  <span class="k">def</span> <span class="nf">AddEventSource</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_source</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds an event source to the storage.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_source: an event source (instance of EventSource).</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="BaseStorage.Close"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.BaseStorage.Close">[docs]</a>  <span class="k">def</span> <span class="nf">Close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Closes the storage.&quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="BaseStorage.DisableProfiling"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.BaseStorage.DisableProfiling">[docs]</a>  <span class="k">def</span> <span class="nf">DisableProfiling</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Disables profiling.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_serializers_profiler</span> <span class="o">=</span> <span class="bp">None</span></div>
+
+<div class="viewcode-block" id="BaseStorage.EnableProfiling"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.BaseStorage.EnableProfiling">[docs]</a>  <span class="k">def</span> <span class="nf">EnableProfiling</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">profiling_type</span><span class="o">=</span><span class="s1">u&#39;all&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Enables profiling.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      profiling_type: optional profiling type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">profiling_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">u&#39;all&#39;</span><span class="p">,</span> <span class="s1">u&#39;serializers&#39;</span><span class="p">)</span> <span class="ow">and</span>
+        <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_serializers_profiler</span><span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_serializers_profiler</span> <span class="o">=</span> <span class="n">profiler</span><span class="o">.</span><span class="n">SerializersProfiler</span><span class="p">(</span><span class="s1">u&#39;Storage&#39;</span><span class="p">)</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="BaseStorage.GetAnalysisReports"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.BaseStorage.GetAnalysisReports">[docs]</a>  <span class="k">def</span> <span class="nf">GetAnalysisReports</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the analysis reports.</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">      Analysis reports (instances of AnalysisReport).</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="BaseStorage.GetEventSources"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.BaseStorage.GetEventSources">[docs]</a>  <span class="k">def</span> <span class="nf">GetEventSources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the event sources.</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">      An event source object (instance of EventSource).</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="BaseStorage.GetEventTags"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.BaseStorage.GetEventTags">[docs]</a>  <span class="k">def</span> <span class="nf">GetEventTags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the event tags.</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">      An event tag object (instance of EventTag).</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="BaseStorage.HasAnalysisReports"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.BaseStorage.HasAnalysisReports">[docs]</a>  <span class="k">def</span> <span class="nf">HasAnalysisReports</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines if a storage contains analysis reports.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A boolean value indicating if the storage contains analysis reports.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="BaseStorage.HasEventTags"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.BaseStorage.HasEventTags">[docs]</a>  <span class="k">def</span> <span class="nf">HasEventTags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines if a storage contains event tags.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A boolean value indicating if the storage contains event tags.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="BaseStorage.Open"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.BaseStorage.Open">[docs]</a>  <span class="k">def</span> <span class="nf">Open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Opens the storage.&quot;&quot;&quot;</span></div></div>
+
+
+<div class="viewcode-block" id="StorageReader"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.StorageReader">[docs]</a><span class="k">class</span> <span class="nc">StorageReader</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that defines the storage reader interface.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="StorageReader.__enter__"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.StorageReader.__enter__">[docs]</a>  <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Make usable with &quot;with&quot; statement.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="StorageReader.__exit__"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.StorageReader.__exit__">[docs]</a>  <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unused_type</span><span class="p">,</span> <span class="n">unused_value</span><span class="p">,</span> <span class="n">unused_traceback</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Make usable with &quot;with&quot; statement.&quot;&quot;&quot;</span>
+    <span class="k">return</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="StorageReader.GetEvents"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.StorageReader.GetEvents">[docs]</a>  <span class="k">def</span> <span class="nf">GetEvents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_range</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves events.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      time_range: an optional time range object (instance of TimeRange).</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">      Event objects (instance of EventObject).</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="StorageReader.GetEventSources"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.StorageReader.GetEventSources">[docs]</a>  <span class="k">def</span> <span class="nf">GetEventSources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves event sources.</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">      Event source objects (instance of EventSourceObject).</span>
+<span class="sd">    &quot;&quot;&quot;</span></div></div>
+
+
+<div class="viewcode-block" id="StorageWriter"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.StorageWriter">[docs]</a><span class="k">class</span> <span class="nc">StorageWriter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that defines the storage writer interface.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    number_of_errors: an integer containing the number of errors written.</span>
+<span class="sd">    number_of_event_sources: an integer containing the number of event</span>
+<span class="sd">                             sources written.</span>
+<span class="sd">    number_of_events: an integer containing the number of events written.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a storage writer object.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">StorageWriter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_enable_profiling</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_profiling_type</span> <span class="o">=</span> <span class="s1">u&#39;all&#39;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">number_of_errors</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">number_of_event_sources</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">number_of_events</span> <span class="o">=</span> <span class="mi">0</span>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="StorageWriter.AddError"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.StorageWriter.AddError">[docs]</a>  <span class="k">def</span> <span class="nf">AddError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">error</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds an error to the storage.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      error: an error object (instance of AnalysisError or ExtractionError).</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="StorageWriter.AddAnalysisReport"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.StorageWriter.AddAnalysisReport">[docs]</a>  <span class="k">def</span> <span class="nf">AddAnalysisReport</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analysis_report</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds an analysis report to the storage.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      analysis_report: an analysis report object (instance of AnalysisReport).</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="StorageWriter.AddEvent"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.StorageWriter.AddEvent">[docs]</a>  <span class="k">def</span> <span class="nf">AddEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds an event to the storage.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: an event object (instance of EventObject).</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="StorageWriter.AddEventSource"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.StorageWriter.AddEventSource">[docs]</a>  <span class="k">def</span> <span class="nf">AddEventSource</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_source</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds an event source to the storage.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_source: an event source object (instance of EventSource).</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="StorageWriter.AddEventTag"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.StorageWriter.AddEventTag">[docs]</a>  <span class="k">def</span> <span class="nf">AddEventTag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_tag</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds an event tag to the storage.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_tag: an event tag object (instance of EventTag).</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="StorageWriter.Close"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.StorageWriter.Close">[docs]</a>  <span class="k">def</span> <span class="nf">Close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Closes the storage writer.&quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="StorageWriter.DisableProfiling"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.StorageWriter.DisableProfiling">[docs]</a>  <span class="k">def</span> <span class="nf">DisableProfiling</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Disables profiling.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_enable_profiling</span> <span class="o">=</span> <span class="bp">False</span></div>
+
+<div class="viewcode-block" id="StorageWriter.EnableProfiling"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.StorageWriter.EnableProfiling">[docs]</a>  <span class="k">def</span> <span class="nf">EnableProfiling</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">profiling_type</span><span class="o">=</span><span class="s1">u&#39;all&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Enables profiling.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      profiling_type: optional profiling type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_enable_profiling</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_profiling_type</span> <span class="o">=</span> <span class="n">profiling_type</span></div>
+
+  <span class="c1"># TODO: remove during phased processing refactor.</span>
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="StorageWriter.ForceClose"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.StorageWriter.ForceClose">[docs]</a>  <span class="k">def</span> <span class="nf">ForceClose</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Forces the storage writer to close.&quot;&quot;&quot;</span></div>
+
+  <span class="c1"># TODO: remove during phased processing refactor.</span>
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="StorageWriter.ForceFlush"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.StorageWriter.ForceFlush">[docs]</a>  <span class="k">def</span> <span class="nf">ForceFlush</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Forces the storage writer to flush.&quot;&quot;&quot;</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="StorageWriter.GetEventSources"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.StorageWriter.GetEventSources">[docs]</a>  <span class="k">def</span> <span class="nf">GetEventSources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the event sources.</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">      An event source object (instance of EventSource).</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="StorageWriter.Open"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.StorageWriter.Open">[docs]</a>  <span class="k">def</span> <span class="nf">Open</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Opens the storage writer.&quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="StorageWriter.SetEnableProfiling"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.StorageWriter.SetEnableProfiling">[docs]</a>  <span class="k">def</span> <span class="nf">SetEnableProfiling</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enable_profiling</span><span class="p">,</span> <span class="n">profiling_type</span><span class="o">=</span><span class="s1">u&#39;all&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Enables or disables profiling.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      enable_profiling: boolean value to indicate if profiling should</span>
+<span class="sd">                        be enabled.</span>
+<span class="sd">      profiling_type: optional profiling type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_enable_profiling</span> <span class="o">=</span> <span class="n">enable_profiling</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_profiling_type</span> <span class="o">=</span> <span class="n">profiling_type</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="StorageWriter.WriteSessionCompletion"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.StorageWriter.WriteSessionCompletion">[docs]</a>  <span class="k">def</span> <span class="nf">WriteSessionCompletion</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes session completion information.&quot;&quot;&quot;</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="StorageWriter.WriteSessionStart"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.interface.StorageWriter.WriteSessionStart">[docs]</a>  <span class="k">def</span> <span class="nf">WriteSessionStart</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_start</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes session start information.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      session_start: the session start information (instance of SessionStart).</span>
+<span class="sd">    &quot;&quot;&quot;</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

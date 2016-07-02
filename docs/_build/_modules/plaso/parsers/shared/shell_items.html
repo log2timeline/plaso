@@ -1,0 +1,288 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.shared.shell_items &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../../index.html" />
+    <link rel="up" title="plaso" href="../../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.shared.shell_items</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Parser for Windows NT shell items.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pyfwsi</span>
+
+<span class="kn">from</span> <span class="nn">plaso</span> <span class="kn">import</span> <span class="n">dependencies</span>
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">shell_item_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.winnt</span> <span class="kn">import</span> <span class="n">shell_folder_ids</span>
+
+
+<span class="n">dependencies</span><span class="o">.</span><span class="n">CheckModuleVersion</span><span class="p">(</span><span class="s1">u&#39;pyfwsi&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ShellItemsParser"><a class="viewcode-back" href="../../../../plaso.parsers.shared.html#plaso.parsers.shared.shell_items.ShellItemsParser">[docs]</a><span class="k">class</span> <span class="nc">ShellItemsParser</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parses for Windows NT shell items.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;shell_items&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">origin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the parser.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      origin: a string containing the origin of the event (event source).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">ShellItemsParser</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_origin</span> <span class="o">=</span> <span class="n">origin</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_path_segments</span> <span class="o">=</span> <span class="p">[]</span>
+
+  <span class="k">def</span> <span class="nf">_ParseShellItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">shell_item</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a shell item.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: a parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      shell_item: the shell item (instance of pyfwsi.item).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path_segment</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ParseShellItemPathSegment</span><span class="p">(</span><span class="n">shell_item</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_path_segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path_segment</span><span class="p">)</span>
+
+    <span class="n">shell_item_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CopyToPath</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shell_item</span><span class="p">,</span> <span class="n">pyfwsi</span><span class="o">.</span><span class="n">file_entry</span><span class="p">):</span>
+      <span class="n">long_name</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+      <span class="n">localized_name</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+      <span class="n">file_reference</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+      <span class="k">for</span> <span class="n">extension_block</span> <span class="ow">in</span> <span class="n">shell_item</span><span class="o">.</span><span class="n">extension_blocks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">extension_block</span><span class="p">,</span> <span class="n">pyfwsi</span><span class="o">.</span><span class="n">file_entry_extension</span><span class="p">):</span>
+          <span class="n">long_name</span> <span class="o">=</span> <span class="n">extension_block</span><span class="o">.</span><span class="n">long_name</span>
+          <span class="n">localized_name</span> <span class="o">=</span> <span class="n">extension_block</span><span class="o">.</span><span class="n">localized_name</span>
+          <span class="n">file_reference</span> <span class="o">=</span> <span class="n">extension_block</span><span class="o">.</span><span class="n">file_reference</span>
+          <span class="k">if</span> <span class="n">file_reference</span><span class="p">:</span>
+            <span class="n">file_reference</span> <span class="o">=</span> <span class="s1">u&#39;{0:d}-{1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">file_reference</span> <span class="o">&amp;</span> <span class="mh">0xffffffffffff</span><span class="p">,</span> <span class="n">file_reference</span> <span class="o">&gt;&gt;</span> <span class="mi">48</span><span class="p">)</span>
+
+          <span class="n">fat_date_time</span> <span class="o">=</span> <span class="n">extension_block</span><span class="o">.</span><span class="n">get_creation_time_as_integer</span><span class="p">()</span>
+          <span class="k">if</span> <span class="n">fat_date_time</span><span class="p">:</span>
+            <span class="n">event_object</span> <span class="o">=</span> <span class="n">shell_item_events</span><span class="o">.</span><span class="n">ShellItemFileEntryEvent</span><span class="p">(</span>
+                <span class="n">fat_date_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">CREATION_TIME</span><span class="p">,</span>
+                <span class="n">shell_item</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">long_name</span><span class="p">,</span> <span class="n">localized_name</span><span class="p">,</span> <span class="n">file_reference</span><span class="p">,</span>
+                <span class="n">shell_item_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_origin</span><span class="p">)</span>
+            <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+          <span class="n">fat_date_time</span> <span class="o">=</span> <span class="n">extension_block</span><span class="o">.</span><span class="n">get_access_time_as_integer</span><span class="p">()</span>
+          <span class="k">if</span> <span class="n">fat_date_time</span><span class="p">:</span>
+            <span class="n">event_object</span> <span class="o">=</span> <span class="n">shell_item_events</span><span class="o">.</span><span class="n">ShellItemFileEntryEvent</span><span class="p">(</span>
+                <span class="n">fat_date_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">ACCESS_TIME</span><span class="p">,</span>
+                <span class="n">shell_item</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">long_name</span><span class="p">,</span> <span class="n">localized_name</span><span class="p">,</span> <span class="n">file_reference</span><span class="p">,</span>
+                <span class="n">shell_item_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_origin</span><span class="p">)</span>
+            <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="n">fat_date_time</span> <span class="o">=</span> <span class="n">shell_item</span><span class="o">.</span><span class="n">get_modification_time_as_integer</span><span class="p">()</span>
+      <span class="k">if</span> <span class="n">fat_date_time</span><span class="p">:</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">shell_item_events</span><span class="o">.</span><span class="n">ShellItemFileEntryEvent</span><span class="p">(</span>
+            <span class="n">fat_date_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">MODIFICATION_TIME</span><span class="p">,</span>
+            <span class="n">shell_item</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">long_name</span><span class="p">,</span> <span class="n">localized_name</span><span class="p">,</span> <span class="n">file_reference</span><span class="p">,</span>
+            <span class="n">shell_item_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_origin</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_ParseShellItemPathSegment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shell_item</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a shell item path segment.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      shell_item: the shell item (instance of pyfwsi.item).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A string containing the shell item path segment.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path_segment</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shell_item</span><span class="p">,</span> <span class="n">pyfwsi</span><span class="o">.</span><span class="n">root_folder</span><span class="p">):</span>
+      <span class="n">description</span> <span class="o">=</span> <span class="n">shell_folder_ids</span><span class="o">.</span><span class="n">DESCRIPTIONS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+          <span class="n">shell_item</span><span class="o">.</span><span class="n">shell_folder_identifier</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">description</span><span class="p">:</span>
+        <span class="n">path_segment</span> <span class="o">=</span> <span class="n">description</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">path_segment</span> <span class="o">=</span> <span class="s1">u&#39;{{{0:s}}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">shell_item</span><span class="o">.</span><span class="n">shell_folder_identifier</span><span class="p">)</span>
+
+      <span class="n">path_segment</span> <span class="o">=</span> <span class="s1">u&#39;&lt;{0:s}&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path_segment</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shell_item</span><span class="p">,</span> <span class="n">pyfwsi</span><span class="o">.</span><span class="n">volume</span><span class="p">):</span>
+      <span class="k">if</span> <span class="n">shell_item</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+        <span class="n">path_segment</span> <span class="o">=</span> <span class="n">shell_item</span><span class="o">.</span><span class="n">name</span>
+      <span class="k">elif</span> <span class="n">shell_item</span><span class="o">.</span><span class="n">identifier</span><span class="p">:</span>
+        <span class="n">path_segment</span> <span class="o">=</span> <span class="s1">u&#39;{{{0:s}}}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">shell_item</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shell_item</span><span class="p">,</span> <span class="n">pyfwsi</span><span class="o">.</span><span class="n">file_entry</span><span class="p">):</span>
+      <span class="n">long_name</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+      <span class="k">for</span> <span class="n">extension_block</span> <span class="ow">in</span> <span class="n">shell_item</span><span class="o">.</span><span class="n">extension_blocks</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">extension_block</span><span class="p">,</span> <span class="n">pyfwsi</span><span class="o">.</span><span class="n">file_entry_extension</span><span class="p">):</span>
+          <span class="n">long_name</span> <span class="o">=</span> <span class="n">extension_block</span><span class="o">.</span><span class="n">long_name</span>
+
+      <span class="k">if</span> <span class="n">long_name</span><span class="p">:</span>
+        <span class="n">path_segment</span> <span class="o">=</span> <span class="n">long_name</span>
+      <span class="k">elif</span> <span class="n">shell_item</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+        <span class="n">path_segment</span> <span class="o">=</span> <span class="n">shell_item</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shell_item</span><span class="p">,</span> <span class="n">pyfwsi</span><span class="o">.</span><span class="n">network_location</span><span class="p">):</span>
+      <span class="k">if</span> <span class="n">shell_item</span><span class="o">.</span><span class="n">location</span><span class="p">:</span>
+        <span class="n">path_segment</span> <span class="o">=</span> <span class="n">shell_item</span><span class="o">.</span><span class="n">location</span>
+
+    <span class="k">if</span> <span class="n">path_segment</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">shell_item</span><span class="o">.</span><span class="n">class_type</span> <span class="o">==</span> <span class="mh">0x00</span><span class="p">:</span>
+      <span class="c1"># TODO: check for signature 0x23febbee</span>
+      <span class="k">pass</span>
+
+    <span class="k">if</span> <span class="n">path_segment</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">path_segment</span> <span class="o">=</span> <span class="s1">u&#39;&lt;UNKNOWN: 0x{0:02x}&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">shell_item</span><span class="o">.</span><span class="n">class_type</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">path_segment</span>
+
+<div class="viewcode-block" id="ShellItemsParser.CopyToPath"><a class="viewcode-back" href="../../../../plaso.parsers.shared.html#plaso.parsers.shared.shell_items.ShellItemsParser.CopyToPath">[docs]</a>  <span class="k">def</span> <span class="nf">CopyToPath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Copies the shell items to a path.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A Unicode string containing the converted shell item list path or None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">number_of_path_segments</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path_segments</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">number_of_path_segments</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">strings</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_path_segments</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="n">number_of_path_segments</span> <span class="o">-=</span> <span class="mi">1</span>
+    <span class="k">for</span> <span class="n">path_segment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path_segments</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+      <span class="c1"># Remove a trailing \ except for the last path segment.</span>
+      <span class="k">if</span> <span class="n">path_segment</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">number_of_path_segments</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">path_segment</span> <span class="o">=</span> <span class="n">path_segment</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+      <span class="k">if</span> <span class="p">((</span><span class="n">path_segment</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;&lt;&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">path_segment</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">u&#39;&gt;&#39;</span><span class="p">))</span> <span class="ow">or</span>
+          <span class="nb">len</span><span class="p">(</span><span class="n">strings</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">strings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39; {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path_segment</span><span class="p">))</span>
+      <span class="k">elif</span> <span class="n">path_segment</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">):</span>
+        <span class="n">strings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;{0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path_segment</span><span class="p">))</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">strings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">{0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path_segment</span><span class="p">))</span>
+      <span class="n">number_of_path_segments</span> <span class="o">-=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="s1">u&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">strings</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ShellItemsParser.GetUpperPathSegment"><a class="viewcode-back" href="../../../../plaso.parsers.shared.html#plaso.parsers.shared.shell_items.ShellItemsParser.GetUpperPathSegment">[docs]</a>  <span class="k">def</span> <span class="nf">GetUpperPathSegment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the upper shell item path segment.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A Unicode string containing the shell item path segment or &#39;N/A&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path_segments</span><span class="p">:</span>
+      <span class="k">return</span> <span class="s1">u&#39;N/A&#39;</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path_segments</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="ShellItemsParser.ParseByteStream"><a class="viewcode-back" href="../../../../plaso.parsers.shared.html#plaso.parsers.shared.shell_items.ShellItemsParser.ParseByteStream">[docs]</a>  <span class="k">def</span> <span class="nf">ParseByteStream</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">byte_stream</span><span class="p">,</span> <span class="n">parent_path_segments</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+      <span class="n">codepage</span><span class="o">=</span><span class="s1">u&#39;cp1252&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses the shell items from the byte stream.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: a parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      byte_stream: a string holding the shell items data.</span>
+<span class="sd">      parent_path_segments: optional list containing the parent shell item</span>
+<span class="sd">                            path segments.</span>
+<span class="sd">      codepage: optional byte stream codepage.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">parent_path_segments</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent_path_segments</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_path_segments</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">parent_path_segments</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_path_segments</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">shell_item_list</span> <span class="o">=</span> <span class="n">pyfwsi</span><span class="o">.</span><span class="n">item_list</span><span class="p">()</span>
+
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">AppendToParserChain</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">shell_item_list</span><span class="o">.</span><span class="n">copy_from_byte_stream</span><span class="p">(</span>
+          <span class="n">byte_stream</span><span class="p">,</span> <span class="n">ascii_codepage</span><span class="o">=</span><span class="n">codepage</span><span class="p">)</span>
+
+      <span class="k">for</span> <span class="n">shell_item</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">shell_item_list</span><span class="o">.</span><span class="n">items</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ParseShellItem</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">shell_item</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">PopFromParserChain</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

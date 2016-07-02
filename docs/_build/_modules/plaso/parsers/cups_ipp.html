@@ -1,0 +1,456 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.cups_ipp &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.cups_ipp</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;The CUPS IPP Control Files Parser.</span>
+
+<span class="sd">CUPS IPP version 1.0:</span>
+<span class="sd">* http://tools.ietf.org/html/rfc2565</span>
+<span class="sd">* http://tools.ietf.org/html/rfc2566</span>
+<span class="sd">* http://tools.ietf.org/html/rfc2567</span>
+<span class="sd">* http://tools.ietf.org/html/rfc2568</span>
+<span class="sd">* http://tools.ietf.org/html/rfc2569</span>
+<span class="sd">* http://tools.ietf.org/html/rfc2639</span>
+
+<span class="sd">CUPS IPP version 1.1:</span>
+<span class="sd">* http://tools.ietf.org/html/rfc2910</span>
+<span class="sd">* http://tools.ietf.org/html/rfc2911</span>
+<span class="sd">* http://tools.ietf.org/html/rfc3196</span>
+<span class="sd">* http://tools.ietf.org/html/rfc3510</span>
+
+<span class="sd">CUPS IPP version 2.0:</span>
+<span class="sd">* N/A</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">construct</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)&#39;</span>
+
+
+<span class="c1"># TODO: RFC Pendings types: resolution, dateTime, rangeOfInteger.</span>
+<span class="c1">#       &quot;dateTime&quot; is not used by Mac OS, instead it uses integer types.</span>
+<span class="c1"># TODO: Only tested against CUPS IPP Mac OS X.</span>
+
+
+<div class="viewcode-block" id="CupsIppEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.cups_ipp.CupsIppEvent">[docs]</a><span class="k">class</span> <span class="nc">CupsIppEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">TimestampEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for an cups ipp event.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;cups:ipp:event&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timestamp: the timestamp which is an integer containing the number</span>
+<span class="sd">                 of micro seconds since January 1, 1970, 00:00:00 UTC.</span>
+<span class="sd">      timestamp_description: The usage string for the timestamp value.</span>
+<span class="sd">      data_dict: Dictionary with all the pairs coming from IPP file.</span>
+<span class="sd">        user: String with the system user name.</span>
+<span class="sd">        owner: String with the real name of the user.</span>
+<span class="sd">        computer_name: String with the name of the computer.</span>
+<span class="sd">        printer_id: String with the identification name of the print.</span>
+<span class="sd">        uri: String with the URL of the CUPS service.</span>
+<span class="sd">        job_id: String with the identification id of the job.</span>
+<span class="sd">        job_name: String with the job name.</span>
+<span class="sd">        copies: Integer with the number of copies.</span>
+<span class="sd">        application: String with the application that prints the document.</span>
+<span class="sd">        doc_type: String with the type of document.</span>
+<span class="sd">        data_dict: Dictionary with all the parsed data coming from the file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">CupsIppEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">)</span>
+    <span class="c1"># TODO: Find a better solution than to have join for each attribute.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ListToString</span><span class="p">(</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;user&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">owner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ListToString</span><span class="p">(</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;owner&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">computer_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ListToString</span><span class="p">(</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="s1">u&#39;computer_name&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">printer_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ListToString</span><span class="p">(</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;printer_id&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">uri</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ListToString</span><span class="p">(</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;uri&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">job_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ListToString</span><span class="p">(</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;job_id&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">job_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ListToString</span><span class="p">(</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;job_name&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">copies</span> <span class="o">=</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;copies&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">application</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ListToString</span><span class="p">(</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;application&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">doc_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ListToString</span><span class="p">(</span><span class="n">data_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;doc_type&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">data_dict</span> <span class="o">=</span> <span class="n">data_dict</span>
+
+  <span class="k">def</span> <span class="nf">_ListToString</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a string from a list value using comma as a delimiter.</span>
+
+<span class="sd">    If any value inside the list contains comma, which is the delimiter,</span>
+<span class="sd">    the entire field is surrounded with double quotes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      values: A list or tuple containing the values.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A string containing all the values joined using comma as a delimiter</span>
+<span class="sd">      or None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">values</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+      <span class="k">return</span>
+
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
+      <span class="k">if</span> <span class="s1">u&#39;,&#39;</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+        <span class="n">values</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="s1">u&#39;&quot;{0:s}&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s1">u&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">values</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CupsIppParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.cups_ipp.CupsIppParser">[docs]</a><span class="k">class</span> <span class="nc">CupsIppParser</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">FileObjectParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parser for CUPS IPP files. &quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;cups_ipp&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for CUPS IPP files.&#39;</span>
+
+  <span class="c1"># INFO:</span>
+  <span class="c1"># For each file, we have only one document with three different timestamps:</span>
+  <span class="c1"># Created, process and finished.</span>
+  <span class="c1"># Format:</span>
+  <span class="c1"># [HEADER: MAGIC + KNOWN_TYPE][GROUP A]...[GROUP Z][GROUP_END: 0x03]</span>
+  <span class="c1"># GROUP: [GROUP ID][PAIR A]...[PAIR Z] where [PAIR: NAME + VALUE]</span>
+  <span class="c1">#   GROUP ID: [1byte ID]</span>
+  <span class="c1">#   PAIR: [TagID][\x00][Name][Value])</span>
+  <span class="c1">#     TagID: 1 byte integer with the type of &quot;Value&quot;.</span>
+  <span class="c1">#     Name: [Length][Text][\00]</span>
+  <span class="c1">#       Name can be empty when the name has more than one value.</span>
+  <span class="c1">#       Example: family name &quot;lopez mata&quot; with more than one surname.</span>
+  <span class="c1">#       Type_Text + [0x06, family, 0x00] + [0x05, lopez, 0x00] +</span>
+  <span class="c1">#       Type_Text + [0x00, 0x00] + [0x04, mata, 0x00]</span>
+  <span class="c1">#     Value: can be integer, boolean, or text provided by TagID.</span>
+  <span class="c1">#       If boolean, Value: [\x01][0x00(False)] or [\x01(True)]</span>
+  <span class="c1">#       If integer, Value: [\x04][Integer]</span>
+  <span class="c1">#       If text,    Value: [Length text][Text][\00]</span>
+
+  <span class="c1"># Magic number that identify the CUPS IPP supported version.</span>
+  <span class="n">IPP_MAJOR_VERSION</span> <span class="o">=</span> <span class="mi">2</span>
+  <span class="n">IPP_MINOR_VERSION</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="c1"># Supported Operation ID.</span>
+  <span class="n">IPP_OP_ID</span> <span class="o">=</span> <span class="mi">5</span>
+
+  <span class="c1"># CUPS IPP File header.</span>
+  <span class="n">CUPS_IPP_HEADER</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;cups_ipp_header_struct&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;major_version&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;minor_version&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;operation_id&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;request_id&#39;</span><span class="p">))</span>
+
+  <span class="c1"># Group ID that indicates the end of the IPP Control file.</span>
+  <span class="n">GROUP_END</span> <span class="o">=</span> <span class="mi">3</span>
+  <span class="c1"># Identification Groups.</span>
+  <span class="n">GROUP_LIST</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">]</span>
+
+  <span class="c1"># Type ID, per cups source file ipp-support.c.</span>
+  <span class="n">TYPE_GENERAL_INTEGER</span> <span class="o">=</span> <span class="mh">0x20</span>
+  <span class="n">TYPE_INTEGER</span> <span class="o">=</span> <span class="mh">0x21</span>
+  <span class="n">TYPE_BOOL</span> <span class="o">=</span> <span class="mh">0x22</span>
+  <span class="n">TYPE_ENUMERATION</span> <span class="o">=</span> <span class="mh">0x23</span>
+  <span class="n">TYPE_DATETIME</span> <span class="o">=</span> <span class="mh">0x31</span>
+
+  <span class="c1"># Type of values that can be extracted.</span>
+  <span class="n">INTEGER_8</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;integer&#39;</span><span class="p">)</span>
+  <span class="n">INTEGER_32</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;integer&#39;</span><span class="p">)</span>
+  <span class="n">TEXT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">PascalString</span><span class="p">(</span>
+      <span class="s1">u&#39;text&#39;</span><span class="p">,</span>
+      <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">,</span>
+      <span class="n">length_field</span><span class="o">=</span><span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;length&#39;</span><span class="p">))</span>
+  <span class="n">BOOLEAN</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;boolean_value&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+      <span class="n">INTEGER_8</span><span class="p">)</span>
+  <span class="n">INTEGER</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;integer_value&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+      <span class="n">INTEGER_32</span><span class="p">)</span>
+
+  <span class="c1"># This is an RFC 2579 datetime.</span>
+  <span class="n">DATETIME</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;datetime&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;year&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;month&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;day&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;hour&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;minutes&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;seconds&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;deciseconds&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;direction_from_utc&#39;</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;ascii&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;hours_from_utc&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;minutes_from_utc&#39;</span><span class="p">),</span>
+  <span class="p">)</span>
+
+  <span class="c1"># Name of the pair.</span>
+  <span class="n">PAIR_NAME</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;pair_name&#39;</span><span class="p">,</span>
+      <span class="n">TEXT</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+
+  <span class="c1"># Specific CUPS IPP to generic name.</span>
+  <span class="n">NAME_PAIR_TRANSLATION</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="s1">u&#39;printer-uri&#39;</span><span class="p">:</span> <span class="s1">u&#39;uri&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;job-uuid&#39;</span><span class="p">:</span> <span class="s1">u&#39;job_id&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;DestinationPrinterID&#39;</span><span class="p">:</span> <span class="s1">u&#39;printer_id&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;job-originating-user-name&#39;</span><span class="p">:</span> <span class="s1">u&#39;user&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;job-name&#39;</span><span class="p">:</span> <span class="s1">u&#39;job_name&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;document-format&#39;</span><span class="p">:</span> <span class="s1">u&#39;doc_type&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;job-originating-host-name&#39;</span><span class="p">:</span> <span class="s1">u&#39;computer_name&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;com.apple.print.JobInfo.PMApplicationName&#39;</span><span class="p">:</span> <span class="s1">u&#39;application&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;com.apple.print.JobInfo.PMJobOwner&#39;</span><span class="p">:</span> <span class="s1">u&#39;owner&#39;</span><span class="p">}</span>
+
+<div class="viewcode-block" id="CupsIppParser.ParseFileObject"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.cups_ipp.CupsIppParser.ParseFileObject">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a CUPS IPP file-like object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: A file-like object.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      UnableToParseFile: when the file cannot be parsed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CUPS_IPP_HEADER</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to parse CUPS IPP Header with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">header</span><span class="o">.</span><span class="n">major_version</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">IPP_MAJOR_VERSION</span> <span class="ow">or</span>
+        <span class="n">header</span><span class="o">.</span><span class="n">minor_version</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">IPP_MINOR_VERSION</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;[{0:s}] Unsupported version number.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">header</span><span class="o">.</span><span class="n">operation_id</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">IPP_OP_ID</span><span class="p">:</span>
+      <span class="c1"># Warn if the operation ID differs from the standard one. We should be</span>
+      <span class="c1"># able to parse the file nonetheless.</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+          <span class="s1">u&#39;[{0:s}] Unsupported operation identifier in file: {1:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">GetDisplayName</span><span class="p">()))</span>
+
+    <span class="c1"># Read the pairs extracting the name and the value.</span>
+    <span class="n">data_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ReadPair</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">value</span><span class="p">:</span>
+      <span class="c1"># Translate the known &quot;name&quot; CUPS IPP to a generic name value.</span>
+      <span class="n">pretty_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">NAME_PAIR_TRANSLATION</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+      <span class="n">data_dict</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">pretty_name</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+      <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ReadPair</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">)</span>
+
+    <span class="c1"># TODO: Refactor to use a lookup table to do event production.</span>
+    <span class="n">time_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">data_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+      <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;date-time-&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;time-&#39;</span><span class="p">):</span>
+        <span class="n">time_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">del</span> <span class="n">data_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="s1">u&#39;date-time-at-creation&#39;</span> <span class="ow">in</span> <span class="n">time_dict</span><span class="p">:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">CupsIppEvent</span><span class="p">(</span>
+          <span class="n">time_dict</span><span class="p">[</span><span class="s1">u&#39;date-time-at-creation&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+          <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">CREATION_TIME</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">u&#39;date-time-at-processing&#39;</span> <span class="ow">in</span> <span class="n">time_dict</span><span class="p">:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">CupsIppEvent</span><span class="p">(</span>
+          <span class="n">time_dict</span><span class="p">[</span><span class="s1">u&#39;date-time-at-processing&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+          <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">START_TIME</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">u&#39;date-time-at-completed&#39;</span> <span class="ow">in</span> <span class="n">time_dict</span><span class="p">:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">CupsIppEvent</span><span class="p">(</span>
+          <span class="n">time_dict</span><span class="p">[</span><span class="s1">u&#39;date-time-at-completed&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+          <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">END_TIME</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">u&#39;time-at-creation&#39;</span> <span class="ow">in</span> <span class="n">time_dict</span><span class="p">:</span>
+      <span class="n">time_value</span> <span class="o">=</span> <span class="n">time_dict</span><span class="p">[</span><span class="s1">u&#39;time-at-creation&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+      <span class="n">timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromPosixTime</span><span class="p">(</span><span class="n">time_value</span><span class="p">)</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">CupsIppEvent</span><span class="p">(</span>
+          <span class="n">timestamp</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">CREATION_TIME</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">u&#39;time-at-processing&#39;</span> <span class="ow">in</span> <span class="n">time_dict</span><span class="p">:</span>
+      <span class="n">time_value</span> <span class="o">=</span> <span class="n">time_dict</span><span class="p">[</span><span class="s1">u&#39;time-at-processing&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+      <span class="n">timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromPosixTime</span><span class="p">(</span><span class="n">time_value</span><span class="p">)</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">CupsIppEvent</span><span class="p">(</span>
+          <span class="n">timestamp</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">START_TIME</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">u&#39;time-at-completed&#39;</span> <span class="ow">in</span> <span class="n">time_dict</span><span class="p">:</span>
+      <span class="n">time_value</span> <span class="o">=</span> <span class="n">time_dict</span><span class="p">[</span><span class="s1">u&#39;time-at-completed&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+      <span class="n">timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromPosixTime</span><span class="p">(</span><span class="n">time_value</span><span class="p">)</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">CupsIppEvent</span><span class="p">(</span>
+          <span class="n">timestamp</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">END_TIME</span><span class="p">,</span> <span class="n">data_dict</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CupsIppParser.ReadPair"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.cups_ipp.CupsIppParser.ReadPair">[docs]</a>  <span class="k">def</span> <span class="nf">ReadPair</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads an attribute name and value pair from a CUPS IPP event.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: a file-like object that points to a file.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of name and value. If name and value cannot be read both are</span>
+<span class="sd">      set to None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Pair = Type ID + Name + Value.</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="c1"># Can be:</span>
+      <span class="c1">#   Group ID + IDtag = Group ID (1byte) + Tag ID (1byte) + &#39;0x00&#39;.</span>
+      <span class="c1">#   IDtag = Tag ID (1byte) + &#39;0x00&#39;.</span>
+      <span class="n">type_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">INTEGER_8</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">type_id</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">GROUP_END</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+      <span class="k">elif</span> <span class="n">type_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">GROUP_LIST</span><span class="p">:</span>
+        <span class="c1"># If it is a group ID we must read the next byte that contains</span>
+        <span class="c1"># the first TagID.</span>
+        <span class="n">type_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">INTEGER_8</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+
+      <span class="c1"># 0x00 separator character.</span>
+      <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">INTEGER_8</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">):</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;[{0:s}] Unsupported identifier in file: {1:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">GetDisplayName</span><span class="p">()))</span>
+      <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+    <span class="c1"># Name = Length name + name + 0x00</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PAIR_NAME</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span><span class="o">.</span><span class="n">text</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">):</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;[{0:s}] Unsupported name in file: {1:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">GetDisplayName</span><span class="p">()))</span>
+      <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+    <span class="c1"># Value: can be integer, boolean or text select by Type ID.</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">type_id</span> <span class="ow">in</span> <span class="p">[</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">TYPE_GENERAL_INTEGER</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">TYPE_INTEGER</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">TYPE_ENUMERATION</span><span class="p">]:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">INTEGER</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span><span class="o">.</span><span class="n">integer</span>
+
+      <span class="k">elif</span> <span class="n">type_id</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">TYPE_BOOL</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BOOLEAN</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span><span class="o">.</span><span class="n">integer</span><span class="p">)</span>
+
+      <span class="k">elif</span> <span class="n">type_id</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">TYPE_DATETIME</span><span class="p">:</span>
+        <span class="n">datetime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DATETIME</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromRFC2579Datetime</span><span class="p">(</span>
+            <span class="n">datetime</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">month</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">day</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">hour</span><span class="p">,</span>
+            <span class="n">datetime</span><span class="o">.</span><span class="n">minutes</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">seconds</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">deciseconds</span><span class="p">,</span>
+            <span class="n">datetime</span><span class="o">.</span><span class="n">direction_from_utc</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">hours_from_utc</span><span class="p">,</span>
+            <span class="n">datetime</span><span class="o">.</span><span class="n">minutes_from_utc</span><span class="p">)</span>
+
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TEXT</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="ne">UnicodeDecodeError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">):</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;[{0:s}] Unsupported value in file: {1:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">GetDisplayName</span><span class="p">()))</span>
+      <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+    <span class="k">return</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParser</span><span class="p">(</span><span class="n">CupsIppParser</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

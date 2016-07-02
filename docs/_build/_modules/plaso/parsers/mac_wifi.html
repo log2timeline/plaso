@@ -1,0 +1,327 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.mac_wifi &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.mac_wifi</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains the wifi.log (Mac OS X) parser.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">import</span> <span class="nn">pyparsing</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">text_parser</span>
+
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Joaquin Moreno Garijo (bastionado@gmail.com)&#39;</span>
+
+
+<div class="viewcode-block" id="MacWifiLogEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mac_wifi.MacWifiLogEvent">[docs]</a><span class="k">class</span> <span class="nc">MacWifiLogEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">TimestampEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for a Mac Wifi log line event.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;mac:wifilog:line&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">agent</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timestamp: the timestamp, contains the number of microseconds from</span>
+<span class="sd">                 January 1, 1970 00:00:00 UTC.</span>
+<span class="sd">      agent: TODO</span>
+<span class="sd">      function: TODO</span>
+<span class="sd">      text: The log message</span>
+<span class="sd">      action: A string containing known WiFI actions, e.g. connected to</span>
+<span class="sd">              an AP, configured, etc. If the action is not known,</span>
+<span class="sd">              the value is the message of the log (text variable).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">MacWifiLogEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">ADDED_TIME</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">agent</span> <span class="o">=</span> <span class="n">agent</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">function</span> <span class="o">=</span> <span class="n">function</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">text</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">action</span> <span class="o">=</span> <span class="n">action</span></div>
+
+
+<div class="viewcode-block" id="MacWifiLogParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mac_wifi.MacWifiLogParser">[docs]</a><span class="k">class</span> <span class="nc">MacWifiLogParser</span><span class="p">(</span><span class="n">text_parser</span><span class="o">.</span><span class="n">PyparsingSingleLineTextParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parse text based on wifi.log file.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;macwifi&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for Mac OS X wifi.log files.&#39;</span>
+
+  <span class="n">_ENCODING</span> <span class="o">=</span> <span class="s1">u&#39;utf-8&#39;</span>
+
+  <span class="c1"># Regular expressions for known actions.</span>
+  <span class="n">RE_CONNECTED</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">r&#39;Already\sassociated\sto\s(.*)\.\sBailing&#39;</span><span class="p">)</span>
+  <span class="n">RE_WIFI_PARAMETERS</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+      <span class="s1">r&#39;\[ssid=(.*?), bssid=(.*?), security=(.*?), rssi=&#39;</span><span class="p">)</span>
+
+  <span class="c1"># Define how a log line should look like.</span>
+  <span class="n">WIFI_LINE</span> <span class="o">=</span> <span class="p">(</span>
+      <span class="n">text_parser</span><span class="o">.</span><span class="n">PyparsingConstants</span><span class="o">.</span><span class="n">MONTH</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;day_of_week&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">text_parser</span><span class="o">.</span><span class="n">PyparsingConstants</span><span class="o">.</span><span class="n">MONTH</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;month&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">text_parser</span><span class="o">.</span><span class="n">PyparsingConstants</span><span class="o">.</span><span class="n">ONE_OR_TWO_DIGITS</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;day&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">text_parser</span><span class="o">.</span><span class="n">PyparsingConstants</span><span class="o">.</span><span class="n">TIME_MSEC</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;time&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">Literal</span><span class="p">(</span><span class="s1">u&#39;&lt;&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">CharsNotIn</span><span class="p">(</span><span class="s1">u&#39;&gt;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;agent&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">Literal</span><span class="p">(</span><span class="s1">u&#39;&gt;&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">CharsNotIn</span><span class="p">(</span><span class="s1">u&#39;:&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;function&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">Literal</span><span class="p">(</span><span class="s1">u&#39;:&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">SkipTo</span><span class="p">(</span><span class="n">pyparsing</span><span class="o">.</span><span class="n">lineEnd</span><span class="p">)</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;text&#39;</span><span class="p">))</span>
+
+  <span class="n">WIFI_HEADER</span> <span class="o">=</span> <span class="p">(</span>
+      <span class="n">text_parser</span><span class="o">.</span><span class="n">PyparsingConstants</span><span class="o">.</span><span class="n">MONTH</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;day_of_week&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">text_parser</span><span class="o">.</span><span class="n">PyparsingConstants</span><span class="o">.</span><span class="n">MONTH</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;month&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">text_parser</span><span class="o">.</span><span class="n">PyparsingConstants</span><span class="o">.</span><span class="n">ONE_OR_TWO_DIGITS</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;day&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">text_parser</span><span class="o">.</span><span class="n">PyparsingConstants</span><span class="o">.</span><span class="n">TIME_MSEC</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;time&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">Literal</span><span class="p">(</span><span class="s1">u&#39;***Starting Up***&#39;</span><span class="p">))</span>
+
+  <span class="c1"># Define the available log line structures.</span>
+  <span class="n">LINE_STRUCTURES</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="p">(</span><span class="s1">u&#39;logline&#39;</span><span class="p">,</span> <span class="n">WIFI_LINE</span><span class="p">),</span>
+      <span class="p">(</span><span class="s1">u&#39;header&#39;</span><span class="p">,</span> <span class="n">WIFI_HEADER</span><span class="p">)]</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a parser object.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">MacWifiLogParser</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_last_month</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_year_use</span> <span class="o">=</span> <span class="mi">0</span>
+
+  <span class="k">def</span> <span class="nf">_GetAction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">agent</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse the well know actions for easy reading.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      agent: The device that generate the entry.</span>
+<span class="sd">      function: The function or action called by the agent.</span>
+<span class="sd">      text: Mac Wifi log text.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      know_action: A formatted string representing the known (or common) action.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">agent</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;airportd&#39;</span><span class="p">):</span>
+      <span class="k">return</span> <span class="n">text</span>
+
+    <span class="c1"># TODO: replace &quot;x in y&quot; checks by startswith if possible.</span>
+    <span class="k">if</span> <span class="s1">u&#39;airportdProcessDLILEvent&#39;</span> <span class="ow">in</span> <span class="n">function</span><span class="p">:</span>
+      <span class="n">interface</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+      <span class="k">return</span> <span class="s1">u&#39;Interface {0:s} turn up.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">interface</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">u&#39;doAutoJoin&#39;</span> <span class="ow">in</span> <span class="n">function</span><span class="p">:</span>
+      <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">RE_CONNECTED</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+        <span class="n">ssid</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">ssid</span> <span class="o">=</span> <span class="s1">u&#39;Unknown&#39;</span>
+      <span class="k">return</span> <span class="s1">u&#39;Wifi connected to SSID {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ssid</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">u&#39;processSystemPSKAssoc&#39;</span> <span class="ow">in</span> <span class="n">function</span><span class="p">:</span>
+      <span class="n">wifi_parameters</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RE_WIFI_PARAMETERS</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">wifi_parameters</span><span class="p">:</span>
+        <span class="n">ssid</span> <span class="o">=</span> <span class="n">wifi_parameters</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">bssid</span> <span class="o">=</span> <span class="n">wifi_parameters</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">security</span> <span class="o">=</span> <span class="n">wifi_parameters</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ssid</span><span class="p">:</span>
+          <span class="n">ssid</span> <span class="o">=</span> <span class="s1">u&#39;Unknown&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">bssid</span><span class="p">:</span>
+          <span class="n">bssid</span> <span class="o">=</span> <span class="s1">u&#39;Unknown&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">security</span><span class="p">:</span>
+          <span class="n">security</span> <span class="o">=</span> <span class="s1">u&#39;Unknown&#39;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="s1">u&#39;New wifi configured. BSSID: {0:s}, SSID: {1:s}, &#39;</span>
+            <span class="s1">u&#39;Security: {2:s}.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">bssid</span><span class="p">,</span> <span class="n">ssid</span><span class="p">,</span> <span class="n">security</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">text</span>
+
+  <span class="k">def</span> <span class="nf">_ConvertToTimestamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts date and time values into a timestamp.</span>
+
+<span class="sd">    This is a timestamp_string as returned by using</span>
+<span class="sd">    text_parser.PyparsingConstants structures:</span>
+<span class="sd">    08, Nov, [20, 36, 37], 222]</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      day: an integer representing the day.</span>
+<span class="sd">      month: an integer representing the month.</span>
+<span class="sd">      year: an integer representing the year.</span>
+<span class="sd">      time: a list containing integers with the number of</span>
+<span class="sd">            hours, minutes and seconds.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      TimestampError: if the timestamp cannot be created from the date and</span>
+<span class="sd">                      time values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">time_values</span><span class="p">,</span> <span class="n">milliseconds</span> <span class="o">=</span> <span class="n">time</span>
+    <span class="n">hours</span><span class="p">,</span> <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span> <span class="o">=</span> <span class="n">time_values</span>
+    <span class="n">microseconds</span> <span class="o">=</span> <span class="n">milliseconds</span> <span class="o">*</span> <span class="mi">1000</span>
+    <span class="k">return</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromTimeParts</span><span class="p">(</span>
+        <span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">hours</span><span class="p">,</span> <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span><span class="p">,</span> <span class="n">microseconds</span><span class="o">=</span><span class="n">microseconds</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_ParseLogLine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">structure</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse a single log line and produce an event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      structure: A pyparsing.ParseResults object from a line in the</span>
+<span class="sd">                 log file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_year_use</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_year_use</span> <span class="o">=</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">GetEstimatedYear</span><span class="p">()</span>
+
+    <span class="c1"># Gap detected between years.</span>
+    <span class="n">month</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">MONTH_DICT</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">month</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_month</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_last_month</span> <span class="o">=</span> <span class="n">month</span>
+
+    <span class="k">if</span> <span class="n">month</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_month</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_year_use</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">timestamp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ConvertToTimestamp</span><span class="p">(</span>
+          <span class="n">structure</span><span class="o">.</span><span class="n">day</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_year_use</span><span class="p">,</span> <span class="n">structure</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">TimestampError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;unable to determine timestamp with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">exception</span><span class="p">))</span>
+      <span class="k">return</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_last_month</span> <span class="o">=</span> <span class="n">month</span>
+
+    <span class="n">text</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">text</span>
+
+    <span class="c1"># Due to the use of CharsNotIn pyparsing structure contains whitespaces</span>
+    <span class="c1"># that need to be removed.</span>
+    <span class="n">function</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">action</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetAction</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">agent</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">MacWifiLogEvent</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">structure</span><span class="o">.</span><span class="n">agent</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MacWifiLogParser.ParseRecord"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mac_wifi.MacWifiLogParser.ParseRecord">[docs]</a>  <span class="k">def</span> <span class="nf">ParseRecord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">structure</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a log record structure and produces events.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      key: An identification string indicating the name of the parsed</span>
+<span class="sd">           structure.</span>
+<span class="sd">      structure: A pyparsing.ParseResults object from a line in the</span>
+<span class="sd">                 log file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">u&#39;logline&#39;</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_ParseLogLine</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">structure</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">key</span> <span class="o">!=</span> <span class="s1">u&#39;header&#39;</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to parse record, unknown structure: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="MacWifiLogParser.VerifyStructure"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mac_wifi.MacWifiLogParser.VerifyStructure">[docs]</a>  <span class="k">def</span> <span class="nf">VerifyStructure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Verify that this file is a Mac Wifi log file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      line: A single line from the text file.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      True if this is the correct parser, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">WIFI_HEADER</span><span class="o">.</span><span class="n">parseString</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">pyparsing</span><span class="o">.</span><span class="n">ParseException</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;Not a Mac Wifi log file&#39;</span><span class="p">)</span>
+      <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParser</span><span class="p">(</span><span class="n">MacWifiLogParser</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.engine.knowledge_base &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.engine.knowledge_base</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;The artifact knowledge base object.</span>
+
+<span class="sd">The knowledge base is filled by user provided input and the pre-processing</span>
+<span class="sd">phase. It is intended to provide successive phases, like the parsing and</span>
+<span class="sd">analysis phases, with essential information like e.g. the timezone and</span>
+<span class="sd">codepage of the source data.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">event</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">py2to3</span>
+
+<span class="kn">import</span> <span class="nn">pytz</span>  <span class="c1"># pylint: disable=wrong-import-order</span>
+
+
+<div class="viewcode-block" id="KnowledgeBase"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.knowledge_base.KnowledgeBase">[docs]</a><span class="k">class</span> <span class="nc">KnowledgeBase</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements the artifact knowledge base.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pre_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initialize the knowledge base object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        pre_obj: Optional preprocess object (instance of PreprocessObject.).</span>
+<span class="sd">                 The default is None, which indicates the KnowledgeBase should</span>
+<span class="sd">                 create a new PreprocessObject.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">KnowledgeBase</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+
+    <span class="c1"># TODO: the first versions of the knowledge base will wrap the pre-process</span>
+    <span class="c1"># object, but this should be replaced by an artifact style knowledge base</span>
+    <span class="c1"># or artifact cache.</span>
+    <span class="k">if</span> <span class="n">pre_obj</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_pre_obj</span> <span class="o">=</span> <span class="n">pre_obj</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_pre_obj</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">PreprocessObject</span><span class="p">()</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_default_codepage</span> <span class="o">=</span> <span class="s1">u&#39;cp1252&#39;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_default_timezone</span> <span class="o">=</span> <span class="n">pytz</span><span class="o">.</span><span class="n">timezone</span><span class="p">(</span><span class="s1">u&#39;UTC&#39;</span><span class="p">)</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">pre_obj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The pre-process object.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pre_obj</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">codepage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The codepage.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pre_obj</span><span class="p">,</span> <span class="s1">u&#39;codepage&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_codepage</span><span class="p">)</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">hostname</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The hostname.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pre_obj</span><span class="p">,</span> <span class="s1">u&#39;hostname&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">platform</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The platform.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pre_obj</span><span class="p">,</span> <span class="s1">u&#39;guessed_os&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span>
+
+  <span class="nd">@platform.setter</span>
+  <span class="k">def</span> <span class="nf">platform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The platform.&quot;&quot;&quot;</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pre_obj</span><span class="p">,</span> <span class="s1">u&#39;guessed_os&#39;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">timezone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The timezone object.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pre_obj</span><span class="p">,</span> <span class="s1">u&#39;zone&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_timezone</span><span class="p">)</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">users</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The list of users.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pre_obj</span><span class="p">,</span> <span class="s1">u&#39;users&#39;</span><span class="p">,</span> <span class="p">[])</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">year</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The year.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pre_obj</span><span class="p">,</span> <span class="s1">u&#39;year&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+<div class="viewcode-block" id="KnowledgeBase.GetUsernameByIdentifier"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.knowledge_base.KnowledgeBase.GetUsernameByIdentifier">[docs]</a>  <span class="k">def</span> <span class="nf">GetUsernameByIdentifier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the username based on an identifier.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      identifier: the identifier, either a UID or SID.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The username or - if not available.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">identifier</span><span class="p">:</span>
+      <span class="k">return</span> <span class="s1">u&#39;-&#39;</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pre_obj</span><span class="o">.</span><span class="n">GetUsernameById</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="KnowledgeBase.GetValue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.knowledge_base.KnowledgeBase.GetValue">[docs]</a>  <span class="k">def</span> <span class="nf">GetValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">default_value</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves a value by identifier.</span>
+
+<span class="sd">    If the identifier is a string it is case insensitive.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      identifier: the value identifier.</span>
+<span class="sd">      default_value: optional default value.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The value or None if not available.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">STRING_TYPES</span><span class="p">):</span>
+      <span class="n">identifier</span> <span class="o">=</span> <span class="n">identifier</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pre_obj</span><span class="p">,</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">default_value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="KnowledgeBase.SetDefaultCodepage"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.knowledge_base.KnowledgeBase.SetDefaultCodepage">[docs]</a>  <span class="k">def</span> <span class="nf">SetDefaultCodepage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">codepage</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the default codepage.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      codepage: the default codepage.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: check if value is sane.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_default_codepage</span> <span class="o">=</span> <span class="n">codepage</span></div>
+
+<div class="viewcode-block" id="KnowledgeBase.SetDefaultTimezone"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.knowledge_base.KnowledgeBase.SetDefaultTimezone">[docs]</a>  <span class="k">def</span> <span class="nf">SetDefaultTimezone</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timezone</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the default timezone.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timezone: the default timezone.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: check if value is sane.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_default_timezone</span> <span class="o">=</span> <span class="n">timezone</span></div>
+
+<div class="viewcode-block" id="KnowledgeBase.SetValue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.knowledge_base.KnowledgeBase.SetValue">[docs]</a>  <span class="k">def</span> <span class="nf">SetValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets a value by identifier.</span>
+
+<span class="sd">    If the identifier is a string it is case insensitive.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      identifier: the value identifier.</span>
+<span class="sd">      value: the value.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">STRING_TYPES</span><span class="p">):</span>
+      <span class="n">identifier</span> <span class="o">=</span> <span class="n">identifier</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pre_obj</span><span class="p">,</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,304 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.mac_appfirewall &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.mac_appfirewall</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains a appfirewall.log (Mac OS X Firewall) parser.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">pyparsing</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">text_parser</span>
+
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)&#39;</span>
+
+
+<div class="viewcode-block" id="MacAppFirewallLogEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mac_appfirewall.MacAppFirewallLogEvent">[docs]</a><span class="k">class</span> <span class="nc">MacAppFirewallLogEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">TimestampEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for a Mac Wifi log line event.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;mac:asl:appfirewall:line&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">process_name</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timestamp: The timestamp which is an integer containing the number</span>
+<span class="sd">                 of micro seconds since January 1, 1970, 00:00:00 UTC.</span>
+<span class="sd">      structure: structure with the parse fields.</span>
+<span class="sd">          computer_name: string with the name of the computer.</span>
+<span class="sd">          agent: string with the agent that save the log.</span>
+<span class="sd">          status: string with the saved status action.</span>
+<span class="sd">          process_name: string name of the entity that tried do the action.</span>
+<span class="sd">      action: string with the action</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">MacAppFirewallLogEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">ADDED_TIME</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">action</span> <span class="o">=</span> <span class="n">action</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">agent</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">agent</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">computer_name</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">computer_name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">process_name</span> <span class="o">=</span> <span class="n">process_name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">status</span></div>
+
+
+<div class="viewcode-block" id="MacAppFirewallParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mac_appfirewall.MacAppFirewallParser">[docs]</a><span class="k">class</span> <span class="nc">MacAppFirewallParser</span><span class="p">(</span><span class="n">text_parser</span><span class="o">.</span><span class="n">PyparsingSingleLineTextParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parse text based on appfirewall.log file.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;mac_appfirewall_log&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for appfirewall.log files.&#39;</span>
+
+  <span class="n">ENCODING</span> <span class="o">=</span> <span class="s1">u&#39;utf-8&#39;</span>
+
+  <span class="c1"># Regular expressions for known actions.</span>
+
+  <span class="c1"># Define how a log line should look like.</span>
+  <span class="c1"># Example: &#39;Nov  2 04:07:35 DarkTemplar-2.local socketfilterfw[112] &#39;</span>
+  <span class="c1">#          &#39;&lt;Info&gt;: Dropbox: Allow (in:0 out:2)&#39;</span>
+  <span class="c1"># INFO: process_name is going to have a white space at the beginning.</span>
+  <span class="n">FIREWALL_LINE</span> <span class="o">=</span> <span class="p">(</span>
+      <span class="n">text_parser</span><span class="o">.</span><span class="n">PyparsingConstants</span><span class="o">.</span><span class="n">MONTH</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;month&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">text_parser</span><span class="o">.</span><span class="n">PyparsingConstants</span><span class="o">.</span><span class="n">ONE_OR_TWO_DIGITS</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;day&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">text_parser</span><span class="o">.</span><span class="n">PyparsingConstants</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;time&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">Word</span><span class="p">(</span><span class="n">pyparsing</span><span class="o">.</span><span class="n">printables</span><span class="p">)</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;computer_name&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">Word</span><span class="p">(</span><span class="n">pyparsing</span><span class="o">.</span><span class="n">printables</span><span class="p">)</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;agent&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">Literal</span><span class="p">(</span><span class="s1">u&#39;&lt;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">suppress</span><span class="p">()</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">CharsNotIn</span><span class="p">(</span><span class="s1">u&#39;&gt;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;status&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">Literal</span><span class="p">(</span><span class="s1">u&#39;&gt;:&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">suppress</span><span class="p">()</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">CharsNotIn</span><span class="p">(</span><span class="s1">u&#39;:&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;process_name&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">Literal</span><span class="p">(</span><span class="s1">u&#39;:&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">SkipTo</span><span class="p">(</span><span class="n">pyparsing</span><span class="o">.</span><span class="n">lineEnd</span><span class="p">)</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;action&#39;</span><span class="p">))</span>
+
+  <span class="c1"># Repeated line.</span>
+  <span class="c1"># Example: Nov 29 22:18:29 --- last message repeated 1 time ---</span>
+  <span class="n">REPEATED_LINE</span> <span class="o">=</span> <span class="p">(</span>
+      <span class="n">text_parser</span><span class="o">.</span><span class="n">PyparsingConstants</span><span class="o">.</span><span class="n">MONTH</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;month&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">text_parser</span><span class="o">.</span><span class="n">PyparsingConstants</span><span class="o">.</span><span class="n">ONE_OR_TWO_DIGITS</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;day&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">text_parser</span><span class="o">.</span><span class="n">PyparsingConstants</span><span class="o">.</span><span class="n">TIME</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;time&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">Literal</span><span class="p">(</span><span class="s1">u&#39;---&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">suppress</span><span class="p">()</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">CharsNotIn</span><span class="p">(</span><span class="s1">u&#39;---&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;process_name&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">Literal</span><span class="p">(</span><span class="s1">u&#39;---&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">suppress</span><span class="p">())</span>
+
+  <span class="c1"># Define the available log line structures.</span>
+  <span class="n">LINE_STRUCTURES</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="p">(</span><span class="s1">u&#39;logline&#39;</span><span class="p">,</span> <span class="n">FIREWALL_LINE</span><span class="p">),</span>
+      <span class="p">(</span><span class="s1">u&#39;repeated&#39;</span><span class="p">,</span> <span class="n">REPEATED_LINE</span><span class="p">)]</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a parser object.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">MacAppFirewallParser</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_last_month</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_previous_structure</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_year_use</span> <span class="o">=</span> <span class="mi">0</span>
+
+  <span class="k">def</span> <span class="nf">_ConvertToTimestamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span> <span class="n">time</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts date and time values into a timestamp.</span>
+
+<span class="sd">    This is a timestamp_string as returned by using</span>
+<span class="sd">    text_parser.PyparsingConstants structures:</span>
+<span class="sd">    08, Nov, [20, 36, 37]</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      day: an integer representing the day.</span>
+<span class="sd">      month: an integer representing the month.</span>
+<span class="sd">      year: an integer representing the year.</span>
+<span class="sd">      time: a list containing integers with the number of</span>
+<span class="sd">            hours, minutes and seconds.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">hour</span><span class="p">,</span> <span class="n">minute</span><span class="p">,</span> <span class="n">second</span> <span class="o">=</span> <span class="n">time</span>
+    <span class="k">return</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromTimeParts</span><span class="p">(</span>
+        <span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">hour</span><span class="p">,</span> <span class="n">minute</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_ParseLogLine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse a single log line and produce an event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      structure: log line of structure.</span>
+<span class="sd">      key: type of line log (normal or repeated).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_year_use</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_year_use</span> <span class="o">=</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">GetEstimatedYear</span><span class="p">()</span>
+
+    <span class="c1"># Gap detected between years.</span>
+    <span class="n">month</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">MONTH_DICT</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">month</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_month</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_last_month</span> <span class="o">=</span> <span class="n">month</span>
+
+    <span class="k">if</span> <span class="n">month</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_last_month</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_year_use</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">timestamp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ConvertToTimestamp</span><span class="p">(</span>
+          <span class="n">structure</span><span class="o">.</span><span class="n">day</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_year_use</span><span class="p">,</span> <span class="n">structure</span><span class="o">.</span><span class="n">time</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">TimestampError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;unable to determine timestamp with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">exception</span><span class="p">))</span>
+      <span class="k">return</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_last_month</span> <span class="o">=</span> <span class="n">month</span>
+
+    <span class="c1"># If the actual entry is a repeated entry, we take the basic information</span>
+    <span class="c1"># from the previous entry, but using the timestmap from the actual entry.</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">u&#39;logline&#39;</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_previous_structure</span> <span class="o">=</span> <span class="n">structure</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">structure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_previous_structure</span>
+
+    <span class="c1"># Pyparsing reads in RAW, but the text is in UTF8.</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">action</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">action</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;Decode UTF8 failed, the message string may be cut short.&#39;</span><span class="p">)</span>
+      <span class="n">action</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">action</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">,</span> <span class="s1">u&#39;ignore&#39;</span><span class="p">)</span>
+    <span class="c1"># Due to the use of CharsNotIn pyparsing structure contains whitespaces</span>
+    <span class="c1"># that need to be removed.</span>
+    <span class="n">process_name</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">process_name</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">MacAppFirewallLogEvent</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">process_name</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MacAppFirewallParser.ParseRecord"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mac_appfirewall.MacAppFirewallParser.ParseRecord">[docs]</a>  <span class="k">def</span> <span class="nf">ParseRecord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">structure</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a log record structure and produces events.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      key: An identification string indicating the name of the parsed</span>
+<span class="sd">           structure.</span>
+<span class="sd">      structure: A pyparsing.ParseResults object from a line in the</span>
+<span class="sd">                 log file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">u&#39;logline&#39;</span><span class="p">,</span> <span class="s1">u&#39;repeated&#39;</span><span class="p">]:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_ParseLogLine</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">structure</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to parse record, unknown structure: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="MacAppFirewallParser.VerifyStructure"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mac_appfirewall.MacAppFirewallParser.VerifyStructure">[docs]</a>  <span class="k">def</span> <span class="nf">VerifyStructure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Verify that this file is a Mac AppFirewall log file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      line: A single line from the text file.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      True if this is the correct parser, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">FIREWALL_LINE</span><span class="o">.</span><span class="n">parseString</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">pyparsing</span><span class="o">.</span><span class="n">ParseException</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">((</span>
+          <span class="s1">u&#39;Unable to parse file as a Mac AppFirewall log file with error: &#39;</span>
+          <span class="s1">u&#39;{0:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">action</span> <span class="o">!=</span> <span class="s1">u&#39;creating /var/log/appfirewall.log&#39;</span> <span class="ow">or</span>
+        <span class="n">line</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="s1">u&#39;Error&#39;</span><span class="p">):</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+          <span class="s1">u&#39;Unsupported Mac AppFirewall action: {0:s} or status: {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">line</span><span class="o">.</span><span class="n">action</span><span class="p">,</span> <span class="n">line</span><span class="o">.</span><span class="n">status</span><span class="p">))</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">return</span> <span class="bp">True</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParser</span><span class="p">(</span><span class="n">MacAppFirewallParser</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

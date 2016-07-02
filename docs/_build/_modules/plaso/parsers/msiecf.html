@@ -1,0 +1,447 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.msiecf &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.msiecf</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Parser for Microsoft Internet Explorer (MSIE) Cache Files (CF).&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pymsiecf</span>
+
+<span class="kn">from</span> <span class="nn">plaso</span> <span class="kn">import</span> <span class="n">dependencies</span>
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">specification</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+
+
+<span class="n">dependencies</span><span class="o">.</span><span class="n">CheckModuleVersion</span><span class="p">(</span><span class="s1">u&#39;pymsiecf&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="MsiecfLeakEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.msiecf.MsiecfLeakEvent">[docs]</a><span class="k">class</span> <span class="nc">MsiecfLeakEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">TimestampEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for an MSIECF leak event.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;msiecf:leak&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">,</span> <span class="n">cache_directories</span><span class="p">,</span> <span class="n">msiecf_item</span><span class="p">,</span>
+      <span class="n">recovered</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timestamp: The timestamp value.</span>
+<span class="sd">      timestamp_description: The usage string describing the timestamp.</span>
+<span class="sd">      cache_directories: A list of cache directory names.</span>
+<span class="sd">      msiecf_item: The MSIECF item (pymsiecf.leak).</span>
+<span class="sd">      recovered: Boolean value to indicate the item was recovered, False</span>
+<span class="sd">                 by default.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">MsiecfLeakEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">recovered</span> <span class="o">=</span> <span class="n">recovered</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">offset</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">cached_filename</span> <span class="o">=</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">filename</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cached_file_size</span> <span class="o">=</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">cached_file_size</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">cache_directory_index</span> <span class="o">=</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">cache_directory_index</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">msiecf_item</span><span class="o">.</span><span class="n">cache_directory_index</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span>
+        <span class="n">msiecf_item</span><span class="o">.</span><span class="n">cache_directory_index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">cache_directories</span><span class="p">)):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">cache_directory_name</span> <span class="o">=</span> <span class="p">(</span>
+          <span class="n">cache_directories</span><span class="p">[</span><span class="n">msiecf_item</span><span class="o">.</span><span class="n">cache_directory_index</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="MsiecfRedirectedEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.msiecf.MsiecfRedirectedEvent">[docs]</a><span class="k">class</span> <span class="nc">MsiecfRedirectedEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">TimestampEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for an MSIECF redirected event.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;msiecf:redirected&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">msiecf_item</span><span class="p">,</span> <span class="n">recovered</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      msiecf_item: The MSIECF item (pymsiecf.leak).</span>
+<span class="sd">      recovered: Boolean value to indicate the item was recovered, False</span>
+<span class="sd">                 by default.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">MsiecfRedirectedEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">NONE_TIMESTAMP</span><span class="p">,</span>
+        <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">NOT_A_TIME</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">recovered</span> <span class="o">=</span> <span class="n">recovered</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">location</span></div>
+
+
+<div class="viewcode-block" id="MsiecfUrlEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.msiecf.MsiecfUrlEvent">[docs]</a><span class="k">class</span> <span class="nc">MsiecfUrlEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">TimestampEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for an MSIECF URL event.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    cache_directory_index: an integer containing the cache directory index.</span>
+<span class="sd">    cache_directory_name: a string containing the cache directory name.</span>
+<span class="sd">    cached_filename: a string containing the cached filename.</span>
+<span class="sd">    cached_file_size: an integer containing the cached file size.</span>
+<span class="sd">    http_headers: a string containing the HTTP headers.</span>
+<span class="sd">    number_of_hits: an integer containing the number of hits.</span>
+<span class="sd">    offset: an integer containing the MSIECF record offset.</span>
+<span class="sd">    recovered: a boolean value to indicate the item was recovered.</span>
+<span class="sd">    url: a string containing the location URL.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;msiecf:url&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">,</span> <span class="n">cache_directories</span><span class="p">,</span> <span class="n">msiecf_item</span><span class="p">,</span>
+      <span class="n">http_headers</span><span class="o">=</span><span class="s1">u&#39;&#39;</span><span class="p">,</span> <span class="n">recovered</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timestamp: the timestamp which is an integer containing the number</span>
+<span class="sd">                 of micro seconds since January 1, 1970, 00:00:00 UTC.</span>
+<span class="sd">      timestamp_description: the usage string for the timestamp value.</span>
+<span class="sd">      cache_directories: a list of cache directory names.</span>
+<span class="sd">      msiecf_item: the MSIECF item (pymsiecf.url).</span>
+<span class="sd">      http_headers: a string containing the HTTP headers.</span>
+<span class="sd">      recovered: a boolean value to indicate the item was recovered.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">MsiecfUrlEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">cache_directory_index</span> <span class="o">=</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">cache_directory_index</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cached_filename</span> <span class="o">=</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">filename</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">cached_file_size</span> <span class="o">=</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">cached_file_size</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">http_headers</span> <span class="o">=</span> <span class="n">http_headers</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">number_of_hits</span> <span class="o">=</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">number_of_hits</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">offset</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">recovered</span> <span class="o">=</span> <span class="n">recovered</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">location</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">msiecf_item</span><span class="o">.</span><span class="n">cache_directory_index</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">and</span>
+        <span class="n">msiecf_item</span><span class="o">.</span><span class="n">cache_directory_index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">cache_directories</span><span class="p">)):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">cache_directory_name</span> <span class="o">=</span> <span class="p">(</span>
+          <span class="n">cache_directories</span><span class="p">[</span><span class="n">msiecf_item</span><span class="o">.</span><span class="n">cache_directory_index</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="MsiecfParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.msiecf.MsiecfParser">[docs]</a><span class="k">class</span> <span class="nc">MsiecfParser</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">FileObjectParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parses MSIE Cache Files (MSIECF).&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;msiecf&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for MSIE Cache Files (MSIECF) also known as index.dat.&#39;</span>
+
+  <span class="k">def</span> <span class="nf">_ParseLeak</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">cache_directories</span><span class="p">,</span> <span class="n">msiecf_item</span><span class="p">,</span> <span class="n">recovered</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extract data from a MSIE Cache Files (MSIECF) leak item.</span>
+
+<span class="sd">       Every item is stored as an event object, one for each timestamp.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      cache_directories: A list of cache directory names.</span>
+<span class="sd">      msiecf_item: An item (pymsiecf.leak).</span>
+<span class="sd">      recovered: Boolean value to indicate the item was recovered, False</span>
+<span class="sd">                 by default.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: add support for possible last cache synchronization date and time.</span>
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">NONE_TIMESTAMP</span>
+    <span class="n">timestamp_description</span> <span class="o">=</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">NOT_A_TIME</span>
+
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">MsiecfLeakEvent</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">,</span> <span class="n">cache_directories</span><span class="p">,</span> <span class="n">msiecf_item</span><span class="p">,</span>
+        <span class="n">recovered</span><span class="o">=</span><span class="n">recovered</span><span class="p">)</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_ParseRedirected</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">msiecf_item</span><span class="p">,</span> <span class="n">recovered</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extract data from a MSIE Cache Files (MSIECF) redirected item.</span>
+
+<span class="sd">       Every item is stored as an event object, one for each timestamp.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      msiecf_item: An item (pymsiecf.redirected).</span>
+<span class="sd">      recovered: Boolean value to indicate the item was recovered, False</span>
+<span class="sd">                 by default.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">MsiecfRedirectedEvent</span><span class="p">(</span><span class="n">msiecf_item</span><span class="p">,</span> <span class="n">recovered</span><span class="o">=</span><span class="n">recovered</span><span class="p">)</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_ParseUrl</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">format_version</span><span class="p">,</span> <span class="n">cache_directories</span><span class="p">,</span> <span class="n">msiecf_item</span><span class="p">,</span>
+      <span class="n">recovered</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extract data from a MSIE Cache Files (MSIECF) URL item.</span>
+
+<span class="sd">       Every item is stored as an event object, one for each timestamp.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      format_version: The MSIECF format version.</span>
+<span class="sd">      cache_directories: A list of cache directory names.</span>
+<span class="sd">      msiecf_item: An item (pymsiecf.url).</span>
+<span class="sd">      recovered: Boolean value to indicate the item was recovered, False</span>
+<span class="sd">                 by default.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># The secondary timestamp can be stored in either UTC or local time</span>
+    <span class="c1"># this is dependent on what the index.dat file is used for.</span>
+    <span class="c1"># Either the file path or location string can be used to distinguish</span>
+    <span class="c1"># between the different type of files.</span>
+    <span class="n">primary_timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromFiletime</span><span class="p">(</span>
+        <span class="n">msiecf_item</span><span class="o">.</span><span class="n">get_primary_time_as_integer</span><span class="p">())</span>
+    <span class="n">primary_timestamp_description</span> <span class="o">=</span> <span class="s1">u&#39;Primary Time&#39;</span>
+
+    <span class="c1"># Need to convert the FILETIME to the internal timestamp here to</span>
+    <span class="c1"># do the from localtime conversion.</span>
+    <span class="n">secondary_timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromFiletime</span><span class="p">(</span>
+        <span class="n">msiecf_item</span><span class="o">.</span><span class="n">get_secondary_time_as_integer</span><span class="p">())</span>
+    <span class="n">secondary_timestamp_description</span> <span class="o">=</span> <span class="s1">u&#39;Secondary Time&#39;</span>
+
+    <span class="k">if</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">type</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">u&#39;cache&#39;</span><span class="p">:</span>
+        <span class="n">primary_timestamp_description</span> <span class="o">=</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">ACCESS_TIME</span>
+        <span class="n">secondary_timestamp_description</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">MODIFICATION_TIME</span><span class="p">)</span>
+
+      <span class="k">elif</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">u&#39;cookie&#39;</span><span class="p">:</span>
+        <span class="n">primary_timestamp_description</span> <span class="o">=</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">ACCESS_TIME</span>
+        <span class="n">secondary_timestamp_description</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">MODIFICATION_TIME</span><span class="p">)</span>
+
+      <span class="k">elif</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">u&#39;history&#39;</span><span class="p">:</span>
+        <span class="n">primary_timestamp_description</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">LAST_VISITED_TIME</span><span class="p">)</span>
+        <span class="n">secondary_timestamp_description</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">LAST_VISITED_TIME</span><span class="p">)</span>
+
+      <span class="k">elif</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">u&#39;history-daily&#39;</span><span class="p">:</span>
+        <span class="n">primary_timestamp_description</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">LAST_VISITED_TIME</span><span class="p">)</span>
+        <span class="n">secondary_timestamp_description</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">LAST_VISITED_TIME</span><span class="p">)</span>
+        <span class="c1"># The secondary_timestamp is in localtime normalize it to be in UTC.</span>
+        <span class="n">secondary_timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">LocaltimeToUTC</span><span class="p">(</span>
+            <span class="n">secondary_timestamp</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">timezone</span><span class="p">)</span>
+
+      <span class="k">elif</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">u&#39;history-weekly&#39;</span><span class="p">:</span>
+        <span class="n">primary_timestamp_description</span> <span class="o">=</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">CREATION_TIME</span>
+        <span class="n">secondary_timestamp_description</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">LAST_VISITED_TIME</span><span class="p">)</span>
+        <span class="c1"># The secondary_timestamp is in localtime normalize it to be in UTC.</span>
+        <span class="n">secondary_timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">LocaltimeToUTC</span><span class="p">(</span>
+            <span class="n">secondary_timestamp</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">timezone</span><span class="p">)</span>
+
+    <span class="n">http_headers</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">type</span> <span class="ow">and</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">data</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">u&#39;cache&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">data</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span> <span class="o">==</span> <span class="n">b</span><span class="s1">&#39;HTTP&#39;</span><span class="p">:</span>
+          <span class="c1"># Make sure the HTTP headers are ASCII encoded.</span>
+          <span class="c1"># TODO: determine correct encoding currently indications that</span>
+          <span class="c1"># this could be the system narrow string codepage.</span>
+          <span class="k">try</span><span class="p">:</span>
+            <span class="n">http_headers</span> <span class="o">=</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">data</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;ascii&#39;</span><span class="p">)</span>
+          <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+            <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+                <span class="s1">u&#39;unable to decode HTTP headers of URL record at offset: &#39;</span>
+                <span class="s1">u&#39;0x{0:08x}. Characters that cannot be decoded will be &#39;</span>
+                <span class="s1">u&#39;replaced with &quot;?&quot; or &quot;</span><span class="se">\\</span><span class="s1">ufffd&quot;.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">msiecf_item</span><span class="o">.</span><span class="n">offset</span><span class="p">))</span>
+            <span class="n">http_headers</span> <span class="o">=</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">data</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span>
+                <span class="s1">u&#39;ascii&#39;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">u&#39;replace&#39;</span><span class="p">)</span>
+
+      <span class="c1"># TODO: parse data of other URL item type like history which requires</span>
+      <span class="c1"># OLE VT parsing.</span>
+
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">MsiecfUrlEvent</span><span class="p">(</span>
+        <span class="n">primary_timestamp</span><span class="p">,</span> <span class="n">primary_timestamp_description</span><span class="p">,</span> <span class="n">cache_directories</span><span class="p">,</span>
+        <span class="n">msiecf_item</span><span class="p">,</span> <span class="n">http_headers</span><span class="o">=</span><span class="n">http_headers</span><span class="p">,</span> <span class="n">recovered</span><span class="o">=</span><span class="n">recovered</span><span class="p">)</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">secondary_timestamp</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">MsiecfUrlEvent</span><span class="p">(</span>
+          <span class="n">secondary_timestamp</span><span class="p">,</span> <span class="n">secondary_timestamp_description</span><span class="p">,</span>
+          <span class="n">cache_directories</span><span class="p">,</span> <span class="n">msiecf_item</span><span class="p">,</span> <span class="n">http_headers</span><span class="o">=</span><span class="n">http_headers</span><span class="p">,</span>
+          <span class="n">recovered</span><span class="o">=</span><span class="n">recovered</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="n">expiration_timestamp</span> <span class="o">=</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">get_expiration_time_as_integer</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">expiration_timestamp</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="c1"># The expiration time in MSIECF version 4.7 is stored as a FILETIME value</span>
+      <span class="c1"># in version 5.2 it is stored as a FAT date time value.</span>
+      <span class="c1"># Since the as_integer function returns the raw integer value we need to</span>
+      <span class="c1"># apply the right conversion here.</span>
+      <span class="k">if</span> <span class="n">format_version</span> <span class="o">==</span> <span class="s1">u&#39;4.7&#39;</span><span class="p">:</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">MsiecfUrlEvent</span><span class="p">(</span>
+            <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromFiletime</span><span class="p">(</span><span class="n">expiration_timestamp</span><span class="p">),</span>
+            <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">EXPIRATION_TIME</span><span class="p">,</span> <span class="n">cache_directories</span><span class="p">,</span>
+            <span class="n">msiecf_item</span><span class="p">,</span> <span class="n">http_headers</span><span class="o">=</span><span class="n">http_headers</span><span class="p">,</span> <span class="n">recovered</span><span class="o">=</span><span class="n">recovered</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">MsiecfUrlEvent</span><span class="p">(</span>
+            <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromFatDateTime</span><span class="p">(</span><span class="n">expiration_timestamp</span><span class="p">),</span>
+            <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">EXPIRATION_TIME</span><span class="p">,</span> <span class="n">cache_directories</span><span class="p">,</span>
+            <span class="n">msiecf_item</span><span class="p">,</span> <span class="n">http_headers</span><span class="o">=</span><span class="n">http_headers</span><span class="p">,</span> <span class="n">recovered</span><span class="o">=</span><span class="n">recovered</span><span class="p">)</span>
+
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="n">last_checked_timestamp</span> <span class="o">=</span> <span class="n">msiecf_item</span><span class="o">.</span><span class="n">get_last_checked_time_as_integer</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">last_checked_timestamp</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">MsiecfUrlEvent</span><span class="p">(</span>
+          <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromFatDateTime</span><span class="p">(</span><span class="n">last_checked_timestamp</span><span class="p">),</span>
+          <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">LAST_CHECKED_TIME</span><span class="p">,</span> <span class="n">cache_directories</span><span class="p">,</span>
+          <span class="n">msiecf_item</span><span class="p">,</span> <span class="n">http_headers</span><span class="o">=</span><span class="n">http_headers</span><span class="p">,</span> <span class="n">recovered</span><span class="o">=</span><span class="n">recovered</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="MsiecfParser.GetFormatSpecification"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.msiecf.MsiecfParser.GetFormatSpecification">[docs]</a>  <span class="k">def</span> <span class="nf">GetFormatSpecification</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the format specification.&quot;&quot;&quot;</span>
+    <span class="n">format_specification</span> <span class="o">=</span> <span class="n">specification</span><span class="o">.</span><span class="n">FormatSpecification</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">NAME</span><span class="p">)</span>
+    <span class="n">format_specification</span><span class="o">.</span><span class="n">AddNewSignature</span><span class="p">(</span>
+        <span class="n">b</span><span class="s1">&#39;Client</span><span class="se">\x20</span><span class="s1">UrlCache</span><span class="se">\x20</span><span class="s1">MMF</span><span class="se">\x20</span><span class="s1">Ver</span><span class="se">\x20</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">format_specification</span></div>
+
+<div class="viewcode-block" id="MsiecfParser.ParseFileObject"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.msiecf.MsiecfParser.ParseFileObject">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a MSIE Cache File (MSIECF) file-like object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: A file-like object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">msiecf_file</span> <span class="o">=</span> <span class="n">pymsiecf</span><span class="o">.</span><span class="n">file</span><span class="p">()</span>
+    <span class="n">msiecf_file</span><span class="o">.</span><span class="n">set_ascii_codepage</span><span class="p">(</span><span class="n">parser_mediator</span><span class="o">.</span><span class="n">codepage</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">msiecf_file</span><span class="o">.</span><span class="n">open_file_object</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;unable to open file with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+      <span class="k">return</span>
+
+    <span class="n">format_version</span> <span class="o">=</span> <span class="n">msiecf_file</span><span class="o">.</span><span class="n">format_version</span>
+    <span class="n">cache_directories</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">cache_directory_name</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">msiecf_file</span><span class="o">.</span><span class="n">cache_directories</span><span class="p">):</span>
+      <span class="n">cache_directories</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cache_directory_name</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">item_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">msiecf_file</span><span class="o">.</span><span class="n">number_of_items</span><span class="p">):</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">msiecf_item</span> <span class="o">=</span> <span class="n">msiecf_file</span><span class="o">.</span><span class="n">get_item</span><span class="p">(</span><span class="n">item_index</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">msiecf_item</span><span class="p">,</span> <span class="n">pymsiecf</span><span class="o">.</span><span class="n">leak</span><span class="p">):</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_ParseLeak</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">cache_directories</span><span class="p">,</span> <span class="n">msiecf_item</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">msiecf_item</span><span class="p">,</span> <span class="n">pymsiecf</span><span class="o">.</span><span class="n">redirected</span><span class="p">):</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_ParseRedirected</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">msiecf_item</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">msiecf_item</span><span class="p">,</span> <span class="n">pymsiecf</span><span class="o">.</span><span class="n">url</span><span class="p">):</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_ParseUrl</span><span class="p">(</span>
+              <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">format_version</span><span class="p">,</span> <span class="n">cache_directories</span><span class="p">,</span> <span class="n">msiecf_item</span><span class="p">)</span>
+
+      <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+            <span class="s1">u&#39;Unable to parse item: {0:d} with error: {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">item_index</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">item_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">msiecf_file</span><span class="o">.</span><span class="n">number_of_recovered_items</span><span class="p">):</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">msiecf_item</span> <span class="o">=</span> <span class="n">msiecf_file</span><span class="o">.</span><span class="n">get_recovered_item</span><span class="p">(</span><span class="n">item_index</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">msiecf_item</span><span class="p">,</span> <span class="n">pymsiecf</span><span class="o">.</span><span class="n">leak</span><span class="p">):</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_ParseLeak</span><span class="p">(</span>
+              <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">cache_directories</span><span class="p">,</span> <span class="n">msiecf_item</span><span class="p">,</span> <span class="n">recovered</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">msiecf_item</span><span class="p">,</span> <span class="n">pymsiecf</span><span class="o">.</span><span class="n">redirected</span><span class="p">):</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_ParseRedirected</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">msiecf_item</span><span class="p">,</span> <span class="n">recovered</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">msiecf_item</span><span class="p">,</span> <span class="n">pymsiecf</span><span class="o">.</span><span class="n">url</span><span class="p">):</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_ParseUrl</span><span class="p">(</span>
+              <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">format_version</span><span class="p">,</span> <span class="n">cache_directories</span><span class="p">,</span> <span class="n">msiecf_item</span><span class="p">,</span>
+              <span class="n">recovered</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+      <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+            <span class="s1">u&#39;Unable to parse recovered item: {0:d} with error: {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">item_index</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+    <span class="n">msiecf_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParser</span><span class="p">(</span><span class="n">MsiecfParser</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

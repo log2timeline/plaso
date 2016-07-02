@@ -1,0 +1,190 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.storage.factory &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.storage.factory</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains the storage factory class.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">py2to3</span>
+
+
+<div class="viewcode-block" id="StorageFactory"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.factory.StorageFactory">[docs]</a><span class="k">class</span> <span class="nc">StorageFactory</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements the storage factory.&quot;&quot;&quot;</span>
+
+  <span class="n">_storage_classes</span> <span class="o">=</span> <span class="p">{}</span>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="StorageFactory.DeregisterStorage"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.factory.StorageFactory.DeregisterStorage">[docs]</a>  <span class="k">def</span> <span class="nf">DeregisterStorage</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">storage_class</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Deregisters a storage class.</span>
+
+<span class="sd">    The storage classes are identified based on their NAME attribute.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      storage_class: the class object of the storage.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      KeyError: if storage class is not set for the corresponding data type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">storage_class_name</span> <span class="o">=</span> <span class="n">storage_class</span><span class="o">.</span><span class="n">NAME</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">storage_class_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">_storage_classes</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+          <span class="s1">u&#39;Storage class not set for name: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">storage_class</span><span class="o">.</span><span class="n">NAME</span><span class="p">))</span>
+
+    <span class="k">del</span> <span class="n">cls</span><span class="o">.</span><span class="n">_storage_classes</span><span class="p">[</span><span class="n">storage_class_name</span><span class="p">]</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="StorageFactory.GetAllTypeIndicators"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.factory.StorageFactory.GetAllTypeIndicators">[docs]</a>  <span class="k">def</span> <span class="nf">GetAllTypeIndicators</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get all registered type indicators.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_storage_classes</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="StorageFactory.NewStorage"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.factory.StorageFactory.NewStorage">[docs]</a>  <span class="k">def</span> <span class="nf">NewStorage</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">type_indicator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a new storage instance for a specific type.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      type_indicator: the type indocator of the storage.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The corresponding storage (instance of StorageFile).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      KeyError: if the type indicator is not registered.</span>
+<span class="sd">      ValueError: if the type indicator is not a string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">type_indicator</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">STRING_TYPES</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Type indicator is not a string.&#39;</span><span class="p">)</span>
+
+    <span class="n">type_indicator</span> <span class="o">=</span> <span class="n">type_indicator</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">type_indicator</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">_storage_classes</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+          <span class="s1">u&#39;Storage implementation not registered for name: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">type_indicator</span><span class="p">))</span>
+
+    <span class="n">storage_class</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_storage_classes</span><span class="p">[</span><span class="n">type_indicator</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">storage_class</span><span class="p">()</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="StorageFactory.RegisterStorage"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.factory.StorageFactory.RegisterStorage">[docs]</a>  <span class="k">def</span> <span class="nf">RegisterStorage</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">storage_class</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Registers a storage class.</span>
+
+<span class="sd">    The storage classes are identified based on their NAME attribute.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      storage_class: the class object of the storage (instance of StorageFile).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      KeyError: if storage class is already set for the corresponding</span>
+<span class="sd">                name attribute.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">storage_name</span> <span class="o">=</span> <span class="n">storage_class</span><span class="o">.</span><span class="n">NAME</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">storage_name</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">_storage_classes</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">((</span>
+          <span class="s1">u&#39;Storage class already set for name: {0:s}.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">storage_class</span><span class="o">.</span><span class="n">NAME</span><span class="p">))</span>
+
+    <span class="n">cls</span><span class="o">.</span><span class="n">_storage_classes</span><span class="p">[</span><span class="n">storage_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">storage_class</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="StorageFactory.RegisterStorages"><a class="viewcode-back" href="../../../plaso.storage.html#plaso.storage.factory.StorageFactory.RegisterStorages">[docs]</a>  <span class="k">def</span> <span class="nf">RegisterStorages</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">storage_classes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Registers storage classes.</span>
+
+<span class="sd">    The storage classes are identified based on their NAME attribute.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      storage_classes: a list of class objects of the storages (instance of</span>
+<span class="sd">                       StorageFile).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      KeyError: if storage class is already set for the corresponding name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">storage_class</span> <span class="ow">in</span> <span class="n">storage_classes</span><span class="p">:</span>
+      <span class="n">cls</span><span class="o">.</span><span class="n">RegisterStorage</span><span class="p">(</span><span class="n">storage_class</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

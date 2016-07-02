@@ -1,0 +1,375 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.esedb_plugins.interface &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../../index.html" />
+    <link rel="up" title="plaso" href="../../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.esedb_plugins.interface</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains the interface for ESE database plugins.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">construct</span>
+<span class="kn">import</span> <span class="nn">pyesedb</span>  <span class="c1"># pylint: disable=wrong-import-order</span>
+
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">plugins</span>
+
+
+<div class="viewcode-block" id="EseDbPlugin"><a class="viewcode-back" href="../../../../plaso.parsers.esedb_plugins.html#plaso.parsers.esedb_plugins.interface.EseDbPlugin">[docs]</a><span class="k">class</span> <span class="nc">EseDbPlugin</span><span class="p">(</span><span class="n">plugins</span><span class="o">.</span><span class="n">BasePlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;The ESE database plugin interface.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;esedb&#39;</span>
+
+  <span class="n">BINARY_DATA_COLUMN_TYPES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+      <span class="n">pyesedb</span><span class="o">.</span><span class="n">column_types</span><span class="o">.</span><span class="n">BINARY_DATA</span><span class="p">,</span>
+      <span class="n">pyesedb</span><span class="o">.</span><span class="n">column_types</span><span class="o">.</span><span class="n">LARGE_BINARY_DATA</span><span class="p">])</span>
+
+  <span class="n">FLOATING_POINT_COLUMN_TYPES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+      <span class="n">pyesedb</span><span class="o">.</span><span class="n">column_types</span><span class="o">.</span><span class="n">FLOAT_32BIT</span><span class="p">,</span>
+      <span class="n">pyesedb</span><span class="o">.</span><span class="n">column_types</span><span class="o">.</span><span class="n">DOUBLE_64BIT</span><span class="p">])</span>
+
+  <span class="n">INTEGER_COLUMN_TYPES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+      <span class="n">pyesedb</span><span class="o">.</span><span class="n">column_types</span><span class="o">.</span><span class="n">CURRENCY</span><span class="p">,</span>
+      <span class="n">pyesedb</span><span class="o">.</span><span class="n">column_types</span><span class="o">.</span><span class="n">DATE_TIME</span><span class="p">,</span>
+      <span class="n">pyesedb</span><span class="o">.</span><span class="n">column_types</span><span class="o">.</span><span class="n">INTEGER_8BIT_UNSIGNED</span><span class="p">,</span>
+      <span class="n">pyesedb</span><span class="o">.</span><span class="n">column_types</span><span class="o">.</span><span class="n">INTEGER_16BIT_SIGNED</span><span class="p">,</span>
+      <span class="n">pyesedb</span><span class="o">.</span><span class="n">column_types</span><span class="o">.</span><span class="n">INTEGER_16BIT_UNSIGNED</span><span class="p">,</span>
+      <span class="n">pyesedb</span><span class="o">.</span><span class="n">column_types</span><span class="o">.</span><span class="n">INTEGER_32BIT_SIGNED</span><span class="p">,</span>
+      <span class="n">pyesedb</span><span class="o">.</span><span class="n">column_types</span><span class="o">.</span><span class="n">INTEGER_32BIT_UNSIGNED</span><span class="p">,</span>
+      <span class="n">pyesedb</span><span class="o">.</span><span class="n">column_types</span><span class="o">.</span><span class="n">INTEGER_64BIT_SIGNED</span><span class="p">])</span>
+
+  <span class="n">STRING_COLUMN_TYPES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+      <span class="n">pyesedb</span><span class="o">.</span><span class="n">column_types</span><span class="o">.</span><span class="n">TEXT</span><span class="p">,</span>
+      <span class="n">pyesedb</span><span class="o">.</span><span class="n">column_types</span><span class="o">.</span><span class="n">LARGE_TEXT</span><span class="p">])</span>
+
+  <span class="n">_UINT64_BIG_ENDIAN</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;value&#39;</span><span class="p">)</span>
+  <span class="n">_UINT64_LITTLE_ENDIAN</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;value&#39;</span><span class="p">)</span>
+
+  <span class="c1"># Dictionary containing a callback method per table name.</span>
+  <span class="c1"># E.g. &#39;SystemIndex_0A&#39;: &#39;ParseSystemIndex_0A&#39;</span>
+  <span class="n">REQUIRED_TABLES</span> <span class="o">=</span> <span class="p">{}</span>
+  <span class="n">OPTIONAL_TABLES</span> <span class="o">=</span> <span class="p">{}</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the ESE database plugin.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">EseDbPlugin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_required_tables</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">REQUIRED_TABLES</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_tables</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_tables</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">REQUIRED_TABLES</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_tables</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">OPTIONAL_TABLES</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_ConvertValueBinaryDataToStringAscii</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a binary data value into a string.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      value: The binary data value containing an ASCII string or None.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A string or None if value is None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;ascii&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_ConvertValueBinaryDataToStringBase16</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a binary data value into a base-16 (hexadecimal) string.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      value: The binary data value or None.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A string or None if value is None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">value</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">u&#39;hex&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_ConvertValueBinaryDataToUBInt64</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a binary data value into an integer.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      value: The binary data value containing an unsigned 64-bit big-endian</span>
+<span class="sd">             integer.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An integer or None if value is None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_UINT64_BIG_ENDIAN</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_ConvertValueBinaryDataToULInt64</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a binary data value into an integer.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      value: The binary data value containing an unsigned 64-bit little-endian</span>
+<span class="sd">             integer.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An integer or None if value is None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_UINT64_LITTLE_ENDIAN</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_GetRecordValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="n">value_entry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves a specific value from the record.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      record: The ESE record object (instance of pyesedb.record).</span>
+<span class="sd">      value_entry: The value entry.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An object containing the value.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      ValueError: if the value is not supported.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">column_type</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">get_column_type</span><span class="p">(</span><span class="n">value_entry</span><span class="p">)</span>
+    <span class="n">long_value</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">is_long_value</span><span class="p">(</span><span class="n">value_entry</span><span class="p">):</span>
+      <span class="n">long_value</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">get_value_data_as_long_value</span><span class="p">(</span><span class="n">value_entry</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">is_multi_value</span><span class="p">(</span><span class="n">value_entry</span><span class="p">):</span>
+      <span class="c1"># TODO: implement</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Multi value support not implemented yet.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">column_type</span> <span class="o">==</span> <span class="n">pyesedb</span><span class="o">.</span><span class="n">column_types</span><span class="o">.</span><span class="n">NULL</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="k">elif</span> <span class="n">column_type</span> <span class="o">==</span> <span class="n">pyesedb</span><span class="o">.</span><span class="n">column_types</span><span class="o">.</span><span class="n">BOOLEAN</span><span class="p">:</span>
+      <span class="c1"># TODO: implement</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Boolean value support not implemented yet.&#39;</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">column_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">INTEGER_COLUMN_TYPES</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">long_value</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Long integer value not supported.&#39;</span><span class="p">)</span>
+      <span class="k">return</span> <span class="n">record</span><span class="o">.</span><span class="n">get_value_data_as_integer</span><span class="p">(</span><span class="n">value_entry</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">column_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">FLOATING_POINT_COLUMN_TYPES</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">long_value</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Long floating point value not supported.&#39;</span><span class="p">)</span>
+      <span class="k">return</span> <span class="n">record</span><span class="o">.</span><span class="n">get_value_data_as_floating_point</span><span class="p">(</span><span class="n">value_entry</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">column_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">STRING_COLUMN_TYPES</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">long_value</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">long_value</span><span class="o">.</span><span class="n">get_data_as_string</span><span class="p">()</span>
+      <span class="k">return</span> <span class="n">record</span><span class="o">.</span><span class="n">get_value_data_as_string</span><span class="p">(</span><span class="n">value_entry</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">column_type</span> <span class="o">==</span> <span class="n">pyesedb</span><span class="o">.</span><span class="n">column_types</span><span class="o">.</span><span class="n">GUID</span><span class="p">:</span>
+      <span class="c1"># TODO: implement</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;GUID value support not implemented yet.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">long_value</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">long_value</span><span class="o">.</span><span class="n">get_data</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">record</span><span class="o">.</span><span class="n">get_value_data</span><span class="p">(</span><span class="n">value_entry</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_GetRecordValues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="n">value_mappings</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the values from the record.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      table_name: The name of the table.</span>
+<span class="sd">      record: The ESE record object (instance of pyesedb.record).</span>
+<span class="sd">      value_mappings: Optional dict of value mappings, which map the column</span>
+<span class="sd">                      name to a callback method.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An dict containing the values.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">record_values</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">value_entry</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">record</span><span class="o">.</span><span class="n">number_of_values</span><span class="p">):</span>
+      <span class="n">column_name</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">get_column_name</span><span class="p">(</span><span class="n">value_entry</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">column_name</span> <span class="ow">in</span> <span class="n">record_values</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s1">u&#39;[{0:s}] duplicate column: {1:s} in table: {2:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">column_name</span><span class="p">,</span> <span class="n">table_name</span><span class="p">))</span>
+        <span class="k">continue</span>
+
+      <span class="n">value_callback</span> <span class="o">=</span> <span class="bp">None</span>
+      <span class="k">if</span> <span class="n">value_mappings</span> <span class="ow">and</span> <span class="n">column_name</span> <span class="ow">in</span> <span class="n">value_mappings</span><span class="p">:</span>
+        <span class="n">value_callback_method</span> <span class="o">=</span> <span class="n">value_mappings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">column_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value_callback_method</span><span class="p">:</span>
+          <span class="n">value_callback</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value_callback_method</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+          <span class="k">if</span> <span class="n">value_callback</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">((</span>
+                <span class="s1">u&#39;[{0:s}] missing value callback method: {1:s} for column: &#39;</span>
+                <span class="s1">u&#39;{2:s} in table: {3:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">value_callback_method</span><span class="p">,</span> <span class="n">column_name</span><span class="p">,</span> <span class="n">table_name</span><span class="p">))</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetRecordValue</span><span class="p">(</span><span class="n">record</span><span class="p">,</span> <span class="n">value_entry</span><span class="p">)</span>
+      <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">exception</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">value_callback</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">value_callback</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+
+      <span class="n">record_values</span><span class="p">[</span><span class="n">column_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">return</span> <span class="n">record_values</span>
+
+  <span class="k">def</span> <span class="nf">_GetTableNames</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">database</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the table names in a database.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      database: The ESE database object (instance of pyesedb.file).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of the table names.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">table_names</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">esedb_table</span> <span class="ow">in</span> <span class="n">database</span><span class="o">.</span><span class="n">tables</span><span class="p">:</span>
+      <span class="n">table_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">esedb_table</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">table_names</span>
+
+<div class="viewcode-block" id="EseDbPlugin.GetEntries"><a class="viewcode-back" href="../../../../plaso.parsers.esedb_plugins.html#plaso.parsers.esedb_plugins.interface.EseDbPlugin.GetEntries">[docs]</a>  <span class="k">def</span> <span class="nf">GetEntries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">database</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts event objects from the database.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      database: Optional ESE database object (instance of pyesedb.file).</span>
+<span class="sd">      cache: Optional cache object (instance of EseDbCache).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      ValueError: If the database attribute is not valid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">database</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Invalid database.&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">table_name</span><span class="p">,</span> <span class="n">callback_method</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tables</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">callback_method</span><span class="p">:</span>
+        <span class="c1"># Table names without a callback method are allowed to improve</span>
+        <span class="c1"># the detection of a database based on its table names.</span>
+        <span class="k">continue</span>
+
+      <span class="n">callback</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">callback_method</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">callback</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s1">u&#39;[{0:s}] missing callback method: {1:s} for table: {2:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">callback_method</span><span class="p">,</span> <span class="n">table_name</span><span class="p">))</span>
+        <span class="k">continue</span>
+
+      <span class="n">esedb_table</span> <span class="o">=</span> <span class="n">database</span><span class="o">.</span><span class="n">get_table_by_name</span><span class="p">(</span><span class="n">table_name</span><span class="p">)</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">esedb_table</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">u&#39;[{0:s}] missing table: {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">table_name</span><span class="p">))</span>
+        <span class="k">continue</span>
+
+      <span class="c1"># The database is passed in case the database contains table names</span>
+      <span class="c1"># that are assigned dynamically and cannot be defined by</span>
+      <span class="c1"># the table name-callback mechanism.</span>
+      <span class="n">callback</span><span class="p">(</span>
+          <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span> <span class="n">table</span><span class="o">=</span><span class="n">esedb_table</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">,</span>
+          <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="EseDbPlugin.Process"><a class="viewcode-back" href="../../../../plaso.parsers.esedb_plugins.html#plaso.parsers.esedb_plugins.interface.EseDbPlugin.Process">[docs]</a>  <span class="k">def</span> <span class="nf">Process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">database</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines if this is the appropriate plugin for the database.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      database: Optional ESE database object (instance of pyesedb.file).</span>
+<span class="sd">      cache: Optional cache object (instance of EseDbCache).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      errors.WrongPlugin: If the database does not contain all the tables</span>
+<span class="sd">                          defined in the required_tables set.</span>
+<span class="sd">      ValueError: If the database attribute is not valid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">database</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Invalid database.&#39;</span><span class="p">)</span>
+
+    <span class="n">table_names</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_GetTableNames</span><span class="p">(</span><span class="n">database</span><span class="p">))</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_required_tables</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">table_names</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">WrongPlugin</span><span class="p">(</span>
+          <span class="s1">u&#39;[{0:s}] required tables not found.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">))</span>
+
+    <span class="c1"># This will raise if unhandled keyword arguments are passed.</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">EseDbPlugin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">GetEntries</span><span class="p">(</span>
+        <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">database</span><span class="o">=</span><span class="n">database</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="n">cache</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

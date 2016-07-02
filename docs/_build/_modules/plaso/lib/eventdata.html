@@ -1,0 +1,146 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.lib.eventdata &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.lib.eventdata</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;A place to store information about events, such as format strings, etc.&quot;&quot;&quot;</span>
+
+
+<span class="c1"># TODO: move this class to events/definitions.py or equiv.</span>
+<div class="viewcode-block" id="EventTimestamp"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.eventdata.EventTimestamp">[docs]</a><span class="k">class</span> <span class="nc">EventTimestamp</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class to manage event data.&quot;&quot;&quot;</span>
+  <span class="c1"># The timestamp_desc values.</span>
+  <span class="n">ACCESS_TIME</span> <span class="o">=</span> <span class="s1">u&#39;Last Access Time&#39;</span>
+  <span class="n">CHANGE_TIME</span> <span class="o">=</span> <span class="s1">u&#39;Metadata Modification Time&#39;</span>
+  <span class="n">CREATION_TIME</span> <span class="o">=</span> <span class="s1">u&#39;Creation Time&#39;</span>
+  <span class="n">MODIFICATION_TIME</span> <span class="o">=</span> <span class="s1">u&#39;Content Modification Time&#39;</span>
+  <span class="n">ENTRY_MODIFICATION_TIME</span> <span class="o">=</span> <span class="s1">u&#39;Metadata Modification Time&#39;</span>
+  <span class="c1"># Added time and Creation time are considered the same.</span>
+  <span class="n">ADDED_TIME</span> <span class="o">=</span> <span class="s1">u&#39;Creation Time&#39;</span>
+  <span class="c1"># Written time and Modification time are considered the same.</span>
+  <span class="n">WRITTEN_TIME</span> <span class="o">=</span> <span class="s1">u&#39;Content Modification Time&#39;</span>
+  <span class="n">EXIT_TIME</span> <span class="o">=</span> <span class="s1">u&#39;Exit Time&#39;</span>
+  <span class="n">LAST_RUNTIME</span> <span class="o">=</span> <span class="s1">u&#39;Last Time Executed&#39;</span>
+  <span class="n">DELETED_TIME</span> <span class="o">=</span> <span class="s1">u&#39;Content Deletion Time&#39;</span>
+
+  <span class="n">INSTALLATION_TIME</span> <span class="o">=</span> <span class="s1">u&#39;Installation Time&#39;</span>
+
+  <span class="n">FILE_DOWNLOADED</span> <span class="o">=</span> <span class="s1">u&#39;File Downloaded&#39;</span>
+  <span class="n">PAGE_VISITED</span> <span class="o">=</span> <span class="s1">u&#39;Page Visited&#39;</span>
+  <span class="c1"># TODO: change page visited into last visited time.</span>
+  <span class="n">LAST_VISITED_TIME</span> <span class="o">=</span> <span class="s1">u&#39;Last Visited Time&#39;</span>
+
+  <span class="n">LAST_CHECKED_TIME</span> <span class="o">=</span> <span class="s1">u&#39;Last Checked Time&#39;</span>
+
+  <span class="n">EXPIRATION_TIME</span> <span class="o">=</span> <span class="s1">u&#39;Expiration Time&#39;</span>
+  <span class="n">START_TIME</span> <span class="o">=</span> <span class="s1">u&#39;Start Time&#39;</span>
+  <span class="n">END_TIME</span> <span class="o">=</span> <span class="s1">u&#39;End Time&#39;</span>
+  <span class="n">UPDATE_TIME</span> <span class="o">=</span> <span class="s1">u&#39;Update Time&#39;</span>
+
+  <span class="n">LAST_SHUTDOWN</span> <span class="o">=</span> <span class="s1">u&#39;Last Shutdown Time&#39;</span>
+
+  <span class="n">ACCOUNT_CREATED</span> <span class="o">=</span> <span class="s1">u&#39;Account Created&#39;</span>
+  <span class="n">LAST_LOGIN_TIME</span> <span class="o">=</span> <span class="s1">u&#39;Last Login Time&#39;</span>
+  <span class="n">LAST_PASSWORD_RESET</span> <span class="o">=</span> <span class="s1">u&#39;Last Password Reset&#39;</span>
+
+  <span class="n">FIRST_CONNECTED</span> <span class="o">=</span> <span class="s1">u&#39;First Connection Time&#39;</span>
+  <span class="n">LAST_CONNECTED</span> <span class="o">=</span> <span class="s1">u&#39;Last Connection Time&#39;</span>
+
+  <span class="n">LAST_PRINTED</span> <span class="o">=</span> <span class="s1">u&#39;Last Printed Time&#39;</span>
+
+  <span class="n">LAST_RESUME_TIME</span> <span class="o">=</span> <span class="s1">u&#39;Last Resume Time&#39;</span>
+
+  <span class="c1"># The timestamp does not represent a date and time value.</span>
+  <span class="n">NOT_A_TIME</span> <span class="o">=</span> <span class="s1">u&#39;Not a time&#39;</span>
+
+  <span class="c1"># Note that the unknown time is used for date and time values</span>
+  <span class="c1"># of which the exact meaning is unknown and being researched.</span>
+  <span class="c1"># For most cases do not use this timestamp description.</span>
+  <span class="n">UNKNOWN</span> <span class="o">=</span> <span class="s1">u&#39;Unknown Time&#39;</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

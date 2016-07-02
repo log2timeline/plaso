@@ -1,0 +1,295 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.output.tln &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.output.tln</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Output module for the TLN format.</span>
+
+<span class="sd">For documentation on the TLN format see: http://forensicswiki.org/wiki/TLN</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+<span class="kn">from</span> <span class="nn">plaso.output</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.output</span> <span class="kn">import</span> <span class="n">manager</span>
+
+
+<div class="viewcode-block" id="TLNBaseOutputModule"><a class="viewcode-back" href="../../../plaso.output.html#plaso.output.tln.TLNBaseOutputModule">[docs]</a><span class="k">class</span> <span class="nc">TLNBaseOutputModule</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">LinearOutputModule</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Base class for a TLN output module.&quot;&quot;&quot;</span>
+  <span class="c1"># Stop pylint from complaining about missing WriteEventBody.</span>
+  <span class="c1"># pylint: disable=abstract-method</span>
+
+  <span class="n">_FIELD_DELIMITER</span> <span class="o">=</span> <span class="s1">u&#39;|&#39;</span>
+  <span class="n">_DESCRIPTION_FIELD_DELIMITER</span> <span class="o">=</span> <span class="s1">u&#39;;&#39;</span>
+
+  <span class="n">_HEADER</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+
+  <span class="k">def</span> <span class="nf">_FormatDescription</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Formats the description.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: the event object (instance of EventObject).</span>
+
+<span class="sd">     Returns:</span>
+<span class="sd">       A string containing the value for the description field.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">date_time_string</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">CopyToIsoFormat</span><span class="p">(</span>
+        <span class="n">event_object</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">timezone</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_mediator</span><span class="o">.</span><span class="n">timezone</span><span class="p">)</span>
+    <span class="n">timestamp_description</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="s1">u&#39;timestamp_desc&#39;</span><span class="p">,</span> <span class="s1">u&#39;UNKNOWN&#39;</span><span class="p">)</span>
+
+    <span class="n">message</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_mediator</span><span class="o">.</span><span class="n">GetFormattedMessages</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">message</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">NoFormatterFound</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to find event formatter for: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="nb">getattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="s1">u&#39;data_type&#39;</span><span class="p">,</span> <span class="s1">u&#39;UNKNOWN&#39;</span><span class="p">)))</span>
+
+    <span class="n">description</span> <span class="o">=</span> <span class="s1">u&#39;{0:s}; {1:s}; {2:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">date_time_string</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">,</span>
+        <span class="n">message</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_DESCRIPTION_FIELD_DELIMITER</span><span class="p">,</span> <span class="s1">u&#39; &#39;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_SanitizeField</span><span class="p">(</span><span class="n">description</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_FormatHostname</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Formats the hostname.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: the event object (instance of EventObject).</span>
+
+<span class="sd">     Returns:</span>
+<span class="sd">       A string containing the value for the hostname field.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">hostname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_mediator</span><span class="o">.</span><span class="n">GetHostname</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_SanitizeField</span><span class="p">(</span><span class="n">hostname</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_FormatSource</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Formats the source.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: the event object (instance of EventObject).</span>
+
+<span class="sd">     Returns:</span>
+<span class="sd">       A string containing the value for the source field.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">source_short</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_mediator</span><span class="o">.</span><span class="n">GetFormattedSources</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">source_short</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">NoFormatterFound</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to find event formatter for: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="nb">getattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="s1">u&#39;data_type&#39;</span><span class="p">,</span> <span class="s1">u&#39;UNKNOWN&#39;</span><span class="p">)))</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_SanitizeField</span><span class="p">(</span><span class="n">source_short</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_FormatUsername</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Formats the username.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: the event object (instance of EventObject).</span>
+
+<span class="sd">     Returns:</span>
+<span class="sd">       A string containing the value for the username field.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_mediator</span><span class="o">.</span><span class="n">GetUsername</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_SanitizeField</span><span class="p">(</span><span class="n">username</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_SanitizeField</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sanitizes a field for output.</span>
+
+<span class="sd">    This method removes the field delimiter from the field string.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      field: the string that makes up the field.</span>
+
+<span class="sd">     Returns:</span>
+<span class="sd">       A string containing the value for the field.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FIELD_DELIMITER</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">field</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_FIELD_DELIMITER</span><span class="p">,</span> <span class="s1">u&#39; &#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">field</span>
+
+<div class="viewcode-block" id="TLNBaseOutputModule.WriteHeader"><a class="viewcode-back" href="../../../plaso.output.html#plaso.output.tln.TLNBaseOutputModule.WriteHeader">[docs]</a>  <span class="k">def</span> <span class="nf">WriteHeader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes the header to the output.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_WriteLine</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_HEADER</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TLNOutputModule"><a class="viewcode-back" href="../../../plaso.output.html#plaso.output.tln.TLNOutputModule">[docs]</a><span class="k">class</span> <span class="nc">TLNOutputModule</span><span class="p">(</span><span class="n">TLNBaseOutputModule</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Output module for the TLN format.</span>
+
+<span class="sd">  TLN defines 5 | separated fields, namely:</span>
+<span class="sd">  * Time - 32-bit POSIX (or Unix) epoch timestamp.</span>
+<span class="sd">  * Source - The name of the parser or plugin that produced the event.</span>
+<span class="sd">  * Host - The source host system.</span>
+<span class="sd">  * User - The user associated with the data.</span>
+<span class="sd">  * Description - Message string describing the data.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;tln&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;TLN 5 field | delimited output.&#39;</span>
+
+  <span class="n">_HEADER</span> <span class="o">=</span> <span class="s1">u&#39;Time|Source|Host|User|Description</span><span class="se">\n</span><span class="s1">&#39;</span>
+
+<div class="viewcode-block" id="TLNOutputModule.WriteEventBody"><a class="viewcode-back" href="../../../plaso.output.html#plaso.output.tln.TLNOutputModule.WriteEventBody">[docs]</a>  <span class="k">def</span> <span class="nf">WriteEventBody</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes the body of an event object to the output.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: the event object (instance of EventObject).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="s1">u&#39;timestamp&#39;</span><span class="p">):</span>
+      <span class="k">return</span>
+
+    <span class="n">posix_timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">CopyToPosix</span><span class="p">(</span><span class="n">event_object</span><span class="o">.</span><span class="n">timestamp</span><span class="p">)</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FormatSource</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+    <span class="n">hostname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FormatHostname</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FormatUsername</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FormatDescription</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="n">out_write</span> <span class="o">=</span> <span class="s1">u&#39;{0:d}|{1:s}|{2:s}|{3:s}|{4!s}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">posix_timestamp</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">hostname</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_WriteLine</span><span class="p">(</span><span class="n">out_write</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="L2TTLNOutputModule"><a class="viewcode-back" href="../../../plaso.output.html#plaso.output.tln.L2TTLNOutputModule">[docs]</a><span class="k">class</span> <span class="nc">L2TTLNOutputModule</span><span class="p">(</span><span class="n">TLNBaseOutputModule</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Output module for the log2timeline extended variant of the TLN format.</span>
+
+<span class="sd">  l2tTLN is an extended variant of TLN introduced log2timeline 0.65.</span>
+
+<span class="sd">  l2tTLN extends basic TLN to 7 | separated fields, namely:</span>
+<span class="sd">  * Time - 32-bit POSIX (or Unix) epoch timestamp.</span>
+<span class="sd">  * Source - The name of the parser or plugin that produced the event.</span>
+<span class="sd">  * Host - The source host system.</span>
+<span class="sd">  * User - The user associated with the data.</span>
+<span class="sd">  * Description - Message string describing the data.</span>
+<span class="sd">  * TZ - L2T 0.65 field. Timezone of the event.</span>
+<span class="sd">  * Notes - L2T 0.65 field. Optional notes field or filename and inode.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;l2ttln&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Extended TLN 7 field | delimited output.&#39;</span>
+
+  <span class="n">_HEADER</span> <span class="o">=</span> <span class="s1">u&#39;Time|Source|Host|User|Description|TZ|Notes</span><span class="se">\n</span><span class="s1">&#39;</span>
+
+  <span class="k">def</span> <span class="nf">_FormatNotes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Formats the notes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: the event object (instance of EventObject).</span>
+
+<span class="sd">     Returns:</span>
+<span class="sd">       A string containing the value for the notes field.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">inode</span> <span class="o">=</span> <span class="n">event_object</span><span class="o">.</span><span class="n">inode</span>
+    <span class="k">if</span> <span class="n">inode</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">inode</span> <span class="o">=</span> <span class="s1">u&#39;-&#39;</span>
+
+    <span class="n">notes</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="s1">u&#39;notes&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">notes</span><span class="p">:</span>
+      <span class="n">notes</span> <span class="o">=</span> <span class="s1">u&#39;File: {0:s} inode: {1!s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="nb">getattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="s1">u&#39;display_name&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">),</span> <span class="n">inode</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_SanitizeField</span><span class="p">(</span><span class="n">notes</span><span class="p">)</span>
+
+<div class="viewcode-block" id="L2TTLNOutputModule.WriteEventBody"><a class="viewcode-back" href="../../../plaso.output.html#plaso.output.tln.L2TTLNOutputModule.WriteEventBody">[docs]</a>  <span class="k">def</span> <span class="nf">WriteEventBody</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes the body of an event object to the output.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: the event object (instance of EventObject).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="s1">u&#39;timestamp&#39;</span><span class="p">):</span>
+      <span class="k">return</span>
+
+    <span class="n">posix_timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">CopyToPosix</span><span class="p">(</span><span class="n">event_object</span><span class="o">.</span><span class="n">timestamp</span><span class="p">)</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FormatSource</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+    <span class="n">hostname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FormatHostname</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+    <span class="n">username</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FormatUsername</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+    <span class="n">description</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FormatDescription</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+    <span class="n">notes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FormatNotes</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="n">out_write</span> <span class="o">=</span> <span class="s1">u&#39;{0:d}|{1:s}|{2:s}|{3:s}|{4:s}|{5!s}|{6!s}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">posix_timestamp</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">hostname</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output_mediator</span><span class="o">.</span><span class="n">timezone</span><span class="p">,</span> <span class="n">notes</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_WriteLine</span><span class="p">(</span><span class="n">out_write</span><span class="p">)</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">OutputManager</span><span class="o">.</span><span class="n">RegisterOutputs</span><span class="p">([</span><span class="n">L2TTLNOutputModule</span><span class="p">,</span> <span class="n">TLNOutputModule</span><span class="p">])</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

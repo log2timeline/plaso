@@ -1,0 +1,234 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.mcafeeav &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.mcafeeav</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Parser for McAfee Anti-Virus Logs.</span>
+
+<span class="sd">McAfee AV uses 4 logs to track when scans were run, when virus databases were</span>
+<span class="sd">updated, and when files match the virus database.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">text_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">text_parser</span>
+
+
+<div class="viewcode-block" id="McafeeAVEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mcafeeav.McafeeAVEvent">[docs]</a><span class="k">class</span> <span class="nc">McafeeAVEvent</span><span class="p">(</span><span class="n">text_events</span><span class="o">.</span><span class="n">TextEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for McAfee AV Log events &quot;&quot;&quot;</span>
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;av:mcafee:accessprotectionlog&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">attributes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a McAfee AV Log Event.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timestamp: the timestamp time value. The timestamp contains the</span>
+<span class="sd">                 number of seconds since Jan 1, 1970 00:00:00 UTC.</span>
+<span class="sd">      offset: the offset of the attributes.</span>
+<span class="sd">      attributes: dict of elements from the AV log line.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">del</span> <span class="n">attributes</span><span class="p">[</span><span class="s1">u&#39;time&#39;</span><span class="p">]</span>
+    <span class="k">del</span> <span class="n">attributes</span><span class="p">[</span><span class="s1">u&#39;date&#39;</span><span class="p">]</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">McafeeAVEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">attributes</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">full_path</span> <span class="o">=</span> <span class="n">attributes</span><span class="p">[</span><span class="s1">u&#39;filename&#39;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="McafeeAccessProtectionParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mcafeeav.McafeeAccessProtectionParser">[docs]</a><span class="k">class</span> <span class="nc">McafeeAccessProtectionParser</span><span class="p">(</span><span class="n">text_parser</span><span class="o">.</span><span class="n">TextCSVParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parses the McAfee AV Access Protection Log.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;mcafee_protection&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for McAfee AV Access Protection log files.&#39;</span>
+
+  <span class="n">VALUE_SEPARATOR</span> <span class="o">=</span> <span class="n">b</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span>
+  <span class="c1"># Define the columns of the McAfee AV Access Protection Log.</span>
+  <span class="n">COLUMNS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">u&#39;date&#39;</span><span class="p">,</span> <span class="s1">u&#39;time&#39;</span><span class="p">,</span> <span class="s1">u&#39;status&#39;</span><span class="p">,</span> <span class="s1">u&#39;username&#39;</span><span class="p">,</span> <span class="s1">u&#39;filename&#39;</span><span class="p">,</span>
+             <span class="s1">u&#39;trigger_location&#39;</span><span class="p">,</span> <span class="s1">u&#39;rule&#39;</span><span class="p">,</span> <span class="s1">u&#39;action&#39;</span><span class="p">]</span>
+
+  <span class="k">def</span> <span class="nf">_ConvertToTimestamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">timezone</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts date and time values into a timestamp.</span>
+
+<span class="sd">    The date and time are made up of two strings, the date and the time,</span>
+<span class="sd">    separated by a tab. The time is in local time. The month and day can</span>
+<span class="sd">    be either 1 or 2 characters long, e.g.: 7/30/2013\\t10:22:48 AM</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      date: a string representing the date.</span>
+<span class="sd">      time: a string representing the time.</span>
+<span class="sd">      timezone: a timezone (instance of pytz.timezone) that the date and</span>
+<span class="sd">                time values represent.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      TimestampError: if the timestamp is badly formed or unable to transfer</span>
+<span class="sd">                      the supplied date and time into a timestamp.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: check if this is correct, likely not date or not time</span>
+    <span class="c1"># is more accurate.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">date</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">time</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">TimestampError</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to extract timestamp from McAfee AV logline.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># TODO: Figure out how McAfee sets Day First and use that here.</span>
+    <span class="c1"># The in-file time format is &#39;07/30/2013\t10:22:48 AM&#39;.</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">time_string</span> <span class="o">=</span> <span class="s1">u&#39;{0:s} {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="n">time</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">TimestampError</span><span class="p">(</span><span class="s1">u&#39;Unable to form a timestamp string.&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromTimeString</span><span class="p">(</span><span class="n">time_string</span><span class="p">,</span> <span class="n">timezone</span><span class="o">=</span><span class="n">timezone</span><span class="p">)</span>
+
+<div class="viewcode-block" id="McafeeAccessProtectionParser.ParseRow"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mcafeeav.McafeeAccessProtectionParser.ParseRow">[docs]</a>  <span class="k">def</span> <span class="nf">ParseRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">row_offset</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a row and extract event objects.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: a parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      row_offset: the offset of the row.</span>
+<span class="sd">      row: a dictionary containing all the fields as denoted in the</span>
+<span class="sd">           COLUMNS class list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">timestamp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ConvertToTimestamp</span><span class="p">(</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">u&#39;date&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">u&#39;time&#39;</span><span class="p">],</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">timezone</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">TimestampError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to parse time string: [{0:s} {1:s}] with error {2:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="nb">repr</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">u&#39;date&#39;</span><span class="p">]),</span> <span class="nb">repr</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">u&#39;time&#39;</span><span class="p">]),</span> <span class="n">exception</span><span class="p">))</span>
+      <span class="k">return</span>
+
+    <span class="k">if</span> <span class="n">timestamp</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">McafeeAVEvent</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">row_offset</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="McafeeAccessProtectionParser.VerifyRow"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mcafeeav.McafeeAccessProtectionParser.VerifyRow">[docs]</a>  <span class="k">def</span> <span class="nf">VerifyRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Verify that this is a McAfee AV Access Protection Log file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: a parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      row: a single row from the CSV file.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      True if this is the correct parser, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">8</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="c1"># This file can have a UTF-8 byte-order-marker at the beginning of</span>
+    <span class="c1"># the first row.</span>
+    <span class="c1"># TODO: Find out all the code pages this can have.  Asked McAfee 10/31.</span>
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">u&#39;date&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="n">b</span><span class="s1">&#39;</span><span class="se">\xef\xbb\xbf</span><span class="s1">&#39;</span><span class="p">:</span>
+      <span class="n">row</span><span class="p">[</span><span class="s1">u&#39;date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">u&#39;date&#39;</span><span class="p">][</span><span class="mi">3</span><span class="p">:]</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="s1">u&#39;utf-8&#39;</span>
+
+    <span class="c1"># Check the date format!</span>
+    <span class="c1"># If it doesn&#39;t parse, then this isn&#39;t a McAfee AV Access Protection Log</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">timestamp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ConvertToTimestamp</span><span class="p">(</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">u&#39;date&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">u&#39;time&#39;</span><span class="p">],</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">timezone</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">TimestampError</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">if</span> <span class="n">timestamp</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="c1"># Use the presence of these strings as a backup or in case of partial file.</span>
+    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="s1">u&#39;Access Protection&#39;</span> <span class="ow">in</span> <span class="n">row</span><span class="p">[</span><span class="s1">u&#39;status&#39;</span><span class="p">]</span> <span class="ow">and</span>
+        <span class="ow">not</span> <span class="s1">u&#39;Would be blocked&#39;</span> <span class="ow">in</span> <span class="n">row</span><span class="p">[</span><span class="s1">u&#39;status&#39;</span><span class="p">]):</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">return</span> <span class="bp">True</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParser</span><span class="p">(</span><span class="n">McafeeAccessProtectionParser</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

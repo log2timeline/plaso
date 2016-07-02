@@ -1,0 +1,1009 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.lib.timelib &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.lib.timelib</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Time manipulation functions and variables.</span>
+
+<span class="sd">This module contain common methods that can be used to convert timestamps</span>
+<span class="sd">from various formats into number of micro seconds since January 1, 1970,</span>
+<span class="sd">00:00:00 UTC that is used internally to store timestamps.</span>
+
+<span class="sd">It also contains various functions to represent timestamps in a more</span>
+<span class="sd">human readable form.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">calendar</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">construct</span>
+<span class="kn">import</span> <span class="nn">pytz</span>
+
+<span class="kn">import</span> <span class="nn">dateutil.parser</span>
+
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">py2to3</span>
+
+
+<span class="n">MONTH_DICT</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">u&#39;jan&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s1">u&#39;feb&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="s1">u&#39;mar&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="s1">u&#39;apr&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="s1">u&#39;may&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+    <span class="s1">u&#39;jun&#39;</span><span class="p">:</span> <span class="mi">6</span><span class="p">,</span>
+    <span class="s1">u&#39;jul&#39;</span><span class="p">:</span> <span class="mi">7</span><span class="p">,</span>
+    <span class="s1">u&#39;aug&#39;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+    <span class="s1">u&#39;sep&#39;</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>
+    <span class="s1">u&#39;oct&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+    <span class="s1">u&#39;nov&#39;</span><span class="p">:</span> <span class="mi">11</span><span class="p">,</span>
+    <span class="s1">u&#39;dec&#39;</span><span class="p">:</span> <span class="mi">12</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="Timestamp"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp">[docs]</a><span class="k">class</span> <span class="nc">Timestamp</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class for converting timestamps to plaso timestamps.</span>
+
+<span class="sd">    The Plaso timestamp is a 64-bit signed timestamp value containing:</span>
+<span class="sd">    micro seconds since 1970-01-01 00:00:00.</span>
+
+<span class="sd">    The timestamp is not necessarily in UTC.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="c1"># The minimum timestamp in seconds</span>
+  <span class="n">TIMESTAMP_MIN_SECONDS</span> <span class="o">=</span> <span class="o">-</span><span class="p">(((</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="il">63L</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1000000</span><span class="p">)</span>
+
+  <span class="c1"># The maximum timestamp in seconds</span>
+  <span class="n">TIMESTAMP_MAX_SECONDS</span> <span class="o">=</span> <span class="p">((</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="il">63L</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1000000</span>
+
+  <span class="c1"># The minimum timestamp in micro seconds</span>
+  <span class="n">TIMESTAMP_MIN_MICRO_SECONDS</span> <span class="o">=</span> <span class="o">-</span><span class="p">((</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="il">63L</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+  <span class="c1"># The maximum timestamp in micro seconds</span>
+  <span class="n">TIMESTAMP_MAX_MICRO_SECONDS</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="il">63L</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+
+  <span class="c1"># Timestamp that represents the timestamp representing not</span>
+  <span class="c1"># a date and time value.</span>
+  <span class="c1"># TODO: replace this with a real None implementation.</span>
+  <span class="n">NONE_TIMESTAMP</span> <span class="o">=</span> <span class="mi">0</span>
+
+  <span class="c1"># The days per month of a non leap year</span>
+  <span class="n">DAYS_PER_MONTH</span> <span class="o">=</span> <span class="p">[</span><span class="mi">31</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">31</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">31</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">31</span><span class="p">,</span> <span class="mi">31</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">31</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">31</span><span class="p">]</span>
+
+  <span class="c1"># The number of seconds in a day</span>
+  <span class="n">SECONDS_PER_DAY</span> <span class="o">=</span> <span class="mi">24</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">60</span>
+
+  <span class="c1"># The number of micro seconds per second</span>
+  <span class="n">MICRO_SECONDS_PER_SECOND</span> <span class="o">=</span> <span class="mi">1000000</span>
+
+  <span class="c1"># The multiplication factor to change milliseconds to micro seconds.</span>
+  <span class="n">MILLI_SECONDS_TO_MICRO_SECONDS</span> <span class="o">=</span> <span class="mi">1000</span>
+
+  <span class="c1"># The difference between Jan 1, 1980 and Jan 1, 1970 in seconds.</span>
+  <span class="n">FAT_DATE_TO_POSIX_BASE</span> <span class="o">=</span> <span class="mi">315532800</span>
+
+  <span class="c1"># The difference between Jan 1, 1601 and Jan 1, 1970 in micro seconds</span>
+  <span class="n">WEBKIT_TIME_TO_POSIX_BASE</span> <span class="o">=</span> <span class="il">11644473600L</span> <span class="o">*</span> <span class="mi">1000000</span>
+
+  <span class="c1"># The difference between Jan 1, 1601 and Jan 1, 1970 in 100 nanoseconds.</span>
+  <span class="n">FILETIME_TO_POSIX_BASE</span> <span class="o">=</span> <span class="il">11644473600L</span> <span class="o">*</span> <span class="mi">10000000</span>
+
+  <span class="c1"># The difference between Nov 10, 1582 and Jan 1, 1970 in 100 nanoseconds.</span>
+  <span class="n">UUID_TIME_TO_POSIX_BASE</span> <span class="o">=</span> <span class="il">12219292800L</span> <span class="o">*</span> <span class="mi">10000000</span>
+
+  <span class="c1"># The number of seconds between January 1, 1904 and Jan 1, 1970.</span>
+  <span class="c1"># Value confirmed with sleuthkit:</span>
+  <span class="c1">#  http://svn.sleuthkit.org/repos/sleuthkit/trunk/tsk3/fs/tsk_hfs.h</span>
+  <span class="c1"># and linux source file linux/include/linux/hfsplus_fs.h</span>
+  <span class="n">HFSTIME_TO_POSIX_BASE</span> <span class="o">=</span> <span class="mi">2082844800</span>
+
+  <span class="c1"># The number of seconds between January 1, 1970 and January 1, 2001.</span>
+  <span class="c1"># As specified in:</span>
+  <span class="c1"># https://developer.apple.com/library/ios/documentation/</span>
+  <span class="c1">#       cocoa/Conceptual/DatesAndTimes/Articles/dtDates.html</span>
+  <span class="n">COCOA_TIME_TO_POSIX_BASE</span> <span class="o">=</span> <span class="mi">978307200</span>
+
+  <span class="c1"># The difference between POSIX (Jan 1, 1970) and DELPHI (Dec 30, 1899).</span>
+  <span class="c1"># http://docwiki.embarcadero.com/Libraries/XE3/en/System.TDateTime</span>
+  <span class="n">DELPHI_TIME_TO_POSIX_BASE</span> <span class="o">=</span> <span class="mi">25569</span>
+
+  <span class="c1"># The Windows SYSTEMTIME structure.</span>
+  <span class="n">SYSTEMTIME_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;timestamp&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;year&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;month&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;weekday&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;day&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;hour&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;minutes&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;seconds&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;milliseconds&#39;</span><span class="p">))</span>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.CopyFromString"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.CopyFromString">[docs]</a>  <span class="k">def</span> <span class="nf">CopyFromString</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">time_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Copies a timestamp from a string containing a date and time value.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      time_string: A string containing a date and time value formatted as:</span>
+<span class="sd">                   YYYY-MM-DD hh:mm:ss.######[+-]##:##</span>
+<span class="sd">                   Where # are numeric digits ranging from 0 to 9 and the</span>
+<span class="sd">                   seconds fraction can be either 3 or 6 digits. The time</span>
+<span class="sd">                   of day, seconds fraction and timezone offset are optional.</span>
+<span class="sd">                   The default timezone is UTC.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      ValueError: if the time string is invalid or not supported.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">time_string</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Invalid time string.&#39;</span><span class="p">)</span>
+
+    <span class="n">time_string_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">time_string</span><span class="p">)</span>
+
+    <span class="c1"># The time string should at least contain &#39;YYYY-MM-DD&#39;.</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">time_string_length</span> <span class="o">&lt;</span> <span class="mi">10</span> <span class="ow">or</span> <span class="n">time_string</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">u&#39;-&#39;</span> <span class="ow">or</span>
+        <span class="n">time_string</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">u&#39;-&#39;</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Invalid time string.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># If a time of day is specified the time string it should at least</span>
+    <span class="c1"># contain &#39;YYYY-MM-DD hh:mm:ss&#39;.</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">time_string_length</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="ow">and</span> <span class="p">(</span>
+        <span class="n">time_string_length</span> <span class="o">&lt;</span> <span class="mi">19</span> <span class="ow">or</span> <span class="n">time_string</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">u&#39; &#39;</span> <span class="ow">or</span>
+        <span class="n">time_string</span><span class="p">[</span><span class="mi">13</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">u&#39;:&#39;</span> <span class="ow">or</span> <span class="n">time_string</span><span class="p">[</span><span class="mi">16</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">u&#39;:&#39;</span><span class="p">)):</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Invalid time string.&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">year</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time_string</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">],</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Unable to parse year.&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">month</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time_string</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="mi">7</span><span class="p">],</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Unable to parse month.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">month</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">13</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Month value out of bounds.&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">day_of_month</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time_string</span><span class="p">[</span><span class="mi">8</span><span class="p">:</span><span class="mi">10</span><span class="p">],</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Unable to parse day of month.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">day_of_month</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">32</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Day of month value out of bounds.&#39;</span><span class="p">)</span>
+
+    <span class="n">hours</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">minutes</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">seconds</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="n">time_string_length</span> <span class="o">&gt;</span> <span class="mi">10</span><span class="p">:</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">hours</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time_string</span><span class="p">[</span><span class="mi">11</span><span class="p">:</span><span class="mi">13</span><span class="p">],</span> <span class="mi">10</span><span class="p">)</span>
+      <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Unable to parse hours.&#39;</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">hours</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">24</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Hours value out of bounds.&#39;</span><span class="p">)</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">minutes</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time_string</span><span class="p">[</span><span class="mi">14</span><span class="p">:</span><span class="mi">16</span><span class="p">],</span> <span class="mi">10</span><span class="p">)</span>
+      <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Unable to parse minutes.&#39;</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">minutes</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Minutes value out of bounds.&#39;</span><span class="p">)</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">seconds</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time_string</span><span class="p">[</span><span class="mi">17</span><span class="p">:</span><span class="mi">19</span><span class="p">],</span> <span class="mi">10</span><span class="p">)</span>
+      <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Unable to parse day of seconds.&#39;</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">seconds</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">60</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Seconds value out of bounds.&#39;</span><span class="p">)</span>
+
+    <span class="n">micro_seconds</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">timezone_offset</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="n">time_string_length</span> <span class="o">&gt;</span> <span class="mi">19</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">time_string</span><span class="p">[</span><span class="mi">19</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">u&#39;.&#39;</span><span class="p">:</span>
+        <span class="n">timezone_index</span> <span class="o">=</span> <span class="mi">19</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">timezone_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">19</span><span class="p">,</span> <span class="n">time_string_length</span><span class="p">):</span>
+          <span class="k">if</span> <span class="n">time_string</span><span class="p">[</span><span class="n">timezone_index</span><span class="p">]</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">u&#39;+&#39;</span><span class="p">,</span> <span class="s1">u&#39;-&#39;</span><span class="p">]:</span>
+            <span class="k">break</span>
+
+          <span class="c1"># The calculation that follow rely on the timezone index to point</span>
+          <span class="c1"># beyond the string in case no timezone offset was defined.</span>
+          <span class="k">if</span> <span class="n">timezone_index</span> <span class="o">==</span> <span class="n">time_string_length</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">timezone_index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+      <span class="k">if</span> <span class="n">timezone_index</span> <span class="o">&gt;</span> <span class="mi">19</span><span class="p">:</span>
+        <span class="n">fraction_of_seconds_length</span> <span class="o">=</span> <span class="n">timezone_index</span> <span class="o">-</span> <span class="mi">20</span>
+        <span class="k">if</span> <span class="n">fraction_of_seconds_length</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">]:</span>
+          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Invalid time string.&#39;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">micro_seconds</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time_string</span><span class="p">[</span><span class="mi">20</span><span class="p">:</span><span class="n">timezone_index</span><span class="p">],</span> <span class="mi">10</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Unable to parse fraction of seconds.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fraction_of_seconds_length</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+          <span class="n">micro_seconds</span> <span class="o">*=</span> <span class="mi">1000</span>
+
+      <span class="k">if</span> <span class="n">timezone_index</span> <span class="o">&lt;</span> <span class="n">time_string_length</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">time_string_length</span> <span class="o">-</span> <span class="n">timezone_index</span> <span class="o">!=</span> <span class="mi">6</span> <span class="ow">or</span>
+            <span class="n">time_string</span><span class="p">[</span><span class="n">timezone_index</span> <span class="o">+</span> <span class="mi">3</span><span class="p">]</span> <span class="o">!=</span> <span class="s1">u&#39;:&#39;</span><span class="p">):</span>
+          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Invalid time string.&#39;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">timezone_offset</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time_string</span><span class="p">[</span>
+              <span class="n">timezone_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span><span class="n">timezone_index</span> <span class="o">+</span> <span class="mi">3</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Unable to parse timezone hours offset.&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">timezone_offset</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">24</span><span class="p">):</span>
+          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Timezone hours offset value out of bounds.&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Note that when the sign of the timezone offset is negative</span>
+        <span class="c1"># the difference needs to be added. We do so by flipping the sign.</span>
+        <span class="k">if</span> <span class="n">time_string</span><span class="p">[</span><span class="n">timezone_index</span><span class="p">]</span> <span class="o">==</span> <span class="s1">u&#39;-&#39;</span><span class="p">:</span>
+          <span class="n">timezone_offset</span> <span class="o">*=</span> <span class="mi">60</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">timezone_offset</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">60</span>
+
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">timezone_offset</span> <span class="o">+=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time_string</span><span class="p">[</span>
+              <span class="n">timezone_index</span> <span class="o">+</span> <span class="mi">4</span><span class="p">:</span><span class="n">timezone_index</span> <span class="o">+</span> <span class="mi">6</span><span class="p">])</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+          <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Unable to parse timezone minutes offset.&#39;</span><span class="p">)</span>
+
+        <span class="n">timezone_offset</span> <span class="o">*=</span> <span class="mi">60</span>
+
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">calendar</span><span class="o">.</span><span class="n">timegm</span><span class="p">((</span>
+        <span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day_of_month</span><span class="p">,</span> <span class="n">hours</span><span class="p">,</span> <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span><span class="p">)))</span>
+
+    <span class="k">return</span> <span class="p">((</span><span class="n">timestamp</span> <span class="o">+</span> <span class="n">timezone_offset</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000000</span><span class="p">)</span> <span class="o">+</span> <span class="n">micro_seconds</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.CopyToDatetime"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.CopyToDatetime">[docs]</a>  <span class="k">def</span> <span class="nf">CopyToDatetime</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">timezone</span><span class="p">,</span> <span class="n">raise_error</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Copies the timestamp to a datetime object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timestamp: The timestamp which is an integer containing the number</span>
+<span class="sd">                 of micro seconds since January 1, 1970, 00:00:00 UTC.</span>
+<span class="sd">      timezone: The timezone (pytz.timezone) object.</span>
+<span class="sd">      raise_error: Boolean that if set to True will not absorb an OverflowError</span>
+<span class="sd">                   if the timestamp is out of bounds. By default there will be</span>
+<span class="sd">                   no error raised.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A datetime object (instance of datetime.datetime). A datetime object of</span>
+<span class="sd">      January 1, 1970 00:00:00 UTC is returned on error if raises_error is</span>
+<span class="sd">      not set.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      OverflowError: If raises_error is set to True and an overflow error</span>
+<span class="sd">                     occurs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">datetime_object</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">1970</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="n">pytz</span><span class="o">.</span><span class="n">UTC</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">datetime_object</span> <span class="o">+=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">microseconds</span><span class="o">=</span><span class="n">timestamp</span><span class="p">)</span>
+      <span class="k">return</span> <span class="n">datetime_object</span><span class="o">.</span><span class="n">astimezone</span><span class="p">(</span><span class="n">timezone</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">OverflowError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">raise_error</span><span class="p">:</span>
+        <span class="k">raise</span>
+
+      <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">((</span>
+          <span class="s1">u&#39;Unable to copy {0:d} to a datetime object with error: &#39;</span>
+          <span class="s1">u&#39;{1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">datetime_object</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.CopyToIsoFormat"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.CopyToIsoFormat">[docs]</a>  <span class="k">def</span> <span class="nf">CopyToIsoFormat</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">timezone</span><span class="o">=</span><span class="n">pytz</span><span class="o">.</span><span class="n">UTC</span><span class="p">,</span> <span class="n">raise_error</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Copies the timestamp to an ISO 8601 formatted string.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timestamp: The timestamp which is an integer containing the number</span>
+<span class="sd">                 of micro seconds since January 1, 1970, 00:00:00 UTC.</span>
+<span class="sd">      timezone: Optional timezone (instance of pytz.timezone).</span>
+<span class="sd">      raise_error: Boolean that if set to True will not absorb an OverflowError</span>
+<span class="sd">                   if the timestamp is out of bounds. By default there will be</span>
+<span class="sd">                   no error raised.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A string containing an ISO 8601 formatted date and time.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">datetime_object</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">CopyToDatetime</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">timezone</span><span class="p">,</span> <span class="n">raise_error</span><span class="o">=</span><span class="n">raise_error</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">datetime_object</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.CopyToPosix"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.CopyToPosix">[docs]</a>  <span class="k">def</span> <span class="nf">CopyToPosix</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts microsecond timestamps to POSIX timestamps.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timestamp: The timestamp which is an integer containing the number</span>
+<span class="sd">                 of micro seconds since January 1, 1970, 00:00:00 UTC.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">timestamp</span> <span class="o">//</span> <span class="n">cls</span><span class="o">.</span><span class="n">MICRO_SECONDS_PER_SECOND</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.DaysInMonth"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.DaysInMonth">[docs]</a>  <span class="k">def</span> <span class="nf">DaysInMonth</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">year</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines the days in a month for a specific year.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      month: The month where 0 represents January.</span>
+<span class="sd">      year: The year as in 1970.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An integer containing the number of days in the month.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      ValueError: if the month value is invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">month</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">12</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Invalid month value&#39;</span><span class="p">)</span>
+
+    <span class="n">days_per_month</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">DAYS_PER_MONTH</span><span class="p">[</span><span class="n">month</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">month</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">cls</span><span class="o">.</span><span class="n">IsLeapYear</span><span class="p">(</span><span class="n">year</span><span class="p">):</span>
+      <span class="n">days_per_month</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">days_per_month</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.DaysInYear"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.DaysInYear">[docs]</a>  <span class="k">def</span> <span class="nf">DaysInYear</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">year</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines the days in a year.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      year: The year as in 1970.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An integer containing the number of days in the year.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">days_in_year</span> <span class="o">=</span> <span class="mi">365</span>
+    <span class="k">if</span> <span class="n">cls</span><span class="o">.</span><span class="n">IsLeapYear</span><span class="p">(</span><span class="n">year</span><span class="p">):</span>
+      <span class="k">return</span> <span class="n">days_in_year</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">days_in_year</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.DayOfYear"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.DayOfYear">[docs]</a>  <span class="k">def</span> <span class="nf">DayOfYear</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">year</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines the day of the year for a specific day of a month in a year.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      day: The day of the month where 0 represents the first day.</span>
+<span class="sd">      month: The month where 0 represents January.</span>
+<span class="sd">      year: The year as in 1970.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An integer containing the day of year.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">day_of_year</span> <span class="o">=</span> <span class="n">day</span>
+
+    <span class="k">for</span> <span class="n">past_month</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">month</span><span class="p">):</span>
+      <span class="n">day_of_year</span> <span class="o">+=</span> <span class="n">cls</span><span class="o">.</span><span class="n">DaysInMonth</span><span class="p">(</span><span class="n">past_month</span><span class="p">,</span> <span class="n">year</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">day_of_year</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.FromCocoaTime"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.FromCocoaTime">[docs]</a>  <span class="k">def</span> <span class="nf">FromCocoaTime</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">cocoa_time</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a Cocoa time to a timestamp.</span>
+
+<span class="sd">    In Cocoa, time and date values are stored in a unsigned 32-bit integer</span>
+<span class="sd">    containing the number of seconds since January 1, 2001 at 00:00:00</span>
+<span class="sd">    (midnight) UTC (GMT).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      cocoa_time: The timestamp in Cocoa format.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC or 0 on error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">FromPosixTime</span><span class="p">(</span><span class="n">cocoa_time</span> <span class="o">+</span> <span class="n">cls</span><span class="o">.</span><span class="n">COCOA_TIME_TO_POSIX_BASE</span><span class="p">)</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.FromDelphiTime"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.FromDelphiTime">[docs]</a>  <span class="k">def</span> <span class="nf">FromDelphiTime</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">delphi_time</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a Delphi time to a timestamp.</span>
+
+<span class="sd">    In Delphi, time and date values (TDateTime)</span>
+<span class="sd">    are stored in a unsigned little endian 64-bit</span>
+<span class="sd">    floating point containing the number of seconds</span>
+<span class="sd">    since December 30, 1899 at 00:00:00 (midnight) Local Timezone.</span>
+<span class="sd">    TDateTime does not have any time zone information.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      delphi_time: The timestamp in Delphi format.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC or 0 on error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">posix_time</span> <span class="o">=</span> <span class="p">(</span><span class="n">delphi_time</span> <span class="o">-</span> <span class="n">cls</span><span class="o">.</span><span class="n">DELPHI_TIME_TO_POSIX_BASE</span><span class="p">)</span> <span class="o">*</span> <span class="mf">86400.0</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">posix_time</span> <span class="o">&lt;</span> <span class="n">cls</span><span class="o">.</span><span class="n">TIMESTAMP_MIN_SECONDS</span> <span class="ow">or</span>
+        <span class="n">posix_time</span> <span class="o">&gt;</span> <span class="n">cls</span><span class="o">.</span><span class="n">TIMESTAMP_MAX_SECONDS</span><span class="p">):</span>
+      <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">FromPosixTime</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">posix_time</span><span class="p">))</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.FromFatDateTime"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.FromFatDateTime">[docs]</a>  <span class="k">def</span> <span class="nf">FromFatDateTime</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">fat_date_time</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a FAT date and time into a timestamp.</span>
+
+<span class="sd">    FAT date time is mainly used in DOS/Windows file formats and FAT.</span>
+
+<span class="sd">    The FAT date and time is a 32-bit value containing two 16-bit values:</span>
+<span class="sd">      * The date (lower 16-bit).</span>
+<span class="sd">        * bits 0 - 4:  day of month, where 1 represents the first day</span>
+<span class="sd">        * bits 5 - 8:  month of year, where 1 represent January</span>
+<span class="sd">        * bits 9 - 15: year since 1980</span>
+<span class="sd">      * The time of day (upper 16-bit).</span>
+<span class="sd">        * bits 0 - 4: seconds (in 2 second intervals)</span>
+<span class="sd">        * bits 5 - 10: minutes</span>
+<span class="sd">        * bits 11 - 15: hours</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      fat_date_time: The 32-bit FAT date time.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC or 0 on error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">number_of_seconds</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">FAT_DATE_TO_POSIX_BASE</span>
+
+    <span class="n">day_of_month</span> <span class="o">=</span> <span class="p">(</span><span class="n">fat_date_time</span> <span class="o">&amp;</span> <span class="mh">0x1f</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">month</span> <span class="o">=</span> <span class="p">((</span><span class="n">fat_date_time</span> <span class="o">&gt;&gt;</span> <span class="mi">5</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0x0f</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+    <span class="n">year</span> <span class="o">=</span> <span class="p">(</span><span class="n">fat_date_time</span> <span class="o">&gt;&gt;</span> <span class="mi">9</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0x7f</span>
+
+    <span class="k">if</span> <span class="n">day_of_month</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">day_of_month</span> <span class="o">&gt;</span> <span class="mi">30</span> <span class="ow">or</span> <span class="n">month</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">month</span> <span class="o">&gt;</span> <span class="mi">11</span><span class="p">:</span>
+      <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="n">number_of_days</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">DayOfYear</span><span class="p">(</span><span class="n">day_of_month</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="mi">1980</span> <span class="o">+</span> <span class="n">year</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">past_year</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">year</span><span class="p">):</span>
+      <span class="n">number_of_days</span> <span class="o">+=</span> <span class="n">cls</span><span class="o">.</span><span class="n">DaysInYear</span><span class="p">(</span><span class="n">past_year</span><span class="p">)</span>
+
+    <span class="n">fat_date_time</span> <span class="o">&gt;&gt;=</span> <span class="mi">16</span>
+
+    <span class="n">seconds</span> <span class="o">=</span> <span class="p">(</span><span class="n">fat_date_time</span> <span class="o">&amp;</span> <span class="mh">0x1f</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
+    <span class="n">minutes</span> <span class="o">=</span> <span class="p">(</span><span class="n">fat_date_time</span> <span class="o">&gt;&gt;</span> <span class="mi">5</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0x3f</span>
+    <span class="n">hours</span> <span class="o">=</span> <span class="p">(</span><span class="n">fat_date_time</span> <span class="o">&gt;&gt;</span> <span class="mi">11</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0x1f</span>
+
+    <span class="k">if</span> <span class="n">hours</span> <span class="o">&gt;</span> <span class="mi">23</span> <span class="ow">or</span> <span class="n">minutes</span> <span class="o">&gt;</span> <span class="mi">59</span> <span class="ow">or</span> <span class="n">seconds</span> <span class="o">&gt;</span> <span class="mi">59</span><span class="p">:</span>
+      <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="n">number_of_seconds</span> <span class="o">+=</span> <span class="p">(((</span><span class="n">hours</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span> <span class="o">+</span> <span class="n">minutes</span><span class="p">)</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span> <span class="o">+</span> <span class="n">seconds</span>
+
+    <span class="n">number_of_seconds</span> <span class="o">+=</span> <span class="n">number_of_days</span> <span class="o">*</span> <span class="n">cls</span><span class="o">.</span><span class="n">SECONDS_PER_DAY</span>
+
+    <span class="k">return</span> <span class="n">number_of_seconds</span> <span class="o">*</span> <span class="n">cls</span><span class="o">.</span><span class="n">MICRO_SECONDS_PER_SECOND</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.FromFiletime"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.FromFiletime">[docs]</a>  <span class="k">def</span> <span class="nf">FromFiletime</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">filetime</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a FILETIME into a timestamp.</span>
+
+<span class="sd">    FILETIME is mainly used in Windows file formats and NTFS.</span>
+
+<span class="sd">    The FILETIME is a 64-bit value containing:</span>
+<span class="sd">      100th nano seconds since 1601-01-01 00:00:00</span>
+
+<span class="sd">    Technically FILETIME consists of 2 x 32-bit parts and is presumed</span>
+<span class="sd">    to be unsigned.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      filetime: The 64-bit FILETIME timestamp.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC or 0 on error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: Add a handling for if the timestamp equals to zero.</span>
+    <span class="k">if</span> <span class="n">filetime</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="k">return</span> <span class="mi">0</span>
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="p">(</span><span class="n">filetime</span> <span class="o">-</span> <span class="n">cls</span><span class="o">.</span><span class="n">FILETIME_TO_POSIX_BASE</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span>
+
+    <span class="k">if</span> <span class="n">timestamp</span> <span class="o">&gt;</span> <span class="n">cls</span><span class="o">.</span><span class="n">TIMESTAMP_MAX_MICRO_SECONDS</span><span class="p">:</span>
+      <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">timestamp</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.FromHfsTime"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.FromHfsTime">[docs]</a>  <span class="k">def</span> <span class="nf">FromHfsTime</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">hfs_time</span><span class="p">,</span> <span class="n">timezone</span><span class="o">=</span><span class="n">pytz</span><span class="o">.</span><span class="n">UTC</span><span class="p">,</span> <span class="n">is_dst</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a HFS time to a timestamp.</span>
+
+<span class="sd">    HFS time is the same as HFS+ time, except stored in the local</span>
+<span class="sd">    timezone of the user.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      hfs_time: Timestamp in the hfs format (32 bit unsigned int).</span>
+<span class="sd">      timezone: The timezone object of the system&#39;s local time.</span>
+<span class="sd">      is_dst: A boolean to indicate the timestamp is corrected for daylight</span>
+<span class="sd">              savings time (DST) only used for the DST transition period.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC or 0 on error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">timestamp_local</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">FromHfsPlusTime</span><span class="p">(</span><span class="n">hfs_time</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">LocaltimeToUTC</span><span class="p">(</span><span class="n">timestamp_local</span><span class="p">,</span> <span class="n">timezone</span><span class="p">,</span> <span class="n">is_dst</span><span class="p">)</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.FromHfsPlusTime"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.FromHfsPlusTime">[docs]</a>  <span class="k">def</span> <span class="nf">FromHfsPlusTime</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">hfs_time</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a HFS+ time to a timestamp.</span>
+
+<span class="sd">    In HFS+ date and time values are stored in an unsigned 32-bit integer</span>
+<span class="sd">    containing the number of seconds since January 1, 1904 at 00:00:00</span>
+<span class="sd">    (midnight) UTC (GMT).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      hfs_time: The timestamp in HFS+ format.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC or 0 on error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">FromPosixTime</span><span class="p">(</span><span class="n">hfs_time</span> <span class="o">-</span> <span class="n">cls</span><span class="o">.</span><span class="n">HFSTIME_TO_POSIX_BASE</span><span class="p">)</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.FromJavaTime"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.FromJavaTime">[docs]</a>  <span class="k">def</span> <span class="nf">FromJavaTime</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">java_time</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a Java time to a timestamp.</span>
+
+<span class="sd">    Jave time is the number of milliseconds since</span>
+<span class="sd">    January 1, 1970, 00:00:00 UTC.</span>
+
+<span class="sd">    URL: http://docs.oracle.com/javase/7/docs/api/</span>
+<span class="sd">         java/sql/Timestamp.html#getTime%28%29</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      java_time: The Java Timestamp.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC or 0 on error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">java_time</span> <span class="o">*</span> <span class="n">cls</span><span class="o">.</span><span class="n">MILLI_SECONDS_TO_MICRO_SECONDS</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.FromPosixTime"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.FromPosixTime">[docs]</a>  <span class="k">def</span> <span class="nf">FromPosixTime</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">posix_time</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a POSIX timestamp into a timestamp.</span>
+
+<span class="sd">    The POSIX time is a signed 32-bit or 64-bit value containing:</span>
+<span class="sd">      seconds since 1970-01-01 00:00:00</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      posix_time: The POSIX timestamp.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC or 0 on error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">posix_time</span> <span class="o">&lt;</span> <span class="n">cls</span><span class="o">.</span><span class="n">TIMESTAMP_MIN_SECONDS</span> <span class="ow">or</span>
+        <span class="n">posix_time</span> <span class="o">&gt;</span> <span class="n">cls</span><span class="o">.</span><span class="n">TIMESTAMP_MAX_SECONDS</span><span class="p">):</span>
+      <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">posix_time</span><span class="p">)</span> <span class="o">*</span> <span class="n">cls</span><span class="o">.</span><span class="n">MICRO_SECONDS_PER_SECOND</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.FromPosixTimeWithMicrosecond"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.FromPosixTimeWithMicrosecond">[docs]</a>  <span class="k">def</span> <span class="nf">FromPosixTimeWithMicrosecond</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">posix_time</span><span class="p">,</span> <span class="n">microsecond</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a POSIX timestamp with microsecond into a timestamp.</span>
+
+<span class="sd">    The POSIX time is a signed 32-bit or 64-bit value containing:</span>
+<span class="sd">      seconds since 1970-01-01 00:00:00</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      posix_time: The POSIX timestamp.</span>
+<span class="sd">      microsecond: The microseconds to add to the timestamp.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC or 0 on error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">FromPosixTime</span><span class="p">(</span><span class="n">posix_time</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">timestamp</span><span class="p">:</span>
+      <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">timestamp</span> <span class="o">+</span> <span class="n">microsecond</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.FromPythonDatetime"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.FromPythonDatetime">[docs]</a>  <span class="k">def</span> <span class="nf">FromPythonDatetime</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">datetime_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a Python datetime object into a timestamp.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      datetime_object: The datetime object (instance of datetime.datetime).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC or 0 on error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">datetime_object</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span>
+      <span class="k">return</span> <span class="mi">0</span>
+
+    <span class="n">posix_time</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">calendar</span><span class="o">.</span><span class="n">timegm</span><span class="p">(</span><span class="n">datetime_object</span><span class="o">.</span><span class="n">utctimetuple</span><span class="p">()))</span>
+    <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">FromPosixTime</span><span class="p">(</span><span class="n">posix_time</span><span class="p">)</span> <span class="o">+</span> <span class="n">datetime_object</span><span class="o">.</span><span class="n">microsecond</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.FromRFC2579Datetime"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.FromRFC2579Datetime">[docs]</a>  <span class="k">def</span> <span class="nf">FromRFC2579Datetime</span><span class="p">(</span>
+      <span class="n">cls</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">hour</span><span class="p">,</span> <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span><span class="p">,</span> <span class="n">deciseconds</span><span class="p">,</span>
+      <span class="n">direction_from_utc</span><span class="p">,</span> <span class="n">hours_from_utc</span><span class="p">,</span> <span class="n">minutes_from_utc</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts values from an RFC2579 time to a timestamp.</span>
+
+<span class="sd">    See https://tools.ietf.org/html/rfc2579.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      year: An integer representing the year.</span>
+<span class="sd">      month: An integer between 1 and 12.</span>
+<span class="sd">      day: An integer representing the number of day in the month.</span>
+<span class="sd">      hour: An integer representing the hour, 0 &lt;= hour &lt; 24.</span>
+<span class="sd">      minutes: An integer, 0 &lt;= minute &lt; 60.</span>
+<span class="sd">      seconds: An integer, 0 &lt;= second &lt; 60.</span>
+<span class="sd">      deciseconds: An integer, 0 &lt;= deciseconds &lt; 10</span>
+<span class="sd">      direction_from_utc: An ascii character, either &#39;+&#39; or &#39;-&#39;.</span>
+<span class="sd">      hours_from_utc: An integer representing the number of hours the time is</span>
+<span class="sd">                      offset from UTC.</span>
+<span class="sd">      minutes_from_utc: An integer representing the number of seconds the time</span>
+<span class="sd">                        is offset from UTC.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC or 0 on error.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      TimestampError: if the timestamp cannot be created from the time parts.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">microseconds</span> <span class="o">=</span> <span class="n">deciseconds</span> <span class="o">*</span> <span class="mi">100000</span>
+    <span class="n">utc_offset_minutes</span> <span class="o">=</span> <span class="p">(</span><span class="n">hours_from_utc</span> <span class="o">*</span> <span class="mi">60</span><span class="p">)</span> <span class="o">+</span> <span class="n">minutes_from_utc</span>
+    <span class="k">if</span> <span class="n">direction_from_utc</span> <span class="o">==</span> <span class="s1">u&#39;-&#39;</span><span class="p">:</span>
+      <span class="n">utc_offset_minutes</span> <span class="o">=</span> <span class="o">-</span><span class="n">utc_offset_minutes</span>
+    <span class="n">timezone</span> <span class="o">=</span> <span class="n">pytz</span><span class="o">.</span><span class="n">FixedOffset</span><span class="p">(</span><span class="n">utc_offset_minutes</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">FromTimeParts</span><span class="p">(</span>
+        <span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">hour</span><span class="p">,</span> <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span><span class="p">,</span> <span class="n">microseconds</span><span class="p">,</span> <span class="n">timezone</span><span class="p">)</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.FromSystemtime"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.FromSystemtime">[docs]</a>  <span class="k">def</span> <span class="nf">FromSystemtime</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">systemtime</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a SYSTEMTIME structure into a timestamp.</span>
+
+<span class="sd">    The SYSTEMTIME structure is mainly used in Windows registries.</span>
+
+<span class="sd">    The SYSTEMTIME structure is a 128-bit struct containing 8 little endian</span>
+<span class="sd">    16-bit integers structured like so:</span>
+<span class="sd">      struct {</span>
+<span class="sd">        WORD year,</span>
+<span class="sd">        WORD month,</span>
+<span class="sd">        WORD day_of_week,</span>
+<span class="sd">        WORD day,</span>
+<span class="sd">        WORD hour,</span>
+<span class="sd">        WORD minute,</span>
+<span class="sd">        WORD second,</span>
+<span class="sd">        WORD millisecond</span>
+<span class="sd">      }</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      systemtime: The 128-bit SYSTEMTIME timestamp.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC or 0 on error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">timestamp</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">SYSTEMTIME_STRUCT</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">systemtime</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">construct</span><span class="o">.</span><span class="n">ConstructError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">TimestampError</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to create timestamp from {0:s} with error: {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">systemtime</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">FromTimeParts</span><span class="p">(</span>
+        <span class="n">year</span><span class="o">=</span><span class="n">timestamp</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="n">timestamp</span><span class="o">.</span><span class="n">month</span><span class="p">,</span>
+        <span class="n">day</span><span class="o">=</span><span class="n">timestamp</span><span class="o">.</span><span class="n">day</span><span class="p">,</span> <span class="n">hour</span><span class="o">=</span><span class="n">timestamp</span><span class="o">.</span><span class="n">hour</span><span class="p">,</span>
+        <span class="n">minutes</span><span class="o">=</span><span class="n">timestamp</span><span class="o">.</span><span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span><span class="o">=</span><span class="n">timestamp</span><span class="o">.</span><span class="n">seconds</span><span class="p">,</span>
+        <span class="n">microseconds</span><span class="o">=</span><span class="p">(</span>
+            <span class="n">timestamp</span><span class="o">.</span><span class="n">milliseconds</span> <span class="o">*</span> <span class="n">cls</span><span class="o">.</span><span class="n">MILLI_SECONDS_TO_MICRO_SECONDS</span><span class="p">))</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.FromTimeParts"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.FromTimeParts">[docs]</a>  <span class="k">def</span> <span class="nf">FromTimeParts</span><span class="p">(</span>
+      <span class="n">cls</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">hour</span><span class="p">,</span> <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span><span class="p">,</span> <span class="n">microseconds</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+      <span class="n">timezone</span><span class="o">=</span><span class="n">pytz</span><span class="o">.</span><span class="n">UTC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a list of time entries to a timestamp.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      year: An integer representing the year.</span>
+<span class="sd">      month: An integer between 1 and 12.</span>
+<span class="sd">      day: An integer representing the number of day in the month.</span>
+<span class="sd">      hour: An integer representing the hour, 0 &lt;= hour &lt; 24.</span>
+<span class="sd">      minutes: An integer, 0 &lt;= minute &lt; 60.</span>
+<span class="sd">      seconds: An integer, 0 &lt;= second &lt; 60.</span>
+<span class="sd">      microseconds: Optional number of microseconds ranging from:</span>
+<span class="sd">                    0 &lt;= microsecond &lt; 1000000.</span>
+<span class="sd">      timezone: Optional timezone (instance of pytz.timezone).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC or 0 on error.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      TimestampError: if the timestamp cannot be created from the time parts.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span>
+          <span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">hour</span><span class="p">,</span> <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span><span class="p">,</span> <span class="n">microseconds</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">TimestampError</span><span class="p">((</span>
+          <span class="s1">u&#39;Unable to create timestamp from {0:04d}-{1:02d}-{2:02d} &#39;</span>
+          <span class="s1">u&#39;{3:02d}:{4:02d}:{5:02d}.{6:06d} with error: {7:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">hour</span><span class="p">,</span> <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span><span class="p">,</span> <span class="n">microseconds</span><span class="p">,</span>
+              <span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">timezone</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">STRING_TYPES</span><span class="p">):</span>
+      <span class="n">timezone</span> <span class="o">=</span> <span class="n">pytz</span><span class="o">.</span><span class="n">timezone</span><span class="p">(</span><span class="n">timezone</span><span class="p">)</span>
+
+    <span class="n">date_use</span> <span class="o">=</span> <span class="n">timezone</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+    <span class="n">posix_time</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">calendar</span><span class="o">.</span><span class="n">timegm</span><span class="p">(</span><span class="n">date_use</span><span class="o">.</span><span class="n">utctimetuple</span><span class="p">()))</span>
+
+    <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">FromPosixTime</span><span class="p">(</span><span class="n">posix_time</span><span class="p">)</span> <span class="o">+</span> <span class="n">microseconds</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.FromTimeString"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.FromTimeString">[docs]</a>  <span class="k">def</span> <span class="nf">FromTimeString</span><span class="p">(</span>
+      <span class="n">cls</span><span class="p">,</span> <span class="n">time_string</span><span class="p">,</span> <span class="n">dayfirst</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">gmt_as_timezone</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+      <span class="n">timezone</span><span class="o">=</span><span class="n">pytz</span><span class="o">.</span><span class="n">UTC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a string containing a date and time value into a timestamp.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      time_string: String that contains a date and time value.</span>
+<span class="sd">      dayfirst: An optional boolean argument. If set to true then the</span>
+<span class="sd">                parser will change the precedence in which it parses timestamps</span>
+<span class="sd">                from MM-DD-YYYY to DD-MM-YYYY (and YYYY-MM-DD will be</span>
+<span class="sd">                YYYY-DD-MM, etc).</span>
+<span class="sd">      gmt_as_timezone: Sometimes the dateutil parser will interpret GMT and UTC</span>
+<span class="sd">                       the same way, that is not make a distinction. By default</span>
+<span class="sd">                       this is set to true, that is GMT can be interpreted</span>
+<span class="sd">                       differently than UTC. If that is not the expected result</span>
+<span class="sd">                       this attribute can be set to false.</span>
+<span class="sd">      timezone: Optional timezone object (instance of pytz.timezone) that</span>
+<span class="sd">                the data and time value in the string represents. This value</span>
+<span class="sd">                is used when the timezone cannot be determined from the string.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC or 0 on error.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      TimestampError: if the time string could not be parsed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">gmt_as_timezone</span> <span class="ow">and</span> <span class="n">time_string</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39; GMT&#39;</span><span class="p">):</span>
+      <span class="n">time_string</span> <span class="o">=</span> <span class="s1">u&#39;{0:s}UTC&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time_string</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">])</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="c1"># TODO: deprecate the use of dateutil parser.</span>
+      <span class="n">datetime_object</span> <span class="o">=</span> <span class="n">dateutil</span><span class="o">.</span><span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">time_string</span><span class="p">,</span> <span class="n">dayfirst</span><span class="o">=</span><span class="n">dayfirst</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">TimestampError</span><span class="p">((</span>
+          <span class="s1">u&#39;Unable to convert time string: {0:s} in to a datetime object &#39;</span>
+          <span class="s1">u&#39;with error: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time_string</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">datetime_object</span><span class="o">.</span><span class="n">tzinfo</span><span class="p">:</span>
+      <span class="n">datetime_object</span> <span class="o">=</span> <span class="n">datetime_object</span><span class="o">.</span><span class="n">astimezone</span><span class="p">(</span><span class="n">pytz</span><span class="o">.</span><span class="n">UTC</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">datetime_object</span> <span class="o">=</span> <span class="n">timezone</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">datetime_object</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">FromPythonDatetime</span><span class="p">(</span><span class="n">datetime_object</span><span class="p">)</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.FromUUIDTime"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.FromUUIDTime">[docs]</a>  <span class="k">def</span> <span class="nf">FromUUIDTime</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">uuid_time</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a UUID verion 1 time into a timestamp.</span>
+
+<span class="sd">    The UUID version 1 time is a 60-bit value containing:</span>
+<span class="sd">      100th nano seconds since 1582-10-15 00:00:00</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      uuid_time: The 60-bit UUID version 1 timestamp.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC or 0 on error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: Add a handling for if the timestamp equals to zero.</span>
+    <span class="k">if</span> <span class="n">uuid_time</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="k">return</span> <span class="mi">0</span>
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="p">(</span><span class="n">uuid_time</span> <span class="o">-</span> <span class="n">cls</span><span class="o">.</span><span class="n">UUID_TIME_TO_POSIX_BASE</span><span class="p">)</span> <span class="o">/</span> <span class="mi">10</span>
+
+    <span class="k">if</span> <span class="n">timestamp</span> <span class="o">&gt;</span> <span class="n">cls</span><span class="o">.</span><span class="n">TIMESTAMP_MAX_MICRO_SECONDS</span><span class="p">:</span>
+      <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">timestamp</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.FromWebKitTime"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.FromWebKitTime">[docs]</a>  <span class="k">def</span> <span class="nf">FromWebKitTime</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">webkit_time</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a WebKit time into a timestamp.</span>
+
+<span class="sd">    The WebKit time is a 64-bit value containing:</span>
+<span class="sd">      micro seconds since 1601-01-01 00:00:00</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      webkit_time: The 64-bit WebKit time timestamp.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC or 0 on error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">webkit_time</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">TIMESTAMP_MIN_MICRO_SECONDS</span> <span class="o">+</span>
+                      <span class="n">cls</span><span class="o">.</span><span class="n">WEBKIT_TIME_TO_POSIX_BASE</span><span class="p">):</span>
+      <span class="k">return</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">webkit_time</span> <span class="o">-</span> <span class="n">cls</span><span class="o">.</span><span class="n">WEBKIT_TIME_TO_POSIX_BASE</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.GetNow"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.GetNow">[docs]</a>  <span class="k">def</span> <span class="nf">GetNow</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the current time (now) as a timestamp in UTC.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">time_elements</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">gmtime</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">calendar</span><span class="o">.</span><span class="n">timegm</span><span class="p">(</span><span class="n">time_elements</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000000</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.IsLeapYear"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.IsLeapYear">[docs]</a>  <span class="k">def</span> <span class="nf">IsLeapYear</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">year</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines if a year is a leap year.</span>
+
+<span class="sd">       A leap year is divisible by 4 and not by 100 or by 400.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      year: The year as in 1970.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A boolean value indicating the year is a leap year.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">year</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">year</span> <span class="o">%</span> <span class="mi">100</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="ow">or</span> <span class="n">year</span> <span class="o">%</span> <span class="mi">400</span> <span class="o">==</span> <span class="mi">0</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.LocaltimeToUTC"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.LocaltimeToUTC">[docs]</a>  <span class="k">def</span> <span class="nf">LocaltimeToUTC</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">timezone</span><span class="p">,</span> <span class="n">is_dst</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts the timestamp in localtime of the timezone to UTC.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timestamp: The timestamp which is an integer containing the number</span>
+<span class="sd">                 of micro seconds since January 1, 1970, 00:00:00 UTC.</span>
+<span class="sd">      timezone: The timezone (pytz.timezone) object.</span>
+<span class="sd">      is_dst: A boolean to indicate the timestamp is corrected for daylight</span>
+<span class="sd">              savings time (DST) only used for the DST transition period.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp which is an integer containing the number of micro seconds</span>
+<span class="sd">      since January 1, 1970, 00:00:00 UTC or 0 on error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">timezone</span> <span class="ow">and</span> <span class="n">timezone</span> <span class="o">!=</span> <span class="n">pytz</span><span class="o">.</span><span class="n">UTC</span><span class="p">:</span>
+      <span class="n">datetime_object</span> <span class="o">=</span> <span class="p">(</span>
+          <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">1970</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span> <span class="o">+</span>
+          <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">microseconds</span><span class="o">=</span><span class="n">timestamp</span><span class="p">))</span>
+
+      <span class="c1"># Check if timezone is UTC since utcoffset() does not support is_dst</span>
+      <span class="c1"># for UTC and will raise.</span>
+      <span class="n">datetime_delta</span> <span class="o">=</span> <span class="n">timezone</span><span class="o">.</span><span class="n">utcoffset</span><span class="p">(</span><span class="n">datetime_object</span><span class="p">,</span> <span class="n">is_dst</span><span class="o">=</span><span class="n">is_dst</span><span class="p">)</span>
+      <span class="n">seconds_delta</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">datetime_delta</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">())</span>
+      <span class="n">timestamp</span> <span class="o">-=</span> <span class="n">seconds_delta</span> <span class="o">*</span> <span class="n">cls</span><span class="o">.</span><span class="n">MICRO_SECONDS_PER_SECOND</span>
+
+    <span class="k">return</span> <span class="n">timestamp</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Timestamp.RoundToSeconds"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.Timestamp.RoundToSeconds">[docs]</a>  <span class="k">def</span> <span class="nf">RoundToSeconds</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Takes a timestamp value and rounds it to a second precision.&quot;&quot;&quot;</span>
+    <span class="n">leftovers</span> <span class="o">=</span> <span class="n">timestamp</span> <span class="o">%</span> <span class="n">cls</span><span class="o">.</span><span class="n">MICRO_SECONDS_PER_SECOND</span>
+    <span class="n">scrubbed</span> <span class="o">=</span> <span class="n">timestamp</span> <span class="o">-</span> <span class="n">leftovers</span>
+    <span class="n">rounded</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">leftovers</span><span class="p">)</span> <span class="o">/</span> <span class="n">cls</span><span class="o">.</span><span class="n">MICRO_SECONDS_PER_SECOND</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">scrubbed</span> <span class="o">+</span> <span class="n">rounded</span> <span class="o">*</span> <span class="n">cls</span><span class="o">.</span><span class="n">MICRO_SECONDS_PER_SECOND</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="GetCurrentYear"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.GetCurrentYear">[docs]</a><span class="k">def</span> <span class="nf">GetCurrentYear</span><span class="p">():</span>
+  <span class="sd">&quot;&quot;&quot;Determines the current year.&quot;&quot;&quot;</span>
+  <span class="n">datetime_object</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+  <span class="k">return</span> <span class="n">datetime_object</span><span class="o">.</span><span class="n">year</span></div>
+
+
+<div class="viewcode-block" id="GetYearFromPosixTime"><a class="viewcode-back" href="../../../plaso.lib.html#plaso.lib.timelib.GetYearFromPosixTime">[docs]</a><span class="k">def</span> <span class="nf">GetYearFromPosixTime</span><span class="p">(</span><span class="n">posix_time</span><span class="p">,</span> <span class="n">timezone</span><span class="o">=</span><span class="n">pytz</span><span class="o">.</span><span class="n">UTC</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Gets the year from a POSIX timestamp</span>
+
+<span class="sd">  The POSIX time is the number of seconds since 1970-01-01 00:00:00 UTC.</span>
+
+<span class="sd">  Args:</span>
+<span class="sd">    posix_time: An integer containing the number of seconds since</span>
+<span class="sd">                1970-01-01 00:00:00 UTC.</span>
+<span class="sd">    timezone: Optional timezone of the POSIX timestamp.</span>
+
+<span class="sd">  Returns:</span>
+<span class="sd">    The year of the POSIX timestamp.</span>
+
+<span class="sd">  Raises:</span>
+<span class="sd">    ValueError: If the posix timestamp is out of the range of supported values.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">datetime_object</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">posix_time</span><span class="p">,</span> <span class="n">tz</span><span class="o">=</span><span class="n">timezone</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">datetime_object</span><span class="o">.</span><span class="n">year</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

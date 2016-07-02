@@ -1,0 +1,1189 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.frontend.preg &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.frontend.preg</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;The preg front-end.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">dfvfs.helpers</span> <span class="kn">import</span> <span class="n">file_system_searcher</span>
+<span class="kn">from</span> <span class="nn">dfvfs.helpers</span> <span class="kn">import</span> <span class="n">windows_path_resolver</span>
+<span class="kn">from</span> <span class="nn">dfvfs.lib</span> <span class="kn">import</span> <span class="n">definitions</span> <span class="k">as</span> <span class="n">dfvfs_definitions</span>
+<span class="kn">from</span> <span class="nn">dfvfs.path</span> <span class="kn">import</span> <span class="n">factory</span> <span class="k">as</span> <span class="n">path_spec_factory</span>
+<span class="kn">from</span> <span class="nn">dfvfs.resolver</span> <span class="kn">import</span> <span class="n">resolver</span> <span class="k">as</span> <span class="n">path_spec_resolver</span>
+<span class="kn">from</span> <span class="nn">dfwinreg</span> <span class="kn">import</span> <span class="n">registry</span> <span class="k">as</span> <span class="n">dfwinreg_registry</span>
+
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">plaso_queue</span>
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">single_process</span>
+<span class="kn">from</span> <span class="nn">plaso.frontend</span> <span class="kn">import</span> <span class="n">extraction_frontend</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">py2to3</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">mediator</span> <span class="k">as</span> <span class="n">parsers_mediator</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span> <span class="k">as</span> <span class="n">parsers_manager</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">winreg</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">winreg_plugins</span>  <span class="c1"># pylint: disable=unused-import</span>
+<span class="kn">from</span> <span class="nn">plaso.preprocessors</span> <span class="kn">import</span> <span class="n">manager</span> <span class="k">as</span> <span class="n">preprocess_manager</span>
+
+
+<span class="c1"># The Registry (file) types.</span>
+<span class="n">REGISTRY_FILE_TYPE_NTUSER</span> <span class="o">=</span> <span class="s1">u&#39;NTUSER&#39;</span>
+<span class="n">REGISTRY_FILE_TYPE_SAM</span> <span class="o">=</span> <span class="s1">u&#39;SAM&#39;</span>
+<span class="n">REGISTRY_FILE_TYPE_SECURITY</span> <span class="o">=</span> <span class="s1">u&#39;SECURITY&#39;</span>
+<span class="n">REGISTRY_FILE_TYPE_SOFTWARE</span> <span class="o">=</span> <span class="s1">u&#39;SOFTWARE&#39;</span>
+<span class="n">REGISTRY_FILE_TYPE_SYSTEM</span> <span class="o">=</span> <span class="s1">u&#39;SYSTEM&#39;</span>
+<span class="n">REGISTRY_FILE_TYPE_UNKNOWN</span> <span class="o">=</span> <span class="s1">u&#39;UNKNOWN&#39;</span>
+<span class="n">REGISTRY_FILE_TYPE_USRCLASS</span> <span class="o">=</span> <span class="s1">u&#39;USRCLASS&#39;</span>
+
+<span class="n">REGISTRY_FILE_TYPES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+    <span class="n">REGISTRY_FILE_TYPE_NTUSER</span><span class="p">,</span>
+    <span class="n">REGISTRY_FILE_TYPE_SAM</span><span class="p">,</span>
+    <span class="n">REGISTRY_FILE_TYPE_SECURITY</span><span class="p">,</span>
+    <span class="n">REGISTRY_FILE_TYPE_SOFTWARE</span><span class="p">,</span>
+    <span class="n">REGISTRY_FILE_TYPE_SYSTEM</span><span class="p">,</span>
+    <span class="n">REGISTRY_FILE_TYPE_USRCLASS</span><span class="p">])</span>
+
+
+<span class="c1"># TODO: add tests for this class.</span>
+<div class="viewcode-block" id="PluginList"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PluginList">[docs]</a><span class="k">class</span> <span class="nc">PluginList</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A simple class that stores information about Windows Registry plugins.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the plugin list object.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">PluginList</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_plugins</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="PluginList.__iter__"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PluginList.__iter__">[docs]</a>  <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return an iterator of all Windows Registry plugins.&quot;&quot;&quot;</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">_</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">extend</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plugins</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">ret</span><span class="p">:</span>
+      <span class="k">yield</span> <span class="n">item</span></div>
+
+  <span class="k">def</span> <span class="nf">_GetPluginsByType</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plugins_dict</span><span class="p">,</span> <span class="n">registry_file_type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the Windows Registry plugins of a specific type.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      plugins_dict: Dictionary containing the Windows Registry plugins</span>
+<span class="sd">                    by plugin type.</span>
+<span class="sd">      registry_file_type: String containing the Windows Registry file type,</span>
+<span class="sd">                          e.g. NTUSER, SOFTWARE.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list containing the Windows Registry plugins (instances of</span>
+<span class="sd">      RegistryPlugin) for the specific plugin type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">plugins_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">registry_file_type</span><span class="p">,</span> <span class="p">[])</span> <span class="o">+</span> <span class="n">plugins_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;any&#39;</span><span class="p">,</span> <span class="p">[])</span>
+
+<div class="viewcode-block" id="PluginList.AddPlugin"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PluginList.AddPlugin">[docs]</a>  <span class="k">def</span> <span class="nf">AddPlugin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plugin_class</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add a Windows Registry plugin to the plugin list.</span>
+
+<span class="sd">    Only plugins with full Windows Registry key paths are registered.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      plugin_class: The plugin class that is being registered.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">key_paths</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">registry_file_types</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">registry_key_filter</span> <span class="ow">in</span> <span class="n">plugin_class</span><span class="o">.</span><span class="n">FILTERS</span><span class="p">:</span>
+      <span class="n">plugin_key_paths</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">registry_key_filter</span><span class="p">,</span> <span class="s1">u&#39;key_paths&#39;</span><span class="p">,</span> <span class="p">[])</span>
+      <span class="k">for</span> <span class="n">plugin_key_path</span> <span class="ow">in</span> <span class="n">plugin_key_paths</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">plugin_key_path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">key_paths</span><span class="p">:</span>
+          <span class="n">key_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">plugin_key_path</span><span class="p">)</span>
+
+          <span class="k">if</span> <span class="n">plugin_key_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;HKEY_CURRENT_USER&#39;</span><span class="p">):</span>
+            <span class="n">registry_file_types</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">u&#39;NTUSER&#39;</span><span class="p">)</span>
+          <span class="k">elif</span> <span class="n">plugin_key_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;HKEY_LOCAL_MACHINE</span><span class="se">\\</span><span class="s1">SAM&#39;</span><span class="p">):</span>
+            <span class="n">registry_file_types</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">u&#39;SAM&#39;</span><span class="p">)</span>
+          <span class="k">elif</span> <span class="n">plugin_key_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;HKEY_LOCAL_MACHINE</span><span class="se">\\</span><span class="s1">Software&#39;</span><span class="p">):</span>
+            <span class="n">registry_file_types</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">u&#39;SOFTWARE&#39;</span><span class="p">)</span>
+          <span class="k">elif</span> <span class="n">plugin_key_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;HKEY_LOCAL_MACHINE</span><span class="se">\\</span><span class="s1">System&#39;</span><span class="p">):</span>
+            <span class="n">registry_file_types</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">u&#39;SYSTEM&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">registry_file_types</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+      <span class="n">plugin_type</span> <span class="o">=</span> <span class="n">registry_file_types</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">plugin_type</span> <span class="o">=</span> <span class="s1">u&#39;any&#39;</span>
+
+    <span class="k">if</span> <span class="n">key_paths</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_plugins</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">plugin_type</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">plugin_class</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PluginList.GetAllPlugins"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PluginList.GetAllPlugins">[docs]</a>  <span class="k">def</span> <span class="nf">GetAllPlugins</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return all key plugins as a list.&quot;&quot;&quot;</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">_</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">ret</span><span class="o">.</span><span class="n">extend</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plugins</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">ret</span></div>
+
+<div class="viewcode-block" id="PluginList.GetKeyPaths"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PluginList.GetKeyPaths">[docs]</a>  <span class="k">def</span> <span class="nf">GetKeyPaths</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plugin_names</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves a list of Windows Registry key paths.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      plugin_names: Optional list of plugin names, if defined only keys from</span>
+<span class="sd">                    these plugins will be expanded. The default is None which</span>
+<span class="sd">                    means all key plugins will get expanded keys.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A set of Windows Registry key paths.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">key_paths</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">plugin_cls</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetAllPlugins</span><span class="p">():</span>
+      <span class="n">plugin_object</span> <span class="o">=</span> <span class="n">plugin_cls</span><span class="p">()</span>
+
+      <span class="k">if</span> <span class="n">plugin_names</span> <span class="ow">and</span> <span class="n">plugin_object</span><span class="o">.</span><span class="n">NAME</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">plugin_names</span><span class="p">:</span>
+        <span class="k">continue</span>
+
+      <span class="k">for</span> <span class="n">key_path</span> <span class="ow">in</span> <span class="n">plugin_object</span><span class="o">.</span><span class="n">GetKeyPaths</span><span class="p">():</span>
+        <span class="n">key_paths</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">key_path</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">key_paths</span></div>
+
+<div class="viewcode-block" id="PluginList.GetPluginObjectByName"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PluginList.GetPluginObjectByName">[docs]</a>  <span class="k">def</span> <span class="nf">GetPluginObjectByName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">registry_file_type</span><span class="p">,</span> <span class="n">plugin_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a new instance of a specific Windows Registry plugin.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      registry_file_type: String containing the Windows Registry file type,</span>
+<span class="sd">                          e.g. NTUSER, SOFTWARE.</span>
+<span class="sd">      plugin_name: the name of the plugin.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The Windows Registry plugin (instance of RegistryPlugin) or None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: make this a dict lookup instead of a list iteration.</span>
+    <span class="k">for</span> <span class="n">plugin_cls</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetPlugins</span><span class="p">(</span><span class="n">registry_file_type</span><span class="p">):</span>
+      <span class="k">if</span> <span class="n">plugin_cls</span><span class="o">.</span><span class="n">NAME</span> <span class="o">==</span> <span class="n">plugin_name</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">plugin_cls</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PluginList.GetPluginObjects"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PluginList.GetPluginObjects">[docs]</a>  <span class="k">def</span> <span class="nf">GetPluginObjects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">registry_file_type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates new instances of a specific type of Windows Registry plugins.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      registry_file_type: String containing the Windows Registry file type,</span>
+<span class="sd">                          e.g. NTUSER, SOFTWARE.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of Windows Registry plugins (instances of RegistryPlugin).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">plugin_cls</span><span class="p">()</span> <span class="k">for</span> <span class="n">plugin_cls</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetPlugins</span><span class="p">(</span><span class="n">registry_file_type</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="PluginList.GetPlugins"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PluginList.GetPlugins">[docs]</a>  <span class="k">def</span> <span class="nf">GetPlugins</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">registry_file_type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the Windows Registry key-based plugins of a specific type.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      registry_file_type: String containing the Windows Registry file type,</span>
+<span class="sd">                          e.g. NTUSER, SOFTWARE.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list containing the Windows Registry plugins (types of</span>
+<span class="sd">      RegistryPlugin) for the specific plugin type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetPluginsByType</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_plugins</span><span class="p">,</span> <span class="n">registry_file_type</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PluginList.GetRegistryPlugins"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PluginList.GetRegistryPlugins">[docs]</a>  <span class="k">def</span> <span class="nf">GetRegistryPlugins</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the Windows Registry plugins based on a filter string.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      filter_string: string containing the name of the plugin or an empty</span>
+<span class="sd">                     string for all the plugins.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of Windows Registry plugins (instance of RegistryPlugin).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">filter_string</span><span class="p">:</span>
+      <span class="n">filter_string</span> <span class="o">=</span> <span class="n">filter_string</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="n">plugins_to_run</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">plugins_per_type</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_plugins</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+      <span class="k">for</span> <span class="n">plugin</span> <span class="ow">in</span> <span class="n">plugins_per_type</span><span class="p">:</span>
+        <span class="c1"># Note that this method also matches on parts of the plugin name.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">filter_string</span> <span class="ow">or</span> <span class="n">filter_string</span> <span class="ow">in</span> <span class="n">plugin</span><span class="o">.</span><span class="n">NAME</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+          <span class="n">plugins_to_run</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">plugin</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">plugins_to_run</span></div>
+
+<div class="viewcode-block" id="PluginList.GetRegistryTypes"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PluginList.GetRegistryTypes">[docs]</a>  <span class="k">def</span> <span class="nf">GetRegistryTypes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the Windows Registry types based on a filter string.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      filter_string: string containing the name of the plugin or an empty</span>
+<span class="sd">                     string for all the plugins.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of Windows Registry types.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">filter_string</span><span class="p">:</span>
+      <span class="n">filter_string</span> <span class="o">=</span> <span class="n">filter_string</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="n">registry_file_types</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">plugin_type</span><span class="p">,</span> <span class="n">plugins_per_type</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_plugins</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+      <span class="k">for</span> <span class="n">plugin</span> <span class="ow">in</span> <span class="n">plugins_per_type</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">filter_string</span> <span class="ow">or</span> <span class="n">filter_string</span> <span class="o">==</span> <span class="n">plugin</span><span class="o">.</span><span class="n">NAME</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
+          <span class="k">if</span> <span class="n">plugin_type</span> <span class="o">==</span> <span class="s1">u&#39;any&#39;</span><span class="p">:</span>
+            <span class="n">registry_file_types</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">REGISTRY_FILE_TYPES</span><span class="p">)</span>
+
+          <span class="k">else</span><span class="p">:</span>
+            <span class="n">registry_file_types</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">plugin_type</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">registry_file_types</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PluginList.GetRegistryTypesFromPlugins"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PluginList.GetRegistryTypesFromPlugins">[docs]</a>  <span class="k">def</span> <span class="nf">GetRegistryTypesFromPlugins</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plugin_names</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a list of Registry types extracted from a list of plugin names.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      plugin_names: a list of plugin names.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of Registry types extracted from the supplied plugins.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">plugin_names</span><span class="p">:</span>
+      <span class="k">return</span> <span class="p">[]</span>
+
+    <span class="n">registry_file_types</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">plugin_type</span><span class="p">,</span> <span class="n">plugins_per_type</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_plugins</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+      <span class="k">for</span> <span class="n">plugin</span> <span class="ow">in</span> <span class="n">plugins_per_type</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">plugin</span><span class="o">.</span><span class="n">NAME</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">plugin_names</span><span class="p">:</span>
+          <span class="c1"># If a plugin is available for every Registry type</span>
+          <span class="c1"># we need to make sure all Registry files are included.</span>
+          <span class="k">if</span> <span class="n">plugin_type</span> <span class="o">==</span> <span class="s1">u&#39;any&#39;</span><span class="p">:</span>
+            <span class="n">registry_file_types</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">REGISTRY_FILE_TYPES</span><span class="p">)</span>
+
+          <span class="k">else</span><span class="p">:</span>
+            <span class="n">registry_file_types</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">plugin_type</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">registry_file_types</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PluginList.GetRegistryPluginsFromRegistryType"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PluginList.GetRegistryPluginsFromRegistryType">[docs]</a>  <span class="k">def</span> <span class="nf">GetRegistryPluginsFromRegistryType</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">registry_file_type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the Windows Registry plugins based on a Registry type.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      registry_file_type: the Windows Registry files type string or an empty</span>
+<span class="sd">                          string for all the plugins.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of Windows Registry plugins (instance of RegistryPlugin).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">registry_file_type</span><span class="p">:</span>
+      <span class="n">registry_file_type</span> <span class="o">=</span> <span class="n">registry_file_type</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+
+    <span class="n">plugins_to_run</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">plugin_type</span><span class="p">,</span> <span class="n">plugins_per_type</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_plugins</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">registry_file_type</span> <span class="ow">or</span> <span class="n">plugin_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">u&#39;any&#39;</span><span class="p">,</span> <span class="n">registry_file_type</span><span class="p">]:</span>
+        <span class="n">plugins_to_run</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">plugins_per_type</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">plugins_to_run</span></div></div>
+
+
+<div class="viewcode-block" id="PregItemQueueConsumer"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregItemQueueConsumer">[docs]</a><span class="k">class</span> <span class="nc">PregItemQueueConsumer</span><span class="p">(</span><span class="n">plaso_queue</span><span class="o">.</span><span class="n">ItemQueueConsumer</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements a list event object queue consumer.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_queue</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the list event object queue consumer.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_queue: the event object queue (instance of Queue).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">PregItemQueueConsumer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">event_queue</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_event_objects</span> <span class="o">=</span> <span class="p">[]</span>
+
+  <span class="k">def</span> <span class="nf">_ConsumeItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">,</span> <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Consumes an item callback for ConsumeItems.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: the event object (instance of EventObject).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_event_objects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PregItemQueueConsumer.GetItems"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregItemQueueConsumer.GetItems">[docs]</a>  <span class="k">def</span> <span class="nf">GetItems</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the consumed event objects.</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">      Event objects (instance of EventObject)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_event_objects</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">StopIteration</span>
+
+    <span class="n">event_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_event_objects</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">event_object</span><span class="p">:</span>
+      <span class="k">yield</span> <span class="n">event_object</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_event_objects</span><span class="p">:</span>
+        <span class="k">break</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_event_objects</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="PregFrontend"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregFrontend">[docs]</a><span class="k">class</span> <span class="nc">PregFrontend</span><span class="p">(</span><span class="n">extraction_frontend</span><span class="o">.</span><span class="n">ExtractionFrontend</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements the preg front-end.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    knowledge_base_object: the knowledge base object (instance</span>
+<span class="sd">                           of KnowledgeBase).</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the front-end object.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">PregFrontend</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_mount_path_spec</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parse_restore_points</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_preprocess_completed</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_registry_files</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_registry_plugin_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetWindowsRegistryPlugins</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_single_file</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_source_path</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_source_path_specs</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">knowledge_base_object</span> <span class="o">=</span> <span class="bp">None</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">registry_plugin_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The Windows Registry plugin list (instance of PluginList).&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_registry_plugin_list</span>
+
+  <span class="k">def</span> <span class="nf">_GetRegistryHelperFromPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">codepage</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a Registry helper object from a path.</span>
+
+<span class="sd">    Given a path to a Registry file this function goes through</span>
+<span class="sd">    all the discovered source path specifications (instance of PathSpec)</span>
+<span class="sd">    and extracts Registry helper objects based on the supplied</span>
+<span class="sd">    path.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      path: the path filter to a Registry file.</span>
+<span class="sd">      codepage: the codepage used for the Registry file.</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">      A Registry helper object (instance of PregRegistryHelper).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: deprecate usage of pre_obj.</span>
+    <span class="n">path_attributes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">knowledge_base_object</span><span class="o">.</span><span class="n">pre_obj</span><span class="o">.</span><span class="n">__dict__</span>
+
+    <span class="k">for</span> <span class="n">source_path_spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source_path_specs</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">source_path_spec</span><span class="o">.</span><span class="n">type_indicator</span> <span class="o">==</span> <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">TYPE_INDICATOR_OS</span><span class="p">:</span>
+        <span class="n">file_entry</span> <span class="o">=</span> <span class="n">path_spec_resolver</span><span class="o">.</span><span class="n">Resolver</span><span class="o">.</span><span class="n">OpenFileEntry</span><span class="p">(</span><span class="n">source_path_spec</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">IsFile</span><span class="p">():</span>
+          <span class="k">yield</span> <span class="n">PregRegistryHelper</span><span class="p">(</span>
+              <span class="n">file_entry</span><span class="p">,</span> <span class="s1">u&#39;OS&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">knowledge_base_object</span><span class="p">,</span> <span class="n">codepage</span><span class="o">=</span><span class="n">codepage</span><span class="p">)</span>
+          <span class="k">continue</span>
+
+        <span class="c1"># TODO: Change this into an actual mount point path spec.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_mount_path_spec</span> <span class="o">=</span> <span class="n">source_path_spec</span>
+
+      <span class="n">collector_name</span> <span class="o">=</span> <span class="n">source_path_spec</span><span class="o">.</span><span class="n">type_indicator</span>
+      <span class="n">parent_path_spec</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">source_path_spec</span><span class="p">,</span> <span class="s1">u&#39;parent&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">parent_path_spec</span> <span class="ow">and</span> <span class="n">parent_path_spec</span><span class="o">.</span><span class="n">type_indicator</span> <span class="o">==</span> <span class="p">(</span>
+          <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">TYPE_INDICATOR_VSHADOW</span><span class="p">):</span>
+        <span class="n">vss_store</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">parent_path_spec</span><span class="p">,</span> <span class="s1">u&#39;store_index&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">collector_name</span> <span class="o">=</span> <span class="s1">u&#39;VSS Store: {0:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vss_store</span><span class="p">)</span>
+
+      <span class="n">file_system</span><span class="p">,</span> <span class="n">mount_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetSourceFileSystem</span><span class="p">(</span><span class="n">source_path_spec</span><span class="p">)</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">path_resolver</span> <span class="o">=</span> <span class="n">windows_path_resolver</span><span class="o">.</span><span class="n">WindowsPathResolver</span><span class="p">(</span>
+            <span class="n">file_system</span><span class="p">,</span> <span class="n">mount_point</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;%UserProfile%</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">):</span>
+          <span class="n">searcher</span> <span class="o">=</span> <span class="n">file_system_searcher</span><span class="o">.</span><span class="n">FileSystemSearcher</span><span class="p">(</span>
+              <span class="n">file_system</span><span class="p">,</span> <span class="n">mount_point</span><span class="p">)</span>
+
+          <span class="n">user_profiles</span> <span class="o">=</span> <span class="p">[]</span>
+          <span class="c1"># TODO: determine the users path properly instead of relying on</span>
+          <span class="c1"># common defaults. Note that these paths are language dependent.</span>
+          <span class="k">for</span> <span class="n">user_path</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">u&#39;/Documents and Settings/.+&#39;</span><span class="p">,</span> <span class="s1">u&#39;/Users/.+&#39;</span><span class="p">):</span>
+            <span class="n">find_spec</span> <span class="o">=</span> <span class="n">file_system_searcher</span><span class="o">.</span><span class="n">FindSpec</span><span class="p">(</span>
+                <span class="n">location_regex</span><span class="o">=</span><span class="n">user_path</span><span class="p">,</span> <span class="n">case_sensitive</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">path_spec</span> <span class="ow">in</span> <span class="n">searcher</span><span class="o">.</span><span class="n">Find</span><span class="p">(</span><span class="n">find_specs</span><span class="o">=</span><span class="p">[</span><span class="n">find_spec</span><span class="p">]):</span>
+              <span class="n">location</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">path_spec</span><span class="p">,</span> <span class="s1">u&#39;location&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+              <span class="k">if</span> <span class="n">location</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">location</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;/&#39;</span><span class="p">):</span>
+                  <span class="n">location</span> <span class="o">=</span> <span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">location</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">u&#39;/&#39;</span><span class="p">))</span>
+                <span class="n">user_profiles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">location</span><span class="p">)</span>
+
+          <span class="k">for</span> <span class="n">user_profile</span> <span class="ow">in</span> <span class="n">user_profiles</span><span class="p">:</span>
+            <span class="n">path_resolver</span><span class="o">.</span><span class="n">SetEnvironmentVariable</span><span class="p">(</span><span class="s1">u&#39;UserProfile&#39;</span><span class="p">,</span> <span class="n">user_profile</span><span class="p">)</span>
+
+            <span class="n">path_spec</span> <span class="o">=</span> <span class="n">path_resolver</span><span class="o">.</span><span class="n">ResolvePath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">path_spec</span><span class="p">:</span>
+              <span class="k">continue</span>
+
+            <span class="n">file_entry</span> <span class="o">=</span> <span class="n">file_system</span><span class="o">.</span><span class="n">GetFileEntryByPathSpec</span><span class="p">(</span><span class="n">path_spec</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">file_entry</span><span class="p">:</span>
+              <span class="k">continue</span>
+
+            <span class="k">yield</span> <span class="n">PregRegistryHelper</span><span class="p">(</span>
+                <span class="n">file_entry</span><span class="p">,</span> <span class="n">collector_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">knowledge_base_object</span><span class="p">,</span>
+                <span class="n">codepage</span><span class="o">=</span><span class="n">codepage</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">path_attribute_value</span> <span class="o">=</span> <span class="n">path_attributes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;systemroot&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+          <span class="k">if</span> <span class="n">path_attribute_value</span><span class="p">:</span>
+            <span class="n">path_resolver</span><span class="o">.</span><span class="n">SetEnvironmentVariable</span><span class="p">(</span>
+                <span class="s1">u&#39;SystemRoot&#39;</span><span class="p">,</span> <span class="n">path_attribute_value</span><span class="p">)</span>
+
+          <span class="n">path_spec</span> <span class="o">=</span> <span class="n">path_resolver</span><span class="o">.</span><span class="n">ResolvePath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+          <span class="k">if</span> <span class="ow">not</span> <span class="n">path_spec</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+          <span class="n">file_entry</span> <span class="o">=</span> <span class="n">file_system</span><span class="o">.</span><span class="n">GetFileEntryByPathSpec</span><span class="p">(</span><span class="n">path_spec</span><span class="p">)</span>
+          <span class="k">if</span> <span class="ow">not</span> <span class="n">file_entry</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+          <span class="k">yield</span> <span class="n">PregRegistryHelper</span><span class="p">(</span>
+              <span class="n">file_entry</span><span class="p">,</span> <span class="n">collector_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">knowledge_base_object</span><span class="p">,</span>
+              <span class="n">codepage</span><span class="o">=</span><span class="n">codepage</span><span class="p">)</span>
+
+      <span class="k">finally</span><span class="p">:</span>
+        <span class="n">file_system</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
+
+  <span class="c1"># TODO: refactor, this is a duplicate of the function in engine.</span>
+  <span class="k">def</span> <span class="nf">_GetSourceFileSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_path_spec</span><span class="p">,</span> <span class="n">resolver_context</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the file system of the source.</span>
+
+<span class="sd">    The mount point path specification refers to either a directory or</span>
+<span class="sd">    a volume on storage media device or image. It is needed by the dfVFS</span>
+<span class="sd">    file system searcher (instance of FileSystemSearcher) to indicate</span>
+<span class="sd">    the base location of the file system.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      source_path_spec: The source path specification (instance of</span>
+<span class="sd">                        dfvfs.PathSpec) of the file system.</span>
+<span class="sd">      resolver_context: Optional resolver context (instance of dfvfs.Context).</span>
+<span class="sd">                        The default is None which will use the built in context</span>
+<span class="sd">                        which is not multi process safe. Note that every thread</span>
+<span class="sd">                        or process must have its own resolver context.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A tuple of the file system (instance of dfvfs.FileSystem) and</span>
+<span class="sd">      the mount point path specification (instance of path.PathSpec).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: if source path specification is not set.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">source_path_spec</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">u&#39;Missing source.&#39;</span><span class="p">)</span>
+
+    <span class="n">file_system</span> <span class="o">=</span> <span class="n">path_spec_resolver</span><span class="o">.</span><span class="n">Resolver</span><span class="o">.</span><span class="n">OpenFileSystem</span><span class="p">(</span>
+        <span class="n">source_path_spec</span><span class="p">,</span> <span class="n">resolver_context</span><span class="o">=</span><span class="n">resolver_context</span><span class="p">)</span>
+
+    <span class="n">type_indicator</span> <span class="o">=</span> <span class="n">source_path_spec</span><span class="o">.</span><span class="n">type_indicator</span>
+    <span class="k">if</span> <span class="n">path_spec_factory</span><span class="o">.</span><span class="n">Factory</span><span class="o">.</span><span class="n">IsSystemLevelTypeIndicator</span><span class="p">(</span><span class="n">type_indicator</span><span class="p">):</span>
+      <span class="n">mount_point</span> <span class="o">=</span> <span class="n">source_path_spec</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">mount_point</span> <span class="o">=</span> <span class="n">source_path_spec</span><span class="o">.</span><span class="n">parent</span>
+
+    <span class="k">return</span> <span class="n">file_system</span><span class="p">,</span> <span class="n">mount_point</span>
+
+<div class="viewcode-block" id="PregFrontend.CreateParserMediator"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregFrontend.CreateParserMediator">[docs]</a>  <span class="k">def</span> <span class="nf">CreateParserMediator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_queue</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a parser mediator object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_queue: an optional event queue object (instance of Queue).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A parser mediator object (instance of parsers_mediator.ParserMediator).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">event_queue</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">event_queue</span> <span class="o">=</span> <span class="n">single_process</span><span class="o">.</span><span class="n">SingleProcessQueue</span><span class="p">()</span>
+    <span class="n">event_queue_producer</span> <span class="o">=</span> <span class="n">plaso_queue</span><span class="o">.</span><span class="n">ItemQueueProducer</span><span class="p">(</span><span class="n">event_queue</span><span class="p">)</span>
+
+    <span class="n">parse_error_queue</span> <span class="o">=</span> <span class="n">single_process</span><span class="o">.</span><span class="n">SingleProcessQueue</span><span class="p">()</span>
+    <span class="n">parse_error_queue_producer</span> <span class="o">=</span> <span class="n">plaso_queue</span><span class="o">.</span><span class="n">ItemQueueProducer</span><span class="p">(</span>
+        <span class="n">parse_error_queue</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">parsers_mediator</span><span class="o">.</span><span class="n">ParserMediator</span><span class="p">(</span>
+        <span class="n">event_queue_producer</span><span class="p">,</span> <span class="n">parse_error_queue_producer</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knowledge_base_object</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PregFrontend.ExpandKeysRedirect"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregFrontend.ExpandKeysRedirect">[docs]</a>  <span class="k">def</span> <span class="nf">ExpandKeysRedirect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">keys</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Expands a list of Registry key paths with their redirect equivalents.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      keys: a list of Windows Registry key paths.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">Software&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="s1">u&#39;Wow6432Node&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">key</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">first</span><span class="p">,</span> <span class="n">second</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">Software&#39;</span><span class="p">)</span>
+        <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;{0:s}</span><span class="se">\\</span><span class="s1">Wow6432Node{1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PregFrontend.GetRegistryFilePaths"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregFrontend.GetRegistryFilePaths">[docs]</a>  <span class="k">def</span> <span class="nf">GetRegistryFilePaths</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">registry_file_types</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a list of Windows Registry file paths.</span>
+
+<span class="sd">    If the Windows Registry file type is not set this functions attempts</span>
+<span class="sd">    to determine it based on the presence of specific Registry keys.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      registry_file_types: a set of Windows Registry file type strings.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of path of Windows Registry files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_restore_points</span><span class="p">:</span>
+      <span class="n">restore_path</span> <span class="o">=</span> <span class="p">(</span>
+          <span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">System Volume Information</span><span class="se">\\</span><span class="s1">_restore.+</span><span class="se">\\</span><span class="s1">RP[0-9]+</span><span class="se">\\</span><span class="s1">snapshot</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">restore_path</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+
+    <span class="n">paths</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">registry_file_type</span> <span class="ow">in</span> <span class="n">registry_file_types</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">registry_file_type</span> <span class="o">==</span> <span class="n">REGISTRY_FILE_TYPE_NTUSER</span><span class="p">:</span>
+        <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;%UserProfile%</span><span class="se">\\</span><span class="s1">NTUSER.DAT&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">restore_path</span><span class="p">:</span>
+          <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;{0:s}</span><span class="se">\\</span><span class="s1">_REGISTRY_USER_NTUSER_.+&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">restore_path</span><span class="p">))</span>
+
+      <span class="k">elif</span> <span class="n">registry_file_type</span> <span class="o">==</span> <span class="n">REGISTRY_FILE_TYPE_SAM</span><span class="p">:</span>
+        <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;%SystemRoot%</span><span class="se">\\</span><span class="s1">System32</span><span class="se">\\</span><span class="s1">config</span><span class="se">\\</span><span class="s1">SAM&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">restore_path</span><span class="p">:</span>
+          <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;{0:s}</span><span class="se">\\</span><span class="s1">_REGISTRY_MACHINE_SAM&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">restore_path</span><span class="p">))</span>
+
+      <span class="k">elif</span> <span class="n">registry_file_type</span> <span class="o">==</span> <span class="n">REGISTRY_FILE_TYPE_SECURITY</span><span class="p">:</span>
+        <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;%SystemRoot%</span><span class="se">\\</span><span class="s1">System32</span><span class="se">\\</span><span class="s1">config</span><span class="se">\\</span><span class="s1">SECURITY&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">restore_path</span><span class="p">:</span>
+          <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+              <span class="s1">u&#39;{0:s}</span><span class="se">\\</span><span class="s1">_REGISTRY_MACHINE_SECURITY&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">restore_path</span><span class="p">))</span>
+
+      <span class="k">elif</span> <span class="n">registry_file_type</span> <span class="o">==</span> <span class="n">REGISTRY_FILE_TYPE_SOFTWARE</span><span class="p">:</span>
+        <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;%SystemRoot%</span><span class="se">\\</span><span class="s1">System32</span><span class="se">\\</span><span class="s1">config</span><span class="se">\\</span><span class="s1">SOFTWARE&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">restore_path</span><span class="p">:</span>
+          <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+              <span class="s1">u&#39;{0:s}</span><span class="se">\\</span><span class="s1">_REGISTRY_MACHINE_SOFTWARE&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">restore_path</span><span class="p">))</span>
+
+      <span class="k">elif</span> <span class="n">registry_file_type</span> <span class="o">==</span> <span class="n">REGISTRY_FILE_TYPE_SYSTEM</span><span class="p">:</span>
+        <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;%SystemRoot%</span><span class="se">\\</span><span class="s1">System32</span><span class="se">\\</span><span class="s1">config</span><span class="se">\\</span><span class="s1">SYSTEM&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">restore_path</span><span class="p">:</span>
+          <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;{0:s}</span><span class="se">\\</span><span class="s1">_REGISTRY_MACHINE_SYSTEM&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">restore_path</span><span class="p">))</span>
+
+      <span class="k">elif</span> <span class="n">registry_file_type</span> <span class="o">==</span> <span class="n">REGISTRY_FILE_TYPE_USRCLASS</span><span class="p">:</span>
+        <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="s1">u&#39;%UserProfile%</span><span class="se">\\</span><span class="s1">AppData</span><span class="se">\\</span><span class="s1">Local</span><span class="se">\\</span><span class="s1">Microsoft</span><span class="se">\\</span><span class="s1">Windows</span><span class="se">\\</span><span class="s1">UsrClass.dat&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">restore_path</span><span class="p">:</span>
+          <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+              <span class="s1">u&#39;{0:s}</span><span class="se">\\</span><span class="s1">_REGISTRY_USER_USRCLASS_.+&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">restore_path</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">paths</span></div>
+
+  <span class="c1"># TODO: refactor this function. Current implementation is too complex.</span>
+<div class="viewcode-block" id="PregFrontend.GetRegistryHelpers"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregFrontend.GetRegistryHelpers">[docs]</a>  <span class="k">def</span> <span class="nf">GetRegistryHelpers</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">registry_file_types</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">plugin_names</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">codepage</span><span class="o">=</span><span class="s1">u&#39;cp1252&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a list of discovered Registry helpers.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      registry_file_types: optional list of Windows Registry file types,</span>
+<span class="sd">                           e.g.: NTUSER, SAM, etc that should be included.</span>
+<span class="sd">      plugin_names: optional list of strings containing the name of the</span>
+<span class="sd">                    plugin(s) or an empty string for all the types. The default</span>
+<span class="sd">                    is None.</span>
+<span class="sd">      codepage: the codepage used for the Registry file.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of Registry helper objects (instance of PregRegistryHelper).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      ValueError: If neither registry_file_types nor plugin name is passed</span>
+<span class="sd">                  as a parameter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">registry_file_types</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">plugin_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+          <span class="s1">u&#39;Missing registry_file_types or plugin_name value.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">plugin_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">plugin_names</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">plugin_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">plugin_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">plugin_name</span> <span class="ow">in</span> <span class="n">plugin_names</span><span class="p">]</span>
+
+    <span class="c1"># TODO: use non-preprocess collector with filter to collect Registry files.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_single_file</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_preprocess_completed</span><span class="p">:</span>
+      <span class="n">file_system</span><span class="p">,</span> <span class="n">mount_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetSourceFileSystem</span><span class="p">(</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_source_path_specs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+      <span class="n">preprocess_manager</span><span class="o">.</span><span class="n">PreprocessPluginsManager</span><span class="o">.</span><span class="n">RunPlugins</span><span class="p">(</span>
+          <span class="s1">u&#39;Windows&#39;</span><span class="p">,</span> <span class="n">file_system</span><span class="p">,</span> <span class="n">mount_point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">knowledge_base_object</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_preprocess_completed</span> <span class="o">=</span> <span class="bp">True</span>
+      <span class="n">file_system</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
+
+    <span class="c1"># TODO: fix issue handling Windows paths</span>
+    <span class="k">if</span> <span class="n">registry_file_types</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">registry_file_types</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">types_from_plugins</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_registry_plugin_list</span><span class="o">.</span><span class="n">GetRegistryTypesFromPlugins</span><span class="p">(</span><span class="n">plugin_names</span><span class="p">))</span>
+    <span class="n">registry_file_types</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">types_from_plugins</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_single_file</span><span class="p">:</span>
+      <span class="n">paths</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_source_path</span><span class="p">]</span>
+
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">types</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+      <span class="k">if</span> <span class="n">registry_file_types</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">registry_file_type</span> <span class="ow">in</span> <span class="n">registry_file_types</span><span class="p">:</span>
+          <span class="n">types</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">registry_file_type</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">plugin_name</span> <span class="ow">in</span> <span class="n">plugin_names</span><span class="p">:</span>
+          <span class="n">types</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_registry_plugin_list</span><span class="o">.</span><span class="n">GetRegistryTypes</span><span class="p">(</span><span class="n">plugin_name</span><span class="p">))</span>
+
+      <span class="n">paths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetRegistryFilePaths</span><span class="p">(</span><span class="n">types</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">knowledge_base_object</span><span class="o">.</span><span class="n">SetDefaultCodepage</span><span class="p">(</span><span class="n">codepage</span><span class="p">)</span>
+
+    <span class="n">registry_helpers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">path</span> <span class="ow">in</span> <span class="n">paths</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">helper</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetRegistryHelperFromPath</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">codepage</span><span class="p">):</span>
+        <span class="n">registry_helpers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">helper</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">registry_helpers</span></div>
+
+  <span class="c1"># TODO: remove after refactoring.</span>
+<div class="viewcode-block" id="PregFrontend.GetRegistryPlugins"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregFrontend.GetRegistryPlugins">[docs]</a>  <span class="k">def</span> <span class="nf">GetRegistryPlugins</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the Windows Registry plugins based on a filter string.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      filter_string: string containing the name of the plugin or an empty</span>
+<span class="sd">                     string for all the plugins.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of Windows Registry plugins (instance of RegistryPlugin).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_registry_plugin_list</span><span class="o">.</span><span class="n">GetRegistryPlugins</span><span class="p">(</span><span class="n">filter_string</span><span class="p">)</span></div>
+
+  <span class="c1"># TODO: remove after refactoring.</span>
+<div class="viewcode-block" id="PregFrontend.GetRegistryPluginsFromRegistryType"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregFrontend.GetRegistryPluginsFromRegistryType">[docs]</a>  <span class="k">def</span> <span class="nf">GetRegistryPluginsFromRegistryType</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">registry_file_type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the Windows Registry plugins based on a Registry type.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      registry_file_type: the Windows Registry files type string.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of Windows Registry plugins (instance of RegistryPlugin).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_registry_plugin_list</span><span class="o">.</span><span class="n">GetRegistryPluginsFromRegistryType</span><span class="p">(</span>
+        <span class="n">registry_file_type</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PregFrontend.GetRegistryTypes"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregFrontend.GetRegistryTypes">[docs]</a>  <span class="k">def</span> <span class="nf">GetRegistryTypes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the Windows Registry types based on a filter string.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      filter_string: string containing the name of the plugin or an empty</span>
+<span class="sd">                     string for all the plugins.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of Windows Registry types.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_registry_plugin_list</span><span class="o">.</span><span class="n">GetRegistryTypes</span><span class="p">(</span><span class="n">filter_string</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PregFrontend.GetWindowsRegistryPlugins"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregFrontend.GetWindowsRegistryPlugins">[docs]</a>  <span class="k">def</span> <span class="nf">GetWindowsRegistryPlugins</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Build a list of all available Windows Registry plugins.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A plugins list (instance of PluginList).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">winreg_parser</span> <span class="o">=</span> <span class="n">parsers_manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">GetParserObjectByName</span><span class="p">(</span>
+        <span class="s1">u&#39;winreg&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">winreg_parser</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">plugins_list</span> <span class="o">=</span> <span class="n">PluginList</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">plugin_class</span> <span class="ow">in</span> <span class="n">winreg_parser</span><span class="o">.</span><span class="n">GetPlugins</span><span class="p">():</span>
+      <span class="n">plugins_list</span><span class="o">.</span><span class="n">AddPlugin</span><span class="p">(</span><span class="n">plugin_class</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">plugins_list</span></div>
+
+<div class="viewcode-block" id="PregFrontend.ParseRegistryFile"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregFrontend.ParseRegistryFile">[docs]</a>  <span class="k">def</span> <span class="nf">ParseRegistryFile</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">registry_helper</span><span class="p">,</span> <span class="n">key_paths</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">use_plugins</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts events from a Registry file.</span>
+
+<span class="sd">    This function takes a Registry helper object (instance of</span>
+<span class="sd">    PregRegistryHelper) and information about either Registry plugins or keys.</span>
+<span class="sd">    The function then opens up the Registry file and runs the plugins defined</span>
+<span class="sd">    (or all if no plugins are defined) against all the keys supplied to it.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      registry_helper: Registry helper object (instance of PregRegistryHelper)</span>
+<span class="sd">      key_paths: optional list of Registry keys paths that are to be parsed.</span>
+<span class="sd">                 The default is None, which results in no keys parsed.</span>
+<span class="sd">      use_plugins: optional list of plugins used to parse the key. The</span>
+<span class="sd">                   default is None, in which case all plugins are used.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A dict that contains the following structure:</span>
+<span class="sd">      key_path:</span>
+<span class="sd">      key: a Registry key (instance of dfwinreg.WinRegistryKey)</span>
+<span class="sd">      subkeys: a list of Registry keys (instance of</span>
+<span class="sd">               dfwinreg.WinRegistryKey).</span>
+<span class="sd">      data:</span>
+<span class="sd">      plugin: a plugin object (instance of RegistryPlugin)</span>
+<span class="sd">      event_objects: List of event objects extracted.</span>
+
+<span class="sd">      key_path 2:</span>
+<span class="sd">          ...</span>
+<span class="sd">      Or an empty dict on error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">registry_helper</span><span class="p">:</span>
+      <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">registry_helper</span><span class="o">.</span><span class="n">Open</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">u&#39;Unable to parse Registry file, with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">exception</span><span class="p">))</span>
+      <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="n">return_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">key_paths</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">key_paths</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">key_path</span> <span class="ow">in</span> <span class="n">key_paths</span><span class="p">:</span>
+      <span class="n">registry_key</span> <span class="o">=</span> <span class="n">registry_helper</span><span class="o">.</span><span class="n">GetKeyByPath</span><span class="p">(</span><span class="n">key_path</span><span class="p">)</span>
+      <span class="n">return_dict</span><span class="p">[</span><span class="n">key_path</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s1">u&#39;key&#39;</span><span class="p">:</span> <span class="n">registry_key</span><span class="p">}</span>
+
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">registry_key</span><span class="p">:</span>
+        <span class="k">continue</span>
+
+      <span class="n">return_dict</span><span class="p">[</span><span class="n">key_path</span><span class="p">][</span><span class="s1">u&#39;subkeys&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">registry_key</span><span class="o">.</span><span class="n">GetSubkeys</span><span class="p">())</span>
+
+      <span class="n">return_dict</span><span class="p">[</span><span class="n">key_path</span><span class="p">][</span><span class="s1">u&#39;data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ParseRegistryKey</span><span class="p">(</span>
+          <span class="n">registry_key</span><span class="p">,</span> <span class="n">registry_helper</span><span class="p">,</span> <span class="n">use_plugins</span><span class="o">=</span><span class="n">use_plugins</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">return_dict</span></div>
+
+<div class="viewcode-block" id="PregFrontend.ParseRegistryKey"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregFrontend.ParseRegistryKey">[docs]</a>  <span class="k">def</span> <span class="nf">ParseRegistryKey</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">registry_key</span><span class="p">,</span> <span class="n">registry_helper</span><span class="p">,</span> <span class="n">use_plugins</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse a single Registry key and return parsed information.</span>
+
+<span class="sd">    Parses the Registry key either using the supplied plugin or trying against</span>
+<span class="sd">    all available plugins.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      registry_key: the Registry key to parse (instance of</span>
+<span class="sd">                    dfwinreg.WinRegistryKey or a string containing key path).</span>
+<span class="sd">      registry_helper: the Registry helper object (instance of</span>
+<span class="sd">                       PregRegistryHelper).</span>
+<span class="sd">      use_plugins: optional list of plugin names to use. The default is None</span>
+<span class="sd">                   which uses all available plugins.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A dictionary with plugin objects as keys and extracted event objects from</span>
+<span class="sd">      each plugin as values or an empty dict on error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">registry_helper</span><span class="p">:</span>
+      <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">registry_key</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">STRING_TYPES</span><span class="p">):</span>
+      <span class="n">registry_key</span> <span class="o">=</span> <span class="n">registry_helper</span><span class="o">.</span><span class="n">GetKeyByPath</span><span class="p">(</span><span class="n">registry_key</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">registry_key</span><span class="p">:</span>
+      <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="n">event_queue</span> <span class="o">=</span> <span class="n">single_process</span><span class="o">.</span><span class="n">SingleProcessQueue</span><span class="p">()</span>
+    <span class="n">event_queue_consumer</span> <span class="o">=</span> <span class="n">PregItemQueueConsumer</span><span class="p">(</span><span class="n">event_queue</span><span class="p">)</span>
+
+    <span class="n">parser_mediator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CreateParserMediator</span><span class="p">(</span><span class="n">event_queue</span><span class="p">)</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">SetFileEntry</span><span class="p">(</span><span class="n">registry_helper</span><span class="o">.</span><span class="n">file_entry</span><span class="p">)</span>
+
+    <span class="n">return_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">found_matching_plugin</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="k">for</span> <span class="n">plugin_object</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_registry_plugin_list</span><span class="o">.</span><span class="n">GetPluginObjects</span><span class="p">(</span>
+        <span class="n">registry_helper</span><span class="o">.</span><span class="n">file_type</span><span class="p">):</span>
+      <span class="k">if</span> <span class="n">use_plugins</span> <span class="ow">and</span> <span class="n">plugin_object</span><span class="o">.</span><span class="n">NAME</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">use_plugins</span><span class="p">:</span>
+        <span class="k">continue</span>
+
+      <span class="c1"># Check if plugin should be processed.</span>
+      <span class="n">can_process</span> <span class="o">=</span> <span class="bp">False</span>
+      <span class="k">for</span> <span class="n">filter_object</span> <span class="ow">in</span> <span class="n">plugin_object</span><span class="o">.</span><span class="n">FILTERS</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">filter_object</span><span class="o">.</span><span class="n">Match</span><span class="p">(</span><span class="n">registry_key</span><span class="p">):</span>
+          <span class="n">can_process</span> <span class="o">=</span> <span class="bp">True</span>
+          <span class="k">break</span>
+
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">can_process</span><span class="p">:</span>
+        <span class="k">continue</span>
+
+      <span class="n">found_matching_plugin</span> <span class="o">=</span> <span class="bp">True</span>
+      <span class="n">plugin_object</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">registry_key</span><span class="p">)</span>
+      <span class="n">event_queue_consumer</span><span class="o">.</span><span class="n">ConsumeItems</span><span class="p">()</span>
+      <span class="n">event_objects</span> <span class="o">=</span> <span class="p">[</span>
+          <span class="n">event_object</span> <span class="k">for</span> <span class="n">event_object</span> <span class="ow">in</span> <span class="n">event_queue_consumer</span><span class="o">.</span><span class="n">GetItems</span><span class="p">()]</span>
+      <span class="k">if</span> <span class="n">event_objects</span><span class="p">:</span>
+        <span class="n">return_dict</span><span class="p">[</span><span class="n">plugin_object</span><span class="p">]</span> <span class="o">=</span> <span class="n">event_objects</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">found_matching_plugin</span><span class="p">:</span>
+      <span class="n">winreg_parser</span> <span class="o">=</span> <span class="n">parsers_manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">GetParserObjectByName</span><span class="p">(</span>
+          <span class="s1">u&#39;winreg&#39;</span><span class="p">)</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">winreg_parser</span><span class="p">:</span>
+        <span class="k">return</span>
+      <span class="n">default_plugin_object</span> <span class="o">=</span> <span class="n">winreg_parser</span><span class="o">.</span><span class="n">GetPluginObjectByName</span><span class="p">(</span>
+          <span class="s1">u&#39;winreg_default&#39;</span><span class="p">)</span>
+
+      <span class="n">default_plugin_object</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">registry_key</span><span class="p">)</span>
+      <span class="n">event_queue_consumer</span><span class="o">.</span><span class="n">ConsumeItems</span><span class="p">()</span>
+      <span class="n">event_objects</span> <span class="o">=</span> <span class="p">[</span>
+          <span class="n">event_object</span> <span class="k">for</span> <span class="n">event_object</span> <span class="ow">in</span> <span class="n">event_queue_consumer</span><span class="o">.</span><span class="n">GetItems</span><span class="p">()]</span>
+      <span class="k">if</span> <span class="n">event_objects</span><span class="p">:</span>
+        <span class="n">return_dict</span><span class="p">[</span><span class="n">default_plugin_object</span><span class="p">]</span> <span class="o">=</span> <span class="n">event_objects</span>
+
+    <span class="k">return</span> <span class="n">return_dict</span></div>
+
+<div class="viewcode-block" id="PregFrontend.SetSingleFile"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregFrontend.SetSingleFile">[docs]</a>  <span class="k">def</span> <span class="nf">SetSingleFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">single_file</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the single file processing parameter.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      single_file: boolean value, if set to True the tool treats the</span>
+<span class="sd">                   source as a single file input, otherwise as a storage</span>
+<span class="sd">                   media format.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_single_file</span> <span class="o">=</span> <span class="n">single_file</span></div>
+
+<div class="viewcode-block" id="PregFrontend.SetSourcePath"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregFrontend.SetSourcePath">[docs]</a>  <span class="k">def</span> <span class="nf">SetSourcePath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the source path.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      source_path: the filesystem path to the disk image.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_source_path</span> <span class="o">=</span> <span class="n">source_path</span></div>
+
+<div class="viewcode-block" id="PregFrontend.SetSourcePathSpecs"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregFrontend.SetSourcePathSpecs">[docs]</a>  <span class="k">def</span> <span class="nf">SetSourcePathSpecs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_path_specs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the source path resolver.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      source_path_specs: list of source path specifications (instance</span>
+<span class="sd">                         of PathSpec).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_source_path_specs</span> <span class="o">=</span> <span class="n">source_path_specs</span></div>
+
+<div class="viewcode-block" id="PregFrontend.SetKnowledgeBase"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregFrontend.SetKnowledgeBase">[docs]</a>  <span class="k">def</span> <span class="nf">SetKnowledgeBase</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">knowledge_base_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the knowledge base object for the front end.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      knowledge_base_object: the knowledge base object (instance</span>
+<span class="sd">                             of KnowledgeBase).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">knowledge_base_object</span> <span class="o">=</span> <span class="n">knowledge_base_object</span></div></div>
+
+
+<div class="viewcode-block" id="PregRegistryHelper"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregRegistryHelper">[docs]</a><span class="k">class</span> <span class="nc">PregRegistryHelper</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that defines few helper functions for Registry operations.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    file_entry: file entry object (instance of dfvfs.FileEntry).</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">_KEY_PATHS_PER_REGISTRY_TYPE</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="n">REGISTRY_FILE_TYPE_NTUSER</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">([</span>
+          <span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">Software</span><span class="se">\\</span><span class="s1">Microsoft</span><span class="se">\\</span><span class="s1">Windows</span><span class="se">\\</span><span class="s1">CurrentVersion</span><span class="se">\\</span><span class="s1">Explorer&#39;</span><span class="p">]),</span>
+      <span class="n">REGISTRY_FILE_TYPE_SAM</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">([</span>
+          <span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">SAM</span><span class="se">\\</span><span class="s1">Domains</span><span class="se">\\</span><span class="s1">Account</span><span class="se">\\</span><span class="s1">Users&#39;</span><span class="p">]),</span>
+      <span class="n">REGISTRY_FILE_TYPE_SECURITY</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">([</span>
+          <span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">Policy</span><span class="se">\\</span><span class="s1">PolAdtEv&#39;</span><span class="p">]),</span>
+      <span class="n">REGISTRY_FILE_TYPE_SOFTWARE</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">([</span>
+          <span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">Microsoft</span><span class="se">\\</span><span class="s1">Windows</span><span class="se">\\</span><span class="s1">CurrentVersion</span><span class="se">\\</span><span class="s1">App Paths&#39;</span><span class="p">]),</span>
+      <span class="n">REGISTRY_FILE_TYPE_SYSTEM</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">([</span>
+          <span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">Select&#39;</span><span class="p">]),</span>
+      <span class="n">REGISTRY_FILE_TYPE_USRCLASS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">([</span>
+          <span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">Local Settings</span><span class="se">\\</span><span class="s1">Software</span><span class="se">\\</span><span class="s1">Microsoft</span><span class="se">\\</span><span class="s1">Windows</span><span class="se">\\</span><span class="s1">CurrentVersion&#39;</span><span class="p">]),</span>
+  <span class="p">}</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">,</span> <span class="n">collector_name</span><span class="p">,</span> <span class="n">knowledge_base_object</span><span class="p">,</span>
+      <span class="n">codepage</span><span class="o">=</span><span class="s1">u&#39;cp1252&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initialize the Registry helper.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: file entry object (instance of dfvfs.FileEntry).</span>
+<span class="sd">      collector_name: the name of the collector, eg. TSK.</span>
+<span class="sd">      knowledge_base_object: A knowledge base object (instance of</span>
+<span class="sd">                             KnowledgeBase), which contains information from</span>
+<span class="sd">                             the source data needed for parsing.</span>
+<span class="sd">      codepage: optional codepage value used for the Registry file. The default</span>
+<span class="sd">                is cp1252.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">PregRegistryHelper</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_codepage</span> <span class="o">=</span> <span class="n">codepage</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_collector_name</span> <span class="o">=</span> <span class="n">collector_name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_currently_registry_key</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_key_path_prefix</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_base_object</span> <span class="o">=</span> <span class="n">knowledge_base_object</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_registry_file</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_registry_file_name</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_registry_file_type</span> <span class="o">=</span> <span class="n">REGISTRY_FILE_TYPE_UNKNOWN</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_win_registry</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">file_entry</span> <span class="o">=</span> <span class="n">file_entry</span>
+
+<div class="viewcode-block" id="PregRegistryHelper.__enter__"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregRegistryHelper.__enter__">[docs]</a>  <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Make usable with &quot;with&quot; statement.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="PregRegistryHelper.__exit__"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregRegistryHelper.__exit__">[docs]</a>  <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unused_type</span><span class="p">,</span> <span class="n">unused_value</span><span class="p">,</span> <span class="n">unused_traceback</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Make usable with &quot;with&quot; statement.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span></div>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">collector_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The name of the collector used to discover the Registry file.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collector_name</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">file_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The Registry file type.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_registry_file_type</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The name of the Registry file.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_registry_file_name</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The file path of the Registry file.&quot;&quot;&quot;</span>
+    <span class="n">path_spec</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_entry</span><span class="p">,</span> <span class="s1">u&#39;path_spec&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path_spec</span><span class="p">:</span>
+      <span class="k">return</span> <span class="s1">u&#39;N/A&#39;</span>
+
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">path_spec</span><span class="p">,</span> <span class="s1">u&#39;location&#39;</span><span class="p">,</span> <span class="s1">u&#39;N/A&#39;</span><span class="p">)</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">root_key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The root key of the Registry file or None.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_registry_file</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_registry_file</span><span class="o">.</span><span class="n">GetRootKey</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">_Reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reset all attributes of the Registry helper.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_currently_registry_key</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_key_path_prefix</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_registry_file</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_registry_file_name</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_registry_file_type</span> <span class="o">=</span> <span class="n">REGISTRY_FILE_TYPE_UNKNOWN</span>
+
+<div class="viewcode-block" id="PregRegistryHelper.ChangeKeyByPath"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregRegistryHelper.ChangeKeyByPath">[docs]</a>  <span class="k">def</span> <span class="nf">ChangeKeyByPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Changes the current key defined by the Registry key path.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      key_path: string containing an absolute or relative Registry key path.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The key (instance of dfwinreg.WinRegistryKey) if available or</span>
+<span class="sd">      None otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">key_path</span> <span class="o">==</span> <span class="s1">u&#39;.&#39;</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_currently_registry_key</span>
+
+    <span class="n">path_segments</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># If the key path is relative to the root key add the key path prefix.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">key_path</span> <span class="ow">or</span> <span class="n">key_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">):</span>
+      <span class="n">path_segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_key_path_prefix</span><span class="p">)</span>
+
+      <span class="c1"># If no key path was provided then change to the root key.</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">key_path</span><span class="p">:</span>
+        <span class="n">path_segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">key_path_upper</span> <span class="o">=</span> <span class="n">key_path</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">key_path_upper</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;HKEY_&#39;</span><span class="p">):</span>
+        <span class="n">current_path</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_currently_registry_key</span><span class="p">,</span> <span class="s1">u&#39;path&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">current_path</span><span class="p">:</span>
+          <span class="n">path_segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_path</span><span class="p">)</span>
+
+    <span class="n">path_segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key_path</span><span class="p">)</span>
+
+    <span class="c1"># Split all the path segments based on the path (segment) separator.</span>
+    <span class="n">path_segments</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">segment</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="n">path_segments</span><span class="p">]</span>
+
+    <span class="c1"># Flatten the sublists into one list.</span>
+    <span class="n">path_segments</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">element</span> <span class="k">for</span> <span class="n">sublist</span> <span class="ow">in</span> <span class="n">path_segments</span> <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">sublist</span><span class="p">]</span>
+
+    <span class="c1"># Remove empty and current (&#39;.&#39;) path segments.</span>
+    <span class="n">path_segments</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">segment</span> <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="n">path_segments</span>
+        <span class="k">if</span> <span class="n">segment</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">,</span> <span class="s1">u&#39;.&#39;</span><span class="p">]]</span>
+
+    <span class="c1"># Remove parent (&#39;..&#39;) path segments.</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">path_segments</span><span class="p">):</span>
+      <span class="k">if</span> <span class="n">path_segments</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">==</span> <span class="s1">u&#39;..&#39;</span><span class="p">:</span>
+        <span class="n">path_segments</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">index</span> <span class="o">-=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">index</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+          <span class="n">path_segments</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+          <span class="n">index</span> <span class="o">-=</span> <span class="mi">1</span>
+
+      <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">key_path</span> <span class="o">=</span> <span class="s1">u&#39;</span><span class="se">\\</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path_segments</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetKeyByPath</span><span class="p">(</span><span class="n">key_path</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PregRegistryHelper.Close"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregRegistryHelper.Close">[docs]</a>  <span class="k">def</span> <span class="nf">Close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Closes the helper.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_Reset</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PregRegistryHelper.GetCurrentRegistryKey"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregRegistryHelper.GetCurrentRegistryKey">[docs]</a>  <span class="k">def</span> <span class="nf">GetCurrentRegistryKey</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the currently Registry key.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_currently_registry_key</span></div>
+
+<div class="viewcode-block" id="PregRegistryHelper.GetCurrentRegistryPath"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregRegistryHelper.GetCurrentRegistryPath">[docs]</a>  <span class="k">def</span> <span class="nf">GetCurrentRegistryPath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the Registry key path or None.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_currently_registry_key</span><span class="p">,</span> <span class="s1">u&#39;path&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PregRegistryHelper.GetKeyByPath"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregRegistryHelper.GetKeyByPath">[docs]</a>  <span class="k">def</span> <span class="nf">GetKeyByPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves a specific key defined by the Registry key path.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      key_path: a Windows Registry key path relative to the root key of</span>
+<span class="sd">                the file or relative to the root of the Windows Registry.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The key (instance of dfwinreg.WinRegistryKey) if available or</span>
+<span class="sd">      None otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">registry_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_win_registry</span><span class="o">.</span><span class="n">GetKeyByPath</span><span class="p">(</span><span class="n">key_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">registry_key</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_currently_registry_key</span> <span class="o">=</span> <span class="n">registry_key</span>
+    <span class="k">return</span> <span class="n">registry_key</span></div>
+
+<div class="viewcode-block" id="PregRegistryHelper.GetRegistryFileType"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregRegistryHelper.GetRegistryFileType">[docs]</a>  <span class="k">def</span> <span class="nf">GetRegistryFileType</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">registry_file</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines the Windows Registry type based on keys present in the file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      registry_file: the Windows Registry file object (instance of</span>
+<span class="sd">                     WinRegistryFile).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The Windows Registry file type, e.g. NTUSER, SOFTWARE.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">registry_file_type</span> <span class="o">=</span> <span class="n">REGISTRY_FILE_TYPE_UNKNOWN</span>
+    <span class="k">for</span> <span class="n">registry_file_type</span><span class="p">,</span> <span class="n">key_paths</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_KEY_PATHS_PER_REGISTRY_TYPE</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+
+      <span class="c1"># If all key paths are found we consider the file to match a certain</span>
+      <span class="c1"># Registry type.</span>
+      <span class="n">match</span> <span class="o">=</span> <span class="bp">True</span>
+      <span class="k">for</span> <span class="n">key_path</span> <span class="ow">in</span> <span class="n">key_paths</span><span class="p">:</span>
+        <span class="n">registry_key</span> <span class="o">=</span> <span class="n">registry_file</span><span class="o">.</span><span class="n">GetKeyByPath</span><span class="p">(</span><span class="n">key_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">registry_key</span><span class="p">:</span>
+          <span class="n">match</span> <span class="o">=</span> <span class="bp">False</span>
+
+      <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+        <span class="k">break</span>
+
+    <span class="k">return</span> <span class="n">registry_file_type</span></div>
+
+<div class="viewcode-block" id="PregRegistryHelper.Open"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.preg.PregRegistryHelper.Open">[docs]</a>  <span class="k">def</span> <span class="nf">Open</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Opens a Windows Registry file.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      IOError: if the Windows Registry file cannot be opened.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_registry_file</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Registry file already open.&#39;</span><span class="p">)</span>
+
+    <span class="n">file_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_entry</span><span class="o">.</span><span class="n">GetFileObject</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_object</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to open Registry file: {0:s} [{1:s}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collector_name</span><span class="p">))</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unable to open Registry file.&#39;</span><span class="p">)</span>
+
+    <span class="n">win_registry_reader</span> <span class="o">=</span> <span class="n">winreg</span><span class="o">.</span><span class="n">FileObjectWinRegistryFileReader</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_registry_file</span> <span class="o">=</span> <span class="n">win_registry_reader</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_registry_file</span><span class="p">:</span>
+      <span class="n">file_object</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+      <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to open Registry file: {0:s} [{1:s}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collector_name</span><span class="p">))</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unable to open Registry file.&#39;</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_win_registry</span> <span class="o">=</span> <span class="n">dfwinreg_registry</span><span class="o">.</span><span class="n">WinRegistry</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_key_path_prefix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_win_registry</span><span class="o">.</span><span class="n">GetRegistryFileMapping</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_registry_file</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_win_registry</span><span class="o">.</span><span class="n">MapFile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_key_path_prefix</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_registry_file</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_registry_file_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_entry</span><span class="o">.</span><span class="n">name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_registry_file_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetRegistryFileType</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_registry_file</span><span class="p">)</span>
+
+    <span class="c1"># Retrieve the Registry file root key because the Registry helper</span>
+    <span class="c1"># expects self._currently_registry_key to be set after</span>
+    <span class="c1"># the Registry file is opened.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_currently_registry_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_registry_file</span><span class="o">.</span><span class="n">GetRootKey</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

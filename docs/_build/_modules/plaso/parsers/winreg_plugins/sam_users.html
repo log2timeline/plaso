@@ -1,0 +1,311 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.winreg_plugins.sam_users &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../../index.html" />
+    <link rel="up" title="plaso" href="../../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.winreg_plugins.sam_users</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;&quot;Windows Registry plugin for SAM Users Account information.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">construct</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">windows_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">winreg</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers.winreg_plugins</span> <span class="kn">import</span> <span class="n">interface</span>
+
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Preston Miller, dpmforensics.com, github.com/prmiller91&#39;</span>
+
+
+<div class="viewcode-block" id="SAMUsersWindowsRegistryEvent"><a class="viewcode-back" href="../../../../plaso.parsers.winreg_plugins.html#plaso.parsers.winreg_plugins.sam_users.SAMUsersWindowsRegistryEvent">[docs]</a><span class="k">class</span> <span class="nc">SAMUsersWindowsRegistryEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">FiletimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for a SAM users Windows Registry event.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    account_rid: an integer containing the account relative identifier (RID).</span>
+<span class="sd">    comments: a string containing the comments.</span>
+<span class="sd">    fullname: a string containing the full name.</span>
+<span class="sd">    key_path: a string containing the Windows Registry key path.</span>
+<span class="sd">    login_count: an integer containing the login count.</span>
+<span class="sd">    offset: an integer containing the data offset of the SAM users</span>
+<span class="sd">            Windows Registry value.</span>
+<span class="sd">    username: a string containing the username.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">&#39;windows:registry:sam_users&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">filetime</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">,</span> <span class="n">key_path</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">account_rid</span><span class="p">,</span>
+      <span class="n">login_count</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">fullname</span><span class="p">,</span> <span class="n">comments</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a SAM users Windows Registry event.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      filetime: an integer containing a FILETIME timestamp.</span>
+<span class="sd">      timestamp_description: a string containing the usage of</span>
+<span class="sd">                             the timestamp value.</span>
+<span class="sd">      key_path: a string containing the Windows Registry key path.</span>
+<span class="sd">      offset: an integer containing the data offset of the SAM users</span>
+<span class="sd">              Windows Registry value.</span>
+<span class="sd">      account_rid: an integer containing the account relative identifier (RID).</span>
+<span class="sd">      login_count: an integer containing the login count.</span>
+<span class="sd">      username: a string containing the username.</span>
+<span class="sd">      fullname: a string containing the full name.</span>
+<span class="sd">      comments: a string containing the comments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">SAMUsersWindowsRegistryEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">filetime</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">account_rid</span> <span class="o">=</span> <span class="n">account_rid</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">comments</span> <span class="o">=</span> <span class="n">comments</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">fullname</span> <span class="o">=</span> <span class="n">fullname</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">key_path</span> <span class="o">=</span> <span class="n">key_path</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">login_count</span> <span class="o">=</span> <span class="n">login_count</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">offset</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">username</span></div>
+
+
+<div class="viewcode-block" id="SAMUsersWindowsRegistryPlugin"><a class="viewcode-back" href="../../../../plaso.parsers.winreg_plugins.html#plaso.parsers.winreg_plugins.sam_users.SAMUsersWindowsRegistryPlugin">[docs]</a><span class="k">class</span> <span class="nc">SAMUsersWindowsRegistryPlugin</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">WindowsRegistryPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Windows Registry plugin for SAM Users Account information.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;windows_sam_users&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for SAM Users and Names Registry keys.&#39;</span>
+
+  <span class="n">FILTERS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+      <span class="n">interface</span><span class="o">.</span><span class="n">WindowsRegistryKeyPathFilter</span><span class="p">(</span>
+          <span class="s1">u&#39;HKEY_LOCAL_MACHINE</span><span class="se">\\</span><span class="s1">SAM</span><span class="se">\\</span><span class="s1">Domains</span><span class="se">\\</span><span class="s1">Account</span><span class="se">\\</span><span class="s1">Users&#39;</span><span class="p">)])</span>
+
+  <span class="n">_F_VALUE_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;f_struct&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;last_login&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;password_reset&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt16</span><span class="p">(</span><span class="s1">u&#39;rid&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt8</span><span class="p">(</span><span class="s1">u&#39;login_count&#39;</span><span class="p">))</span>
+
+  <span class="n">_V_VALUE_HEADER</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;v_header&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">11</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;values&#39;</span><span class="p">)))</span>
+
+  <span class="n">_V_VALUE_STRINGS_OFFSET</span> <span class="o">=</span> <span class="mi">204</span>
+
+  <span class="n">_SOURCE_APPEND</span> <span class="o">=</span> <span class="s1">u&#39;: User Account Information&#39;</span>
+
+<div class="viewcode-block" id="SAMUsersWindowsRegistryPlugin.GetEntries"><a class="viewcode-back" href="../../../../plaso.parsers.winreg_plugins.html#plaso.parsers.winreg_plugins.sam_users.SAMUsersWindowsRegistryPlugin.GetEntries">[docs]</a>  <span class="k">def</span> <span class="nf">GetEntries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">registry_key</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Collect data from Users and Names and produce event objects.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      registry_key: A Windows Registry key (instance of</span>
+<span class="sd">                    dfwinreg.WinRegistryKey).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">names_key</span> <span class="o">=</span> <span class="n">registry_key</span><span class="o">.</span><span class="n">GetSubkeyByName</span><span class="p">(</span><span class="s1">u&#39;Names&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">names_key</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span><span class="s1">u&#39;missing subkey: &quot;Names&quot;.&#39;</span><span class="p">)</span>
+      <span class="k">return</span>
+
+    <span class="n">values</span> <span class="o">=</span> <span class="p">[(</span><span class="n">v</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">last_written_time</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">names_key</span><span class="o">.</span><span class="n">GetSubkeys</span><span class="p">()]</span>
+
+    <span class="n">usernames_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">subkey</span> <span class="ow">in</span> <span class="n">registry_key</span><span class="o">.</span><span class="n">GetSubkeys</span><span class="p">():</span>
+      <span class="k">if</span> <span class="n">subkey</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">u&#39;Names&#39;</span><span class="p">:</span>
+        <span class="k">continue</span>
+
+      <span class="n">f_value</span> <span class="o">=</span> <span class="n">subkey</span><span class="o">.</span><span class="n">GetValueByName</span><span class="p">(</span><span class="s1">u&#39;F&#39;</span><span class="p">)</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">f_value</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+            <span class="s1">u&#39;missing Registry value: &quot;F&quot; in subkey: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">subkey</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">continue</span>
+
+      <span class="n">v_value</span> <span class="o">=</span> <span class="n">subkey</span><span class="o">.</span><span class="n">GetValueByName</span><span class="p">(</span><span class="s1">u&#39;V&#39;</span><span class="p">)</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">v_value</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+            <span class="s1">u&#39;missing Registry value: &quot;V&quot; in subkey: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">subkey</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">continue</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">f_data_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_F_VALUE_STRUCT</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">f_value</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+      <span class="k">except</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+            <span class="s1">u&#39;unable to parse Registry value: &quot;F&quot; in subkey: {0:s} &#39;</span>
+            <span class="s1">u&#39;with error: {1:s}.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">subkey</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+        <span class="k">continue</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">v_data_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_V_VALUE_HEADER</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">v_value</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+      <span class="k">except</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+            <span class="s1">u&#39;unable to parse Registry value: &quot;V&quot; in subkey: {0:s} &#39;</span>
+            <span class="s1">u&#39;with error: {1:s}.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">subkey</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+        <span class="k">continue</span>
+
+      <span class="n">v_header_values</span> <span class="o">=</span> <span class="n">v_data_struct</span><span class="o">.</span><span class="n">values</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+      <span class="n">data_start_offset</span> <span class="o">=</span> <span class="n">v_header_values</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_V_VALUE_STRINGS_OFFSET</span>
+      <span class="n">data_end_offset</span> <span class="o">=</span> <span class="n">v_header_values</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">+</span> <span class="n">data_start_offset</span>
+      <span class="n">utf16_stream</span> <span class="o">=</span> <span class="n">v_value</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">data_start_offset</span><span class="p">:</span><span class="n">data_end_offset</span><span class="p">]</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">username</span> <span class="o">=</span> <span class="n">utf16_stream</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-16-le&#39;</span><span class="p">)</span>
+      <span class="k">except</span> <span class="p">(</span><span class="ne">UnicodeDecodeError</span><span class="p">,</span> <span class="ne">UnicodeEncodeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">username</span> <span class="o">=</span> <span class="n">utf16_stream</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-16-le&#39;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">u&#39;replace&#39;</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+            <span class="s1">u&#39;unable to decode username string with error: {0:s}. Characters &#39;</span>
+            <span class="s1">u&#39;that cannot be decoded will be replaced with &quot;?&quot; or &#39;</span>
+            <span class="s1">u&#39;&quot;</span><span class="se">\\</span><span class="s1">ufffd&quot;.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+
+      <span class="n">data_start_offset</span> <span class="o">=</span> <span class="n">v_header_values</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_V_VALUE_STRINGS_OFFSET</span>
+      <span class="n">data_end_offset</span> <span class="o">=</span> <span class="n">v_header_values</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span> <span class="o">+</span> <span class="n">data_start_offset</span>
+      <span class="n">utf16_stream</span> <span class="o">=</span> <span class="n">v_value</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">data_start_offset</span><span class="p">:</span><span class="n">data_end_offset</span><span class="p">]</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">fullname</span> <span class="o">=</span> <span class="n">utf16_stream</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-16-le&#39;</span><span class="p">)</span>
+      <span class="k">except</span> <span class="p">(</span><span class="ne">UnicodeDecodeError</span><span class="p">,</span> <span class="ne">UnicodeEncodeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">fullname</span> <span class="o">=</span> <span class="n">utf16_stream</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-16-le&#39;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">u&#39;replace&#39;</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+            <span class="s1">u&#39;unable to decode fullname string with error: {0:s}. Characters &#39;</span>
+            <span class="s1">u&#39;that cannot be decoded will be replaced with &quot;?&quot; or &#39;</span>
+            <span class="s1">u&#39;&quot;</span><span class="se">\\</span><span class="s1">ufffd&quot;.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+
+      <span class="n">data_start_offset</span> <span class="o">=</span> <span class="n">v_header_values</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_V_VALUE_STRINGS_OFFSET</span>
+      <span class="n">data_end_offset</span> <span class="o">=</span> <span class="n">v_header_values</span><span class="p">[</span><span class="mi">10</span><span class="p">]</span> <span class="o">+</span> <span class="n">data_start_offset</span>
+      <span class="n">utf16_stream</span> <span class="o">=</span> <span class="n">v_value</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">data_start_offset</span><span class="p">:</span><span class="n">data_end_offset</span><span class="p">]</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">comments</span> <span class="o">=</span> <span class="n">utf16_stream</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-16-le&#39;</span><span class="p">)</span>
+      <span class="k">except</span> <span class="p">(</span><span class="ne">UnicodeDecodeError</span><span class="p">,</span> <span class="ne">UnicodeEncodeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">comments</span> <span class="o">=</span> <span class="n">utf16_stream</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-16-le&#39;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">u&#39;replace&#39;</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+            <span class="s1">u&#39;unable to decode comments string with error: {0:s}. Characters &#39;</span>
+            <span class="s1">u&#39;that cannot be decoded will be replaced with &quot;?&quot; or &#39;</span>
+            <span class="s1">u&#39;&quot;</span><span class="se">\\</span><span class="s1">ufffd&quot;.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+
+      <span class="n">filetime</span> <span class="o">=</span> <span class="bp">None</span>
+      <span class="k">if</span> <span class="n">usernames_dict</span><span class="p">:</span>
+        <span class="n">filetime</span> <span class="o">=</span> <span class="n">usernames_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+      <span class="c1"># TODO: check if subkey.name == f_data_struct.rid</span>
+
+      <span class="k">if</span> <span class="n">filetime</span><span class="p">:</span>
+        <span class="n">values_dict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">u&#39;account_rid&#39;</span><span class="p">:</span> <span class="n">f_data_struct</span><span class="o">.</span><span class="n">rid</span><span class="p">,</span>
+            <span class="s1">u&#39;login_count&#39;</span><span class="p">:</span> <span class="n">f_data_struct</span><span class="o">.</span><span class="n">login_count</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">username</span><span class="p">:</span>
+          <span class="n">values_dict</span><span class="p">[</span><span class="s1">u&#39;username&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">username</span>
+        <span class="k">if</span> <span class="n">fullname</span><span class="p">:</span>
+          <span class="n">values_dict</span><span class="p">[</span><span class="s1">u&#39;full_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fullname</span>
+        <span class="k">if</span> <span class="n">comments</span><span class="p">:</span>
+          <span class="n">values_dict</span><span class="p">[</span><span class="s1">u&#39;comments&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">comments</span>
+
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">windows_events</span><span class="o">.</span><span class="n">WindowsRegistryEvent</span><span class="p">(</span>
+            <span class="n">filetime</span><span class="p">,</span> <span class="n">registry_key</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">values_dict</span><span class="p">,</span>
+            <span class="n">offset</span><span class="o">=</span><span class="n">registry_key</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="n">source_append</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_SOURCE_APPEND</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">f_data_struct</span><span class="o">.</span><span class="n">last_login</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">SAMUsersWindowsRegistryEvent</span><span class="p">(</span>
+            <span class="n">f_data_struct</span><span class="o">.</span><span class="n">last_login</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">LAST_LOGIN_TIME</span><span class="p">,</span>
+            <span class="n">registry_key</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">f_value</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="n">f_data_struct</span><span class="o">.</span><span class="n">rid</span><span class="p">,</span>
+            <span class="n">f_data_struct</span><span class="o">.</span><span class="n">login_count</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">fullname</span><span class="p">,</span> <span class="n">comments</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">f_data_struct</span><span class="o">.</span><span class="n">password_reset</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">SAMUsersWindowsRegistryEvent</span><span class="p">(</span>
+            <span class="n">f_data_struct</span><span class="o">.</span><span class="n">password_reset</span><span class="p">,</span>
+            <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">LAST_PASSWORD_RESET</span><span class="p">,</span>
+            <span class="n">registry_key</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">f_value</span><span class="o">.</span><span class="n">offset</span><span class="p">,</span> <span class="n">f_data_struct</span><span class="o">.</span><span class="n">rid</span><span class="p">,</span>
+            <span class="n">f_data_struct</span><span class="o">.</span><span class="n">login_count</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">fullname</span><span class="p">,</span> <span class="n">comments</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span></div></div>
+
+
+<span class="n">winreg</span><span class="o">.</span><span class="n">WinRegistryParser</span><span class="o">.</span><span class="n">RegisterPlugin</span><span class="p">(</span><span class="n">SAMUsersWindowsRegistryPlugin</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

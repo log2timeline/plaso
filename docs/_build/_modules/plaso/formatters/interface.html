@@ -1,0 +1,423 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.formatters.interface &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.formatters.interface</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains the event formatters interface classes.</span>
+
+<span class="sd">The l2t_csv and other formats are dependent on a message field,</span>
+<span class="sd">referred to as description_long and description_short in l2t_csv.</span>
+
+<span class="sd">Plaso no longer stores these field explicitly.</span>
+
+<span class="sd">A formatter, with a format string definition, is used to convert</span>
+<span class="sd">the event object values into a formatted string that is similar</span>
+<span class="sd">to the description_long and description_short field.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">py2to3</span>
+
+
+<div class="viewcode-block" id="EventFormatter"><a class="viewcode-back" href="../../../plaso.formatters.html#plaso.formatters.interface.EventFormatter">[docs]</a><span class="k">class</span> <span class="nc">EventFormatter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Base class to format event type specific data using a format string.</span>
+
+<span class="sd">  Define the (long) format string and the short format string by defining</span>
+<span class="sd">  FORMAT_STRING and FORMAT_STRING_SHORT. The syntax of the format strings</span>
+<span class="sd">  is similar to that of format() where the place holder for a certain</span>
+<span class="sd">  event object attribute is defined as {attribute_name}.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="c1"># The data type is a unique identifier for the event data. The current</span>
+  <span class="c1"># approach is to define it as human readable string in the format</span>
+  <span class="c1"># root:branch: ... :leaf, e.g. a page visited entry inside a Chrome History</span>
+  <span class="c1"># database is defined as: chrome:history:page_visited.</span>
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;internal&#39;</span>
+
+  <span class="c1"># The format string.</span>
+  <span class="n">FORMAT_STRING</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+  <span class="n">FORMAT_STRING_SHORT</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+
+  <span class="c1"># The source short and long strings.</span>
+  <span class="n">SOURCE_SHORT</span> <span class="o">=</span> <span class="s1">u&#39;LOG&#39;</span>
+  <span class="n">SOURCE_LONG</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+
+  <span class="c1"># The format string can be defined as:</span>
+  <span class="c1"># {name}, {name:format}, {name!conversion}, {name!conversion:format}</span>
+  <span class="n">_FORMAT_STRING_ATTRIBUTE_NAME_RE</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+      <span class="s1">u&#39;{([a-z][a-zA-Z0-9_]*)[!]?[^:}]*[:]?[^}]*}&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes an event formatter object.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">EventFormatter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_format_string_attribute_names</span> <span class="o">=</span> <span class="bp">None</span>
+
+  <span class="k">def</span> <span class="nf">_FormatMessage</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format_string</span><span class="p">,</span> <span class="n">event_values</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines the formatted message string.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      format_string: a Unicode string containing the message format string.</span>
+<span class="sd">      event_values: a dictionary object containing the event (object) values.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The formatted message string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">format_string</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">UNICODE_TYPE</span><span class="p">):</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">u&#39;Format string: {0:s} is non-Unicode.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">format_string</span><span class="p">))</span>
+
+      <span class="c1"># Plaso code files should be in UTF-8 any thus binary strings are</span>
+      <span class="c1"># assumed UTF-8. If this is not the case this should be fixed.</span>
+      <span class="n">format_string</span> <span class="o">=</span> <span class="n">format_string</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">u&#39;ignore&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">message_string</span> <span class="o">=</span> <span class="n">format_string</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">event_values</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">error_message</span> <span class="o">=</span> <span class="p">(</span>
+          <span class="s1">u&#39;unable to format string: &quot;{0:s}&quot; event object is missing required &#39;</span>
+          <span class="s1">u&#39;attributes: {1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">format_string</span><span class="p">,</span> <span class="n">exception</span><span class="p">)</span>
+      <span class="n">error_message</span> <span class="o">=</span> <span class="p">(</span>
+          <span class="s1">u&#39;Event: {0:s} data type: {1:s} display name: {2:s} &#39;</span>
+          <span class="s1">u&#39;parser chain: {3:s} with error: {4:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">event_values</span><span class="p">[</span><span class="s1">u&#39;uuid&#39;</span><span class="p">],</span> <span class="n">event_values</span><span class="p">[</span><span class="s1">u&#39;data_type&#39;</span><span class="p">],</span>
+              <span class="n">event_values</span><span class="p">[</span><span class="s1">u&#39;display_name&#39;</span><span class="p">],</span> <span class="n">event_values</span><span class="p">[</span><span class="s1">u&#39;parser&#39;</span><span class="p">],</span>
+              <span class="n">error_message</span><span class="p">)</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
+
+      <span class="n">attribute_values</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="k">for</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">event_values</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">attribute_values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;{0:s}: {1!s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+
+      <span class="n">message_string</span> <span class="o">=</span> <span class="s1">u&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">attribute_values</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">UnicodeDecodeError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">error_message</span> <span class="o">=</span> <span class="s1">u&#39;Unicode decode error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">)</span>
+      <span class="n">error_message</span> <span class="o">=</span> <span class="p">(</span>
+          <span class="s1">u&#39;Event: {0:s} data type: {1:s} display name: {2:s} &#39;</span>
+          <span class="s1">u&#39;parser chain: {3:s} with error: {4:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">event_values</span><span class="p">[</span><span class="s1">u&#39;uuid&#39;</span><span class="p">],</span> <span class="n">event_values</span><span class="p">[</span><span class="s1">u&#39;data_type&#39;</span><span class="p">],</span>
+              <span class="n">event_values</span><span class="p">[</span><span class="s1">u&#39;display_name&#39;</span><span class="p">],</span> <span class="n">event_values</span><span class="p">[</span><span class="s1">u&#39;parser&#39;</span><span class="p">],</span>
+              <span class="n">error_message</span><span class="p">)</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">error_message</span><span class="p">)</span>
+
+      <span class="n">message_string</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+
+    <span class="c1"># Strip carriage return and linefeed form the message strings.</span>
+    <span class="c1"># Using replace function here because it is faster than re.sub() or</span>
+    <span class="c1"># string.strip().</span>
+    <span class="k">return</span> <span class="n">message_string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\r</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_FormatMessages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format_string</span><span class="p">,</span> <span class="n">short_format_string</span><span class="p">,</span> <span class="n">event_values</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines the formatted message strings.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      format_string: a Unicode string containing the message format string.</span>
+<span class="sd">      short_format_string: a Unicode string containing the short message</span>
+<span class="sd">                           format string.</span>
+<span class="sd">      event_values: a dictionary object containing the event (object) values.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A tuple containing the formatted message string and short message string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">message_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FormatMessage</span><span class="p">(</span><span class="n">format_string</span><span class="p">,</span> <span class="n">event_values</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">short_format_string</span><span class="p">:</span>
+      <span class="n">short_message_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FormatMessage</span><span class="p">(</span>
+          <span class="n">short_format_string</span><span class="p">,</span> <span class="n">event_values</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">short_message_string</span> <span class="o">=</span> <span class="n">message_string</span>
+
+    <span class="c1"># Truncate the short message string if necessary.</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">short_message_string</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">80</span><span class="p">:</span>
+      <span class="n">short_message_string</span> <span class="o">=</span> <span class="s1">u&#39;{0:s}...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">short_message_string</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">77</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">message_string</span><span class="p">,</span> <span class="n">short_message_string</span>
+
+<div class="viewcode-block" id="EventFormatter.GetFormatStringAttributeNames"><a class="viewcode-back" href="../../../plaso.formatters.html#plaso.formatters.interface.EventFormatter.GetFormatStringAttributeNames">[docs]</a>  <span class="k">def</span> <span class="nf">GetFormatStringAttributeNames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the attribute names in the format string.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A set containing the attribute names.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_string_attribute_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_format_string_attribute_names</span> <span class="o">=</span> <span class="p">(</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_STRING_ATTRIBUTE_NAME_RE</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">FORMAT_STRING</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_format_string_attribute_names</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="EventFormatter.GetMessages"><a class="viewcode-back" href="../../../plaso.formatters.html#plaso.formatters.interface.EventFormatter.GetMessages">[docs]</a>  <span class="k">def</span> <span class="nf">GetMessages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unused_formatter_mediator</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines the formatted message strings for an event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      formatter_mediator: the formatter mediator object (instance of</span>
+<span class="sd">                          FormatterMediator).</span>
+<span class="sd">      event_object: the event object (instance of EventObject).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A tuple containing the formatted message string and short message string.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      WrongFormatter: if the event object cannot be formatted by the formatter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">DATA_TYPE</span> <span class="o">!=</span> <span class="n">event_object</span><span class="o">.</span><span class="n">data_type</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">WrongFormatter</span><span class="p">(</span><span class="s1">u&#39;Unsupported data type: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">event_object</span><span class="o">.</span><span class="n">data_type</span><span class="p">))</span>
+
+    <span class="n">event_values</span> <span class="o">=</span> <span class="n">event_object</span><span class="o">.</span><span class="n">CopyToDict</span><span class="p">()</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FormatMessages</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">FORMAT_STRING</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">FORMAT_STRING_SHORT</span><span class="p">,</span> <span class="n">event_values</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="EventFormatter.GetSources"><a class="viewcode-back" href="../../../plaso.formatters.html#plaso.formatters.interface.EventFormatter.GetSources">[docs]</a>  <span class="k">def</span> <span class="nf">GetSources</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines the the short and long source for an event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: the event object (instance of EventObject).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A tuple of the short and long source string.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      WrongFormatter: if the event object cannot be formatted by the formatter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">DATA_TYPE</span> <span class="o">!=</span> <span class="n">event_object</span><span class="o">.</span><span class="n">data_type</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">WrongFormatter</span><span class="p">(</span><span class="s1">u&#39;Unsupported data type: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">event_object</span><span class="o">.</span><span class="n">data_type</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">SOURCE_SHORT</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">SOURCE_LONG</span></div></div>
+
+
+<div class="viewcode-block" id="ConditionalEventFormatter"><a class="viewcode-back" href="../../../plaso.formatters.html#plaso.formatters.interface.ConditionalEventFormatter">[docs]</a><span class="k">class</span> <span class="nc">ConditionalEventFormatter</span><span class="p">(</span><span class="n">EventFormatter</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Base class to conditionally format event data using format string pieces.</span>
+
+<span class="sd">     Define the (long) format string and the short format string by defining</span>
+<span class="sd">     FORMAT_STRING_PIECES and FORMAT_STRING_SHORT_PIECES. The syntax of the</span>
+<span class="sd">     format strings pieces is similar to of the event formatter</span>
+<span class="sd">     (EventFormatter). Every format string piece should contain a single</span>
+<span class="sd">     attribute name or none.</span>
+
+<span class="sd">     FORMAT_STRING_SEPARATOR is used to control the string which the separate</span>
+<span class="sd">     string pieces should be joined. It contains a space by default.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="c1"># The format string pieces.</span>
+  <span class="n">FORMAT_STRING_PIECES</span> <span class="o">=</span> <span class="p">[</span><span class="s1">u&#39;&#39;</span><span class="p">]</span>
+  <span class="n">FORMAT_STRING_SHORT_PIECES</span> <span class="o">=</span> <span class="p">[</span><span class="s1">u&#39;&#39;</span><span class="p">]</span>
+
+  <span class="c1"># The separator used to join the string pieces.</span>
+  <span class="n">FORMAT_STRING_SEPARATOR</span> <span class="o">=</span> <span class="s1">u&#39; &#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the conditional formatter.</span>
+
+<span class="sd">       A map is build of the string pieces and their corresponding attribute</span>
+<span class="sd">       name to optimize conditional string formatting.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: when an invalid format string piece is encountered.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">ConditionalEventFormatter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+
+    <span class="c1"># The format string can be defined as:</span>
+    <span class="c1"># {name}, {name:format}, {name!conversion}, {name!conversion:format}</span>
+    <span class="n">regexp</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">u&#39;{[a-z][a-zA-Z0-9_]*[!]?[^:}]*[:]?[^}]*}&#39;</span><span class="p">)</span>
+    <span class="n">regexp_name</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s1">u&#39;[a-z][a-zA-Z0-9_]*&#39;</span><span class="p">)</span>
+
+    <span class="c1"># The format string pieces map is a list containing the attribute name</span>
+    <span class="c1"># per format string piece. E.g. [&quot;Description: {description}&quot;] would be</span>
+    <span class="c1"># mapped to: [0] = &quot;description&quot;. If the string piece does not contain</span>
+    <span class="c1"># an attribute name it is treated as text that does not needs formatting.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_format_string_pieces_map</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">format_string_piece</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">FORMAT_STRING_PIECES</span><span class="p">:</span>
+      <span class="n">result</span> <span class="o">=</span> <span class="n">regexp</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">format_string_piece</span><span class="p">)</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
+        <span class="c1"># The text format string piece is stored as an empty map entry to</span>
+        <span class="c1"># keep the index in the map equal to the format string pieces.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_format_string_pieces_map</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;&#39;</span><span class="p">)</span>
+      <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># Extract the attribute name.</span>
+        <span class="n">attribute_name</span> <span class="o">=</span> <span class="n">regexp_name</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_format_string_pieces_map</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">attribute_name</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">((</span>
+            <span class="s1">u&#39;Invalid format string piece: [{0:s}] contains more than 1 &#39;</span>
+            <span class="s1">u&#39;attribute name.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">format_string_piece</span><span class="p">))</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_format_string_short_pieces_map</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">format_string_piece</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">FORMAT_STRING_SHORT_PIECES</span><span class="p">:</span>
+      <span class="n">result</span> <span class="o">=</span> <span class="n">regexp</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">format_string_piece</span><span class="p">)</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="p">:</span>
+        <span class="c1"># The text format string piece is stored as an empty map entry to</span>
+        <span class="c1"># keep the index in the map equal to the format string pieces.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_format_string_short_pieces_map</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;&#39;</span><span class="p">)</span>
+      <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># Extract the attribute name.</span>
+        <span class="n">attribute_name</span> <span class="o">=</span> <span class="n">regexp_name</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_format_string_short_pieces_map</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">attribute_name</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">((</span>
+            <span class="s1">u&#39;Invalid short format string piece: [{0:s}] contains more &#39;</span>
+            <span class="s1">u&#39;than 1 attribute name.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">format_string_piece</span><span class="p">))</span>
+
+  <span class="k">def</span> <span class="nf">_ConditionalFormatMessages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_values</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines the conditional formatted message strings.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_values: a dictionary object containing the event (object) values.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A tuple containing the formatted message string and short message string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Using getattr here to make sure the attribute is not set to None.</span>
+    <span class="c1"># if A.b = None, hasattr(A, b) is True but getattr(A, b, None) is False.</span>
+    <span class="n">string_pieces</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">map_index</span><span class="p">,</span> <span class="n">attribute_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_format_string_pieces_map</span><span class="p">):</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">attribute_name</span> <span class="ow">or</span> <span class="n">attribute_name</span> <span class="ow">in</span> <span class="n">event_values</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">attribute_name</span><span class="p">:</span>
+          <span class="n">attribute</span> <span class="o">=</span> <span class="n">event_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attribute_name</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+          <span class="c1"># If an attribute is an int, yet has zero value we want to include</span>
+          <span class="c1"># that in the format string, since that is still potentially valid</span>
+          <span class="c1"># information. Otherwise we would like to skip it.</span>
+          <span class="c1"># pylint: disable=unidiomatic-typecheck</span>
+          <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">attribute</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">bool</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">long</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">attribute</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">string_pieces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">FORMAT_STRING_PIECES</span><span class="p">[</span><span class="n">map_index</span><span class="p">])</span>
+    <span class="n">format_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">FORMAT_STRING_SEPARATOR</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">string_pieces</span><span class="p">)</span>
+
+    <span class="n">string_pieces</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">map_index</span><span class="p">,</span> <span class="n">attribute_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_format_string_short_pieces_map</span><span class="p">):</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">attribute_name</span> <span class="ow">or</span> <span class="n">event_values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attribute_name</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">string_pieces</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">FORMAT_STRING_SHORT_PIECES</span><span class="p">[</span><span class="n">map_index</span><span class="p">])</span>
+    <span class="n">short_format_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">FORMAT_STRING_SEPARATOR</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">string_pieces</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FormatMessages</span><span class="p">(</span>
+        <span class="n">format_string</span><span class="p">,</span> <span class="n">short_format_string</span><span class="p">,</span> <span class="n">event_values</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ConditionalEventFormatter.GetFormatStringAttributeNames"><a class="viewcode-back" href="../../../plaso.formatters.html#plaso.formatters.interface.ConditionalEventFormatter.GetFormatStringAttributeNames">[docs]</a>  <span class="k">def</span> <span class="nf">GetFormatStringAttributeNames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the attribute names in the format string.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A set containing the attribute names.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_string_attribute_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_format_string_attribute_names</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="k">for</span> <span class="n">format_string_piece</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">FORMAT_STRING_PIECES</span><span class="p">:</span>
+        <span class="n">attribute_names</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FORMAT_STRING_ATTRIBUTE_NAME_RE</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span>
+            <span class="n">format_string_piece</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">attribute_names</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_format_string_attribute_names</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">attribute_names</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_format_string_attribute_names</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ConditionalEventFormatter.GetMessages"><a class="viewcode-back" href="../../../plaso.formatters.html#plaso.formatters.interface.ConditionalEventFormatter.GetMessages">[docs]</a>  <span class="k">def</span> <span class="nf">GetMessages</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unused_formatter_mediator</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines the formatted message strings for an event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      formatter_mediator: the formatter mediator object (instance of</span>
+<span class="sd">                          FormatterMediator).</span>
+<span class="sd">      event_object: the event object (instance of EventObject).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A tuple containing the formatted message string and short message string.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      WrongFormatter: if the event object cannot be formatted by the formatter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">DATA_TYPE</span> <span class="o">!=</span> <span class="n">event_object</span><span class="o">.</span><span class="n">data_type</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">WrongFormatter</span><span class="p">(</span><span class="s1">u&#39;Unsupported data type: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">event_object</span><span class="o">.</span><span class="n">data_type</span><span class="p">))</span>
+
+    <span class="n">event_values</span> <span class="o">=</span> <span class="n">event_object</span><span class="o">.</span><span class="n">CopyToDict</span><span class="p">()</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ConditionalFormatMessages</span><span class="p">(</span><span class="n">event_values</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

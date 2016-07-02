@@ -1,0 +1,278 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.oxml &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.oxml</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains a parser for OXML files (i.e. MS Office 2007+).&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">struct</span>
+<span class="kn">import</span> <span class="nn">zipfile</span>
+
+<span class="kn">from</span> <span class="nn">xml.etree</span> <span class="kn">import</span> <span class="n">ElementTree</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;David Nides (david.nides@gmail.com)&#39;</span>
+
+
+<div class="viewcode-block" id="OpenXMLParserEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.oxml.OpenXMLParserEvent">[docs]</a><span class="k">class</span> <span class="nc">OpenXMLParserEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">TimestampEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Process timestamps from MS Office XML Events.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;metadata:openxml&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">usage</span><span class="p">,</span> <span class="n">metadata</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timestamp: The timestamp time value. The timestamp contains the</span>
+<span class="sd">                 number of microseconds since Jan 1, 1970 00:00:00 UTC</span>
+<span class="sd">      usage: The description of the usage of the time value.</span>
+<span class="sd">      metadata: A dict object containing extracted metadata.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">OpenXMLParserEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">usage</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">metadata</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+      <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="OpenXMLParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.oxml.OpenXMLParser">[docs]</a><span class="k">class</span> <span class="nc">OpenXMLParser</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">FileObjectParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parse metadata from OXML files.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;openxml&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for OpenXML (OXML) files.&#39;</span>
+
+  <span class="n">_METAKEY_TRANSLATE</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="s1">u&#39;creator&#39;</span><span class="p">:</span> <span class="s1">u&#39;author&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;lastModifiedBy&#39;</span><span class="p">:</span> <span class="s1">u&#39;last_saved_by&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;Total_Time&#39;</span><span class="p">:</span> <span class="s1">u&#39;total_edit_time&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;Pages&#39;</span><span class="p">:</span> <span class="s1">u&#39;number_of_pages&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;CharactersWithSpaces&#39;</span><span class="p">:</span> <span class="s1">u&#39;number_of_characters_with_spaces&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;Paragraphs&#39;</span><span class="p">:</span> <span class="s1">u&#39;number_of_paragraphs&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;Characters&#39;</span><span class="p">:</span> <span class="s1">u&#39;number_of_characters&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;Lines&#39;</span><span class="p">:</span> <span class="s1">u&#39;number_of_lines&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;revision&#39;</span><span class="p">:</span> <span class="s1">u&#39;revision_number&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;Words&#39;</span><span class="p">:</span> <span class="s1">u&#39;number_of_words&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;Application&#39;</span><span class="p">:</span> <span class="s1">u&#39;creating_app&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;Shared_Doc&#39;</span><span class="p">:</span> <span class="s1">u&#39;shared&#39;</span><span class="p">,</span>
+  <span class="p">}</span>
+
+  <span class="n">_FILES_REQUIRED</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+      <span class="s1">u&#39;[Content_Types].xml&#39;</span><span class="p">,</span> <span class="s1">u&#39;_rels/.rels&#39;</span><span class="p">,</span> <span class="s1">u&#39;docProps/core.xml&#39;</span><span class="p">])</span>
+
+  <span class="k">def</span> <span class="nf">_FixString</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert CamelCase to lower_with_underscore.&quot;&quot;&quot;</span>
+    <span class="c1"># TODO: Add Unicode support.</span>
+    <span class="n">fix_key</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">r&#39;(.)([A-Z][a-z]+)&#39;</span><span class="p">,</span> <span class="s1">r&#39;\1_\2&#39;</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">r&#39;([a-z0-9])([A-Z])&#39;</span><span class="p">,</span> <span class="s1">r&#39;\1_\2&#39;</span><span class="p">,</span> <span class="n">fix_key</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">_GetTimestampFromString</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">time_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines a timestamp from the time string.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      time_string: A string containing the date and time.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The timestamp time value. The timestamp contains the number of</span>
+<span class="sd">      microseconds since Jan 1, 1970 00:00:00 UTC or None if the time string</span>
+<span class="sd">      could not be parsed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">time_string</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromTimeString</span><span class="p">(</span><span class="n">time_string</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">TimestampError</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to parse time string: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time_string</span><span class="p">))</span>
+
+<div class="viewcode-block" id="OpenXMLParser.ParseFileObject"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.oxml.OpenXMLParser.ParseFileObject">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses an OXML file-like object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: A file-like object.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      UnableToParseFile: when the file cannot be parsed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_name</span> <span class="o">=</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">GetDisplayName</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">is_zipfile</span><span class="p">(</span><span class="n">file_object</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;[{0:s}] unable to parse file: {1:s} with error: {2:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="s1">u&#39;Not a Zip file.&#39;</span><span class="p">))</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">zip_container</span> <span class="o">=</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">file_object</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">zipfile</span><span class="o">.</span><span class="n">BadZipfile</span><span class="p">,</span> <span class="n">struct</span><span class="o">.</span><span class="n">error</span><span class="p">,</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">LargeZipFile</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;[{0:s}] unable to parse file: {1:s} with error: {2:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="s1">u&#39;Bad Zip file.&#39;</span><span class="p">))</span>
+
+    <span class="n">zip_name_list</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">zip_container</span><span class="o">.</span><span class="n">namelist</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FILES_REQUIRED</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">zip_name_list</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;[{0:s}] unable to parse file: {1:s} with error: {2:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="s1">u&#39;OXML element(s) missing.&#39;</span><span class="p">))</span>
+
+    <span class="n">metadata</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">timestamps</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">rels_xml</span> <span class="o">=</span> <span class="n">zip_container</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">u&#39;_rels/.rels&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">BadZipfile</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to parse file with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+      <span class="k">return</span>
+
+    <span class="n">rels_root</span> <span class="o">=</span> <span class="n">ElementTree</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">rels_xml</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">properties</span> <span class="ow">in</span> <span class="n">rels_root</span><span class="o">.</span><span class="n">iter</span><span class="p">():</span>
+      <span class="k">if</span> <span class="s1">u&#39;properties&#39;</span> <span class="ow">in</span> <span class="nb">repr</span><span class="p">(</span><span class="n">properties</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;Type&#39;</span><span class="p">)):</span>
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">xml</span> <span class="o">=</span> <span class="n">zip_container</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">properties</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;Target&#39;</span><span class="p">))</span>
+          <span class="n">root</span> <span class="o">=</span> <span class="n">ElementTree</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">xml</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span>
+            <span class="ne">OverflowError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span>
+            <span class="n">zipfile</span><span class="o">.</span><span class="n">BadZipfile</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+          <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+              <span class="s1">u&#39;[{0:s}] unable to read property with error: {1:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                  <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+          <span class="k">continue</span>
+
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">iter</span><span class="p">():</span>
+          <span class="k">if</span> <span class="n">element</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">tag</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="n">tag</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s1">u&#39;}&#39;</span><span class="p">)</span>
+            <span class="c1"># Not including the &#39;lpstr&#39; attribute because it is</span>
+            <span class="c1"># very verbose.</span>
+            <span class="k">if</span> <span class="n">tag</span> <span class="o">==</span> <span class="s1">u&#39;lpstr&#39;</span><span class="p">:</span>
+              <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">tag</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">u&#39;created&#39;</span><span class="p">,</span> <span class="s1">u&#39;modified&#39;</span><span class="p">,</span> <span class="s1">u&#39;lastPrinted&#39;</span><span class="p">]:</span>
+              <span class="n">timestamps</span><span class="p">[</span><span class="n">tag</span><span class="p">]</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="n">text</span>
+            <span class="k">else</span><span class="p">:</span>
+              <span class="n">tag_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_METAKEY_TRANSLATE</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FixString</span><span class="p">(</span><span class="n">tag</span><span class="p">))</span>
+              <span class="n">metadata</span><span class="p">[</span><span class="n">tag_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="n">text</span>
+
+    <span class="n">event_object</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="n">time_string</span> <span class="o">=</span> <span class="n">timestamps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;created&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetTimestampFromString</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">time_string</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">timestamp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">OpenXMLParserEvent</span><span class="p">(</span>
+          <span class="n">timestamp</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">CREATION_TIME</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="n">time_string</span> <span class="o">=</span> <span class="n">timestamps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;modified&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetTimestampFromString</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">time_string</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">timestamp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">OpenXMLParserEvent</span><span class="p">(</span>
+          <span class="n">timestamp</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">MODIFICATION_TIME</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="n">time_string</span> <span class="o">=</span> <span class="n">timestamps</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;lastPrinted&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetTimestampFromString</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">time_string</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">timestamp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">OpenXMLParserEvent</span><span class="p">(</span>
+          <span class="n">timestamp</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">LAST_PRINTED</span><span class="p">,</span> <span class="n">metadata</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParser</span><span class="p">(</span><span class="n">OpenXMLParser</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

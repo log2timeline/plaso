@@ -1,0 +1,534 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.asl &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.asl</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;The Apple System Log Parser.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">construct</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">py2to3</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)&#39;</span>
+
+
+<div class="viewcode-block" id="ASLEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.asl.ASLEvent">[docs]</a><span class="k">class</span> <span class="nc">ASLEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">PosixTimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for an ASL event.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    computer_name: a string containing the name of the host.</span>
+<span class="sd">    extra_information: a string containing extra fields associated</span>
+<span class="sd">                       to the event.</span>
+<span class="sd">    facility: a string containing the facility.</span>
+<span class="sd">    group_id: an integer containing the group identifer (GID).</span>
+<span class="sd">    level: a string containing the level of criticality of the event.</span>
+<span class="sd">    message_id: an integer containing the message identifier.</span>
+<span class="sd">    message: a string containing the message of the event.</span>
+<span class="sd">    pid: an integer containing the process identifier (PID).</span>
+<span class="sd">    read_uid: the user ID that can read this file. If -1: all.</span>
+<span class="sd">    read_gid: the group ID that can read this file. If -1: all.</span>
+<span class="sd">    record_position: an integer containing the position of the event record.</span>
+<span class="sd">    sender: a string containing the sender or process that created the event.</span>
+<span class="sd">    user_sid: a string containing the user identifier (UID).</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;mac:asl:event&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">posix_time</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">message_id</span><span class="p">,</span> <span class="n">level</span><span class="p">,</span> <span class="n">pid</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">gid</span><span class="p">,</span>
+      <span class="n">read_uid</span><span class="p">,</span> <span class="n">read_gid</span><span class="p">,</span> <span class="n">computer_name</span><span class="p">,</span> <span class="n">sender</span><span class="p">,</span> <span class="n">facility</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span>
+      <span class="n">extra_information</span><span class="p">,</span> <span class="n">micro_seconds</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      posix_time: the POSIX time value, which contains the number of seconds</span>
+<span class="sd">                  since January 1, 1970 00:00:00 UTC.</span>
+<span class="sd">      offset: an integer containing the offset of the event record.</span>
+<span class="sd">      message_id: an integer containing the message identifier.</span>
+<span class="sd">      level: a string containing the level of criticality of the event.</span>
+<span class="sd">      pid: an integer containing the process identifier (PID).</span>
+<span class="sd">      uid: an integer containing the user identifier (UID).</span>
+<span class="sd">      gid: an integer containing the group identifier (GID).</span>
+<span class="sd">      read_uid: the user ID that can read this file. If -1: all.</span>
+<span class="sd">      read_gid: the group ID that can read this file. If -1: all.</span>
+<span class="sd">      computer_name: a string containing the name of the host.</span>
+<span class="sd">      sender: a string containing the sender or process that created the event.</span>
+<span class="sd">      facility: a string containing the facility.</span>
+<span class="sd">      message: a string containing the message of the event.</span>
+<span class="sd">      extra_information: a string containing extra fields associated</span>
+<span class="sd">                         to the event.</span>
+<span class="sd">      micro_seconds: optional number of micro seconds.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">ASLEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">posix_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">CREATION_TIME</span><span class="p">,</span>
+        <span class="n">micro_seconds</span><span class="o">=</span><span class="n">micro_seconds</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">computer_name</span> <span class="o">=</span> <span class="n">computer_name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">extra_information</span> <span class="o">=</span> <span class="n">extra_information</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">facility</span> <span class="o">=</span> <span class="n">facility</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">group_id</span> <span class="o">=</span> <span class="n">gid</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">level</span> <span class="o">=</span> <span class="n">level</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">message_id</span> <span class="o">=</span> <span class="n">message_id</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">pid</span> <span class="o">=</span> <span class="n">pid</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">read_gid</span> <span class="o">=</span> <span class="n">read_gid</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">read_uid</span> <span class="o">=</span> <span class="n">read_uid</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">record_position</span> <span class="o">=</span> <span class="n">offset</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">sender</span> <span class="o">=</span> <span class="n">sender</span>
+    <span class="c1"># Note that the user_sid value is expected to be a string.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">user_sid</span> <span class="o">=</span> <span class="s1">u&#39;{0:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">uid</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ASLParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.asl.ASLParser">[docs]</a><span class="k">class</span> <span class="nc">ASLParser</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">FileObjectParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parser for ASL log files.&quot;&quot;&quot;</span>
+
+  <span class="n">_INITIAL_FILE_OFFSET</span> <span class="o">=</span> <span class="bp">None</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;asl_log&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for ASL log files.&#39;</span>
+
+  <span class="n">_ASL_MAGIC</span> <span class="o">=</span> <span class="n">b</span><span class="s1">&#39;ASL DB</span><span class="se">\x00\x00\x00\x00\x00\x00</span><span class="s1">&#39;</span>
+
+  <span class="c1"># ASL File header.</span>
+  <span class="c1"># magic: magic number that identify ASL files.</span>
+  <span class="c1"># version: version of the file.</span>
+  <span class="c1"># offset: first record in the file.</span>
+  <span class="c1"># timestamp: time when the first entry was written.</span>
+  <span class="c1">#     Contains the number of seconds since January 1, 1970 00:00:00 UTC.</span>
+  <span class="c1"># last_offset: last record in the file.</span>
+  <span class="n">_ASL_HEADER_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;asl_header_struct&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;magic&#39;</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;version&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;offset&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;timestamp&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;cache_size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;last_offset&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">36</span><span class="p">))</span>
+
+  <span class="c1"># The record structure is:</span>
+  <span class="c1"># [HEAP][STRUCTURE][4xExtraField][2xExtraField]*[PreviousEntry]</span>
+  <span class="c1"># Record static structure.</span>
+  <span class="c1"># tam_entry: it contains the number of bytes from this file position</span>
+  <span class="c1">#            until the end of the record, without counts itself.</span>
+  <span class="c1"># next_offset: next record. If is equal to 0x00, it is the last record.</span>
+  <span class="c1"># asl_message_id: integer that has the numeric identification of the event.</span>
+  <span class="c1"># timestamp: the entry creation date and time.</span>
+  <span class="c1">#     Contains the number of seconds since January 1, 1970 00:00:00 UTC.</span>
+  <span class="c1"># nanosecond: nanosecond to add to the timestamp.</span>
+  <span class="c1"># level: level of priority.</span>
+  <span class="c1"># pid: process identification that ask to save the record.</span>
+  <span class="c1"># uid: user identification that has lunched the process.</span>
+  <span class="c1"># gid: group identification that has lunched the process.</span>
+  <span class="c1"># read_uid: identification id of a user. Only applied if is not -1 (all FF).</span>
+  <span class="c1">#           Only root and this user can read the entry.</span>
+  <span class="c1"># read_gid: the same than read_uid, but for the group.</span>
+  <span class="n">_ASL_RECORD_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;asl_record_struct&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;tam_entry&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;next_offset&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;asl_message_id&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;timestamp&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;nanosec&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;level&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt16</span><span class="p">(</span><span class="s1">u&#39;flags&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;pid&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;uid&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;gid&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;read_uid&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;read_gid&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;ref_pid&#39;</span><span class="p">))</span>
+
+  <span class="n">_ASL_RECORD_STRUCT_SIZE</span> <span class="o">=</span> <span class="n">_ASL_RECORD_STRUCT</span><span class="o">.</span><span class="n">sizeof</span><span class="p">()</span>
+
+  <span class="c1"># 8-byte fields, they can be:</span>
+  <span class="c1"># - String: [Nibble = 1000 (8)][Nibble = Length][7 Bytes = String].</span>
+  <span class="c1"># - Integer: integer that has the byte position in the file that points</span>
+  <span class="c1">#            to an ASL_RECORD_DYN_VALUE struct. If the value of the integer</span>
+  <span class="c1">#            is equal to 0, it means that it has not data (skip).</span>
+
+  <span class="c1"># If the field is a String, we use this structure to decode each</span>
+  <span class="c1"># integer byte in the corresponding character (ASCII Char).</span>
+  <span class="n">_ASL_OCTET_STRING</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">ExprAdapter</span><span class="p">(</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Octet</span><span class="p">(</span><span class="s1">u&#39;string&#39;</span><span class="p">),</span>
+      <span class="n">encoder</span><span class="o">=</span><span class="k">lambda</span> <span class="n">obj</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="nb">ord</span><span class="p">(</span><span class="n">obj</span><span class="p">),</span>
+      <span class="n">decoder</span><span class="o">=</span><span class="k">lambda</span> <span class="n">obj</span><span class="p">,</span> <span class="n">ctx</span><span class="p">:</span> <span class="nb">chr</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span>
+
+  <span class="c1"># Field string structure. If the first bit is 1, it means that it</span>
+  <span class="c1"># is a String (1000) = 8, then the next nibble has the number of</span>
+  <span class="c1"># characters. The last 7 bytes are the number of bytes.</span>
+  <span class="n">_ASL_STRING</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">BitStruct</span><span class="p">(</span>
+      <span class="s1">u&#39;string&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Flag</span><span class="p">(</span><span class="s1">u&#39;type&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Bits</span><span class="p">(</span><span class="s1">u&#39;filler&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">If</span><span class="p">(</span>
+          <span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+          <span class="n">construct</span><span class="o">.</span><span class="n">Nibble</span><span class="p">(</span><span class="s1">u&#39;string_length&#39;</span><span class="p">)),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">If</span><span class="p">(</span>
+          <span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+          <span class="n">construct</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="n">_ASL_OCTET_STRING</span><span class="p">)))</span>
+
+  <span class="c1"># 8-byte pointer to a byte position in the file.</span>
+  <span class="n">_ASL_POINTER</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">UBInt64</span><span class="p">(</span><span class="s1">u&#39;pointer&#39;</span><span class="p">)</span>
+
+  <span class="c1"># Dynamic data structure pointed by a pointer that contains a String:</span>
+  <span class="c1"># [2 bytes padding][4 bytes size of String][String].</span>
+  <span class="n">_ASL_RECORD_DYN_VALUE</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;asl_record_dyn_value&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">UBInt32</span><span class="p">(</span><span class="s1">u&#39;size&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Bytes</span><span class="p">(</span><span class="s1">u&#39;value&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">ctx</span><span class="p">:</span> <span class="n">ctx</span><span class="o">.</span><span class="n">size</span><span class="p">))</span>
+
+<div class="viewcode-block" id="ASLParser.ParseFileObject"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.asl.ASLParser.ParseFileObject">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses an ALS file-like object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: a parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: a file-like object.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      UnableToParseFile: when the file cannot be parsed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_SET</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ASL_HEADER_STRUCT</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to parse ASL Header with error: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">header</span><span class="o">.</span><span class="n">magic</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ASL_MAGIC</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span><span class="s1">u&#39;Not an ASL Header, unable to parse.&#39;</span><span class="p">)</span>
+
+    <span class="n">offset</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">offset</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">offset</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">header_last_offset</span> <span class="o">=</span> <span class="n">header</span><span class="o">.</span><span class="n">last_offset</span>
+
+    <span class="n">previous_offset</span> <span class="o">=</span> <span class="n">offset</span>
+    <span class="n">event_object</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ReadASLEvent</span><span class="p">(</span>
+        <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">event_object</span><span class="p">:</span>
+      <span class="c1"># Sanity check, the last read element must be the same as</span>
+      <span class="c1"># indicated by the header.</span>
+      <span class="k">if</span> <span class="n">offset</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">previous_offset</span> <span class="o">!=</span> <span class="n">header_last_offset</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+            <span class="s1">u&#39;Unable to parse header. Last element header does not match &#39;</span>
+            <span class="s1">u&#39;header offset.&#39;</span><span class="p">)</span>
+      <span class="n">previous_offset</span> <span class="o">=</span> <span class="n">offset</span>
+      <span class="n">event_object</span><span class="p">,</span> <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ReadASLEvent</span><span class="p">(</span>
+          <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ASLParser.ReadASLEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.asl.ASLParser.ReadASLEvent">[docs]</a>  <span class="k">def</span> <span class="nf">ReadASLEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads an ASL record at a specific offset.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: a parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: a file-like object that points to an ASL file.</span>
+<span class="sd">      offset: an integer containing the offset of the ASL record.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A tuple of an event object extracted from the ASL record,</span>
+<span class="sd">      and the offset to the next ASL record in the file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># The heap of the entry is saved to try to avoid seek (performance issue).</span>
+    <span class="c1"># It has the real start position of the entry.</span>
+    <span class="n">dynamic_data_offset</span> <span class="o">=</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">dynamic_data</span> <span class="o">=</span> <span class="n">file_object</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">offset</span> <span class="o">-</span> <span class="n">dynamic_data_offset</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;unable to read ASL record dynamic data with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">exception</span><span class="p">))</span>
+      <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">offset</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">record_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ASL_RECORD_STRUCT</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;unable to parse ASL record with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+      <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+    <span class="c1"># Variable tam_fields = is the real length of the dynamic fields.</span>
+    <span class="c1"># We have this: [Record_Struct] + [Dynamic_Fields] + [Pointer_Entry_Before]</span>
+    <span class="c1"># In Record_Struct we have a field called tam_entry, where it has the number</span>
+    <span class="c1"># of bytes until the end of the entry from the position that the field is.</span>
+    <span class="c1"># The tam_entry is between the 2th and the 6th byte in the [Record_Struct].</span>
+    <span class="c1"># tam_entry = ([Record_Struct]-6)+[Dynamic_Fields]+[Pointer_Entry_Before]</span>
+    <span class="c1"># Also, we do not need [Point_Entry_Before] and then we delete the size of</span>
+    <span class="c1"># [Point_Entry_Before] that it is 8 bytes (8):</span>
+    <span class="c1"># tam_entry = ([Record_Struct]-6)+[Dynamic_Fields]+[Pointer_Entry_Before]</span>
+    <span class="c1"># [Dynamic_Fields] = tam_entry - [Record_Struct] + 6 - 8</span>
+    <span class="c1"># [Dynamic_Fields] = tam_entry - [Record_Struct] - 2</span>
+    <span class="n">tam_fields</span> <span class="o">=</span> <span class="n">record_struct</span><span class="o">.</span><span class="n">tam_entry</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ASL_RECORD_STRUCT_SIZE</span> <span class="o">-</span> <span class="mi">2</span>
+
+    <span class="c1"># Dynamic part of the entry that contains minimal four fields of 8 bytes</span>
+    <span class="c1"># plus 2 x [8 bytes] fields for each extra ASL_Field.</span>
+    <span class="c1"># The four first fields are always the Host, Sender, Facility and Message.</span>
+    <span class="c1"># After the four first fields, the entry might have extra ASL_Fields.</span>
+    <span class="c1"># For each extra ASL_field, it has a pair of 8-byte fields where the first</span>
+    <span class="c1"># 8 bytes contains the name of the extra ASL_field and the second 8 bytes</span>
+    <span class="c1"># contains the text of the extra field.</span>
+    <span class="c1"># All of this 8-byte field can be saved using one of these three different</span>
+    <span class="c1"># types:</span>
+    <span class="c1"># - Null value (&#39;0000000000000000&#39;): nothing to do.</span>
+    <span class="c1"># - String: It is string if first bit = 1 or first nibble = 8 (1000).</span>
+    <span class="c1">#           Second nibble has the length of string.</span>
+    <span class="c1">#           The next 7 bytes have the text characters of the string</span>
+    <span class="c1">#           padding the end with null characters: &#39;0x00&#39;.</span>
+    <span class="c1">#           Example: [8468 6964 6400 0000]</span>
+    <span class="c1">#                    [8] String, [4] length, value: [68 69 64 64] = hidd.</span>
+    <span class="c1"># - Pointer: static position in the file to a special struct</span>
+    <span class="c1">#            implemented as an ASL_RECORD_DYN_VALUE.</span>
+    <span class="c1">#            Example: [0000 0000 0000 0077]</span>
+    <span class="c1">#            It points to the file position 0x077 that has a</span>
+    <span class="c1">#            ASL_RECORD_DYN_VALUE structure.</span>
+    <span class="n">values</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">while</span> <span class="n">tam_fields</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">field_data</span> <span class="o">=</span> <span class="n">file_object</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+      <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+            <span class="s1">u&#39;unable to read ASL field with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+      <span class="c1"># Try to read the field data as a string.</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">asl_string_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ASL_STRING</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">field_data</span><span class="p">)</span>
+        <span class="n">string_data</span> <span class="o">=</span> <span class="n">b</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">asl_string_struct</span><span class="o">.</span><span class="n">string</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="n">asl_string_struct</span><span class="o">.</span><span class="n">string_length</span><span class="p">])</span>
+        <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">string_data</span><span class="p">)</span>
+
+        <span class="c1"># Go to parse the next extra field.</span>
+        <span class="n">tam_fields</span> <span class="o">-=</span> <span class="mi">8</span>
+        <span class="k">continue</span>
+
+      <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+      <span class="c1"># If the field is not a string it must be a pointer.</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">pointer_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ASL_POINTER</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">field_data</span><span class="p">)</span>
+      <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+            <span class="s1">u&#39;unable to parse ASL field with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">pointer_value</span><span class="p">:</span>
+        <span class="c1"># Next extra field: 8 bytes more.</span>
+        <span class="n">tam_fields</span> <span class="o">-=</span> <span class="mi">8</span>
+        <span class="k">continue</span>
+
+      <span class="c1"># The next IF ELSE is only for performance issues, avoiding seek.</span>
+      <span class="c1"># If the pointer points a lower position than where the actual entry</span>
+      <span class="c1"># starts, it means that it points to a previous entry.</span>
+      <span class="n">pos</span> <span class="o">=</span> <span class="n">pointer_value</span> <span class="o">-</span> <span class="n">dynamic_data_offset</span>
+
+      <span class="c1"># Greater or equal 0 means that the data is in the actual entry.</span>
+      <span class="k">if</span> <span class="n">pos</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">dyn_value_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ASL_RECORD_DYN_VALUE</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span>
+              <span class="n">dynamic_data</span><span class="p">[</span><span class="n">pos</span><span class="p">:])</span>
+          <span class="n">dyn_value</span> <span class="o">=</span> <span class="n">dyn_value_struct</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+          <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dyn_value</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+              <span class="s1">u&#39;unable to parse ASL record dynamic value with error: &#39;</span>
+              <span class="s1">u&#39;{0:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+          <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+      <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Only if it is a pointer that points to the</span>
+        <span class="c1"># heap from another entry we use the seek method.</span>
+        <span class="n">main_position</span> <span class="o">=</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">()</span>
+
+        <span class="c1"># If the pointer is in a previous entry.</span>
+        <span class="k">if</span> <span class="n">main_position</span> <span class="o">&gt;</span> <span class="n">pointer_value</span><span class="p">:</span>
+          <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">pointer_value</span> <span class="o">-</span> <span class="n">main_position</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_CUR</span><span class="p">)</span>
+
+          <span class="k">try</span><span class="p">:</span>
+            <span class="n">dyn_value_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ASL_RECORD_DYN_VALUE</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span>
+                <span class="n">file_object</span><span class="p">)</span>
+            <span class="n">dyn_value</span> <span class="o">=</span> <span class="n">dyn_value_struct</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dyn_value</span><span class="p">)</span>
+
+          <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">):</span>
+            <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+                <span class="s1">u&#39;the pointer at {0:d} (0x{0:08x}) points to invalid &#39;</span>
+                <span class="s1">u&#39;information.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">main_position</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ASL_POINTER</span><span class="o">.</span><span class="n">sizeof</span><span class="p">()))</span>
+
+          <span class="c1"># Come back to the position in the entry.</span>
+          <span class="n">_</span> <span class="o">=</span> <span class="n">file_object</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">main_position</span> <span class="o">-</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">())</span>
+
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">_</span> <span class="o">=</span> <span class="n">file_object</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">pointer_value</span> <span class="o">-</span> <span class="n">main_position</span><span class="p">)</span>
+
+          <span class="n">dyn_value_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ASL_RECORD_DYN_VALUE</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span>
+              <span class="n">file_object</span><span class="p">)</span>
+          <span class="n">dyn_value</span> <span class="o">=</span> <span class="n">dyn_value_struct</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+          <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dyn_value</span><span class="p">)</span>
+
+          <span class="c1"># Come back to the position in the entry.</span>
+          <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="n">main_position</span> <span class="o">-</span> <span class="n">file_object</span><span class="o">.</span><span class="n">tell</span><span class="p">(),</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_CUR</span><span class="p">)</span>
+
+      <span class="c1"># Next extra field: 8 bytes more.</span>
+      <span class="n">tam_fields</span> <span class="o">-=</span> <span class="mi">8</span>
+
+    <span class="c1"># Read the last 8 bytes of the record that points to the previous entry.</span>
+    <span class="n">_</span> <span class="o">=</span> <span class="n">file_object</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+
+    <span class="c1"># Parsed section, we translate the read data to an appropriate format.</span>
+    <span class="n">micro_seconds</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="nb">divmod</span><span class="p">(</span><span class="n">record_struct</span><span class="o">.</span><span class="n">nanosec</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+
+    <span class="c1"># Parsing the dynamic values (text or pointers to position with text).</span>
+    <span class="c1"># The first four are always the host, sender, facility, and message.</span>
+    <span class="n">number_of_values</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">number_of_values</span> <span class="o">&lt;</span> <span class="mi">4</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;less than four values read from an ASL event.&#39;</span><span class="p">)</span>
+
+    <span class="n">computer_name</span> <span class="o">=</span> <span class="s1">u&#39;N/A&#39;</span>
+    <span class="n">sender</span> <span class="o">=</span> <span class="s1">u&#39;N/A&#39;</span>
+    <span class="n">facility</span> <span class="o">=</span> <span class="s1">u&#39;N/A&#39;</span>
+    <span class="n">message</span> <span class="o">=</span> <span class="s1">u&#39;N/A&#39;</span>
+
+    <span class="k">if</span> <span class="n">number_of_values</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+      <span class="n">computer_name</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">number_of_values</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+      <span class="n">sender</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">number_of_values</span> <span class="o">&gt;=</span> <span class="mi">3</span><span class="p">:</span>
+      <span class="n">facility</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">number_of_values</span> <span class="o">&gt;=</span> <span class="mi">4</span><span class="p">:</span>
+      <span class="n">message</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">)</span>
+
+    <span class="c1"># If the entry has an extra fields, they works as a pairs:</span>
+    <span class="c1"># The first is the name of the field and the second the value.</span>
+    <span class="n">extra_information</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">number_of_values</span> <span class="o">&gt;</span> <span class="mi">4</span> <span class="ow">and</span> <span class="n">number_of_values</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="c1"># Taking all the extra attributes and merging them together,</span>
+      <span class="c1"># e.g. a = [1, 2, 3, 4] will look like &quot;1: 2, 3: 4&quot;.</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">extra_values</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">py2to3</span><span class="o">.</span><span class="n">UNICODE_TYPE</span><span class="p">,</span> <span class="n">values</span><span class="p">[</span><span class="mi">4</span><span class="p">:])</span>
+        <span class="n">extra_information</span> <span class="o">=</span> <span class="s1">u&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="nb">map</span><span class="p">(</span><span class="s1">u&#39;: &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">,</span> <span class="nb">zip</span><span class="p">(</span><span class="n">extra_values</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">extra_values</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">])))</span>
+      <span class="k">except</span> <span class="ne">UnicodeDecodeError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+            <span class="s1">u&#39;Unable to decode all ASL values in the extra information fields.&#39;</span><span class="p">)</span>
+
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">ASLEvent</span><span class="p">(</span>
+        <span class="n">record_struct</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">record_struct</span><span class="o">.</span><span class="n">asl_message_id</span><span class="p">,</span>
+        <span class="n">record_struct</span><span class="o">.</span><span class="n">level</span><span class="p">,</span> <span class="n">record_struct</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="n">record_struct</span><span class="o">.</span><span class="n">uid</span><span class="p">,</span>
+        <span class="n">record_struct</span><span class="o">.</span><span class="n">gid</span><span class="p">,</span> <span class="n">record_struct</span><span class="o">.</span><span class="n">read_uid</span><span class="p">,</span> <span class="n">record_struct</span><span class="o">.</span><span class="n">read_gid</span><span class="p">,</span>
+        <span class="n">computer_name</span><span class="p">,</span> <span class="n">sender</span><span class="p">,</span> <span class="n">facility</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">extra_information</span><span class="p">,</span>
+        <span class="n">micro_seconds</span><span class="o">=</span><span class="n">micro_seconds</span><span class="p">)</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">record_struct</span><span class="o">.</span><span class="n">next_offset</span><span class="p">)</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParser</span><span class="p">(</span><span class="n">ASLParser</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,594 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.sqlite_plugins.skype &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../../index.html" />
+    <link rel="up" title="plaso" href="../../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.sqlite_plugins.skype</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains a basic Skype SQLite parser.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">sqlite</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers.sqlite_plugins</span> <span class="kn">import</span> <span class="n">interface</span>
+
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Joaquin Moreno Garijo (bastionado@gmail.com)&#39;</span>
+
+
+<div class="viewcode-block" id="SkypeChatEvent"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.skype.SkypeChatEvent">[docs]</a><span class="k">class</span> <span class="nc">SkypeChatEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">PosixTimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for a Skype event.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    from_account: a string containing the from display name and the author.</span>
+<span class="sd">    to_account: a string containing the accounts (excluding the</span>
+<span class="sd">                author) of the conversation.</span>
+<span class="sd">    text: a string containing the body XML.</span>
+<span class="sd">    title: a string containing the title.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;skype:event:chat&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">posix_time</span><span class="p">,</span> <span class="n">from_displayname</span><span class="p">,</span> <span class="n">author</span><span class="p">,</span> <span class="n">to_account</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">body_xml</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Build a Skype Event from a single row.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      posix_time: the POSIX time value, which contains the number of seconds</span>
+<span class="sd">                  since January 1, 1970 00:00:00 UTC.</span>
+<span class="sd">      from_displayname: a string containing the from display name.</span>
+<span class="sd">      author: a string containing the author.</span>
+<span class="sd">      to_account: a string containing the accounts (excluding the</span>
+<span class="sd">                  author) of the conversation.</span>
+<span class="sd">      title: a string containing the title.</span>
+<span class="sd">      body_xml: a string containing the body XML.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">SkypeChatEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">posix_time</span><span class="p">,</span> <span class="s1">u&#39;Chat from Skype&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">from_account</span> <span class="o">=</span> <span class="s1">u&#39;{0:s} &lt;{1:s}&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">from_displayname</span><span class="p">,</span> <span class="n">author</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">body_xml</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">title</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">to_account</span> <span class="o">=</span> <span class="n">to_account</span></div>
+
+
+<div class="viewcode-block" id="SkypeAccountEvent"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.skype.SkypeAccountEvent">[docs]</a><span class="k">class</span> <span class="nc">SkypeAccountEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">PosixTimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for account information.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    country: a string containing the chosen home country of the account</span>
+<span class="sd">             holder.</span>
+<span class="sd">    display_name: a string containing the chosen display name of the account</span>
+<span class="sd">                  holder.</span>
+<span class="sd">    email: a string containing the registered email address of the account</span>
+<span class="sd">           holder.</span>
+<span class="sd">    offset: an integer containing the row identifier.</span>
+<span class="sd">    username: a string containing the full name of the Skype account holder and</span>
+<span class="sd">              display name.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;skype:event:account&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">posix_time</span><span class="p">,</span> <span class="n">usage</span><span class="p">,</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">full_name</span><span class="p">,</span> <span class="n">display_name</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span>
+      <span class="n">country</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initialize the event.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      posix_time: the POSIX time value, which contains the number of seconds</span>
+<span class="sd">                  since January 1, 1970 00:00:00 UTC.</span>
+<span class="sd">      usage: a string containing the description string of the timestamp.</span>
+<span class="sd">      identifier: an integer containing the row identifier.</span>
+<span class="sd">      full_name: a string containing the full name of the Skype account holder.</span>
+<span class="sd">      display_name: a string containing the chosen display name of the account</span>
+<span class="sd">                    holder.</span>
+<span class="sd">      email: a string containing the registered email address of the account</span>
+<span class="sd">             holder.</span>
+<span class="sd">      country: a string containing the chosen home country of the account</span>
+<span class="sd">               holder.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">SkypeAccountEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">posix_time</span><span class="p">,</span> <span class="n">usage</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">country</span> <span class="o">=</span> <span class="n">country</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">display_name</span> <span class="o">=</span> <span class="n">display_name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">email</span> <span class="o">=</span> <span class="n">email</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">identifier</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="s1">u&#39;{0:s} &lt;{1:s}&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">full_name</span><span class="p">,</span> <span class="n">display_name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SkypeSMSEvent"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.skype.SkypeSMSEvent">[docs]</a><span class="k">class</span> <span class="nc">SkypeSMSEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">PosixTimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience EventObject for SMS.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    number: a string containing the phone number where the SMS was sent.</span>
+<span class="sd">    text: a string containing the text (SMS body) that was sent.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;skype:event:sms&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">posix_time</span><span class="p">,</span> <span class="n">phone_number</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read the information related with the SMS.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      posix_time: the POSIX time value, which contains the number of seconds</span>
+<span class="sd">                  since January 1, 1970 00:00:00 UTC.</span>
+<span class="sd">      phone_number: a string containing the phone number where the SMS was sent.</span>
+<span class="sd">      text: a string containing the text (SMS body) that was sent.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">SkypeSMSEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">posix_time</span><span class="p">,</span> <span class="s1">u&#39;SMS from Skype&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">number</span> <span class="o">=</span> <span class="n">phone_number</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">text</span></div>
+
+
+<div class="viewcode-block" id="SkypeCallEvent"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.skype.SkypeCallEvent">[docs]</a><span class="k">class</span> <span class="nc">SkypeCallEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">PosixTimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience EventObject for the calls.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    call_type: a string containing the call type e.g. WAITING, STARTED,</span>
+<span class="sd">               FINISHED.</span>
+<span class="sd">    dst_call: a string containing the account which gets the call.</span>
+<span class="sd">    src_call: a string containing the account which started the call.</span>
+<span class="sd">    user_start_call: a boolean which indicates that the owner account</span>
+<span class="sd">                     started the call.</span>
+<span class="sd">    video_conference: a boolean which indicates if the call was a video</span>
+<span class="sd">                      conference.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;skype:event:call&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">posix_time</span><span class="p">,</span> <span class="n">call_type</span><span class="p">,</span> <span class="n">user_start_call</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span>
+      <span class="n">video_conference</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Contains information if the call was cancelled, accepted or finished.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      posix_time: the POSIX time value, which contains the number of seconds</span>
+<span class="sd">                  since January 1, 1970 00:00:00 UTC.</span>
+<span class="sd">      call_type: a string containing the call type e.g. WAITING, STARTED,</span>
+<span class="sd">                 FINISHED.</span>
+<span class="sd">      user_start_call: a boolean which indicates that the owner account</span>
+<span class="sd">                       started the call.</span>
+<span class="sd">      source: a string containing the account which started the call.</span>
+<span class="sd">      destination: a string containing the account which gets the call.</span>
+<span class="sd">      video_conference: a boolean which indicates if the call was a video</span>
+<span class="sd">                        conference.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nb">super</span><span class="p">(</span><span class="n">SkypeCallEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">posix_time</span><span class="p">,</span> <span class="s1">u&#39;Call from Skype&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">call_type</span> <span class="o">=</span> <span class="n">call_type</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">dst_call</span> <span class="o">=</span> <span class="n">destination</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">src_call</span> <span class="o">=</span> <span class="n">source</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">user_start_call</span> <span class="o">=</span> <span class="n">user_start_call</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">video_conference</span> <span class="o">=</span> <span class="n">video_conference</span></div>
+
+
+<div class="viewcode-block" id="SkypeTransferFileEvent"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.skype.SkypeTransferFileEvent">[docs]</a><span class="k">class</span> <span class="nc">SkypeTransferFileEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">PosixTimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Evaluate the action of send a file.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    action_type: a string containing the action type e.g. GETSOLICITUDE,</span>
+<span class="sd">                 SENDSOLICITUDE, ACCEPTED, FINISHED.</span>
+<span class="sd">    destination: a string containing the account that received the file.</span>
+<span class="sd">    offset: an integer containing the row identifier.</span>
+<span class="sd">    source: a string containing the account that sent the file.</span>
+<span class="sd">    transferred_filename: a string containing the name of the file transferred.</span>
+<span class="sd">    transferred_file_path: a string containing the path of the file transferred.</span>
+<span class="sd">    transferred_filesize: an integer containing the size of the file</span>
+<span class="sd">                          transferred.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;skype:event:transferfile&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">posix_time</span><span class="p">,</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">action_type</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span>
+      <span class="n">file_path</span><span class="p">,</span> <span class="n">file_size</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Actions related with sending files.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      posix_time: the POSIX time value, which contains the number of seconds</span>
+<span class="sd">                  since January 1, 1970 00:00:00 UTC.</span>
+<span class="sd">      identifier: an integer containing the row identifier.</span>
+<span class="sd">      action_type: a string containing the action type e.g. GETSOLICITUDE,</span>
+<span class="sd">                   SENDSOLICITUDE, ACCEPTED, FINISHED.</span>
+<span class="sd">      source: a string containing the account that sent the file.</span>
+<span class="sd">      destination: a string containing the account that received the file.</span>
+<span class="sd">      filename: a string containing the name of the file transferred.</span>
+<span class="sd">      file_path: a string containing the path of the file transferred.</span>
+<span class="sd">      file_size: an integer containing the size of the file transferred.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Note that pysqlite does not accept a Unicode string in row[&#39;string&#39;] and</span>
+    <span class="c1"># will raise &quot;IndexError: Index must be int or string&quot;.</span>
+
+    <span class="nb">super</span><span class="p">(</span><span class="n">SkypeTransferFileEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">posix_time</span><span class="p">,</span> <span class="s1">u&#39;File transfer from Skype&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">action_type</span> <span class="o">=</span> <span class="n">action_type</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">destination</span> <span class="o">=</span> <span class="n">destination</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">identifier</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">source</span> <span class="o">=</span> <span class="n">source</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">transferred_filename</span> <span class="o">=</span> <span class="n">filename</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">transferred_filepath</span> <span class="o">=</span> <span class="n">file_path</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">transferred_filesize</span> <span class="o">=</span> <span class="n">file_size</span></div>
+
+
+<div class="viewcode-block" id="SkypePlugin"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.skype.SkypePlugin">[docs]</a><span class="k">class</span> <span class="nc">SkypePlugin</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">SQLitePlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;SQLite plugin for Skype main.db SQlite database file.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;skype&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for Skype SQLite database files.&#39;</span>
+
+  <span class="c1"># Queries for building cache.</span>
+  <span class="n">QUERY_DEST_FROM_TRANSFER</span> <span class="o">=</span> <span class="p">(</span>
+      <span class="s1">u&#39;SELECT parent_id, partner_handle AS skypeid, &#39;</span>
+      <span class="s1">u&#39;partner_dispname AS skypename FROM transfers&#39;</span><span class="p">)</span>
+  <span class="n">QUERY_SOURCE_FROM_TRANSFER</span> <span class="o">=</span> <span class="p">(</span>
+      <span class="s1">u&#39;SELECT pk_id, partner_handle AS skypeid, &#39;</span>
+      <span class="s1">u&#39;partner_dispname AS skypename FROM transfers&#39;</span><span class="p">)</span>
+
+  <span class="c1"># Define the needed queries.</span>
+  <span class="n">QUERIES</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="p">((</span><span class="s1">u&#39;SELECT c.id, c.participants, c.friendlyname AS title, &#39;</span>
+        <span class="s1">u&#39;m.author AS author, m.from_dispname AS from_displayname, &#39;</span>
+        <span class="s1">u&#39;m.body_xml, m.timestamp, c.dialog_partner FROM Chats c, Messages m &#39;</span>
+        <span class="s1">u&#39;WHERE c.name = m.chatname&#39;</span><span class="p">),</span> <span class="s1">u&#39;ParseChat&#39;</span><span class="p">),</span>
+      <span class="p">((</span><span class="s1">u&#39;SELECT id, fullname, given_displayname, emails, &#39;</span>
+        <span class="s1">u&#39;country, profile_timestamp, authreq_timestamp, &#39;</span>
+        <span class="s1">u&#39;lastonline_timestamp, mood_timestamp, sent_authrequest_time, &#39;</span>
+        <span class="s1">u&#39;lastused_timestamp FROM Accounts&#39;</span><span class="p">),</span> <span class="s1">u&#39;ParseAccountInformation&#39;</span><span class="p">),</span>
+      <span class="p">((</span><span class="s1">u&#39;SELECT id, target_numbers AS dstnum_sms, timestamp AS time_sms, &#39;</span>
+        <span class="s1">u&#39;body AS msg_sms FROM SMSes&#39;</span><span class="p">),</span> <span class="s1">u&#39;ParseSMS&#39;</span><span class="p">),</span>
+      <span class="p">((</span><span class="s1">u&#39;SELECT id, partner_handle, partner_dispname, offer_send_list, &#39;</span>
+        <span class="s1">u&#39;starttime, accepttime, finishtime, filepath, filename, filesize, &#39;</span>
+        <span class="s1">u&#39;status, parent_id, pk_id FROM Transfers&#39;</span><span class="p">),</span> <span class="s1">u&#39;ParseFileTransfer&#39;</span><span class="p">),</span>
+      <span class="p">((</span><span class="s1">u&#39;SELECT c.id, cm.guid, c.is_incoming, &#39;</span>
+        <span class="s1">u&#39;cm.call_db_id, cm.videostatus, c.begin_timestamp AS try_call, &#39;</span>
+        <span class="s1">u&#39;cm.start_timestamp AS accept_call, cm.call_duration &#39;</span>
+        <span class="s1">u&#39;FROM Calls c, CallMembers cm &#39;</span>
+        <span class="s1">u&#39;WHERE c.id = cm.call_db_id;&#39;</span><span class="p">),</span> <span class="s1">u&#39;ParseCall&#39;</span><span class="p">)]</span>
+
+  <span class="c1"># The required tables.</span>
+  <span class="n">REQUIRED_TABLES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+      <span class="s1">u&#39;Chats&#39;</span><span class="p">,</span> <span class="s1">u&#39;Accounts&#39;</span><span class="p">,</span> <span class="s1">u&#39;Conversations&#39;</span><span class="p">,</span> <span class="s1">u&#39;Contacts&#39;</span><span class="p">,</span> <span class="s1">u&#39;SMSes&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;Transfers&#39;</span><span class="p">,</span> <span class="s1">u&#39;CallMembers&#39;</span><span class="p">,</span> <span class="s1">u&#39;Calls&#39;</span><span class="p">])</span>
+
+<div class="viewcode-block" id="SkypePlugin.ParseAccountInformation"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.skype.SkypePlugin.ParseAccountInformation">[docs]</a>  <span class="k">def</span> <span class="nf">ParseAccountInformation</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses the Accounts database.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      row: The row resulting from the query.</span>
+<span class="sd">      query: Optional query string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Note that pysqlite does not accept a Unicode string in row[&#39;string&#39;] and</span>
+    <span class="c1"># will raise &quot;IndexError: Index must be int or string&quot;.</span>
+
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;profile_timestamp&#39;</span><span class="p">]:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">SkypeAccountEvent</span><span class="p">(</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;profile_timestamp&#39;</span><span class="p">],</span> <span class="s1">u&#39;Profile Changed&#39;</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;fullname&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;given_displayname&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;emails&#39;</span><span class="p">],</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;country&#39;</span><span class="p">])</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;authreq_timestamp&#39;</span><span class="p">]:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">SkypeAccountEvent</span><span class="p">(</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;authreq_timestamp&#39;</span><span class="p">],</span> <span class="s1">u&#39;Authenticate Request&#39;</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;fullname&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;given_displayname&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;emails&#39;</span><span class="p">],</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;country&#39;</span><span class="p">])</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;lastonline_timestamp&#39;</span><span class="p">]:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">SkypeAccountEvent</span><span class="p">(</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;lastonline_timestamp&#39;</span><span class="p">],</span> <span class="s1">u&#39;Last Online&#39;</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;fullname&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;given_displayname&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;emails&#39;</span><span class="p">],</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;country&#39;</span><span class="p">])</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;mood_timestamp&#39;</span><span class="p">]:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">SkypeAccountEvent</span><span class="p">(</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;mood_timestamp&#39;</span><span class="p">],</span> <span class="s1">u&#39;Mood Event&#39;</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;fullname&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;given_displayname&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;emails&#39;</span><span class="p">],</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;country&#39;</span><span class="p">])</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;sent_authrequest_time&#39;</span><span class="p">]:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">SkypeAccountEvent</span><span class="p">(</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;sent_authrequest_time&#39;</span><span class="p">],</span> <span class="s1">u&#39;Auth Request Sent&#39;</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;fullname&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;given_displayname&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;emails&#39;</span><span class="p">],</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;country&#39;</span><span class="p">])</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;lastused_timestamp&#39;</span><span class="p">]:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">SkypeAccountEvent</span><span class="p">(</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;lastused_timestamp&#39;</span><span class="p">],</span> <span class="s1">u&#39;Last Used&#39;</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;fullname&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;given_displayname&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;emails&#39;</span><span class="p">],</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;country&#39;</span><span class="p">])</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SkypePlugin.ParseChat"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.skype.SkypePlugin.ParseChat">[docs]</a>  <span class="k">def</span> <span class="nf">ParseChat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a chat message row.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      row: The row resulting from the query.</span>
+<span class="sd">      query: Optional query string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Note that pysqlite does not accept a Unicode string in row[&#39;string&#39;] and</span>
+    <span class="c1"># will raise &quot;IndexError: Index must be int or string&quot;.</span>
+
+    <span class="n">to_account</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+    <span class="n">accounts</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">participants</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;participants&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">participant</span> <span class="ow">in</span> <span class="n">participants</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">participant</span> <span class="o">!=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;author&#39;</span><span class="p">]:</span>
+        <span class="n">accounts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">participant</span><span class="p">)</span>
+    <span class="n">to_account</span> <span class="o">=</span> <span class="s1">u&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">accounts</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">to_account</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;dialog_partner&#39;</span><span class="p">]:</span>
+        <span class="n">to_account</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;dialog_partner&#39;</span><span class="p">]</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">to_account</span> <span class="o">=</span> <span class="s1">u&#39;Unknown User&#39;</span>
+
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">SkypeChatEvent</span><span class="p">(</span>
+        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;timestamp&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;from_displayname&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;author&#39;</span><span class="p">],</span> <span class="n">to_account</span><span class="p">,</span>
+        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;body_xml&#39;</span><span class="p">])</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SkypePlugin.ParseSMS"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.skype.SkypePlugin.ParseSMS">[docs]</a>  <span class="k">def</span> <span class="nf">ParseSMS</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse SMS.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      row: The row resulting from the query.</span>
+<span class="sd">      query: Optional query string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Note that pysqlite does not accept a Unicode string in row[&#39;string&#39;] and</span>
+    <span class="c1"># will raise &quot;IndexError: Index must be int or string&quot;.</span>
+
+    <span class="n">phone_number</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;dstnum_sms&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">phone_number</span><span class="p">:</span>
+      <span class="n">phone_number</span> <span class="o">=</span> <span class="n">phone_number</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">u&#39; &#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span>
+
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">SkypeSMSEvent</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;time_sms&#39;</span><span class="p">],</span> <span class="n">phone_number</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;msg_sms&#39;</span><span class="p">])</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SkypePlugin.ParseCall"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.skype.SkypePlugin.ParseCall">[docs]</a>  <span class="k">def</span> <span class="nf">ParseCall</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse the calls taking into accounts some rows.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      row: The row resulting from the query.</span>
+<span class="sd">      query: Optional query string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Note that pysqlite does not accept a Unicode string in row[&#39;string&#39;] and</span>
+    <span class="c1"># will raise &quot;IndexError: Index must be int or string&quot;.</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">aux</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;guid&#39;</span><span class="p">]</span>
+      <span class="k">if</span> <span class="n">aux</span><span class="p">:</span>
+        <span class="n">aux_list</span> <span class="o">=</span> <span class="n">aux</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">u&#39;-&#39;</span><span class="p">)</span>
+        <span class="n">src_aux</span> <span class="o">=</span> <span class="n">aux_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">dst_aux</span> <span class="o">=</span> <span class="n">aux_list</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">src_aux</span> <span class="o">=</span> <span class="s1">u&#39;Unknown [no GUID]&#39;</span>
+        <span class="n">dst_aux</span> <span class="o">=</span> <span class="s1">u&#39;Unknown [no GUID]&#39;</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+      <span class="n">src_aux</span> <span class="o">=</span> <span class="s1">u&#39;Unknown [{0:s}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;guid&#39;</span><span class="p">])</span>
+      <span class="n">dst_aux</span> <span class="o">=</span> <span class="s1">u&#39;Unknown [{0:s}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;guid&#39;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;is_incoming&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">u&#39;0&#39;</span><span class="p">:</span>
+      <span class="n">user_start_call</span> <span class="o">=</span> <span class="bp">True</span>
+      <span class="n">source</span> <span class="o">=</span> <span class="n">src_aux</span>
+      <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ip_address&#39;</span><span class="p">]:</span>
+        <span class="n">destination</span> <span class="o">=</span> <span class="s1">u&#39;{0:s} &lt;{1:s}&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dst_aux</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ip_address&#39;</span><span class="p">])</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">destination</span> <span class="o">=</span> <span class="n">dst_aux</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">user_start_call</span> <span class="o">=</span> <span class="bp">False</span>
+      <span class="n">source</span> <span class="o">=</span> <span class="n">src_aux</span>
+      <span class="n">destination</span> <span class="o">=</span> <span class="n">dst_aux</span>
+
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;videostatus&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">u&#39;3&#39;</span><span class="p">:</span>
+      <span class="n">video_conference</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">video_conference</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">SkypeCallEvent</span><span class="p">(</span>
+        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;try_call&#39;</span><span class="p">],</span> <span class="s1">u&#39;WAITING&#39;</span><span class="p">,</span> <span class="n">user_start_call</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span>
+        <span class="n">video_conference</span><span class="p">)</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;accept_call&#39;</span><span class="p">]:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">SkypeCallEvent</span><span class="p">(</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;accept_call&#39;</span><span class="p">],</span> <span class="s1">u&#39;ACCEPTED&#39;</span><span class="p">,</span> <span class="n">user_start_call</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span>
+          <span class="n">destination</span><span class="p">,</span> <span class="n">video_conference</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;call_duration&#39;</span><span class="p">]:</span>
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">timestamp</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;accept_call&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;call_duration&#39;</span><span class="p">])</span>
+          <span class="n">event_object</span> <span class="o">=</span> <span class="n">SkypeCallEvent</span><span class="p">(</span>
+              <span class="n">timestamp</span><span class="p">,</span> <span class="s1">u&#39;FINISHED&#39;</span><span class="p">,</span> <span class="n">user_start_call</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span>
+              <span class="n">video_conference</span><span class="p">)</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+          <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">((</span>
+              <span class="s1">u&#39;[{0:s}] Unable to determine when the call {1:s} was &#39;</span>
+              <span class="s1">u&#39;finished.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]))</span></div>
+
+<div class="viewcode-block" id="SkypePlugin.ParseFileTransfer"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.skype.SkypePlugin.ParseFileTransfer">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileTransfer</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">database</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+      <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse the transfer files.</span>
+
+<span class="sd">     There is no direct relationship between who sends the file and</span>
+<span class="sd">     who accepts the file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      row: the row with all information related with the file transfers.</span>
+<span class="sd">      query: Optional query string.</span>
+<span class="sd">      cache: a cache object (instance of SQLiteCache).</span>
+<span class="sd">      database: A database object (instance of SQLiteDatabase).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Note that pysqlite does not accept a Unicode string in row[&#39;string&#39;] and</span>
+    <span class="c1"># will raise &quot;IndexError: Index must be int or string&quot;.</span>
+
+    <span class="n">source_dict</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="s1">u&#39;source&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">source_dict</span><span class="p">:</span>
+      <span class="n">results</span> <span class="o">=</span> <span class="n">database</span><span class="o">.</span><span class="n">Query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">QUERY_SOURCE_FROM_TRANSFER</span><span class="p">)</span>
+
+      <span class="c1"># Note that pysqlite does not accept a Unicode string in row[&#39;string&#39;] and</span>
+      <span class="c1"># will raise &quot;IndexError: Index must be int or string&quot;.</span>
+      <span class="n">cache</span><span class="o">.</span><span class="n">CacheQueryResults</span><span class="p">(</span>
+          <span class="n">results</span><span class="p">,</span> <span class="s1">&#39;source&#39;</span><span class="p">,</span> <span class="s1">&#39;pk_id&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;skypeid&#39;</span><span class="p">,</span> <span class="s1">&#39;skypename&#39;</span><span class="p">))</span>
+      <span class="n">source_dict</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="s1">u&#39;source&#39;</span><span class="p">)</span>
+
+    <span class="n">dest_dict</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="s1">u&#39;destination&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">dest_dict</span><span class="p">:</span>
+      <span class="n">results</span> <span class="o">=</span> <span class="n">database</span><span class="o">.</span><span class="n">Query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">QUERY_DEST_FROM_TRANSFER</span><span class="p">)</span>
+
+      <span class="c1"># Note that pysqlite does not accept a Unicode string in row[&#39;string&#39;] and</span>
+      <span class="c1"># will raise &quot;IndexError: Index must be int or string&quot;.</span>
+      <span class="n">cache</span><span class="o">.</span><span class="n">CacheQueryResults</span><span class="p">(</span>
+          <span class="n">results</span><span class="p">,</span> <span class="s1">&#39;destination&#39;</span><span class="p">,</span> <span class="s1">&#39;parent_id&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;skypeid&#39;</span><span class="p">,</span> <span class="s1">&#39;skypename&#39;</span><span class="p">))</span>
+      <span class="n">dest_dict</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="s1">u&#39;destination&#39;</span><span class="p">)</span>
+
+    <span class="n">source</span> <span class="o">=</span> <span class="s1">u&#39;Unknown&#39;</span>
+    <span class="n">destination</span> <span class="o">=</span> <span class="s1">u&#39;Unknown&#39;</span>
+
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;parent_id&#39;</span><span class="p">]:</span>
+      <span class="n">destination</span> <span class="o">=</span> <span class="s1">u&#39;{0:s} &lt;{1:s}&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;partner_handle&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;partner_dispname&#39;</span><span class="p">])</span>
+      <span class="n">skype_id</span><span class="p">,</span> <span class="n">skype_name</span> <span class="o">=</span> <span class="n">source_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;parent_id&#39;</span><span class="p">],</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">])</span>
+      <span class="k">if</span> <span class="n">skype_name</span><span class="p">:</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="s1">u&#39;{0:s} &lt;{1:s}&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">skype_id</span><span class="p">,</span> <span class="n">skype_name</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">source</span> <span class="o">=</span> <span class="s1">u&#39;{0:s} &lt;{1:s}&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;partner_handle&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;partner_dispname&#39;</span><span class="p">])</span>
+
+      <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;pk_id&#39;</span><span class="p">]:</span>
+        <span class="n">skype_id</span><span class="p">,</span> <span class="n">skype_name</span> <span class="o">=</span> <span class="n">dest_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;pk_id&#39;</span><span class="p">],</span> <span class="p">[</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">skype_name</span><span class="p">:</span>
+          <span class="n">destination</span> <span class="o">=</span> <span class="s1">u&#39;{0:s} &lt;{1:s}&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">skype_id</span><span class="p">,</span> <span class="n">skype_name</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="c1"># TODO: add a conversion base.</span>
+      <span class="n">file_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;filesize&#39;</span><span class="p">])</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;unable to convert file size: {0!s} of file: {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">row</span><span class="p">[</span><span class="s1">&#39;filesize&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]))</span>
+      <span class="n">file_size</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;starttime&#39;</span><span class="p">]:</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">SkypeTransferFileEvent</span><span class="p">(</span>
+            <span class="n">row</span><span class="p">[</span><span class="s1">&#39;starttime&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="s1">u&#39;GETSOLICITUDE&#39;</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span>
+            <span class="n">row</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;filepath&#39;</span><span class="p">],</span> <span class="n">file_size</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;accepttime&#39;</span><span class="p">]:</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">SkypeTransferFileEvent</span><span class="p">(</span>
+            <span class="n">row</span><span class="p">[</span><span class="s1">&#39;accepttime&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="s1">u&#39;ACCEPTED&#39;</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span>
+            <span class="n">row</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;filepath&#39;</span><span class="p">],</span> <span class="n">file_size</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;finishtime&#39;</span><span class="p">]:</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">SkypeTransferFileEvent</span><span class="p">(</span>
+            <span class="n">row</span><span class="p">[</span><span class="s1">&#39;finishtime&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="s1">u&#39;FINISHED&#39;</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span>
+            <span class="n">row</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;filepath&#39;</span><span class="p">],</span> <span class="n">file_size</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;starttime&#39;</span><span class="p">]:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">SkypeTransferFileEvent</span><span class="p">(</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;starttime&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="s1">u&#39;SENDSOLICITUDE&#39;</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">destination</span><span class="p">,</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;filepath&#39;</span><span class="p">],</span> <span class="n">file_size</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span></div></div>
+
+
+<span class="n">sqlite</span><span class="o">.</span><span class="n">SQLiteParser</span><span class="o">.</span><span class="n">RegisterPlugin</span><span class="p">(</span><span class="n">SkypePlugin</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

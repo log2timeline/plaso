@@ -1,0 +1,559 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>construct.adapters &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for construct.adapters</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">construct.core</span> <span class="kn">import</span> <span class="n">Adapter</span><span class="p">,</span> <span class="n">AdaptationError</span><span class="p">,</span> <span class="n">Pass</span>
+<span class="kn">from</span> <span class="nn">construct.lib</span> <span class="kn">import</span> <span class="n">int_to_bin</span><span class="p">,</span> <span class="n">bin_to_int</span><span class="p">,</span> <span class="n">swap_bytes</span>
+<span class="kn">from</span> <span class="nn">construct.lib</span> <span class="kn">import</span> <span class="n">FlagsContainer</span><span class="p">,</span> <span class="n">HexString</span>
+<span class="kn">from</span> <span class="nn">six</span> <span class="kn">import</span> <span class="n">BytesIO</span>
+<span class="kn">import</span> <span class="nn">six</span>
+
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="nb">bytes</span>
+<span class="k">except</span> <span class="ne">NameError</span><span class="p">:</span>
+    <span class="nb">bytes</span> <span class="o">=</span> <span class="nb">str</span>
+
+<span class="c1">#===============================================================================</span>
+<span class="c1"># exceptions</span>
+<span class="c1">#===============================================================================</span>
+<span class="k">class</span> <span class="nc">BitIntegerError</span><span class="p">(</span><span class="n">AdaptationError</span><span class="p">):</span>
+    <span class="k">pass</span>
+<span class="k">class</span> <span class="nc">MappingError</span><span class="p">(</span><span class="n">AdaptationError</span><span class="p">):</span>
+    <span class="k">pass</span>
+<span class="k">class</span> <span class="nc">ConstError</span><span class="p">(</span><span class="n">AdaptationError</span><span class="p">):</span>
+    <span class="k">pass</span>
+<span class="k">class</span> <span class="nc">ValidationError</span><span class="p">(</span><span class="n">AdaptationError</span><span class="p">):</span>
+    <span class="k">pass</span>
+<span class="k">class</span> <span class="nc">PaddingError</span><span class="p">(</span><span class="n">AdaptationError</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="c1">#===============================================================================</span>
+<span class="c1"># adapters</span>
+<span class="c1">#===============================================================================</span>
+<span class="k">class</span> <span class="nc">BitIntegerAdapter</span><span class="p">(</span><span class="n">Adapter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adapter for bit-integers (converts bitstrings to integers, and vice versa).</span>
+<span class="sd">    See BitField.</span>
+
+<span class="sd">    :param subcon: the subcon to adapt</span>
+<span class="sd">    :param width: the size of the subcon, in bits</span>
+<span class="sd">    :param swapped: whether to swap byte order (little endian/big endian).</span>
+<span class="sd">                    default is False (big endian)</span>
+<span class="sd">    :param signed: whether the value is signed (two&#39;s complement). the default</span>
+<span class="sd">                   is False (unsigned)</span>
+<span class="sd">    :param bytesize: number of bits per byte, used for byte-swapping (if swapped).</span>
+<span class="sd">                     default is 8.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;width&quot;</span><span class="p">,</span> <span class="s2">&quot;swapped&quot;</span><span class="p">,</span> <span class="s2">&quot;signed&quot;</span><span class="p">,</span> <span class="s2">&quot;bytesize&quot;</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">swapped</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span> <span class="n">signed</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span>
+                 <span class="n">bytesize</span> <span class="o">=</span> <span class="mi">8</span><span class="p">):</span>
+        <span class="n">Adapter</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">width</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">swapped</span> <span class="o">=</span> <span class="n">swapped</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">signed</span> <span class="o">=</span> <span class="n">signed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bytesize</span> <span class="o">=</span> <span class="n">bytesize</span>
+    <span class="k">def</span> <span class="nf">_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">obj</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">signed</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BitIntegerError</span><span class="p">(</span><span class="s2">&quot;object is negative, but field is not signed&quot;</span><span class="p">,</span>
+                <span class="n">obj</span><span class="p">)</span>
+        <span class="n">obj2</span> <span class="o">=</span> <span class="n">int_to_bin</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">(</span><span class="n">context</span><span class="p">)</span> <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">swapped</span><span class="p">:</span>
+            <span class="n">obj2</span> <span class="o">=</span> <span class="n">swap_bytes</span><span class="p">(</span><span class="n">obj2</span><span class="p">,</span> <span class="n">bytesize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bytesize</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj2</span>
+    <span class="k">def</span> <span class="nf">_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">swapped</span><span class="p">:</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">swap_bytes</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">bytesize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bytesize</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">bin_to_int</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">signed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signed</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">MappingAdapter</span><span class="p">(</span><span class="n">Adapter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adapter that maps objects to other objects.</span>
+<span class="sd">    See SymmetricMapping and Enum.</span>
+
+<span class="sd">    :param subcon: the subcon to map</span>
+<span class="sd">    :param decoding: the decoding (parsing) mapping (a dict)</span>
+<span class="sd">    :param encoding: the encoding (building) mapping (a dict)</span>
+<span class="sd">    :param decdefault: the default return value when the object is not found</span>
+<span class="sd">                       in the decoding mapping. if no object is given, an exception is raised.</span>
+<span class="sd">                       if ``Pass`` is used, the unmapped object will be passed as-is</span>
+<span class="sd">    :param encdefault: the default return value when the object is not found</span>
+<span class="sd">                       in the encoding mapping. if no object is given, an exception is raised.</span>
+<span class="sd">                       if ``Pass`` is used, the unmapped object will be passed as-is</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;encoding&quot;</span><span class="p">,</span> <span class="s2">&quot;decoding&quot;</span><span class="p">,</span> <span class="s2">&quot;encdefault&quot;</span><span class="p">,</span> <span class="s2">&quot;decdefault&quot;</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">,</span> <span class="n">decoding</span><span class="p">,</span> <span class="n">encoding</span><span class="p">,</span>
+                 <span class="n">decdefault</span> <span class="o">=</span> <span class="bp">NotImplemented</span><span class="p">,</span> <span class="n">encdefault</span> <span class="o">=</span> <span class="bp">NotImplemented</span><span class="p">):</span>
+        <span class="n">Adapter</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">decoding</span> <span class="o">=</span> <span class="n">decoding</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="n">encoding</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">decdefault</span> <span class="o">=</span> <span class="n">decdefault</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">encdefault</span> <span class="o">=</span> <span class="n">encdefault</span>
+    <span class="k">def</span> <span class="nf">_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">[</span><span class="n">obj</span><span class="p">]</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">encdefault</span> <span class="ow">is</span> <span class="bp">NotImplemented</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">MappingError</span><span class="p">(</span><span class="s2">&quot;no encoding mapping for </span><span class="si">%r</span><span class="s2"> [</span><span class="si">%s</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">subcon</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">encdefault</span> <span class="ow">is</span> <span class="n">Pass</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">obj</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">encdefault</span>
+    <span class="k">def</span> <span class="nf">_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoding</span><span class="p">[</span><span class="n">obj</span><span class="p">]</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">decdefault</span> <span class="ow">is</span> <span class="bp">NotImplemented</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">MappingError</span><span class="p">(</span><span class="s2">&quot;no decoding mapping for </span><span class="si">%r</span><span class="s2"> [</span><span class="si">%s</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">subcon</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">decdefault</span> <span class="ow">is</span> <span class="n">Pass</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">obj</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decdefault</span>
+
+<span class="k">class</span> <span class="nc">FlagsAdapter</span><span class="p">(</span><span class="n">Adapter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adapter for flag fields. Each flag is extracted from the number, resulting</span>
+<span class="sd">    in a FlagsContainer object. Not intended for direct usage. See FlagsEnum.</span>
+
+<span class="sd">    :param subcon: the subcon to extract</span>
+<span class="sd">    :param flags: a dictionary mapping flag-names to their value</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;flags&quot;</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">,</span> <span class="n">flags</span><span class="p">):</span>
+        <span class="n">Adapter</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flags</span> <span class="o">=</span> <span class="n">flags</span>
+    <span class="k">def</span> <span class="nf">_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">flags</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+                <span class="n">flags</span> <span class="o">|=</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">flags</span>
+    <span class="k">def</span> <span class="nf">_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">obj2</span> <span class="o">=</span> <span class="n">FlagsContainer</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">obj2</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">bool</span><span class="p">(</span><span class="n">obj</span> <span class="o">&amp;</span> <span class="n">value</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">obj2</span>
+
+<span class="k">class</span> <span class="nc">StringAdapter</span><span class="p">(</span><span class="n">Adapter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adapter for strings. Converts a sequence of characters into a python</span>
+<span class="sd">    string, and optionally handles character encoding. See String.</span>
+
+<span class="sd">    :param subcon: the subcon to convert</span>
+<span class="sd">    :param encoding: the character encoding name (e.g., &quot;utf8&quot;), or None to</span>
+<span class="sd">                     return raw bytes (usually 8-bit ASCII).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;encoding&quot;</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">,</span> <span class="n">encoding</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">Adapter</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span> <span class="o">=</span> <span class="n">encoding</span>
+    <span class="k">def</span> <span class="nf">_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+    <span class="k">def</span> <span class="nf">_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">six</span><span class="o">.</span><span class="n">b</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoding</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+<span class="k">class</span> <span class="nc">PaddedStringAdapter</span><span class="p">(</span><span class="n">Adapter</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Adapter for padded strings. See String.</span>
+
+<span class="sd">    :param subcon: the subcon to adapt</span>
+<span class="sd">    :param padchar: the padding character. default is &quot;\x00&quot;.</span>
+<span class="sd">    :param paddir: the direction where padding is placed (&quot;right&quot;, &quot;left&quot;, or</span>
+<span class="sd">                   &quot;center&quot;). the default is &quot;right&quot;.</span>
+<span class="sd">    :param trimdir: the direction where trimming will take place (&quot;right&quot; or</span>
+<span class="sd">                    &quot;left&quot;). the default is &quot;right&quot;. trimming is only meaningful for</span>
+<span class="sd">                    building, when the given string is too long.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;padchar&quot;</span><span class="p">,</span> <span class="s2">&quot;paddir&quot;</span><span class="p">,</span> <span class="s2">&quot;trimdir&quot;</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">,</span> <span class="n">padchar</span> <span class="o">=</span> <span class="n">six</span><span class="o">.</span><span class="n">b</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span><span class="p">),</span> <span class="n">paddir</span> <span class="o">=</span> <span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="n">trimdir</span> <span class="o">=</span> <span class="s2">&quot;right&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">paddir</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="s2">&quot;center&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;paddir must be &#39;right&#39;, &#39;left&#39; or &#39;center&#39;&quot;</span><span class="p">,</span> <span class="n">paddir</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">trimdir</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;right&quot;</span><span class="p">,</span> <span class="s2">&quot;left&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;trimdir must be &#39;right&#39; or &#39;left&#39;&quot;</span><span class="p">,</span> <span class="n">trimdir</span><span class="p">)</span>
+        <span class="n">Adapter</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">padchar</span> <span class="o">=</span> <span class="n">padchar</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paddir</span> <span class="o">=</span> <span class="n">paddir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">trimdir</span> <span class="o">=</span> <span class="n">trimdir</span>
+    <span class="k">def</span> <span class="nf">_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">paddir</span> <span class="o">==</span> <span class="s2">&quot;right&quot;</span><span class="p">:</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">padchar</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">paddir</span> <span class="o">==</span> <span class="s2">&quot;left&quot;</span><span class="p">:</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">padchar</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">padchar</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+    <span class="k">def</span> <span class="nf">_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sizeof</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">paddir</span> <span class="o">==</span> <span class="s2">&quot;right&quot;</span><span class="p">:</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">padchar</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">paddir</span> <span class="o">==</span> <span class="s2">&quot;left&quot;</span><span class="p">:</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">rjust</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">padchar</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">center</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">padchar</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">size</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trimdir</span> <span class="o">==</span> <span class="s2">&quot;right&quot;</span><span class="p">:</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="p">[:</span><span class="n">size</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="p">[</span><span class="o">-</span><span class="n">size</span><span class="p">:]</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+<span class="k">class</span> <span class="nc">LengthValueAdapter</span><span class="p">(</span><span class="n">Adapter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adapter for length-value pairs. It extracts only the value from the</span>
+<span class="sd">    pair, and calculates the length based on the value.</span>
+<span class="sd">    See PrefixedArray and PascalString.</span>
+
+<span class="sd">    :param subcon: the subcon returning a length-value pair</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">def</span> <span class="nf">_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">obj</span><span class="p">),</span> <span class="n">obj</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">obj</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="k">class</span> <span class="nc">CStringAdapter</span><span class="p">(</span><span class="n">StringAdapter</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Adapter for C-style strings (strings terminated by a terminator char).</span>
+
+<span class="sd">    :param subcon: the subcon to convert</span>
+<span class="sd">    :param terminators: a sequence of terminator chars. default is &quot;\x00&quot;.</span>
+<span class="sd">    :param encoding: the character encoding to use (e.g., &quot;utf8&quot;), or None to return raw-bytes.</span>
+<span class="sd">                     the terminator characters are not affected by the encoding.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;terminators&quot;</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">,</span> <span class="n">terminators</span> <span class="o">=</span> <span class="n">six</span><span class="o">.</span><span class="n">b</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span><span class="p">),</span> <span class="n">encoding</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">StringAdapter</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">,</span> <span class="n">encoding</span> <span class="o">=</span> <span class="n">encoding</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">terminators</span> <span class="o">=</span> <span class="n">terminators</span>
+    <span class="k">def</span> <span class="nf">_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">StringAdapter</span><span class="o">.</span><span class="n">_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">terminators</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">StringAdapter</span><span class="o">.</span><span class="n">_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">six</span><span class="o">.</span><span class="n">b</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">obj</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">context</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">TunnelAdapter</span><span class="p">(</span><span class="n">Adapter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adapter for tunneling (as in protocol tunneling). A tunnel is construct</span>
+<span class="sd">    nested upon another (layering). For parsing, the lower layer first parses</span>
+<span class="sd">    the data (note: it must return a string!), then the upper layer is called</span>
+<span class="sd">    to parse that data (bottom-up). For building it works in a top-down manner;</span>
+<span class="sd">    first the upper layer builds the data, then the lower layer takes it and</span>
+<span class="sd">    writes it to the stream.</span>
+
+<span class="sd">    :param subcon: the lower layer subcon</span>
+<span class="sd">    :param inner_subcon: the upper layer (tunneled/nested) subcon</span>
+
+<span class="sd">    Example::</span>
+
+<span class="sd">        # a pascal string containing compressed data (zlib encoding), so first</span>
+<span class="sd">        # the string is read, decompressed, and finally re-parsed as an array</span>
+<span class="sd">        # of UBInt16</span>
+<span class="sd">        TunnelAdapter(</span>
+<span class="sd">            PascalString(&quot;data&quot;, encoding = &quot;zlib&quot;),</span>
+<span class="sd">            GreedyRange(UBInt16(&quot;elements&quot;))</span>
+<span class="sd">        )</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;inner_subcon&quot;</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">,</span> <span class="n">inner_subcon</span><span class="p">):</span>
+        <span class="n">Adapter</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner_subcon</span> <span class="o">=</span> <span class="n">inner_subcon</span>
+    <span class="k">def</span> <span class="nf">_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">inner_subcon</span><span class="o">.</span><span class="n">_parse</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">obj</span><span class="p">),</span> <span class="n">context</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="n">stream</span> <span class="o">=</span> <span class="n">BytesIO</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">inner_subcon</span><span class="o">.</span><span class="n">_build</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">stream</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">ExprAdapter</span><span class="p">(</span><span class="n">Adapter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A generic adapter that accepts &#39;encoder&#39; and &#39;decoder&#39; as parameters. You</span>
+<span class="sd">    can use ExprAdapter instead of writing a full-blown class when only a</span>
+<span class="sd">    simple expression is needed.</span>
+
+<span class="sd">    :param subcon: the subcon to adapt</span>
+<span class="sd">    :param encoder: a function that takes (obj, context) and returns an encoded version of obj</span>
+<span class="sd">    :param decoder: a function that takes (obj, context) and returns an decoded version of obj</span>
+
+<span class="sd">    Example::</span>
+
+<span class="sd">        ExprAdapter(UBInt8(&quot;foo&quot;),</span>
+<span class="sd">            encoder = lambda obj, ctx: obj / 4,</span>
+<span class="sd">            decoder = lambda obj, ctx: obj * 4,</span>
+<span class="sd">        )</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;_encode&quot;</span><span class="p">,</span> <span class="s2">&quot;_decode&quot;</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">,</span> <span class="n">encoder</span><span class="p">,</span> <span class="n">decoder</span><span class="p">):</span>
+        <span class="n">Adapter</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_encode</span> <span class="o">=</span> <span class="n">encoder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_decode</span> <span class="o">=</span> <span class="n">decoder</span>
+
+<span class="k">class</span> <span class="nc">HexDumpAdapter</span><span class="p">(</span><span class="n">Adapter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adapter for hex-dumping strings. It returns a HexString, which is a string</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;linesize&quot;</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">,</span> <span class="n">linesize</span> <span class="o">=</span> <span class="mi">16</span><span class="p">):</span>
+        <span class="n">Adapter</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linesize</span> <span class="o">=</span> <span class="n">linesize</span>
+    <span class="k">def</span> <span class="nf">_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">obj</span>
+    <span class="k">def</span> <span class="nf">_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">HexString</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">linesize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linesize</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">ConstAdapter</span><span class="p">(</span><span class="n">Adapter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adapter for enforcing a constant value (&quot;magic numbers&quot;). When decoding,</span>
+<span class="sd">    the return value is checked; when building, the value is substituted in.</span>
+
+<span class="sd">    :param subcon: the subcon to validate</span>
+<span class="sd">    :param value: the expected value</span>
+
+<span class="sd">    Example::</span>
+
+<span class="sd">        Const(Field(&quot;signature&quot;, 2), &quot;MZ&quot;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="n">Adapter</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="k">def</span> <span class="nf">_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">obj</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ConstError</span><span class="p">(</span><span class="s2">&quot;expected </span><span class="si">%r</span><span class="s2">, found </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">obj</span><span class="p">))</span>
+    <span class="k">def</span> <span class="nf">_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">obj</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ConstError</span><span class="p">(</span><span class="s2">&quot;expected </span><span class="si">%r</span><span class="s2">, found </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">obj</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+<span class="k">class</span> <span class="nc">SlicingAdapter</span><span class="p">(</span><span class="n">Adapter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adapter for slicing a list (getting a slice from that list)</span>
+
+<span class="sd">    :param subcon: the subcon to slice</span>
+<span class="sd">    :param start: start index</span>
+<span class="sd">    :param stop: stop index (or None for up-to-end)</span>
+<span class="sd">    :param step: step (or None for every element)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="s2">&quot;stop&quot;</span><span class="p">,</span> <span class="s2">&quot;step&quot;</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span> <span class="o">=</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">Adapter</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">=</span> <span class="n">start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop</span> <span class="o">=</span> <span class="n">stop</span>
+    <span class="k">def</span> <span class="nf">_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">obj</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">+</span> <span class="n">obj</span>
+    <span class="k">def</span> <span class="nf">_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">obj</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">stop</span><span class="p">]</span>
+
+<span class="k">class</span> <span class="nc">IndexingAdapter</span><span class="p">(</span><span class="n">Adapter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adapter for indexing a list (getting a single item from that list)</span>
+
+<span class="sd">    :param subcon: the subcon to index</span>
+<span class="sd">    :param index: the index of the list to get</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;index&quot;</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="n">Adapter</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="nb">int</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;index must be an integer&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">index</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">index</span>
+    <span class="k">def</span> <span class="nf">_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">+</span> <span class="p">[</span><span class="n">obj</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">obj</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">index</span><span class="p">]</span>
+
+<span class="k">class</span> <span class="nc">PaddingAdapter</span><span class="p">(</span><span class="n">Adapter</span><span class="p">):</span>
+    <span class="sd">r&quot;&quot;&quot;</span>
+<span class="sd">    Adapter for padding.</span>
+
+<span class="sd">    :param subcon: the subcon to pad</span>
+<span class="sd">    :param pattern: the padding pattern (character). default is &quot;\x00&quot;</span>
+<span class="sd">    :param strict: whether or not to verify, during parsing, that the given</span>
+<span class="sd">                   padding matches the padding pattern. default is False (unstrict)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;pattern&quot;</span><span class="p">,</span> <span class="s2">&quot;strict&quot;</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">,</span> <span class="n">pattern</span> <span class="o">=</span> <span class="n">six</span><span class="o">.</span><span class="n">b</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\x00</span><span class="s2">&quot;</span><span class="p">),</span> <span class="n">strict</span> <span class="o">=</span> <span class="bp">False</span><span class="p">):</span>
+        <span class="n">Adapter</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span> <span class="o">=</span> <span class="n">pattern</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">strict</span> <span class="o">=</span> <span class="n">strict</span>
+    <span class="k">def</span> <span class="nf">_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sizeof</span><span class="p">(</span><span class="n">context</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span>
+    <span class="k">def</span> <span class="nf">_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">strict</span><span class="p">:</span>
+            <span class="n">expected</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sizeof</span><span class="p">(</span><span class="n">context</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">pattern</span>
+            <span class="k">if</span> <span class="n">obj</span> <span class="o">!=</span> <span class="n">expected</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">PaddingError</span><span class="p">(</span><span class="s2">&quot;expected </span><span class="si">%r</span><span class="s2">, found </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">expected</span><span class="p">,</span> <span class="n">obj</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">obj</span>
+
+
+<span class="c1">#===============================================================================</span>
+<span class="c1"># validators</span>
+<span class="c1">#===============================================================================</span>
+<span class="k">class</span> <span class="nc">Validator</span><span class="p">(</span><span class="n">Adapter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Abstract class: validates a condition on the encoded/decoded object.</span>
+<span class="sd">    Override _validate(obj, context) in deriving classes.</span>
+
+<span class="sd">    :param subcon: the subcon to validate</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">def</span> <span class="nf">_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s2">&quot;invalid object&quot;</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">obj</span>
+    <span class="k">def</span> <span class="nf">_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+<span class="k">class</span> <span class="nc">OneOf</span><span class="p">(</span><span class="n">Validator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validates that the object is one of the listed values.</span>
+
+<span class="sd">    :param subcon: object to validate</span>
+<span class="sd">    :param valids: a set of valid values</span>
+
+<span class="sd">    Example::</span>
+
+<span class="sd">        &gt;&gt;&gt; OneOf(UBInt8(&quot;foo&quot;), [4,5,6,7]).parse(&quot;\\x05&quot;)</span>
+<span class="sd">        5</span>
+<span class="sd">        &gt;&gt;&gt; OneOf(UBInt8(&quot;foo&quot;), [4,5,6,7]).parse(&quot;\\x08&quot;)</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">            ...</span>
+<span class="sd">        construct.core.ValidationError: (&#39;invalid object&#39;, 8)</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; OneOf(UBInt8(&quot;foo&quot;), [4,5,6,7]).build(5)</span>
+<span class="sd">        &#39;\\x05&#39;</span>
+<span class="sd">        &gt;&gt;&gt; OneOf(UBInt8(&quot;foo&quot;), [4,5,6,7]).build(9)</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">            ...</span>
+<span class="sd">        construct.core.ValidationError: (&#39;invalid object&#39;, 9)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;valids&quot;</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">,</span> <span class="n">valids</span><span class="p">):</span>
+        <span class="n">Validator</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">valids</span> <span class="o">=</span> <span class="n">valids</span>
+    <span class="k">def</span> <span class="nf">_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">valids</span>
+
+<span class="k">class</span> <span class="nc">NoneOf</span><span class="p">(</span><span class="n">Validator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validates that the object is none of the listed values.</span>
+
+<span class="sd">    :param subcon: object to validate</span>
+<span class="sd">    :param invalids: a set of invalid values</span>
+
+<span class="sd">    Example::</span>
+
+<span class="sd">        &gt;&gt;&gt; NoneOf(UBInt8(&quot;foo&quot;), [4,5,6,7]).parse(&quot;\\x08&quot;)</span>
+<span class="sd">        8</span>
+<span class="sd">        &gt;&gt;&gt; NoneOf(UBInt8(&quot;foo&quot;), [4,5,6,7]).parse(&quot;\\x06&quot;)</span>
+<span class="sd">        Traceback (most recent call last):</span>
+<span class="sd">            ...</span>
+<span class="sd">        construct.core.ValidationError: (&#39;invalid object&#39;, 6)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">__slots__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;invalids&quot;</span><span class="p">]</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">,</span> <span class="n">invalids</span><span class="p">):</span>
+        <span class="n">Validator</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subcon</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">invalids</span> <span class="o">=</span> <span class="n">invalids</span>
+    <span class="k">def</span> <span class="nf">_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">obj</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">invalids</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

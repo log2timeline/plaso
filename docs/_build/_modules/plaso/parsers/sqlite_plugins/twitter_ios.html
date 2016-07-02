@@ -1,0 +1,285 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.sqlite_plugins.twitter_ios &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../../index.html" />
+    <link rel="up" title="plaso" href="../../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.sqlite_plugins.twitter_ios</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding:utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Parser for Twitter on iOS 8+ database.</span>
+
+<span class="sd">SQLite database path:</span>
+<span class="sd">/private/var/mobile/Containers/Data/Application/Library/Caches/databases/</span>
+<span class="sd">SQLite database name: twitter.db</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">sqlite</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers.sqlite_plugins</span> <span class="kn">import</span> <span class="n">interface</span>
+
+
+<div class="viewcode-block" id="TwitterIOSContactEvent"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.twitter_ios.TwitterIOSContactEvent">[docs]</a><span class="k">class</span> <span class="nc">TwitterIOSContactEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">PosixTimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parent class for Twitter on iOS 8+ contacts events.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    description: A string containing the contact&#39;s profile description.</span>
+<span class="sd">    followers_cnt: An integer containing the number of followers.</span>
+<span class="sd">    following: An integer value to describe if the contact is following the</span>
+<span class="sd">               user&#39;s account, represented by 0 or 1.</span>
+<span class="sd">    following_cnt: An integer containing the number of following.</span>
+<span class="sd">    location: A string containing the contact&#39;s profile location.</span>
+<span class="sd">    name: A string containing the contact&#39;s profile name.</span>
+<span class="sd">    profile_url: A string containing the contact&#39;s  profile picture URL.</span>
+<span class="sd">    screen_name: A string containing the contact&#39;s screen name.</span>
+<span class="sd">    url: A string containing the contact&#39;s profile URL.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">posix_time</span><span class="p">,</span> <span class="n">posix_time_description</span><span class="p">,</span> <span class="n">screen_name</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">profile_url</span><span class="p">,</span>
+      <span class="n">location</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">following</span><span class="p">,</span> <span class="n">following_cnt</span><span class="p">,</span> <span class="n">followers_cnt</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initalizes a TwitterIOSContacts event.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      posix_time: The POSIX time value, which contains the number of seconds</span>
+<span class="sd">                  since January 1, 1970 00:00:00 UTC.</span>
+<span class="sd">      posix_time_description: The description of the usage of the timestamp.</span>
+<span class="sd">      screen_name: A string containing the contact&#39;s screen name.</span>
+<span class="sd">      name: A string containing the contact&#39;s profile name.</span>
+<span class="sd">      profile_url: A string containing the contact&#39;s  profile picture URL.</span>
+<span class="sd">      location: A string containing the contact&#39;s profile location.</span>
+<span class="sd">      url: A string containing the contact&#39;s profile URL.</span>
+<span class="sd">      description: A string containing the contact&#39;s profile description.</span>
+<span class="sd">      following: An interger value to describe if the contact is following the</span>
+<span class="sd">                 user&#39;s account, represented by 0 or 1.</span>
+<span class="sd">      following_cnt: An integer containing the number of following.</span>
+<span class="sd">      followers_cnt: An integer containing the number of followers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">TwitterIOSContactEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">posix_time</span><span class="p">,</span> <span class="n">posix_time_description</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">followers_cnt</span> <span class="o">=</span> <span class="n">followers_cnt</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">following</span> <span class="o">=</span> <span class="n">following</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">following_cnt</span> <span class="o">=</span> <span class="n">following_cnt</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">location</span> <span class="o">=</span> <span class="n">location</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">profile_url</span> <span class="o">=</span> <span class="n">profile_url</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">screen_name</span> <span class="o">=</span> <span class="n">screen_name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span></div>
+
+
+<div class="viewcode-block" id="TwitterIOSContactCreationEvent"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.twitter_ios.TwitterIOSContactCreationEvent">[docs]</a><span class="k">class</span> <span class="nc">TwitterIOSContactCreationEvent</span><span class="p">(</span><span class="n">TwitterIOSContactEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for Twitter contacts creation events.&quot;&quot;&quot;</span>
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;twitter:ios:contact_creation&#39;</span></div>
+
+
+<div class="viewcode-block" id="TwitterIOSContactUpdateEvent"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.twitter_ios.TwitterIOSContactUpdateEvent">[docs]</a><span class="k">class</span> <span class="nc">TwitterIOSContactUpdateEvent</span><span class="p">(</span><span class="n">TwitterIOSContactEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for Twitter contacts update events.&quot;&quot;&quot;</span>
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;twitter:ios:contact_update&#39;</span></div>
+
+
+<div class="viewcode-block" id="TwitterIOSStatusEvent"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.twitter_ios.TwitterIOSStatusEvent">[docs]</a><span class="k">class</span> <span class="nc">TwitterIOSStatusEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">PosixTimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parent class for Twitter on iOS 8+ status events.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    favorite_cnt: An integer containing the number of times the status message</span>
+<span class="sd">                  has been favorited.</span>
+<span class="sd">    favorited: An integer value to mark status as favorite by the account.</span>
+<span class="sd">    name: A string containing the user&#39;s profile name.</span>
+<span class="sd">    retweet_cnt: A string containing the number of times the status message has</span>
+<span class="sd">                 been retweeted.</span>
+<span class="sd">    text: A string containing the content of the status messsage.</span>
+<span class="sd">    user_id: An integer containing the user unique identifier.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">posix_time</span><span class="p">,</span> <span class="n">posix_time_description</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span>
+      <span class="n">retweet_cnt</span><span class="p">,</span> <span class="n">favorite_cnt</span><span class="p">,</span> <span class="n">favorited</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initalizes a TwitterIOSStatuses event.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      posix_time: the POSIX time value, which contains the number of seconds</span>
+<span class="sd">                  since January 1, 1970 00:00:00 UTC.</span>
+<span class="sd">      posix_time_description: The description of the usage of the timestamp.</span>
+<span class="sd">      text: A string containing the content of the status messsage.</span>
+<span class="sd">      user_id: An integer containing the user unique identifier.</span>
+<span class="sd">      name: A string containing the user&#39;s profile name.</span>
+<span class="sd">      retweet_cnt: A string containing the number of times the status message</span>
+<span class="sd">                   has been retweeted.</span>
+<span class="sd">      favorite_cnt: An integer containing the number of times the status</span>
+<span class="sd">                    message has been favorited.</span>
+<span class="sd">      favorited: An integer value to mark status as favorite by the account.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">TwitterIOSStatusEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">posix_time</span><span class="p">,</span> <span class="n">posix_time_description</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">favorite_cnt</span> <span class="o">=</span> <span class="n">favorite_cnt</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">favorited</span> <span class="o">=</span> <span class="n">favorited</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">retweet_cnt</span> <span class="o">=</span> <span class="n">retweet_cnt</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">text</span> <span class="o">=</span> <span class="n">text</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">user_id</span></div>
+
+
+<div class="viewcode-block" id="TwitterIOSStatusCreationEvent"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.twitter_ios.TwitterIOSStatusCreationEvent">[docs]</a><span class="k">class</span> <span class="nc">TwitterIOSStatusCreationEvent</span><span class="p">(</span><span class="n">TwitterIOSStatusEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for Twitter status creation events.&quot;&quot;&quot;</span>
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;twitter:ios:status_creation&#39;</span></div>
+
+
+<div class="viewcode-block" id="TwitterIOSStatusUpdateEvent"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.twitter_ios.TwitterIOSStatusUpdateEvent">[docs]</a><span class="k">class</span> <span class="nc">TwitterIOSStatusUpdateEvent</span><span class="p">(</span><span class="n">TwitterIOSStatusEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for Twitter status update events.&quot;&quot;&quot;</span>
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;twitter:ios:status_update&#39;</span></div>
+
+
+<div class="viewcode-block" id="TwitterIOSPlugin"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.twitter_ios.TwitterIOSPlugin">[docs]</a><span class="k">class</span> <span class="nc">TwitterIOSPlugin</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">SQLitePlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parser for Twitter on iOS 8+ database.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;twitter_ios&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for Twitter on iOS 8+ database&#39;</span>
+
+  <span class="n">QUERIES</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="p">((</span><span class="s1">u&#39;SELECT createdDate, updatedAt, screenName, name, profileImageUrl,&#39;</span>
+        <span class="s1">u&#39;location, description, url, following, followersCount, followingCount&#39;</span>
+        <span class="s1">u&#39; FROM Users ORDER BY createdDate&#39;</span><span class="p">),</span> <span class="s1">u&#39;ParseContactRow&#39;</span><span class="p">),</span>
+      <span class="p">((</span><span class="s1">u&#39;SELECT Statuses.date AS date, Statuses.text AS text, Statuses.userId &#39;</span>
+        <span class="s1">u&#39;AS user_id, Users.name AS name, Statuses.retweetCount AS &#39;</span>
+        <span class="s1">u&#39;retweetCount, Statuses.favoriteCount AS favoriteCount, &#39;</span>
+        <span class="s1">u&#39;Statuses.favorited AS favorited, Statuses.updatedAt AS updatedAt &#39;</span>
+        <span class="s1">u&#39;FROM Statuses LEFT join Users ON Statuses.userId = Users.id ORDER &#39;</span>
+        <span class="s1">u&#39;BY date&#39;</span><span class="p">),</span> <span class="s1">u&#39;ParseStatusRow&#39;</span><span class="p">)]</span>
+
+  <span class="n">REQUIRED_TABLES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+      <span class="s1">u&#39;Lists&#39;</span><span class="p">,</span> <span class="s1">u&#39;MyRetweets&#39;</span><span class="p">,</span> <span class="s1">u&#39;StatusesShadow&#39;</span><span class="p">,</span> <span class="s1">u&#39;UsersShadow&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;ListsShadow&#39;</span><span class="p">,</span> <span class="s1">u&#39;Statuses&#39;</span><span class="p">,</span> <span class="s1">u&#39;Users&#39;</span><span class="p">])</span>
+
+<div class="viewcode-block" id="TwitterIOSPlugin.ParseContactRow"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.twitter_ios.TwitterIOSPlugin.ParseContactRow">[docs]</a>  <span class="k">def</span> <span class="nf">ParseContactRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a contact row from the database.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      row: The row resulting from the query.</span>
+<span class="sd">      query: Optional query string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;createdDate&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">TwitterIOSContactCreationEvent</span><span class="p">(</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;createdDate&#39;</span><span class="p">],</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">CREATION_TIME</span><span class="p">,</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;screenName&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;profileImageUrl&#39;</span><span class="p">],</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;location&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;following&#39;</span><span class="p">],</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;followingCount&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;followersCount&#39;</span><span class="p">])</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;updatedAt&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">TwitterIOSContactUpdateEvent</span><span class="p">(</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;updatedAt&#39;</span><span class="p">],</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">UPDATE_TIME</span><span class="p">,</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;screenName&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;profileImageUrl&#39;</span><span class="p">],</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;location&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;description&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;following&#39;</span><span class="p">],</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;followingCount&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;followersCount&#39;</span><span class="p">])</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TwitterIOSPlugin.ParseStatusRow"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.twitter_ios.TwitterIOSPlugin.ParseStatusRow">[docs]</a>  <span class="k">def</span> <span class="nf">ParseStatusRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a contact row from the database.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      row: The row resulting from the query.</span>
+<span class="sd">      query: Optional query string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">TwitterIOSStatusCreationEvent</span><span class="p">(</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">],</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">CREATION_TIME</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">],</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;user_id&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;retweetCount&#39;</span><span class="p">],</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;favoriteCount&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;favorited&#39;</span><span class="p">])</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;updatedAt&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">TwitterIOSStatusUpdateEvent</span><span class="p">(</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;updatedAt&#39;</span><span class="p">],</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">UPDATE_TIME</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">],</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;user_id&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;retweetCount&#39;</span><span class="p">],</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">&#39;favoriteCount&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;favorited&#39;</span><span class="p">])</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span></div></div>
+
+
+<span class="n">sqlite</span><span class="o">.</span><span class="n">SQLiteParser</span><span class="o">.</span><span class="n">RegisterPlugin</span><span class="p">(</span><span class="n">TwitterIOSPlugin</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

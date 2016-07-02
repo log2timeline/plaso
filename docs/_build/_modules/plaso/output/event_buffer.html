@@ -1,0 +1,287 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.output.event_buffer &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.output.event_buffer</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains the event buffer class.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">heapq</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">utils</span>
+
+
+<span class="k">class</span> <span class="nc">_EventsHeap</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that defines the event objects heap.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes an event objects heap.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">_EventsHeap</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_heap</span> <span class="o">=</span> <span class="p">[]</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">number_of_events</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The number of serialized event objects on the heap.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_heap</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">PopEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pops an event object from the heap.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An event object (instance of EventObject).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">event_object</span> <span class="o">=</span> <span class="n">heapq</span><span class="o">.</span><span class="n">heappop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_heap</span><span class="p">)</span>
+      <span class="k">return</span> <span class="n">event_object</span>
+
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">None</span>
+
+  <span class="k">def</span> <span class="nf">PushEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pushes an event object onto the heap.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: an event object (instance of EventObject).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: remove store number and store index once no longer exposed.</span>
+    <span class="c1"># Replace them by event object specific attributes relevant to sorting.</span>
+    <span class="n">heap_values</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">event_object</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">event_object</span><span class="o">.</span><span class="n">timestamp_desc</span><span class="p">,</span>
+        <span class="n">event_object</span><span class="o">.</span><span class="n">store_number</span><span class="p">,</span> <span class="n">event_object</span><span class="o">.</span><span class="n">store_index</span><span class="p">,</span>
+        <span class="n">event_object</span><span class="p">)</span>
+    <span class="n">heapq</span><span class="o">.</span><span class="n">heappush</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_heap</span><span class="p">,</span> <span class="n">heap_values</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">PushEvents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_objects</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pushes event objects onto the heap.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_objects: a list of event objects (instances of EventObject).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">event_object</span> <span class="ow">in</span> <span class="n">event_objects</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">PushEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+
+<span class="c1"># TODO: rename class and fix docstrings.</span>
+<div class="viewcode-block" id="EventBuffer"><a class="viewcode-back" href="../../../plaso.output.html#plaso.output.event_buffer.EventBuffer">[docs]</a><span class="k">class</span> <span class="nc">EventBuffer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Buffer class for event object output processing.</span>
+
+<span class="sd">  The event buffer is used to deduplicate event objects and make sure</span>
+<span class="sd">  they are sorted before output.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    check_dedups: boolean value indicating whether or not the buffer</span>
+<span class="sd">                  should check and merge duplicate entries or not.</span>
+<span class="sd">    duplicate_counter: integer that contains the number of duplicates.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">_MERGE_ATTRIBUTES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s1">u&#39;inode&#39;</span><span class="p">,</span> <span class="s1">u&#39;filename&#39;</span><span class="p">,</span> <span class="s1">u&#39;display_name&#39;</span><span class="p">])</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_module</span><span class="p">,</span> <span class="n">check_dedups</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes an event buffer object.</span>
+
+<span class="sd">    This class is used for buffering up events for duplicate removals</span>
+<span class="sd">    and for other post-processing/analysis of events before being presented</span>
+<span class="sd">    by the appropriate output module.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      output_module: an output module object (instance of OutputModule).</span>
+<span class="sd">      check_dedups: optional boolean value indicating whether or not the buffer</span>
+<span class="sd">                    should check and merge duplicate entries or not.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_current_timestamp</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_events_per_key</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_output_module</span> <span class="o">=</span> <span class="n">output_module</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_output_module</span><span class="o">.</span><span class="n">Open</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_output_module</span><span class="o">.</span><span class="n">WriteHeader</span><span class="p">()</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">check_dedups</span> <span class="o">=</span> <span class="n">check_dedups</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">duplicate_counter</span> <span class="o">=</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="EventBuffer.__enter__"><a class="viewcode-back" href="../../../plaso.output.html#plaso.output.event_buffer.EventBuffer.__enter__">[docs]</a>  <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Make usable with &quot;with&quot; statement.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="EventBuffer.__exit__"><a class="viewcode-back" href="../../../plaso.output.html#plaso.output.event_buffer.EventBuffer.__exit__">[docs]</a>  <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unused_type</span><span class="p">,</span> <span class="n">unused_value</span><span class="p">,</span> <span class="n">unused_traceback</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Make usable with &quot;with&quot; statement.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">End</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="EventBuffer.Append"><a class="viewcode-back" href="../../../plaso.output.html#plaso.output.event_buffer.EventBuffer.Append">[docs]</a>  <span class="k">def</span> <span class="nf">Append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Appends an event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: an event object (instance of EventObject).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">check_dedups</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_output_module</span><span class="o">.</span><span class="n">WriteEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+      <span class="k">return</span>
+
+    <span class="k">if</span> <span class="n">event_object</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_timestamp</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_current_timestamp</span> <span class="o">=</span> <span class="n">event_object</span><span class="o">.</span><span class="n">timestamp</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">Flush</span><span class="p">()</span>
+
+    <span class="n">key</span> <span class="o">=</span> <span class="n">event_object</span><span class="o">.</span><span class="n">EqualityString</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_events_per_key</span><span class="p">:</span>
+      <span class="n">duplicate_event_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_events_per_key</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">JoinEvents</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">duplicate_event_object</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_events_per_key</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">event_object</span></div>
+
+<div class="viewcode-block" id="EventBuffer.End"><a class="viewcode-back" href="../../../plaso.output.html#plaso.output.event_buffer.EventBuffer.End">[docs]</a>  <span class="k">def</span> <span class="nf">End</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Closes the buffer.</span>
+
+<span class="sd">    Buffered event objects are written using the output module, an optional</span>
+<span class="sd">    footer is written and the output is closed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">Flush</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_output_module</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_output_module</span><span class="o">.</span><span class="n">WriteFooter</span><span class="p">()</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_output_module</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="EventBuffer.Flush"><a class="viewcode-back" href="../../../plaso.output.html#plaso.output.event_buffer.EventBuffer.Flush">[docs]</a>  <span class="k">def</span> <span class="nf">Flush</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Flushes the buffer.</span>
+
+<span class="sd">    Buffered event objects are written using the output module.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_events_per_key</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="c1"># The heap is used to make sure the events are sorted in</span>
+    <span class="c1"># a deterministic way.</span>
+    <span class="n">events_heap</span> <span class="o">=</span> <span class="n">_EventsHeap</span><span class="p">()</span>
+    <span class="n">events_heap</span><span class="o">.</span><span class="n">PushEvents</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_events_per_key</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_events_per_key</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">events_heap</span><span class="o">.</span><span class="n">PopEvent</span><span class="p">()</span>
+    <span class="k">while</span> <span class="n">event_object</span><span class="p">:</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output_module</span><span class="o">.</span><span class="n">WriteEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+      <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">WrongFormatter</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="c1"># TODO: store errors and report them at the end of psort.</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s1">u&#39;Unable to write event with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">events_heap</span><span class="o">.</span><span class="n">PopEvent</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="EventBuffer.JoinEvents"><a class="viewcode-back" href="../../../plaso.output.html#plaso.output.event_buffer.EventBuffer.JoinEvents">[docs]</a>  <span class="k">def</span> <span class="nf">JoinEvents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">first_event</span><span class="p">,</span> <span class="n">second_event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Joins two event objects.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      first_event: the first event object (instance of EventObject).</span>
+<span class="sd">      second_event: the second event object (instance of EventObject).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">duplicate_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="c1"># TODO: Currently we are using the first event pathspec, perhaps that</span>
+    <span class="c1"># is not the best approach. There is no need to have all the pathspecs</span>
+    <span class="c1"># inside the combined event, however which one should be chosen is</span>
+    <span class="c1"># perhaps something that can be evaluated here (regular TSK in favor of</span>
+    <span class="c1"># an event stored deep inside a VSS for instance).</span>
+    <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_MERGE_ATTRIBUTES</span><span class="p">:</span>
+      <span class="c1"># TODO: remove need for GetUnicodeString.</span>
+      <span class="n">first_value</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">GetUnicodeString</span><span class="p">(</span>
+          <span class="nb">getattr</span><span class="p">(</span><span class="n">first_event</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">u&#39;;&#39;</span><span class="p">))</span>
+      <span class="n">second_value</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">GetUnicodeString</span><span class="p">(</span>
+          <span class="nb">getattr</span><span class="p">(</span><span class="n">second_event</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">))</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">u&#39;;&#39;</span><span class="p">))</span>
+      <span class="n">values_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">first_value</span> <span class="o">|</span> <span class="n">second_value</span><span class="p">)</span>
+      <span class="n">values_list</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span> <span class="c1"># keeping this consistent across runs helps with diffs</span>
+      <span class="nb">setattr</span><span class="p">(</span><span class="n">first_event</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="s1">u&#39;;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">values_list</span><span class="p">))</span>
+
+    <span class="c1"># Special instance if this is a filestat entry we need to combine the</span>
+    <span class="c1"># description field.</span>
+    <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">first_event</span><span class="p">,</span> <span class="s1">u&#39;parser&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">u&#39;filestat&#39;</span><span class="p">:</span>
+      <span class="n">first_description</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
+          <span class="nb">getattr</span><span class="p">(</span><span class="n">first_event</span><span class="p">,</span> <span class="s1">u&#39;timestamp_desc&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">u&#39;;&#39;</span><span class="p">))</span>
+      <span class="n">second_description</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span>
+          <span class="nb">getattr</span><span class="p">(</span><span class="n">second_event</span><span class="p">,</span> <span class="s1">u&#39;timestamp_desc&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">u&#39;;&#39;</span><span class="p">))</span>
+      <span class="n">descriptions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">first_description</span> <span class="o">|</span> <span class="n">second_description</span><span class="p">)</span>
+      <span class="n">descriptions</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+      <span class="k">if</span> <span class="n">second_event</span><span class="o">.</span><span class="n">timestamp_desc</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">first_event</span><span class="o">.</span><span class="n">timestamp_desc</span><span class="p">:</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">first_event</span><span class="p">,</span> <span class="s1">u&#39;timestamp_desc&#39;</span><span class="p">,</span> <span class="s1">u&#39;;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">descriptions</span><span class="p">))</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

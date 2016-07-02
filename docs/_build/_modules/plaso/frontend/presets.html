@@ -1,0 +1,156 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.frontend.presets &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.frontend.presets</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Helper file for filtering out parsers.&quot;&quot;&quot;</span>
+
+<span class="n">categories</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">u&#39;win_gen&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s1">u&#39;bencode&#39;</span><span class="p">,</span> <span class="s1">u&#39;esedb&#39;</span><span class="p">,</span> <span class="s1">u&#39;filestat&#39;</span><span class="p">,</span> <span class="s1">u&#39;sqlite/google_drive&#39;</span><span class="p">,</span> <span class="s1">u&#39;java_idx&#39;</span><span class="p">,</span>
+        <span class="s1">u&#39;lnk&#39;</span><span class="p">,</span> <span class="s1">u&#39;mcafee_protection&#39;</span><span class="p">,</span> <span class="s1">u&#39;olecf&#39;</span><span class="p">,</span> <span class="s1">u&#39;openxml&#39;</span><span class="p">,</span> <span class="s1">u&#39;pe&#39;</span><span class="p">,</span> <span class="s1">u&#39;prefetch&#39;</span><span class="p">,</span>
+        <span class="s1">u&#39;sccm&#39;</span><span class="p">,</span> <span class="s1">u&#39;skydrive_log&#39;</span><span class="p">,</span> <span class="s1">u&#39;skydrive_log_old&#39;</span><span class="p">,</span> <span class="s1">u&#39;sqlite/skype&#39;</span><span class="p">,</span>
+        <span class="s1">u&#39;symantec_scanlog&#39;</span><span class="p">,</span> <span class="s1">u&#39;webhist&#39;</span><span class="p">,</span> <span class="s1">u&#39;winfirewall&#39;</span><span class="p">,</span> <span class="s1">u&#39;winjob&#39;</span><span class="p">,</span> <span class="s1">u&#39;winreg&#39;</span><span class="p">],</span>
+    <span class="s1">u&#39;winxp&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s1">u&#39;recycle_bin_info2&#39;</span><span class="p">,</span> <span class="s1">u&#39;win_gen&#39;</span><span class="p">,</span> <span class="s1">u&#39;winevt&#39;</span><span class="p">],</span>
+    <span class="s1">u&#39;winxp_slow&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s1">u&#39;hachoir&#39;</span><span class="p">,</span> <span class="s1">u&#39;winxp&#39;</span><span class="p">],</span>
+    <span class="s1">u&#39;win7&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s1">u&#39;recycle_bin&#39;</span><span class="p">,</span> <span class="s1">u&#39;custom_destinations&#39;</span><span class="p">,</span> <span class="s1">u&#39;esedb/esedb_file_history&#39;</span><span class="p">,</span>
+        <span class="s1">u&#39;olecf/olecf_automatic_destinations&#39;</span><span class="p">,</span> <span class="s1">u&#39;win_gen&#39;</span><span class="p">,</span> <span class="s1">u&#39;winevtx&#39;</span><span class="p">],</span>
+    <span class="s1">u&#39;win7_slow&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s1">u&#39;hachoir&#39;</span><span class="p">,</span> <span class="s1">u&#39;win7&#39;</span><span class="p">],</span>
+    <span class="s1">u&#39;webhist&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s1">u&#39;binary_cookies&#39;</span><span class="p">,</span> <span class="s1">u&#39;chrome_cache&#39;</span><span class="p">,</span> <span class="s1">u&#39;sqlite/chrome_cookies&#39;</span><span class="p">,</span>
+        <span class="s1">u&#39;sqlite/chrome_extension_activity&#39;</span><span class="p">,</span> <span class="s1">u&#39;sqlite/chrome_history&#39;</span><span class="p">,</span>
+        <span class="s1">u&#39;chrome_preferences&#39;</span><span class="p">,</span> <span class="s1">u&#39;firefox_cache&#39;</span><span class="p">,</span> <span class="s1">u&#39;sqlite/firefox_cookies&#39;</span><span class="p">,</span>
+        <span class="s1">u&#39;sqlite/firefox_downloads&#39;</span><span class="p">,</span> <span class="s1">u&#39;sqlite/firefox_history&#39;</span><span class="p">,</span> <span class="s1">u&#39;java_idx&#39;</span><span class="p">,</span>
+        <span class="s1">u&#39;esedb/msie_webcache&#39;</span><span class="p">,</span> <span class="s1">u&#39;msiecf&#39;</span><span class="p">,</span> <span class="s1">u&#39;opera_global&#39;</span><span class="p">,</span>
+        <span class="s1">u&#39;opera_typed_history&#39;</span><span class="p">,</span> <span class="s1">u&#39;plist/safari_history&#39;</span><span class="p">],</span>
+    <span class="s1">u&#39;linux&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s1">u&#39;bencode&#39;</span><span class="p">,</span> <span class="s1">u&#39;filestat&#39;</span><span class="p">,</span> <span class="s1">u&#39;sqlite/google_drive&#39;</span><span class="p">,</span> <span class="s1">u&#39;java_idx&#39;</span><span class="p">,</span> <span class="s1">u&#39;olecf&#39;</span><span class="p">,</span>
+        <span class="s1">u&#39;openxml&#39;</span><span class="p">,</span> <span class="s1">u&#39;pls_recall&#39;</span><span class="p">,</span> <span class="s1">u&#39;popularity_contest&#39;</span><span class="p">,</span> <span class="s1">u&#39;selinux&#39;</span><span class="p">,</span>
+        <span class="s1">u&#39;sqlite/skype&#39;</span><span class="p">,</span> <span class="s1">u&#39;syslog&#39;</span><span class="p">,</span> <span class="s1">u&#39;utmp&#39;</span><span class="p">,</span> <span class="s1">u&#39;webhist&#39;</span><span class="p">,</span> <span class="s1">u&#39;xchatlog&#39;</span><span class="p">,</span>
+        <span class="s1">u&#39;xchatscrollback&#39;</span><span class="p">,</span> <span class="s1">u&#39;sqlite/zeitgeist&#39;</span><span class="p">],</span>
+    <span class="s1">u&#39;macosx&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s1">u&#39;sqlite/appusage&#39;</span><span class="p">,</span> <span class="s1">u&#39;asl_log&#39;</span><span class="p">,</span> <span class="s1">u&#39;bencode&#39;</span><span class="p">,</span> <span class="s1">u&#39;bsm_log&#39;</span><span class="p">,</span> <span class="s1">u&#39;cups_ipp&#39;</span><span class="p">,</span>
+        <span class="s1">u&#39;filestat&#39;</span><span class="p">,</span> <span class="s1">u&#39;sqlite/google_drive&#39;</span><span class="p">,</span> <span class="s1">u&#39;java_idx&#39;</span><span class="p">,</span>
+        <span class="s1">u&#39;sqlite/ls_quarantine&#39;</span><span class="p">,</span> <span class="s1">u&#39;mac_appfirewall_log&#39;</span><span class="p">,</span>
+        <span class="s1">u&#39;sqlite/mac_document_versions&#39;</span><span class="p">,</span> <span class="s1">u&#39;mac_keychain&#39;</span><span class="p">,</span> <span class="s1">u&#39;mac_securityd&#39;</span><span class="p">,</span>
+        <span class="s1">u&#39;sqlite/mackeeper_cache&#39;</span><span class="p">,</span> <span class="s1">u&#39;macwifi&#39;</span><span class="p">,</span> <span class="s1">u&#39;olecf&#39;</span><span class="p">,</span> <span class="s1">u&#39;openxml&#39;</span><span class="p">,</span> <span class="s1">u&#39;plist&#39;</span><span class="p">,</span>
+        <span class="s1">u&#39;sqlite/skype&#39;</span><span class="p">,</span> <span class="s1">u&#39;utmpx&#39;</span><span class="p">,</span> <span class="s1">u&#39;webhist&#39;</span><span class="p">],</span>
+    <span class="c1"># TODO: Once syslog parser has been rewritten to be faster than the current</span>
+    <span class="c1"># one it&#39;s moved out of the default parsers for Mac OS X and into the &quot;slow&quot;</span>
+    <span class="c1"># mode.</span>
+    <span class="s1">u&#39;macosx_slow&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">u&#39;macosx&#39;</span><span class="p">,</span> <span class="s1">u&#39;syslog&#39;</span><span class="p">],</span>
+    <span class="s1">u&#39;android&#39;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s1">u&#39;android_app_usage&#39;</span><span class="p">,</span> <span class="s1">u&#39;filestat&#39;</span><span class="p">,</span> <span class="s1">u&#39;chrome_cache&#39;</span><span class="p">,</span>
+        <span class="s1">u&#39;sqlite/android_calls&#39;</span><span class="p">,</span> <span class="s1">u&#39;sqlite/android_sms&#39;</span><span class="p">,</span>
+        <span class="s1">u&#39;sqlite/android_webview&#39;</span><span class="p">,</span> <span class="s1">u&#39;sqlite/android_webviewcache&#39;</span><span class="p">,</span>
+        <span class="s1">u&#39;sqlite/chrome_cookies&#39;</span><span class="p">,</span> <span class="s1">u&#39;sqlite/chrome_history&#39;</span><span class="p">,</span> <span class="s1">u&#39;sqlite/skype&#39;</span><span class="p">,]}</span>
+
+
+<div class="viewcode-block" id="GetParsersFromCategory"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.presets.GetParsersFromCategory">[docs]</a><span class="k">def</span> <span class="nf">GetParsersFromCategory</span><span class="p">(</span><span class="n">category</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Return a list of parsers from a parser category.</span>
+
+<span class="sd">  Args:</span>
+<span class="sd">    category: One of the parser categories.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">return_list</span> <span class="o">=</span> <span class="p">[]</span>
+  <span class="k">if</span> <span class="n">category</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">categories</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">return_list</span>
+
+  <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">categories</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">category</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">categories</span><span class="p">:</span>
+      <span class="n">return_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">GetParsersFromCategory</span><span class="p">(</span><span class="n">item</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">return_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+  <span class="k">return</span> <span class="n">return_list</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>
