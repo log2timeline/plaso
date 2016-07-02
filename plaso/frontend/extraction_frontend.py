@@ -19,7 +19,7 @@ from plaso.frontend import presets
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.multi_processing import multi_process
+from plaso.multi_processing import engine
 from plaso.hashers import manager as hashers_manager
 from plaso.parsers import manager as parsers_manager
 from plaso.storage import zip_file as storage_zip_file
@@ -413,7 +413,7 @@ class ExtractionFrontend(frontend.Frontend):
     if self._single_process_mode:
       self._engine = single_process.SingleProcessEngine()
     else:
-      self._engine = multi_process.MultiProcessEngine(
+      self._engine = engine.MultiProcessEngine(
           maximum_number_of_queued_items=self._queue_size,
           use_zeromq=self._use_zeromq)
 

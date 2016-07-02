@@ -1,0 +1,233 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.preprocessors.linux &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.preprocessors.linux</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains preprocessors for Linux.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">csv</span>
+
+<span class="kn">from</span> <span class="nn">dfvfs.helpers</span> <span class="kn">import</span> <span class="n">text_file</span>
+
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.preprocessors</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.preprocessors</span> <span class="kn">import</span> <span class="n">manager</span>
+
+
+<div class="viewcode-block" id="LinuxHostname"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.linux.LinuxHostname">[docs]</a><span class="k">class</span> <span class="nc">LinuxHostname</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">PreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A preprocessing class that fetches hostname on Linux.&quot;&quot;&quot;</span>
+
+  <span class="n">SUPPORTED_OS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">u&#39;Linux&#39;</span><span class="p">]</span>
+  <span class="n">WEIGHT</span> <span class="o">=</span> <span class="mi">1</span>
+  <span class="n">ATTRIBUTE</span> <span class="o">=</span> <span class="s1">u&#39;hostname&#39;</span>
+
+<div class="viewcode-block" id="LinuxHostname.GetValue"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.linux.LinuxHostname.GetValue">[docs]</a>  <span class="k">def</span> <span class="nf">GetValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">searcher</span><span class="p">,</span> <span class="n">unused_knowledge_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines the hostname based on the contents of /etc/hostname.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      searcher: The file system searcher object (instance of</span>
+<span class="sd">                dfvfs.FileSystemSearcher).</span>
+<span class="sd">      knowledge_base: A knowledge base object (instance of KnowledgeBase),</span>
+<span class="sd">                      which contains information from the source data needed</span>
+<span class="sd">                      for parsing.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The hostname.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      errors.PreProcessFail: if the preprocessing fails.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="s1">u&#39;/etc/hostname&#39;</span>
+    <span class="n">file_entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FindFileEntry</span><span class="p">(</span><span class="n">searcher</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_entry</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">PreProcessFail</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to find file entry for path: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+
+    <span class="n">file_object</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetFileObject</span><span class="p">()</span>
+    <span class="n">file_data</span> <span class="o">=</span> <span class="n">file_object</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="mi">512</span><span class="p">)</span>
+    <span class="n">file_object</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="n">hostname</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">file_data</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s1">u&#39;{0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">hostname</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="LinuxTimezone"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.linux.LinuxTimezone">[docs]</a><span class="k">class</span> <span class="nc">LinuxTimezone</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">PreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A preprocessing class that fetches the timezone on Linux.&quot;&quot;&quot;</span>
+
+  <span class="n">ATTRIBUTE</span> <span class="o">=</span> <span class="s1">u&#39;time_zone_str&#39;</span>
+  <span class="n">DEFAULT_ATTRIBUTE_VALUE</span> <span class="o">=</span> <span class="s1">u&#39;UTC&#39;</span>
+  <span class="n">SUPPORTED_OS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">u&#39;Linux&#39;</span><span class="p">]</span>
+  <span class="n">WEIGHT</span> <span class="o">=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="LinuxTimezone.GetValue"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.linux.LinuxTimezone.GetValue">[docs]</a>  <span class="k">def</span> <span class="nf">GetValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">searcher</span><span class="p">,</span> <span class="n">unused_knowledge_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines the timezone based on the contents of /etc/timezone.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      searcher: The file system searcher object (instance of</span>
+<span class="sd">                dfvfs.FileSystemSearcher).</span>
+<span class="sd">      knowledge_base: A knowledge base object (instance of KnowledgeBase),</span>
+<span class="sd">                      which contains information from the source data needed</span>
+<span class="sd">                      for parsing.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A string containing a tzdata (Olsen) timezone name (for example,</span>
+<span class="sd">      America/New_York).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      errors.PreProcessFail: if the preprocessing fails.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="s1">u&#39;/etc/timezone&#39;</span>
+    <span class="n">file_entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FindFileEntry</span><span class="p">(</span><span class="n">searcher</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_entry</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">PreProcessFail</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to find file entry for path: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+
+    <span class="n">file_object</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetFileObject</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">text_file_object</span> <span class="o">=</span> <span class="n">text_file</span><span class="o">.</span><span class="n">TextFile</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+      <span class="n">file_data</span> <span class="o">=</span> <span class="n">text_file_object</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="n">file_object</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">file_data</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="LinuxUsernames"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.linux.LinuxUsernames">[docs]</a><span class="k">class</span> <span class="nc">LinuxUsernames</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">PreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A preprocessing class that fetches usernames on Linux.&quot;&quot;&quot;</span>
+
+  <span class="n">SUPPORTED_OS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">u&#39;Linux&#39;</span><span class="p">]</span>
+  <span class="n">WEIGHT</span> <span class="o">=</span> <span class="mi">1</span>
+  <span class="n">ATTRIBUTE</span> <span class="o">=</span> <span class="s1">u&#39;users&#39;</span>
+
+<div class="viewcode-block" id="LinuxUsernames.GetValue"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.linux.LinuxUsernames.GetValue">[docs]</a>  <span class="k">def</span> <span class="nf">GetValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">searcher</span><span class="p">,</span> <span class="n">unused_knowledge_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines the user information based on the contents of /etc/passwd.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      searcher: The file system searcher object (instance of</span>
+<span class="sd">                dfvfs.FileSystemSearcher).</span>
+<span class="sd">      knowledge_base: A knowledge base object (instance of KnowledgeBase),</span>
+<span class="sd">                      which contains information from the source data needed</span>
+<span class="sd">                      for parsing.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list containing username information dicts.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      errors.PreProcessFail: if the preprocessing fails.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: Add passwd.cache, might be good if nss cache is enabled.</span>
+
+    <span class="n">path</span> <span class="o">=</span> <span class="s1">u&#39;/etc/passwd&#39;</span>
+    <span class="n">file_entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FindFileEntry</span><span class="p">(</span><span class="n">searcher</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_entry</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">PreProcessFail</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to find file entry for path: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+
+    <span class="n">file_object</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetFileObject</span><span class="p">()</span>
+    <span class="n">text_file_object</span> <span class="o">=</span> <span class="n">text_file</span><span class="o">.</span><span class="n">TextFile</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+
+    <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">text_file_object</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;:&#39;</span><span class="p">)</span>
+
+    <span class="n">users</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+      <span class="c1"># TODO: as part of artifacts, create a proper object for this.</span>
+      <span class="n">user</span> <span class="o">=</span> <span class="p">{</span>
+          <span class="s1">u&#39;uid&#39;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+          <span class="s1">u&#39;gid&#39;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span>
+          <span class="s1">u&#39;name&#39;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+          <span class="s1">u&#39;path&#39;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span>
+          <span class="s1">u&#39;shell&#39;</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="mi">6</span><span class="p">]}</span>
+      <span class="n">users</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+
+    <span class="n">file_object</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">users</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">PreprocessPluginsManager</span><span class="o">.</span><span class="n">RegisterPlugins</span><span class="p">([</span>
+    <span class="n">LinuxHostname</span><span class="p">,</span> <span class="n">LinuxTimezone</span><span class="p">,</span> <span class="n">LinuxUsernames</span><span class="p">])</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.pls_recall &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.pls_recall</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Parser for PL/SQL Developer Recall files.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">construct</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+
+
+<div class="viewcode-block" id="PlsRecallEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.pls_recall.PlsRecallEvent">[docs]</a><span class="k">class</span> <span class="nc">PlsRecallEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">DelphiTimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for a PL/SQL Recall file container.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;PLSRecall:event&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delphi_time</span><span class="p">,</span> <span class="n">sequence</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">database</span><span class="p">,</span> <span class="n">query</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      delphi_time: the Delphi time value when the entry was created.</span>
+<span class="sd">      sequence: Sequence indicates the order of execution.</span>
+<span class="sd">      username: The username that made the query.</span>
+<span class="sd">      database_name: String containing the database name.</span>
+<span class="sd">      query: String containing the PL/SQL query.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">PlsRecallEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">delphi_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">CREATION_TIME</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">database_name</span> <span class="o">=</span> <span class="n">database</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">query</span> <span class="o">=</span> <span class="n">query</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">sequence</span> <span class="o">=</span> <span class="n">sequence</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">user</span></div>
+
+
+<div class="viewcode-block" id="PlsRecallParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.pls_recall.PlsRecallParser">[docs]</a><span class="k">class</span> <span class="nc">PlsRecallParser</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">FileObjectParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parse PL/SQL Recall files.</span>
+
+<span class="sd">  Parser is based on a::</span>
+
+<span class="sd">    TRecallRecord = packed record</span>
+<span class="sd">      Sequence: Integer;</span>
+<span class="sd">      TimeStamp: TDateTime;</span>
+<span class="sd">      Username: array[0..30] of Char;</span>
+<span class="sd">      Database: array[0..80] of Char;</span>
+<span class="sd">      Text: array[0..4000] of Char;</span>
+<span class="sd">    end;</span>
+
+<span class="sd">    Delphi TDateTime is a little endian 64-bit</span>
+<span class="sd">    floating point without any time zone information</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">_INITIAL_FILE_OFFSET</span> <span class="o">=</span> <span class="bp">None</span>
+  <span class="n">_PLS_KEYWORD</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+      <span class="s1">u&#39;begin&#39;</span><span class="p">,</span> <span class="s1">u&#39;commit&#39;</span><span class="p">,</span> <span class="s1">u&#39;create&#39;</span><span class="p">,</span> <span class="s1">u&#39;declare&#39;</span><span class="p">,</span> <span class="s1">u&#39;drop&#39;</span><span class="p">,</span> <span class="s1">u&#39;end&#39;</span><span class="p">,</span> <span class="s1">u&#39;exception&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;execute&#39;</span><span class="p">,</span> <span class="s1">u&#39;insert&#39;</span><span class="p">,</span> <span class="s1">u&#39;replace&#39;</span><span class="p">,</span> <span class="s1">u&#39;rollback&#39;</span><span class="p">,</span> <span class="s1">u&#39;select&#39;</span><span class="p">,</span> <span class="s1">u&#39;set&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;update&#39;</span><span class="p">])</span>
+
+  <span class="c1"># 6 * 365 * 24 * 60 * 60 * 1000000.</span>
+  <span class="n">_SIX_YEARS_IN_MICRO_SECONDS</span> <span class="o">=</span> <span class="mi">189216000000000</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;pls_recall&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for PL/SQL Recall files.&#39;</span>
+
+  <span class="n">PLS_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;PL/SQL_Recall&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;Sequence&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">LFloat64</span><span class="p">(</span><span class="s1">u&#39;TimeStamp&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;Username&#39;</span><span class="p">,</span> <span class="mi">31</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">b</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;Database&#39;</span><span class="p">,</span> <span class="mi">81</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">b</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">String</span><span class="p">(</span><span class="s1">u&#39;Query&#39;</span><span class="p">,</span> <span class="mi">4001</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="n">b</span><span class="s1">&#39;</span><span class="se">\x00</span><span class="s1">&#39;</span><span class="p">))</span>
+
+<div class="viewcode-block" id="PlsRecallParser.ParseFileObject"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.pls_recall.PlsRecallParser.ParseFileObject">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a PLSRecall.dat file-like object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: A file-like object.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      UnableToParseFile: when the file cannot be parsed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">is_pls</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">VerifyFile</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">((</span>
+          <span class="s1">u&#39;Not a PLSrecall File, unable to parse.&#39;</span>
+          <span class="s1">u&#39;with error: {0:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">is_pls</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Not a PLSRecall File, unable to parse.&#39;</span><span class="p">)</span>
+
+    <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_SET</span><span class="p">)</span>
+    <span class="n">pls_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PLS_STRUCT</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="n">pls_record</span><span class="p">:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">PlsRecallEvent</span><span class="p">(</span>
+          <span class="n">pls_record</span><span class="o">.</span><span class="n">TimeStamp</span><span class="p">,</span> <span class="n">pls_record</span><span class="o">.</span><span class="n">Sequence</span><span class="p">,</span> <span class="n">pls_record</span><span class="o">.</span><span class="n">Username</span><span class="p">,</span>
+          <span class="n">pls_record</span><span class="o">.</span><span class="n">Database</span><span class="p">,</span> <span class="n">pls_record</span><span class="o">.</span><span class="n">Query</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">pls_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PLS_STRUCT</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+      <span class="k">except</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">:</span>
+        <span class="c1"># The code has reached the end of file (EOF).</span>
+        <span class="k">break</span></div>
+
+<div class="viewcode-block" id="PlsRecallParser.VerifyFile"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.pls_recall.PlsRecallParser.VerifyFile">[docs]</a>  <span class="k">def</span> <span class="nf">VerifyFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check if the file is a PLSRecall.dat file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_object: file that we want to check.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      True if this is a valid PLSRecall.dat file, otherwise False.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_object</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">SEEK_SET</span><span class="p">)</span>
+
+    <span class="c1"># The file consists of PL/SQL structures that are equal</span>
+    <span class="c1"># size (4125 bytes) TRecallRecord records. It should be</span>
+    <span class="c1"># noted that the query value is free form.</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">structure</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PLS_STRUCT</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">):</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="c1"># Verify few entries inside the structure.</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromDelphiTime</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">TimeStamp</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">if</span> <span class="n">timestamp</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="c1"># Verify that the timestamp is no more than six years into the future.</span>
+    <span class="c1"># Six years is an arbitrary time length just to evaluate the timestamp</span>
+    <span class="c1"># against some value. There is no guarantee that this will catch everything.</span>
+    <span class="c1"># TODO: Add a check for similarly valid value back in time. Maybe if it the</span>
+    <span class="c1"># timestamp is before 1980 we are pretty sure it is invalid?</span>
+    <span class="c1"># TODO: This is a very flaky assumption. Find a better one.</span>
+    <span class="n">current_timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">GetNow</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">timestamp</span> <span class="o">&gt;</span> <span class="n">current_timestamp</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_SIX_YEARS_IN_MICRO_SECONDS</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="c1"># TODO: Add other verification checks here. For instance make sure</span>
+    <span class="c1"># that the query actually looks like a SQL query. This structure produces a</span>
+    <span class="c1"># lot of false positives and thus we need to add additional verification to</span>
+    <span class="c1"># make sure we are not parsing non-PLSRecall files.</span>
+    <span class="c1"># Another check might be to make sure the username looks legitimate, or the</span>
+    <span class="c1"># sequence number, or the database name.</span>
+    <span class="c1"># For now we just check if all three fields pass our &quot;is this a text&quot; test.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">utils</span><span class="o">.</span><span class="n">IsText</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">Username</span><span class="p">):</span>
+      <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">utils</span><span class="o">.</span><span class="n">IsText</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">Query</span><span class="p">):</span>
+      <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">utils</span><span class="o">.</span><span class="n">IsText</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">Database</span><span class="p">):</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="c1"># Take the first word from the query field and attempt to match that against</span>
+    <span class="c1"># allowed queries.</span>
+    <span class="n">first_word</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">structure</span><span class="o">.</span><span class="n">Query</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">first_word</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PLS_KEYWORD</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">return</span> <span class="bp">True</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParser</span><span class="p">(</span><span class="n">PlsRecallParser</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

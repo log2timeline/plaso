@@ -1,0 +1,276 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.plist_plugins.macuser &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../../index.html" />
+    <link rel="up" title="plaso" href="../../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.plist_plugins.macuser</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains the Mac OS X user plist plugin.&quot;&quot;&quot;</span>
+
+<span class="c1"># TODO: Only plists from Mac OS X 10.8 and 10.9 were tested. Look at other</span>
+<span class="c1">#       versions as well.</span>
+
+<span class="kn">import</span> <span class="nn">binascii</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">xml.etree</span> <span class="kn">import</span> <span class="n">ElementTree</span>
+
+<span class="kn">from</span> <span class="nn">binplist</span> <span class="kn">import</span> <span class="n">binplist</span>
+<span class="kn">from</span> <span class="nn">dfvfs.file_io</span> <span class="kn">import</span> <span class="n">fake_file_io</span>
+<span class="kn">from</span> <span class="nn">dfvfs.path</span> <span class="kn">import</span> <span class="n">fake_path_spec</span>
+<span class="kn">from</span> <span class="nn">dfvfs.resolver</span> <span class="kn">import</span> <span class="n">context</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">plist_event</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">plist</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers.plist_plugins</span> <span class="kn">import</span> <span class="n">interface</span>
+
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)&#39;</span>
+
+
+<div class="viewcode-block" id="MacUserPlugin"><a class="viewcode-back" href="../../../../plaso.parsers.plist_plugins.html#plaso.parsers.plist_plugins.macuser.MacUserPlugin">[docs]</a><span class="k">class</span> <span class="nc">MacUserPlugin</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">PlistPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Basic plugin to extract timestamp Mac user information.</span>
+
+<span class="sd">  Further details about the extracted fields.</span>
+<span class="sd">    name:</span>
+<span class="sd">      string with the system user.</span>
+<span class="sd">    uid:</span>
+<span class="sd">      user ID.</span>
+<span class="sd">    passwordpolicyoptions:</span>
+<span class="sd">      XML Plist structures with the timestamp.</span>
+<span class="sd">    passwordLastSetTime:</span>
+<span class="sd">      last time the password was changed.</span>
+<span class="sd">    lastLoginTimestamp:</span>
+<span class="sd">      last time the user was authenticated depending on the situation,</span>
+<span class="sd">      these timestamps are reset (0 value). It is translated by the</span>
+<span class="sd">      library as a 2001-01-01 00:00:00 (COCAO zero time representation).</span>
+<span class="sd">      If this happens, the event is not yield.</span>
+<span class="sd">    failedLoginTimestamp:</span>
+<span class="sd">      last time the user passwd was incorrectly(*).</span>
+<span class="sd">    failedLoginCount:</span>
+<span class="sd">      times of incorrect passwords.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;macuser&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for Mac OS X user plist files.&#39;</span>
+
+  <span class="c1"># The PLIST_PATH is dynamic, &quot;user&quot;.plist is the name of the</span>
+  <span class="c1"># Mac OS X user.</span>
+  <span class="n">PLIST_KEYS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+      <span class="s1">u&#39;name&#39;</span><span class="p">,</span> <span class="s1">u&#39;uid&#39;</span><span class="p">,</span> <span class="s1">u&#39;home&#39;</span><span class="p">,</span> <span class="s1">u&#39;passwordpolicyoptions&#39;</span><span class="p">,</span> <span class="s1">u&#39;ShadowHashData&#39;</span><span class="p">])</span>
+
+  <span class="n">_ROOT</span> <span class="o">=</span> <span class="s1">u&#39;/&#39;</span>
+
+<div class="viewcode-block" id="MacUserPlugin.Process"><a class="viewcode-back" href="../../../../plaso.parsers.plist_plugins.html#plaso.parsers.plist_plugins.macuser.MacUserPlugin.Process">[docs]</a>  <span class="k">def</span> <span class="nf">Process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">plist_name</span><span class="p">,</span> <span class="n">top_level</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check if it is a valid Mac OS X system  account plist file name.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      plist_name: name of the plist file.</span>
+<span class="sd">      top_level: dictionary with the plist file parsed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">MacUserPlugin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
+        <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">plist_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">PLIST_PATH</span><span class="p">,</span> <span class="n">top_level</span><span class="o">=</span><span class="n">top_level</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MacUserPlugin.GetEntries"><a class="viewcode-back" href="../../../../plaso.parsers.plist_plugins.html#plaso.parsers.plist_plugins.macuser.MacUserPlugin.GetEntries">[docs]</a>  <span class="k">def</span> <span class="nf">GetEntries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">match</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts relevant user timestamp entries.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      match: Optional dictionary containing keys extracted from PLIST_KEYS.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">u&#39;name&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">match</span> <span class="ow">or</span> <span class="s1">u&#39;uid&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">match</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">account</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="s1">u&#39;name&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">uid</span> <span class="o">=</span> <span class="n">match</span><span class="p">[</span><span class="s1">u&#39;uid&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">cocoa_zero</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">COCOA_TIME_TO_POSIX_BASE</span> <span class="o">*</span>
+        <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">MICRO_SECONDS_PER_SECOND</span><span class="p">)</span>
+
+    <span class="c1"># INFO: binplist return a string with the Plist XML.</span>
+    <span class="k">for</span> <span class="n">policy</span> <span class="ow">in</span> <span class="n">match</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;passwordpolicyoptions&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">xml_policy</span> <span class="o">=</span> <span class="n">ElementTree</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">policy</span><span class="p">)</span>
+      <span class="k">except</span> <span class="p">(</span><span class="n">ElementTree</span><span class="o">.</span><span class="n">ParseError</span><span class="p">,</span> <span class="ne">LookupError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">((</span>
+            <span class="s1">u&#39;Unable to parse XML structure for an user policy, account: &#39;</span>
+            <span class="s1">u&#39;{0:s} and uid: {1!s}, with error: {2:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">account</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+        <span class="k">continue</span>
+
+      <span class="k">for</span> <span class="n">dict_elements</span> <span class="ow">in</span> <span class="n">xml_policy</span><span class="o">.</span><span class="n">iterfind</span><span class="p">(</span><span class="s1">u&#39;dict&#39;</span><span class="p">):</span>
+        <span class="n">key_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span><span class="o">.</span><span class="n">text</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">dict_elements</span><span class="o">.</span><span class="n">getchildren</span><span class="p">()]</span>
+        <span class="c1"># Taking a list and converting it to a dict, using every other item</span>
+        <span class="c1"># as the key and the other one as the value.</span>
+        <span class="n">policy_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">key_values</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">],</span> <span class="n">key_values</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]))</span>
+
+      <span class="n">time_string</span> <span class="o">=</span> <span class="n">policy_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;passwordLastSetTime&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">time_string</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromTimeString</span><span class="p">(</span><span class="n">time_string</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">TimestampError</span><span class="p">:</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+              <span class="s1">u&#39;Unable to parse time string: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time_string</span><span class="p">))</span>
+          <span class="n">timestamp</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">shadow_hash_data</span> <span class="o">=</span> <span class="n">match</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;ShadowHashData&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">timestamp</span> <span class="o">&gt;</span> <span class="n">cocoa_zero</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">shadow_hash_data</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+          <span class="c1"># Extract the hash password information.</span>
+          <span class="c1"># It is store in the attribute ShadowHasData which is</span>
+          <span class="c1"># a binary plist data; However binplist only extract one</span>
+          <span class="c1"># level of binary plist, then it returns this information</span>
+          <span class="c1"># as a string.</span>
+
+          <span class="c1"># TODO: change this into a DataRange instead. For this we</span>
+          <span class="c1"># need the file offset and size of the ShadowHashData value data.</span>
+          <span class="n">shadow_hash_data</span> <span class="o">=</span> <span class="n">shadow_hash_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+          <span class="n">resolver_context</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
+          <span class="n">fake_file</span> <span class="o">=</span> <span class="n">fake_file_io</span><span class="o">.</span><span class="n">FakeFile</span><span class="p">(</span>
+              <span class="n">resolver_context</span><span class="p">,</span> <span class="n">shadow_hash_data</span><span class="p">)</span>
+          <span class="n">shadow_hash_data_path_spec</span> <span class="o">=</span> <span class="n">fake_path_spec</span><span class="o">.</span><span class="n">FakePathSpec</span><span class="p">(</span>
+              <span class="n">location</span><span class="o">=</span><span class="s1">u&#39;ShadowHashData&#39;</span><span class="p">)</span>
+          <span class="n">fake_file</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path_spec</span><span class="o">=</span><span class="n">shadow_hash_data_path_spec</span><span class="p">)</span>
+
+          <span class="k">try</span><span class="p">:</span>
+            <span class="n">plist_file</span> <span class="o">=</span> <span class="n">binplist</span><span class="o">.</span><span class="n">BinaryPlist</span><span class="p">(</span><span class="n">file_obj</span><span class="o">=</span><span class="n">fake_file</span><span class="p">)</span>
+            <span class="n">top_level</span> <span class="o">=</span> <span class="n">plist_file</span><span class="o">.</span><span class="n">Parse</span><span class="p">()</span>
+          <span class="k">except</span> <span class="n">binplist</span><span class="o">.</span><span class="n">FormatError</span><span class="p">:</span>
+            <span class="n">top_level</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+          <span class="n">salted_hash</span> <span class="o">=</span> <span class="n">top_level</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;SALTED-SHA512-PBKDF2&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+          <span class="k">if</span> <span class="n">salted_hash</span><span class="p">:</span>
+            <span class="n">password_hash</span> <span class="o">=</span> <span class="s1">u&#39;$ml${0:d}${1:s}${2:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">salted_hash</span><span class="p">[</span><span class="s1">u&#39;iterations&#39;</span><span class="p">],</span>
+                <span class="n">binascii</span><span class="o">.</span><span class="n">hexlify</span><span class="p">(</span><span class="n">salted_hash</span><span class="p">[</span><span class="s1">u&#39;salt&#39;</span><span class="p">]),</span>
+                <span class="n">binascii</span><span class="o">.</span><span class="n">hexlify</span><span class="p">(</span><span class="n">salted_hash</span><span class="p">[</span><span class="s1">u&#39;entropy&#39;</span><span class="p">]))</span>
+          <span class="k">else</span><span class="p">:</span>
+            <span class="n">password_hash</span> <span class="o">=</span> <span class="s1">u&#39;N/A&#39;</span>
+          <span class="n">description</span> <span class="o">=</span> <span class="p">(</span>
+              <span class="s1">u&#39;Last time {0:s} ({1!s}) changed the password: {2!s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                  <span class="n">account</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">password_hash</span><span class="p">)</span>
+          <span class="n">event_object</span> <span class="o">=</span> <span class="n">plist_event</span><span class="o">.</span><span class="n">PlistTimeEvent</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">_ROOT</span><span class="p">,</span> <span class="s1">u&#39;passwordLastSetTime&#39;</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="n">time_string</span> <span class="o">=</span> <span class="n">policy_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;lastLoginTimestamp&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">time_string</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromTimeString</span><span class="p">(</span><span class="n">time_string</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">TimestampError</span><span class="p">:</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+              <span class="s1">u&#39;Unable to parse time string: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time_string</span><span class="p">))</span>
+          <span class="n">timestamp</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">description</span> <span class="o">=</span> <span class="s1">u&#39;Last login from {0:s} ({1!s})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">account</span><span class="p">,</span> <span class="n">uid</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">timestamp</span> <span class="o">&gt;</span> <span class="n">cocoa_zero</span><span class="p">:</span>
+          <span class="n">event_object</span> <span class="o">=</span> <span class="n">plist_event</span><span class="o">.</span><span class="n">PlistTimeEvent</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">_ROOT</span><span class="p">,</span> <span class="s1">u&#39;lastLoginTimestamp&#39;</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="n">time_string</span> <span class="o">=</span> <span class="n">policy_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;failedLoginTimestamp&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">time_string</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromTimeString</span><span class="p">(</span><span class="n">time_string</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">TimestampError</span><span class="p">:</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+              <span class="s1">u&#39;Unable to parse time string: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time_string</span><span class="p">))</span>
+          <span class="n">timestamp</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">description</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s1">u&#39;Last failed login from {0:s} ({1!s}) ({2!s} times)&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">account</span><span class="p">,</span> <span class="n">uid</span><span class="p">,</span> <span class="n">policy_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;failedLoginCount&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">timestamp</span> <span class="o">&gt;</span> <span class="n">cocoa_zero</span><span class="p">:</span>
+          <span class="n">event_object</span> <span class="o">=</span> <span class="n">plist_event</span><span class="o">.</span><span class="n">PlistTimeEvent</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">_ROOT</span><span class="p">,</span> <span class="s1">u&#39;failedLoginTimestamp&#39;</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
+          <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span></div></div>
+
+
+<span class="n">plist</span><span class="o">.</span><span class="n">PlistParser</span><span class="o">.</span><span class="n">RegisterPlugin</span><span class="p">(</span><span class="n">MacUserPlugin</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

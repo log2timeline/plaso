@@ -1,0 +1,164 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.plist_plugins.timemachine &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../../index.html" />
+    <link rel="up" title="plaso" href="../../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.plist_plugins.timemachine</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains a TimeMachine plist plugin in Plaso.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">construct</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">plist_event</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">plist</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers.plist_plugins</span> <span class="kn">import</span> <span class="n">interface</span>
+
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)&#39;</span>
+
+
+<div class="viewcode-block" id="TimeMachinePlugin"><a class="viewcode-back" href="../../../../plaso.parsers.plist_plugins.html#plaso.parsers.plist_plugins.timemachine.TimeMachinePlugin">[docs]</a><span class="k">class</span> <span class="nc">TimeMachinePlugin</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">PlistPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Basic plugin to extract time machine hardisk and the backups.</span>
+
+<span class="sd">  Further details about the extracted fields:</span>
+<span class="sd">    DestinationID:</span>
+<span class="sd">      remote UUID hard disk where the backup is done.</span>
+
+<span class="sd">    BackupAlias:</span>
+<span class="sd">      structure that contains the extra information from the destinationID.</span>
+
+<span class="sd">    SnapshotDates:</span>
+<span class="sd">      list of the backup dates.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;time_machine&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for TimeMachine plist files.&#39;</span>
+
+  <span class="n">PLIST_PATH</span> <span class="o">=</span> <span class="s1">u&#39;com.apple.TimeMachine.plist&#39;</span>
+  <span class="n">PLIST_KEYS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s1">u&#39;Destinations&#39;</span><span class="p">,</span> <span class="s1">u&#39;RootVolumeUUID&#39;</span><span class="p">])</span>
+
+  <span class="n">TM_BACKUP_ALIAS</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;tm_backup_alias&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">PascalString</span><span class="p">(</span>
+          <span class="s1">u&#39;value&#39;</span><span class="p">,</span> <span class="n">length_field</span><span class="o">=</span><span class="n">construct</span><span class="o">.</span><span class="n">UBInt8</span><span class="p">(</span><span class="s1">u&#39;length&#39;</span><span class="p">)))</span>
+
+<div class="viewcode-block" id="TimeMachinePlugin.GetEntries"><a class="viewcode-back" href="../../../../plaso.parsers.plist_plugins.html#plaso.parsers.plist_plugins.timemachine.TimeMachinePlugin.GetEntries">[docs]</a>  <span class="k">def</span> <span class="nf">GetEntries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">match</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts relevant TimeMachine entries.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      match: Optional dictionary containing keys extracted from PLIST_KEYS.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">u&#39;Destinations&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">match</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">root</span> <span class="o">=</span> <span class="s1">u&#39;/Destinations&#39;</span>
+    <span class="n">key</span> <span class="o">=</span> <span class="s1">u&#39;item/SnapshotDates&#39;</span>
+
+    <span class="c1"># For each TimeMachine devices.</span>
+    <span class="k">for</span> <span class="n">destination</span> <span class="ow">in</span> <span class="n">match</span><span class="p">[</span><span class="s1">u&#39;Destinations&#39;</span><span class="p">]:</span>
+      <span class="n">hd_uuid</span> <span class="o">=</span> <span class="n">destination</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;DestinationID&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">hd_uuid</span><span class="p">:</span>
+        <span class="n">hd_uuid</span> <span class="o">=</span> <span class="s1">u&#39;Unknown device&#39;</span>
+
+      <span class="n">alias</span> <span class="o">=</span> <span class="n">destination</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;BackupAlias&#39;</span><span class="p">,</span> <span class="s1">u&#39;&lt;ALIAS&gt;&#39;</span><span class="p">)</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">alias</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">TM_BACKUP_ALIAS</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">alias</span><span class="p">)</span><span class="o">.</span><span class="n">value</span>
+      <span class="k">except</span> <span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">:</span>
+        <span class="n">alias</span> <span class="o">=</span> <span class="s1">u&#39;Unknown alias&#39;</span>
+
+      <span class="c1"># For each Backup.</span>
+      <span class="k">for</span> <span class="n">timestamp</span> <span class="ow">in</span> <span class="n">destination</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;SnapshotDates&#39;</span><span class="p">,</span> <span class="p">[]):</span>
+        <span class="n">description</span> <span class="o">=</span> <span class="s1">u&#39;TimeMachine Backup in {0:s} ({1:s})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">alias</span><span class="p">,</span> <span class="n">hd_uuid</span><span class="p">)</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">plist_event</span><span class="o">.</span><span class="n">PlistEvent</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">description</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span></div></div>
+
+
+<span class="n">plist</span><span class="o">.</span><span class="n">PlistParser</span><span class="o">.</span><span class="n">RegisterPlugin</span><span class="p">(</span><span class="n">TimeMachinePlugin</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

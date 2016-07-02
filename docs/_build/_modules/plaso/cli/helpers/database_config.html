@@ -1,0 +1,159 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.cli.helpers.database_config &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../../index.html" />
+    <link rel="up" title="plaso" href="../../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.cli.helpers.database_config</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;The arguments helper for a database configuration.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.cli.helpers</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.cli.helpers</span> <span class="kn">import</span> <span class="n">server_config</span>
+
+
+<div class="viewcode-block" id="DatabaseConfigHelper"><a class="viewcode-back" href="../../../../plaso.cli.helpers.html#plaso.cli.helpers.database_config.DatabaseConfigHelper">[docs]</a><span class="k">class</span> <span class="nc">DatabaseConfigHelper</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">ArgumentsHelper</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;CLI arguments helper class for database configuration.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;database_config&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Argument helper for a database configuration.&#39;</span>
+
+  <span class="n">_DEFAULT_NAME</span> <span class="o">=</span> <span class="s1">u&#39;data&#39;</span>
+  <span class="n">_DEFAULT_PASSWORD</span> <span class="o">=</span> <span class="s1">u&#39;toor&#39;</span>
+  <span class="n">_DEFAULT_USERNAME</span> <span class="o">=</span> <span class="s1">u&#39;root&#39;</span>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="DatabaseConfigHelper.AddArguments"><a class="viewcode-back" href="../../../../plaso.cli.helpers.html#plaso.cli.helpers.database_config.DatabaseConfigHelper.AddArguments">[docs]</a>  <span class="k">def</span> <span class="nf">AddArguments</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">argument_group</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add command line arguments the helper supports to an argument group.</span>
+
+<span class="sd">    This function takes an argument parser or an argument group object and adds</span>
+<span class="sd">    to it all the command line arguments this helper supports.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      argument_group: the argparse group (instance of argparse._ArgumentGroup or</span>
+<span class="sd">                      or argparse.ArgumentParser).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">argument_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">u&#39;--user&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">u&#39;username&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">u&#39;store&#39;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">cls</span><span class="o">.</span><span class="n">_DEFAULT_USERNAME</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s1">u&#39;USERNAME&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">u&#39;The username used to connect to the database.&#39;</span><span class="p">)</span>
+    <span class="n">argument_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">u&#39;--password&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">u&#39;password&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">u&#39;store&#39;</span><span class="p">,</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">cls</span><span class="o">.</span><span class="n">_DEFAULT_PASSWORD</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s1">u&#39;PASSWORD&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s1">u&#39;The password for the database user.&#39;</span><span class="p">))</span>
+    <span class="n">argument_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">u&#39;--db_name&#39;</span><span class="p">,</span> <span class="s1">&#39;--db-name&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">u&#39;db_name&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">u&#39;store&#39;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">cls</span><span class="o">.</span><span class="n">_DEFAULT_NAME</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s1">u&#39;The name of the database to connect to.&#39;</span><span class="p">))</span>
+
+    <span class="n">server_config</span><span class="o">.</span><span class="n">BaseServerConfigHelper</span><span class="o">.</span><span class="n">AddArguments</span><span class="p">(</span><span class="n">argument_group</span><span class="p">)</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="DatabaseConfigHelper.ParseOptions"><a class="viewcode-back" href="../../../../plaso.cli.helpers.html#plaso.cli.helpers.database_config.DatabaseConfigHelper.ParseOptions">[docs]</a>  <span class="k">def</span> <span class="nf">ParseOptions</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">output_module</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses and validates options.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      options: the parser option object (instance of argparse.Namespace).</span>
+<span class="sd">      output_module: an output module (instance of OutputModule).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      BadConfigObject: when the output module object is of the wrong type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">output_module</span><span class="p">,</span> <span class="s1">u&#39;SetCredentials&#39;</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">BadConfigObject</span><span class="p">(</span><span class="s1">u&#39;Unable to set username information.&#39;</span><span class="p">)</span>
+
+    <span class="n">username</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_ParseStringOption</span><span class="p">(</span>
+        <span class="n">options</span><span class="p">,</span> <span class="s1">u&#39;username&#39;</span><span class="p">,</span> <span class="n">default_value</span><span class="o">=</span><span class="n">cls</span><span class="o">.</span><span class="n">_DEFAULT_USERNAME</span><span class="p">)</span>
+    <span class="n">password</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_ParseStringOption</span><span class="p">(</span>
+        <span class="n">options</span><span class="p">,</span> <span class="s1">u&#39;password&#39;</span><span class="p">,</span> <span class="n">default_value</span><span class="o">=</span><span class="n">cls</span><span class="o">.</span><span class="n">_DEFAULT_PASSWORD</span><span class="p">)</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_ParseStringOption</span><span class="p">(</span>
+        <span class="n">options</span><span class="p">,</span> <span class="s1">u&#39;db_name&#39;</span><span class="p">,</span> <span class="n">default_value</span><span class="o">=</span><span class="n">cls</span><span class="o">.</span><span class="n">_DEFAULT_NAME</span><span class="p">)</span>
+
+    <span class="n">output_module</span><span class="o">.</span><span class="n">SetCredentials</span><span class="p">(</span><span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="n">password</span><span class="p">)</span>
+    <span class="n">output_module</span><span class="o">.</span><span class="n">SetDatabaseName</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+    <span class="n">server_config</span><span class="o">.</span><span class="n">BaseServerConfigHelper</span><span class="o">.</span><span class="n">ParseOptions</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="n">output_module</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

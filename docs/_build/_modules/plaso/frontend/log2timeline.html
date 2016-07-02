@@ -1,0 +1,196 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.frontend.log2timeline &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.frontend.log2timeline</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;The log2timeline front-end.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">plaso</span>
+<span class="c1"># The following import makes sure the filters are registered.</span>
+<span class="kn">from</span> <span class="nn">plaso</span> <span class="kn">import</span> <span class="n">filters</span>  <span class="c1"># pylint: disable=unused-import</span>
+<span class="c1"># The following import makes sure the hashers are registered.</span>
+<span class="kn">from</span> <span class="nn">plaso</span> <span class="kn">import</span> <span class="n">hashers</span>  <span class="c1"># pylint: disable=unused-import</span>
+<span class="c1"># The following import makes sure the parsers are registered.</span>
+<span class="kn">from</span> <span class="nn">plaso</span> <span class="kn">import</span> <span class="n">parsers</span>  <span class="c1"># pylint: disable=unused-import</span>
+<span class="c1"># The following import makes sure the output modules are registered.</span>
+<span class="kn">from</span> <span class="nn">plaso</span> <span class="kn">import</span> <span class="n">output</span>  <span class="c1"># pylint: disable=unused-import</span>
+<span class="kn">from</span> <span class="nn">plaso.filters</span> <span class="kn">import</span> <span class="n">manager</span> <span class="k">as</span> <span class="n">filters_manager</span>
+<span class="kn">from</span> <span class="nn">plaso.frontend</span> <span class="kn">import</span> <span class="n">extraction_frontend</span>
+<span class="kn">from</span> <span class="nn">plaso.output</span> <span class="kn">import</span> <span class="n">manager</span> <span class="k">as</span> <span class="n">output_manager</span>
+
+
+<div class="viewcode-block" id="LoggingFilter"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.log2timeline.LoggingFilter">[docs]</a><span class="k">class</span> <span class="nc">LoggingFilter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Filter</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements basic filtering of log events for plaso.</span>
+
+<span class="sd">  Some libraries, like binplist, introduce excessive amounts of</span>
+<span class="sd">  logging that clutters down the debug logs of plaso, making them</span>
+<span class="sd">  almost non-usable. This class implements a filter designed to make</span>
+<span class="sd">  the debug logs more clutter-free.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="LoggingFilter.filter"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.log2timeline.LoggingFilter.filter">[docs]</a>  <span class="k">def</span> <span class="nf">filter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Filter messages sent to the logging infrastructure.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">module</span> <span class="o">==</span> <span class="s1">u&#39;binplist&#39;</span> <span class="ow">and</span> <span class="n">record</span><span class="o">.</span><span class="n">levelno</span> <span class="o">&lt;</span> <span class="n">logging</span><span class="o">.</span><span class="n">ERROR</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">return</span> <span class="bp">True</span></div></div>
+
+
+<div class="viewcode-block" id="Log2TimelineFrontend"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.log2timeline.Log2TimelineFrontend">[docs]</a><span class="k">class</span> <span class="nc">Log2TimelineFrontend</span><span class="p">(</span><span class="n">extraction_frontend</span><span class="o">.</span><span class="n">ExtractionFrontend</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements the log2timeline front-end.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">_GetFiltersInformation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the filters information.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of tuples of filter names and docstrings.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">filters_information</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">filter_object</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span>
+        <span class="n">filters_manager</span><span class="o">.</span><span class="n">FiltersManager</span><span class="o">.</span><span class="n">GetFilterObjects</span><span class="p">()):</span>
+      <span class="c1"># TODO: refactor to use DESCRIPTION instead of docstring.</span>
+      <span class="n">doc_string</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">filter_object</span><span class="o">.</span><span class="n">__doc__</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+      <span class="n">filters_information</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">filter_object</span><span class="o">.</span><span class="n">filter_name</span><span class="p">,</span> <span class="n">doc_string</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">filters_information</span>
+
+  <span class="k">def</span> <span class="nf">_GetOutputModulesInformation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the output modules information.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of tuples of output module names and descriptions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">output_modules_information</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">output_class</span> <span class="ow">in</span> <span class="n">output_manager</span><span class="o">.</span><span class="n">OutputManager</span><span class="o">.</span><span class="n">GetOutputClasses</span><span class="p">():</span>
+      <span class="n">output_modules_information</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">output_class</span><span class="o">.</span><span class="n">DESCRIPTION</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">output_modules_information</span>
+
+<div class="viewcode-block" id="Log2TimelineFrontend.GetDisabledOutputClasses"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.log2timeline.Log2TimelineFrontend.GetDisabledOutputClasses">[docs]</a>  <span class="k">def</span> <span class="nf">GetDisabledOutputClasses</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the disabled output classes.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An output module generator which yields tuples of output class names</span>
+<span class="sd">      and type object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">output_manager</span><span class="o">.</span><span class="n">OutputManager</span><span class="o">.</span><span class="n">GetDisabledOutputClasses</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Log2TimelineFrontend.GetOutputClasses"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.log2timeline.Log2TimelineFrontend.GetOutputClasses">[docs]</a>  <span class="k">def</span> <span class="nf">GetOutputClasses</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the available output classes.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An output module generator which yields tuples of output class names</span>
+<span class="sd">      and type object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">output_manager</span><span class="o">.</span><span class="n">OutputManager</span><span class="o">.</span><span class="n">GetOutputClasses</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Log2TimelineFrontend.GetPluginData"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.log2timeline.Log2TimelineFrontend.GetPluginData">[docs]</a>  <span class="k">def</span> <span class="nf">GetPluginData</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the version and various plugin information.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A dictionary object with lists of available parsers and plugins.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">return_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">return_dict</span><span class="p">[</span><span class="s1">u&#39;Versions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s1">u&#39;plaso engine&#39;</span><span class="p">,</span> <span class="n">plaso</span><span class="o">.</span><span class="n">GetVersion</span><span class="p">()),</span>
+        <span class="p">(</span><span class="s1">u&#39;python&#39;</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">version</span><span class="p">)]</span>
+
+    <span class="n">return_dict</span><span class="p">[</span><span class="s1">u&#39;Hashers&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetHashersInformation</span><span class="p">()</span>
+    <span class="n">return_dict</span><span class="p">[</span><span class="s1">u&#39;Parsers&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetParsersInformation</span><span class="p">()</span>
+    <span class="n">return_dict</span><span class="p">[</span><span class="s1">u&#39;Parser Plugins&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetParserPluginsInformation</span><span class="p">()</span>
+    <span class="n">return_dict</span><span class="p">[</span><span class="s1">u&#39;Parser Presets&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetParserPresetsInformation</span><span class="p">()</span>
+    <span class="n">return_dict</span><span class="p">[</span><span class="s1">u&#39;Output Modules&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetOutputModulesInformation</span><span class="p">()</span>
+    <span class="n">return_dict</span><span class="p">[</span><span class="s1">u&#39;Filters&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetFiltersInformation</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">return_dict</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

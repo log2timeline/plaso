@@ -1,0 +1,670 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.analysis.interface &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.analysis.interface</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains the interface for analysis plugins.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">Queue</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="c1"># Some distributions unvendor urllib3 from the requests module, and we need to</span>
+<span class="c1"># access some methods inside urllib3 to disable warnings. We&#39;ll try to import it</span>
+<span class="c1"># here, to keep the imports together.</span>
+<span class="k">try</span><span class="p">:</span>
+  <span class="kn">import</span> <span class="nn">urllib3</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+  <span class="n">urllib3</span> <span class="o">=</span> <span class="bp">None</span>
+
+<span class="kn">from</span> <span class="nn">plaso.analysis</span> <span class="kn">import</span> <span class="n">definitions</span>
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">events</span>
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">reports</span>
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">plaso_queue</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+
+
+<div class="viewcode-block" id="AnalysisPlugin"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.interface.AnalysisPlugin">[docs]</a><span class="k">class</span> <span class="nc">AnalysisPlugin</span><span class="p">(</span><span class="n">plaso_queue</span><span class="o">.</span><span class="n">ItemQueueConsumer</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements the analysis plugin object interface.&quot;&quot;&quot;</span>
+
+  <span class="c1"># The URLS should contain a list of URLs with additional information about</span>
+  <span class="c1"># this analysis plugin.</span>
+  <span class="n">URLS</span> <span class="o">=</span> <span class="p">[]</span>
+
+  <span class="c1"># The name of the plugin. This is the name that is matched against when</span>
+  <span class="c1"># loading plugins, so it is important that this name is short, concise and</span>
+  <span class="c1"># explains the nature of the plugin easily. It also needs to be unique.</span>
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;analysis_plugin&#39;</span>
+
+  <span class="c1"># A flag indicating whether or not this plugin should be run during extraction</span>
+  <span class="c1"># phase or reserved entirely for post processing stage.</span>
+  <span class="c1"># Typically this would mean that the plugin is perhaps too computationally</span>
+  <span class="c1"># heavy to be run during event extraction and should rather be run during</span>
+  <span class="c1"># post-processing.</span>
+  <span class="c1"># Since most plugins should perhaps rather be run during post-processing</span>
+  <span class="c1"># this is set to False by default and needs to be overwritten if the plugin</span>
+  <span class="c1"># should be able to run during the extraction phase.</span>
+  <span class="n">ENABLE_IN_EXTRACTION</span> <span class="o">=</span> <span class="bp">False</span>
+
+  <span class="c1"># A flag to indicate that this plugin takes a long time to compile a report.</span>
+  <span class="n">LONG_RUNNING_PLUGIN</span> <span class="o">=</span> <span class="bp">False</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_queue</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes an analysis plugin.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      incoming_queue: A queue that is used to listen to incoming events.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">AnalysisPlugin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">incoming_queue</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">plugin_type</span> <span class="o">=</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PLUGIN_TYPE_REPORT</span>
+
+  <span class="k">def</span> <span class="nf">_ConsumeItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">analysis_mediator</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Consumes an item callback for ConsumeItems.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      item: the item object.</span>
+<span class="sd">      analysis_mediator: The analysis mediator object (instance of</span>
+<span class="sd">                         AnalysisMediator).</span>
+<span class="sd">      kwargs: keyword arguments to pass to the _ConsumeItem callback.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: rename to ExamineItem.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">ExamineEvent</span><span class="p">(</span><span class="n">analysis_mediator</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">plugin_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the name of the plugin.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="AnalysisPlugin.CompileReport"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.interface.AnalysisPlugin.CompileReport">[docs]</a>  <span class="k">def</span> <span class="nf">CompileReport</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analysis_mediator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compiles a report of the analysis.</span>
+
+<span class="sd">    After the plugin has received every copy of an event to</span>
+<span class="sd">    analyze this function will be called so that the report</span>
+<span class="sd">    can be assembled.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      analysis_mediator: The analysis mediator object (instance of</span>
+<span class="sd">                         AnalysisMediator).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The analysis report (instance of AnalysisReport).</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="AnalysisPlugin.ExamineEvent"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.interface.AnalysisPlugin.ExamineEvent">[docs]</a>  <span class="k">def</span> <span class="nf">ExamineEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analysis_mediator</span><span class="p">,</span> <span class="n">event_object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Analyzes an event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      analysis_mediator: The analysis mediator object (instance of</span>
+<span class="sd">                         AnalysisMediator).</span>
+<span class="sd">      event_object: An event object (instance of EventObject).</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="AnalysisPlugin.RunPlugin"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.interface.AnalysisPlugin.RunPlugin">[docs]</a>  <span class="k">def</span> <span class="nf">RunPlugin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analysis_mediator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;For each item in the queue send the read event to analysis.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      analysis_mediator: The analysis mediator object (instance of</span>
+<span class="sd">                         AnalysisMediator).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">ConsumeItems</span><span class="p">(</span><span class="n">analysis_mediator</span><span class="o">=</span><span class="n">analysis_mediator</span><span class="p">)</span>
+
+    <span class="n">analysis_report</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">CompileReport</span><span class="p">(</span><span class="n">analysis_mediator</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">analysis_report</span><span class="p">:</span>
+      <span class="n">analysis_report</span><span class="o">.</span><span class="n">time_compiled</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">GetNow</span><span class="p">()</span>
+      <span class="n">analysis_mediator</span><span class="o">.</span><span class="n">ProduceAnalysisReport</span><span class="p">(</span>
+          <span class="n">analysis_report</span><span class="p">,</span> <span class="n">plugin_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">plugin_name</span><span class="p">)</span>
+    <span class="n">analysis_mediator</span><span class="o">.</span><span class="n">ReportingComplete</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="HashTaggingAnalysisPlugin"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.interface.HashTaggingAnalysisPlugin">[docs]</a><span class="k">class</span> <span class="nc">HashTaggingAnalysisPlugin</span><span class="p">(</span><span class="n">AnalysisPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;An interface for plugins that tag events based on the source file hash.</span>
+
+<span class="sd">  An implementation of this class should be paired with an implementation of</span>
+<span class="sd">  the HashAnalyzer interface.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    hash_analysis_queue: A queue (instance of Queue.Queue) that contains</span>
+<span class="sd">                         the results of analysis of file hashes.</span>
+<span class="sd">    hash_queue: A queue (instance of Queue.Queue) that contains file hashes.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="c1"># The event data types the plugin will collect hashes from. Subclasses</span>
+  <span class="c1"># must override this attribute.</span>
+  <span class="n">DATA_TYPES</span> <span class="o">=</span> <span class="p">[]</span>
+  <span class="c1"># The plugin will select hashes from the event objects from these attributes,</span>
+  <span class="c1"># in priority order. More collision-resistant hashing algorithms should be</span>
+  <span class="c1"># preferred over less resistant algorithms.</span>
+  <span class="n">REQUIRED_HASH_ATTRIBUTES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span>
+      <span class="p">[</span><span class="s1">u&#39;sha256_hash&#39;</span><span class="p">,</span> <span class="s1">u&#39;sha1_hash&#39;</span><span class="p">,</span> <span class="s1">u&#39;md5_hash&#39;</span><span class="p">])</span>
+  <span class="c1"># The default number of seconds for the plugin to wait for analysis results</span>
+  <span class="c1"># to be added to the hash_analysis_queue by the analyzer thread.</span>
+  <span class="n">DEFAULT_QUEUE_TIMEOUT</span> <span class="o">=</span> <span class="mi">4</span>
+  <span class="n">SECONDS_BETWEEN_STATUS_LOG_MESSAGES</span> <span class="o">=</span> <span class="mi">30</span>
+  <span class="c1"># Hashing analysis plugins can take a long time to run, so set this by</span>
+  <span class="c1"># default.</span>
+  <span class="n">LONG_RUNNING_PLUGIN</span> <span class="o">=</span> <span class="bp">True</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_queue</span><span class="p">,</span> <span class="n">analyzer_class</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a hash tagging analysis plugin.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      incoming_queue: A queue that is used to listen for incoming events.</span>
+<span class="sd">      analyzer_class: A subclass of HashAnalyzer that will be instantiated</span>
+<span class="sd">                      by the plugin.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">HashTaggingAnalysisPlugin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">incoming_queue</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_analysis_queue_timeout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_QUEUE_TIMEOUT</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_analyzer_started</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_event_uuids_by_pathspec</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_hash_pathspecs</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_requester_class</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_time_of_last_status_log</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">hash_analysis_queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">hash_queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_analyzer</span> <span class="o">=</span> <span class="n">analyzer_class</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hash_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hash_analysis_queue</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_GenerateTextLine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analysis_mediator</span><span class="p">,</span> <span class="n">pathspec</span><span class="p">,</span> <span class="n">tag_strings</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generates a line of text regarding the plugins findings.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      analysis_mediator: The analysis mediator object (instance of</span>
+<span class="sd">                         AnalysisMediator).</span>
+<span class="sd">      pathspec: The pathspec (instance of dfvfs.PathSpec) whose hash was</span>
+<span class="sd">                looked up by the plugin.</span>
+<span class="sd">      tag_strings: A list of strings describing the plugin&#39;s results for a given</span>
+<span class="sd">                   pathspec.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">display_name</span> <span class="o">=</span> <span class="n">analysis_mediator</span><span class="o">.</span><span class="n">GetDisplayName</span><span class="p">(</span><span class="n">pathspec</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s1">u&#39;{0:s}: {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">display_name</span><span class="p">,</span> <span class="s1">u&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tag_strings</span><span class="p">))</span>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="HashTaggingAnalysisPlugin.GenerateTagStrings"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.interface.HashTaggingAnalysisPlugin.GenerateTagStrings">[docs]</a>  <span class="k">def</span> <span class="nf">GenerateTagStrings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hash_information</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Generates a list of strings to tag events with.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      hash_information: An object that encapsulates the result of the</span>
+<span class="sd">                        analysis of a hash, as returned by the Analyze() method</span>
+<span class="sd">                        of the analyzer class associated with this plugin.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of string tags to apply to events.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+  <span class="k">def</span> <span class="nf">_CreateTag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_uuid</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates an event tag.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_uuid: The UUID of the event that should be tagged.</span>
+<span class="sd">      labels: A list of strings that contains the labels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">event_tag</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">EventTag</span><span class="p">(</span>
+        <span class="n">comment</span><span class="o">=</span><span class="s1">u&#39;Tag applied by {0:s} analysis plugin&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">),</span>
+        <span class="n">event_uuid</span><span class="o">=</span><span class="n">event_uuid</span><span class="p">)</span>
+    <span class="n">event_tag</span><span class="o">.</span><span class="n">AddLabels</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">event_tag</span>
+
+  <span class="k">def</span> <span class="nf">_HandleHashAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hash_analysis</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Deals with a the results of the analysis of a hash.</span>
+
+<span class="sd">    This method ensures that tag strings are generated for the hash,</span>
+<span class="sd">    then tags all events derived from files with that hash.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      hash_analysis: The the hash analysis plugin&#39;s results for a given hash</span>
+<span class="sd">                     (instance of HashAnalysis).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A tuple of:</span>
+<span class="sd">        pathspecs: A list of pathspecs (instances of dfvfs.PathSpec) that had</span>
+<span class="sd">                   the hash value looked up.</span>
+<span class="sd">        tag_strings: A list of strings that corresponds to the hash value that</span>
+<span class="sd">                     was looked up.</span>
+<span class="sd">        tags: A list of event tags (instances of EventTag) for all events that</span>
+<span class="sd">              were extracted from the path specifictions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tags</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">event_uuids</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">tag_strings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GenerateTagStrings</span><span class="p">(</span><span class="n">hash_analysis</span><span class="o">.</span><span class="n">hash_information</span><span class="p">)</span>
+    <span class="n">pathspecs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash_pathspecs</span><span class="p">[</span><span class="n">hash_analysis</span><span class="o">.</span><span class="n">subject_hash</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">pathspec</span> <span class="ow">in</span> <span class="n">pathspecs</span><span class="p">:</span>
+      <span class="n">event_uuids</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_event_uuids_by_pathspec</span><span class="p">[</span><span class="n">pathspec</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">event_uuid</span> <span class="ow">in</span> <span class="n">event_uuids</span><span class="p">:</span>
+      <span class="n">tag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CreateTag</span><span class="p">(</span><span class="n">event_uuid</span><span class="p">,</span> <span class="n">tag_strings</span><span class="p">)</span>
+      <span class="n">tags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pathspecs</span><span class="p">,</span> <span class="n">tag_strings</span><span class="p">,</span> <span class="n">tags</span>
+
+  <span class="k">def</span> <span class="nf">_EnsureRequesterStarted</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks if the analyzer is running and starts it if not.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_analyzer_started</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_analyzer</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_analyzer_started</span> <span class="o">=</span> <span class="bp">True</span>
+
+<div class="viewcode-block" id="HashTaggingAnalysisPlugin.ExamineEvent"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.interface.HashTaggingAnalysisPlugin.ExamineEvent">[docs]</a>  <span class="k">def</span> <span class="nf">ExamineEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analysis_mediator</span><span class="p">,</span> <span class="n">event_object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Evaluates whether an event contains the appropriate data for a hash</span>
+<span class="sd">    lookup.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      analysis_mediator: The analysis mediator object (instance of</span>
+<span class="sd">                         AnalysisMediator).</span>
+<span class="sd">      event_object: An event object (instance of EventObject).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_EnsureRequesterStarted</span><span class="p">()</span>
+    <span class="n">pathspec</span> <span class="o">=</span> <span class="n">event_object</span><span class="o">.</span><span class="n">pathspec</span>
+    <span class="n">event_uuids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_event_uuids_by_pathspec</span><span class="p">[</span><span class="n">pathspec</span><span class="p">]</span>
+    <span class="n">event_uuids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event_object</span><span class="o">.</span><span class="n">uuid</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">event_object</span><span class="o">.</span><span class="n">data_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">DATA_TYPES</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">REQUIRED_HASH_ATTRIBUTES</span><span class="p">:</span>
+        <span class="n">hash_for_lookup</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">hash_for_lookup</span><span class="p">:</span>
+          <span class="k">continue</span>
+        <span class="n">pathspecs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash_pathspecs</span><span class="p">[</span><span class="n">hash_for_lookup</span><span class="p">]</span>
+        <span class="n">pathspecs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pathspec</span><span class="p">)</span>
+        <span class="c1"># There may be multiple pathspecs that have the same hash. We only</span>
+        <span class="c1"># want to look them up once.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">pathspecs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">hash_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">hash_for_lookup</span><span class="p">)</span>
+        <span class="k">return</span>
+      <span class="n">warning_message</span> <span class="o">=</span> <span class="p">(</span>
+          <span class="s1">u&#39;Event with ID {0:s} had none of the required attributes &#39;</span>
+          <span class="s1">u&#39;{1:s}.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">event_object</span><span class="o">.</span><span class="n">uuid</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">REQUIRED_HASH_ATTRIBUTES</span><span class="p">)</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">warning_message</span><span class="p">)</span></div>
+
+  <span class="k">def</span> <span class="nf">_ContinueReportCompilation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines if the plugin should continue trying to compile the report.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      True if the plugin should continue, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">analyzer_alive</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_analyzer</span><span class="o">.</span><span class="n">is_alive</span><span class="p">()</span>
+    <span class="n">hash_queue_has_tasks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hash_queue</span><span class="o">.</span><span class="n">unfinished_tasks</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="n">analysis_queue</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">hash_analysis_queue</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">analyzer_alive</span> <span class="ow">and</span> <span class="n">hash_queue_has_tasks</span><span class="p">)</span> <span class="ow">or</span> <span class="n">analysis_queue</span>
+
+<div class="viewcode-block" id="HashTaggingAnalysisPlugin.EstimateTimeRemaining"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.interface.HashTaggingAnalysisPlugin.EstimateTimeRemaining">[docs]</a>  <span class="k">def</span> <span class="nf">EstimateTimeRemaining</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Estimate how long until all hashes have been analyzed.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The estimated number of seconds until all hashes have been analyzed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">number_of_hashes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hash_queue</span><span class="o">.</span><span class="n">qsize</span><span class="p">()</span>
+    <span class="n">hashes_per_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_analyzer</span><span class="o">.</span><span class="n">hashes_per_batch</span>
+    <span class="n">wait_time_per_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_analyzer</span><span class="o">.</span><span class="n">wait_after_analysis</span>
+    <span class="n">average_analysis_time</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_analyzer</span><span class="o">.</span><span class="n">seconds_spent_analyzing</span> <span class="o">/</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_analyzer</span><span class="o">.</span><span class="n">analyses_performed</span><span class="p">)</span>
+    <span class="n">batches_remaining</span> <span class="o">=</span> <span class="n">number_of_hashes</span> <span class="o">/</span> <span class="n">hashes_per_batch</span>
+    <span class="n">estimated_seconds_per_batch</span> <span class="o">=</span> <span class="n">average_analysis_time</span> <span class="o">+</span> <span class="n">wait_time_per_batch</span>
+    <span class="k">return</span> <span class="n">batches_remaining</span> <span class="o">*</span> <span class="n">estimated_seconds_per_batch</span></div>
+
+  <span class="c1"># TODO: Refactor to do this more elegantly, perhaps via callback.</span>
+  <span class="k">def</span> <span class="nf">_LogProgressUpdateIfReasonable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Prints a progress update if enough time has passed.&quot;&quot;&quot;</span>
+    <span class="n">next_log_time</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_time_of_last_status_log</span> <span class="o">+</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SECONDS_BETWEEN_STATUS_LOG_MESSAGES</span><span class="p">)</span>
+    <span class="n">current_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">current_time</span> <span class="o">&lt;</span> <span class="n">next_log_time</span><span class="p">:</span>
+      <span class="k">return</span>
+    <span class="n">completion_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">ctime</span><span class="p">(</span><span class="n">current_time</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">EstimateTimeRemaining</span><span class="p">())</span>
+    <span class="n">log_message</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="s1">u&#39;{0:s} hash analysis plugin running. {1:d} hashes in queue, &#39;</span>
+        <span class="s1">u&#39;estimated completion time {2:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hash_queue</span><span class="o">.</span><span class="n">qsize</span><span class="p">(),</span> <span class="n">completion_time</span><span class="p">))</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">log_message</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_time_of_last_status_log</span> <span class="o">=</span> <span class="n">current_time</span>
+
+<div class="viewcode-block" id="HashTaggingAnalysisPlugin.CompileReport"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.interface.HashTaggingAnalysisPlugin.CompileReport">[docs]</a>  <span class="k">def</span> <span class="nf">CompileReport</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analysis_mediator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compiles an analysis report.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      analysis_mediator: The analysis mediator object (instance of</span>
+<span class="sd">                         AnalysisMediator).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The analysis report (instance of AnalysisReport).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tags</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">lines_of_text</span> <span class="o">=</span> <span class="p">[</span><span class="s1">u&#39;{0:s} hash tagging Results&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">)]</span>
+    <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ContinueReportCompilation</span><span class="p">():</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_LogProgressUpdateIfReasonable</span><span class="p">()</span>
+        <span class="n">hash_analysis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hash_analysis_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_analysis_queue_timeout</span><span class="p">)</span>
+      <span class="k">except</span> <span class="n">Queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
+        <span class="c1"># The result queue is empty, but there could still be items that need</span>
+        <span class="c1"># to be processed by the analyzer.</span>
+        <span class="k">continue</span>
+      <span class="n">pathspecs</span><span class="p">,</span> <span class="n">tag_strings</span><span class="p">,</span> <span class="n">new_tags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_HandleHashAnalysis</span><span class="p">(</span>
+          <span class="n">hash_analysis</span><span class="p">)</span>
+      <span class="n">tags</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">new_tags</span><span class="p">)</span>
+      <span class="k">for</span> <span class="n">pathspec</span> <span class="ow">in</span> <span class="n">pathspecs</span><span class="p">:</span>
+        <span class="n">text_line</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GenerateTextLine</span><span class="p">(</span>
+            <span class="n">analysis_mediator</span><span class="p">,</span> <span class="n">pathspec</span><span class="p">,</span> <span class="n">tag_strings</span><span class="p">)</span>
+        <span class="n">lines_of_text</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">text_line</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_analyzer</span><span class="o">.</span><span class="n">SignalAbort</span><span class="p">()</span>
+
+    <span class="n">lines_of_text</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;&#39;</span><span class="p">)</span>
+    <span class="n">report_text</span> <span class="o">=</span> <span class="s1">u&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">lines_of_text</span><span class="p">)</span>
+    <span class="n">analysis_report</span> <span class="o">=</span> <span class="n">reports</span><span class="o">.</span><span class="n">AnalysisReport</span><span class="p">(</span>
+        <span class="n">plugin_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="n">report_text</span><span class="p">)</span>
+    <span class="n">analysis_report</span><span class="o">.</span><span class="n">SetTags</span><span class="p">(</span><span class="n">tags</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">analysis_report</span></div></div>
+
+
+<div class="viewcode-block" id="HashAnalyzer"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.interface.HashAnalyzer">[docs]</a><span class="k">class</span> <span class="nc">HashAnalyzer</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that defines the interfaces for hash analyzer threads.</span>
+
+<span class="sd">  This interface should be implemented once for each hash analysis plugin.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    analyses_performed: The number of analysis batches completed by this</span>
+<span class="sd">                        analyzer.</span>
+<span class="sd">    hashes_per_batch: The maximum number of hashes to analyze at once.</span>
+<span class="sd">    seconds_spent_analyzing: The number of seconds this analyzer has spent</span>
+<span class="sd">                             performing analysis (as opposed to waiting on</span>
+<span class="sd">                             queues, etc.)</span>
+<span class="sd">    wait_after_analysis: How long the analyzer will sleep for after analyzing a</span>
+<span class="sd">                         batch of hashes.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="c1"># How long to wait for new items to be added to the the input queue.</span>
+  <span class="n">EMPTY_QUEUE_WAIT_TIME</span> <span class="o">=</span> <span class="mi">4</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">hash_queue</span><span class="p">,</span> <span class="n">hash_analysis_queue</span><span class="p">,</span> <span class="n">hashes_per_batch</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+      <span class="n">wait_after_analysis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a hash analyzer.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      hash_queue: A queue (instance of Queue.queue) that contains hashes to</span>
+<span class="sd">                  be analyzed.</span>
+<span class="sd">      hash_analysis_queue: A queue (instance of Queue.queue) that the analyzer</span>
+<span class="sd">                           will append HashAnalysis objects to.</span>
+<span class="sd">      hashes_per_batch: The number of hashes to analyze at once. The default</span>
+<span class="sd">                        is 1.</span>
+<span class="sd">      wait_after_analysis: The number of seconds to wait after each batch is</span>
+<span class="sd">                           analyzed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">HashAnalyzer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_abort</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_hash_queue</span> <span class="o">=</span> <span class="n">hash_queue</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_hash_analysis_queue</span> <span class="o">=</span> <span class="n">hash_analysis_queue</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">analyses_performed</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">hashes_per_batch</span> <span class="o">=</span> <span class="n">hashes_per_batch</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">seconds_spent_analyzing</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">wait_after_analysis</span> <span class="o">=</span> <span class="n">wait_after_analysis</span>
+    <span class="c1"># Indicate that this is a daemon thread. The program will exit if only</span>
+    <span class="c1"># daemon threads are running. This thread should never block program exit.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="bp">True</span>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="HashAnalyzer.Analyze"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.interface.HashAnalyzer.Analyze">[docs]</a>  <span class="k">def</span> <span class="nf">Analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hashes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Analyzes a list of hashes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      hashes: A list of hashes (strings) to look up.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of hash analysis objects (instances of HashAnalysis).</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+  <span class="k">def</span> <span class="nf">_GetHashes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_queue</span><span class="p">,</span> <span class="n">max_hashes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves a list of items from a queue.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      target_queue: The target_queue to retrieve items from.</span>
+<span class="sd">      max_hashes: The maximum number of items to retrieve from the target_queue.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of at most max_hashes elements from the target_queue. The list</span>
+<span class="sd">      may have no elements if the target_queue is empty.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">hashes</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_hashes</span><span class="p">):</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="n">target_queue</span><span class="o">.</span><span class="n">get_nowait</span><span class="p">()</span>
+      <span class="k">except</span> <span class="n">Queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
+        <span class="k">continue</span>
+      <span class="n">hashes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">hashes</span>
+
+<div class="viewcode-block" id="HashAnalyzer.SignalAbort"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.interface.HashAnalyzer.SignalAbort">[docs]</a>  <span class="k">def</span> <span class="nf">SignalAbort</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Instructs this analyzer to stop running.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_abort</span> <span class="o">=</span> <span class="bp">True</span></div>
+
+  <span class="c1"># This method is part of the threading.Thread interface, hence its name does</span>
+  <span class="c1"># not follow the style guide.</span>
+<div class="viewcode-block" id="HashAnalyzer.run"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.interface.HashAnalyzer.run">[docs]</a>  <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The method called by the threading library to start the thread.&quot;&quot;&quot;</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abort</span><span class="p">:</span>
+      <span class="n">hashes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetHashes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_hash_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hashes_per_batch</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">hashes</span><span class="p">:</span>
+        <span class="n">time_before_analysis</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">hash_analyses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Analyze</span><span class="p">(</span><span class="n">hashes</span><span class="p">)</span>
+        <span class="n">current_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seconds_spent_analyzing</span> <span class="o">+=</span> <span class="n">current_time</span> <span class="o">-</span> <span class="n">time_before_analysis</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">analyses_performed</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">for</span> <span class="n">hash_analysis</span> <span class="ow">in</span> <span class="n">hash_analyses</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_hash_analysis_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">hash_analysis</span><span class="p">)</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_hash_queue</span><span class="o">.</span><span class="n">task_done</span><span class="p">()</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wait_after_analysis</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Wait for some more hashes to be added to the queue.</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">EMPTY_QUEUE_WAIT_TIME</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="HTTPHashAnalyzer"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.interface.HTTPHashAnalyzer">[docs]</a><span class="k">class</span> <span class="nc">HTTPHashAnalyzer</span><span class="p">(</span><span class="n">HashAnalyzer</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A class that provides a useful interface for hash plugins using HTTP(S)&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hash_queue</span><span class="p">,</span> <span class="n">hash_analysis_queue</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a HTTP hash analyzer.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      hash_queue: A queue (instance of Queue.queue) that contains hashes to</span>
+<span class="sd">                  be analyzed.</span>
+<span class="sd">      hash_analysis_queue: A queue (instance of Queue.queue) that the analyzer</span>
+<span class="sd">                           will append HashAnalysis objects to.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">HTTPHashAnalyzer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">hash_queue</span><span class="p">,</span> <span class="n">hash_analysis_queue</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_checked_for_old_python_version</span> <span class="o">=</span> <span class="bp">False</span>
+
+  <span class="k">def</span> <span class="nf">_CheckPythonVersionAndDisableWarnings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks python version, and disables SSL warnings.</span>
+
+<span class="sd">    urllib3 will warn on each HTTPS request made by older versions of Python.</span>
+<span class="sd">    Rather than spamming the user, we print one warning message, then disable</span>
+<span class="sd">    warnings in urllib3.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_checked_for_old_python_version</span><span class="p">:</span>
+      <span class="k">return</span>
+    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">9</span><span class="p">):</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+          <span class="s1">u&#39;You are running a version of Python prior to 2.7.9. Your version &#39;</span>
+          <span class="s1">u&#39;of Python has multiple weaknesses in its SSL implementation that &#39;</span>
+          <span class="s1">u&#39;can allow an attacker to read or modify SSL encrypted data. &#39;</span>
+          <span class="s1">u&#39;Please update. Further SSL warnings will be suppressed. See &#39;</span>
+          <span class="s1">u&#39;https://www.python.org/dev/peps/pep-0466/ for more information.&#39;</span><span class="p">)</span>
+      <span class="c1"># Some distributions de-vendor urllib3 from requests, so we have to</span>
+      <span class="c1"># check if this has occurred and disable warnings in the correct</span>
+      <span class="c1"># package.</span>
+      <span class="k">if</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">requests</span><span class="p">,</span> <span class="s1">u&#39;packages&#39;</span><span class="p">)</span> <span class="ow">and</span>
+          <span class="nb">hasattr</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">packages</span><span class="p">,</span> <span class="s1">u&#39;urllib3&#39;</span><span class="p">)</span> <span class="ow">and</span>
+          <span class="nb">hasattr</span><span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">packages</span><span class="o">.</span><span class="n">urllib3</span><span class="p">,</span> <span class="s1">u&#39;disable_warnings&#39;</span><span class="p">)):</span>
+        <span class="n">requests</span><span class="o">.</span><span class="n">packages</span><span class="o">.</span><span class="n">urllib3</span><span class="o">.</span><span class="n">disable_warnings</span><span class="p">()</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">urllib3</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">urllib3</span><span class="p">,</span> <span class="s1">u&#39;disable_warnings&#39;</span><span class="p">):</span>
+          <span class="n">urllib3</span><span class="o">.</span><span class="n">disable_warnings</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_checked_for_old_python_version</span> <span class="o">=</span> <span class="bp">True</span>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="HTTPHashAnalyzer.Analyze"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.interface.HTTPHashAnalyzer.Analyze">[docs]</a>  <span class="k">def</span> <span class="nf">Analyze</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hashes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Analyzes a list of hashes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      hashes: A list of hashes (strings) to look up.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of hash analysis objects (instances of HashAnalysis).</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="HTTPHashAnalyzer.MakeRequestAndDecodeJSON"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.interface.HTTPHashAnalyzer.MakeRequestAndDecodeJSON">[docs]</a>  <span class="k">def</span> <span class="nf">MakeRequestAndDecodeJSON</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Make a HTTP request and decode the results as JSON.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      url: The URL to make a request to.</span>
+<span class="sd">      method: The HTTP method to use to make the request, as a string. GET and</span>
+<span class="sd">              POST are supported.</span>
+<span class="sd">      kwargs: Parameters to the requests .get() or post() methods, depending</span>
+<span class="sd">              on the value of the method parameter.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The body of the HTTP response, decoded from JSON.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      ConnectionError: If it is not possible to connect to the given URL, or it</span>
+<span class="sd">                       the request returns a HTTP error.</span>
+<span class="sd">      ValueError: If an invalid HTTP method is specified.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">method</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">u&#39;get&#39;</span><span class="p">,</span> <span class="s1">u&#39;post&#39;</span><span class="p">]:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Method {0:s} is not supported&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">url</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;https&#39;</span><span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_CheckPythonVersionAndDisableWarnings</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">u&#39;get&#39;</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">u&#39;post&#39;</span><span class="p">:</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+      <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">ConnectionError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">error_string</span> <span class="o">=</span> <span class="s1">u&#39;Unable to connect to {0:s}: {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">url</span><span class="p">,</span> <span class="n">exception</span><span class="p">)</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">(</span><span class="n">error_string</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">requests</span><span class="o">.</span><span class="n">HTTPError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">error_string</span> <span class="o">=</span> <span class="s1">u&#39;{0:s} returned a HTTP error: {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">url</span><span class="p">,</span> <span class="n">exception</span><span class="p">)</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">(</span><span class="n">error_string</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="HashAnalysis"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.interface.HashAnalysis">[docs]</a><span class="k">class</span> <span class="nc">HashAnalysis</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A class that holds information about a hash.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    hash_information: An object containing information about the hash.</span>
+<span class="sd">    subject_hash: The hash that was analyzed.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subject_hash</span><span class="p">,</span> <span class="n">hash_information</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a HashAnalysis object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      subject_hash: The hash that the hash_information relates to.</span>
+<span class="sd">      hash_information: An object containing information about the hash.</span>
+<span class="sd">                        This object will be used by the _GenerateTagString</span>
+<span class="sd">                        method in the HashTaggingAnalysisPlugin to tag events</span>
+<span class="sd">                        that relate to the hash.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">hash_information</span> <span class="o">=</span> <span class="n">hash_information</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">subject_hash</span> <span class="o">=</span> <span class="n">subject_hash</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

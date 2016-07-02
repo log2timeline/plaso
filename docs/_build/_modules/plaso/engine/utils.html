@@ -1,0 +1,191 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.engine.utils &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.engine.utils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Engine utility functions.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">dfvfs.helpers</span> <span class="kn">import</span> <span class="n">file_system_searcher</span>
+
+
+<div class="viewcode-block" id="PathExpander"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.utils.PathExpander">[docs]</a><span class="k">class</span> <span class="nc">PathExpander</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements the path expander.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="PathExpander.ExpandPath"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.utils.PathExpander.ExpandPath">[docs]</a>  <span class="k">def</span> <span class="nf">ExpandPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">path_attributes</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Expands a path based on attributes in pre calculated values.</span>
+
+<span class="sd">       A path may contain paths that are attributes, based on calculations</span>
+<span class="sd">       from preprocessing.</span>
+
+<span class="sd">       A path attribute is defined as anything within a curly bracket, e.g.</span>
+<span class="sd">       &quot;\\System\\{my_attribute}\\Path\\Keyname&quot;. If the path attribute</span>
+<span class="sd">       my_attribute is defined its value will be replaced with the attribute</span>
+<span class="sd">       name, e.g. &quot;\\System\\MyValue\\Path\\Keyname&quot;.</span>
+
+<span class="sd">       If the path needs to have curly brackets in the path then they need</span>
+<span class="sd">       to be escaped with another curly bracket, e.g.</span>
+<span class="sd">       &quot;\\System\\{my_attribute}\\{{123-AF25-E523}}\\KeyName&quot;. In this</span>
+<span class="sd">       case the {{123-AF25-E523}} will be replaced with &quot;{123-AF25-E523}&quot;.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      path: the path before being expanded.</span>
+<span class="sd">      path_attributes: optional dictionary of path attributes.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A Registry key path that&#39;s expanded based on attribute values.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      KeyError: If an attribute name is in the key path not set in</span>
+<span class="sd">                the preprocessing object a KeyError will be raised.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path_attributes</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">path</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">expanded_path</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">path_attributes</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to expand path with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">expanded_path</span></div></div>
+
+
+<div class="viewcode-block" id="BuildFindSpecsFromFile"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.utils.BuildFindSpecsFromFile">[docs]</a><span class="k">def</span> <span class="nf">BuildFindSpecsFromFile</span><span class="p">(</span><span class="n">filter_file_path</span><span class="p">,</span> <span class="n">pre_obj</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Returns a list of find specification from a filter file.</span>
+
+<span class="sd">  Args:</span>
+<span class="sd">    filter_file_path: A path to a file that contains find specifications.</span>
+<span class="sd">    pre_obj: A preprocessing object (instance of PreprocessObject). This is</span>
+<span class="sd">             optional but when provided takes care of expanding each segment.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">find_specs</span> <span class="o">=</span> <span class="p">[]</span>
+
+  <span class="k">if</span> <span class="n">pre_obj</span><span class="p">:</span>
+    <span class="n">path_expander</span> <span class="o">=</span> <span class="n">PathExpander</span><span class="p">()</span>
+
+  <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filter_file_path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file_object</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file_object</span><span class="p">:</span>
+      <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+      <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;#&#39;</span><span class="p">):</span>
+        <span class="k">continue</span>
+
+      <span class="k">if</span> <span class="n">pre_obj</span><span class="p">:</span>
+        <span class="n">path_attributes</span> <span class="o">=</span> <span class="n">pre_obj</span><span class="o">.</span><span class="n">__dict__</span>
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">line</span> <span class="o">=</span> <span class="n">path_expander</span><span class="o">.</span><span class="n">ExpandPath</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">path_attributes</span><span class="o">=</span><span class="n">path_attributes</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+          <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">((</span>
+              <span class="s1">u&#39;Unable to use collection filter line: {0:s} with error: &#39;</span>
+              <span class="s1">u&#39;{1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+          <span class="k">continue</span>
+
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;/&#39;</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">((</span>
+            <span class="s1">u&#39;The filter string must be defined as an abolute path: &#39;</span>
+            <span class="s1">u&#39;{0:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">line</span><span class="p">))</span>
+        <span class="k">continue</span>
+
+      <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">file_path</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">rstrip</span><span class="p">()</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s1">u&#39;/&#39;</span><span class="p">)</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">file_path</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s1">u&#39;Unable to parse the filter string: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">line</span><span class="p">))</span>
+        <span class="k">continue</span>
+
+      <span class="c1"># Convert the filter paths into a list of path segments and strip</span>
+      <span class="c1"># the root path segment.</span>
+      <span class="n">path_segments</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">u&#39;/&#39;</span><span class="p">)</span>
+      <span class="n">path_segments</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+      <span class="n">find_specs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_system_searcher</span><span class="o">.</span><span class="n">FindSpec</span><span class="p">(</span>
+          <span class="n">location_regex</span><span class="o">=</span><span class="n">path_segments</span><span class="p">,</span> <span class="n">case_sensitive</span><span class="o">=</span><span class="bp">False</span><span class="p">))</span>
+
+  <span class="k">return</span> <span class="n">find_specs</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

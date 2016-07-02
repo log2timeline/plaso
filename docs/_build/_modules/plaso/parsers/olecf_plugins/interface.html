@@ -1,0 +1,205 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.olecf_plugins.interface &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../../index.html" />
+    <link rel="up" title="plaso" href="../../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.olecf_plugins.interface</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains the necessary interface for OLECF plugins.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">plugins</span>
+
+
+<div class="viewcode-block" id="OlecfPlugin"><a class="viewcode-back" href="../../../../plaso.parsers.olecf_plugins.html#plaso.parsers.olecf_plugins.interface.OlecfPlugin">[docs]</a><span class="k">class</span> <span class="nc">OlecfPlugin</span><span class="p">(</span><span class="n">plugins</span><span class="o">.</span><span class="n">BasePlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;An OLECF plugin for Plaso.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;olecf&#39;</span>
+
+  <span class="c1"># List of tables that should be present in the database, for verification.</span>
+  <span class="n">REQUIRED_ITEMS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([])</span>
+
+<div class="viewcode-block" id="OlecfPlugin.GetTimestamps"><a class="viewcode-back" href="../../../../plaso.parsers.olecf_plugins.html#plaso.parsers.olecf_plugins.interface.OlecfPlugin.GetTimestamps">[docs]</a>  <span class="k">def</span> <span class="nf">GetTimestamps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">olecf_item</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Takes an OLECF object and returns extracted timestamps.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      olecf_item: A OLECF item (instance of pyolecf.item).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A tuple of two timestamps: created and modified.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">olecf_item</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">creation_time</span> <span class="o">=</span> <span class="n">olecf_item</span><span class="o">.</span><span class="n">get_creation_time_as_integer</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">OverflowError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to read the creation time with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">exception</span><span class="p">))</span>
+      <span class="n">creation_time</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">modification_time</span> <span class="o">=</span> <span class="n">olecf_item</span><span class="o">.</span><span class="n">get_modification_time_as_integer</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">OverflowError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to read the modification time with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">exception</span><span class="p">))</span>
+      <span class="n">modification_time</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># If no useful events, return early.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">creation_time</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">modification_time</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">None</span><span class="p">,</span> <span class="bp">None</span>
+
+    <span class="c1"># Office template documents sometimes contain a creation time</span>
+    <span class="c1"># of -1 (0xffffffffffffffff).</span>
+    <span class="k">if</span> <span class="n">creation_time</span> <span class="o">==</span> <span class="mh">0xffffffffffffffff</span><span class="n">L</span><span class="p">:</span>
+      <span class="n">creation_time</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">return</span> <span class="n">creation_time</span><span class="p">,</span> <span class="n">modification_time</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="OlecfPlugin.ParseItems"><a class="viewcode-back" href="../../../../plaso.parsers.olecf_plugins.html#plaso.parsers.olecf_plugins.interface.OlecfPlugin.ParseItems">[docs]</a>  <span class="k">def</span> <span class="nf">ParseItems</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">root_item</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">items</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses OLECF items.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      root_item: Optional root item of the OLECF file.</span>
+<span class="sd">      item_names: Optional list of all items discovered in the root.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="OlecfPlugin.Process"><a class="viewcode-back" href="../../../../plaso.parsers.olecf_plugins.html#plaso.parsers.olecf_plugins.interface.OlecfPlugin.Process">[docs]</a>  <span class="k">def</span> <span class="nf">Process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">root_item</span><span class="p">,</span> <span class="n">item_names</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determine if this is the right plugin for this OLECF file.</span>
+
+<span class="sd">    This function takes a list of sub items found in the root of a</span>
+<span class="sd">    OLECF file and compares that to a list of required items defined</span>
+<span class="sd">    in this plugin.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      root_item: Optional root item of the OLECF file.</span>
+<span class="sd">      item_names: Optional list of all items discovered in the root.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      errors.WrongPlugin: If the set of required items is not a subset</span>
+<span class="sd">                          of the available items.</span>
+<span class="sd">      ValueError: If the root_item or items are not set.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">root_item</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">or</span> <span class="n">item_names</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Root item or items are not set.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">item_names</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">REQUIRED_ITEMS</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">WrongPlugin</span><span class="p">(</span>
+          <span class="s1">u&#39;Not the correct items for: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">))</span>
+
+    <span class="c1"># This will raise if unhandled keyword arguments are passed.</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">OlecfPlugin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">)</span>
+
+    <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">item_string</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">REQUIRED_ITEMS</span><span class="p">:</span>
+      <span class="n">item</span> <span class="o">=</span> <span class="n">root_item</span><span class="o">.</span><span class="n">get_sub_item_by_name</span><span class="p">(</span><span class="n">item_string</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">item</span><span class="p">:</span>
+        <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">ParseItems</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">root_item</span><span class="o">=</span><span class="n">root_item</span><span class="p">,</span> <span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="OleDefinitions"><a class="viewcode-back" href="../../../../plaso.parsers.olecf_plugins.html#plaso.parsers.olecf_plugins.interface.OleDefinitions">[docs]</a><span class="k">class</span> <span class="nc">OleDefinitions</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for OLE definitions.&quot;&quot;&quot;</span>
+
+  <span class="n">VT_I2</span> <span class="o">=</span> <span class="mh">0x0002</span>
+  <span class="n">VT_I4</span> <span class="o">=</span> <span class="mh">0x0003</span>
+  <span class="n">VT_BOOL</span> <span class="o">=</span> <span class="mh">0x000b</span>
+  <span class="n">VT_LPSTR</span> <span class="o">=</span> <span class="mh">0x001e</span>
+  <span class="n">VT_LPWSTR</span> <span class="o">=</span> <span class="mh">0x001e</span>
+  <span class="n">VT_FILETIME</span> <span class="o">=</span> <span class="mh">0x0040</span>
+  <span class="n">VT_CF</span> <span class="o">=</span> <span class="mh">0x0047</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,402 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.sqlite_plugins.chrome &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../../index.html" />
+    <link rel="up" title="plaso" href="../../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.sqlite_plugins.chrome</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Parser for the Google Chrome History files.</span>
+
+<span class="sd">   The Chrome History is stored in SQLite database files named History</span>
+<span class="sd">   and Archived History. Where the Archived History does not contain</span>
+<span class="sd">   the downloads table.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">sqlite</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers.sqlite_plugins</span> <span class="kn">import</span> <span class="n">interface</span>
+
+
+<div class="viewcode-block" id="ChromeHistoryFileDownloadedEvent"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.chrome.ChromeHistoryFileDownloadedEvent">[docs]</a><span class="k">class</span> <span class="nc">ChromeHistoryFileDownloadedEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">TimestampEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for a Chrome History file downloaded event.&quot;&quot;&quot;</span>
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;chrome:history:file_downloaded&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">row_id</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">full_path</span><span class="p">,</span> <span class="n">received_bytes</span><span class="p">,</span> <span class="n">total_bytes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timestamp: The timestamp value.</span>
+<span class="sd">      row_id: The identifier of the corresponding row.</span>
+<span class="sd">      url: The URL of the downloaded file.</span>
+<span class="sd">      full_path: The full path where the file was downloaded to.</span>
+<span class="sd">      received_bytes: The number of bytes received while downloading.</span>
+<span class="sd">      total_bytes: The total number of bytes to download.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">ChromeHistoryFileDownloadedEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">FILE_DOWNLOADED</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">row_id</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">full_path</span> <span class="o">=</span> <span class="n">full_path</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">received_bytes</span> <span class="o">=</span> <span class="n">received_bytes</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">total_bytes</span> <span class="o">=</span> <span class="n">total_bytes</span></div>
+
+
+<div class="viewcode-block" id="ChromeHistoryPageVisitedEvent"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.chrome.ChromeHistoryPageVisitedEvent">[docs]</a><span class="k">class</span> <span class="nc">ChromeHistoryPageVisitedEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">WebKitTimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for a Chrome History page visited event.&quot;&quot;&quot;</span>
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;chrome:history:page_visited&#39;</span>
+
+  <span class="c1"># TODO: refactor extra to be conditional arguments.</span>
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">webkit_time</span><span class="p">,</span> <span class="n">row_id</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">hostname</span><span class="p">,</span> <span class="n">typed_count</span><span class="p">,</span> <span class="n">from_visit</span><span class="p">,</span>
+      <span class="n">extra</span><span class="p">,</span> <span class="n">visit_source</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      webkit_time: The WebKit time value.</span>
+<span class="sd">      row_id: The identifier of the corresponding row.</span>
+<span class="sd">      url: The URL of the visited page.</span>
+<span class="sd">      title: The title of the visited page.</span>
+<span class="sd">      hostname: The visited hostname.</span>
+<span class="sd">      typed_count: The number of characters of the URL that were typed.</span>
+<span class="sd">      from_visit: The URL where the visit originated from.</span>
+<span class="sd">      extra: String containing extra event data.</span>
+<span class="sd">      visit_source: The source of the page visit, if defined.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">ChromeHistoryPageVisitedEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">webkit_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">PAGE_VISITED</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">row_id</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">title</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">hostname</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">typed_count</span> <span class="o">=</span> <span class="n">typed_count</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">from_visit</span> <span class="o">=</span> <span class="n">from_visit</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">extra</span> <span class="o">=</span> <span class="n">extra</span>
+    <span class="k">if</span> <span class="n">visit_source</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">visit_source</span> <span class="o">=</span> <span class="n">visit_source</span></div>
+
+
+<div class="viewcode-block" id="ChromeHistoryPlugin"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.chrome.ChromeHistoryPlugin">[docs]</a><span class="k">class</span> <span class="nc">ChromeHistoryPlugin</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">SQLitePlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parse Chrome Archived History and History files.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;chrome_history&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for Chrome history SQLite database files.&#39;</span>
+
+  <span class="c1"># Define the needed queries.</span>
+  <span class="n">QUERIES</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="p">((</span><span class="s1">u&#39;SELECT urls.id, urls.url, urls.title, urls.visit_count, &#39;</span>
+        <span class="s1">u&#39;urls.typed_count, urls.last_visit_time, urls.hidden, visits.&#39;</span>
+        <span class="s1">u&#39;visit_time, visits.from_visit, visits.transition, visits.id &#39;</span>
+        <span class="s1">u&#39;AS visit_id FROM urls, visits WHERE urls.id = visits.url ORDER &#39;</span>
+        <span class="s1">u&#39;BY visits.visit_time&#39;</span><span class="p">),</span> <span class="s1">u&#39;ParseLastVisitedRow&#39;</span><span class="p">),</span>
+      <span class="p">((</span><span class="s1">u&#39;SELECT downloads.id AS id, downloads.start_time,&#39;</span>
+        <span class="s1">u&#39;downloads.target_path, downloads_url_chains.url, &#39;</span>
+        <span class="s1">u&#39;downloads.received_bytes, downloads.total_bytes FROM downloads,&#39;</span>
+        <span class="s1">u&#39; downloads_url_chains WHERE downloads.id = &#39;</span>
+        <span class="s1">u&#39;downloads_url_chains.id&#39;</span><span class="p">),</span> <span class="s1">u&#39;ParseNewFileDownloadedRow&#39;</span><span class="p">),</span>
+      <span class="p">((</span><span class="s1">u&#39;SELECT id, full_path, url, start_time, received_bytes, &#39;</span>
+        <span class="s1">u&#39;total_bytes,state FROM downloads&#39;</span><span class="p">),</span> <span class="s1">u&#39;ParseFileDownloadedRow&#39;</span><span class="p">)]</span>
+
+  <span class="c1"># The required tables common to Archived History and History.</span>
+  <span class="n">REQUIRED_TABLES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+      <span class="s1">u&#39;keyword_search_terms&#39;</span><span class="p">,</span> <span class="s1">u&#39;meta&#39;</span><span class="p">,</span> <span class="s1">u&#39;urls&#39;</span><span class="p">,</span> <span class="s1">u&#39;visits&#39;</span><span class="p">,</span> <span class="s1">u&#39;visit_source&#39;</span><span class="p">])</span>
+
+  <span class="c1"># Queries for cache building.</span>
+  <span class="n">URL_CACHE_QUERY</span> <span class="o">=</span> <span class="p">(</span>
+      <span class="s1">u&#39;SELECT visits.id AS id, urls.url, urls.title FROM &#39;</span>
+      <span class="s1">u&#39;visits, urls WHERE urls.id = visits.url&#39;</span><span class="p">)</span>
+  <span class="n">SYNC_CACHE_QUERY</span> <span class="o">=</span> <span class="s1">u&#39;SELECT id, source FROM visit_source&#39;</span>
+
+  <span class="c1"># The following definition for values can be found here:</span>
+  <span class="c1"># http://src.chromium.org/svn/trunk/src/content/public/common/ \</span>
+  <span class="c1"># page_transition_types_list.h</span>
+  <span class="n">PAGE_TRANSITION</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="mi">0</span><span class="p">:</span> <span class="s1">u&#39;LINK&#39;</span><span class="p">,</span>
+      <span class="mi">1</span><span class="p">:</span> <span class="s1">u&#39;TYPED&#39;</span><span class="p">,</span>
+      <span class="mi">2</span><span class="p">:</span> <span class="s1">u&#39;AUTO_BOOKMARK&#39;</span><span class="p">,</span>
+      <span class="mi">3</span><span class="p">:</span> <span class="s1">u&#39;AUTO_SUBFRAME&#39;</span><span class="p">,</span>
+      <span class="mi">4</span><span class="p">:</span> <span class="s1">u&#39;MANUAL_SUBFRAME&#39;</span><span class="p">,</span>
+      <span class="mi">5</span><span class="p">:</span> <span class="s1">u&#39;GENERATED&#39;</span><span class="p">,</span>
+      <span class="mi">6</span><span class="p">:</span> <span class="s1">u&#39;START_PAGE&#39;</span><span class="p">,</span>
+      <span class="mi">7</span><span class="p">:</span> <span class="s1">u&#39;FORM_SUBMIT&#39;</span><span class="p">,</span>
+      <span class="mi">8</span><span class="p">:</span> <span class="s1">u&#39;RELOAD&#39;</span><span class="p">,</span>
+      <span class="mi">9</span><span class="p">:</span> <span class="s1">u&#39;KEYWORD&#39;</span><span class="p">,</span>
+      <span class="mi">10</span><span class="p">:</span> <span class="s1">u&#39;KEYWORD_GENERATED &#39;</span>
+  <span class="p">}</span>
+
+  <span class="n">TRANSITION_LONGER</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="mi">0</span><span class="p">:</span> <span class="s1">u&#39;User clicked a link&#39;</span><span class="p">,</span>
+      <span class="mi">1</span><span class="p">:</span> <span class="s1">u&#39;User typed the URL in the URL bar&#39;</span><span class="p">,</span>
+      <span class="mi">2</span><span class="p">:</span> <span class="s1">u&#39;Got through a suggestion in the UI&#39;</span><span class="p">,</span>
+      <span class="mi">3</span><span class="p">:</span> <span class="p">(</span><span class="s1">u&#39;Content automatically loaded in a non-toplevel frame - user may &#39;</span>
+          <span class="s1">u&#39;not realize&#39;</span><span class="p">),</span>
+      <span class="mi">4</span><span class="p">:</span> <span class="s1">u&#39;Subframe explicitly requested by the user&#39;</span><span class="p">,</span>
+      <span class="mi">5</span><span class="p">:</span> <span class="p">(</span><span class="s1">u&#39;User typed in the URL bar and selected an entry from the list - &#39;</span>
+          <span class="s1">u&#39;such as a search bar&#39;</span><span class="p">),</span>
+      <span class="mi">6</span><span class="p">:</span> <span class="s1">u&#39;The start page of the browser&#39;</span><span class="p">,</span>
+      <span class="mi">7</span><span class="p">:</span> <span class="s1">u&#39;A form the user has submitted values to&#39;</span><span class="p">,</span>
+      <span class="mi">8</span><span class="p">:</span> <span class="p">(</span><span class="s1">u&#39;The user reloaded the page, eg by hitting the reload button or &#39;</span>
+          <span class="s1">u&#39;restored a session&#39;</span><span class="p">),</span>
+      <span class="mi">9</span><span class="p">:</span> <span class="p">(</span><span class="s1">u&#39;URL what was generated from a replaceable keyword other than the &#39;</span>
+          <span class="s1">u&#39;default search provider&#39;</span><span class="p">),</span>
+      <span class="mi">10</span><span class="p">:</span> <span class="s1">u&#39;Corresponds to a visit generated from a KEYWORD&#39;</span>
+  <span class="p">}</span>
+
+  <span class="c1"># The following is the values for the source enum found in the visit_source</span>
+  <span class="c1"># table and describes where a record originated from (if it originates from a</span>
+  <span class="c1"># different storage than locally generated).</span>
+  <span class="c1"># The source can be found here:</span>
+  <span class="c1"># http://src.chromium.org/svn/trunk/src/chrome/browser/history/\</span>
+  <span class="c1"># history_types.h</span>
+  <span class="n">VISIT_SOURCE</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="mi">0</span><span class="p">:</span> <span class="s1">u&#39;SOURCE_SYNCED&#39;</span><span class="p">,</span>
+      <span class="mi">1</span><span class="p">:</span> <span class="s1">u&#39;SOURCE_BROWSED&#39;</span><span class="p">,</span>
+      <span class="mi">2</span><span class="p">:</span> <span class="s1">u&#39;SOURCE_EXTENSION&#39;</span><span class="p">,</span>
+      <span class="mi">3</span><span class="p">:</span> <span class="s1">u&#39;SOURCE_FIREFOX_IMPORTED&#39;</span><span class="p">,</span>
+      <span class="mi">4</span><span class="p">:</span> <span class="s1">u&#39;SOURCE_IE_IMPORTED&#39;</span><span class="p">,</span>
+      <span class="mi">5</span><span class="p">:</span> <span class="s1">u&#39;SOURCE_SAFARI_IMPORTED&#39;</span>
+  <span class="p">}</span>
+
+  <span class="n">CORE_MASK</span> <span class="o">=</span> <span class="mh">0xff</span>
+
+  <span class="k">def</span> <span class="nf">_GetHostname</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hostname</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a hostname from a full URL.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">hostname</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;http&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">hostname</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;ftp&#39;</span><span class="p">):</span>
+      <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">uri</span> <span class="o">=</span> <span class="n">hostname</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s1">u&#39;//&#39;</span><span class="p">)</span>
+      <span class="n">hostname</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">uri</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s1">u&#39;/&#39;</span><span class="p">)</span>
+
+      <span class="k">return</span> <span class="n">hostname</span>
+
+    <span class="k">if</span> <span class="n">hostname</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;about&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">hostname</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;chrome&#39;</span><span class="p">):</span>
+      <span class="n">site</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">hostname</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s1">u&#39;/&#39;</span><span class="p">)</span>
+      <span class="k">return</span> <span class="n">site</span>
+
+    <span class="k">return</span> <span class="n">hostname</span>
+
+  <span class="k">def</span> <span class="nf">_GetUrl</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">url</span><span class="p">,</span> <span class="n">cache</span><span class="p">,</span> <span class="n">database</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return an URL from a reference to an entry in the from_visit table.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">url</span><span class="p">:</span>
+      <span class="k">return</span> <span class="s1">u&#39;&#39;</span>
+
+    <span class="n">url_cache_results</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="s1">u&#39;url&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">url_cache_results</span><span class="p">:</span>
+      <span class="n">result_set</span> <span class="o">=</span> <span class="n">database</span><span class="o">.</span><span class="n">Query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">URL_CACHE_QUERY</span><span class="p">)</span>
+
+      <span class="c1"># Note that pysqlite does not accept a Unicode string in row[&#39;string&#39;] and</span>
+      <span class="c1"># will raise &quot;IndexError: Index must be int or string&quot;.</span>
+      <span class="n">cache</span><span class="o">.</span><span class="n">CacheQueryResults</span><span class="p">(</span>
+          <span class="n">result_set</span><span class="p">,</span> <span class="s1">&#39;url&#39;</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;url&#39;</span><span class="p">,</span> <span class="s1">&#39;title&#39;</span><span class="p">))</span>
+      <span class="n">url_cache_results</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="s1">u&#39;url&#39;</span><span class="p">)</span>
+
+    <span class="n">reference_url</span><span class="p">,</span> <span class="n">reference_title</span> <span class="o">=</span> <span class="n">url_cache_results</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="p">[</span><span class="s1">u&#39;&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">reference_url</span><span class="p">:</span>
+      <span class="k">return</span> <span class="s1">u&#39;&#39;</span>
+
+    <span class="k">return</span> <span class="s1">u&#39;{0:s} ({1:s})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">reference_url</span><span class="p">,</span> <span class="n">reference_title</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_GetVisitSource</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visit_id</span><span class="p">,</span> <span class="n">cache</span><span class="p">,</span> <span class="n">database</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a string denoting the visit source type if possible.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      visit_id: The ID from the visits table for the particular record.</span>
+<span class="sd">      cache: A cache object (instance of SQLiteCache).</span>
+<span class="sd">      database: A database object (instance of SQLiteDatabase).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A string with the visit source, None if not found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">visit_id</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">sync_cache_results</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="s1">u&#39;sync&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">sync_cache_results</span><span class="p">:</span>
+      <span class="n">result_set</span> <span class="o">=</span> <span class="n">database</span><span class="o">.</span><span class="n">Query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SYNC_CACHE_QUERY</span><span class="p">)</span>
+
+      <span class="c1"># Note that pysqlite does not accept a Unicode string in row[&#39;string&#39;] and</span>
+      <span class="c1"># will raise &quot;IndexError: Index must be int or string&quot;.</span>
+      <span class="n">cache</span><span class="o">.</span><span class="n">CacheQueryResults</span><span class="p">(</span>
+          <span class="n">result_set</span><span class="p">,</span> <span class="s1">&#39;sync&#39;</span><span class="p">,</span> <span class="s1">&#39;id&#39;</span><span class="p">,</span> <span class="p">(</span><span class="s1">&#39;source&#39;</span><span class="p">,))</span>
+      <span class="n">sync_cache_results</span> <span class="o">=</span> <span class="n">cache</span><span class="o">.</span><span class="n">GetResults</span><span class="p">(</span><span class="s1">u&#39;sync&#39;</span><span class="p">)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="n">sync_cache_results</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">visit_id</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">results</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">VISIT_SOURCE</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ChromeHistoryPlugin.ParseFileDownloadedRow"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.chrome.ChromeHistoryPlugin.ParseFileDownloadedRow">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileDownloadedRow</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a file downloaded row.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      row: The row resulting from the query.</span>
+<span class="sd">      query: Optional query string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Note that pysqlite does not accept a Unicode string in row[&#39;string&#39;] and</span>
+    <span class="c1"># will raise &quot;IndexError: Index must be int or string&quot;.</span>
+
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromPosixTime</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;start_time&#39;</span><span class="p">])</span>
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">ChromeHistoryFileDownloadedEvent</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;full_path&#39;</span><span class="p">],</span>
+        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;received_bytes&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;total_bytes&#39;</span><span class="p">])</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ChromeHistoryPlugin.ParseNewFileDownloadedRow"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.chrome.ChromeHistoryPlugin.ParseNewFileDownloadedRow">[docs]</a>  <span class="k">def</span> <span class="nf">ParseNewFileDownloadedRow</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a file downloaded row.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      row: The row resulting from the query.</span>
+<span class="sd">      query: Optional query string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Note that pysqlite does not accept a Unicode string in row[&#39;string&#39;] and</span>
+    <span class="c1"># will raise &quot;IndexError: Index must be int or string&quot;.</span>
+
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromWebKitTime</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;start_time&#39;</span><span class="p">])</span>
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">ChromeHistoryFileDownloadedEvent</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;target_path&#39;</span><span class="p">],</span>
+        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;received_bytes&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;total_bytes&#39;</span><span class="p">])</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ChromeHistoryPlugin.ParseLastVisitedRow"><a class="viewcode-back" href="../../../../plaso.parsers.sqlite_plugins.html#plaso.parsers.sqlite_plugins.chrome.ChromeHistoryPlugin.ParseLastVisitedRow">[docs]</a>  <span class="k">def</span> <span class="nf">ParseLastVisitedRow</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cache</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">database</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+      <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a last visited row.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      row: The row resulting from the query.</span>
+<span class="sd">      query: Optional query string.</span>
+<span class="sd">      cache: Optional cache object (instance of SQLiteCache).</span>
+<span class="sd">      database: Optional database object (instance of SQLiteDatabase).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Note that pysqlite does not accept a Unicode string in row[&#39;string&#39;] and</span>
+    <span class="c1"># will raise &quot;IndexError: Index must be int or string&quot;.</span>
+
+    <span class="n">extras</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">transition_nr</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;transition&#39;</span><span class="p">]</span> <span class="o">&amp;</span> <span class="bp">self</span><span class="o">.</span><span class="n">CORE_MASK</span>
+    <span class="n">page_transition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PAGE_TRANSITION</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">transition_nr</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">page_transition</span><span class="p">:</span>
+      <span class="n">extras</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;Type: [{0:s} - {1:s}]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">page_transition</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">TRANSITION_LONGER</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">transition_nr</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;hidden&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">u&#39;1&#39;</span><span class="p">:</span>
+      <span class="n">extras</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;(url hidden)&#39;</span><span class="p">)</span>
+
+    <span class="c1"># TODO: move to formatter.</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;typed_count&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">multi</span> <span class="o">=</span> <span class="s1">u&#39;s&#39;</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">multi</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+
+      <span class="n">extras</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;(type count {1:d} time{0:s})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">multi</span><span class="p">,</span> <span class="n">count</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">extras</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">u&#39;(URL not typed directly - no typed count)&#39;</span><span class="p">)</span>
+
+    <span class="n">visit_source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetVisitSource</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;visit_id&#39;</span><span class="p">],</span> <span class="n">cache</span><span class="p">,</span> <span class="n">database</span><span class="p">)</span>
+
+    <span class="c1"># TODO: replace extras by conditional formatting.</span>
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">ChromeHistoryPageVisitedEvent</span><span class="p">(</span>
+        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;visit_time&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">],</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_GetHostname</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]),</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;typed_count&#39;</span><span class="p">],</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_GetUrl</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;from_visit&#39;</span><span class="p">],</span> <span class="n">cache</span><span class="p">,</span> <span class="n">database</span><span class="p">),</span> <span class="s1">u&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">extras</span><span class="p">),</span>
+        <span class="n">visit_source</span><span class="p">)</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span></div></div>
+
+
+<span class="n">sqlite</span><span class="o">.</span><span class="n">SQLiteParser</span><span class="o">.</span><span class="n">RegisterPlugin</span><span class="p">(</span><span class="n">ChromeHistoryPlugin</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

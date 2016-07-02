@@ -1,0 +1,304 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.recycler &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.recycler</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Parser for Windows Recycle files, INFO2 and $I/$R pairs.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">construct</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">binary</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+
+
+<div class="viewcode-block" id="WinRecycleEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.recycler.WinRecycleEvent">[docs]</a><span class="k">class</span> <span class="nc">WinRecycleEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">FiletimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for a Windows Recycle Bin event object.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;windows:metadata:deleted_item&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">filetime</span><span class="p">,</span> <span class="n">filename_string</span><span class="p">,</span> <span class="n">filename_utf</span><span class="p">,</span> <span class="n">record_information</span><span class="p">,</span>
+      <span class="n">record_size</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      filetime: the FILETIME timestamp value.</span>
+<span class="sd">      filename_string: the short filename as an extended ASCII string (codepage</span>
+<span class="sd">                      encoded).</span>
+<span class="sd">      filename_utf: the filename in Unicode.</span>
+<span class="sd">      record_information: the record information (instance of</span>
+<span class="sd">                          construct.Struct).</span>
+<span class="sd">      record_size: the size of the record.</span>
+<span class="sd">      encoding: optional codepage used to encode the string with.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: pass values directly instead of reading record.</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">WinRecycleEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">filetime</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">DELETED_TIME</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">u&#39;index&#39;</span> <span class="ow">in</span> <span class="n">record_information</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">record_information</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;index&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="n">record_size</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">index</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">drive_number</span> <span class="o">=</span> <span class="n">record_information</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;drive&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">file_size</span> <span class="o">=</span> <span class="n">record_information</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;filesize&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">filename_string</span> <span class="ow">and</span> <span class="n">encoding</span><span class="p">:</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">short_filename</span> <span class="o">=</span> <span class="n">filename_string</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">)</span>
+      <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+        <span class="n">short_filename</span> <span class="o">=</span> <span class="n">filename_string</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">u&#39;ignore&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">filename_string</span><span class="p">:</span>
+      <span class="n">short_filename</span> <span class="o">=</span> <span class="nb">repr</span><span class="p">(</span><span class="n">filename_string</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">short_filename</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="n">filename_utf</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">orig_filename</span> <span class="o">=</span> <span class="n">filename_utf</span>
+      <span class="k">if</span> <span class="n">filename_utf</span> <span class="o">!=</span> <span class="n">short_filename</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">short_filename</span> <span class="o">=</span> <span class="n">short_filename</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">orig_filename</span> <span class="o">=</span> <span class="n">short_filename</span></div>
+
+
+<div class="viewcode-block" id="WinRecycleBinParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.recycler.WinRecycleBinParser">[docs]</a><span class="k">class</span> <span class="nc">WinRecycleBinParser</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">FileObjectParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parses the Windows $Recycle.Bin $I files.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;recycle_bin&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for Windows $Recycle.Bin $I files.&#39;</span>
+
+  <span class="c1"># Define a list of all structs needed.</span>
+  <span class="c1"># Struct read from:</span>
+  <span class="c1"># https://code.google.com/p/rifiuti2/source/browse/trunk/src/rifiuti-vista.h</span>
+  <span class="n">RECORD_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;record&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;filesize&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;filetime&#39;</span><span class="p">))</span>
+
+  <span class="n">MAGIC_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;magic&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="WinRecycleBinParser.ParseFileObject"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.recycler.WinRecycleBinParser.ParseFileObject">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a Windows RecycleBin $Ixx file-like object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: A file-like object.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      UnableToParseFile: when the file cannot be parsed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">magic_header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">MAGIC_STRUCT</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">,</span> <span class="ne">IOError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to parse $Ixxx file with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">magic_header</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Not an $Ixxx file, wrong magic header.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># We may have to rely on filenames since this header is very generic.</span>
+    <span class="c1"># TODO: Rethink this and potentially make a better test.</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">GetFilename</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;$I&#39;</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Not an $Ixxx file, filename doesn</span><span class="se">\&#39;</span><span class="s1">t start with $I.&#39;</span><span class="p">)</span>
+
+    <span class="n">record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RECORD_STRUCT</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="n">filename_utf</span> <span class="o">=</span> <span class="n">binary</span><span class="o">.</span><span class="n">ReadUTF16Stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+
+    <span class="n">filetime</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;filetime&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># TODO: handle missing timestamp.</span>
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">WinRecycleEvent</span><span class="p">(</span><span class="n">filetime</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">,</span> <span class="n">filename_utf</span><span class="p">,</span> <span class="n">record</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="WinRecyclerInfo2Parser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.recycler.WinRecyclerInfo2Parser">[docs]</a><span class="k">class</span> <span class="nc">WinRecyclerInfo2Parser</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">FileObjectParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parses the Windows Recycler INFO2 file.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;recycle_bin_info2&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for Windows Recycler INFO2 files.&#39;</span>
+
+  <span class="c1"># Define a list of all structs used.</span>
+  <span class="n">INT32_LE</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;my_int&#39;</span><span class="p">)</span>
+
+  <span class="n">FILE_HEADER_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;file_header&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">Padding</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;record_size&#39;</span><span class="p">))</span>
+
+  <span class="c1"># Struct based on (-both Unicode and byte strings):</span>
+  <span class="c1"># https://code.google.com/p/rifiuti2/source/browse/trunk/src/rifiuti.h</span>
+  <span class="n">RECORD_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">Struct</span><span class="p">(</span>
+      <span class="s1">u&#39;record&#39;</span><span class="p">,</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;index&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;drive&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt64</span><span class="p">(</span><span class="s1">u&#39;filetime&#39;</span><span class="p">),</span>
+      <span class="n">construct</span><span class="o">.</span><span class="n">ULInt32</span><span class="p">(</span><span class="s1">u&#39;filesize&#39;</span><span class="p">))</span>
+
+  <span class="n">STRING_STRUCT</span> <span class="o">=</span> <span class="n">construct</span><span class="o">.</span><span class="n">CString</span><span class="p">(</span><span class="s1">u&#39;legacy_filename&#39;</span><span class="p">)</span>
+
+  <span class="c1"># Define a list of needed variables.</span>
+  <span class="n">UNICODE_FILENAME_OFFSET</span> <span class="o">=</span> <span class="mh">0x11C</span>
+  <span class="n">RECORD_INDEX_OFFSET</span> <span class="o">=</span> <span class="mh">0x108</span>
+
+<div class="viewcode-block" id="WinRecyclerInfo2Parser.ParseFileObject"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.recycler.WinRecyclerInfo2Parser.ParseFileObject">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a Windows Recycler INFO2 file-like object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: A file-like object.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      UnableToParseFile: when the file cannot be parsed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">magic_header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">INT32_LE</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">construct</span><span class="o">.</span><span class="n">FieldError</span><span class="p">,</span> <span class="ne">IOError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to parse INFO2 file with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">magic_header</span> <span class="o">!=</span> <span class="mi">5</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Not an INFO2 file, wrong magic header.&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Since this header value is really generic it is hard not to use filename</span>
+    <span class="c1"># as an indicator too.</span>
+    <span class="c1"># TODO: Rethink this and potentially make a better test.</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">GetFilename</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;INFO2&#39;</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span><span class="p">(</span>
+          <span class="s1">u&#39;Not an INFO2 file, filename isn</span><span class="se">\&#39;</span><span class="s1">t INFO2.&#39;</span><span class="p">)</span>
+
+    <span class="n">file_header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">FILE_HEADER_STRUCT</span><span class="o">.</span><span class="n">parse_stream</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+
+    <span class="c1"># Limit record size to 65536 to be on the safe side.</span>
+    <span class="n">record_size</span> <span class="o">=</span> <span class="n">file_header</span><span class="p">[</span><span class="s1">u&#39;record_size&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">record_size</span> <span class="o">&gt;</span> <span class="mi">65536</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">((</span>
+          <span class="s1">u&#39;Record size: {0:d} is too large for INFO2. Defaulting to: &#39;</span>
+          <span class="s1">u&#39;65535&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">record_size</span><span class="p">))</span>
+      <span class="n">record_size</span> <span class="o">=</span> <span class="mi">65535</span>
+
+    <span class="c1"># If recordsize is 0x320 then we have Unicode names as well.</span>
+    <span class="n">read_unicode_names</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="k">if</span> <span class="n">record_size</span> <span class="o">==</span> <span class="mh">0x320</span><span class="p">:</span>
+      <span class="n">read_unicode_names</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="n">data</span> <span class="o">=</span> <span class="n">file_object</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">record_size</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">data</span><span class="p">:</span>
+      <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">!=</span> <span class="n">record_size</span><span class="p">:</span>
+        <span class="k">break</span>
+      <span class="n">filename_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">STRING_STRUCT</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">4</span><span class="p">:])</span>
+      <span class="n">record_information</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">RECORD_STRUCT</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span>
+          <span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">RECORD_INDEX_OFFSET</span><span class="p">:])</span>
+      <span class="k">if</span> <span class="n">read_unicode_names</span><span class="p">:</span>
+        <span class="n">filename_utf</span> <span class="o">=</span> <span class="n">binary</span><span class="o">.</span><span class="n">ReadUTF16</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">UNICODE_FILENAME_OFFSET</span><span class="p">:])</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">filename_utf</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+
+      <span class="n">filetime</span> <span class="o">=</span> <span class="n">record_information</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;filetime&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+      <span class="c1"># TODO: handle missing timestamp.</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">WinRecycleEvent</span><span class="p">(</span>
+          <span class="n">filetime</span><span class="p">,</span> <span class="n">filename_string</span><span class="p">,</span> <span class="n">filename_utf</span><span class="p">,</span> <span class="n">record_information</span><span class="p">,</span>
+          <span class="n">record_size</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="n">parser_mediator</span><span class="o">.</span><span class="n">codepage</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="n">data</span> <span class="o">=</span> <span class="n">file_object</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">record_size</span><span class="p">)</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParsers</span><span class="p">([</span>
+    <span class="n">WinRecycleBinParser</span><span class="p">,</span> <span class="n">WinRecyclerInfo2Parser</span><span class="p">])</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

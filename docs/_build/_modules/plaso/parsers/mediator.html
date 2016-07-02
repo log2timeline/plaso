@@ -1,0 +1,621 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.mediator &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.mediator</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;The parser mediator object.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">dfvfs.lib</span> <span class="kn">import</span> <span class="n">definitions</span> <span class="k">as</span> <span class="n">dfvfs_definitions</span>
+
+<span class="c1"># TODO: disabled as long nothing is listening on the parse error queue.</span>
+<span class="c1"># from plaso.lib import event</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">py2to3</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+
+
+<div class="viewcode-block" id="ParserMediator"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator">[docs]</a><span class="k">class</span> <span class="nc">ParserMediator</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements the parser mediator.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">event_queue_producer</span><span class="p">,</span> <span class="n">parse_error_queue_producer</span><span class="p">,</span> <span class="n">knowledge_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a parser mediator object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_queue_producer: the event object queue producer (instance of</span>
+<span class="sd">                            ItemQueueProducer).</span>
+<span class="sd">      parse_error_queue_producer: the parse error queue producer (instance of</span>
+<span class="sd">                                  ItemQueueProducer).</span>
+<span class="sd">      knowledge_base: A knowledge base object (instance of KnowledgeBase),</span>
+<span class="sd">                      which contains information from the source data needed</span>
+<span class="sd">                      for parsing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">ParserMediator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_abort</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_event_queue_producer</span> <span class="o">=</span> <span class="n">event_queue_producer</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_extra_event_attributes</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_file_entry</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_filter_object</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_base</span> <span class="o">=</span> <span class="n">knowledge_base</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_mount_path</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parse_error_queue_producer</span> <span class="o">=</span> <span class="n">parse_error_queue_producer</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parser_chain_components</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_text_prepend</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">number_of_events</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">number_of_parse_errors</span> <span class="o">=</span> <span class="mi">0</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">abort</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read-only value to indicate the parsing should be aborted.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abort</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">codepage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The codepage.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_base</span><span class="o">.</span><span class="n">codepage</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">hostname</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The hostname.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_base</span><span class="o">.</span><span class="n">hostname</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">knowledge_base</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The knowledge base.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_base</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">platform</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The platform.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_base</span><span class="o">.</span><span class="n">platform</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">timezone</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The timezone object.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_base</span><span class="o">.</span><span class="n">timezone</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">year</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The year.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_base</span><span class="o">.</span><span class="n">year</span>
+
+  <span class="k">def</span> <span class="nf">_GetEarliestYearFromFileEntry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the year from the file entry date and time values.</span>
+
+<span class="sd">    This function uses the creation time if available otherwise the change</span>
+<span class="sd">    time (metadata last modification time) is used.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An integer containing the year of the file entry or None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetFileEntry</span><span class="p">()</span>
+    <span class="n">stat_object</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetStat</span><span class="p">()</span>
+
+    <span class="n">posix_time</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stat_object</span><span class="p">,</span> <span class="s1">u&#39;crtime&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">posix_time</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">posix_time</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stat_object</span><span class="p">,</span> <span class="s1">u&#39;ctime&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">posix_time</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to determine creation year from file stat information.&#39;</span><span class="p">)</span>
+      <span class="k">return</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">year</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">GetYearFromPosixTime</span><span class="p">(</span>
+          <span class="n">posix_time</span><span class="p">,</span> <span class="n">timezone</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_base</span><span class="o">.</span><span class="n">timezone</span><span class="p">)</span>
+      <span class="k">return</span> <span class="n">year</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">((</span>
+          <span class="s1">u&#39;Unable to determine creation year from file stat information with &#39;</span>
+          <span class="s1">u&#39;error: {0:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+      <span class="k">return</span>
+
+  <span class="k">def</span> <span class="nf">_GetInode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inode_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the inode from the inode value.</span>
+
+<span class="sd">    Note that the inode value in TSK can be a string, e.g. &#39;27-128-1&#39;.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      inode_value: a string or an integer containing the inode.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An integer containing the inode or -1 on error if the inode value</span>
+<span class="sd">      cannot be converted to an integer.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inode_value</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">INTEGER_TYPES</span><span class="p">):</span>
+      <span class="k">return</span> <span class="n">inode_value</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inode_value</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+      <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">inode_value</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inode_value</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">STRING_TYPES</span><span class="p">):</span>
+      <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">b</span><span class="s1">&#39;-&#39;</span> <span class="ow">in</span> <span class="n">inode_value</span><span class="p">:</span>
+      <span class="n">inode_value</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">inode_value</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;-&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">inode_value</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+      <span class="k">return</span> <span class="o">-</span><span class="mi">1</span>
+
+  <span class="k">def</span> <span class="nf">_GetLatestYearFromFileEntry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the maximum (highest value) year from the file entry.</span>
+
+<span class="sd">    This function uses the modification time if available otherwise the change</span>
+<span class="sd">    time (metadata last modification time) is used.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An integer containing the year of the file entry or None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetFileEntry</span><span class="p">()</span>
+    <span class="n">stat_object</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetStat</span><span class="p">()</span>
+
+    <span class="n">posix_time</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stat_object</span><span class="p">,</span> <span class="s1">u&#39;mtime&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">posix_time</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">posix_time</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stat_object</span><span class="p">,</span> <span class="s1">u&#39;ctime&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">posix_time</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to determine modification year from file stat information.&#39;</span><span class="p">)</span>
+      <span class="k">return</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">year</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">GetYearFromPosixTime</span><span class="p">(</span>
+          <span class="n">posix_time</span><span class="p">,</span> <span class="n">timezone</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_base</span><span class="o">.</span><span class="n">timezone</span><span class="p">)</span>
+      <span class="k">return</span> <span class="n">year</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">((</span>
+          <span class="s1">u&#39;Unable to determine creation year from file stat &#39;</span>
+          <span class="s1">u&#39;information with error: {0:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+      <span class="k">return</span>
+
+  <span class="k">def</span> <span class="nf">_GetRelativePath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_spec</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the relative path.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      path_spec: a path specification (instance of dfvfs.PathSpec).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A string containing the relative path or None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path_spec</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="c1"># TODO: Solve this differently, quite possibly inside dfVFS using mount</span>
+    <span class="c1"># path spec.</span>
+    <span class="n">location</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">path_spec</span><span class="p">,</span> <span class="s1">u&#39;location&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">location</span> <span class="ow">and</span> <span class="n">path_spec</span><span class="o">.</span><span class="n">HasParent</span><span class="p">():</span>
+      <span class="n">location</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">path_spec</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="s1">u&#39;location&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">location</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">data_stream</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">path_spec</span><span class="p">,</span> <span class="s1">u&#39;data_stream&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">data_stream</span><span class="p">:</span>
+      <span class="n">location</span> <span class="o">=</span> <span class="s1">u&#39;{0:s}:{1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">data_stream</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">path_spec</span><span class="o">.</span><span class="n">type_indicator</span> <span class="o">!=</span> <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">TYPE_INDICATOR_OS</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">location</span>
+
+    <span class="c1"># If we are parsing a mount point we don&#39;t want to include the full</span>
+    <span class="c1"># path to file&#39;s location here, we are only interested in the path</span>
+    <span class="c1"># relative to the mount point.</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mount_path</span><span class="p">:</span>
+      <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">location</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mount_path</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">location</span>
+
+<div class="viewcode-block" id="ParserMediator.AddEventAttribute"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.AddEventAttribute">[docs]</a>  <span class="k">def</span> <span class="nf">AddEventAttribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute_name</span><span class="p">,</span> <span class="n">attribute_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add an attribute that will be set on all events produced.</span>
+
+<span class="sd">    Setting attributes using this method will cause events produced via this</span>
+<span class="sd">    mediator to have an attribute with the provided name set with the</span>
+<span class="sd">    provided value.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      attribute_name: The name of the attribute to set.</span>
+<span class="sd">      attribute_value: The value of the attribute to set.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      KeyError: If an attribute with the given name is already set.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_extra_event_attributes</span><span class="p">,</span> <span class="n">attribute_name</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">u&#39;Value already set for attribute {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">attribute_name</span><span class="p">))</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_extra_event_attributes</span><span class="p">[</span><span class="n">attribute_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">attribute_value</span></div>
+
+<div class="viewcode-block" id="ParserMediator.AppendToParserChain"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.AppendToParserChain">[docs]</a>  <span class="k">def</span> <span class="nf">AppendToParserChain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plugin_or_parser</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add a parser or plugin to the chain to the chain.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parser_chain_components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">plugin_or_parser</span><span class="o">.</span><span class="n">NAME</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ParserMediator.ClearEventAttributes"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.ClearEventAttributes">[docs]</a>  <span class="k">def</span> <span class="nf">ClearEventAttributes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Clear out attributes that should be added to all events.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_extra_event_attributes</span> <span class="o">=</span> <span class="p">{}</span></div>
+
+<div class="viewcode-block" id="ParserMediator.ClearParserChain"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.ClearParserChain">[docs]</a>  <span class="k">def</span> <span class="nf">ClearParserChain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Clears the parser chain.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parser_chain_components</span> <span class="o">=</span> <span class="p">[]</span></div>
+
+<div class="viewcode-block" id="ParserMediator.GetDisplayName"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.GetDisplayName">[docs]</a>  <span class="k">def</span> <span class="nf">GetDisplayName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_entry</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the display name for a file entry.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: optional file entry object (instance of dfvfs.FileEntry).</span>
+<span class="sd">                  If none is provided, the display name of self._file_entry</span>
+<span class="sd">                  will be returned.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A human readable string that describes the path to the file entry.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      ValueError: if the file entry is missing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">file_entry</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">file_entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_entry</span>
+
+    <span class="k">if</span> <span class="n">file_entry</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Missing file entry&#39;</span><span class="p">)</span>
+
+    <span class="n">path_spec</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">file_entry</span><span class="p">,</span> <span class="s1">u&#39;path_spec&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="n">relative_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetRelativePath</span><span class="p">(</span><span class="n">path_spec</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">relative_path</span><span class="p">:</span>
+      <span class="n">relative_path</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">relative_path</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="o">.</span><span class="n">type_indicator</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_text_prepend</span><span class="p">:</span>
+      <span class="n">relative_path</span> <span class="o">=</span> <span class="s1">u&#39;{0:s}{1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_text_prepend</span><span class="p">,</span> <span class="n">relative_path</span><span class="p">)</span>
+
+    <span class="n">parent_path_spec</span> <span class="o">=</span> <span class="n">path_spec</span><span class="o">.</span><span class="n">parent</span>
+    <span class="k">if</span> <span class="n">parent_path_spec</span> <span class="ow">and</span> <span class="n">path_spec</span><span class="o">.</span><span class="n">type_indicator</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">TYPE_INDICATOR_BZIP2</span><span class="p">,</span>
+        <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">TYPE_INDICATOR_GZIP</span><span class="p">]:</span>
+      <span class="n">parent_path_spec</span> <span class="o">=</span> <span class="n">parent_path_spec</span><span class="o">.</span><span class="n">parent</span>
+
+    <span class="k">if</span> <span class="n">parent_path_spec</span> <span class="ow">and</span> <span class="n">parent_path_spec</span><span class="o">.</span><span class="n">type_indicator</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">TYPE_INDICATOR_VSHADOW</span><span class="p">]:</span>
+      <span class="n">store_index</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">path_spec</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="s1">u&#39;store_index&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">store_index</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s1">u&#39;VSS{0:d}:{1:s}:{2:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">store_index</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="o">.</span><span class="n">type_indicator</span><span class="p">,</span> <span class="n">relative_path</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s1">u&#39;{0:s}:{1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="o">.</span><span class="n">type_indicator</span><span class="p">,</span> <span class="n">relative_path</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ParserMediator.GetEstimatedYear"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.GetEstimatedYear">[docs]</a>  <span class="k">def</span> <span class="nf">GetEstimatedYear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves an estimate of the year.</span>
+
+<span class="sd">    This function first looks to see if the knowledge base defines a year, if</span>
+<span class="sd">    not it tries to determine the year based on the file entry metadata, if</span>
+<span class="sd">    that fails the current year is used.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An integer containing the year of the file entry or the current year.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: improve this method to get a more reliable estimate.</span>
+    <span class="c1"># Preserve the year-less date and sort this out in the psort phase.</span>
+    <span class="n">year</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_base</span><span class="o">.</span><span class="n">year</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">year</span><span class="p">:</span>
+      <span class="c1"># TODO: Find a decent way to actually calculate the correct year</span>
+      <span class="c1"># instead of relying on stats object.</span>
+      <span class="n">year</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetEarliestYearFromFileEntry</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">year</span><span class="p">:</span>
+      <span class="n">year</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">GetCurrentYear</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">year</span></div>
+
+<div class="viewcode-block" id="ParserMediator.GetFileEntry"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.GetFileEntry">[docs]</a>  <span class="k">def</span> <span class="nf">GetFileEntry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the active file entry.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A file entry (instance of dfvfs.FileEntry).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_entry</span></div>
+
+<div class="viewcode-block" id="ParserMediator.GetFilename"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.GetFilename">[docs]</a>  <span class="k">def</span> <span class="nf">GetFilename</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the name of the active file entry.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A string containing the name of the active file entry or None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_entry</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">data_stream</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="p">,</span> <span class="s1">u&#39;data_stream&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">data_stream</span><span class="p">:</span>
+      <span class="k">return</span> <span class="s1">u&#39;{0:s}:{1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_entry</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">data_stream</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_entry</span><span class="o">.</span><span class="n">name</span></div>
+
+<div class="viewcode-block" id="ParserMediator.GetLatestYear"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.GetLatestYear">[docs]</a>  <span class="k">def</span> <span class="nf">GetLatestYear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the latest (newest) year for an event from a file.</span>
+
+<span class="sd">    This function tries to determine the year based on the file entry metadata,</span>
+<span class="sd">    if that fails the current year is used.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An integer containing the year of the file entry or the current year.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">year</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetLatestYearFromFileEntry</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">year</span><span class="p">:</span>
+      <span class="n">year</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">GetCurrentYear</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">year</span></div>
+
+<div class="viewcode-block" id="ParserMediator.GetParserChain"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.GetParserChain">[docs]</a>  <span class="k">def</span> <span class="nf">GetParserChain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The parser chain up to this point.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="s1">u&#39;/&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parser_chain_components</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ParserMediator.MatchesFilter"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.MatchesFilter">[docs]</a>  <span class="k">def</span> <span class="nf">MatchesFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks if the event object matches the filter.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: the event object (instance of EventObject).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A boolean value indicating if the event object matches the filter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_object</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_object</span><span class="o">.</span><span class="n">Matches</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ParserMediator.PopFromParserChain"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.PopFromParserChain">[docs]</a>  <span class="k">def</span> <span class="nf">PopFromParserChain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Remove the last added parser or plugin from the chain.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parser_chain_components</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ParserMediator.ProcessEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.ProcessEvent">[docs]</a>  <span class="k">def</span> <span class="nf">ProcessEvent</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">,</span> <span class="n">parser_chain</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">file_entry</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Processes an event before it is emitted to the event queue.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: the event object (instance of EventObject).</span>
+<span class="sd">      parser_chain: Optional string containing the parsing chain up to this</span>
+<span class="sd">                    point.</span>
+<span class="sd">      file_entry: Optional file entry object (instance of dfvfs.FileEntry).</span>
+<span class="sd">                  The default is None, which will default to the current</span>
+<span class="sd">                  file entry set in the mediator.</span>
+<span class="sd">      query: Optional query string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: rename this to event_object.parser_chain or equivalent.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="s1">u&#39;parser&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="n">parser_chain</span><span class="p">:</span>
+      <span class="n">event_object</span><span class="o">.</span><span class="n">parser</span> <span class="o">=</span> <span class="n">parser_chain</span>
+
+    <span class="c1"># TODO: deprecate text_prepend in favor of an event tag.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="s1">u&#39;text_prepend&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_text_prepend</span><span class="p">:</span>
+      <span class="n">event_object</span><span class="o">.</span><span class="n">text_prepend</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_text_prepend</span>
+
+    <span class="k">if</span> <span class="n">file_entry</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">file_entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_entry</span>
+
+    <span class="n">display_name</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="n">file_entry</span><span class="p">:</span>
+      <span class="n">event_object</span><span class="o">.</span><span class="n">pathspec</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span>
+
+      <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="s1">u&#39;filename&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">path_spec</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">file_entry</span><span class="p">,</span> <span class="s1">u&#39;path_spec&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="n">event_object</span><span class="o">.</span><span class="n">filename</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetRelativePath</span><span class="p">(</span><span class="n">path_spec</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">display_name</span><span class="p">:</span>
+        <span class="c1"># TODO: dfVFS refactor: move display name to output since the path</span>
+        <span class="c1"># specification contains the full information.</span>
+        <span class="n">display_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetDisplayName</span><span class="p">(</span><span class="n">file_entry</span><span class="p">)</span>
+
+      <span class="n">stat_object</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetStat</span><span class="p">()</span>
+      <span class="n">inode_value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stat_object</span><span class="p">,</span> <span class="s1">u&#39;ino&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="s1">u&#39;inode&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">inode_value</span><span class="p">:</span>
+        <span class="n">event_object</span><span class="o">.</span><span class="n">inode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetInode</span><span class="p">(</span><span class="n">inode_value</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="s1">u&#39;display_name&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="n">display_name</span><span class="p">:</span>
+      <span class="n">event_object</span><span class="o">.</span><span class="n">display_name</span> <span class="o">=</span> <span class="n">display_name</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="s1">u&#39;hostname&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">hostname</span><span class="p">:</span>
+      <span class="n">event_object</span><span class="o">.</span><span class="n">hostname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hostname</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="s1">u&#39;username&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+      <span class="n">user_sid</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="s1">u&#39;user_sid&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+      <span class="n">username</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_knowledge_base</span><span class="o">.</span><span class="n">GetUsernameByIdentifier</span><span class="p">(</span><span class="n">user_sid</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">username</span><span class="p">:</span>
+        <span class="n">event_object</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">username</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="s1">u&#39;query&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="n">query</span><span class="p">:</span>
+      <span class="n">event_object</span><span class="o">.</span><span class="n">query</span> <span class="o">=</span> <span class="n">query</span>
+
+    <span class="k">for</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_extra_event_attributes</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+      <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">attribute</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">u&#39;Event already has a value for {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">attribute</span><span class="p">))</span>
+
+      <span class="nb">setattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ParserMediator.ProduceEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.ProduceEvent">[docs]</a>  <span class="k">def</span> <span class="nf">ProduceEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Produces an event onto the queue.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: the event object (instance of EventObject).</span>
+<span class="sd">      query: Optional query string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">ProcessEvent</span><span class="p">(</span>
+        <span class="n">event_object</span><span class="p">,</span> <span class="n">parser_chain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">GetParserChain</span><span class="p">(),</span>
+        <span class="n">file_entry</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_file_entry</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">MatchesFilter</span><span class="p">(</span><span class="n">event_object</span><span class="p">):</span>
+      <span class="k">return</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_event_queue_producer</span><span class="o">.</span><span class="n">ProduceItem</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">number_of_events</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="ParserMediator.ProduceEvents"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.ProduceEvents">[docs]</a>  <span class="k">def</span> <span class="nf">ProduceEvents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_objects</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Produces events onto the queue.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_objects: a list or generator of event objects (instances of</span>
+<span class="sd">                     EventObject).</span>
+<span class="sd">      query: Optional query string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">event_object</span> <span class="ow">in</span> <span class="n">event_objects</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ParserMediator.ProduceParseError"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.ProduceParseError">[docs]</a>  <span class="k">def</span> <span class="nf">ProduceParseError</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Produces a parse error.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      message: The message of the error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">number_of_parse_errors</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="c1"># TODO: Remove call to logging when parser error queue is fully functional.</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+        <span class="s1">u&#39;[{0:s}] unable to parse file: {1:s} with error: {2:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">GetParserChain</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetDisplayName</span><span class="p">(),</span> <span class="n">message</span><span class="p">))</span></div>
+
+    <span class="c1"># TODO: disabled as long nothing is listening on the parse error queue.</span>
+    <span class="c1"># if self._parse_error_queue_producer:</span>
+    <span class="c1">#   path_spec = self._file_entry.path_spec</span>
+    <span class="c1">#   parser_chain = self.GetParserChain()</span>
+    <span class="c1">#   parse_error = event.ExtractionError(</span>
+    <span class="c1">#       parser_chain, message, path_spec=path_spec)</span>
+    <span class="c1">#   self._parse_error_queue_producer.ProduceItem(parse_error)</span>
+    <span class="c1">#   self.number_of_parse_errors += 1</span>
+
+<div class="viewcode-block" id="ParserMediator.ResetCounters"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.ResetCounters">[docs]</a>  <span class="k">def</span> <span class="nf">ResetCounters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Resets the counters.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">number_of_events</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">number_of_parse_errors</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="ParserMediator.ResetFileEntry"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.ResetFileEntry">[docs]</a>  <span class="k">def</span> <span class="nf">ResetFileEntry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Resets the active file entry.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_file_entry</span> <span class="o">=</span> <span class="bp">None</span></div>
+
+<div class="viewcode-block" id="ParserMediator.SetFileEntry"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.SetFileEntry">[docs]</a>  <span class="k">def</span> <span class="nf">SetFileEntry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the active file entry.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: the file entry (instance of dfvfs.FileEntry).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_file_entry</span> <span class="o">=</span> <span class="n">file_entry</span></div>
+
+<div class="viewcode-block" id="ParserMediator.SetFilterObject"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.SetFilterObject">[docs]</a>  <span class="k">def</span> <span class="nf">SetFilterObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the filter object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      filter_object: the filter object (instance of objectfilter.Filter).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_filter_object</span> <span class="o">=</span> <span class="n">filter_object</span></div>
+
+<div class="viewcode-block" id="ParserMediator.SetMountPath"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.SetMountPath">[docs]</a>  <span class="k">def</span> <span class="nf">SetMountPath</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mount_path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the mount path.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      mount_path: string containing the mount path.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Remove a trailing path separator from the mount path so the relative</span>
+    <span class="c1"># paths will start with a path separator.</span>
+    <span class="k">if</span> <span class="n">mount_path</span> <span class="ow">and</span> <span class="n">mount_path</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">):</span>
+      <span class="n">mount_path</span> <span class="o">=</span> <span class="n">mount_path</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_mount_path</span> <span class="o">=</span> <span class="n">mount_path</span></div>
+
+<div class="viewcode-block" id="ParserMediator.SetTextPrepend"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.SetTextPrepend">[docs]</a>  <span class="k">def</span> <span class="nf">SetTextPrepend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text_prepend</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the text prepend.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      text_prepend: string that contains the text to prepend to every event.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_text_prepend</span> <span class="o">=</span> <span class="n">text_prepend</span></div>
+
+<div class="viewcode-block" id="ParserMediator.SignalAbort"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.mediator.ParserMediator.SignalAbort">[docs]</a>  <span class="k">def</span> <span class="nf">SignalAbort</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Signals the parsers to abort.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_abort</span> <span class="o">=</span> <span class="bp">True</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

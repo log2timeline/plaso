@@ -1,0 +1,277 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.winprefetch &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.winprefetch</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Parser for Windows Prefetch files.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pyscca</span>
+
+<span class="kn">from</span> <span class="nn">plaso</span> <span class="kn">import</span> <span class="n">dependencies</span>
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">windows_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">specification</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+
+
+<span class="n">dependencies</span><span class="o">.</span><span class="n">CheckModuleVersion</span><span class="p">(</span><span class="s1">u&#39;pyscca&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="WinPrefetchExecutionEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.winprefetch.WinPrefetchExecutionEvent">[docs]</a><span class="k">class</span> <span class="nc">WinPrefetchExecutionEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">FiletimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that defines a Windows Prefetch execution event.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    executable: a string containing the executable filename.</span>
+<span class="sd">    format_version: an integer containing the format version.</span>
+<span class="sd">    mapped_files: a list of strings containing the mapped filenames.</span>
+<span class="sd">    number_of_volumes: an integer containing the number of volumes.</span>
+<span class="sd">    path: a path to the executable.</span>
+<span class="sd">    prefetch_hash: an integer containing the prefetch hash.</span>
+<span class="sd">    run_count: an integer containing the run count.</span>
+<span class="sd">    volume_device_paths: a list of strings containing volume device path</span>
+<span class="sd">                         strings.</span>
+<span class="sd">    volume_serial_numbers: a list of integers containing the volume serial</span>
+<span class="sd">                           numbers.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;windows:prefetch:execution&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">,</span> <span class="n">format_version</span><span class="p">,</span>
+      <span class="n">executable_filename</span><span class="p">,</span> <span class="n">prefetch_hash</span><span class="p">,</span> <span class="n">run_count</span><span class="p">,</span> <span class="n">mapped_files</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span>
+      <span class="n">number_of_volumes</span><span class="p">,</span> <span class="n">volume_serial_numbers</span><span class="p">,</span> <span class="n">volume_device_paths</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timestamp: the FILETIME timestamp value.</span>
+<span class="sd">      timestamp_description: the usage string for the timestamp value.</span>
+<span class="sd">      format_version: an integer containing the format version.</span>
+<span class="sd">      executable_filename: a string containing the executable filename.</span>
+<span class="sd">      prefetch_hash: an integer containing the prefetch hash.</span>
+<span class="sd">      run_count: an integer containing the run count.</span>
+<span class="sd">      mapped_files: a list of strings containing the mapped filenames.</span>
+<span class="sd">      path: a path to the executable.</span>
+<span class="sd">      number_of_volumes: an integer containing the number of volumes.</span>
+<span class="sd">      volume_serial_numbers: a list of integers containing volume serial</span>
+<span class="sd">                             numbers.</span>
+<span class="sd">      volume_device_paths: a list of strings containing volume device path</span>
+<span class="sd">                           strings.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">WinPrefetchExecutionEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">executable</span> <span class="o">=</span> <span class="n">executable_filename</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">mapped_files</span> <span class="o">=</span> <span class="n">mapped_files</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">number_of_volumes</span> <span class="o">=</span> <span class="n">number_of_volumes</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">prefetch_hash</span> <span class="o">=</span> <span class="n">prefetch_hash</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">run_count</span> <span class="o">=</span> <span class="n">run_count</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="n">format_version</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">volume_device_paths</span> <span class="o">=</span> <span class="n">volume_device_paths</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">volume_serial_numbers</span> <span class="o">=</span> <span class="n">volume_serial_numbers</span></div>
+
+
+<div class="viewcode-block" id="WinPrefetchParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.winprefetch.WinPrefetchParser">[docs]</a><span class="k">class</span> <span class="nc">WinPrefetchParser</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">FileObjectParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A parser for Windows Prefetch files.&quot;&quot;&quot;</span>
+
+  <span class="n">_INITIAL_FILE_OFFSET</span> <span class="o">=</span> <span class="bp">None</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;prefetch&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for Windows Prefetch files.&#39;</span>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="WinPrefetchParser.GetFormatSpecification"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.winprefetch.WinPrefetchParser.GetFormatSpecification">[docs]</a>  <span class="k">def</span> <span class="nf">GetFormatSpecification</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the format specification.&quot;&quot;&quot;</span>
+    <span class="n">format_specification</span> <span class="o">=</span> <span class="n">specification</span><span class="o">.</span><span class="n">FormatSpecification</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">NAME</span><span class="p">)</span>
+    <span class="n">format_specification</span><span class="o">.</span><span class="n">AddNewSignature</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;SCCA&#39;</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">format_specification</span></div>
+
+<div class="viewcode-block" id="WinPrefetchParser.ParseFileObject"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.winprefetch.WinPrefetchParser.ParseFileObject">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a Windows Prefetch file-like object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_object: A file-like object.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      UnableToParseFile: when the file cannot be parsed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">scca_file</span> <span class="o">=</span> <span class="n">pyscca</span><span class="o">.</span><span class="n">file</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">scca_file</span><span class="o">.</span><span class="n">open_file_object</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;unable to open file with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+      <span class="k">return</span>
+
+    <span class="n">format_version</span> <span class="o">=</span> <span class="n">scca_file</span><span class="o">.</span><span class="n">format_version</span>
+    <span class="n">executable_filename</span> <span class="o">=</span> <span class="n">scca_file</span><span class="o">.</span><span class="n">executable_filename</span>
+    <span class="n">prefetch_hash</span> <span class="o">=</span> <span class="n">scca_file</span><span class="o">.</span><span class="n">prefetch_hash</span>
+    <span class="n">run_count</span> <span class="o">=</span> <span class="n">scca_file</span><span class="o">.</span><span class="n">run_count</span>
+    <span class="n">number_of_volumes</span> <span class="o">=</span> <span class="n">scca_file</span><span class="o">.</span><span class="n">number_of_volumes</span>
+
+    <span class="n">volume_serial_numbers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">volume_device_paths</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+
+    <span class="k">for</span> <span class="n">volume_information</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">scca_file</span><span class="o">.</span><span class="n">volumes</span><span class="p">):</span>
+      <span class="n">volume_serial_number</span> <span class="o">=</span> <span class="n">volume_information</span><span class="o">.</span><span class="n">serial_number</span>
+      <span class="n">volume_device_path</span> <span class="o">=</span> <span class="n">volume_information</span><span class="o">.</span><span class="n">device_path</span>
+
+      <span class="n">volume_serial_numbers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">volume_serial_number</span><span class="p">)</span>
+      <span class="n">volume_device_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">volume_device_path</span><span class="p">)</span>
+
+      <span class="n">timestamp</span> <span class="o">=</span> <span class="n">volume_information</span><span class="o">.</span><span class="n">get_creation_time_as_integer</span><span class="p">()</span>
+      <span class="k">if</span> <span class="n">timestamp</span><span class="p">:</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">windows_events</span><span class="o">.</span><span class="n">WindowsVolumeCreationEvent</span><span class="p">(</span>
+            <span class="n">timestamp</span><span class="p">,</span> <span class="n">volume_device_path</span><span class="p">,</span> <span class="n">volume_serial_number</span><span class="p">,</span>
+            <span class="n">parser_mediator</span><span class="o">.</span><span class="n">GetFilename</span><span class="p">())</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">scca_file</span><span class="o">.</span><span class="n">filenames</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">filename</span><span class="p">:</span>
+          <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">filename</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">volume_device_path</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="n">filename</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">executable_filename</span><span class="p">)):</span>
+          <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">path</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="n">volume_device_path</span><span class="p">)</span>
+
+    <span class="n">mapped_files</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">entry_index</span><span class="p">,</span> <span class="n">file_metrics</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">scca_file</span><span class="o">.</span><span class="n">file_metrics_entries</span><span class="p">):</span>
+      <span class="n">mapped_file_string</span> <span class="o">=</span> <span class="n">file_metrics</span><span class="o">.</span><span class="n">filename</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">mapped_file_string</span><span class="p">:</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+            <span class="s1">u&#39;missing filename for file metrics entry: {0:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">entry_index</span><span class="p">))</span>
+        <span class="k">continue</span>
+
+      <span class="n">file_reference</span> <span class="o">=</span> <span class="n">file_metrics</span><span class="o">.</span><span class="n">file_reference</span>
+      <span class="k">if</span> <span class="n">file_reference</span><span class="p">:</span>
+        <span class="n">mapped_file_string</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s1">u&#39;{0:s} [MFT entry: {1:d}, sequence: {2:d}]&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">mapped_file_string</span><span class="p">,</span> <span class="n">file_reference</span> <span class="o">&amp;</span> <span class="mh">0xffffffffffff</span><span class="n">L</span><span class="p">,</span>
+                <span class="n">file_reference</span> <span class="o">&gt;&gt;</span> <span class="mi">48</span><span class="p">)</span>
+
+      <span class="n">mapped_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mapped_file_string</span><span class="p">)</span>
+
+    <span class="n">timestamp</span> <span class="o">=</span> <span class="n">scca_file</span><span class="o">.</span><span class="n">get_last_run_time_as_integer</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">timestamp</span><span class="p">:</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span><span class="s1">u&#39;missing last run time&#39;</span><span class="p">)</span>
+      <span class="n">timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">NONE_TIMESTAMP</span>
+
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">WinPrefetchExecutionEvent</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">LAST_RUNTIME</span><span class="p">,</span> <span class="n">format_version</span><span class="p">,</span>
+        <span class="n">executable_filename</span><span class="p">,</span> <span class="n">prefetch_hash</span><span class="p">,</span> <span class="n">run_count</span><span class="p">,</span> <span class="n">mapped_files</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span>
+        <span class="n">number_of_volumes</span><span class="p">,</span> <span class="n">volume_serial_numbers</span><span class="p">,</span> <span class="n">volume_device_paths</span><span class="p">)</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="c1"># Check for the 7 older last run time values available since</span>
+    <span class="c1"># format version 26.</span>
+    <span class="k">if</span> <span class="n">format_version</span> <span class="o">&gt;=</span> <span class="mi">26</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">last_run_time_index</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">):</span>
+        <span class="n">timestamp</span> <span class="o">=</span> <span class="n">scca_file</span><span class="o">.</span><span class="n">get_last_run_time_as_integer</span><span class="p">(</span><span class="n">last_run_time_index</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">timestamp</span><span class="p">:</span>
+          <span class="k">continue</span>
+
+        <span class="n">timestamp_description</span> <span class="o">=</span> <span class="s1">u&#39;Previous {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">LAST_RUNTIME</span><span class="p">)</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">WinPrefetchExecutionEvent</span><span class="p">(</span>
+            <span class="n">timestamp</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">,</span> <span class="n">format_version</span><span class="p">,</span>
+            <span class="n">executable_filename</span><span class="p">,</span> <span class="n">prefetch_hash</span><span class="p">,</span> <span class="n">run_count</span><span class="p">,</span> <span class="n">mapped_files</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span>
+            <span class="n">number_of_volumes</span><span class="p">,</span> <span class="n">volume_serial_numbers</span><span class="p">,</span> <span class="n">volume_device_paths</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="n">scca_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParser</span><span class="p">(</span><span class="n">WinPrefetchParser</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

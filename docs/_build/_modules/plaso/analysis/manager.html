@@ -1,0 +1,243 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.analysis.manager &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.analysis.manager</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains the analysis plugin manager class.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">plaso.analysis</span> <span class="kn">import</span> <span class="n">definitions</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+
+
+<div class="viewcode-block" id="AnalysisPluginManager"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.manager.AnalysisPluginManager">[docs]</a><span class="k">class</span> <span class="nc">AnalysisPluginManager</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements the analysis plugin manager.&quot;&quot;&quot;</span>
+
+  <span class="n">_plugin_classes</span> <span class="o">=</span> <span class="p">{}</span>
+
+  <span class="n">_PLUGIN_TYPE_STRINGS</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="n">definitions</span><span class="o">.</span><span class="n">PLUGIN_TYPE_ANNOTATION</span><span class="p">:</span> <span class="p">(</span>
+          <span class="s1">u&#39;Annotation/Tagging plugin&#39;</span><span class="p">),</span>
+      <span class="n">definitions</span><span class="o">.</span><span class="n">PLUGIN_TYPE_ANOMALY</span><span class="p">:</span> <span class="p">(</span>
+          <span class="s1">u&#39;Anomaly plugin&#39;</span><span class="p">),</span>
+      <span class="n">definitions</span><span class="o">.</span><span class="n">PLUGIN_TYPE_REPORT</span><span class="p">:</span> <span class="p">(</span>
+          <span class="s1">u&#39;Summary/Report plugin&#39;</span><span class="p">),</span>
+      <span class="n">definitions</span><span class="o">.</span><span class="n">PLUGIN_TYPE_STATISTICS</span><span class="p">:</span> <span class="p">(</span>
+          <span class="s1">u&#39;Statistics plugin&#39;</span><span class="p">)</span>
+  <span class="p">}</span>
+  <span class="n">_PLUGIN_TYPE_STRINGS</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">u&#39;Unknown type&#39;</span><span class="p">)</span>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="AnalysisPluginManager.DeregisterPlugin"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.manager.AnalysisPluginManager.DeregisterPlugin">[docs]</a>  <span class="k">def</span> <span class="nf">DeregisterPlugin</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">plugin_class</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Deregisters an analysis plugin class.</span>
+
+<span class="sd">    The analysis plugin classes are identified by their lower case name.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      plugin_class: the class object of the analysis plugin.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      KeyError: if analysis plugin class is not set for the corresponding name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">plugin_name</span> <span class="o">=</span> <span class="n">plugin_class</span><span class="o">.</span><span class="n">NAME</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">plugin_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">_plugin_classes</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">u&#39;Plugin class not set for name: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">plugin_class</span><span class="o">.</span><span class="n">NAME</span><span class="p">))</span>
+
+    <span class="k">del</span> <span class="n">cls</span><span class="o">.</span><span class="n">_plugin_classes</span><span class="p">[</span><span class="n">plugin_name</span><span class="p">]</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="AnalysisPluginManager.GetPlugins"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.manager.AnalysisPluginManager.GetPlugins">[docs]</a>  <span class="k">def</span> <span class="nf">GetPlugins</span><span class="p">(</span><span class="n">cls</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the registered analysis plugin classes.</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">      A tuple that contains the uniquely identifying name of the plugin</span>
+<span class="sd">      and the plugin class (subclass of AnalysisPlugin).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">plugin_name</span><span class="p">,</span> <span class="n">plugin_class</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">_plugin_classes</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+      <span class="k">yield</span> <span class="n">plugin_name</span><span class="p">,</span> <span class="n">plugin_class</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="AnalysisPluginManager.GetAllPluginInformation"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.manager.AnalysisPluginManager.GetAllPluginInformation">[docs]</a>  <span class="k">def</span> <span class="nf">GetAllPluginInformation</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">show_all</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves a list of the registered analysis plugins.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      show_all: optional boolean value to indicate to list all the analysis</span>
+<span class="sd">                plugin names.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A sorted list of tuples containing the name, docstring and type string</span>
+<span class="sd">      of each analysis plugin.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">plugin_class</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">_plugin_classes</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+      <span class="n">plugin_object</span> <span class="o">=</span> <span class="n">plugin_class</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">show_all</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">plugin_class</span><span class="o">.</span><span class="n">ENABLE_IN_EXTRACTION</span><span class="p">:</span>
+        <span class="k">continue</span>
+
+      <span class="c1"># TODO: Use a specific description variable, not the docstring.</span>
+      <span class="n">doc_string</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">plugin_class</span><span class="o">.</span><span class="n">__doc__</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+      <span class="n">type_string</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_PLUGIN_TYPE_STRINGS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">plugin_object</span><span class="o">.</span><span class="n">plugin_type</span><span class="p">)</span>
+      <span class="n">information_tuple</span> <span class="o">=</span> <span class="p">(</span><span class="n">plugin_object</span><span class="o">.</span><span class="n">plugin_name</span><span class="p">,</span> <span class="n">doc_string</span><span class="p">,</span> <span class="n">type_string</span><span class="p">)</span>
+      <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">information_tuple</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">results</span><span class="p">)</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="AnalysisPluginManager.LoadPlugins"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.manager.AnalysisPluginManager.LoadPlugins">[docs]</a>  <span class="k">def</span> <span class="nf">LoadPlugins</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">plugin_names</span><span class="p">,</span> <span class="n">incoming_queues</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Yield analysis plugins for a given list of plugin names.</span>
+
+<span class="sd">    Given a list of plugin names this method finds the analysis</span>
+<span class="sd">    plugins, initializes them and returns a generator.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      plugin_names: A list of plugin names that should be loaded up. This</span>
+<span class="sd">                    should be a list of strings.</span>
+<span class="sd">      incoming_queues: A list of queues (instances of QueueInterface) that</span>
+<span class="sd">                       the plugin uses to read in incoming events to analyse.</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">      Analysis plugin objects (instances of AnalysisPlugin).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      errors.BadConfigOption: If plugins_names does not contain a list of</span>
+<span class="sd">                              strings.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">plugin_names_lower</span> <span class="o">=</span> <span class="p">[</span><span class="n">word</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">plugin_names</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">BadConfigOption</span><span class="p">(</span><span class="s1">u&#39;Plugin names should be a list of strings.&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">plugin_object</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">_plugin_classes</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+      <span class="n">plugin_name</span> <span class="o">=</span> <span class="n">plugin_object</span><span class="o">.</span><span class="n">NAME</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+      <span class="k">if</span> <span class="n">plugin_name</span> <span class="ow">in</span> <span class="n">plugin_names_lower</span><span class="p">:</span>
+        <span class="n">queue_index</span> <span class="o">=</span> <span class="n">plugin_names_lower</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">plugin_name</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+          <span class="n">incoming_queue</span> <span class="o">=</span> <span class="n">incoming_queues</span><span class="p">[</span><span class="n">queue_index</span><span class="p">]</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
+          <span class="n">incoming_queue</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="k">yield</span> <span class="n">plugin_object</span><span class="p">(</span><span class="n">incoming_queue</span><span class="p">)</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="AnalysisPluginManager.RegisterPlugin"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.manager.AnalysisPluginManager.RegisterPlugin">[docs]</a>  <span class="k">def</span> <span class="nf">RegisterPlugin</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">plugin_class</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Registers an analysis plugin class.</span>
+
+<span class="sd">    Then analysis plugin classes are identified based on their lower case name.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      plugin_class: the class object of the analysis plugin.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      KeyError: if analysis plugin class is already set for the corresponding</span>
+<span class="sd">                name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">plugin_name</span> <span class="o">=</span> <span class="n">plugin_class</span><span class="o">.</span><span class="n">NAME</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">plugin_name</span> <span class="ow">in</span> <span class="n">cls</span><span class="o">.</span><span class="n">_plugin_classes</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">u&#39;Plugin class already set for name: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">plugin_class</span><span class="o">.</span><span class="n">NAME</span><span class="p">))</span>
+
+    <span class="n">cls</span><span class="o">.</span><span class="n">_plugin_classes</span><span class="p">[</span><span class="n">plugin_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">plugin_class</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="AnalysisPluginManager.RegisterPlugins"><a class="viewcode-back" href="../../../plaso.analysis.html#plaso.analysis.manager.AnalysisPluginManager.RegisterPlugins">[docs]</a>  <span class="k">def</span> <span class="nf">RegisterPlugins</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">plugin_classes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Registers formatter classes.</span>
+
+<span class="sd">    The formatter classes are identified based on their lower case name.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      plugin_classes: a list of class objects of the formatters.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      KeyError: if formatter class is already set for the corresponding name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">plugin_class</span> <span class="ow">in</span> <span class="n">plugin_classes</span><span class="p">:</span>
+      <span class="n">cls</span><span class="o">.</span><span class="n">RegisterPlugin</span><span class="p">(</span><span class="n">plugin_class</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

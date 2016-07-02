@@ -1,0 +1,491 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.olecf_plugins.summary &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../../index.html" />
+    <link rel="up" title="plaso" href="../../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.olecf_plugins.summary</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Plugin to parse the OLECF summary/document summary information items.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">olecf</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers.olecf_plugins</span> <span class="kn">import</span> <span class="n">interface</span>
+
+
+<div class="viewcode-block" id="OleCfSummaryInfoEvent"><a class="viewcode-back" href="../../../../plaso.parsers.olecf_plugins.html#plaso.parsers.olecf_plugins.summary.OleCfSummaryInfoEvent">[docs]</a><span class="k">class</span> <span class="nc">OleCfSummaryInfoEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">FiletimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for an OLECF Summary info event.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;olecf:summary_info&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">usage</span><span class="p">,</span> <span class="n">attributes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timestamp: The FILETIME timestamp value.</span>
+<span class="sd">      usage: The usage string, describing the timestamp value.</span>
+<span class="sd">      attributes: A dict object containing all extracted attributes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">OleCfSummaryInfoEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">usage</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">u&#39;Summary Information&#39;</span>
+
+    <span class="k">for</span> <span class="n">attribute_name</span><span class="p">,</span> <span class="n">attribute_value</span> <span class="ow">in</span> <span class="n">attributes</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+      <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute_name</span><span class="p">,</span> <span class="n">attribute_value</span><span class="p">)</span></div>
+
+
+<span class="c1"># TODO: Move this class to a higher level (to the interface)</span>
+<span class="c1"># so the these functions can be shared by other plugins.</span>
+<div class="viewcode-block" id="OleCfSummaryInfo"><a class="viewcode-back" href="../../../../plaso.parsers.olecf_plugins.html#plaso.parsers.olecf_plugins.summary.OleCfSummaryInfo">[docs]</a><span class="k">class</span> <span class="nc">OleCfSummaryInfo</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;An OLECF Summary Info object.&quot;&quot;&quot;</span>
+
+  <span class="n">_CLASS_IDENTIFIER</span> <span class="o">=</span> <span class="s1">u&#39;f29f85e0-4ff9-1068-ab91-08002b27b3d9&#39;</span>
+
+  <span class="n">_PROPERTY_NAMES_INT32</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="mh">0x000e</span><span class="p">:</span> <span class="s1">u&#39;number_of_pages&#39;</span><span class="p">,</span>  <span class="c1"># PIDSI_PAGECOUNT</span>
+      <span class="mh">0x000f</span><span class="p">:</span> <span class="s1">u&#39;number_of_words&#39;</span><span class="p">,</span>  <span class="c1"># PIDSI_WORDCOUNT</span>
+      <span class="mh">0x0010</span><span class="p">:</span> <span class="s1">u&#39;number_of_characters&#39;</span><span class="p">,</span>  <span class="c1"># PIDSI_CHARCOUNT</span>
+      <span class="mh">0x0013</span><span class="p">:</span> <span class="s1">u&#39;security&#39;</span><span class="p">,</span>  <span class="c1"># PIDSI_SECURITY</span>
+  <span class="p">}</span>
+
+  <span class="n">_PROPERTY_NAMES_STRING</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="mh">0x0002</span><span class="p">:</span> <span class="s1">u&#39;title&#39;</span><span class="p">,</span>  <span class="c1"># PIDSI_TITLE</span>
+      <span class="mh">0x0003</span><span class="p">:</span> <span class="s1">u&#39;subject&#39;</span><span class="p">,</span>  <span class="c1"># PIDSI_SUBJECT</span>
+      <span class="mh">0x0004</span><span class="p">:</span> <span class="s1">u&#39;author&#39;</span><span class="p">,</span>  <span class="c1"># PIDSI_AUTHOR</span>
+      <span class="mh">0x0005</span><span class="p">:</span> <span class="s1">u&#39;keywords&#39;</span><span class="p">,</span>  <span class="c1"># PIDSI_KEYWORDS</span>
+      <span class="mh">0x0006</span><span class="p">:</span> <span class="s1">u&#39;comments&#39;</span><span class="p">,</span>  <span class="c1"># PIDSI_COMMENTS</span>
+      <span class="mh">0x0007</span><span class="p">:</span> <span class="s1">u&#39;template&#39;</span><span class="p">,</span>  <span class="c1"># PIDSI_TEMPLATE</span>
+      <span class="mh">0x0008</span><span class="p">:</span> <span class="s1">u&#39;last_saved_by&#39;</span><span class="p">,</span>  <span class="c1"># PIDSI_LASTAUTHOR</span>
+      <span class="mh">0x0009</span><span class="p">:</span> <span class="s1">u&#39;revision_number&#39;</span><span class="p">,</span>  <span class="c1"># PIDSI_REVNUMBER</span>
+      <span class="mh">0x0012</span><span class="p">:</span> <span class="s1">u&#39;application&#39;</span><span class="p">,</span>  <span class="c1"># PIDSI_APPNAME</span>
+  <span class="p">}</span>
+
+  <span class="n">PIDSI_CODEPAGE</span> <span class="o">=</span> <span class="mh">0x0001</span>
+  <span class="n">PIDSI_EDITTIME</span> <span class="o">=</span> <span class="mh">0x000a</span>
+  <span class="n">PIDSI_LASTPRINTED</span> <span class="o">=</span> <span class="mh">0x000b</span>
+  <span class="n">PIDSI_CREATE_DTM</span> <span class="o">=</span> <span class="mh">0x000c</span>
+  <span class="n">PIDSI_LASTSAVE_DTM</span> <span class="o">=</span> <span class="mh">0x000d</span>
+  <span class="n">PIDSI_THUMBNAIL</span> <span class="o">=</span> <span class="mh">0x0011</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">olecf_item</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initialize the OLECF summary object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      olecf_item: The OLECF item (instance of pyolecf.property_set_stream).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">OleCfSummaryInfo</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_InitFromPropertySet</span><span class="p">(</span><span class="n">olecf_item</span><span class="o">.</span><span class="n">set</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_InitFromPropertySet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_set</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the object from a property set.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      property_set: The OLECF property set (pyolecf.property_set).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Combine the values of multiple property sections</span>
+    <span class="c1"># but do not override properties that are already set.</span>
+    <span class="k">for</span> <span class="n">property_section</span> <span class="ow">in</span> <span class="n">property_set</span><span class="o">.</span><span class="n">sections</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">property_section</span><span class="o">.</span><span class="n">class_identifier</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CLASS_IDENTIFIER</span><span class="p">:</span>
+        <span class="k">continue</span>
+      <span class="k">for</span> <span class="n">property_value</span> <span class="ow">in</span> <span class="n">property_section</span><span class="o">.</span><span class="n">properties</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_InitFromPropertyValue</span><span class="p">(</span><span class="n">property_value</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_InitFromPropertyValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the object from a property value.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      property_value: The OLECF property value (pyolecf.property_value).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">property_value</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">interface</span><span class="o">.</span><span class="n">OleDefinitions</span><span class="o">.</span><span class="n">VT_I2</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_InitFromPropertyValueTypeInt16</span><span class="p">(</span><span class="n">property_value</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">property_value</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">interface</span><span class="o">.</span><span class="n">OleDefinitions</span><span class="o">.</span><span class="n">VT_I4</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_InitFromPropertyValueTypeInt32</span><span class="p">(</span><span class="n">property_value</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="p">(</span><span class="n">property_value</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">interface</span><span class="o">.</span><span class="n">OleDefinitions</span><span class="o">.</span><span class="n">VT_LPSTR</span> <span class="ow">or</span>
+          <span class="n">property_value</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">interface</span><span class="o">.</span><span class="n">OleDefinitions</span><span class="o">.</span><span class="n">VT_LPWSTR</span><span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_InitFromPropertyValueTypeString</span><span class="p">(</span><span class="n">property_value</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">property_value</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">interface</span><span class="o">.</span><span class="n">OleDefinitions</span><span class="o">.</span><span class="n">VT_FILETIME</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_InitFromPropertyValueTypeFiletime</span><span class="p">(</span><span class="n">property_value</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_InitFromPropertyValueTypeInt16</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the object from a 16-bit int type property value.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      property_value: The OLECF property value (pyolecf.property_value</span>
+<span class="sd">                      of type VT_I2).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">property_value</span><span class="o">.</span><span class="n">identifier</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">PIDSI_CODEPAGE</span><span class="p">:</span>
+      <span class="c1"># TODO: can the codepage vary per property section?</span>
+      <span class="c1"># And is it needed to interpret the ASCII strings?</span>
+      <span class="c1"># codepage = property_value.data_as_integer</span>
+      <span class="k">pass</span>
+
+  <span class="k">def</span> <span class="nf">_InitFromPropertyValueTypeInt32</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the object from a 32-bit int type property value.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      property_value: The OLECF property value (pyolecf.property_value</span>
+<span class="sd">                      of type VT_I4).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">property_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PROPERTY_NAMES_INT32</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">property_value</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">property_name</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">property_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="n">property_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">property_value</span><span class="o">.</span><span class="n">data_as_integer</span>
+
+  <span class="k">def</span> <span class="nf">_InitFromPropertyValueTypeString</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the object from a string type property value.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      property_value: The OLECF property value (pyolecf.property_value</span>
+<span class="sd">                      of type VT_LPSTR or VT_LPWSTR).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">property_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PROPERTY_NAMES_STRING</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">property_value</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">property_name</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">property_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">attributes</span><span class="p">[</span><span class="n">property_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">property_value</span><span class="o">.</span><span class="n">data_as_string</span>
+
+  <span class="k">def</span> <span class="nf">_InitFromPropertyValueTypeFiletime</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the object from a filetime type property value.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      property_value: The OLECF property value (pyolecf.property_value</span>
+<span class="sd">                      of type VT_FILETIME).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">property_value</span><span class="o">.</span><span class="n">identifier</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">PIDSI_LASTPRINTED</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+          <span class="p">(</span><span class="n">property_value</span><span class="o">.</span><span class="n">data_as_integer</span><span class="p">,</span> <span class="s1">u&#39;Document Last Printed Time&#39;</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="n">property_value</span><span class="o">.</span><span class="n">identifier</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">PIDSI_CREATE_DTM</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+          <span class="p">(</span><span class="n">property_value</span><span class="o">.</span><span class="n">data_as_integer</span><span class="p">,</span> <span class="s1">u&#39;Document Creation Time&#39;</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="n">property_value</span><span class="o">.</span><span class="n">identifier</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">PIDSI_LASTSAVE_DTM</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+          <span class="p">(</span><span class="n">property_value</span><span class="o">.</span><span class="n">data_as_integer</span><span class="p">,</span> <span class="s1">u&#39;Document Last Save Time&#39;</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="n">property_value</span><span class="o">.</span><span class="n">identifier</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">PIDSI_EDITTIME</span><span class="p">:</span>
+      <span class="c1"># property_name = u&#39;total_edit_time&#39;</span>
+      <span class="c1"># TODO: handle duration.</span>
+      <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="OleCfDocumentSummaryInfoEvent"><a class="viewcode-back" href="../../../../plaso.parsers.olecf_plugins.html#plaso.parsers.olecf_plugins.summary.OleCfDocumentSummaryInfoEvent">[docs]</a><span class="k">class</span> <span class="nc">OleCfDocumentSummaryInfoEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">FiletimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for an OLECF Document Summary info event.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;olecf:document_summary_info&#39;</span>
+
+  <span class="n">_CLASS_IDENTIFIER</span> <span class="o">=</span> <span class="s1">u&#39;d5cdd502-2e9c-101b-9397-08002b2cf9ae&#39;</span>
+
+  <span class="n">_PROPERTY_NAMES_BOOL</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="mh">0x0013</span><span class="p">:</span> <span class="s1">u&#39;shared_document&#39;</span><span class="p">,</span>  <span class="c1"># PIDDSI_SHAREDDOC</span>
+  <span class="p">}</span>
+
+  <span class="n">_PROPERTY_NAMES_INT32</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="mh">0x0004</span><span class="p">:</span> <span class="s1">u&#39;number_of_bytes&#39;</span><span class="p">,</span>  <span class="c1"># PIDDSI_BYTECOUNT</span>
+      <span class="mh">0x0005</span><span class="p">:</span> <span class="s1">u&#39;number_of_lines&#39;</span><span class="p">,</span>  <span class="c1"># PIDDSI_LINECOUNT</span>
+      <span class="mh">0x0006</span><span class="p">:</span> <span class="s1">u&#39;number_of_paragraphs&#39;</span><span class="p">,</span>  <span class="c1"># PIDDSI_PARCOUNT</span>
+      <span class="mh">0x0007</span><span class="p">:</span> <span class="s1">u&#39;number_of_slides&#39;</span><span class="p">,</span>  <span class="c1"># PIDDSI_SLIDECOUNT</span>
+      <span class="mh">0x0008</span><span class="p">:</span> <span class="s1">u&#39;number_of_notes&#39;</span><span class="p">,</span>  <span class="c1"># PIDDSI_NOTECOUNT</span>
+      <span class="mh">0x0009</span><span class="p">:</span> <span class="s1">u&#39;number_of_hidden_slides&#39;</span><span class="p">,</span>  <span class="c1"># PIDDSI_HIDDENCOUNT</span>
+      <span class="mh">0x000a</span><span class="p">:</span> <span class="s1">u&#39;number_of_clips&#39;</span><span class="p">,</span>  <span class="c1"># PIDDSI_MMCLIPCOUNT</span>
+      <span class="mh">0x0011</span><span class="p">:</span> <span class="s1">u&#39;number_of_characters_with_white_space&#39;</span><span class="p">,</span>  <span class="c1"># PIDDSI_CCHWITHSPACES</span>
+      <span class="mh">0x0017</span><span class="p">:</span> <span class="s1">u&#39;application_version&#39;</span><span class="p">,</span>  <span class="c1"># PIDDSI_VERSION</span>
+  <span class="p">}</span>
+
+  <span class="n">_PROPERTY_NAMES_STRING</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="mh">0x000e</span><span class="p">:</span> <span class="s1">u&#39;manager&#39;</span><span class="p">,</span>  <span class="c1"># PIDDSI_MANAGER</span>
+      <span class="mh">0x000f</span><span class="p">:</span> <span class="s1">u&#39;company&#39;</span><span class="p">,</span>  <span class="c1"># PIDDSI_COMPANY</span>
+      <span class="mh">0x001a</span><span class="p">:</span> <span class="s1">u&#39;content_type&#39;</span><span class="p">,</span>  <span class="c1"># PIDDSI_CONTENTTYPE</span>
+      <span class="mh">0x001b</span><span class="p">:</span> <span class="s1">u&#39;content_status&#39;</span><span class="p">,</span>  <span class="c1"># PIDDSI_CONTENTSTATUS</span>
+      <span class="mh">0x001c</span><span class="p">:</span> <span class="s1">u&#39;language&#39;</span><span class="p">,</span>  <span class="c1"># PIDDSI_LANGUAGE</span>
+      <span class="mh">0x001d</span><span class="p">:</span> <span class="s1">u&#39;document_version&#39;</span><span class="p">,</span>  <span class="c1"># PIDDSI_DOCVERSION</span>
+  <span class="p">}</span>
+
+  <span class="n">PIDDSI_CODEPAGE</span> <span class="o">=</span> <span class="mh">0x0001</span>
+  <span class="n">PIDDSI_CATEGORY</span> <span class="o">=</span> <span class="mh">0x0002</span>
+  <span class="n">PIDDSI_PRESFORMAT</span> <span class="o">=</span> <span class="mh">0x0003</span>
+  <span class="n">PIDDSI_SCALE</span> <span class="o">=</span> <span class="mh">0x000b</span>
+  <span class="n">PIDDSI_HEADINGPAIR</span> <span class="o">=</span> <span class="mh">0x000c</span>
+  <span class="n">PIDDSI_DOCPARTS</span> <span class="o">=</span> <span class="mh">0x000d</span>
+  <span class="n">PIDDSI_LINKSDIRTY</span> <span class="o">=</span> <span class="mh">0x0010</span>
+  <span class="n">PIDDSI_VERSION</span> <span class="o">=</span> <span class="mh">0x0017</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">usage</span><span class="p">,</span> <span class="n">olecf_item</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      timestamp: The FILETIME timestamp value.</span>
+<span class="sd">      usage: The usage string, describing the timestamp value.</span>
+<span class="sd">      olecf_item: The OLECF item (pyolecf.property_set_stream).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">OleCfDocumentSummaryInfoEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">timestamp</span><span class="p">,</span> <span class="n">usage</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">u&#39;Document Summary Information&#39;</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_InitFromPropertySet</span><span class="p">(</span><span class="n">olecf_item</span><span class="o">.</span><span class="n">set</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_InitFromPropertySet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_set</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event from a property set.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      property_set: The OLECF property set (pyolecf.property_set).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Combine the values of multiple property sections</span>
+    <span class="c1"># but do not override properties that are already set.</span>
+    <span class="k">for</span> <span class="n">property_section</span> <span class="ow">in</span> <span class="n">property_set</span><span class="o">.</span><span class="n">sections</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">property_section</span><span class="o">.</span><span class="n">class_identifier</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CLASS_IDENTIFIER</span><span class="p">:</span>
+        <span class="k">continue</span>
+      <span class="k">for</span> <span class="n">property_value</span> <span class="ow">in</span> <span class="n">property_section</span><span class="o">.</span><span class="n">properties</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_InitFromPropertyValue</span><span class="p">(</span><span class="n">property_value</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_InitFromPropertyValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event from a property value.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      property_value: The OLECF property value (pyolecf.property_value).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">property_value</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">interface</span><span class="o">.</span><span class="n">OleDefinitions</span><span class="o">.</span><span class="n">VT_I2</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_InitFromPropertyValueTypeInt16</span><span class="p">(</span><span class="n">property_value</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">property_value</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">interface</span><span class="o">.</span><span class="n">OleDefinitions</span><span class="o">.</span><span class="n">VT_I4</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_InitFromPropertyValueTypeInt32</span><span class="p">(</span><span class="n">property_value</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">property_value</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">interface</span><span class="o">.</span><span class="n">OleDefinitions</span><span class="o">.</span><span class="n">VT_BOOL</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_InitFromPropertyValueTypeBool</span><span class="p">(</span><span class="n">property_value</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="p">(</span><span class="n">property_value</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">interface</span><span class="o">.</span><span class="n">OleDefinitions</span><span class="o">.</span><span class="n">VT_LPSTR</span> <span class="ow">or</span>
+          <span class="n">property_value</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">interface</span><span class="o">.</span><span class="n">OleDefinitions</span><span class="o">.</span><span class="n">VT_LPWSTR</span><span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_InitFromPropertyValueTypeString</span><span class="p">(</span><span class="n">property_value</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_InitFromPropertyValueTypeInt16</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event from a 16-bit int type property value.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      property_value: The OLECF property value (pyolecf.property_value</span>
+<span class="sd">                      of type VT_I2).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">property_value</span><span class="o">.</span><span class="n">identifier</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">PIDDSI_CODEPAGE</span><span class="p">:</span>
+      <span class="c1"># TODO: can the codepage vary per property section?</span>
+      <span class="c1"># And is it needed to interpret the ASCII strings?</span>
+      <span class="c1"># codepage = property_value.data_as_integer</span>
+      <span class="k">pass</span>
+
+  <span class="k">def</span> <span class="nf">_InitFromPropertyValueTypeInt32</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event from a 32-bit int type property value.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      property_value: The OLECF property value (pyolecf.property_value</span>
+<span class="sd">                      of type VT_I4).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">property_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PROPERTY_NAMES_INT32</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">property_value</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+    <span class="c1"># The application version consists of 2 16-bit values that make up</span>
+    <span class="c1"># the version number. Where the upper 16-bit is the major number</span>
+    <span class="c1"># and the lower 16-bit the minor number.</span>
+    <span class="k">if</span> <span class="n">property_value</span><span class="o">.</span><span class="n">identifier</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">PIDDSI_VERSION</span><span class="p">:</span>
+      <span class="n">application_version</span> <span class="o">=</span> <span class="n">property_value</span><span class="o">.</span><span class="n">data_as_integer</span>
+      <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_name</span><span class="p">,</span> <span class="s1">u&#39;{0:d}.{1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">application_version</span> <span class="o">&gt;&gt;</span> <span class="mi">16</span><span class="p">,</span> <span class="n">application_version</span> <span class="o">&amp;</span> <span class="mh">0xffff</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="n">property_name</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_name</span><span class="p">):</span>
+      <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_name</span><span class="p">,</span> <span class="n">property_value</span><span class="o">.</span><span class="n">data_as_integer</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_InitFromPropertyValueTypeBool</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event from a boolean type property value.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      property_value: The OLECF property value (pyolecf.property_value</span>
+<span class="sd">                      of type VT_BOOL).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">property_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PROPERTY_NAMES_BOOL</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">property_value</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">property_name</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_name</span><span class="p">):</span>
+      <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_name</span><span class="p">,</span> <span class="n">property_value</span><span class="o">.</span><span class="n">data_as_boolean</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_InitFromPropertyValueTypeString</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event from a string type property value.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      property_value: The OLECF property value (pyolecf.property_value</span>
+<span class="sd">                      of type VT_LPSTR or VT_LPWSTR).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">property_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PROPERTY_NAMES_STRING</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="n">property_value</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">property_name</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_name</span><span class="p">):</span>
+      <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">property_name</span><span class="p">,</span> <span class="n">property_value</span><span class="o">.</span><span class="n">data_as_string</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DocumentSummaryOlecfPlugin"><a class="viewcode-back" href="../../../../plaso.parsers.olecf_plugins.html#plaso.parsers.olecf_plugins.summary.DocumentSummaryOlecfPlugin">[docs]</a><span class="k">class</span> <span class="nc">DocumentSummaryOlecfPlugin</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">OlecfPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Plugin that parses DocumentSummaryInformation item from an OLECF file.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;olecf_document_summary&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for a DocumentSummaryInformation OLECF stream.&#39;</span>
+
+  <span class="c1"># pylint: disable=anomalous-backslash-in-string</span>
+  <span class="n">REQUIRED_ITEMS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s1">u&#39;</span><span class="se">\005</span><span class="s1">DocumentSummaryInformation&#39;</span><span class="p">])</span>
+
+<div class="viewcode-block" id="DocumentSummaryOlecfPlugin.ParseItems"><a class="viewcode-back" href="../../../../plaso.parsers.olecf_plugins.html#plaso.parsers.olecf_plugins.summary.DocumentSummaryOlecfPlugin.ParseItems">[docs]</a>  <span class="k">def</span> <span class="nf">ParseItems</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">root_item</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">items</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a document summary information OLECF item.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      root_item: Optional root item of the OLECF file.</span>
+<span class="sd">      item_names: Optional list of all items discovered in the root.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">root_creation_time</span><span class="p">,</span> <span class="n">root_modification_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetTimestamps</span><span class="p">(</span><span class="n">root_item</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">root_creation_time</span><span class="p">:</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">OleCfDocumentSummaryInfoEvent</span><span class="p">(</span>
+            <span class="n">root_creation_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">CREATION_TIME</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">root_modification_time</span><span class="p">:</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">OleCfDocumentSummaryInfoEvent</span><span class="p">(</span>
+            <span class="n">root_modification_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">MODIFICATION_TIME</span><span class="p">,</span>
+            <span class="n">item</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="SummaryInfoOlecfPlugin"><a class="viewcode-back" href="../../../../plaso.parsers.olecf_plugins.html#plaso.parsers.olecf_plugins.summary.SummaryInfoOlecfPlugin">[docs]</a><span class="k">class</span> <span class="nc">SummaryInfoOlecfPlugin</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">OlecfPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Plugin that parses the SummaryInformation item from an OLECF file.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;olecf_summary&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for a SummaryInformation OLECF stream.&#39;</span>
+
+  <span class="c1"># pylint: disable=anomalous-backslash-in-string</span>
+  <span class="n">REQUIRED_ITEMS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s1">u&#39;</span><span class="se">\005</span><span class="s1">SummaryInformation&#39;</span><span class="p">])</span>
+
+<div class="viewcode-block" id="SummaryInfoOlecfPlugin.ParseItems"><a class="viewcode-back" href="../../../../plaso.parsers.olecf_plugins.html#plaso.parsers.olecf_plugins.summary.SummaryInfoOlecfPlugin.ParseItems">[docs]</a>  <span class="k">def</span> <span class="nf">ParseItems</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">root_item</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">items</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a summary information OLECF item.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      root_item: Optional root item of the OLECF file.</span>
+<span class="sd">      item_names: Optional list of all items discovered in the root.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">root_creation_time</span><span class="p">,</span> <span class="n">root_modification_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetTimestamps</span><span class="p">(</span><span class="n">root_item</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">items</span><span class="p">:</span>
+      <span class="n">summary_information_object</span> <span class="o">=</span> <span class="n">OleCfSummaryInfo</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+      <span class="k">for</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">timestamp_description</span> <span class="ow">in</span> <span class="n">summary_information_object</span><span class="o">.</span><span class="n">events</span><span class="p">:</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">OleCfSummaryInfoEvent</span><span class="p">(</span>
+            <span class="n">timestamp</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">,</span>
+            <span class="n">summary_information_object</span><span class="o">.</span><span class="n">attributes</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">root_creation_time</span><span class="p">:</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">OleCfSummaryInfoEvent</span><span class="p">(</span>
+            <span class="n">root_creation_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">CREATION_TIME</span><span class="p">,</span>
+            <span class="n">summary_information_object</span><span class="o">.</span><span class="n">attributes</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">root_modification_time</span><span class="p">:</span>
+        <span class="n">event_object</span> <span class="o">=</span> <span class="n">OleCfSummaryInfoEvent</span><span class="p">(</span>
+            <span class="n">root_modification_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">MODIFICATION_TIME</span><span class="p">,</span>
+            <span class="n">summary_information_object</span><span class="o">.</span><span class="n">attributes</span><span class="p">)</span>
+        <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span></div></div>
+
+
+<span class="n">olecf</span><span class="o">.</span><span class="n">OleCfParser</span><span class="o">.</span><span class="n">RegisterPlugins</span><span class="p">([</span>
+    <span class="n">DocumentSummaryOlecfPlugin</span><span class="p">,</span> <span class="n">SummaryInfoOlecfPlugin</span><span class="p">])</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

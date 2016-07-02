@@ -1,0 +1,614 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.engine.single_process &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.engine.single_process</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;The single process processing engine.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pdb</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">from</span> <span class="nn">dfvfs.resolver</span> <span class="kn">import</span> <span class="n">context</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">event_sources</span>
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">engine</span>
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">extractors</span>
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">plaso_queue</span>
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">worker</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">definitions</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">mediator</span> <span class="k">as</span> <span class="n">parsers_mediator</span>
+
+
+<div class="viewcode-block" id="SingleProcessPathSpecQueueProducer"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.single_process.SingleProcessPathSpecQueueProducer">[docs]</a><span class="k">class</span> <span class="nc">SingleProcessPathSpecQueueProducer</span><span class="p">(</span><span class="n">engine</span><span class="o">.</span><span class="n">PathSpecQueueProducer</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements a path specification queue producer object.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_spec_queue</span><span class="p">,</span> <span class="n">storage_writer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the queue producer object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      path_spec_queue: the path specification queue (instance of Queue).</span>
+<span class="sd">                       This queue contains the path specifications (instances</span>
+<span class="sd">                       of dfvfs.PathSpec) of the file entries that need</span>
+<span class="sd">                       to be processed.</span>
+<span class="sd">      storage_writer: a storage writer object (instance of StorageWriter).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">SingleProcessPathSpecQueueProducer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">path_spec_queue</span><span class="p">,</span> <span class="n">storage_writer</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_extraction_worker</span> <span class="o">=</span> <span class="bp">None</span>
+
+  <span class="k">def</span> <span class="nf">_FlushQueue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Flushes the queue, callback for the QueueFull exception.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_UpdateStatus</span><span class="p">()</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">IsEmpty</span><span class="p">():</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_extraction_worker</span><span class="o">.</span><span class="n">Run</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">_UpdateStatus</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Updates the processing status.&quot;&quot;&quot;</span>
+    <span class="c1"># Set the status to waiting while emptying the queue.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_status</span> <span class="o">=</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_WAITING</span>
+
+<div class="viewcode-block" id="SingleProcessPathSpecQueueProducer.SetExtractionWorker"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.single_process.SingleProcessPathSpecQueueProducer.SetExtractionWorker">[docs]</a>  <span class="k">def</span> <span class="nf">SetExtractionWorker</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">extraction_worker</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the extraction worker.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      extraction_worker: the extraction worker object (instance of</span>
+<span class="sd">                         EventExtractionWorker).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_extraction_worker</span> <span class="o">=</span> <span class="n">extraction_worker</span></div></div>
+
+
+<div class="viewcode-block" id="SingleProcessEngine"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.single_process.SingleProcessEngine">[docs]</a><span class="k">class</span> <span class="nc">SingleProcessEngine</span><span class="p">(</span><span class="n">engine</span><span class="o">.</span><span class="n">BaseEngine</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that defines the single process engine.&quot;&quot;&quot;</span>
+
+  <span class="n">_STATUS_CHECK_SLEEP</span> <span class="o">=</span> <span class="mf">1.5</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maximum_number_of_queued_items</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initialize the single process engine object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      maximum_number_of_queued_items: the maximum number of queued items.</span>
+<span class="sd">                                      The default is 0, which represents</span>
+<span class="sd">                                      no limit.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path_spec_queue</span> <span class="o">=</span> <span class="n">SingleProcessQueue</span><span class="p">(</span>
+        <span class="n">maximum_number_of_queued_items</span><span class="o">=</span><span class="n">maximum_number_of_queued_items</span><span class="p">)</span>
+    <span class="n">event_object_queue</span> <span class="o">=</span> <span class="n">SingleProcessQueue</span><span class="p">(</span>
+        <span class="n">maximum_number_of_queued_items</span><span class="o">=</span><span class="n">maximum_number_of_queued_items</span><span class="p">)</span>
+    <span class="n">parse_error_queue</span> <span class="o">=</span> <span class="n">SingleProcessQueue</span><span class="p">(</span>
+        <span class="n">maximum_number_of_queued_items</span><span class="o">=</span><span class="n">maximum_number_of_queued_items</span><span class="p">)</span>
+
+    <span class="nb">super</span><span class="p">(</span><span class="n">SingleProcessEngine</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">path_spec_queue</span><span class="p">,</span> <span class="n">event_object_queue</span><span class="p">,</span> <span class="n">parse_error_queue</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_extraction_worker</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_event_queue_producer</span> <span class="o">=</span> <span class="n">SingleProcessItemQueueProducer</span><span class="p">(</span>
+        <span class="n">event_object_queue</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_event_object_consumer</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_last_status_update_timestamp</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parse_error_queue_producer</span> <span class="o">=</span> <span class="n">SingleProcessItemQueueProducer</span><span class="p">(</span>
+        <span class="n">parse_error_queue</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_path_spec_producer</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_status_update_callback</span> <span class="o">=</span> <span class="bp">None</span>
+
+  <span class="k">def</span> <span class="nf">_CreateExtractionWorker</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">worker_number</span><span class="p">,</span> <span class="n">filter_object</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">mount_path</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+      <span class="n">process_archive_files</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">text_prepend</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates an extraction worker object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      worker_number: a number that identifies the worker.</span>
+<span class="sd">      filter_object: optional filter object (instance of objectfilter.Filter).</span>
+<span class="sd">      mount_path: optional string containing the mount path.</span>
+<span class="sd">      process_archive_files: optional boolean value to indicate if the worker</span>
+<span class="sd">                             should scan for file entries inside files.</span>
+<span class="sd">      text_prepend: optional string that contains the text to prepend to every</span>
+<span class="sd">                    event object.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An extraction worker (instance of worker.ExtractionWorker).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parser_mediator</span> <span class="o">=</span> <span class="n">parsers_mediator</span><span class="o">.</span><span class="n">ParserMediator</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_event_queue_producer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_error_queue_producer</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">knowledge_base</span><span class="p">)</span>
+
+    <span class="n">resolver_context</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
+
+    <span class="n">extraction_worker</span> <span class="o">=</span> <span class="n">SingleProcessEventExtractionWorker</span><span class="p">(</span>
+        <span class="n">worker_number</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path_spec_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_event_queue_producer</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parse_error_queue_producer</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span>
+        <span class="n">resolver_context</span><span class="o">=</span><span class="n">resolver_context</span><span class="p">,</span>
+        <span class="n">status_update_callback</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_UpdateStatus</span><span class="p">)</span>
+
+    <span class="c1"># TODO: differentiate between debug output and debug mode.</span>
+    <span class="n">extraction_worker</span><span class="o">.</span><span class="n">SetEnableDebugMode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_enable_debug_output</span><span class="p">)</span>
+
+    <span class="n">extraction_worker</span><span class="o">.</span><span class="n">SetEnableProfiling</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_enable_profiling</span><span class="p">,</span>
+        <span class="n">profiling_sample_rate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_profiling_sample_rate</span><span class="p">,</span>
+        <span class="n">profiling_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_profiling_type</span><span class="p">)</span>
+
+    <span class="n">extraction_worker</span><span class="o">.</span><span class="n">SetProcessArchiveFiles</span><span class="p">(</span><span class="n">process_archive_files</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">filter_object</span><span class="p">:</span>
+      <span class="n">extraction_worker</span><span class="o">.</span><span class="n">SetFilterObject</span><span class="p">(</span><span class="n">filter_object</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">mount_path</span><span class="p">:</span>
+      <span class="n">extraction_worker</span><span class="o">.</span><span class="n">SetMountPath</span><span class="p">(</span><span class="n">mount_path</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">text_prepend</span><span class="p">:</span>
+      <span class="n">extraction_worker</span><span class="o">.</span><span class="n">SetTextPrepend</span><span class="p">(</span><span class="n">text_prepend</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">extraction_worker</span>
+
+  <span class="k">def</span> <span class="nf">_UpdateCollectorStatus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">processing_completed</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Updates the collector status.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      processing_completed: optional boolean value the processing has been</span>
+<span class="sd">                            completed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path_spec_producer</span><span class="o">.</span><span class="n">GetStatus</span><span class="p">()</span>
+    <span class="n">status_indicator</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;processing_status&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="n">produced_number_of_path_specs</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="s1">u&#39;produced_number_of_path_specs&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">processing_completed</span><span class="p">:</span>
+      <span class="n">status_indicator</span> <span class="o">=</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_COMPLETED</span>
+    <span class="k">elif</span> <span class="n">status_indicator</span> <span class="o">==</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_INITIALIZED</span><span class="p">:</span>
+      <span class="n">status_indicator</span> <span class="o">=</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_RUNNING</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_processing_status</span><span class="o">.</span><span class="n">UpdateCollectorStatus</span><span class="p">(</span>
+        <span class="s1">u&#39;Collector&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">(),</span> <span class="n">produced_number_of_path_specs</span><span class="p">,</span>
+        <span class="n">status_indicator</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_UpdateExtractionWorkerStatus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">processing_completed</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Updates the extraction worker status.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      processing_completed: optional boolean value the processing has been</span>
+<span class="sd">                            completed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extraction_worker</span><span class="o">.</span><span class="n">GetStatus</span><span class="p">()</span>
+    <span class="n">status_indicator</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;processing_status&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="n">consumed_number_of_path_specs</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="s1">u&#39;consumed_number_of_path_specs&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">display_name</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;display_name&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span>
+    <span class="n">number_of_events</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;number_of_events&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">produced_number_of_path_specs</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+        <span class="s1">u&#39;produced_number_of_path_specs&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">processing_completed</span><span class="p">:</span>
+      <span class="n">status_indicator</span> <span class="o">=</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_COMPLETED</span>
+    <span class="k">elif</span> <span class="n">status_indicator</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_COMPLETED</span><span class="p">,</span>
+        <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_INITIALIZED</span><span class="p">):</span>
+      <span class="c1"># If the worker is initialized or completed in single</span>
+      <span class="c1"># processing mode it is actually waiting for input.</span>
+      <span class="n">status_indicator</span> <span class="o">=</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_WAITING</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_processing_status</span><span class="o">.</span><span class="n">UpdateExtractionWorkerStatus</span><span class="p">(</span>
+        <span class="s1">u&#39;Worker&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">(),</span> <span class="n">display_name</span><span class="p">,</span> <span class="n">number_of_events</span><span class="p">,</span>
+        <span class="n">consumed_number_of_path_specs</span><span class="p">,</span> <span class="n">produced_number_of_path_specs</span><span class="p">,</span>
+        <span class="n">status_indicator</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_UpdateStorageWriterStatus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">processing_completed</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Updates the storage writer status.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      processing_completed: optional boolean value the processing has been</span>
+<span class="sd">                            completed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_event_object_consumer</span><span class="o">.</span><span class="n">GetStatus</span><span class="p">()</span>
+    <span class="n">status_indicator</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;processing_status&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="n">number_of_events</span> <span class="o">=</span> <span class="n">status</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;number_of_events&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">processing_completed</span><span class="p">:</span>
+      <span class="n">status_indicator</span> <span class="o">=</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_COMPLETED</span>
+    <span class="k">elif</span> <span class="n">status_indicator</span> <span class="ow">in</span> <span class="p">(</span>
+        <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_COMPLETED</span><span class="p">,</span>
+        <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_INITIALIZED</span><span class="p">):</span>
+      <span class="c1"># If the storage writer is initialized or completed in single</span>
+      <span class="c1"># processing mode it is actually waiting for input.</span>
+      <span class="n">status_indicator</span> <span class="o">=</span> <span class="n">definitions</span><span class="o">.</span><span class="n">PROCESSING_STATUS_WAITING</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_processing_status</span><span class="o">.</span><span class="n">UpdateStorageWriterStatus</span><span class="p">(</span>
+        <span class="s1">u&#39;StorageWriter&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">(),</span> <span class="n">number_of_events</span><span class="p">,</span> <span class="n">status_indicator</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_UpdateStatus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">processing_completed</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Updates the processing status.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      processing_completed: optional boolean value the processing has been</span>
+<span class="sd">                            completed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">current_timestamp</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">current_timestamp</span> <span class="o">&lt;</span> <span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_last_status_update_timestamp</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_STATUS_CHECK_SLEEP</span><span class="p">):</span>
+      <span class="k">return</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_UpdateCollectorStatus</span><span class="p">(</span><span class="n">processing_completed</span><span class="o">=</span><span class="n">processing_completed</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_UpdateExtractionWorkerStatus</span><span class="p">(</span>
+        <span class="n">processing_completed</span><span class="o">=</span><span class="n">processing_completed</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_UpdateStorageWriterStatus</span><span class="p">(</span><span class="n">processing_completed</span><span class="o">=</span><span class="n">processing_completed</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status_update_callback</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_status_update_callback</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_processing_status</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_last_status_update_timestamp</span> <span class="o">=</span> <span class="n">current_timestamp</span>
+
+  <span class="k">def</span> <span class="nf">_ExtractEventSources</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">source_path_specs</span><span class="p">,</span> <span class="n">storage_writer</span><span class="p">,</span> <span class="n">filter_find_specs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+      <span class="n">resolver_context</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Processes the sources and extract event sources.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      source_path_specs: a list of path specifications (instances of</span>
+<span class="sd">                         dfvfs.PathSpec) of the sources to process.</span>
+<span class="sd">      resolver_context: resolver context (instance of dfvfs.Context).</span>
+<span class="sd">      storage_writer: a storage writer object (instance of StorageWriter).</span>
+<span class="sd">      filter_find_specs: optional list of filter find specifications (instances</span>
+<span class="sd">                         of dfvfs.FindSpec).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path_spec_extractor</span> <span class="o">=</span> <span class="n">extractors</span><span class="o">.</span><span class="n">PathSpecExtractor</span><span class="p">(</span><span class="n">resolver_context</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">path_spec</span> <span class="ow">in</span> <span class="n">path_spec_extractor</span><span class="o">.</span><span class="n">ExtractPathSpecs</span><span class="p">(</span>
+        <span class="n">source_path_specs</span><span class="p">,</span> <span class="n">find_specs</span><span class="o">=</span><span class="n">filter_find_specs</span><span class="p">):</span>
+
+      <span class="c1"># TODO: determine if event sources should be DataStream or FileEntry</span>
+      <span class="c1"># or both.</span>
+      <span class="n">event_source</span> <span class="o">=</span> <span class="n">event_sources</span><span class="o">.</span><span class="n">FileEntryEventSource</span><span class="p">(</span><span class="n">path_spec</span><span class="o">=</span><span class="n">path_spec</span><span class="p">)</span>
+      <span class="n">storage_writer</span><span class="o">.</span><span class="n">AddEventSource</span><span class="p">(</span><span class="n">event_source</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SingleProcessEngine.ProcessSources"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.single_process.SingleProcessEngine.ProcessSources">[docs]</a>  <span class="k">def</span> <span class="nf">ProcessSources</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">source_path_specs</span><span class="p">,</span> <span class="n">storage_writer</span><span class="p">,</span> <span class="n">preprocess_object</span><span class="p">,</span>
+      <span class="n">filter_find_specs</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">filter_object</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">hasher_names_string</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+      <span class="n">mount_path</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">parser_filter_expression</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+      <span class="n">process_archive_files</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">resolver_context</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+      <span class="n">status_update_callback</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">text_prepend</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Processes the sources and extracts event objects.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      source_path_specs: a list of path specifications (instances of</span>
+<span class="sd">                         dfvfs.PathSpec) of the sources to process.</span>
+<span class="sd">      storage_writer: a storage writer object (instance of StorageWriter).</span>
+<span class="sd">      preprocess_object: a preprocess object (instance of PreprocessObject).</span>
+<span class="sd">      filter_find_specs: optional list of filter find specifications (instances</span>
+<span class="sd">                         of dfvfs.FindSpec).</span>
+<span class="sd">      filter_object: optional filter object (instance of objectfilter.Filter).</span>
+<span class="sd">      hasher_names_string: optional comma separated string of names of</span>
+<span class="sd">                           hashers to enable.</span>
+<span class="sd">      mount_path: optional string containing the mount path.</span>
+<span class="sd">      parser_filter_expression: optional string containing the parser filter</span>
+<span class="sd">                                expression, where None represents all parsers</span>
+<span class="sd">                                and plugins.</span>
+<span class="sd">      process_archive_files: optional boolean value to indicate if the worker</span>
+<span class="sd">                             should scan for file entries inside files.</span>
+<span class="sd">      resolver_context: optional resolver context (instance of dfvfs.Context).</span>
+<span class="sd">      status_update_callback: optional callback function for status updates.</span>
+<span class="sd">      text_prepend: optional string that contains the text to prepend to every</span>
+<span class="sd">                    event object.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The processing status (instance of ProcessingStatus).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;Processing started.&#39;</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_status_update_callback</span> <span class="o">=</span> <span class="n">status_update_callback</span>
+
+    <span class="c1"># TODO: pass status update callback.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_ExtractEventSources</span><span class="p">(</span>
+        <span class="n">source_path_specs</span><span class="p">,</span> <span class="n">storage_writer</span><span class="p">,</span> <span class="n">filter_find_specs</span><span class="o">=</span><span class="n">filter_find_specs</span><span class="p">,</span>
+        <span class="n">resolver_context</span><span class="o">=</span><span class="n">resolver_context</span><span class="p">)</span>
+
+    <span class="c1"># TODO: flushing the storage writer here for now to make sure the event</span>
+    <span class="c1"># sources are written to disk. Remove this during phased processing</span>
+    <span class="c1"># refactor.</span>
+    <span class="n">storage_writer</span><span class="o">.</span><span class="n">ForceFlush</span><span class="p">()</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_path_spec_producer</span> <span class="o">=</span> <span class="n">SingleProcessPathSpecQueueProducer</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_path_spec_queue</span><span class="p">,</span> <span class="n">storage_writer</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_extraction_worker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CreateExtractionWorker</span><span class="p">(</span>
+        <span class="mi">0</span><span class="p">,</span> <span class="n">filter_object</span><span class="o">=</span><span class="n">filter_object</span><span class="p">,</span> <span class="n">mount_path</span><span class="o">=</span><span class="n">mount_path</span><span class="p">,</span>
+        <span class="n">process_archive_files</span><span class="o">=</span><span class="n">process_archive_files</span><span class="p">,</span>
+        <span class="n">text_prepend</span><span class="o">=</span><span class="n">text_prepend</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">hasher_names_string</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_extraction_worker</span><span class="o">.</span><span class="n">SetHashers</span><span class="p">(</span><span class="n">hasher_names_string</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_extraction_worker</span><span class="o">.</span><span class="n">InitializeParserObjects</span><span class="p">(</span>
+        <span class="n">parser_filter_expression</span><span class="o">=</span><span class="n">parser_filter_expression</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_event_object_consumer</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">EventObjectQueueConsumer</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_event_object_queue</span><span class="p">,</span> <span class="n">storage_writer</span><span class="p">)</span>
+
+    <span class="c1"># Set the extraction worker and storage writer values so that they</span>
+    <span class="c1"># can be accessed if the QueueFull exception is raised. This is</span>
+    <span class="c1"># needed in single process mode to prevent the queue consuming too</span>
+    <span class="c1"># much memory.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_path_spec_producer</span><span class="o">.</span><span class="n">SetExtractionWorker</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_extraction_worker</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_event_queue_producer</span><span class="o">.</span><span class="n">SetEventObjectConsumer</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_event_object_consumer</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parse_error_queue_producer</span><span class="o">.</span><span class="n">SetEventObjectConsumer</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_event_object_consumer</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_UpdateStatus</span><span class="p">()</span>
+    <span class="c1"># TODO: remove queues.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_path_spec_producer</span><span class="o">.</span><span class="n">Run</span><span class="p">()</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_UpdateStatus</span><span class="p">()</span>
+    <span class="c1"># TODO: split hashing and extraction phases.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_extraction_worker</span><span class="o">.</span><span class="n">Run</span><span class="p">()</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_UpdateStatus</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_event_object_consumer</span><span class="o">.</span><span class="n">Run</span><span class="p">()</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_UpdateStatus</span><span class="p">(</span><span class="n">processing_completed</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="n">storage_writer</span><span class="o">.</span><span class="n">WritePreprocessObject</span><span class="p">(</span><span class="n">preprocess_object</span><span class="p">)</span>
+    <span class="n">storage_writer</span><span class="o">.</span><span class="n">WriteSessionCompletion</span><span class="p">()</span>
+    <span class="n">storage_writer</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
+
+    <span class="c1"># Reset the extraction worker and storage writer values to return</span>
+    <span class="c1"># the objects in their original state. This will prevent access</span>
+    <span class="c1"># to the extraction worker outside this function and allow it</span>
+    <span class="c1"># to be garbage collected.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_extraction_worker</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_event_object_consumer</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_event_queue_producer</span><span class="o">.</span><span class="n">SetEventObjectConsumer</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parse_error_queue_producer</span><span class="o">.</span><span class="n">SetEventObjectConsumer</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_path_spec_producer</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_status_update_callback</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;Processing completed.&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_processing_status</span></div>
+
+<div class="viewcode-block" id="SingleProcessEngine.SignalAbort"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.single_process.SingleProcessEngine.SignalAbort">[docs]</a>  <span class="k">def</span> <span class="nf">SignalAbort</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Signals the engine to abort.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_event_queue_producer</span><span class="o">.</span><span class="n">SignalAbort</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parse_error_queue_producer</span><span class="o">.</span><span class="n">SignalAbort</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path_spec_producer</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_path_spec_producer</span><span class="o">.</span><span class="n">SignalAbort</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="SingleProcessEventExtractionWorker"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.single_process.SingleProcessEventExtractionWorker">[docs]</a><span class="k">class</span> <span class="nc">SingleProcessEventExtractionWorker</span><span class="p">(</span><span class="n">worker</span><span class="o">.</span><span class="n">BaseEventExtractionWorker</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that defines the single process event extraction worker.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">path_spec_queue</span><span class="p">,</span> <span class="n">event_queue_producer</span><span class="p">,</span>
+      <span class="n">parse_error_queue_producer</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">resolver_context</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+      <span class="n">status_update_callback</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event extraction worker object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      identifier: the identifier, usually an incrementing integer.</span>
+<span class="sd">      path_spec_queue: the path specification queue (instance of Queue).</span>
+<span class="sd">                       This queue contains the path specifications (instances</span>
+<span class="sd">                       of dfvfs.PathSpec) of the file entries that need</span>
+<span class="sd">                       to be processed.</span>
+<span class="sd">      event_queue_producer: the event object queue producer (instance of</span>
+<span class="sd">                            ItemQueueProducer).</span>
+<span class="sd">      parse_error_queue_producer: the parse error queue producer (instance of</span>
+<span class="sd">                                  ItemQueueProducer).</span>
+<span class="sd">      parser_mediator: a parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      resolver_context: optional resolver context (instance of dfvfs.Context).</span>
+<span class="sd">      status_update_callback: optional callback function for status updates.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">SingleProcessEventExtractionWorker</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">identifier</span><span class="p">,</span> <span class="n">path_spec_queue</span><span class="p">,</span> <span class="n">event_queue_producer</span><span class="p">,</span>
+        <span class="n">parse_error_queue_producer</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span>
+        <span class="n">resolver_context</span><span class="o">=</span><span class="n">resolver_context</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_status_update_callback</span> <span class="o">=</span> <span class="n">status_update_callback</span>
+
+  <span class="k">def</span> <span class="nf">_ConsumeItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_spec</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Consumes an item callback for ConsumeItems.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      path_spec: a path specification (instance of dfvfs.PathSpec).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      QueueFull: If a queue is full.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_status_update_callback</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_status_update_callback</span><span class="p">()</span>
+
+    <span class="nb">super</span><span class="p">(</span><span class="n">SingleProcessEventExtractionWorker</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_ConsumeItem</span><span class="p">(</span>
+        <span class="n">path_spec</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_DebugProcessPathSpec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Callback for debugging path specification processing failures.&quot;&quot;&quot;</span>
+    <span class="n">pdb</span><span class="o">.</span><span class="n">post_mortem</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="SingleProcessItemQueueProducer"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.single_process.SingleProcessItemQueueProducer">[docs]</a><span class="k">class</span> <span class="nc">SingleProcessItemQueueProducer</span><span class="p">(</span><span class="n">plaso_queue</span><span class="o">.</span><span class="n">ItemQueueProducer</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements a single process item queue producer.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">queue_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the queue producer.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      queue_object: the queue object (instance of Queue).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">SingleProcessItemQueueProducer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">queue_object</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_event_object_consumer</span> <span class="o">=</span> <span class="bp">None</span>
+
+  <span class="k">def</span> <span class="nf">_FlushQueue</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Flushes the queue callback for the QueueFull exception.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_event_object_consumer</span><span class="o">.</span><span class="n">Run</span><span class="p">()</span>
+
+<div class="viewcode-block" id="SingleProcessItemQueueProducer.SetEventObjectConsumer"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.single_process.SingleProcessItemQueueProducer.SetEventObjectConsumer">[docs]</a>  <span class="k">def</span> <span class="nf">SetEventObjectConsumer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object_consumer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the event object queue consumer.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object_consumer: an event object queue consumer (instance of</span>
+<span class="sd">                             ItemQueueConsumer).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_event_object_consumer</span> <span class="o">=</span> <span class="n">event_object_consumer</span></div></div>
+
+
+<div class="viewcode-block" id="SingleProcessQueue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.single_process.SingleProcessQueue">[docs]</a><span class="k">class</span> <span class="nc">SingleProcessQueue</span><span class="p">(</span><span class="n">plaso_queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Single process queue.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">maximum_number_of_queued_items</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a single process queue object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      maximum_number_of_queued_items: the maximum number of queued items.</span>
+<span class="sd">                                      The default is 0, which represents</span>
+<span class="sd">                                      no limit.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">SingleProcessQueue</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+
+    <span class="c1"># The Queue interface defines the maximum number of queued items to be</span>
+    <span class="c1"># 0 if unlimited as does the multi processing queue, but deque uses</span>
+    <span class="c1"># None to indicate no limit.</span>
+    <span class="k">if</span> <span class="n">maximum_number_of_queued_items</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="n">maximum_number_of_queued_items</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="c1"># maxlen contains the maximum number of items allowed to be queued,</span>
+    <span class="c1"># where None represents unlimited.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">deque</span><span class="p">(</span>
+        <span class="n">maxlen</span><span class="o">=</span><span class="n">maximum_number_of_queued_items</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SingleProcessQueue.IsEmpty"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.single_process.SingleProcessQueue.IsEmpty">[docs]</a>  <span class="k">def</span> <span class="nf">IsEmpty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines if the queue is empty.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="SingleProcessQueue.PushItem"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.single_process.SingleProcessQueue.PushItem">[docs]</a>  <span class="k">def</span> <span class="nf">PushItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pushes an item onto the queue.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      QueueFull: when the queue is full.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">number_of_items</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="p">)</span>
+
+    <span class="c1"># Deque will drop the first item in the queue when maxlen is exceeded.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">maxlen</span> <span class="ow">or</span> <span class="n">number_of_items</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">maxlen</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+      <span class="n">number_of_items</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">maxlen</span> <span class="ow">and</span> <span class="n">number_of_items</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">maxlen</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">QueueFull</span></div>
+
+<div class="viewcode-block" id="SingleProcessQueue.PopItem"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.single_process.SingleProcessQueue.PopItem">[docs]</a>  <span class="k">def</span> <span class="nf">PopItem</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pops an item off the queue or None on timeout.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      QueueClose: on user abort.</span>
+<span class="sd">      QueueEmpty: when the queue is empty.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="c1"># Using popleft to have FIFO behavior.</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">popleft</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">QueueEmpty</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">QueueClose</span></div>
+
+<div class="viewcode-block" id="SingleProcessQueue.Close"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.single_process.SingleProcessQueue.Close">[docs]</a>  <span class="k">def</span> <span class="nf">Close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Closes this queue, indicating that no further items will be added to it.</span>
+
+<span class="sd">    This method has no effect on for the single process queue, but is included</span>
+<span class="sd">    for compatibility with the Multiprocessing queue.&quot;&quot;&quot;</span>
+    <span class="k">return</span></div>
+
+<div class="viewcode-block" id="SingleProcessQueue.Open"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.single_process.SingleProcessQueue.Open">[docs]</a>  <span class="k">def</span> <span class="nf">Open</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Opens the queue, ready to enqueue or dequeue items.</span>
+
+<span class="sd">    This method has no effect on for the single process queue, but is included</span>
+<span class="sd">    for compatibility with the Multiprocessing queue.&quot;&quot;&quot;</span>
+    <span class="k">return</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

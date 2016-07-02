@@ -1,0 +1,230 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.symantec &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.symantec</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains a Symantec parser in plaso.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">text_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">text_parser</span>
+
+<span class="kn">import</span> <span class="nn">pytz</span>  <span class="c1"># pylint: disable=wrong-import-order</span>
+
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;David Nides (david.nides@gmail.com)&#39;</span>
+
+
+<div class="viewcode-block" id="SymantecEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.symantec.SymantecEvent">[docs]</a><span class="k">class</span> <span class="nc">SymantecEvent</span><span class="p">(</span><span class="n">text_events</span><span class="o">.</span><span class="n">TextEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for a Symantec line event.&quot;&quot;&quot;</span>
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;av:symantec:scanlog&#39;</span></div>
+
+
+<div class="viewcode-block" id="SymantecParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.symantec.SymantecParser">[docs]</a><span class="k">class</span> <span class="nc">SymantecParser</span><span class="p">(</span><span class="n">text_parser</span><span class="o">.</span><span class="n">TextCSVParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parse Symantec AV Corporate Edition and Endpoint Protection log files.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;symantec_scanlog&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for Symantec Anti-Virus log files.&#39;</span>
+
+  <span class="c1"># Define the columns that make up the structure of a Symantec log file.</span>
+  <span class="c1"># http://www.symantec.com/docs/TECH100099</span>
+  <span class="n">COLUMNS</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="s1">u&#39;time&#39;</span><span class="p">,</span> <span class="s1">u&#39;event&#39;</span><span class="p">,</span> <span class="s1">u&#39;cat&#39;</span><span class="p">,</span> <span class="s1">u&#39;logger&#39;</span><span class="p">,</span> <span class="s1">u&#39;computer&#39;</span><span class="p">,</span> <span class="s1">u&#39;user&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;virus&#39;</span><span class="p">,</span> <span class="s1">u&#39;file&#39;</span><span class="p">,</span> <span class="s1">u&#39;action1&#39;</span><span class="p">,</span> <span class="s1">u&#39;action2&#39;</span><span class="p">,</span> <span class="s1">u&#39;action0&#39;</span><span class="p">,</span> <span class="s1">u&#39;virustype&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;flags&#39;</span><span class="p">,</span> <span class="s1">u&#39;description&#39;</span><span class="p">,</span> <span class="s1">u&#39;scanid&#39;</span><span class="p">,</span> <span class="s1">u&#39;new_ext&#39;</span><span class="p">,</span> <span class="s1">u&#39;groupid&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;event_data&#39;</span><span class="p">,</span> <span class="s1">u&#39;vbin_id&#39;</span><span class="p">,</span> <span class="s1">u&#39;virus_id&#39;</span><span class="p">,</span> <span class="s1">u&#39;quarfwd_status&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;access&#39;</span><span class="p">,</span> <span class="s1">u&#39;snd_status&#39;</span><span class="p">,</span> <span class="s1">u&#39;compressed&#39;</span><span class="p">,</span> <span class="s1">u&#39;depth&#39;</span><span class="p">,</span> <span class="s1">u&#39;still_infected&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;definfo&#39;</span><span class="p">,</span> <span class="s1">u&#39;defseqnumber&#39;</span><span class="p">,</span> <span class="s1">u&#39;cleaninfo&#39;</span><span class="p">,</span> <span class="s1">u&#39;deleteinfo&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;backup_id&#39;</span><span class="p">,</span> <span class="s1">u&#39;parent&#39;</span><span class="p">,</span> <span class="s1">u&#39;guid&#39;</span><span class="p">,</span> <span class="s1">u&#39;clientgroup&#39;</span><span class="p">,</span> <span class="s1">u&#39;address&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;domainname&#39;</span><span class="p">,</span> <span class="s1">u&#39;ntdomain&#39;</span><span class="p">,</span> <span class="s1">u&#39;macaddr&#39;</span><span class="p">,</span> <span class="s1">u&#39;version:&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;remote_machine&#39;</span><span class="p">,</span> <span class="s1">u&#39;remote_machine_ip&#39;</span><span class="p">,</span> <span class="s1">u&#39;action1_status&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;action2_status&#39;</span><span class="p">,</span> <span class="s1">u&#39;license_feature_name&#39;</span><span class="p">,</span> <span class="s1">u&#39;license_feature_ver&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;license_serial_num&#39;</span><span class="p">,</span> <span class="s1">u&#39;license_fulfillment_id&#39;</span><span class="p">,</span> <span class="s1">u&#39;license_start_dt&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;license_expiration_dt&#39;</span><span class="p">,</span> <span class="s1">u&#39;license_lifecycle&#39;</span><span class="p">,</span> <span class="s1">u&#39;license_seats_total&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;license_seats&#39;</span><span class="p">,</span> <span class="s1">u&#39;err_code&#39;</span><span class="p">,</span> <span class="s1">u&#39;license_seats_delta&#39;</span><span class="p">,</span> <span class="s1">u&#39;status&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;domain_guid&#39;</span><span class="p">,</span> <span class="s1">u&#39;log_session_guid&#39;</span><span class="p">,</span> <span class="s1">u&#39;vbin_session_id&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;login_domain&#39;</span><span class="p">,</span> <span class="s1">u&#39;extra&#39;</span><span class="p">]</span>
+
+  <span class="k">def</span> <span class="nf">_ConvertToTimestamp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date_time_values</span><span class="p">,</span> <span class="n">timezone</span><span class="o">=</span><span class="n">pytz</span><span class="o">.</span><span class="n">UTC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts the given parsed date and time values to a timestamp.</span>
+
+<span class="sd">    The date and time values consist of six hexadecimal octets.</span>
+<span class="sd">    They represent the following:</span>
+<span class="sd">      First octet: Number of years since 1970</span>
+<span class="sd">      Second octet: Month, where January = 0</span>
+<span class="sd">      Third octet: Day</span>
+<span class="sd">      Fourth octet: Hour</span>
+<span class="sd">      Fifth octet: Minute</span>
+<span class="sd">      Sixth octet: Second</span>
+
+<span class="sd">    For example, 200A13080122 represents November 19, 2002, 8:01:34 AM.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      date_time_values: The hexadecimal encoded date and time values.</span>
+<span class="sd">      timezone: Optional timezone (instance of pytz.timezone).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A timestamp value, contains the number of micro seconds since</span>
+<span class="sd">      January 1, 1970, 00:00:00 UTC.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">date_time_values</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">NONE_TIMESTAMP</span>
+
+    <span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">hours</span><span class="p">,</span> <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="nb">int</span><span class="p">(</span><span class="n">hexdigit</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">hexdigit</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span> <span class="k">for</span> <span class="n">hexdigit</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+            <span class="n">date_time_values</span><span class="p">[::</span><span class="mi">2</span><span class="p">],</span> <span class="n">date_time_values</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]))</span>
+
+    <span class="k">return</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromTimeParts</span><span class="p">(</span>
+        <span class="n">year</span> <span class="o">+</span> <span class="mi">1970</span><span class="p">,</span> <span class="n">month</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">day</span><span class="p">,</span> <span class="n">hours</span><span class="p">,</span> <span class="n">minutes</span><span class="p">,</span> <span class="n">seconds</span><span class="p">,</span> <span class="n">timezone</span><span class="o">=</span><span class="n">timezone</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SymantecParser.VerifyRow"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.symantec.SymantecParser.VerifyRow">[docs]</a>  <span class="k">def</span> <span class="nf">VerifyRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Verify a single line of a Symantec log file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      row: A single row from the CSV file.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      True if this is the correct parser, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">timestamp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ConvertToTimestamp</span><span class="p">(</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">u&#39;time&#39;</span><span class="p">],</span> <span class="n">timezone</span><span class="o">=</span><span class="n">parser_mediator</span><span class="o">.</span><span class="n">timezone</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="n">errors</span><span class="o">.</span><span class="n">TimestampError</span><span class="p">):</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">timestamp</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="c1"># Check few entries.</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">my_event</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">u&#39;event&#39;</span><span class="p">])</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">if</span> <span class="n">my_event</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">my_event</span> <span class="o">&gt;</span> <span class="mi">77</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">category</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">u&#39;cat&#39;</span><span class="p">])</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">if</span> <span class="n">category</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">category</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">return</span> <span class="bp">True</span></div>
+
+<div class="viewcode-block" id="SymantecParser.ParseRow"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.symantec.SymantecParser.ParseRow">[docs]</a>  <span class="k">def</span> <span class="nf">ParseRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">row_offset</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a row and extract event objects.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      row_offset: The offset of the row.</span>
+<span class="sd">      row: A dictionary containing all the fields as denoted in the</span>
+<span class="sd">           COLUMNS class list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">timestamp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ConvertToTimestamp</span><span class="p">(</span>
+          <span class="n">row</span><span class="p">[</span><span class="s1">u&#39;time&#39;</span><span class="p">],</span> <span class="n">timezone</span><span class="o">=</span><span class="n">parser_mediator</span><span class="o">.</span><span class="n">timezone</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="n">errors</span><span class="o">.</span><span class="n">TimestampError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">timestamp</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">NONE_TIMESTAMP</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceParseError</span><span class="p">(</span>
+          <span class="s1">u&#39;unable to determine timestamp with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">exception</span><span class="p">))</span>
+
+    <span class="c1"># TODO: Create new dict object that only contains valuable attributes.</span>
+    <span class="n">event_object</span> <span class="o">=</span> <span class="n">SymantecEvent</span><span class="p">(</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">row_offset</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParser</span><span class="p">(</span><span class="n">SymantecParser</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

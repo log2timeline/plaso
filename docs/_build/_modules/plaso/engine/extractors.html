@@ -1,0 +1,675 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.engine.extractors &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.engine.extractors</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;The extractor class definitions.</span>
+
+<span class="sd">An extractor is a class used to extract information from &quot;raw&quot; data.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">pysigscan</span>
+
+<span class="kn">from</span> <span class="nn">dfvfs.helpers</span> <span class="kn">import</span> <span class="n">file_system_searcher</span>
+<span class="kn">from</span> <span class="nn">dfvfs.lib</span> <span class="kn">import</span> <span class="n">definitions</span> <span class="k">as</span> <span class="n">dfvfs_definitions</span>
+<span class="kn">from</span> <span class="nn">dfvfs.lib</span> <span class="kn">import</span> <span class="n">errors</span> <span class="k">as</span> <span class="n">dfvfs_errors</span>
+<span class="kn">from</span> <span class="nn">dfvfs.resolver</span> <span class="kn">import</span> <span class="n">resolver</span> <span class="k">as</span> <span class="n">path_spec_resolver</span>
+
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">profiler</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">interface</span> <span class="k">as</span> <span class="n">parsers_interface</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span> <span class="k">as</span> <span class="n">parsers_manager</span>
+
+
+<div class="viewcode-block" id="EventExtractor"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.extractors.EventExtractor">[docs]</a><span class="k">class</span> <span class="nc">EventExtractor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements an event extractor object.</span>
+
+<span class="sd">  The event extractor extracts events from event sources.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resolver_context</span><span class="p">,</span> <span class="n">parser_filter_expression</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes an event extractor object.</span>
+
+<span class="sd">    The parser filter expression is a comma separated value string that</span>
+<span class="sd">    denotes a list of parser names to include and/or exclude. Each entry</span>
+<span class="sd">    can have the value of:</span>
+
+<span class="sd">    * An exact match of a list of parsers, or a preset (see</span>
+<span class="sd">      plaso/frontend/presets.py for a full list of available presets).</span>
+<span class="sd">    * A name of a single parser (case insensitive), e.g. msiecf.</span>
+<span class="sd">    * A glob name for a single parser, e.g. &#39;*msie*&#39; (case insensitive).</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      resolver_context: a resolver context (instance of dfvfs.Context).</span>
+<span class="sd">      parser_filter_expression: optional string containing the parser filter</span>
+<span class="sd">                                expression, where None represents all parsers</span>
+<span class="sd">                                and plugins.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">EventExtractor</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_file_scanner</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_filestat_parser_object</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_mft_parser_object</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_non_sigscan_parser_names</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parser_filter_expression</span> <span class="o">=</span> <span class="n">parser_filter_expression</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parser_objects</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parsers_profiler</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_resolver_context</span> <span class="o">=</span> <span class="n">resolver_context</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_specification_store</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_usnjrnl_parser_object</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_InitializeParserObjects</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">_CheckParserCanProcessFileEntry</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_object</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines if a parser can process a file entry.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: a file entry (instance of dfvfs.FileEntry).</span>
+<span class="sd">      parser_object: a parser object (instance of BaseParser).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A boolean value that indicates the file entry can be processed by</span>
+<span class="sd">      the parser object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">filter_object</span> <span class="ow">in</span> <span class="n">parser_object</span><span class="o">.</span><span class="n">FILTERS</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">filter_object</span><span class="o">.</span><span class="n">Match</span><span class="p">(</span><span class="n">file_entry</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="k">return</span> <span class="bp">False</span>
+
+  <span class="k">def</span> <span class="nf">_GetSignatureMatchParserNames</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines if a file-like object matches one of the known signatures.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_object: the file-like object whose contents will be checked</span>
+<span class="sd">                   for known signatures.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list of parser names for which the contents of the file-like object</span>
+<span class="sd">      matches their known signatures.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parser_name_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">scan_state</span> <span class="o">=</span> <span class="n">pysigscan</span><span class="o">.</span><span class="n">scan_state</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_file_scanner</span><span class="o">.</span><span class="n">scan_file_object</span><span class="p">(</span><span class="n">scan_state</span><span class="p">,</span> <span class="n">file_object</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">scan_result</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">scan_state</span><span class="o">.</span><span class="n">scan_results</span><span class="p">):</span>
+      <span class="n">format_specification</span> <span class="o">=</span> <span class="p">(</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_specification_store</span><span class="o">.</span><span class="n">GetSpecificationBySignature</span><span class="p">(</span>
+              <span class="n">scan_result</span><span class="o">.</span><span class="n">identifier</span><span class="p">))</span>
+
+      <span class="k">if</span> <span class="n">format_specification</span><span class="o">.</span><span class="n">identifier</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">parser_name_list</span><span class="p">:</span>
+        <span class="n">parser_name_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">format_specification</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">parser_name_list</span>
+
+  <span class="k">def</span> <span class="nf">_InitializeParserObjects</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the parser objects.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_specification_store</span><span class="p">,</span> <span class="n">non_sigscan_parser_names</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">parsers_manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">GetSpecificationStore</span><span class="p">(</span>
+            <span class="n">parser_filter_expression</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_parser_filter_expression</span><span class="p">))</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_non_sigscan_parser_names</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">parser_name</span> <span class="ow">in</span> <span class="n">non_sigscan_parser_names</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">parser_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">u&#39;filestat&#39;</span><span class="p">,</span> <span class="s1">u&#39;usnjrnl&#39;</span><span class="p">]:</span>
+        <span class="k">continue</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_non_sigscan_parser_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parser_name</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_file_scanner</span> <span class="o">=</span> <span class="n">parsers_manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">GetScanner</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_specification_store</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parser_objects</span> <span class="o">=</span> <span class="n">parsers_manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">GetParserObjects</span><span class="p">(</span>
+        <span class="n">parser_filter_expression</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_parser_filter_expression</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_filestat_parser_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parser_objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;filestat&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">u&#39;filestat&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parser_objects</span><span class="p">:</span>
+      <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parser_objects</span><span class="p">[</span><span class="s1">u&#39;filestat&#39;</span><span class="p">]</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_mft_parser_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parser_objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;mft&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_usnjrnl_parser_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parser_objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;usnjrnl&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">u&#39;usnjrnl&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parser_objects</span><span class="p">:</span>
+      <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parser_objects</span><span class="p">[</span><span class="s1">u&#39;usnjrnl&#39;</span><span class="p">]</span>
+
+  <span class="k">def</span> <span class="nf">_ParseDataStreamWithParser</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">parser_object</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">,</span> <span class="n">data_stream_name</span><span class="o">=</span><span class="s1">u&#39;&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a data stream of a file entry with a specific parser.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: a parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      parser_object: a parser object (instance of BaseParser).</span>
+<span class="sd">      file_entry: a file entry object (instance of dfvfs.FileEntry).</span>
+<span class="sd">      data_stream_name: optional data stream name. The default is</span>
+<span class="sd">                        an empty string which represents the default</span>
+<span class="sd">                        data stream.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: if the file-like object is missing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_object</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetFileObject</span><span class="p">(</span><span class="n">data_stream_name</span><span class="o">=</span><span class="n">data_stream_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_object</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to retrieve file-like object from file entry.&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_ParseFileEntryWithParser</span><span class="p">(</span>
+          <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">parser_object</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">,</span> <span class="n">file_object</span><span class="o">=</span><span class="n">file_object</span><span class="p">)</span>
+
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="n">file_object</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">_ParseFileEntryWithParser</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">parser_object</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">,</span> <span class="n">file_object</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a file entry with a specific parser.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: a parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      parser_object: a parser object (instance of BaseParser).</span>
+<span class="sd">      file_entry: a file entry object (instance of dfvfs.FileEntry).</span>
+<span class="sd">      file_object: optional file-like object to parse. If not set the parser</span>
+<span class="sd">                   will use the parser mediator to open the file entry&#39;s</span>
+<span class="sd">                   default data stream as a file-like object.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      TypeError: if parser object is not a supported parser type.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parser_object</span><span class="p">,</span> <span class="p">(</span>
+        <span class="n">parsers_interface</span><span class="o">.</span><span class="n">FileEntryParser</span><span class="p">,</span> <span class="n">parsers_interface</span><span class="o">.</span><span class="n">FileObjectParser</span><span class="p">)):</span>
+      <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">u&#39;Unsupported parser object type.&#39;</span><span class="p">)</span>
+
+    <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ClearParserChain</span><span class="p">()</span>
+
+    <span class="n">reference_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolver_context</span><span class="o">.</span><span class="n">GetFileObjectReferenceCount</span><span class="p">(</span>
+        <span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parsers_profiler</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_parsers_profiler</span><span class="o">.</span><span class="n">StartTiming</span><span class="p">(</span><span class="n">parser_object</span><span class="o">.</span><span class="n">NAME</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parser_object</span><span class="p">,</span> <span class="n">parsers_interface</span><span class="o">.</span><span class="n">FileEntryParser</span><span class="p">):</span>
+        <span class="n">parser_object</span><span class="o">.</span><span class="n">Parse</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">)</span>
+      <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parser_object</span><span class="p">,</span> <span class="n">parsers_interface</span><span class="o">.</span><span class="n">FileObjectParser</span><span class="p">):</span>
+        <span class="n">parser_object</span><span class="o">.</span><span class="n">Parse</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_object</span><span class="p">)</span>
+
+    <span class="c1"># We catch IOError so we can determine the parser that generated the error.</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IOError</span><span class="p">,</span> <span class="n">dfvfs_errors</span><span class="o">.</span><span class="n">BackEndError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">display_name</span> <span class="o">=</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">GetDisplayName</span><span class="p">(</span><span class="n">file_entry</span><span class="p">)</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;{0:s} unable to parse file: {1:s} with error: {2:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">parser_object</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">display_name</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">except</span> <span class="n">errors</span><span class="o">.</span><span class="n">UnableToParseFile</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">display_name</span> <span class="o">=</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">GetDisplayName</span><span class="p">(</span><span class="n">file_entry</span><span class="p">)</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+          <span class="s1">u&#39;{0:s} unable to parse file: {1:s} with error: {2:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">parser_object</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">display_name</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parsers_profiler</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_parsers_profiler</span><span class="o">.</span><span class="n">StopTiming</span><span class="p">(</span><span class="n">parser_object</span><span class="o">.</span><span class="n">NAME</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">reference_count</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolver_context</span><span class="o">.</span><span class="n">GetFileObjectReferenceCount</span><span class="p">(</span>
+          <span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="p">):</span>
+        <span class="n">display_name</span> <span class="o">=</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">GetDisplayName</span><span class="p">(</span><span class="n">file_entry</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">((</span>
+            <span class="s1">u&#39;[{0:s}] did not explicitly close file-object for file: &#39;</span>
+            <span class="s1">u&#39;{1:s}.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">parser_object</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">display_name</span><span class="p">))</span>
+
+<div class="viewcode-block" id="EventExtractor.ParseDataStream"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.extractors.EventExtractor.ParseDataStream">[docs]</a>  <span class="k">def</span> <span class="nf">ParseDataStream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">,</span> <span class="n">data_stream_name</span><span class="o">=</span><span class="s1">u&#39;&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a data stream of a file entry with the enabled parsers.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: a parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_entry: a file entry object (instance of dfvfs.FileEntry).</span>
+<span class="sd">      data_stream_name: optional data stream name. The default is</span>
+<span class="sd">                        an empty string which represents the default</span>
+<span class="sd">                        data stream.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: if the file-like object or the parser object is missing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_object</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetFileObject</span><span class="p">(</span><span class="n">data_stream_name</span><span class="o">=</span><span class="n">data_stream_name</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_object</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to retrieve file-like object from file entry.&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">parser_name_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetSignatureMatchParserNames</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">parser_name_list</span><span class="p">:</span>
+        <span class="n">parser_name_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_non_sigscan_parser_names</span>
+
+      <span class="k">for</span> <span class="n">parser_name</span> <span class="ow">in</span> <span class="n">parser_name_list</span><span class="p">:</span>
+        <span class="n">parser_object</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parser_objects</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">parser_name</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">parser_object</span><span class="p">:</span>
+          <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+              <span class="s1">u&#39;Parser object missing for parser: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">parser_name</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">parser_object</span><span class="o">.</span><span class="n">FILTERS</span><span class="p">:</span>
+          <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CheckParserCanProcessFileEntry</span><span class="p">(</span>
+              <span class="n">parser_object</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">):</span>
+            <span class="k">continue</span>
+
+        <span class="n">display_name</span> <span class="o">=</span> <span class="n">parser_mediator</span><span class="o">.</span><span class="n">GetDisplayName</span><span class="p">(</span><span class="n">file_entry</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">((</span>
+            <span class="s1">u&#39;[ParseDataStream] parsing file: {0:s} with parser: &#39;</span>
+            <span class="s1">u&#39;{1:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">display_name</span><span class="p">,</span> <span class="n">parser_name</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ParseFileEntryWithParser</span><span class="p">(</span>
+            <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">parser_object</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">,</span>
+            <span class="n">file_object</span><span class="o">=</span><span class="n">file_object</span><span class="p">)</span>
+
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="n">file_object</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="EventExtractor.ParseFileEntryMetadata"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.extractors.EventExtractor.ParseFileEntryMetadata">[docs]</a>  <span class="k">def</span> <span class="nf">ParseFileEntryMetadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses the file entry metadata e.g. file system data.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: a parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_entry: a file entry object (instance of dfvfs.FileEntry).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filestat_parser_object</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_ParseFileEntryWithParser</span><span class="p">(</span>
+          <span class="n">parser_mediator</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filestat_parser_object</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="EventExtractor.ParseMetadataFile"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.extractors.EventExtractor.ParseMetadataFile">[docs]</a>  <span class="k">def</span> <span class="nf">ParseMetadataFile</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">,</span> <span class="n">data_stream_name</span><span class="o">=</span><span class="s1">u&#39;&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a metadata file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: a parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      file_entry: a file entry object (instance of dfvfs.FileEntry).</span>
+<span class="sd">      data_stream_name: optional data stream name. The default is</span>
+<span class="sd">                        an empty string which represents the default</span>
+<span class="sd">                        data stream.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">parent_path_spec</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="p">,</span> <span class="s1">u&#39;parent&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="n">filename_upper</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mft_parser_object</span> <span class="ow">and</span> <span class="n">parent_path_spec</span> <span class="ow">and</span>
+        <span class="n">filename_upper</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">u&#39;$MFT&#39;</span><span class="p">,</span> <span class="s1">u&#39;$MFTMIRR&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">data_stream_name</span><span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_ParseDataStreamWithParser</span><span class="p">(</span>
+          <span class="n">parser_mediator</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_mft_parser_object</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_usnjrnl_parser_object</span> <span class="ow">and</span> <span class="n">parent_path_spec</span> <span class="ow">and</span>
+          <span class="n">filename_upper</span> <span class="o">==</span> <span class="s1">u&#39;$USNJRNL&#39;</span> <span class="ow">and</span> <span class="n">data_stream_name</span> <span class="o">==</span> <span class="s1">u&#39;$J&#39;</span><span class="p">):</span>
+      <span class="c1"># To be able to ignore the sparse data ranges the UsnJrnl parser</span>
+      <span class="c1"># needs to read directly from the volume.</span>
+      <span class="n">volume_file_object</span> <span class="o">=</span> <span class="n">path_spec_resolver</span><span class="o">.</span><span class="n">Resolver</span><span class="o">.</span><span class="n">OpenFileObject</span><span class="p">(</span>
+          <span class="n">parent_path_spec</span><span class="p">,</span> <span class="n">resolver_context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_resolver_context</span><span class="p">)</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ParseFileEntryWithParser</span><span class="p">(</span>
+            <span class="n">parser_mediator</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_usnjrnl_parser_object</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">,</span>
+            <span class="n">file_object</span><span class="o">=</span><span class="n">volume_file_object</span><span class="p">)</span>
+      <span class="k">finally</span><span class="p">:</span>
+        <span class="n">volume_file_object</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="EventExtractor.ProfilingStart"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.extractors.EventExtractor.ProfilingStart">[docs]</a>  <span class="k">def</span> <span class="nf">ProfilingStart</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">identifier</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Starts the profiling.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      identifier: a string containg the profiling identifier.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      ValueError: if the parsers profiler is already set.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parsers_profiler</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Parsers profiler already set.&#39;</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parsers_profiler</span> <span class="o">=</span> <span class="n">profiler</span><span class="o">.</span><span class="n">ParsersProfiler</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="EventExtractor.ProfilingStop"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.extractors.EventExtractor.ProfilingStop">[docs]</a>  <span class="k">def</span> <span class="nf">ProfilingStop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Stops the profiling.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      ValueError: if the parsers profiler is not set.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parsers_profiler</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Parsers profiler not set.&#39;</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_parsers_profiler</span><span class="o">.</span><span class="n">Write</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="PathSpecExtractor"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.extractors.PathSpecExtractor">[docs]</a><span class="k">class</span> <span class="nc">PathSpecExtractor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements a path specification extractor object.</span>
+
+<span class="sd">  The path specification extractor extracts path specification from a source</span>
+<span class="sd">  directory, file or storage media device or image.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resolver_context</span><span class="p">,</span> <span class="n">duplicate_file_check</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a path specification extractor object.</span>
+
+<span class="sd">    The source collector discovers all the file entries in the source.</span>
+<span class="sd">    The source can be a single file, directory or a volume within</span>
+<span class="sd">    a storage media image or device.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      resolver_context: a resolver context (instance of dfvfs.Context).</span>
+<span class="sd">      duplicate_file_check: optional boolean value to indicate the collector</span>
+<span class="sd">                            should ignore duplicate files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">PathSpecExtractor</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_duplicate_file_check</span> <span class="o">=</span> <span class="n">duplicate_file_check</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_hashlist</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_resolver_context</span> <span class="o">=</span> <span class="n">resolver_context</span>
+
+  <span class="k">def</span> <span class="nf">_CalculateNTFSTimeHash</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a hash value calculated from a NTFS file&#39;s metadata.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: the file entry (instance of FileEntry).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A hash value (string) that can be used to determine if a file&#39;s timestamp</span>
+<span class="sd">      value has changed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">stat_object</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetStat</span><span class="p">()</span>
+    <span class="n">ret_hash</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">()</span>
+
+    <span class="n">atime</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stat_object</span><span class="p">,</span> <span class="s1">u&#39;atime&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">atime</span><span class="p">:</span>
+      <span class="n">atime</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">ret_hash</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;atime:{0:d}.{1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">atime</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stat_object</span><span class="p">,</span> <span class="s1">u&#39;atime_nano&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
+
+    <span class="n">crtime</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stat_object</span><span class="p">,</span> <span class="s1">u&#39;crtime&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">crtime</span><span class="p">:</span>
+      <span class="n">crtime</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">ret_hash</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;crtime:{0:d}.{1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">crtime</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stat_object</span><span class="p">,</span> <span class="s1">u&#39;crtime_nano&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
+
+    <span class="n">mtime</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stat_object</span><span class="p">,</span> <span class="s1">u&#39;mtime&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">mtime</span><span class="p">:</span>
+      <span class="n">mtime</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">ret_hash</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;mtime:{0:d}.{1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">mtime</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stat_object</span><span class="p">,</span> <span class="s1">u&#39;mtime_nano&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
+
+    <span class="n">ctime</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stat_object</span><span class="p">,</span> <span class="s1">u&#39;ctime&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ctime</span><span class="p">:</span>
+      <span class="n">ctime</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">ret_hash</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">b</span><span class="s1">&#39;ctime:{0:d}.{1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">ctime</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">stat_object</span><span class="p">,</span> <span class="s1">u&#39;ctime_nano&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
+
+    <span class="k">return</span> <span class="n">ret_hash</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">_ExtractPathSpecs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_spec</span><span class="p">,</span> <span class="n">find_specs</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts path specification from a specific source.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      path_spec: a path specification (instance of dfvfs.path.PathSpec).</span>
+<span class="sd">      find_specs: optional list of find specifications (instances of</span>
+<span class="sd">                  dfvfs.FindSpec).</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">      Path specifications (instances of dfvfs.PathSpec) of file entries</span>
+<span class="sd">      found in the source.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">file_entry</span> <span class="o">=</span> <span class="n">path_spec_resolver</span><span class="o">.</span><span class="n">Resolver</span><span class="o">.</span><span class="n">OpenFileEntry</span><span class="p">(</span>
+          <span class="n">path_spec</span><span class="p">,</span> <span class="n">resolver_context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_resolver_context</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span>
+        <span class="n">dfvfs_errors</span><span class="o">.</span><span class="n">AccessError</span><span class="p">,</span> <span class="n">dfvfs_errors</span><span class="o">.</span><span class="n">BackEndError</span><span class="p">,</span>
+        <span class="n">dfvfs_errors</span><span class="o">.</span><span class="n">PathSpecError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to open file entry with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+      <span class="k">return</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_entry</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">u&#39;Unable to open: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path_spec</span><span class="o">.</span><span class="n">comparable</span><span class="p">))</span>
+      <span class="k">return</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">IsDirectory</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">IsFile</span><span class="p">()</span> <span class="ow">and</span>
+        <span class="ow">not</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">IsDevice</span><span class="p">()):</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">((</span>
+          <span class="s1">u&#39;Source path specification not a device, file or directory.</span><span class="se">\n</span><span class="s1">&#39;</span>
+          <span class="s1">u&#39;{0:s}&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path_spec</span><span class="o">.</span><span class="n">comparable</span><span class="p">))</span>
+      <span class="k">return</span>
+
+    <span class="k">if</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">IsFile</span><span class="p">():</span>
+      <span class="k">yield</span> <span class="n">path_spec</span>
+
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">path_spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ExtractPathSpecsFromFileSystem</span><span class="p">(</span>
+          <span class="n">path_spec</span><span class="p">,</span> <span class="n">find_specs</span><span class="o">=</span><span class="n">find_specs</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">path_spec</span>
+
+  <span class="k">def</span> <span class="nf">_ExtractPathSpecsFromDirectory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts path specification from a directory.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: a file entry (instance of dfvfs.FileEntry) that refers</span>
+<span class="sd">                  to the directory.</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">      Path specifications (instances of dfvfs.PathSpec) of file entries</span>
+<span class="sd">      found in the directory.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Need to do a breadth-first search otherwise we&#39;ll hit the Python</span>
+    <span class="c1"># maximum recursion depth.</span>
+    <span class="n">sub_directories</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">sub_file_entry</span> <span class="ow">in</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">sub_file_entries</span><span class="p">:</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">sub_file_entry</span><span class="o">.</span><span class="n">IsAllocated</span><span class="p">()</span> <span class="ow">or</span> <span class="n">sub_file_entry</span><span class="o">.</span><span class="n">IsLink</span><span class="p">():</span>
+          <span class="k">continue</span>
+      <span class="k">except</span> <span class="n">dfvfs_errors</span><span class="o">.</span><span class="n">BackEndError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s1">u&#39;Unable to process file: {0:s} with error: {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">sub_file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="o">.</span><span class="n">comparable</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span>
+                    <span class="s1">u&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">u&#39;;&#39;</span><span class="p">),</span> <span class="n">exception</span><span class="p">))</span>
+        <span class="k">continue</span>
+
+      <span class="c1"># For TSK-based file entries only, ignore the virtual /$OrphanFiles</span>
+      <span class="c1"># directory.</span>
+      <span class="k">if</span> <span class="n">sub_file_entry</span><span class="o">.</span><span class="n">type_indicator</span> <span class="o">==</span> <span class="n">dfvfs_definitions</span><span class="o">.</span><span class="n">TYPE_INDICATOR_TSK</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">IsRoot</span><span class="p">()</span> <span class="ow">and</span> <span class="n">sub_file_entry</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">u&#39;$OrphanFiles&#39;</span><span class="p">:</span>
+          <span class="k">continue</span>
+
+      <span class="k">if</span> <span class="n">sub_file_entry</span><span class="o">.</span><span class="n">IsDirectory</span><span class="p">():</span>
+        <span class="n">sub_directories</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sub_file_entry</span><span class="p">)</span>
+
+      <span class="k">elif</span> <span class="n">sub_file_entry</span><span class="o">.</span><span class="n">IsFile</span><span class="p">():</span>
+        <span class="c1"># If we are dealing with a VSS we want to calculate a hash</span>
+        <span class="c1"># value based on available timestamps and compare that to previously</span>
+        <span class="c1"># calculated hash values, and only include the file into the queue if</span>
+        <span class="c1"># the hash does not match.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_duplicate_file_check</span><span class="p">:</span>
+          <span class="n">hash_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CalculateNTFSTimeHash</span><span class="p">(</span><span class="n">sub_file_entry</span><span class="p">)</span>
+
+          <span class="n">inode</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sub_file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="p">,</span> <span class="s1">u&#39;inode&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+          <span class="k">if</span> <span class="n">inode</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hashlist</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">hash_value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hashlist</span><span class="p">[</span><span class="n">inode</span><span class="p">]:</span>
+              <span class="k">continue</span>
+
+          <span class="bp">self</span><span class="o">.</span><span class="n">_hashlist</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">inode</span><span class="p">,</span> <span class="p">[])</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hash_value</span><span class="p">)</span>
+
+      <span class="k">for</span> <span class="n">path_spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ExtractPathSpecsFromFile</span><span class="p">(</span><span class="n">sub_file_entry</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">path_spec</span>
+
+    <span class="k">for</span> <span class="n">sub_file_entry</span> <span class="ow">in</span> <span class="n">sub_directories</span><span class="p">:</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">path_spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ExtractPathSpecsFromDirectory</span><span class="p">(</span><span class="n">sub_file_entry</span><span class="p">):</span>
+          <span class="k">yield</span> <span class="n">path_spec</span>
+
+      <span class="k">except</span> <span class="p">(</span>
+          <span class="n">dfvfs_errors</span><span class="o">.</span><span class="n">AccessError</span><span class="p">,</span> <span class="n">dfvfs_errors</span><span class="o">.</span><span class="n">BackEndError</span><span class="p">,</span>
+          <span class="n">dfvfs_errors</span><span class="o">.</span><span class="n">PathSpecError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">u&#39;{0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+
+  <span class="k">def</span> <span class="nf">_ExtractPathSpecsFromFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts path specification from a file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: a file entry (instance of dfvfs.FileEntry).</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">      Path specifications (instances of dfvfs.PathSpec) of file entries</span>
+<span class="sd">      found in the file entry.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">produced_main_path_spec</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="k">for</span> <span class="n">data_stream</span> <span class="ow">in</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">data_streams</span><span class="p">:</span>
+      <span class="c1"># Make a copy so we don&#39;t make the changes on a path specification</span>
+      <span class="c1"># directly. Otherwise already produced path specifications can be</span>
+      <span class="c1"># altered in the process.</span>
+      <span class="n">path_spec</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">data_stream</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">path_spec</span><span class="p">,</span> <span class="s1">u&#39;data_stream&#39;</span><span class="p">,</span> <span class="n">data_stream</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+      <span class="k">yield</span> <span class="n">path_spec</span>
+
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">data_stream</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+        <span class="n">produced_main_path_spec</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">produced_main_path_spec</span><span class="p">:</span>
+      <span class="k">yield</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span>
+
+  <span class="k">def</span> <span class="nf">_ExtractPathSpecsFromFileSystem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_spec</span><span class="p">,</span> <span class="n">find_specs</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts path specification from a file system within a specific source.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      path_spec: a path specification (instance of dfvfs.PathSpec)</span>
+<span class="sd">                 of the root of the file system.</span>
+<span class="sd">      find_specs: optional list of find specifications (instances of</span>
+<span class="sd">                  dfvfs.FindSpec).</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">      Path specifications (instances of dfvfs.PathSpec) of file entries</span>
+<span class="sd">      found in the file system.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">file_system</span> <span class="o">=</span> <span class="n">path_spec_resolver</span><span class="o">.</span><span class="n">Resolver</span><span class="o">.</span><span class="n">OpenFileSystem</span><span class="p">(</span>
+          <span class="n">path_spec</span><span class="p">,</span> <span class="n">resolver_context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_resolver_context</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span>
+        <span class="n">dfvfs_errors</span><span class="o">.</span><span class="n">AccessError</span><span class="p">,</span> <span class="n">dfvfs_errors</span><span class="o">.</span><span class="n">BackEndError</span><span class="p">,</span>
+        <span class="n">dfvfs_errors</span><span class="o">.</span><span class="n">PathSpecError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to open file system with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+      <span class="k">return</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">find_specs</span><span class="p">:</span>
+        <span class="n">searcher</span> <span class="o">=</span> <span class="n">file_system_searcher</span><span class="o">.</span><span class="n">FileSystemSearcher</span><span class="p">(</span>
+            <span class="n">file_system</span><span class="p">,</span> <span class="n">path_spec</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">path_spec</span> <span class="ow">in</span> <span class="n">searcher</span><span class="o">.</span><span class="n">Find</span><span class="p">(</span><span class="n">find_specs</span><span class="o">=</span><span class="n">find_specs</span><span class="p">):</span>
+          <span class="k">yield</span> <span class="n">path_spec</span>
+
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">file_entry</span> <span class="o">=</span> <span class="n">file_system</span><span class="o">.</span><span class="n">GetFileEntryByPathSpec</span><span class="p">(</span><span class="n">path_spec</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">file_entry</span><span class="p">:</span>
+          <span class="k">for</span> <span class="n">path_spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ExtractPathSpecsFromDirectory</span><span class="p">(</span><span class="n">file_entry</span><span class="p">):</span>
+            <span class="k">yield</span> <span class="n">path_spec</span>
+
+    <span class="k">except</span> <span class="p">(</span>
+        <span class="n">dfvfs_errors</span><span class="o">.</span><span class="n">AccessError</span><span class="p">,</span> <span class="n">dfvfs_errors</span><span class="o">.</span><span class="n">BackEndError</span><span class="p">,</span>
+        <span class="n">dfvfs_errors</span><span class="o">.</span><span class="n">PathSpecError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">u&#39;{0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="n">file_system</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
+
+<div class="viewcode-block" id="PathSpecExtractor.ExtractPathSpecs"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.extractors.PathSpecExtractor.ExtractPathSpecs">[docs]</a>  <span class="k">def</span> <span class="nf">ExtractPathSpecs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_specs</span><span class="p">,</span> <span class="n">find_specs</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts path specification from a specific source.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      path_spec: a list of path specification (instances of</span>
+<span class="sd">                 dfvfs.path.PathSpec).</span>
+<span class="sd">      find_specs: optional list of find specifications (instances of</span>
+<span class="sd">                  dfvfs.FindSpec).</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">      Path specifications (instances of dfvfs.PathSpec) of file entries</span>
+<span class="sd">      found in the source.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">path_spec</span> <span class="ow">in</span> <span class="n">path_specs</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">extracted_path_spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ExtractPathSpecs</span><span class="p">(</span>
+          <span class="n">path_spec</span><span class="p">,</span> <span class="n">find_specs</span><span class="o">=</span><span class="n">find_specs</span><span class="p">):</span>
+        <span class="k">yield</span> <span class="n">extracted_path_spec</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

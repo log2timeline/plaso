@@ -1,0 +1,1025 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.engine.zeromq_queue &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.engine.zeromq_queue</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;ZeroMQ implementations of the Plaso queue interface.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">errno</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">Queue</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">import</span> <span class="nn">zmq</span>
+
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">plaso_queue</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+
+
+<div class="viewcode-block" id="ZeroMQQueue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQQueue">[docs]</a><span class="k">class</span> <span class="nc">ZeroMQQueue</span><span class="p">(</span><span class="n">plaso_queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that defines an interfaces for ZeroMQ backed Plaso queues.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    name: A name to use to identify the queue.</span>
+<span class="sd">    port: The TCP port that the queue is connected or bound to. If the queue is</span>
+<span class="sd">          not yet bound or connected to a port, this value will be None.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">_SOCKET_ADDRESS</span> <span class="o">=</span> <span class="s1">u&#39;tcp://127.0.0.1&#39;</span>
+  <span class="n">_SOCKET_TYPE</span> <span class="o">=</span> <span class="bp">None</span>
+  <span class="n">SOCKET_CONNECTION_BIND</span> <span class="o">=</span> <span class="mi">1</span>
+  <span class="n">SOCKET_CONNECTION_CONNECT</span> <span class="o">=</span> <span class="mi">2</span>
+  <span class="n">SOCKET_CONNECTION_TYPE</span> <span class="o">=</span> <span class="bp">None</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">delay_open</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">linger_seconds</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">timeout_seconds</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+      <span class="n">name</span><span class="o">=</span><span class="s1">u&#39;Unnamed&#39;</span><span class="p">,</span> <span class="n">maximum_items</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a ZeroMQ backed queue.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      delay_open: Optional boolean that governs whether a ZeroMQ socket</span>
+<span class="sd">                   should be created the first time the queue is pushed to or</span>
+<span class="sd">                   popped from, rather than at queue object initialization.</span>
+<span class="sd">                   This is useful if a queue needs to be passed to a</span>
+<span class="sd">                   child process from a parent.</span>
+<span class="sd">      linger_seconds: Optional number of seconds that the underlying ZeroMQ</span>
+<span class="sd">                      socket can remain open after the queue object has been</span>
+<span class="sd">                      closed, to allow queued items to be transferred to other</span>
+<span class="sd">                      ZeroMQ sockets.</span>
+<span class="sd">      port: The TCP port to use for the queue. The default is None, which</span>
+<span class="sd">            indicates that the queue should choose a random port to bind to.</span>
+<span class="sd">      timeout_seconds: Optional number of seconds that calls to PopItem and</span>
+<span class="sd">                       PushItem may block for, before returning</span>
+<span class="sd">                       queue.QueueEmpty.</span>
+<span class="sd">      name: Optional name to identify the queue.</span>
+<span class="sd">      maximum_items: Optional maximum number of items to queue on the ZeroMQ</span>
+<span class="sd">                     socket. ZeroMQ refers to this value as &quot;high water</span>
+<span class="sd">                     mark&quot; or &quot;hwm&quot;. Note that this limit only applies at one</span>
+<span class="sd">                     &quot;end&quot; of the queue. The default of 1000 is the ZeroMQ</span>
+<span class="sd">                     default value.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      ValueError: If the queue is configured to connect to an endpoint,</span>
+<span class="sd">                      but no port is specified.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SOCKET_CONNECTION_TYPE</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">SOCKET_CONNECTION_CONNECT</span>
+        <span class="ow">and</span> <span class="ow">not</span> <span class="n">port</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;No port specified to connect to.&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_high_water_mark</span> <span class="o">=</span> <span class="n">maximum_items</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_linger_seconds</span> <span class="o">=</span> <span class="n">linger_seconds</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_timeout_milliseconds</span> <span class="o">=</span> <span class="n">timeout_seconds</span> <span class="o">*</span> <span class="mi">1000</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">delay_open</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_CreateZMQSocket</span><span class="p">()</span>
+
+  <span class="nd">@property</span>
+  <span class="k">def</span> <span class="nf">timeout_seconds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Maximum number of seconds that calls to Pop or Push items can take.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">divmod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_timeout_milliseconds</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+  <span class="nd">@timeout_seconds.setter</span>
+  <span class="k">def</span> <span class="nf">timeout_seconds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Maximum number of seconds that calls to Pop or Push items can take.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_timeout_milliseconds</span> <span class="o">=</span> <span class="n">value</span> <span class="o">*</span> <span class="mi">1000</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_SetSocketTimeouts</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">_SetSocketTimeouts</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the timeouts for socket send and receive.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_SOCKET_TYPE</span> <span class="o">==</span> <span class="n">zmq</span><span class="o">.</span><span class="n">PULL</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span>
+          <span class="n">zmq</span><span class="o">.</span><span class="n">RCVTIMEO</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timeout_milliseconds</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_SOCKET_TYPE</span> <span class="o">==</span> <span class="n">zmq</span><span class="o">.</span><span class="n">PUSH</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="o">.</span><span class="n">setsockopt</span><span class="p">(</span>
+          <span class="n">zmq</span><span class="o">.</span><span class="n">SNDTIMEO</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timeout_milliseconds</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_SetSocketHighWaterMark</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the high water mark for the socket.</span>
+
+<span class="sd">    This number is maximum number of items that will be queued on this end of</span>
+<span class="sd">    the queue.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="o">.</span><span class="n">hwm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_high_water_mark</span>
+
+  <span class="k">def</span> <span class="nf">_CreateZMQSocket</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a ZeroMQ socket.&quot;&quot;&quot;</span>
+    <span class="n">zmq_context</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">Context</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span> <span class="o">=</span> <span class="n">zmq_context</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_SOCKET_TYPE</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_SetSocketTimeouts</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_SetSocketHighWaterMark</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">:</span>
+      <span class="n">address</span> <span class="o">=</span> <span class="s1">u&#39;{0:s}:{1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_SOCKET_ADDRESS</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">)</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">SOCKET_CONNECTION_TYPE</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">SOCKET_CONNECTION_CONNECT</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">address</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;{0:s} connected to {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">address</span><span class="p">))</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">address</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;{0:s} bound to specified port {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">address</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="o">.</span><span class="n">bind_to_random_port</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_SOCKET_ADDRESS</span><span class="p">)</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;{0:s} bound to random port {1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">))</span>
+
+<div class="viewcode-block" id="ZeroMQQueue.Open"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQQueue.Open">[docs]</a>  <span class="k">def</span> <span class="nf">Open</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Opens this queue, causing the creation of a ZeroMQ socket.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      QueueAlreadyStarted: If the queue is already started, and a socket already</span>
+<span class="sd">      exists.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">QueueAlreadyStarted</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_CreateZMQSocket</span><span class="p">()</span></div>
+
+  <span class="c1"># pylint: disable=arguments-differ</span>
+<div class="viewcode-block" id="ZeroMQQueue.Close"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQQueue.Close">[docs]</a>  <span class="k">def</span> <span class="nf">Close</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">abort</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Closes the queue.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      abort: If the Close is the result of an abort condition.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      QueueAlreadyClosed: If the queue is not started, or has already been</span>
+<span class="sd">      closed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">abort</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">QueueAlreadyClosed</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">abort</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">u&#39;{0:s} queue aborting. Contents may be lost.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_linger_seconds</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+          <span class="s1">u&#39;{0:s} queue closing, will linger for up to {1:d} seconds&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linger_seconds</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="p">:</span>
+      <span class="k">return</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_linger_seconds</span><span class="p">)</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="ZeroMQQueue.Empty"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQQueue.Empty">[docs]</a>  <span class="k">def</span> <span class="nf">Empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Empties all items from the queue.&quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="ZeroMQQueue.IsBound"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQQueue.IsBound">[docs]</a>  <span class="k">def</span> <span class="nf">IsBound</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks if the queue is bound to a port.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SOCKET_CONNECTION_TYPE</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">SOCKET_CONNECTION_BIND</span> <span class="ow">and</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+      <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="bp">False</span></div>
+
+<div class="viewcode-block" id="ZeroMQQueue.IsConnected"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQQueue.IsConnected">[docs]</a>  <span class="k">def</span> <span class="nf">IsConnected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks if the queue is connected to an port.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SOCKET_CONNECTION_TYPE</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">SOCKET_CONNECTION_CONNECT</span> <span class="ow">and</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">):</span>
+      <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="bp">False</span></div>
+
+<div class="viewcode-block" id="ZeroMQQueue.IsEmpty"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQQueue.IsEmpty">[docs]</a>  <span class="k">def</span> <span class="nf">IsEmpty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Checks if the queue is empty.</span>
+
+<span class="sd">    ZeroMQ queues don&#39;t have a concept of &quot;empty&quot; - there could always be</span>
+<span class="sd">    messages on the queue that a producer or consumer is unaware of. Thus,</span>
+<span class="sd">    the queue is never empty, so we return False. Note that it is possible that</span>
+<span class="sd">    a queue is unable to pop an item from a queue within a timeout, which will</span>
+<span class="sd">    cause PopItem to raise a QueueEmpty exception, but this is a different</span>
+<span class="sd">    condition.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      False</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">False</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="ZeroMQQueue.PushItem"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQQueue.PushItem">[docs]</a>  <span class="k">def</span> <span class="nf">PushItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pushes an item on to the queue.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      item: The item to push on the queue.</span>
+<span class="sd">      block: Optional argument to indicate whether the push should be performed</span>
+<span class="sd">             in blocking or non-block mode.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      QueueAlreadyClosed: If the queue is closed.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="ZeroMQQueue.PopItem"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQQueue.PopItem">[docs]</a>  <span class="k">def</span> <span class="nf">PopItem</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pops an item off the queue.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The item from the queue.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      QueueEmpty: If the queue is empty, and no item could be popped within the</span>
+<span class="sd">                  queue timeout.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div></div>
+
+
+<div class="viewcode-block" id="ZeroMQPullQueue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQPullQueue">[docs]</a><span class="k">class</span> <span class="nc">ZeroMQPullQueue</span><span class="p">(</span><span class="n">ZeroMQQueue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parent class for Plaso queues backed by ZeroMQ PULL sockets.</span>
+
+<span class="sd">  This class should not be instantiated directly, a subclass should be</span>
+<span class="sd">  instantiated instead.</span>
+
+<span class="sd">  Instances of this class or subclasses may only be used to pop items, not to</span>
+<span class="sd">  push.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">_SOCKET_TYPE</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">PULL</span>
+
+<div class="viewcode-block" id="ZeroMQPullQueue.Empty"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQPullQueue.Empty">[docs]</a>  <span class="k">def</span> <span class="nf">Empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Empties the queue.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      zmq.error.ZMQError: If a ZeroMQ error occurs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="o">.</span><span class="n">recv_pyobj</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">Again</span><span class="p">:</span>
+      <span class="c1"># Timeout dequeueing an item, so the queue is empty.</span>
+      <span class="k">pass</span>
+    <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">ZMQError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">exception</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">EINTR</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">u&#39;ZMQ syscall interrupted in {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">return</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span></div>
+
+<div class="viewcode-block" id="ZeroMQPullQueue.PopItem"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQPullQueue.PopItem">[docs]</a>  <span class="k">def</span> <span class="nf">PopItem</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pops an item off the queue.</span>
+
+<span class="sd">    If no ZeroMQ socket has been created, one will be created the first</span>
+<span class="sd">    time this method is called.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      QueueEmpty: If the queue is empty, and no item could be popped within the</span>
+<span class="sd">                  queue timeout.</span>
+<span class="sd">      zmq.error.ZMQError: If a ZeroMQ error occurs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;Pop on {0:s} queue, port {1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_CreateZMQSocket</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="o">.</span><span class="n">recv_pyobj</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">Again</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">QueueEmpty</span>
+    <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">ZMQError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">exception</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">EINTR</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s1">u&#39;ZMQ syscall interrupted in {0:s}. Queue aborting&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">plaso_queue</span><span class="o">.</span><span class="n">QueueAbort</span><span class="p">()</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">Close</span><span class="p">(</span><span class="n">abort</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+      <span class="k">raise</span></div>
+
+<div class="viewcode-block" id="ZeroMQPullQueue.PushItem"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQPullQueue.PushItem">[docs]</a>  <span class="k">def</span> <span class="nf">PushItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pushes an item on to the queue.</span>
+
+<span class="sd">    Provided for compatibility with the API, but doesn&#39;t actually work.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      item: The item to push on to the queue.</span>
+<span class="sd">      block: Optional argument to indicate whether the push should be performed</span>
+<span class="sd">             in blocking or non-block mode.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      WrongQueueType: As Push is not supported this queue.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">WrongQueueType</span></div></div>
+
+
+<div class="viewcode-block" id="ZeroMQPullBindQueue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQPullBindQueue">[docs]</a><span class="k">class</span> <span class="nc">ZeroMQPullBindQueue</span><span class="p">(</span><span class="n">ZeroMQPullQueue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A Plaso queue backed by a ZeroMQ PULL socket that binds to a port.</span>
+
+<span class="sd">  This queue may only be used to pop items, not to push.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">SOCKET_CONNECTION_TYPE</span> <span class="o">=</span> <span class="n">ZeroMQQueue</span><span class="o">.</span><span class="n">SOCKET_CONNECTION_BIND</span></div>
+
+
+<div class="viewcode-block" id="ZeroMQPullConnectQueue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQPullConnectQueue">[docs]</a><span class="k">class</span> <span class="nc">ZeroMQPullConnectQueue</span><span class="p">(</span><span class="n">ZeroMQPullQueue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A Plaso queue backed by a ZeroMQ PULL socket that connects to a port.</span>
+
+<span class="sd">  This queue may only be used to pop items, not to push.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">SOCKET_CONNECTION_TYPE</span> <span class="o">=</span> <span class="n">ZeroMQQueue</span><span class="o">.</span><span class="n">SOCKET_CONNECTION_CONNECT</span></div>
+
+
+<div class="viewcode-block" id="ZeroMQPushQueue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQPushQueue">[docs]</a><span class="k">class</span> <span class="nc">ZeroMQPushQueue</span><span class="p">(</span><span class="n">ZeroMQQueue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parent class for Plaso queues backed by ZeroMQ PUSH sockets.</span>
+
+<span class="sd">  This class should not be instantiated directly, a subclass should be</span>
+<span class="sd">  instantiated instead.</span>
+
+<span class="sd">  Instances of this class or subclasses may only be used to push items, not to</span>
+<span class="sd">  pop.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">_SOCKET_TYPE</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">PUSH</span>
+
+<div class="viewcode-block" id="ZeroMQPushQueue.PopItem"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQPushQueue.PopItem">[docs]</a>  <span class="k">def</span> <span class="nf">PopItem</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pops an item of the queue.</span>
+
+<span class="sd">    Provided for compatibility with the API, but doesn&#39;t actually work.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      WrongQueueType: As Pull is not supported this queue.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">WrongQueueType</span></div>
+
+<div class="viewcode-block" id="ZeroMQPushQueue.PushItem"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQPushQueue.PushItem">[docs]</a>  <span class="k">def</span> <span class="nf">PushItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Push an item on to the queue.</span>
+
+<span class="sd">    If no ZeroMQ socket has been created, one will be created the first time</span>
+<span class="sd">    this method is called.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      item: The item to push on to the queue.</span>
+<span class="sd">      block: Optional argument to indicate whether the push should be performed</span>
+<span class="sd">             in blocking or non-block mode.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      KeyboardInterrupt: If the process is sent a KeyboardInterrupt while</span>
+<span class="sd">                         pushing an item.</span>
+<span class="sd">      zmq.error.Again: If it was not possible to push the item to the queue</span>
+<span class="sd">                       within the timeout.</span>
+<span class="sd">      zmq.error.ZMQError: If a ZeroMQ specific error occurs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;Push on {0:s} queue, port {1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_CreateZMQSocket</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">block</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="o">.</span><span class="n">send_pyobj</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="o">.</span><span class="n">send_pyobj</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">zmq</span><span class="o">.</span><span class="n">DONTWAIT</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">Again</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">u&#39;{0:s} unable to push item, raising.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+      <span class="k">raise</span>
+    <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">ZMQError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">exception</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">EINTR</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">u&#39;ZMQ syscall interrupted in {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">plaso_queue</span><span class="o">.</span><span class="n">QueueAbort</span><span class="p">()</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">Close</span><span class="p">(</span><span class="n">abort</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+      <span class="k">raise</span></div>
+
+<div class="viewcode-block" id="ZeroMQPushQueue.Empty"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQPushQueue.Empty">[docs]</a>  <span class="k">def</span> <span class="nf">Empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Empties all items from the queue.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      WrongQueueType: As this queue type does not support emptying.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">WrongQueueType</span></div></div>
+
+
+<div class="viewcode-block" id="ZeroMQPushBindQueue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQPushBindQueue">[docs]</a><span class="k">class</span> <span class="nc">ZeroMQPushBindQueue</span><span class="p">(</span><span class="n">ZeroMQPushQueue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A Plaso queue backed by a ZeroMQ PUSH socket that binds to a port.</span>
+
+<span class="sd">  This queue may only be used to push items, not to pop.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">SOCKET_CONNECTION_TYPE</span> <span class="o">=</span> <span class="n">ZeroMQQueue</span><span class="o">.</span><span class="n">SOCKET_CONNECTION_BIND</span></div>
+
+
+<div class="viewcode-block" id="ZeroMQPushConnectQueue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQPushConnectQueue">[docs]</a><span class="k">class</span> <span class="nc">ZeroMQPushConnectQueue</span><span class="p">(</span><span class="n">ZeroMQPushQueue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A Plaso queue backed by a ZeroMQ PUSH socket that connects to a port.</span>
+
+<span class="sd">  This queue may only be used to push items, not to pop.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">SOCKET_CONNECTION_TYPE</span> <span class="o">=</span> <span class="n">ZeroMQQueue</span><span class="o">.</span><span class="n">SOCKET_CONNECTION_CONNECT</span></div>
+
+
+<div class="viewcode-block" id="ZeroMQRequestQueue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQRequestQueue">[docs]</a><span class="k">class</span> <span class="nc">ZeroMQRequestQueue</span><span class="p">(</span><span class="n">ZeroMQQueue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parent class for Plaso queues backed by ZeroMQ REQ sockets.</span>
+
+<span class="sd">  This class should not be instantiated directly, a subclass should be</span>
+<span class="sd">  instantiated instead.</span>
+
+<span class="sd">  Instances of this class or subclasses may only be used to pop items, not to</span>
+<span class="sd">  push.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">_SOCKET_TYPE</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">REQ</span>
+
+<div class="viewcode-block" id="ZeroMQRequestQueue.Empty"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQRequestQueue.Empty">[docs]</a>  <span class="k">def</span> <span class="nf">Empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Empties the queue.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      zmq.error.ZMQError: If an error occurs in ZeroMQ.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="o">.</span><span class="n">send_pyobj</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="o">.</span><span class="n">recv_pyobj</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">Again</span><span class="p">:</span>
+      <span class="c1"># Timeout receiving on queue, so we can conclude that the queue is empty.</span>
+      <span class="k">return</span>
+    <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">ZMQError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">exception</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">EINTR</span><span class="p">:</span>
+        <span class="c1"># Interrupted syscall, we won&#39;t be able to dequeue any more items from</span>
+        <span class="c1"># this queue, so we can consider it empty.</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">u&#39;ZMQ syscall interrupted in {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">return</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span></div>
+
+<div class="viewcode-block" id="ZeroMQRequestQueue.PopItem"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQRequestQueue.PopItem">[docs]</a>  <span class="k">def</span> <span class="nf">PopItem</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pops an item off the queue.</span>
+
+<span class="sd">    If no ZeroMQ socket has been created, one will be created the first</span>
+<span class="sd">    time this method is called.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The item retrieved from the queue, as a deserialized Python object.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      KeyboardInterrupt: If the process is sent a KeyboardInterrupt while</span>
+<span class="sd">                         popping an item.</span>
+<span class="sd">      QueueEmpty: If the queue is empty, and no item could be popped within the</span>
+<span class="sd">                  queue timeout.</span>
+<span class="sd">      zmq.error.ZMQError: If an error occurs in ZeroMQ.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;Pop on {0:s} queue, port {1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_CreateZMQSocket</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="o">.</span><span class="n">send_pyobj</span><span class="p">(</span><span class="bp">None</span><span class="p">)</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="o">.</span><span class="n">recv_pyobj</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">Again</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">QueueEmpty</span>
+    <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">ZMQError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">exception</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">EINTR</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s1">u&#39;ZMQ syscall interrupted in {0:s}. Queue aborting.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">plaso_queue</span><span class="o">.</span><span class="n">QueueAbort</span><span class="p">()</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">Close</span><span class="p">(</span><span class="n">abort</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+      <span class="k">raise</span></div>
+
+<div class="viewcode-block" id="ZeroMQRequestQueue.PushItem"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQRequestQueue.PushItem">[docs]</a>  <span class="k">def</span> <span class="nf">PushItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pushes an item on to the queue.</span>
+
+<span class="sd">    Provided for compatibility with the API, but doesn&#39;t actually work.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      item: The item to push on to the queue.</span>
+<span class="sd">      block: Optional argument to indicate whether the push should be performed</span>
+<span class="sd">             in blocking or non-block mode.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      WrongQueueType: As Push is not supported this queue.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">WrongQueueType</span></div></div>
+
+
+<div class="viewcode-block" id="ZeroMQRequestBindQueue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQRequestBindQueue">[docs]</a><span class="k">class</span> <span class="nc">ZeroMQRequestBindQueue</span><span class="p">(</span><span class="n">ZeroMQRequestQueue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A Plaso queue backed by a ZeroMQ REQ socket that binds to a port.</span>
+
+<span class="sd">  This queue may only be used to pop items, not to push.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">SOCKET_CONNECTION_TYPE</span> <span class="o">=</span> <span class="n">ZeroMQQueue</span><span class="o">.</span><span class="n">SOCKET_CONNECTION_BIND</span></div>
+
+
+<div class="viewcode-block" id="ZeroMQRequestConnectQueue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQRequestConnectQueue">[docs]</a><span class="k">class</span> <span class="nc">ZeroMQRequestConnectQueue</span><span class="p">(</span><span class="n">ZeroMQRequestQueue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A Plaso queue backed by a ZeroMQ REQ socket that connects to a port.</span>
+
+<span class="sd">  This queue may only be used to pop items, not to push.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">SOCKET_CONNECTION_TYPE</span> <span class="o">=</span> <span class="n">ZeroMQQueue</span><span class="o">.</span><span class="n">SOCKET_CONNECTION_CONNECT</span></div>
+
+
+<div class="viewcode-block" id="ZeroMQBufferedQueue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQBufferedQueue">[docs]</a><span class="k">class</span> <span class="nc">ZeroMQBufferedQueue</span><span class="p">(</span><span class="n">ZeroMQQueue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parent class for buffered Plaso queues..</span>
+
+<span class="sd">  This class should not be instantiated directly, a subclass should be</span>
+<span class="sd">  instantiated instead.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">delay_open</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">linger_seconds</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">timeout_seconds</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+      <span class="n">name</span><span class="o">=</span><span class="s1">u&#39;Unnamed&#39;</span><span class="p">,</span> <span class="n">maximum_items</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">buffer_max_size</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+      <span class="n">buffer_timeout_seconds</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes a buffered, ZeroMQ backed queue.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      delay_open: Optional boolean that governs whether a ZeroMQ socket</span>
+<span class="sd">                   should be created the first time the queue is pushed to or</span>
+<span class="sd">                   popped from, rather than at queue object initialization.</span>
+<span class="sd">                   This is useful if a queue needs to be passed to a</span>
+<span class="sd">                   child process from a parent.</span>
+<span class="sd">      linger_seconds: Optional number of seconds that the underlying ZeroMQ</span>
+<span class="sd">                      socket can remain open after the queue object has been</span>
+<span class="sd">                      closed, to allow queued items to be transferred to other</span>
+<span class="sd">                      ZeroMQ sockets.</span>
+<span class="sd">      port: The TCP port to use for the queue. The default is None, which</span>
+<span class="sd">            indicates that the queue should choose a random port to bind to.</span>
+<span class="sd">      timeout_seconds: Optional number of seconds that calls to PopItem and</span>
+<span class="sd">                       PushItem may block for, before returning</span>
+<span class="sd">                       queue.QueueEmpty.</span>
+<span class="sd">      name: Optional name to identify the queue.</span>
+<span class="sd">      maximum_items: Optional maximum number of items allowed in the queue</span>
+<span class="sd">                       at one time. Note that this limit only applies at one</span>
+<span class="sd">                       &quot;end&quot; of the queue. The default of 1000 is the ZeroMQ</span>
+<span class="sd">                       default value.</span>
+<span class="sd">      buffer_max_size: The maximum number of items to store in the buffer,</span>
+<span class="sd">                       before or after they are sent/received via ZeroMQ.</span>
+<span class="sd">      buffer_timeout_seconds: The number of seconds to wait when doing a</span>
+<span class="sd">                              put or get to/from the internal buffer.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_timeout_seconds</span> <span class="o">=</span> <span class="n">buffer_timeout_seconds</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span> <span class="o">=</span> <span class="n">Queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="n">buffer_max_size</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_terminate_event</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
+    <span class="c1"># We need to set up the internal buffer queue before we call super, so that</span>
+    <span class="c1"># if the call to super opens the ZMQSocket, the backing thread will work.</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">ZeroMQBufferedQueue</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">delay_open</span><span class="p">,</span> <span class="n">linger_seconds</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">timeout_seconds</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span>
+        <span class="n">maximum_items</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_CreateZMQSocket</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creates a ZeroMQ socket as well as a regular queue and a thread.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">ZeroMQBufferedQueue</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_CreateZMQSocket</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
+        <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ZeroMQResponder</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_terminate_event</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_thread</span><span class="o">.</span><span class="n">daemon</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+  <span class="nd">@abc.abstractmethod</span>
+  <span class="k">def</span> <span class="nf">_ZeroMQResponder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_queue</span><span class="p">,</span> <span class="n">socket</span><span class="p">,</span> <span class="n">terminate_event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Listens for requests and replies to clients.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      source_queue: The queue to uses to pull items from.</span>
+<span class="sd">      socket: The socket to listen to, and send responses to.</span>
+<span class="sd">      terminate_event: The event that signals that the queue should terminate.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="ZeroMQBufferedQueue.Close"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQBufferedQueue.Close">[docs]</a>  <span class="k">def</span> <span class="nf">Close</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">abort</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Close the queue.</span>
+
+<span class="sd">    Unless the abort parameter is set to true, the underlying socket will remain</span>
+<span class="sd">    open for _linger_seconds before being destroyed.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      abort: Whether the queue is closing due to an error condition, and the</span>
+<span class="sd">             queue should be close immediately.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">abort</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">u&#39;{0:s} Queue aborting. Contents may be lost.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">Empty</span><span class="p">()</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_linger_seconds</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+          <span class="s1">u&#39;{0:s} Queue closing, will linger for up to {1:d} seconds&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linger_seconds</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">u&#39;terminate_event&#39;</span><span class="p">):</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_terminate_event</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="bp">True</span></div>
+
+<div class="viewcode-block" id="ZeroMQBufferedQueue.Empty"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQBufferedQueue.Empty">[docs]</a>  <span class="k">def</span> <span class="nf">Empty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Empty the queue.&quot;&quot;&quot;</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">empty</span><span class="p">():</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">get_nowait</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="ZeroMQBufferedReplyQueue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQBufferedReplyQueue">[docs]</a><span class="k">class</span> <span class="nc">ZeroMQBufferedReplyQueue</span><span class="p">(</span><span class="n">ZeroMQBufferedQueue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parent class for buffered Plaso queues backed by ZeroMQ REP sockets.</span>
+
+<span class="sd">  This class should not be instantiated directly, a subclass should be</span>
+<span class="sd">  instantiated instead.</span>
+
+<span class="sd">  Instances of this class or subclasses may only be used to push items, not to</span>
+<span class="sd">  pop.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">_SOCKET_TYPE</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">REP</span>
+
+  <span class="k">def</span> <span class="nf">_ZeroMQResponder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_queue</span><span class="p">,</span> <span class="n">socket</span><span class="p">,</span> <span class="n">terminate_event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Listens for requests and replies to clients.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      source_queue: The queue to uses to pull items from.</span>
+<span class="sd">      socket: The socket to listen to, and send responses to.</span>
+<span class="sd">      terminate_event: The event that signals that the queue should terminate.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      QueueEmpty: If a timeout occurs when trying to reply to a request.</span>
+<span class="sd">      zmq.error.ZMQError: If an error occurs in ZeroMQ.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;ZeroMQ responder thread started&#39;</span><span class="p">)</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">terminate_event</span><span class="o">.</span><span class="n">isSet</span><span class="p">():</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># We need to receive a request before we send.</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">recv</span><span class="p">()</span>
+      <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">Again</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;{0:s} did not receive a request within the &#39;</span>
+                      <span class="s1">u&#39;timeout of {1:d} seconds.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                          <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeout_seconds</span><span class="p">))</span>
+        <span class="k">continue</span>
+      <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">ZMQError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">exception</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">EINTR</span><span class="p">:</span>
+          <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">u&#39;ZMQ syscall interrupted in {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+          <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="k">raise</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
+          <span class="n">item</span> <span class="o">=</span> <span class="n">source_queue</span><span class="o">.</span><span class="n">get_nowait</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">item</span> <span class="o">=</span> <span class="n">source_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_buffer_timeout_seconds</span><span class="p">)</span>
+      <span class="k">except</span> <span class="n">Queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="n">plaso_queue</span><span class="o">.</span><span class="n">QueueAbort</span><span class="p">()</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="o">.</span><span class="n">send_pyobj</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+      <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">Again</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s1">u&#39;{0:s} could not reply to a request within {1:d} seconds.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeout_seconds</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">QueueEmpty</span>
+      <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">ZMQError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">exception</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">EINTR</span><span class="p">:</span>
+          <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">u&#39;ZMQ syscall interrupted in {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+          <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="k">raise</span>
+    <span class="n">socket</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_linger_seconds</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ZeroMQBufferedReplyQueue.PopItem"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQBufferedReplyQueue.PopItem">[docs]</a>  <span class="k">def</span> <span class="nf">PopItem</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pops an item of the queue.</span>
+
+<span class="sd">    Provided for compatibility with the API, but doesn&#39;t actually work.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      WrongQueueType: As Pop is not supported by this queue.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">WrongQueueType</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="ZeroMQBufferedReplyQueue.PushItem"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQBufferedReplyQueue.PushItem">[docs]</a>  <span class="k">def</span> <span class="nf">PushItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Push an item on to the queue.</span>
+
+<span class="sd">    If no ZeroMQ socket has been created, one will be created the first time</span>
+<span class="sd">    this method is called.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      item: The item to push on to the queue.</span>
+<span class="sd">      block: Optional argument to indicate whether the push should be performed</span>
+<span class="sd">             in blocking or non-block mode.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      QueueAlreadyClosed: If the queue is closed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">QueueAlreadyClosed</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_CreateZMQSocket</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">block</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_buffer_timeout_seconds</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ZeroMQBufferedReplyBindQueue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQBufferedReplyBindQueue">[docs]</a><span class="k">class</span> <span class="nc">ZeroMQBufferedReplyBindQueue</span><span class="p">(</span><span class="n">ZeroMQBufferedReplyQueue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A Plaso queue backed by a ZeroMQ REP socket that binds to a port.</span>
+
+<span class="sd">  This queue may only be used to pop items, not to push.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">SOCKET_CONNECTION_TYPE</span> <span class="o">=</span> <span class="n">ZeroMQQueue</span><span class="o">.</span><span class="n">SOCKET_CONNECTION_BIND</span></div>
+
+
+<div class="viewcode-block" id="ZeroMQBufferedReplyConnectQueue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQBufferedReplyConnectQueue">[docs]</a><span class="k">class</span> <span class="nc">ZeroMQBufferedReplyConnectQueue</span><span class="p">(</span><span class="n">ZeroMQBufferedReplyQueue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A Plaso queue backed by a ZeroMQ REP socket that connects to a port.</span>
+
+<span class="sd">  This queue may only be used to pop items, not to push.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">SOCKET_CONNECTION_TYPE</span> <span class="o">=</span> <span class="n">ZeroMQQueue</span><span class="o">.</span><span class="n">SOCKET_CONNECTION_CONNECT</span></div>
+
+
+<div class="viewcode-block" id="ZeroMQBufferedPushQueue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQBufferedPushQueue">[docs]</a><span class="k">class</span> <span class="nc">ZeroMQBufferedPushQueue</span><span class="p">(</span><span class="n">ZeroMQBufferedQueue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parent class for buffered Plaso queues backed by ZeroMQ PUSH sockets.</span>
+
+<span class="sd">  This class should not be instantiated directly, a subclass should be</span>
+<span class="sd">  instantiated instead.</span>
+
+<span class="sd">  Instances of this class or subclasses may only be used to push items, not to</span>
+<span class="sd">  pop.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">_SOCKET_TYPE</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">PUSH</span>
+
+  <span class="k">def</span> <span class="nf">_ZeroMQResponder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_queue</span><span class="p">,</span> <span class="n">socket</span><span class="p">,</span> <span class="n">terminate_event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Listens for requests and replies to clients.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      source_queue: The queue to uses to pull items from.</span>
+<span class="sd">      socket: The socket to listen to, and send responses to.</span>
+<span class="sd">      terminate_event: The event that signals that the queue should terminate.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      QueueEmpty: If the queue encountered a timeout trying to push an item.</span>
+<span class="sd">      zmq.error.ZMQError: If ZeroMQ encounters an error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;ZeroMQ responder thread started&#39;</span><span class="p">)</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">terminate_event</span><span class="o">.</span><span class="n">isSet</span><span class="p">():</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
+          <span class="c1"># No further items can be added be added to the queue, so we don&#39;t</span>
+          <span class="c1"># need to block.</span>
+          <span class="n">item</span> <span class="o">=</span> <span class="n">source_queue</span><span class="o">.</span><span class="n">get_nowait</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">item</span> <span class="o">=</span> <span class="n">source_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">True</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_buffer_timeout_seconds</span><span class="p">)</span>
+      <span class="k">except</span> <span class="n">Queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
+        <span class="c1"># No item available within timeout, so time to exit.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
+        <span class="k">continue</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="o">.</span><span class="n">send_pyobj</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+      <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">Again</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s1">u&#39;{0:s} could not push an item within {1:d} seconds.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timeout_seconds</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">QueueEmpty</span>
+      <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">ZMQError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">exception</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">EINTR</span><span class="p">:</span>
+          <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">u&#39;ZMQ syscall interrupted in {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+          <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="k">raise</span>
+    <span class="n">socket</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_linger_seconds</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ZeroMQBufferedPushQueue.PushItem"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQBufferedPushQueue.PushItem">[docs]</a>  <span class="k">def</span> <span class="nf">PushItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Push an item on to the queue.</span>
+
+<span class="sd">    If no ZeroMQ socket has been created, one will be created the first time</span>
+<span class="sd">    this method is called.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      item: The item to push on to the queue.</span>
+<span class="sd">      block: Optional argument to indicate whether the push should be performed</span>
+<span class="sd">             in blocking or non-block mode.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      QueueAlreadyClosed: If there is an attempt to close a queue that&#39;s already</span>
+<span class="sd">                          closed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">QueueAlreadyClosed</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_CreateZMQSocket</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="n">block</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_buffer_timeout_seconds</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ZeroMQBufferedPushQueue.PopItem"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQBufferedPushQueue.PopItem">[docs]</a>  <span class="k">def</span> <span class="nf">PopItem</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pops an item of the queue.</span>
+
+<span class="sd">    Provided for compatibility with the API, but doesn&#39;t actually work.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      WrongQueueType: As Pop is not supported by this queue.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">WrongQueueType</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="ZeroMQBufferedPushBindQueue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQBufferedPushBindQueue">[docs]</a><span class="k">class</span> <span class="nc">ZeroMQBufferedPushBindQueue</span><span class="p">(</span><span class="n">ZeroMQBufferedPushQueue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A Plaso queue backed by a ZeroMQ PUSH socket that binds to a port.</span>
+
+<span class="sd">  This queue may only be used to push items, not to pop.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">SOCKET_CONNECTION_TYPE</span> <span class="o">=</span> <span class="n">ZeroMQQueue</span><span class="o">.</span><span class="n">SOCKET_CONNECTION_BIND</span></div>
+
+
+<div class="viewcode-block" id="ZeroMQBufferedPushConnectQueue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQBufferedPushConnectQueue">[docs]</a><span class="k">class</span> <span class="nc">ZeroMQBufferedPushConnectQueue</span><span class="p">(</span><span class="n">ZeroMQBufferedPushQueue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A Plaso queue backed by a ZeroMQ PUSH socket that connects to a port.</span>
+
+<span class="sd">  This queue may only be used to push items, not to pop.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">SOCKET_CONNECTION_TYPE</span> <span class="o">=</span> <span class="n">ZeroMQQueue</span><span class="o">.</span><span class="n">SOCKET_CONNECTION_CONNECT</span></div>
+
+
+<div class="viewcode-block" id="ZeroMQBufferedPullQueue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQBufferedPullQueue">[docs]</a><span class="k">class</span> <span class="nc">ZeroMQBufferedPullQueue</span><span class="p">(</span><span class="n">ZeroMQBufferedQueue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parent class for buffered Plaso queues backed by ZeroMQ PULL sockets.</span>
+
+<span class="sd">  This class should not be instantiated directly, a subclass should be</span>
+<span class="sd">  instantiated instead.</span>
+
+<span class="sd">  Instances of this class or subclasses may only be used to pop items, not to</span>
+<span class="sd">  push.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">_SOCKET_TYPE</span> <span class="o">=</span> <span class="n">zmq</span><span class="o">.</span><span class="n">PULL</span>
+  <span class="n">_DOWNSTREAM_QUEUE_MAX_TRIES</span> <span class="o">=</span> <span class="mi">10</span>
+  <span class="n">_DOWNSTREAM_QUEUE_SLEEP_TIME</span> <span class="o">=</span> <span class="mf">0.2</span>
+
+  <span class="k">def</span> <span class="nf">_ZeroMQResponder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_queue</span><span class="p">,</span> <span class="n">socket</span><span class="p">,</span> <span class="n">terminate_event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Listens for requests and replies to clients.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      source_queue: The queue to uses to pull items from.</span>
+<span class="sd">      socket: The socket to listen to, and send responses to.</span>
+<span class="sd">      terminate_event: The event that signals that the queue should terminate.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      zmq.error.ZMQError: If an error is encountered by ZeroMQ.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;ZeroMQ responder thread started&#39;</span><span class="p">)</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">terminate_event</span><span class="o">.</span><span class="n">isSet</span><span class="p">():</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">recv_pyobj</span><span class="p">()</span>
+      <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">Again</span><span class="p">:</span>
+        <span class="c1"># No item received within timeout.</span>
+        <span class="n">item</span> <span class="o">=</span> <span class="n">plaso_queue</span><span class="o">.</span><span class="n">QueueAbort</span><span class="p">()</span>
+      <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">ZMQError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">exception</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">EINTR</span><span class="p">:</span>
+          <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">u&#39;ZMQ syscall interrupted in {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+          <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="k">raise</span>
+
+      <span class="n">retries</span> <span class="o">=</span> <span class="mi">0</span>
+      <span class="k">while</span> <span class="n">retries</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DOWNSTREAM_QUEUE_MAX_TRIES</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_buffer_timeout_seconds</span><span class="p">)</span>
+          <span class="k">break</span>
+        <span class="k">except</span> <span class="n">Queue</span><span class="o">.</span><span class="n">Full</span><span class="p">:</span>
+          <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;Queue {0:s} buffer limit hit.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+          <span class="n">retries</span> <span class="o">+=</span> <span class="mi">1</span>
+          <span class="k">if</span> <span class="n">retries</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_DOWNSTREAM_QUEUE_MAX_TRIES</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">u&#39;Queue {0:s} unserved for too long, aborting&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+            <span class="k">break</span>
+          <span class="k">else</span><span class="p">:</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_DOWNSTREAM_QUEUE_SLEEP_TIME</span><span class="p">)</span>
+            <span class="k">continue</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">u&#39;Queue {0:s} responder exiting.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+
+<div class="viewcode-block" id="ZeroMQBufferedPullQueue.PopItem"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQBufferedPullQueue.PopItem">[docs]</a>  <span class="k">def</span> <span class="nf">PopItem</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pops an item off the queue.</span>
+
+<span class="sd">    If no ZeroMQ socket has been created, one will be created the first</span>
+<span class="sd">    time this method is called.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      QueueEmpty: If the queue is empty, and no item could be popped within the</span>
+<span class="sd">                  queue timeout.</span>
+<span class="sd">      zmq.error.ZMQError: If an error is encountered by ZeroMQ.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;Pop on {0:s} queue, port {1:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zmq_socket</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_CreateZMQSocket</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_queue</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_buffer_timeout_seconds</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">Queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">plaso_queue</span><span class="o">.</span><span class="n">QueueAbort</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">zmq</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">ZMQError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">exception</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">EINTR</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">u&#39;ZMQ syscall interrupted in {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">plaso_queue</span><span class="o">.</span><span class="n">QueueAbort</span><span class="p">()</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span>
+    <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">Close</span><span class="p">(</span><span class="n">abort</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+      <span class="k">raise</span></div>
+
+<div class="viewcode-block" id="ZeroMQBufferedPullQueue.PushItem"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQBufferedPullQueue.PushItem">[docs]</a>  <span class="k">def</span> <span class="nf">PushItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">,</span> <span class="n">block</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Pushes an item on to the queue.</span>
+
+<span class="sd">    Provided for compatibility with the API, but doesn&#39;t actually work.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      item: The item to push on to the queue.</span>
+<span class="sd">      block: Optional argument to indicate whether the push should be performed</span>
+<span class="sd">             in blocking or non-block mode.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      WrongQueueType: As Push is not supported this queue.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">WrongQueueType</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="ZeroMQBufferedPullBindQueue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQBufferedPullBindQueue">[docs]</a><span class="k">class</span> <span class="nc">ZeroMQBufferedPullBindQueue</span><span class="p">(</span><span class="n">ZeroMQBufferedPullQueue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A Plaso queue backed by a ZeroMQ PULL socket that binds to a port.</span>
+
+<span class="sd">  This queue may only be used to pop items, not to push.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">SOCKET_CONNECTION_TYPE</span> <span class="o">=</span> <span class="n">ZeroMQQueue</span><span class="o">.</span><span class="n">SOCKET_CONNECTION_BIND</span></div>
+
+
+<div class="viewcode-block" id="ZeroMQBufferedPullConnectQueue"><a class="viewcode-back" href="../../../plaso.engine.html#plaso.engine.zeromq_queue.ZeroMQBufferedPullConnectQueue">[docs]</a><span class="k">class</span> <span class="nc">ZeroMQBufferedPullConnectQueue</span><span class="p">(</span><span class="n">ZeroMQBufferedPullQueue</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A Plaso queue backed by a ZeroMQ PULL socket that connects to a port.</span>
+
+<span class="sd">  This queue may only be used to pop items, not to push.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="n">SOCKET_CONNECTION_TYPE</span> <span class="o">=</span> <span class="n">ZeroMQQueue</span><span class="o">.</span><span class="n">SOCKET_CONNECTION_CONNECT</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

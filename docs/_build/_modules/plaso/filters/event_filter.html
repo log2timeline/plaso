@@ -1,0 +1,137 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.filters.event_filter &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.filters.event_filter</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;The event object filter.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">plaso.filters</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.filters</span> <span class="kn">import</span> <span class="n">manager</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+
+
+<div class="viewcode-block" id="EventObjectFilter"><a class="viewcode-back" href="../../../plaso.filters.html#plaso.filters.event_filter.EventObjectFilter">[docs]</a><span class="k">class</span> <span class="nc">EventObjectFilter</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">FilterObject</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements an event object filter.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="EventObjectFilter.CompileFilter"><a class="viewcode-back" href="../../../plaso.filters.html#plaso.filters.event_filter.EventObjectFilter.CompileFilter">[docs]</a>  <span class="k">def</span> <span class="nf">CompileFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_expression</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compiles the filter expression.</span>
+
+<span class="sd">    The filter expression contains an object filter expression.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      filter_expression: string that contains the filter expression.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      WrongPlugin: if the filter could not be compiled.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">matcher</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetMatcher</span><span class="p">(</span><span class="n">filter_expression</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">matcher</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">WrongPlugin</span><span class="p">(</span><span class="s1">u&#39;Malformed filter expression.&#39;</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_filter_expression</span> <span class="o">=</span> <span class="n">filter_expression</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_matcher</span> <span class="o">=</span> <span class="n">matcher</span></div>
+
+<div class="viewcode-block" id="EventObjectFilter.Match"><a class="viewcode-back" href="../../../plaso.filters.html#plaso.filters.event_filter.EventObjectFilter.Match">[docs]</a>  <span class="k">def</span> <span class="nf">Match</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines if an event object matches the filter.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: an event object (instance of EventObject).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A boolean value that indicates a match.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matcher</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">True</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_decision</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_matcher</span><span class="o">.</span><span class="n">Matches</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decision</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">FiltersManager</span><span class="o">.</span><span class="n">RegisterFilter</span><span class="p">(</span><span class="n">EventObjectFilter</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

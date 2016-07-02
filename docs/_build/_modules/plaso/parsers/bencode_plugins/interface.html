@@ -1,0 +1,263 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.bencode_plugins.interface &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../../index.html" />
+    <link rel="up" title="plaso" href="../../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.bencode_plugins.interface</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;bencode_interface contains basic interface for bencode plugins within Plaso.</span>
+
+<span class="sd">Bencoded files are only one example of a type of object that the Plaso tool is</span>
+<span class="sd">expected to encounter and process.  There can be and are many other parsers</span>
+<span class="sd">which are designed to process specific data types.</span>
+
+<span class="sd">BencodePlugin defines the attributes necessary for registration, discovery</span>
+<span class="sd">and operation of plugins for bencoded files which will be used by</span>
+<span class="sd">BencodeParser.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">plugins</span>
+
+
+<div class="viewcode-block" id="BencodePlugin"><a class="viewcode-back" href="../../../../plaso.parsers.bencode_plugins.html#plaso.parsers.bencode_plugins.interface.BencodePlugin">[docs]</a><span class="k">class</span> <span class="nc">BencodePlugin</span><span class="p">(</span><span class="n">plugins</span><span class="o">.</span><span class="n">BasePlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;This is an abstract class from which plugins should be based.&quot;&quot;&quot;</span>
+
+  <span class="c1"># BENCODE_KEYS is a list of keys required by a plugin.</span>
+  <span class="c1"># This is expected to be overridden by the processing plugin.</span>
+  <span class="c1"># Ex. frozenset([u&#39;activity-date&#39;, u&#39;done-date&#39;])</span>
+  <span class="n">BENCODE_KEYS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s1">u&#39;any&#39;</span><span class="p">])</span>
+
+  <span class="c1"># This is expected to be overridden by the processing plugin.</span>
+  <span class="c1"># URLS should contain a list of URLs with additional information about</span>
+  <span class="c1"># this key or value.</span>
+  <span class="c1"># Ex. [u&#39;https://wiki.theory.org/BitTorrentSpecification#Bencoding&#39;]</span>
+  <span class="n">URLS</span> <span class="o">=</span> <span class="p">[]</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;bencode&#39;</span>
+
+  <span class="k">def</span> <span class="nf">_GetKeys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Helper function to return keys nested in a bencode dict.</span>
+
+<span class="sd">    By default this function will return the values for the named keys requested</span>
+<span class="sd">    by a plugin in match{}. The default setting is to look a single layer down</span>
+<span class="sd">    from the root (same as the check for plugin applicability). This level is</span>
+<span class="sd">    suitable for most cases.</span>
+
+<span class="sd">    For cases where there is variability in the name at the first level</span>
+<span class="sd">    (e.g. it is the MAC addresses of a device, or a UUID) it is possible to</span>
+<span class="sd">    override the depth limit and use _GetKeys to fetch from a deeper level.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      data: bencode data in dictionary form.</span>
+<span class="sd">      keys: A list of keys that should be returned.</span>
+<span class="sd">      depth: Defines how many levels deep to check for a match.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A dictionary with just the keys requested.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="n">depth</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+        <span class="n">match</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">parsed_key</span><span class="p">,</span> <span class="n">parsed_value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_RecurseKey</span><span class="p">(</span>
+          <span class="n">data</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="n">depth</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">parsed_key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+          <span class="n">match</span><span class="p">[</span><span class="n">parsed_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">parsed_value</span>
+          <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">match</span>
+    <span class="k">return</span> <span class="n">match</span>
+
+  <span class="k">def</span> <span class="nf">_RecurseKey</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">recur_item</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="s1">u&#39;&#39;</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">15</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Flattens nested dictionaries and lists by yielding it&#39;s values.</span>
+
+<span class="sd">    The hierarchy of a bencode file is a series of nested dictionaries and</span>
+<span class="sd">    lists. This is a helper function helps plugins navigate the structure</span>
+<span class="sd">    without having to reimplement their own recursive methods.</span>
+
+<span class="sd">    This method implements an overridable depth limit to prevent processing</span>
+<span class="sd">    extremely deeply nested dictionaries. If the limit is reached a debug</span>
+<span class="sd">    message is logged indicating which key processing stopped on.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      recur_item: An object to be checked for additional nested items.</span>
+<span class="sd">      root: The pathname of the current working key.</span>
+<span class="sd">      depth: A counter to ensure we stop at the maximum recursion depth.</span>
+
+<span class="sd">    Yields:</span>
+<span class="sd">      A tuple of the root, key, and value from a bencoded file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">depth</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;Recursion limit hit for key: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">root</span><span class="p">))</span>
+      <span class="k">return</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">recur_item</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+      <span class="k">for</span> <span class="n">recur</span> <span class="ow">in</span> <span class="n">recur_item</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_RecurseKey</span><span class="p">(</span><span class="n">recur</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">depth</span><span class="p">):</span>
+          <span class="k">yield</span> <span class="n">key</span>
+      <span class="k">return</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">recur_item</span><span class="p">,</span> <span class="s1">u&#39;iteritems&#39;</span><span class="p">):</span>
+      <span class="k">return</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">recur_item</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+      <span class="k">yield</span> <span class="n">root</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span>
+      <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="p">[</span><span class="n">value</span><span class="p">]</span>
+      <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+          <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">keyval</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_RecurseKey</span><span class="p">(</span>
+                <span class="n">item</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">root</span> <span class="o">+</span> <span class="s1">u&#39;/&#39;</span> <span class="o">+</span> <span class="n">key</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="n">depth</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+              <span class="k">yield</span> <span class="n">keyval</span>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="BencodePlugin.GetEntries"><a class="viewcode-back" href="../../../../plaso.parsers.bencode_plugins.html#plaso.parsers.bencode_plugins.interface.BencodePlugin.GetEntries">[docs]</a>  <span class="k">def</span> <span class="nf">GetEntries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">match</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Extracts event object from the values of entries within a bencoded file.</span>
+
+<span class="sd">    This is the main method that a bencode plugin needs to implement.</span>
+
+<span class="sd">    The contents of the bencode keys defined in BENCODE_KEYS can be made</span>
+<span class="sd">    available to the plugin as both a matched{&#39;KEY&#39;: &#39;value&#39;} and as the</span>
+<span class="sd">    entire bencoded data dictionary. The plugin should implement logic to parse</span>
+<span class="sd">    the most relevant data set into a useful event for incorporation into the</span>
+<span class="sd">    Plaso timeline.</span>
+
+<span class="sd">    The attributes for a BencodeEvent should include the following:</span>
+<span class="sd">      root = Root key this event was extracted from.</span>
+<span class="sd">      key = Key the value resided in.</span>
+<span class="sd">      time = Date this artifact was created in micro seconds (usec) from</span>
+<span class="sd">             January 1, 1970 00:00:00 UTC.</span>
+<span class="sd">      desc = Short description.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      data: Bencode data in dictionary form.</span>
+<span class="sd">      match: Optional dictionary containing only the keys selected in the</span>
+<span class="sd">             BENCODE_KEYS.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="BencodePlugin.Process"><a class="viewcode-back" href="../../../../plaso.parsers.bencode_plugins.html#plaso.parsers.bencode_plugins.interface.BencodePlugin.Process">[docs]</a>  <span class="k">def</span> <span class="nf">Process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determine if this is the correct plugin; if so proceed with processing.</span>
+
+<span class="sd">    Process() checks if the current bencode file being processed is a match for</span>
+<span class="sd">    a plugin by comparing the PATH and KEY requirements defined by a plugin. If</span>
+<span class="sd">    both match processing continues; else raise WrongBencodePlugin.</span>
+
+<span class="sd">    This function also extracts the required keys as defined in</span>
+<span class="sd">    self.BENCODE_KEYS from the file and stores the result in match[key]</span>
+<span class="sd">    and calls self.GetEntries() which holds the processing logic implemented by</span>
+<span class="sd">    the plugin.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      data: Bencode data in dictionary form.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      WrongBencodePlugin: If this plugin is not able to process the given file.</span>
+<span class="sd">      ValueError: If top level is not set.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Data is not set.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="o">.</span><span class="n">issuperset</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">BENCODE_KEYS</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">WrongBencodePlugin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">)</span>
+
+    <span class="c1"># This will raise if unhandled keyword arguments are passed.</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">BencodePlugin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">)</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;Bencode Plugin Used: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">))</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetKeys</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">BENCODE_KEYS</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">GetEntries</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span> <span class="n">match</span><span class="o">=</span><span class="n">match</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

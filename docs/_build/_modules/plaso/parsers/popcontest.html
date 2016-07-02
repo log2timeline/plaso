@@ -1,0 +1,371 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.parsers.popcontest &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.parsers.popcontest</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains the Popularity Contest log file parser in plaso.</span>
+
+<span class="sd">Information updated 20 january 2014.</span>
+<span class="sd">From Debian Package Popularity Contest</span>
+<span class="sd">Avery Pennarun &lt;apenwarr@debian.org&gt;</span>
+
+<span class="sd">From  &#39;http://www.unix.com/man-page/Linux/8/popularity-contest/&#39;:</span>
+
+<span class="sd">    The  popularity-contest command gathers information about Debian pack-</span>
+<span class="sd">    ages installed on the system, and prints the name of the most  recently</span>
+<span class="sd">    used  executable  program  in that package as well as its last-accessed</span>
+<span class="sd">    time (atime) and last-attribute-changed time (ctime) to stdout.</span>
+
+<span class="sd">    When aggregated with the output of popularity-contest from  many  other</span>
+<span class="sd">    systems,  this information is valuable because it can be used to deter-</span>
+<span class="sd">    mine which Debian packages are commonly installed, used,  or  installed</span>
+<span class="sd">    and  never  used.  This helps Debian maintainers make decisions such as</span>
+<span class="sd">    which packages should be installed by default on new systems.</span>
+
+<span class="sd">    The resulting  statistic  is  available  from  the  project  home  page</span>
+<span class="sd">    http://popcon.debian.org/.</span>
+
+<span class="sd">    Normally,    popularity-contest    is   run   from   a cron(8)   job,</span>
+<span class="sd">    /etc/cron.daily/popularity-contest,  which  automatically  submits  the</span>
+<span class="sd">    results  to  Debian package maintainers (only once a week) according to</span>
+<span class="sd">    the settings in /etc/popularity-contest.conf and /usr/share/popularity-</span>
+<span class="sd">    contest/default.conf.</span>
+
+
+<span class="sd">From &#39;http://popcon.ubuntu.com/README&#39;:</span>
+
+<span class="sd">The popularity-contest output looks like this:</span>
+
+<span class="sd">    POPULARITY-CONTEST-0 TIME:914183330 ID:b92a5fc1809d8a95a12eb3a3c8445</span>
+<span class="sd">    914183333 909868335 grep /bin/fgrep</span>
+<span class="sd">    914183333 909868280 findutils /usr/bin/find</span>
+<span class="sd">    914183330 909885698 dpkg-awk /usr/bin/dpkg-awk</span>
+<span class="sd">    914183330 909868577 gawk /usr/bin/gawk</span>
+<span class="sd">    [...more lines...]</span>
+<span class="sd">    END-POPULARITY-CONTEST-0 TIME:914183335</span>
+
+<span class="sd">    The first and last lines allow you to put more than one set of</span>
+<span class="sd">    popularity-contest results into a single file and then split them up</span>
+<span class="sd">    easily later.</span>
+
+<span class="sd">    The rest of the lines are package entries, one line for each package</span>
+<span class="sd">    installed on your system.  They have the format:</span>
+
+<span class="sd">    &lt;atime&gt; &lt;ctime&gt; &lt;package-name&gt; &lt;mru-program&gt; &lt;tag&gt;</span>
+
+<span class="sd">    &lt;package-name&gt; is the name of the Debian package that contains</span>
+<span class="sd">    &lt;mru-program&gt;. &lt;mru-program&gt; is the most recently used program,</span>
+<span class="sd">    static library, or header (.h) file in the package.</span>
+
+<span class="sd">    &lt;atime&gt; and &lt;ctime&gt; are the access time and creation time of the</span>
+<span class="sd">    &lt;mru-program&gt; on your disk, respectively, represented as the number of</span>
+<span class="sd">    seconds since midnight GMT on January 1, 1970 (i.e. in Unix time_t format).</span>
+<span class="sd">    Linux updates &lt;atime&gt; whenever you open the file; &lt;ctime&gt; was set when you</span>
+<span class="sd">    first installed the package.</span>
+
+<span class="sd">    &lt;tag&gt; is determined by popularity-contest depending on &lt;atime&gt;, &lt;ctime&gt;, and</span>
+<span class="sd">    the current date.  &lt;tag&gt; can be RECENT-CTIME, OLD, or NOFILES.</span>
+
+<span class="sd">    RECENT-CTIME means that atime is very close to ctime; it&#39;s impossible to</span>
+<span class="sd">    tell whether the package was used recently or not, since &lt;atime&gt; is also</span>
+<span class="sd">    updated when &lt;ctime&gt; is set.  Normally, this happens because you have</span>
+<span class="sd">    recently upgraded the package to a new version, resetting the &lt;ctime&gt;.</span>
+
+<span class="sd">    OLD means that the &lt;atime&gt; is more than a month ago; you haven&#39;t used the</span>
+<span class="sd">    package for more than a month.</span>
+
+<span class="sd">    NOFILES means that no files in the package seemed to be programs, so</span>
+<span class="sd">    &lt;atime&gt;, &lt;ctime&gt;, and &lt;mru-program&gt; are invalid.&#39;</span>
+
+<span class="sd">   REMARKS. The parser will generate events solely based on the &lt;atime&gt; field</span>
+<span class="sd">   and not using &lt;ctime&gt;, to reduce the generation of (possibly many) useless</span>
+<span class="sd">   events all with the same &lt;ctime&gt;. Indeed, that &lt;ctime&gt; will be probably</span>
+<span class="sd">   get from file system and/or package management logs. The &lt;ctime&gt; will be</span>
+<span class="sd">   reported in the log line.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">pyparsing</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">time_events</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">eventdata</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">manager</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers</span> <span class="kn">import</span> <span class="n">text_parser</span>
+
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s1">&#39;Francesco Picasso (francesco.picasso@gmail.com)&#39;</span>
+
+
+<div class="viewcode-block" id="PopularityContestSessionEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.popcontest.PopularityContestSessionEvent">[docs]</a><span class="k">class</span> <span class="nc">PopularityContestSessionEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">PosixTimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for a Popularity Contest start/end event.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;popularity_contest:session:event&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">posix_time</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">details</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">hostid</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      posix_time: the the start/end POSIX time value, which contains the</span>
+<span class="sd">                  number of seconds since January 1, 1970 00:00:00 UTC.</span>
+<span class="sd">      session: the session number.</span>
+<span class="sd">      status: start or end of the session.</span>
+<span class="sd">      details: optional popularity contest version and host architecture.</span>
+<span class="sd">      hostid: optional host uuid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">PopularityContestSessionEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">posix_time</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">ADDED_TIME</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">details</span> <span class="o">=</span> <span class="n">details</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">hostid</span> <span class="o">=</span> <span class="n">hostid</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">session</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">status</span></div>
+
+
+<div class="viewcode-block" id="PopularityContestEvent"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.popcontest.PopularityContestEvent">[docs]</a><span class="k">class</span> <span class="nc">PopularityContestEvent</span><span class="p">(</span><span class="n">time_events</span><span class="o">.</span><span class="n">PosixTimeEvent</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Convenience class for a Popularity Contest line event.&quot;&quot;&quot;</span>
+
+  <span class="n">DATA_TYPE</span> <span class="o">=</span> <span class="s1">u&#39;popularity_contest:log:event&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">posix_time</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">,</span> <span class="n">package</span><span class="p">,</span> <span class="n">mru</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the event object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      posix_time: the access POSIX time value, which contains the</span>
+<span class="sd">                  number of seconds since January 1, 1970 00:00:00 UTC.</span>
+<span class="sd">      timestamp_description: The usage string for the timestamp value.</span>
+<span class="sd">      package: the installed packaged name, whom mru belongs to.</span>
+<span class="sd">      mru: the recently used app/library from package.</span>
+<span class="sd">      tag: optional popularity context tag.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">PopularityContestEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="n">posix_time</span><span class="p">,</span> <span class="n">timestamp_description</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">mru</span> <span class="o">=</span> <span class="n">mru</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">package</span> <span class="o">=</span> <span class="n">package</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">record_tag</span> <span class="o">=</span> <span class="n">tag</span></div>
+
+
+<div class="viewcode-block" id="PopularityContestParser"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.popcontest.PopularityContestParser">[docs]</a><span class="k">class</span> <span class="nc">PopularityContestParser</span><span class="p">(</span><span class="n">text_parser</span><span class="o">.</span><span class="n">PyparsingSingleLineTextParser</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Parse popularity contest log files.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;popularity_contest&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;Parser for popularity contest log files.&#39;</span>
+
+  <span class="n">_ASCII_PRINTABLES</span> <span class="o">=</span> <span class="n">pyparsing</span><span class="o">.</span><span class="n">printables</span>
+  <span class="n">_UNICODE_PRINTABLES</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+      <span class="nb">unichr</span><span class="p">(</span><span class="n">character</span><span class="p">)</span> <span class="k">for</span> <span class="n">character</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">65536</span><span class="p">)</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="nb">unichr</span><span class="p">(</span><span class="n">character</span><span class="p">)</span><span class="o">.</span><span class="n">isspace</span><span class="p">())</span>
+
+  <span class="n">MRU</span> <span class="o">=</span> <span class="n">pyparsing</span><span class="o">.</span><span class="n">Word</span><span class="p">(</span><span class="n">_UNICODE_PRINTABLES</span><span class="p">)</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;mru&#39;</span><span class="p">)</span>
+  <span class="n">PACKAGE</span> <span class="o">=</span> <span class="n">pyparsing</span><span class="o">.</span><span class="n">Word</span><span class="p">(</span><span class="n">_ASCII_PRINTABLES</span><span class="p">)</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;package&#39;</span><span class="p">)</span>
+  <span class="n">TAG</span> <span class="o">=</span> <span class="n">pyparsing</span><span class="o">.</span><span class="n">QuotedString</span><span class="p">(</span><span class="s1">u&#39;&lt;&#39;</span><span class="p">,</span> <span class="n">endQuoteChar</span><span class="o">=</span><span class="s1">u&#39;&gt;&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;tag&#39;</span><span class="p">)</span>
+  <span class="n">TIMESTAMP</span> <span class="o">=</span> <span class="n">text_parser</span><span class="o">.</span><span class="n">PyparsingConstants</span><span class="o">.</span><span class="n">INTEGER</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span>
+      <span class="s1">u&#39;timestamp&#39;</span><span class="p">)</span>
+
+  <span class="n">HEADER</span> <span class="o">=</span> <span class="p">(</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">Literal</span><span class="p">(</span><span class="s1">u&#39;POPULARITY-CONTEST-&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">suppress</span><span class="p">()</span> <span class="o">+</span>
+      <span class="n">text_parser</span><span class="o">.</span><span class="n">PyparsingConstants</span><span class="o">.</span><span class="n">INTEGER</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;session&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">Literal</span><span class="p">(</span><span class="s1">u&#39;TIME:&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">suppress</span><span class="p">()</span> <span class="o">+</span> <span class="n">TIMESTAMP</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">Literal</span><span class="p">(</span><span class="s1">u&#39;ID:&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">suppress</span><span class="p">()</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">Word</span><span class="p">(</span><span class="n">pyparsing</span><span class="o">.</span><span class="n">alphanums</span><span class="p">,</span> <span class="n">exact</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;id&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">SkipTo</span><span class="p">(</span><span class="n">pyparsing</span><span class="o">.</span><span class="n">LineEnd</span><span class="p">())</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;details&#39;</span><span class="p">))</span>
+
+  <span class="n">FOOTER</span> <span class="o">=</span> <span class="p">(</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">Literal</span><span class="p">(</span><span class="s1">u&#39;END-POPULARITY-CONTEST-&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">suppress</span><span class="p">()</span> <span class="o">+</span>
+      <span class="n">text_parser</span><span class="o">.</span><span class="n">PyparsingConstants</span><span class="o">.</span><span class="n">INTEGER</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;session&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="n">pyparsing</span><span class="o">.</span><span class="n">Literal</span><span class="p">(</span><span class="s1">u&#39;TIME:&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">suppress</span><span class="p">()</span> <span class="o">+</span> <span class="n">TIMESTAMP</span><span class="p">)</span>
+
+  <span class="n">LOG_LINE</span> <span class="o">=</span> <span class="p">(</span>
+      <span class="n">TIMESTAMP</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;atime&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">TIMESTAMP</span><span class="o">.</span><span class="n">setResultsName</span><span class="p">(</span><span class="s1">u&#39;ctime&#39;</span><span class="p">)</span> <span class="o">+</span>
+      <span class="p">(</span><span class="n">PACKAGE</span> <span class="o">+</span> <span class="n">TAG</span> <span class="o">|</span> <span class="n">PACKAGE</span> <span class="o">+</span> <span class="n">MRU</span> <span class="o">+</span> <span class="n">pyparsing</span><span class="o">.</span><span class="n">Optional</span><span class="p">(</span><span class="n">TAG</span><span class="p">)))</span>
+
+  <span class="n">LINE_STRUCTURES</span> <span class="o">=</span> <span class="p">[</span>
+      <span class="p">(</span><span class="s1">u&#39;logline&#39;</span><span class="p">,</span> <span class="n">LOG_LINE</span><span class="p">),</span>
+      <span class="p">(</span><span class="s1">u&#39;header&#39;</span><span class="p">,</span> <span class="n">HEADER</span><span class="p">),</span>
+      <span class="p">(</span><span class="s1">u&#39;footer&#39;</span><span class="p">,</span> <span class="n">FOOTER</span><span class="p">),</span>
+  <span class="p">]</span>
+
+  <span class="n">_ENCODING</span> <span class="o">=</span> <span class="s1">u&#39;UTF-8&#39;</span>
+
+  <span class="k">def</span> <span class="nf">_ParseLogLine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">structure</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses an event object from the log line.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      structure: the log line structure object (instance of</span>
+<span class="sd">                 pyparsing.ParseResults).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Required fields are &lt;mru&gt; and &lt;atime&gt; and we are not interested in</span>
+    <span class="c1"># log lines without &lt;mru&gt;.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">structure</span><span class="o">.</span><span class="n">mru</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="c1"># The &lt;atime&gt; field (as &lt;ctime&gt;) is always present but could be 0.</span>
+    <span class="c1"># In case of &lt;atime&gt; equal to 0, we are in &lt;NOFILES&gt; case, safely return</span>
+    <span class="c1"># without logging.</span>
+    <span class="k">if</span> <span class="n">structure</span><span class="o">.</span><span class="n">atime</span><span class="p">:</span>
+      <span class="c1"># TODO: not doing any check on &lt;tag&gt; fields, even if only informative</span>
+      <span class="c1"># probably it could be better to check for the expected values.</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">PopularityContestEvent</span><span class="p">(</span>
+          <span class="n">structure</span><span class="o">.</span><span class="n">atime</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">ACCESS_TIME</span><span class="p">,</span>
+          <span class="n">structure</span><span class="o">.</span><span class="n">package</span><span class="p">,</span> <span class="n">structure</span><span class="o">.</span><span class="n">mru</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="n">structure</span><span class="o">.</span><span class="n">tag</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">structure</span><span class="o">.</span><span class="n">ctime</span><span class="p">:</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">PopularityContestEvent</span><span class="p">(</span>
+          <span class="n">structure</span><span class="o">.</span><span class="n">ctime</span><span class="p">,</span> <span class="n">eventdata</span><span class="o">.</span><span class="n">EventTimestamp</span><span class="o">.</span><span class="n">ENTRY_MODIFICATION_TIME</span><span class="p">,</span>
+          <span class="n">structure</span><span class="o">.</span><span class="n">package</span><span class="p">,</span> <span class="n">structure</span><span class="o">.</span><span class="n">mru</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="n">structure</span><span class="o">.</span><span class="n">tag</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PopularityContestParser.ParseRecord"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.popcontest.PopularityContestParser.ParseRecord">[docs]</a>  <span class="k">def</span> <span class="nf">ParseRecord</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">structure</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a log record structure and produces events.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      key: An identification string indicating the name of the parsed</span>
+<span class="sd">           structure.</span>
+<span class="sd">      structure: A pyparsing.ParseResults object from a line in the</span>
+<span class="sd">                 log file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: Add anomaly objects for abnormal timestamps, such as when the log</span>
+    <span class="c1"># timestamp is greater than the session start.</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">u&#39;logline&#39;</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_ParseLogLine</span><span class="p">(</span><span class="n">parser_mediator</span><span class="p">,</span> <span class="n">structure</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">u&#39;header&#39;</span><span class="p">:</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">structure</span><span class="o">.</span><span class="n">timestamp</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s1">u&#39;PopularityContestParser, header with invalid timestamp.&#39;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+      <span class="n">session</span> <span class="o">=</span> <span class="s1">u&#39;{0!s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">session</span><span class="p">)</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">PopularityContestSessionEvent</span><span class="p">(</span>
+          <span class="n">structure</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="s1">u&#39;start&#39;</span><span class="p">,</span> <span class="n">details</span><span class="o">=</span><span class="n">structure</span><span class="o">.</span><span class="n">details</span><span class="p">,</span>
+          <span class="n">hostid</span><span class="o">=</span><span class="n">structure</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">u&#39;footer&#39;</span><span class="p">:</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">structure</span><span class="o">.</span><span class="n">timestamp</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s1">u&#39;PopularityContestParser, footer with invalid timestamp.&#39;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+      <span class="n">session</span> <span class="o">=</span> <span class="s1">u&#39;{0!s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">structure</span><span class="o">.</span><span class="n">session</span><span class="p">)</span>
+      <span class="n">event_object</span> <span class="o">=</span> <span class="n">PopularityContestSessionEvent</span><span class="p">(</span>
+          <span class="n">structure</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="s1">u&#39;end&#39;</span><span class="p">)</span>
+      <span class="n">parser_mediator</span><span class="o">.</span><span class="n">ProduceEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;PopularityContestParser, unknown structure: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="PopularityContestParser.VerifyStructure"><a class="viewcode-back" href="../../../plaso.parsers.html#plaso.parsers.popcontest.PopularityContestParser.VerifyStructure">[docs]</a>  <span class="k">def</span> <span class="nf">VerifyStructure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parser_mediator</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Verify that this file is a Popularity Contest log file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      parser_mediator: A parser mediator object (instance of ParserMediator).</span>
+<span class="sd">      line: A single line from the text file.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      True if this is the correct parser, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">header_struct</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">HEADER</span><span class="o">.</span><span class="n">parseString</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">pyparsing</span><span class="o">.</span><span class="n">ParseException</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;Not a Popularity Contest log file, invalid header&#39;</span><span class="p">)</span>
+      <span class="k">return</span> <span class="bp">False</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">FromPosixTime</span><span class="p">(</span><span class="n">header_struct</span><span class="o">.</span><span class="n">timestamp</span><span class="p">):</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">u&#39;Invalid Popularity Contest log file header timestamp.&#39;</span><span class="p">)</span>
+      <span class="k">return</span> <span class="bp">False</span>
+    <span class="k">return</span> <span class="bp">True</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">ParsersManager</span><span class="o">.</span><span class="n">RegisterParser</span><span class="p">(</span><span class="n">PopularityContestParser</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

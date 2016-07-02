@@ -1,0 +1,819 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.serializer.json_serializer &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.serializer.json_serializer</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;The json serializer object implementation.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">binascii</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">from</span> <span class="nn">dfvfs.path</span> <span class="kn">import</span> <span class="n">path_spec</span> <span class="k">as</span> <span class="n">dfvfs_path_spec</span>
+<span class="kn">from</span> <span class="nn">dfvfs.path</span> <span class="kn">import</span> <span class="n">factory</span> <span class="k">as</span> <span class="n">dfvfs_path_spec_factory</span>
+
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">event_sources</span>
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">events</span>
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">interface</span> <span class="k">as</span> <span class="n">containers_interface</span>
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">reports</span>
+<span class="kn">from</span> <span class="nn">plaso.containers</span> <span class="kn">import</span> <span class="n">sessions</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">event</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">py2to3</span>
+<span class="kn">from</span> <span class="nn">plaso.serializer</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.storage</span> <span class="kn">import</span> <span class="n">collection</span>
+
+<span class="kn">import</span> <span class="nn">pytz</span>  <span class="c1"># pylint: disable=wrong-import-order</span>
+
+
+<span class="k">class</span> <span class="nc">_PreprocessObjectJSONDecoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONDecoder</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A class that implements a preprocessing object JSON decoder.&quot;&quot;&quot;</span>
+
+  <span class="n">_CLASS_TYPES</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+      <span class="s1">u&#39;bytes&#39;</span><span class="p">,</span> <span class="s1">u&#39;collections.Counter&#39;</span><span class="p">,</span> <span class="s1">u&#39;PreprocessObject&#39;</span><span class="p">,</span> <span class="s1">u&#39;range&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;timezone&#39;</span><span class="p">])</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the JSON decoder object.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">_PreprocessObjectJSONDecoder</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span>
+        <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">object_hook</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_ConvertDictToObject</span><span class="p">,</span> <span class="o">**</span><span class="n">kargs</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_ConvertDictToCollectionsCounter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a JSON dict into a collections counter object.</span>
+
+<span class="sd">    The dictionary of the JSON serialized objects consists of:</span>
+<span class="sd">    {</span>
+<span class="sd">        &#39;__type__&#39;: &#39;collections.Counter&#39;</span>
+<span class="sd">        ...</span>
+<span class="sd">    }</span>
+
+<span class="sd">    Here &#39;__type__&#39; indicates the object base type. In this case this should</span>
+<span class="sd">    be &#39;collections.Counter&#39;. The rest of the elements of the dictionary make up</span>
+<span class="sd">    the preprocessing object properties.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      json_dict: a dictionary of the JSON serialized objects.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A collections counter object (instance of collections.Counter).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">collections_counter</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">Counter</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">json_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+      <span class="n">collections_counter</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">return</span> <span class="n">collections_counter</span>
+
+  <span class="k">def</span> <span class="nf">_ConvertDictToPreprocessObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a JSON dict into a preprocessing object.</span>
+
+<span class="sd">    The dictionary of the JSON serialized objects consists of:</span>
+<span class="sd">    {</span>
+<span class="sd">        &#39;__type__&#39;: &#39;PreprocessObject&#39;</span>
+<span class="sd">        &#39;collection_information&#39;: { ... }</span>
+<span class="sd">        &#39;counter&#39;: { ... }</span>
+<span class="sd">        &#39;plugin_counter&#39;: { ... }</span>
+<span class="sd">        &#39;store_range&#39;: { ... }</span>
+<span class="sd">        &#39;stores&#39;: { ... }</span>
+<span class="sd">        &#39;zone&#39;: { ... }</span>
+<span class="sd">        ...</span>
+<span class="sd">    }</span>
+
+<span class="sd">    Here &#39;__type__&#39; indicates the object base type. In this case this should</span>
+<span class="sd">    be &#39;PreprocessObject&#39;. The rest of the elements of the dictionary make up</span>
+<span class="sd">    the preprocessing object properties.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      json_dict: a dictionary of the JSON serialized objects.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A preprocessing object (instance of PreprocessObject).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">preprocessing_object</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">PreprocessObject</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">json_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+      <span class="nb">setattr</span><span class="p">(</span><span class="n">preprocessing_object</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">preprocessing_object</span>
+
+  <span class="k">def</span> <span class="nf">_ConvertDictToObject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a JSON dict into an object.</span>
+
+<span class="sd">    Note that json_dict is a dict of dicts and the _ConvertDictToObject</span>
+<span class="sd">    method will be called for every dict. That is how the deserialized</span>
+<span class="sd">    objects are created.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      json_dict: a dictionary of the JSON serialized objects.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A deserialized object which can be:</span>
+<span class="sd">        * a collections counter (instance of collections.Counter);</span>
+<span class="sd">        * a dictionary;</span>
+<span class="sd">        * a preprocessing object (instance of PreprocessObject);</span>
+<span class="sd">        * a pytz timezone object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Use __type__ to indicate the object class type.</span>
+    <span class="n">class_type</span> <span class="o">=</span> <span class="n">json_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;__type__&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">class_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_CLASS_TYPES</span><span class="p">:</span>
+      <span class="c1"># Dealing with a regular dict.</span>
+      <span class="k">return</span> <span class="n">json_dict</span>
+
+    <span class="c1"># Remove the class type from the JSON dict since we cannot pass it.</span>
+    <span class="k">del</span> <span class="n">json_dict</span><span class="p">[</span><span class="s1">u&#39;__type__&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">class_type</span> <span class="o">==</span> <span class="s1">u&#39;bytes&#39;</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">binascii</span><span class="o">.</span><span class="n">a2b_qp</span><span class="p">(</span><span class="n">json_dict</span><span class="p">[</span><span class="s1">u&#39;stream&#39;</span><span class="p">])</span>
+
+    <span class="k">elif</span> <span class="n">class_type</span> <span class="o">==</span> <span class="s1">u&#39;collections.Counter&#39;</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ConvertDictToCollectionsCounter</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">class_type</span> <span class="o">==</span> <span class="s1">u&#39;range&#39;</span><span class="p">:</span>
+      <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">json_dict</span><span class="p">[</span><span class="s1">u&#39;start&#39;</span><span class="p">],</span> <span class="n">json_dict</span><span class="p">[</span><span class="s1">u&#39;end&#39;</span><span class="p">]])</span>
+
+    <span class="k">elif</span> <span class="n">class_type</span> <span class="o">==</span> <span class="s1">u&#39;timezone&#39;</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">pytz</span><span class="o">.</span><span class="n">timezone</span><span class="p">(</span><span class="n">json_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;zone&#39;</span><span class="p">,</span> <span class="s1">u&#39;UTC&#39;</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ConvertDictToPreprocessObject</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">_PreprocessObjectJSONEncoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A class that implements a preprocessing object JSON encoder.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">_ConvertCollectionInformationToDict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">collection_information</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a collection information dictionary into a JSON dictionary.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      collection_information: a collection information dictionary.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A dictionary of the JSON serialized objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">json_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">attribute_name</span><span class="p">,</span> <span class="n">attribute_value</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">collection_information</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+      <span class="k">if</span> <span class="n">attribute_value</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">continue</span>
+
+      <span class="k">if</span> <span class="n">attribute_name</span> <span class="o">==</span> <span class="s1">u&#39;configured_zone&#39;</span><span class="p">:</span>
+        <span class="n">attribute_value</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">u&#39;__type__&#39;</span><span class="p">:</span> <span class="s1">u&#39;timezone&#39;</span><span class="p">,</span>
+            <span class="s1">u&#39;zone&#39;</span><span class="p">:</span> <span class="s1">u&#39;{0!s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">)</span>
+        <span class="p">}</span>
+
+      <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">BYTES_TYPE</span><span class="p">):</span>
+        <span class="n">attribute_value</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">u&#39;__type__&#39;</span><span class="p">:</span> <span class="s1">u&#39;bytes&#39;</span><span class="p">,</span>
+            <span class="s1">u&#39;stream&#39;</span><span class="p">:</span> <span class="s1">u&#39;{0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">binascii</span><span class="o">.</span><span class="n">b2a_qp</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">))</span>
+        <span class="p">}</span>
+
+      <span class="n">json_dict</span><span class="p">[</span><span class="n">attribute_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">attribute_value</span>
+
+    <span class="k">return</span> <span class="n">json_dict</span>
+
+  <span class="k">def</span> <span class="nf">_ConvertCollectionsCounterToDict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">collections_counter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a collections counter object into a JSON dictionary.</span>
+
+<span class="sd">    The resulting dictionary of the JSON serialized objects consists of:</span>
+<span class="sd">    {</span>
+<span class="sd">        &#39;__type__&#39;: &#39;collections.Counter&#39;</span>
+<span class="sd">        ...</span>
+<span class="sd">    }</span>
+
+<span class="sd">    Here &#39;__type__&#39; indicates the object base type. In this case</span>
+<span class="sd">    &#39;collections.Counter&#39;. The rest of the elements of the dictionary make up</span>
+<span class="sd">    the collections counter object attributes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      collections_counter: a collections counter object (instance of</span>
+<span class="sd">                           collections.Counter).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A dictionary of the JSON serialized objects.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      TypeError: if not an instance of collections.Counter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">collections_counter</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Counter</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">TypeError</span>
+
+    <span class="n">json_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">u&#39;__type__&#39;</span><span class="p">:</span> <span class="s1">u&#39;collections.Counter&#39;</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">attribute_name</span><span class="p">,</span> <span class="n">attribute_value</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">collections_counter</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+      <span class="k">if</span> <span class="n">attribute_value</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">continue</span>
+
+      <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">BYTES_TYPE</span><span class="p">):</span>
+        <span class="n">attribute_value</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">u&#39;__type__&#39;</span><span class="p">:</span> <span class="s1">u&#39;bytes&#39;</span><span class="p">,</span>
+            <span class="s1">u&#39;stream&#39;</span><span class="p">:</span> <span class="s1">u&#39;{0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">binascii</span><span class="o">.</span><span class="n">b2a_qp</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">))</span>
+        <span class="p">}</span>
+
+      <span class="n">json_dict</span><span class="p">[</span><span class="n">attribute_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">attribute_value</span>
+
+    <span class="k">return</span> <span class="n">json_dict</span>
+
+  <span class="c1"># Note: that the following functions do not follow the style guide</span>
+  <span class="c1"># because they are part of the json.JSONEncoder object interface.</span>
+
+  <span class="c1"># pylint: disable=method-hidden</span>
+  <span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">preprocessing_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a preprocessing object into a JSON dictionary.</span>
+
+<span class="sd">    The resulting dictionary of the JSON serialized objects consists of:</span>
+<span class="sd">    {</span>
+<span class="sd">        &#39;__type__&#39;: &#39;PreprocessObject&#39;</span>
+<span class="sd">        &#39;collection_information&#39;: { ... }</span>
+<span class="sd">        &#39;counter&#39;: { ... }</span>
+<span class="sd">        &#39;plugin_counter&#39;: { ... }</span>
+<span class="sd">        &#39;store_range&#39;: { ... }</span>
+<span class="sd">        &#39;stores&#39;: { ... }</span>
+<span class="sd">        &#39;zone&#39;: { ... }</span>
+<span class="sd">        ...</span>
+<span class="sd">    }</span>
+
+<span class="sd">    Here &#39;__type__&#39; indicates the object base type. In this case</span>
+<span class="sd">    &#39;PreprocessObject&#39;. The rest of the elements of the dictionary</span>
+<span class="sd">    make up the preprocessing object attributes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      preprocessing_object: a preprocessing object (instance of</span>
+<span class="sd">                            PreprocessObject).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A dictionary of the JSON serialized objects.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      TypeError: if not an instance of PreprocessObject.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">preprocessing_object</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">PreprocessObject</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">TypeError</span>
+
+    <span class="n">json_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">u&#39;__type__&#39;</span><span class="p">:</span> <span class="s1">u&#39;PreprocessObject&#39;</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">attribute_name</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">preprocessing_object</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+      <span class="n">attribute_value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">preprocessing_object</span><span class="p">,</span> <span class="n">attribute_name</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">attribute_value</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">continue</span>
+
+      <span class="k">if</span> <span class="n">attribute_name</span> <span class="o">==</span> <span class="s1">u&#39;collection_information&#39;</span><span class="p">:</span>
+        <span class="n">attribute_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ConvertCollectionInformationToDict</span><span class="p">(</span>
+            <span class="n">attribute_value</span><span class="p">)</span>
+
+      <span class="k">elif</span> <span class="n">attribute_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">u&#39;counter&#39;</span><span class="p">,</span> <span class="s1">u&#39;plugin_counter&#39;</span><span class="p">]:</span>
+        <span class="n">attribute_value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ConvertCollectionsCounterToDict</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">)</span>
+
+      <span class="k">elif</span> <span class="n">attribute_name</span> <span class="o">==</span> <span class="s1">u&#39;store_range&#39;</span><span class="p">:</span>
+        <span class="n">attribute_value</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">u&#39;__type__&#39;</span><span class="p">:</span> <span class="s1">u&#39;range&#39;</span><span class="p">,</span>
+            <span class="s1">u&#39;end&#39;</span><span class="p">:</span> <span class="n">attribute_value</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="s1">u&#39;start&#39;</span><span class="p">:</span> <span class="n">attribute_value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">}</span>
+
+      <span class="k">elif</span> <span class="n">attribute_name</span> <span class="o">==</span> <span class="s1">u&#39;zone&#39;</span><span class="p">:</span>
+        <span class="n">attribute_value</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">u&#39;__type__&#39;</span><span class="p">:</span> <span class="s1">u&#39;timezone&#39;</span><span class="p">,</span>
+            <span class="s1">u&#39;zone&#39;</span><span class="p">:</span> <span class="s1">u&#39;{0!s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">)</span>
+        <span class="p">}</span>
+
+      <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">BYTES_TYPE</span><span class="p">):</span>
+        <span class="n">attribute_value</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">u&#39;__type__&#39;</span><span class="p">:</span> <span class="s1">u&#39;bytes&#39;</span><span class="p">,</span>
+            <span class="s1">u&#39;stream&#39;</span><span class="p">:</span> <span class="s1">u&#39;{0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">binascii</span><span class="o">.</span><span class="n">b2a_qp</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">))</span>
+        <span class="p">}</span>
+
+      <span class="n">json_dict</span><span class="p">[</span><span class="n">attribute_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">attribute_value</span>
+
+    <span class="k">return</span> <span class="n">json_dict</span>
+
+
+<div class="viewcode-block" id="JSONAttributeContainerSerializer"><a class="viewcode-back" href="../../../plaso.serializer.html#plaso.serializer.json_serializer.JSONAttributeContainerSerializer">[docs]</a><span class="k">class</span> <span class="nc">JSONAttributeContainerSerializer</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">AttributeContainerSerializer</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements the json attribute container serializer.&quot;&quot;&quot;</span>
+
+  <span class="n">_CONTAINER_CLASS_PER_TYPE</span> <span class="o">=</span> <span class="p">{</span>
+      <span class="s1">u&#39;analysis_report&#39;</span><span class="p">:</span> <span class="n">reports</span><span class="o">.</span><span class="n">AnalysisReport</span><span class="p">,</span>
+      <span class="s1">u&#39;event&#39;</span><span class="p">:</span> <span class="n">events</span><span class="o">.</span><span class="n">EventObject</span><span class="p">,</span>
+      <span class="s1">u&#39;event_source&#39;</span><span class="p">:</span> <span class="n">event_sources</span><span class="o">.</span><span class="n">EventSource</span><span class="p">,</span>
+      <span class="s1">u&#39;event_tag&#39;</span><span class="p">:</span> <span class="n">events</span><span class="o">.</span><span class="n">EventTag</span><span class="p">,</span>
+      <span class="s1">u&#39;extraction_error&#39;</span><span class="p">:</span> <span class="n">errors</span><span class="o">.</span><span class="n">ExtractionError</span><span class="p">,</span>
+      <span class="s1">u&#39;session_completion&#39;</span><span class="p">:</span> <span class="n">sessions</span><span class="o">.</span><span class="n">SessionCompletion</span><span class="p">,</span>
+      <span class="s1">u&#39;session_start&#39;</span><span class="p">:</span> <span class="n">sessions</span><span class="o">.</span><span class="n">SessionStart</span><span class="p">,</span>
+  <span class="p">}</span>
+
+  <span class="nd">@classmethod</span>
+  <span class="k">def</span> <span class="nf">_ConvertAttributeContainerToDict</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">attribute_container</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts an attribute container object into a JSON dictionary.</span>
+
+<span class="sd">    The resulting dictionary of the JSON serialized objects consists of:</span>
+<span class="sd">    {</span>
+<span class="sd">        &#39;__type__&#39;: &#39;AttributeContainer&#39;</span>
+<span class="sd">        &#39;__container_type__&#39;: ...</span>
+<span class="sd">        ...</span>
+<span class="sd">    }</span>
+
+<span class="sd">    Here &#39;__type__&#39; indicates the object base type. In this case</span>
+<span class="sd">    &#39;AttributeContainer&#39;.</span>
+
+<span class="sd">    &#39;__container_type__&#39; indicates the container type and rest of the elements</span>
+<span class="sd">    of the dictionary make up the attributes of the container.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      attribute_container: an attribute container (instance of</span>
+<span class="sd">                           AttributeContainer).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A dictionary of the JSON serialized objects.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      TypeError: if not an instance of AttributeContainer.</span>
+<span class="sd">      ValueError: if the attribute container type is not supported.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+        <span class="n">attribute_container</span><span class="p">,</span> <span class="n">containers_interface</span><span class="o">.</span><span class="n">AttributeContainer</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">u&#39;Not an attribute container type.&#39;</span><span class="p">)</span>
+
+    <span class="n">container_type</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">attribute_container</span><span class="p">,</span> <span class="s1">u&#39;CONTAINER_TYPE&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">container_type</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Unuspported attribute container type: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="nb">type</span><span class="p">(</span><span class="n">attribute_container</span><span class="p">)))</span>
+
+    <span class="n">json_dict</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">u&#39;__type__&#39;</span><span class="p">:</span> <span class="s1">u&#39;AttributeContainer&#39;</span><span class="p">,</span>
+        <span class="s1">u&#39;__container_type__&#39;</span><span class="p">:</span> <span class="n">container_type</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">for</span> <span class="n">attribute_name</span><span class="p">,</span> <span class="n">attribute_value</span> <span class="ow">in</span> <span class="n">attribute_container</span><span class="o">.</span><span class="n">GetAttributes</span><span class="p">():</span>
+      <span class="k">if</span> <span class="n">attribute_value</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">continue</span>
+
+      <span class="n">json_dict</span><span class="p">[</span><span class="n">attribute_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_ConvertAttributeValueToDict</span><span class="p">(</span>
+          <span class="n">attribute_value</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">json_dict</span>
+
+  <span class="nd">@classmethod</span>
+  <span class="k">def</span> <span class="nf">_ConvertAttributeValueToDict</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">attribute_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts an attribute value into a JSON dictionary.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      attribute_value: an attribute value.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The JSON serialized object which can be:</span>
+<span class="sd">        * a dictionary;</span>
+<span class="sd">        * a list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">BYTES_TYPE</span><span class="p">):</span>
+      <span class="n">attribute_value</span> <span class="o">=</span> <span class="p">{</span>
+          <span class="s1">u&#39;__type__&#39;</span><span class="p">:</span> <span class="s1">u&#39;bytes&#39;</span><span class="p">,</span>
+          <span class="s1">u&#39;stream&#39;</span><span class="p">:</span> <span class="s1">u&#39;{0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">binascii</span><span class="o">.</span><span class="n">b2a_qp</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">))</span>
+      <span class="p">}</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+      <span class="n">json_list</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="k">for</span> <span class="n">list_element</span> <span class="ow">in</span> <span class="n">attribute_value</span><span class="p">:</span>
+        <span class="n">json_dict</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_ConvertAttributeValueToDict</span><span class="p">(</span><span class="n">list_element</span><span class="p">)</span>
+        <span class="n">json_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">attribute_value</span> <span class="o">=</span> <span class="n">json_list</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">attribute_value</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">u&#39;__type__&#39;</span><span class="p">:</span> <span class="s1">u&#39;tuple&#39;</span><span class="p">,</span>
+            <span class="s1">u&#39;values&#39;</span><span class="p">:</span> <span class="n">json_list</span>
+        <span class="p">}</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">,</span> <span class="n">dfvfs_path_spec</span><span class="o">.</span><span class="n">PathSpec</span><span class="p">):</span>
+      <span class="n">attribute_value</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_ConvertPathSpecToDict</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">,</span> <span class="n">containers_interface</span><span class="o">.</span><span class="n">AttributeContainer</span><span class="p">):</span>
+      <span class="n">attribute_value</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_ConvertAttributeContainerToDict</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">attribute_value</span>
+
+  <span class="nd">@classmethod</span>
+  <span class="k">def</span> <span class="nf">_ConvertDictToObject</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">json_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a JSON dict into an object.</span>
+
+<span class="sd">    The dictionary of the JSON serialized objects consists of:</span>
+<span class="sd">    {</span>
+<span class="sd">        &#39;__type__&#39;: &#39;AttributeContainer&#39;</span>
+<span class="sd">        &#39;__container_type__&#39;: ...</span>
+<span class="sd">        ...</span>
+<span class="sd">    }</span>
+
+<span class="sd">    Here &#39;__type__&#39; indicates the object base type. In this case</span>
+<span class="sd">    &#39;AttributeContainer&#39;.</span>
+
+<span class="sd">    &#39;__container_type__&#39; indicates the attribute container type.</span>
+
+<span class="sd">    The rest of the elements of the dictionary make up the attributes.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      json_dict: a dictionary of the JSON serialized objects.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A deserialized object which can be:</span>
+<span class="sd">        * an attribute container (instance of AttributeContainer);</span>
+<span class="sd">        * a dictionary;</span>
+<span class="sd">        * a list;</span>
+<span class="sd">        * a tuple.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      ValueError: if the class type or container type is not supported.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Use __type__ to indicate the object class type.</span>
+    <span class="n">class_type</span> <span class="o">=</span> <span class="n">json_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;__type__&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">class_type</span><span class="p">:</span>
+      <span class="c1"># Dealing with a regular dict.</span>
+      <span class="k">return</span> <span class="n">json_dict</span>
+
+    <span class="k">if</span> <span class="n">class_type</span> <span class="o">==</span> <span class="s1">u&#39;bytes&#39;</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">binascii</span><span class="o">.</span><span class="n">a2b_qp</span><span class="p">(</span><span class="n">json_dict</span><span class="p">[</span><span class="s1">u&#39;stream&#39;</span><span class="p">])</span>
+
+    <span class="k">elif</span> <span class="n">class_type</span> <span class="o">==</span> <span class="s1">u&#39;tuple&#39;</span><span class="p">:</span>
+      <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">_ConvertListToObject</span><span class="p">(</span><span class="n">json_dict</span><span class="p">[</span><span class="s1">u&#39;values&#39;</span><span class="p">]))</span>
+
+    <span class="k">elif</span> <span class="n">class_type</span> <span class="o">==</span> <span class="s1">u&#39;AttributeContainer&#39;</span><span class="p">:</span>
+      <span class="c1"># Use __container_type__ to indicate the attribute container type.</span>
+      <span class="n">container_type</span> <span class="o">=</span> <span class="n">json_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;__container_type__&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+    <span class="c1"># Since we would like the JSON as flat as possible we handle decoding</span>
+    <span class="c1"># a path specification.</span>
+    <span class="k">elif</span> <span class="n">class_type</span> <span class="o">==</span> <span class="s1">u&#39;PathSpec&#39;</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_ConvertDictToPathSpec</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span>
+
+    <span class="c1"># Provide backwards compatibility.</span>
+    <span class="k">elif</span> <span class="n">class_type</span> <span class="o">==</span> <span class="s1">u&#39;EventObject&#39;</span><span class="p">:</span>
+      <span class="n">container_type</span> <span class="o">=</span> <span class="s1">u&#39;event&#39;</span>
+
+    <span class="k">elif</span> <span class="n">class_type</span> <span class="o">==</span> <span class="s1">u&#39;EventTag&#39;</span><span class="p">:</span>
+      <span class="n">container_type</span> <span class="o">=</span> <span class="s1">u&#39;event_tag&#39;</span>
+
+    <span class="k">elif</span> <span class="n">class_type</span> <span class="o">==</span> <span class="s1">u&#39;AnalysisReport&#39;</span><span class="p">:</span>
+      <span class="n">container_type</span> <span class="o">=</span> <span class="s1">u&#39;analysis_report&#39;</span>
+
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Unsupported class type: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">class_type</span><span class="p">))</span>
+
+    <span class="n">container_class</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_CONTAINER_CLASS_PER_TYPE</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">container_type</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">container_class</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Unsupported container type: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">container_type</span><span class="p">))</span>
+
+    <span class="n">container_object</span> <span class="o">=</span> <span class="n">container_class</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">attribute_name</span><span class="p">,</span> <span class="n">attribute_value</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">json_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+      <span class="k">if</span> <span class="n">attribute_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">u&#39;__&#39;</span><span class="p">):</span>
+        <span class="k">continue</span>
+
+      <span class="c1"># Be strict about which attributes to set in non event objects.</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">container_type</span> <span class="o">!=</span> <span class="s1">u&#39;event&#39;</span> <span class="ow">and</span>
+          <span class="n">attribute_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">container_object</span><span class="o">.</span><span class="n">__dict__</span><span class="p">):</span>
+        <span class="k">continue</span>
+
+      <span class="c1"># Note that &quot;_tags&quot; is the name for &quot;labels&quot; in EventTag prior to</span>
+      <span class="c1"># version 1.4.1-20160131</span>
+      <span class="k">if</span> <span class="n">container_type</span> <span class="o">==</span> <span class="s1">u&#39;event_tag&#39;</span> <span class="ow">and</span> <span class="n">attribute_name</span> <span class="o">==</span> <span class="s1">u&#39;_event_tags&#39;</span><span class="p">:</span>
+        <span class="n">attribute_name</span> <span class="o">=</span> <span class="s1">u&#39;labels&#39;</span>
+
+      <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">attribute_value</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_ConvertDictToObject</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">)</span>
+
+      <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">attribute_value</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_ConvertListToObject</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">)</span>
+
+      <span class="nb">setattr</span><span class="p">(</span><span class="n">container_object</span><span class="p">,</span> <span class="n">attribute_name</span><span class="p">,</span> <span class="n">attribute_value</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">container_object</span>
+
+  <span class="nd">@classmethod</span>
+  <span class="k">def</span> <span class="nf">_ConvertListToObject</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">json_list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a JSON list into an object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      json_list: a list of the JSON serialized objects.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A deserialized list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">list_value</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">json_list_element</span> <span class="ow">in</span> <span class="n">json_list</span><span class="p">:</span>
+      <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">json_list_element</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">list_value</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">_ConvertDictToObject</span><span class="p">(</span><span class="n">json_list_element</span><span class="p">))</span>
+
+      <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">json_list_element</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">list_value</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cls</span><span class="o">.</span><span class="n">_ConvertListToObject</span><span class="p">(</span><span class="n">json_list_element</span><span class="p">))</span>
+
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">list_value</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">json_list_element</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">list_value</span>
+
+  <span class="nd">@classmethod</span>
+  <span class="k">def</span> <span class="nf">_ConvertDictToPathSpec</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">json_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a JSON dict into a path specification object.</span>
+
+<span class="sd">    The dictionary of the JSON serialized objects consists of:</span>
+<span class="sd">    {</span>
+<span class="sd">        &#39;__type__&#39;: &#39;PathSpec&#39;</span>
+<span class="sd">        &#39;type_indicator&#39;: &#39;OS&#39;</span>
+<span class="sd">        &#39;parent&#39;: { ... }</span>
+<span class="sd">        ...</span>
+<span class="sd">    }</span>
+
+<span class="sd">    Here &#39;__type__&#39; indicates the object base type. In this case this should</span>
+<span class="sd">    be &#39;PathSpec&#39;. The rest of the elements of the dictionary make up the</span>
+<span class="sd">    path specification object properties.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      json_dict: a dictionary of the JSON serialized objects.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A path specification (instance of path.PathSpec).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">type_indicator</span> <span class="o">=</span> <span class="n">json_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;type_indicator&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">type_indicator</span><span class="p">:</span>
+      <span class="k">del</span> <span class="n">json_dict</span><span class="p">[</span><span class="s1">u&#39;type_indicator&#39;</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="s1">u&#39;parent&#39;</span> <span class="ow">in</span> <span class="n">json_dict</span><span class="p">:</span>
+      <span class="n">json_dict</span><span class="p">[</span><span class="s1">u&#39;parent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_ConvertDictToPathSpec</span><span class="p">(</span><span class="n">json_dict</span><span class="p">[</span><span class="s1">u&#39;parent&#39;</span><span class="p">])</span>
+
+    <span class="c1"># Remove the class type from the JSON dict since we cannot pass it.</span>
+    <span class="k">del</span> <span class="n">json_dict</span><span class="p">[</span><span class="s1">u&#39;__type__&#39;</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">dfvfs_path_spec_factory</span><span class="o">.</span><span class="n">Factory</span><span class="o">.</span><span class="n">NewPathSpec</span><span class="p">(</span>
+        <span class="n">type_indicator</span><span class="p">,</span> <span class="o">**</span><span class="n">json_dict</span><span class="p">)</span>
+
+  <span class="nd">@classmethod</span>
+  <span class="k">def</span> <span class="nf">_ConvertPathSpecToDict</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">path_spec_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Converts a path specification object into a JSON dictionary.</span>
+
+<span class="sd">    The resulting dictionary of the JSON serialized objects consists of:</span>
+<span class="sd">    {</span>
+<span class="sd">        &#39;__type__&#39;: &#39;PathSpec&#39;</span>
+<span class="sd">        &#39;type_indicator&#39;: &#39;OS&#39;</span>
+<span class="sd">        &#39;parent&#39;: { ... }</span>
+<span class="sd">        ...</span>
+<span class="sd">    }</span>
+
+<span class="sd">    Here &#39;__type__&#39; indicates the object base type. In this case &#39;PathSpec&#39;.</span>
+<span class="sd">    The rest of the elements of the dictionary make up the path specification</span>
+<span class="sd">    object properties. The supported property names are defined in</span>
+<span class="sd">    path_spec_factory.Factory.PROPERTY_NAMES. Note that this method is called</span>
+<span class="sd">    recursively for every path specification object and creates a dict of</span>
+<span class="sd">    dicts in the process.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      path_spec_object: a path specification (instance of dfvfs.PathSpec).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A dictionary of the JSON serialized objects.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      TypeError: if not an instance of dfvfs.PathSpec.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path_spec_object</span><span class="p">,</span> <span class="n">dfvfs_path_spec</span><span class="o">.</span><span class="n">PathSpec</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">TypeError</span>
+
+    <span class="n">json_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">u&#39;__type__&#39;</span><span class="p">:</span> <span class="s1">u&#39;PathSpec&#39;</span><span class="p">}</span>
+    <span class="k">for</span> <span class="n">property_name</span> <span class="ow">in</span> <span class="n">dfvfs_path_spec_factory</span><span class="o">.</span><span class="n">Factory</span><span class="o">.</span><span class="n">PROPERTY_NAMES</span><span class="p">:</span>
+      <span class="n">property_value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">path_spec_object</span><span class="p">,</span> <span class="n">property_name</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+      <span class="k">if</span> <span class="n">property_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">json_dict</span><span class="p">[</span><span class="n">property_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">property_value</span>
+
+    <span class="k">if</span> <span class="n">path_spec_object</span><span class="o">.</span><span class="n">HasParent</span><span class="p">():</span>
+      <span class="n">json_dict</span><span class="p">[</span><span class="s1">u&#39;parent&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">_ConvertPathSpecToDict</span><span class="p">(</span><span class="n">path_spec_object</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
+
+    <span class="n">json_dict</span><span class="p">[</span><span class="s1">u&#39;type_indicator&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">path_spec_object</span><span class="o">.</span><span class="n">type_indicator</span>
+    <span class="n">location</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">path_spec_object</span><span class="p">,</span> <span class="s1">u&#39;location&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">location</span><span class="p">:</span>
+      <span class="n">json_dict</span><span class="p">[</span><span class="s1">u&#39;location&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">location</span>
+
+    <span class="k">return</span> <span class="n">json_dict</span>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="JSONAttributeContainerSerializer.ReadSerialized"><a class="viewcode-back" href="../../../plaso.serializer.html#plaso.serializer.json_serializer.JSONAttributeContainerSerializer.ReadSerialized">[docs]</a>  <span class="k">def</span> <span class="nf">ReadSerialized</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">json_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads an attribute container from serialized form.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      json_string: a JSON string containing the serialized form.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An attribute container (instance of AttributeContainer) or None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">json_string</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">json_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json_string</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">ReadSerializedDict</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="JSONAttributeContainerSerializer.ReadSerializedDict"><a class="viewcode-back" href="../../../plaso.serializer.html#plaso.serializer.json_serializer.JSONAttributeContainerSerializer.ReadSerializedDict">[docs]</a>  <span class="k">def</span> <span class="nf">ReadSerializedDict</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">json_dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads an attribute container from serialized dictionary form.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      json_dict: a dictionary of the JSON serialized objects.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An attribute container (instance of AttributeContainer) or None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">json_dict</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_ConvertDictToObject</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="JSONAttributeContainerSerializer.WriteSerialized"><a class="viewcode-back" href="../../../plaso.serializer.html#plaso.serializer.json_serializer.JSONAttributeContainerSerializer.WriteSerialized">[docs]</a>  <span class="k">def</span> <span class="nf">WriteSerialized</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">attribute_container</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes an attribute container to serialized form.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      attribute_container: an attribute container (instance of</span>
+<span class="sd">                           AttributeContainer).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A JSON string containing the serialized form.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">json_dict</span> <span class="o">=</span> <span class="n">cls</span><span class="o">.</span><span class="n">WriteSerializedDict</span><span class="p">(</span><span class="n">attribute_container</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">json_dict</span><span class="p">)</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="JSONAttributeContainerSerializer.WriteSerializedDict"><a class="viewcode-back" href="../../../plaso.serializer.html#plaso.serializer.json_serializer.JSONAttributeContainerSerializer.WriteSerializedDict">[docs]</a>  <span class="k">def</span> <span class="nf">WriteSerializedDict</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">attribute_container</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes an attribute container to serialized form.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      attribute_container: an attribute container (instance of</span>
+<span class="sd">                           AttributeContainer).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A dictionary of the JSON serialized objects.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">cls</span><span class="o">.</span><span class="n">_ConvertAttributeContainerToDict</span><span class="p">(</span><span class="n">attribute_container</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="JSONPreprocessObjectSerializer"><a class="viewcode-back" href="../../../plaso.serializer.html#plaso.serializer.json_serializer.JSONPreprocessObjectSerializer">[docs]</a><span class="k">class</span> <span class="nc">JSONPreprocessObjectSerializer</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">PreprocessObjectSerializer</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements the json preprocessing object serializer.&quot;&quot;&quot;</span>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="JSONPreprocessObjectSerializer.ReadSerialized"><a class="viewcode-back" href="../../../plaso.serializer.html#plaso.serializer.json_serializer.JSONPreprocessObjectSerializer.ReadSerialized">[docs]</a>  <span class="k">def</span> <span class="nf">ReadSerialized</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">json_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads a path filter from serialized form.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      json_string: a JSON string containing the serialized form.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A preprocessing object (instance of PreprocessObject).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">json_decoder</span> <span class="o">=</span> <span class="n">_PreprocessObjectJSONDecoder</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">json_decoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">json_string</span><span class="p">)</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="JSONPreprocessObjectSerializer.WriteSerialized"><a class="viewcode-back" href="../../../plaso.serializer.html#plaso.serializer.json_serializer.JSONPreprocessObjectSerializer.WriteSerialized">[docs]</a>  <span class="k">def</span> <span class="nf">WriteSerialized</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">preprocess_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes a preprocessing object to serialized form.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      preprocess_object: a preprocessing object (instance of PreprocessObject).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A JSON string containing the serialized form.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">preprocess_object</span><span class="p">,</span> <span class="n">cls</span><span class="o">=</span><span class="n">_PreprocessObjectJSONEncoder</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="JSONCollectionInformationObjectSerializer"><a class="viewcode-back" href="../../../plaso.serializer.html#plaso.serializer.json_serializer.JSONCollectionInformationObjectSerializer">[docs]</a><span class="k">class</span> <span class="nc">JSONCollectionInformationObjectSerializer</span><span class="p">(</span>
+    <span class="n">interface</span><span class="o">.</span><span class="n">CollectionInformationObjectSerializer</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements the collection information serializer interface.&quot;&quot;&quot;</span>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="JSONCollectionInformationObjectSerializer.ReadSerialized"><a class="viewcode-back" href="../../../plaso.serializer.html#plaso.serializer.json_serializer.JSONCollectionInformationObjectSerializer.ReadSerialized">[docs]</a>  <span class="k">def</span> <span class="nf">ReadSerialized</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">serialized</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads a path filter from serialized form.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      serialized: an object containing the serialized form.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A collection information object (instance of CollectionInformation).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">json_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">serialized</span><span class="p">)</span>
+    <span class="n">collection_information_object</span> <span class="o">=</span> <span class="n">collection</span><span class="o">.</span><span class="n">CollectionInformation</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">json_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+      <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="n">collection_information_object</span><span class="o">.</span><span class="n">RESERVED_COUNTER_KEYWORD</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">value_dict</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+          <span class="n">collection_information_object</span><span class="o">.</span><span class="n">AddCounterDict</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">value_dict</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">collection_information_object</span><span class="o">.</span><span class="n">SetValue</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">collection_information_object</span></div>
+
+  <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="JSONCollectionInformationObjectSerializer.WriteSerialized"><a class="viewcode-back" href="../../../plaso.serializer.html#plaso.serializer.json_serializer.JSONCollectionInformationObjectSerializer.WriteSerialized">[docs]</a>  <span class="k">def</span> <span class="nf">WriteSerialized</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">collection_information_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes a collection information object to serialized form.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      collection_information_object: a collection information object (instance</span>
+<span class="sd">                                     of CollectionInformation).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An object containing the serialized form.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">collection_information_object</span><span class="p">,</span> <span class="s1">u&#39;GetValues&#39;</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to serialize collection information, missing value getting.&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">collection_information_object</span><span class="p">,</span> <span class="s1">u&#39;AddCounter&#39;</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to serialize collection information, missing counters.&#39;</span><span class="p">)</span>
+
+    <span class="n">full_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">collection_information_object</span><span class="o">.</span><span class="n">GetValueDict</span><span class="p">())</span>
+
+    <span class="k">if</span> <span class="n">collection_information_object</span><span class="o">.</span><span class="n">HasCounters</span><span class="p">():</span>
+      <span class="n">counter_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">collection_information_object</span><span class="o">.</span><span class="n">GetCounters</span><span class="p">())</span>
+      <span class="n">full_dict</span><span class="p">[</span>
+          <span class="n">collection_information_object</span><span class="o">.</span><span class="n">RESERVED_COUNTER_KEYWORD</span><span class="p">]</span> <span class="o">=</span> <span class="n">counter_dict</span>
+
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">full_dict</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

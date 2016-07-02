@@ -1,0 +1,639 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.cli.tools &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.cli.tools</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;The CLI tools classes.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">locale</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">plaso</span>
+<span class="kn">from</span> <span class="nn">plaso.cli</span> <span class="kn">import</span> <span class="n">views</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">py2to3</span>
+
+<span class="kn">import</span> <span class="nn">pytz</span>  <span class="c1"># pylint: disable=wrong-import-order</span>
+
+
+<div class="viewcode-block" id="CLITool"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.CLITool">[docs]</a><span class="k">class</span> <span class="nc">CLITool</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements a CLI tool.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    list_timezones: boolean value to indicate the time zones should be listed.</span>
+<span class="sd">    preferred_encoding: string containing the preferred encoding of single-byte</span>
+<span class="sd">                        or multi-byte character strings (sometimes referred to</span>
+<span class="sd">                        as extended ASCII).</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+  <span class="c1"># The maximum number of characters of a line written to the output writer.</span>
+  <span class="n">_LINE_LENGTH</span> <span class="o">=</span> <span class="mi">80</span>
+
+  <span class="c1"># The fall back preferred encoding.</span>
+  <span class="n">_PREFERRED_ENCODING</span> <span class="o">=</span> <span class="s1">u&#39;utf-8&#39;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_reader</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">output_writer</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the CLI tool object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      input_reader: optional input reader (instance of InputReader).</span>
+<span class="sd">                    The default is None which indicates the use of the stdin</span>
+<span class="sd">                    input reader.</span>
+<span class="sd">      output_writer: optional output writer (instance of OutputWriter).</span>
+<span class="sd">                     The default is None which indicates the use of the stdout</span>
+<span class="sd">                     output writer.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">CLITool</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+
+    <span class="n">preferred_encoding</span> <span class="o">=</span> <span class="n">locale</span><span class="o">.</span><span class="n">getpreferredencoding</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">preferred_encoding</span><span class="p">:</span>
+      <span class="n">preferred_encoding</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PREFERRED_ENCODING</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">input_reader</span><span class="p">:</span>
+      <span class="n">input_reader</span> <span class="o">=</span> <span class="n">StdinInputReader</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="n">preferred_encoding</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">output_writer</span><span class="p">:</span>
+      <span class="n">output_writer</span> <span class="o">=</span> <span class="n">StdoutOutputWriter</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="n">preferred_encoding</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_data_location</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_debug_mode</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_encode_errors</span> <span class="o">=</span> <span class="s1">u&#39;strict&#39;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_input_reader</span> <span class="o">=</span> <span class="n">input_reader</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_log_file</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_output_writer</span> <span class="o">=</span> <span class="n">output_writer</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_quiet_mode</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_timezone</span> <span class="o">=</span> <span class="n">pytz</span><span class="o">.</span><span class="n">UTC</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_views_format_type</span> <span class="o">=</span> <span class="n">views</span><span class="o">.</span><span class="n">ViewsFactory</span><span class="o">.</span><span class="n">FORMAT_TYPE_CLI</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">list_timezones</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">preferred_encoding</span> <span class="o">=</span> <span class="n">preferred_encoding</span>
+
+  <span class="k">def</span> <span class="nf">_ConfigureLogging</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">format_string</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">log_level</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Configure the logger.</span>
+
+<span class="sd">    If a filename is specified and the corresponding log file already exists,</span>
+<span class="sd">    the file is truncated.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      filename: optional path to a filename to append logs to. Defaults to None,</span>
+<span class="sd">                which means logs will not be redirected to a file.</span>
+<span class="sd">      format_string: optional format string for the logs. Defaults to None,</span>
+<span class="sd">                     which in turn configures the logger to use a default format</span>
+<span class="sd">                     string.</span>
+<span class="sd">      log_level: optional integer representing the log level, eg. logging.DEBUG.</span>
+<span class="sd">                 Defaults to None, which configures the logger to use INFO</span>
+<span class="sd">                 level.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Remove all possible log handlers.</span>
+    <span class="k">for</span> <span class="n">handler</span> <span class="ow">in</span> <span class="n">logging</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">handlers</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">removeHandler</span><span class="p">(</span><span class="n">handler</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">log_level</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">log_level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">format_string</span><span class="p">:</span>
+      <span class="n">format_string</span> <span class="o">=</span> <span class="s1">u&#39;[</span><span class="si">%(levelname)s</span><span class="s1">] </span><span class="si">%(message)s</span><span class="s1">&#39;</span>
+
+    <span class="k">if</span> <span class="n">filename</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span>
+          <span class="n">level</span><span class="o">=</span><span class="n">log_level</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="n">format_string</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span>
+          <span class="n">filemode</span><span class="o">=</span><span class="s1">u&#39;w&#39;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">log_level</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="n">format_string</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_EncodeString</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Encodes a string in the preferred encoding.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A byte string containing the encoded string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="c1"># Note that encode() will first convert string into a Unicode string</span>
+      <span class="c1"># if necessary.</span>
+      <span class="n">encoded_string</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">preferred_encoding</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_encode_errors</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">UnicodeEncodeError</span><span class="p">:</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_encode_errors</span> <span class="o">==</span> <span class="s1">u&#39;strict&#39;</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s1">u&#39;Unable to properly write output due to encoding error. &#39;</span>
+            <span class="s1">u&#39;Switching to error tolerant encoding which can result in &#39;</span>
+            <span class="s1">u&#39;non Basic Latin (C0) characters to be replaced with &quot;?&quot; or &#39;</span>
+            <span class="s1">u&#39;&quot;</span><span class="se">\\</span><span class="s1">ufffd&quot;.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_encode_errors</span> <span class="o">=</span> <span class="s1">u&#39;replace&#39;</span>
+
+      <span class="n">encoded_string</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">preferred_encoding</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_encode_errors</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">encoded_string</span>
+
+  <span class="k">def</span> <span class="nf">_ParseDataLocationOption</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses the data location option.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      options: the command line arguments (instance of argparse.Namespace).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data_location</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ParseStringOption</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="s1">u&#39;data_location&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">data_location</span><span class="p">:</span>
+      <span class="c1"># Determine if we are running from the source directory.</span>
+      <span class="c1"># This should get us the path to the &quot;plaso/cli&quot; directory.</span>
+      <span class="n">data_location</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">__file__</span><span class="p">)</span>
+
+      <span class="c1"># In order to get to the main path of the egg file we need to traverse</span>
+      <span class="c1"># two directories up.</span>
+      <span class="n">data_location</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">data_location</span><span class="p">)</span>
+      <span class="n">data_location</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">data_location</span><span class="p">)</span>
+
+      <span class="c1"># There are multiple options to run a tool e.g. running from source or</span>
+      <span class="c1"># from an egg file.</span>
+      <span class="n">data_location_egg</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_location</span><span class="p">,</span> <span class="s1">u&#39;share&#39;</span><span class="p">,</span> <span class="s1">u&#39;plaso&#39;</span><span class="p">)</span>
+      <span class="n">data_location_source</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_location</span><span class="p">,</span> <span class="s1">u&#39;data&#39;</span><span class="p">)</span>
+      <span class="n">data_location_system</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">prefix</span><span class="p">,</span> <span class="s1">u&#39;share&#39;</span><span class="p">,</span> <span class="s1">u&#39;plaso&#39;</span><span class="p">)</span>
+      <span class="n">data_location_system_local</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+          <span class="n">sys</span><span class="o">.</span><span class="n">prefix</span><span class="p">,</span> <span class="s1">u&#39;local&#39;</span><span class="p">,</span> <span class="s1">u&#39;share&#39;</span><span class="p">,</span> <span class="s1">u&#39;plaso&#39;</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">data_location_egg</span><span class="p">):</span>
+        <span class="n">data_location</span> <span class="o">=</span> <span class="n">data_location_egg</span>
+      <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">data_location_source</span><span class="p">):</span>
+        <span class="n">data_location</span> <span class="o">=</span> <span class="n">data_location_source</span>
+      <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">data_location_system</span><span class="p">):</span>
+        <span class="n">data_location</span> <span class="o">=</span> <span class="n">data_location_system</span>
+      <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">data_location_system_local</span><span class="p">):</span>
+        <span class="n">data_location</span> <span class="o">=</span> <span class="n">data_location_system_local</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">data_location</span> <span class="o">=</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">data_location</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_output_writer</span><span class="o">.</span><span class="n">Write</span><span class="p">(</span>
+          <span class="s1">u&#39;WARNING: unable to determine location of data files.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_data_location</span> <span class="o">=</span> <span class="n">data_location</span>
+
+  <span class="k">def</span> <span class="nf">_ParseInformationalOptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses the informational options.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      options: the command line arguments (instance of argparse.Namespace).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_debug_mode</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="s1">u&#39;debug&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_quiet_mode</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="s1">u&#39;quiet&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_debug_mode</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quiet_mode</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;Cannot use debug and quiet mode at the same time, defaulting to &#39;</span>
+          <span class="s1">u&#39;debug output.&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_ParseTimezoneOption</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses the timezone options.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      options: the command line arguments (instance of argparse.Namespace).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      BadConfigOption: if the options are invalid.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">timezone_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ParseStringOption</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="s1">u&#39;timezone&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">timezone_string</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">STRING_TYPES</span><span class="p">):</span>
+      <span class="k">if</span> <span class="n">timezone_string</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">u&#39;list&#39;</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">list_timezones</span> <span class="o">=</span> <span class="bp">True</span>
+
+      <span class="k">elif</span> <span class="n">timezone_string</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_timezone</span> <span class="o">=</span> <span class="n">pytz</span><span class="o">.</span><span class="n">timezone</span><span class="p">(</span><span class="n">timezone_string</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">pytz</span><span class="o">.</span><span class="n">UnknownTimeZoneError</span><span class="p">:</span>
+          <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">BadConfigOption</span><span class="p">(</span>
+              <span class="s1">u&#39;Unknown timezone: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">timezone_string</span><span class="p">))</span>
+
+<div class="viewcode-block" id="CLITool.AddBasicOptions"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.CLITool.AddBasicOptions">[docs]</a>  <span class="k">def</span> <span class="nf">AddBasicOptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argument_group</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds the basic options to the argument group.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      argument_group: The argparse argument group (instance of</span>
+<span class="sd">                      argparse._ArgumentGroup).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">version_string</span> <span class="o">=</span> <span class="s1">u&#39;plaso - {0:s} version {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">NAME</span><span class="p">,</span> <span class="n">plaso</span><span class="o">.</span><span class="n">GetVersion</span><span class="p">())</span>
+
+    <span class="c1"># We want a custom help message and not the default argparse one.</span>
+    <span class="n">argument_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">u&#39;-h&#39;</span><span class="p">,</span> <span class="s1">u&#39;--help&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">u&#39;help&#39;</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">u&#39;show this help message and exit.&#39;</span><span class="p">)</span>
+
+    <span class="n">argument_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">u&#39;-V&#39;</span><span class="p">,</span> <span class="s1">u&#39;--version&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">u&#39;version&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">u&#39;version&#39;</span><span class="p">,</span>
+        <span class="n">version</span><span class="o">=</span><span class="n">version_string</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">u&#39;show the version information.&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CLITool.AddDataLocationOption"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.CLITool.AddDataLocationOption">[docs]</a>  <span class="k">def</span> <span class="nf">AddDataLocationOption</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argument_group</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds the data location option to the argument group.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      argument_group: The argparse argument group (instance of</span>
+<span class="sd">                      argparse._ArgumentGroup).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">argument_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">u&#39;--data&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">u&#39;store&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">u&#39;data_location&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s1">u&#39;PATH&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">u&#39;the location of the data files.&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CLITool.AddInformationalOptions"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.CLITool.AddInformationalOptions">[docs]</a>  <span class="k">def</span> <span class="nf">AddInformationalOptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argument_group</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds the informational options to the argument group.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      argument_group: The argparse argument group (instance of</span>
+<span class="sd">                      argparse._ArgumentGroup).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">argument_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="s1">&#39;--debug&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;debug&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">u&#39;enable debug output.&#39;</span><span class="p">)</span>
+
+    <span class="n">argument_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">&#39;-q&#39;</span><span class="p">,</span> <span class="s1">&#39;--quiet&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">&#39;quiet&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+        <span class="n">help</span><span class="o">=</span><span class="s1">u&#39;disable informational output.&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CLITool.AddLogFileOptions"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.CLITool.AddLogFileOptions">[docs]</a>  <span class="k">def</span> <span class="nf">AddLogFileOptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argument_group</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds the log file option to the argument group.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      argument_group: The argparse argument group (instance of</span>
+<span class="sd">                      argparse._ArgumentGroup).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">argument_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">u&#39;--logfile&#39;</span><span class="p">,</span> <span class="s1">u&#39;--log_file&#39;</span><span class="p">,</span> <span class="s1">u&#39;--log-file&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">u&#39;store&#39;</span><span class="p">,</span>
+        <span class="n">metavar</span><span class="o">=</span><span class="s1">u&#39;FILENAME&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">u&#39;log_file&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">u&#39;&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s1">u&#39;If defined all log messages will be redirected to this file &#39;</span>
+            <span class="s1">u&#39;instead the default STDERR.&#39;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="CLITool.AddTimezoneOption"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.CLITool.AddTimezoneOption">[docs]</a>  <span class="k">def</span> <span class="nf">AddTimezoneOption</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">argument_group</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds the timezone option to the argument group.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      argument_group: The argparse argument group (instance of</span>
+<span class="sd">                      argparse._ArgumentGroup).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">argument_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
+        <span class="s1">u&#39;-z&#39;</span><span class="p">,</span> <span class="s1">u&#39;--zone&#39;</span><span class="p">,</span> <span class="s1">u&#39;--timezone&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s1">u&#39;timezone&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">u&#39;store&#39;</span><span class="p">,</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">u&#39;UTC&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="p">(</span>
+            <span class="s1">u&#39;explicitly define the timezone. Typically the timezone is &#39;</span>
+            <span class="s1">u&#39;determined automatically where possible. Use &quot;-z list&quot; to &#39;</span>
+            <span class="s1">u&#39;see a list of available timezones.&#39;</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="CLITool.GetCommandLineArguments"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.CLITool.GetCommandLineArguments">[docs]</a>  <span class="k">def</span> <span class="nf">GetCommandLineArguments</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the command line arguments.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A string containing the command line arguments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">command_line_arguments</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">command_line_arguments</span><span class="p">:</span>
+      <span class="k">return</span> <span class="s1">u&#39;&#39;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">command_line_arguments</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">BYTES_TYPE</span><span class="p">):</span>
+      <span class="n">encoding</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">encoding</span>
+
+      <span class="c1"># Note that sys.stdin.encoding can be None.</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">encoding</span><span class="p">:</span>
+        <span class="n">encoding</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preferred_encoding</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">command_line_arguments</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">argument</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">)</span> <span class="k">for</span> <span class="n">argument</span> <span class="ow">in</span> <span class="n">command_line_arguments</span><span class="p">]</span>
+
+      <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s1">u&#39;Unable to properly read command line input due to encoding &#39;</span>
+            <span class="s1">u&#39;error. Replacing non Basic Latin (C0) characters with &quot;?&quot; or &#39;</span>
+            <span class="s1">u&#39;&quot;</span><span class="se">\\</span><span class="s1">ufffd&quot;.&#39;</span><span class="p">)</span>
+
+        <span class="n">command_line_arguments</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">argument</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s1">u&#39;replace&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">argument</span> <span class="ow">in</span> <span class="n">command_line_arguments</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="s1">u&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">command_line_arguments</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CLITool.ListTimeZones"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.CLITool.ListTimeZones">[docs]</a>  <span class="k">def</span> <span class="nf">ListTimeZones</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Lists the timezones.&quot;&quot;&quot;</span>
+    <span class="n">max_length</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">timezone_name</span> <span class="ow">in</span> <span class="n">pytz</span><span class="o">.</span><span class="n">all_timezones</span><span class="p">:</span>
+      <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">timezone_name</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">max_length</span><span class="p">:</span>
+        <span class="n">max_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">timezone_name</span><span class="p">)</span>
+
+    <span class="n">utc_date_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span>
+
+    <span class="n">table_view</span> <span class="o">=</span> <span class="n">views</span><span class="o">.</span><span class="n">ViewsFactory</span><span class="o">.</span><span class="n">GetTableView</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_views_format_type</span><span class="p">,</span> <span class="n">column_names</span><span class="o">=</span><span class="p">[</span><span class="s1">u&#39;Timezone&#39;</span><span class="p">,</span> <span class="s1">u&#39;UTC Offset&#39;</span><span class="p">],</span>
+        <span class="n">title</span><span class="o">=</span><span class="s1">u&#39;Zones&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">timezone_name</span> <span class="ow">in</span> <span class="n">pytz</span><span class="o">.</span><span class="n">all_timezones</span><span class="p">:</span>
+      <span class="n">local_timezone</span> <span class="o">=</span> <span class="n">pytz</span><span class="o">.</span><span class="n">timezone</span><span class="p">(</span><span class="n">timezone_name</span><span class="p">)</span>
+
+      <span class="n">local_date_string</span> <span class="o">=</span> <span class="s1">u&#39;{0!s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">local_timezone</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">utc_date_time</span><span class="p">))</span>
+      <span class="k">if</span> <span class="s1">u&#39;+&#39;</span> <span class="ow">in</span> <span class="n">local_date_string</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">diff</span> <span class="o">=</span> <span class="n">local_date_string</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s1">u&#39;+&#39;</span><span class="p">)</span>
+        <span class="n">diff_string</span> <span class="o">=</span> <span class="s1">u&#39;+{0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">diff</span> <span class="o">=</span> <span class="n">local_date_string</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s1">u&#39;-&#39;</span><span class="p">)</span>
+        <span class="n">diff_string</span> <span class="o">=</span> <span class="s1">u&#39;-{0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span>
+
+      <span class="n">table_view</span><span class="o">.</span><span class="n">AddRow</span><span class="p">([</span><span class="n">timezone_name</span><span class="p">,</span> <span class="n">diff_string</span><span class="p">])</span>
+
+    <span class="n">table_view</span><span class="o">.</span><span class="n">Write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_output_writer</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CLITool.ParseOptions"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.CLITool.ParseOptions">[docs]</a>  <span class="k">def</span> <span class="nf">ParseOptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses tool specific options.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      options: the command line arguments (instance of argparse.Namespace).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_ParseInformationalOptions</span><span class="p">(</span><span class="n">options</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CLITool.ParseLogFileOptions"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.CLITool.ParseLogFileOptions">[docs]</a>  <span class="k">def</span> <span class="nf">ParseLogFileOptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses the log file options.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      options: the command line arguments (instance of argparse.Namespace).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_log_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ParseStringOption</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="s1">u&#39;log_file&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CLITool.ParseStringOption"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.CLITool.ParseStringOption">[docs]</a>  <span class="k">def</span> <span class="nf">ParseStringOption</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">argument_name</span><span class="p">,</span> <span class="n">default_value</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a string command line argument.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      options: the command line arguments (instance of argparse.Namespace).</span>
+<span class="sd">      argument_name: the name of the command line argument.</span>
+<span class="sd">      default_value: optional default value of the command line argument.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A string containing the command line argument value. If the command</span>
+<span class="sd">      line argument is not set the default value will be returned.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      BadConfigOption: if the command line argument value cannot be converted</span>
+<span class="sd">                       to a Unicode string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">argument_value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">options</span><span class="p">,</span> <span class="n">argument_name</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">argument_value</span><span class="p">:</span>
+      <span class="k">return</span> <span class="n">default_value</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">argument_value</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">BYTES_TYPE</span><span class="p">):</span>
+      <span class="n">encoding</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="o">.</span><span class="n">encoding</span>
+
+      <span class="c1"># Note that sys.stdin.encoding can be None.</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">encoding</span><span class="p">:</span>
+        <span class="n">encoding</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preferred_encoding</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">argument_value</span> <span class="o">=</span> <span class="n">argument_value</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">encoding</span><span class="p">)</span>
+      <span class="k">except</span> <span class="ne">UnicodeDecodeError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">BadConfigOption</span><span class="p">((</span>
+            <span class="s1">u&#39;Unable to convert option: {0:s} to Unicode with error: &#39;</span>
+            <span class="s1">u&#39;{1:s}.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">argument_name</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">argument_value</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">UNICODE_TYPE</span><span class="p">):</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">BadConfigOption</span><span class="p">(</span>
+          <span class="s1">u&#39;Unsupported option: {0:s} string type required.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">argument_name</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">argument_value</span></div>
+
+<div class="viewcode-block" id="CLITool.PrintSeparatorLine"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.CLITool.PrintSeparatorLine">[docs]</a>  <span class="k">def</span> <span class="nf">PrintSeparatorLine</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Prints a separator line.&quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_output_writer</span><span class="o">.</span><span class="n">Write</span><span class="p">(</span><span class="s1">u&#39;-&#39;</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_LINE_LENGTH</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_output_writer</span><span class="o">.</span><span class="n">Write</span><span class="p">(</span><span class="s1">u&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="CLIInputReader"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.CLIInputReader">[docs]</a><span class="k">class</span> <span class="nc">CLIInputReader</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements the CLI input reader interface.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the input reader object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      encoding: optional input encoding.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">CLIInputReader</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_encoding</span> <span class="o">=</span> <span class="n">encoding</span>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="CLIInputReader.Read"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.CLIInputReader.Read">[docs]</a>  <span class="k">def</span> <span class="nf">Read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads a string from the input.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A string containing the input.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div></div>
+
+
+<div class="viewcode-block" id="CLIOutputWriter"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.CLIOutputWriter">[docs]</a><span class="k">class</span> <span class="nc">CLIOutputWriter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements the CLI output writer interface.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the output writer object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      encoding: optional output encoding.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">CLIOutputWriter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_encoding</span> <span class="o">=</span> <span class="n">encoding</span>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="CLIOutputWriter.Write"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.CLIOutputWriter.Write">[docs]</a>  <span class="k">def</span> <span class="nf">Write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes a string to the output.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      string: A string containing the output.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div></div>
+
+
+<div class="viewcode-block" id="FileObjectInputReader"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.FileObjectInputReader">[docs]</a><span class="k">class</span> <span class="nc">FileObjectInputReader</span><span class="p">(</span><span class="n">CLIInputReader</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements a file-like object input reader.</span>
+
+<span class="sd">  This input reader relies on the file-like object having a readline method.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the input reader object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_object: the file-like object to read from.</span>
+<span class="sd">      encoding: optional input encoding.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">FileObjectInputReader</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span> <span class="o">=</span> <span class="s1">u&#39;strict&#39;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span> <span class="o">=</span> <span class="n">file_object</span>
+
+<div class="viewcode-block" id="FileObjectInputReader.Read"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.FileObjectInputReader.Read">[docs]</a>  <span class="k">def</span> <span class="nf">Read</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads a string from the input.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A string containing the input.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">encoded_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">string</span> <span class="o">=</span> <span class="n">encoded_string</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_encoding</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span> <span class="o">==</span> <span class="s1">u&#39;strict&#39;</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s1">u&#39;Unable to properly read input due to encoding error. &#39;</span>
+            <span class="s1">u&#39;Switching to error tolerant encoding which can result in &#39;</span>
+            <span class="s1">u&#39;non Basic Latin (C0) characters to be replaced with &quot;?&quot; or &#39;</span>
+            <span class="s1">u&#39;&quot;</span><span class="se">\\</span><span class="s1">ufffd&quot;.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span> <span class="o">=</span> <span class="s1">u&#39;replace&#39;</span>
+
+      <span class="n">string</span> <span class="o">=</span> <span class="n">encoded_string</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_encoding</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">string</span></div></div>
+
+
+<div class="viewcode-block" id="StdinInputReader"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.StdinInputReader">[docs]</a><span class="k">class</span> <span class="nc">StdinInputReader</span><span class="p">(</span><span class="n">FileObjectInputReader</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements a stdin input reader.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the input reader object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      encoding: optional input encoding.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">StdinInputReader</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdin</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FileObjectOutputWriter"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.FileObjectOutputWriter">[docs]</a><span class="k">class</span> <span class="nc">FileObjectOutputWriter</span><span class="p">(</span><span class="n">CLIOutputWriter</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements a file-like object output writer.</span>
+
+<span class="sd">  This output writer relies on the file-like object having a write method.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_object</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the output writer object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_object: the file-like object to write to.</span>
+<span class="sd">      encoding: optional output encoding.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">FileObjectOutputWriter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span> <span class="o">=</span> <span class="s1">u&#39;strict&#39;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span> <span class="o">=</span> <span class="n">file_object</span>
+
+<div class="viewcode-block" id="FileObjectOutputWriter.Write"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.FileObjectOutputWriter.Write">[docs]</a>  <span class="k">def</span> <span class="nf">Write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes a string to the output.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      string: A string containing the output.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="c1"># Note that encode() will first convert string into a Unicode string</span>
+      <span class="c1"># if necessary.</span>
+      <span class="n">encoded_string</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_encoding</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">UnicodeEncodeError</span><span class="p">:</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span> <span class="o">==</span> <span class="s1">u&#39;strict&#39;</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="s1">u&#39;Unable to properly write output due to encoding error. &#39;</span>
+            <span class="s1">u&#39;Switching to error tolerant encoding which can result in &#39;</span>
+            <span class="s1">u&#39;non Basic Latin (C0) characters to be replaced with &quot;?&quot; or &#39;</span>
+            <span class="s1">u&#39;&quot;</span><span class="se">\\</span><span class="s1">ufffd&quot;.&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span> <span class="o">=</span> <span class="s1">u&#39;replace&#39;</span>
+
+      <span class="n">encoded_string</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_encoding</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_file_object</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">encoded_string</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="StdoutOutputWriter"><a class="viewcode-back" href="../../../plaso.cli.html#plaso.cli.tools.StdoutOutputWriter">[docs]</a><span class="k">class</span> <span class="nc">StdoutOutputWriter</span><span class="p">(</span><span class="n">FileObjectOutputWriter</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements a stdout output writer.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the output writer object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      encoding: optional output encoding.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">StdoutOutputWriter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="n">encoding</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

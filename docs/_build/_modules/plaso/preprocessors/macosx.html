@@ -1,0 +1,440 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.preprocessors.macosx &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.preprocessors.macosx</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;This file contains preprocessors for Mac OS X.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">plistlib</span>
+
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">errors</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">plist</span>
+<span class="kn">from</span> <span class="nn">plaso.parsers.plist_plugins</span> <span class="kn">import</span> <span class="n">interface</span> <span class="k">as</span> <span class="n">plist_interface</span>
+<span class="kn">from</span> <span class="nn">plaso.preprocessors</span> <span class="kn">import</span> <span class="n">interface</span>
+<span class="kn">from</span> <span class="nn">plaso.preprocessors</span> <span class="kn">import</span> <span class="n">manager</span>
+
+
+<div class="viewcode-block" id="PlistPreprocessPlugin"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.macosx.PlistPreprocessPlugin">[docs]</a><span class="k">class</span> <span class="nc">PlistPreprocessPlugin</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">PreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that defines the plist preprocess plugin object.&quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">_GetPlistRootKey</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_entry</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Open a plist file entry.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      file_entry: The plist file entry (instance of dfvfs.FileEntry).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The plist root key (instance of plistlib._InternalDict).</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      errors.PreProcessFail: if the preprocessing fails.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_object</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">GetFileObject</span><span class="p">()</span>
+
+    <span class="n">plist_file</span> <span class="o">=</span> <span class="n">plist</span><span class="o">.</span><span class="n">PlistFile</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">plist_file</span><span class="o">.</span><span class="n">Read</span><span class="p">(</span><span class="n">file_object</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">location</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="p">,</span> <span class="s1">u&#39;location&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">PreProcessFail</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to read plist file: {0:s} with error: {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">location</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">finally</span><span class="p">:</span>
+      <span class="n">file_object</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">plist_file</span><span class="o">.</span><span class="n">root_key</span>
+
+  <span class="nd">@abc.abstractmethod</span>
+<div class="viewcode-block" id="PlistPreprocessPlugin.GetValue"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.macosx.PlistPreprocessPlugin.GetValue">[docs]</a>  <span class="k">def</span> <span class="nf">GetValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">searcher</span><span class="p">,</span> <span class="n">knowledge_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return the value for the attribute.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      searcher: The file system searcher object (instance of</span>
+<span class="sd">                dfvfs.FileSystemSearcher).</span>
+<span class="sd">      knowledge_base: A knowledge base object (instance of KnowledgeBase),</span>
+<span class="sd">                      which contains information from the source data needed</span>
+<span class="sd">                      for parsing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span></div></div>
+
+
+<div class="viewcode-block" id="PlistKeyPreprocessPlugin"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.macosx.PlistKeyPreprocessPlugin">[docs]</a><span class="k">class</span> <span class="nc">PlistKeyPreprocessPlugin</span><span class="p">(</span><span class="n">PlistPreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that defines the plist key preprocess plugin object.</span>
+
+<span class="sd">  The plist key preprocess plugin retieves values from key names,</span>
+<span class="sd">  defined in PLIST_KEYS, from a specific plist file, defined in</span>
+<span class="sd">  PLIST_PATH.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="n">SUPPORTED_OS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">u&#39;MacOSX&#39;</span><span class="p">]</span>
+  <span class="n">WEIGHT</span> <span class="o">=</span> <span class="mi">2</span>
+
+  <span class="c1"># Path to the plist file to be parsed, can depend on paths discovered</span>
+  <span class="c1"># in previous preprocessors.</span>
+  <span class="n">PLIST_PATH</span> <span class="o">=</span> <span class="s1">u&#39;&#39;</span>
+
+  <span class="c1"># The key that&#39;s value should be returned back. It is an ordered list</span>
+  <span class="c1"># of preference. If the first value is found it will be returned and no</span>
+  <span class="c1"># others will be searched.</span>
+  <span class="n">PLIST_KEYS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">u&#39;&#39;</span><span class="p">]</span>
+
+  <span class="k">def</span> <span class="nf">_FindKeys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span> <span class="n">matches</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Searches the plist key hierarchy for keys with matching names.</span>
+
+<span class="sd">    If a match is found a tuple of the key name and value is added to</span>
+<span class="sd">    the matches list.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      key: a plist key (instance of plistlib._InternalDict).</span>
+<span class="sd">      names: list of names of the keys to match.</span>
+<span class="sd">      matches: a list to add the keys with matching names.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">subkey</span> <span class="ow">in</span> <span class="n">key</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+      <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
+        <span class="n">matches</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">subkey</span><span class="p">))</span>
+
+      <span class="c1"># pylint: disable=protected-access</span>
+      <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">subkey</span><span class="p">,</span> <span class="n">plistlib</span><span class="o">.</span><span class="n">_InternalDict</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_FindKeys</span><span class="p">(</span><span class="n">subkey</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span> <span class="n">matches</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PlistKeyPreprocessPlugin.GetValue"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.macosx.PlistKeyPreprocessPlugin.GetValue">[docs]</a>  <span class="k">def</span> <span class="nf">GetValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">searcher</span><span class="p">,</span> <span class="n">unused_knowledge_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns a value retrieved from keys within a plist file.</span>
+
+<span class="sd">    Where the name of the keys are defined in PLIST_KEYS.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      searcher: The file system searcher object (instance of</span>
+<span class="sd">                dfvfs.FileSystemSearcher).</span>
+<span class="sd">      knowledge_base: A knowledge base object (instance of KnowledgeBase),</span>
+<span class="sd">                      which contains information from the source data needed</span>
+<span class="sd">                      for parsing.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The value of the first key that is found.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      errors.PreProcessFail: if the preprocessing fails.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FindFileEntry</span><span class="p">(</span><span class="n">searcher</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PLIST_PATH</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_entry</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">PreProcessFail</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to open file: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PLIST_PATH</span><span class="p">))</span>
+
+    <span class="n">root_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetPlistRootKey</span><span class="p">(</span><span class="n">file_entry</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">root_key</span><span class="p">:</span>
+      <span class="n">location</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">file_entry</span><span class="o">.</span><span class="n">path_spec</span><span class="p">,</span> <span class="s1">u&#39;location&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">PreProcessFail</span><span class="p">(</span>
+          <span class="s1">u&#39;Missing root key in plist: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">location</span><span class="p">))</span>
+
+    <span class="n">matches</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_FindKeys</span><span class="p">(</span><span class="n">root_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PLIST_KEYS</span><span class="p">,</span> <span class="n">matches</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">matches</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">PreProcessFail</span><span class="p">(</span><span class="s1">u&#39;No such keys: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="s1">u&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PLIST_KEYS</span><span class="p">)))</span>
+
+    <span class="n">key_name</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">key_value</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">for</span> <span class="n">key_name</span><span class="p">,</span> <span class="n">key_value</span> <span class="ow">in</span> <span class="n">matches</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">key_value</span><span class="p">:</span>
+        <span class="k">break</span>
+
+    <span class="k">if</span> <span class="n">key_value</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">PreProcessFail</span><span class="p">(</span><span class="s1">u&#39;No values found for keys: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="s1">u&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">PLIST_KEYS</span><span class="p">)))</span>
+
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ParseValue</span><span class="p">(</span><span class="n">key_name</span><span class="p">,</span> <span class="n">key_value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PlistKeyPreprocessPlugin.ParseValue"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.macosx.PlistKeyPreprocessPlugin.ParseValue">[docs]</a>  <span class="k">def</span> <span class="nf">ParseValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unused_key_name</span><span class="p">,</span> <span class="n">key_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a key value.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      key_name: The name of the key.</span>
+<span class="sd">      key_value: The value of the key.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The parsed value.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      errors.PreProcessFail: if the value cannot be parsed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">key_value</span></div></div>
+
+
+<div class="viewcode-block" id="MacOSXBuild"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.macosx.MacOSXBuild">[docs]</a><span class="k">class</span> <span class="nc">MacOSXBuild</span><span class="p">(</span><span class="n">PlistKeyPreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Fetches build information about a Mac OS X system.&quot;&quot;&quot;</span>
+
+  <span class="n">ATTRIBUTE</span> <span class="o">=</span> <span class="s1">u&#39;build&#39;</span>
+  <span class="n">PLIST_PATH</span> <span class="o">=</span> <span class="s1">u&#39;/System/Library/CoreServices/SystemVersion.plist&#39;</span>
+
+  <span class="n">PLIST_KEYS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">u&#39;ProductUserVisibleVersion&#39;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="MacOSXHostname"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.macosx.MacOSXHostname">[docs]</a><span class="k">class</span> <span class="nc">MacOSXHostname</span><span class="p">(</span><span class="n">PlistKeyPreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Fetches hostname information about a Mac OS X system.&quot;&quot;&quot;</span>
+
+  <span class="n">ATTRIBUTE</span> <span class="o">=</span> <span class="s1">u&#39;hostname&#39;</span>
+  <span class="n">PLIST_PATH</span> <span class="o">=</span> <span class="s1">u&#39;/Library/Preferences/SystemConfiguration/preferences.plist&#39;</span>
+
+  <span class="n">PLIST_KEYS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">u&#39;ComputerName&#39;</span><span class="p">,</span> <span class="s1">u&#39;LocalHostName&#39;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="MacOSXKeyboard"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.macosx.MacOSXKeyboard">[docs]</a><span class="k">class</span> <span class="nc">MacOSXKeyboard</span><span class="p">(</span><span class="n">PlistKeyPreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Fetches keyboard information from a Mac OS X system.&quot;&quot;&quot;</span>
+
+  <span class="n">ATTRIBUTE</span> <span class="o">=</span> <span class="s1">u&#39;keyboard_layout&#39;</span>
+  <span class="n">PLIST_PATH</span> <span class="o">=</span> <span class="s1">u&#39;/Library/Preferences/com.apple.HIToolbox.plist&#39;</span>
+
+  <span class="n">PLIST_KEYS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">u&#39;AppleCurrentKeyboardLayoutInputSourceID&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="MacOSXKeyboard.ParseValue"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.macosx.MacOSXKeyboard.ParseValue">[docs]</a>  <span class="k">def</span> <span class="nf">ParseValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unused_key_name</span><span class="p">,</span> <span class="n">key_value</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses a key value.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      key_name: The name of the key.</span>
+<span class="sd">      key_value: The value of the key.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The parsed value.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      errors.PreProcessFail: if the value cannot be parsed.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key_value</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+      <span class="n">key_value</span> <span class="o">=</span> <span class="n">key_value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">keyboard_layout</span> <span class="o">=</span> <span class="n">key_value</span><span class="o">.</span><span class="n">rpartition</span><span class="p">(</span><span class="s1">u&#39;.&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">keyboard_layout</span></div></div>
+
+
+<div class="viewcode-block" id="MacOSXTimeZone"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.macosx.MacOSXTimeZone">[docs]</a><span class="k">class</span> <span class="nc">MacOSXTimeZone</span><span class="p">(</span><span class="n">interface</span><span class="o">.</span><span class="n">PreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Gather timezone information from a Mac OS X system.&quot;&quot;&quot;</span>
+
+  <span class="n">ATTRIBUTE</span> <span class="o">=</span> <span class="s1">u&#39;time_zone_str&#39;</span>
+  <span class="n">SUPPORTED_OS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">u&#39;MacOSX&#39;</span><span class="p">]</span>
+
+  <span class="n">WEIGHT</span> <span class="o">=</span> <span class="mi">1</span>
+
+  <span class="n">ZONE_FILE_PATH</span> <span class="o">=</span> <span class="s1">u&#39;/private/etc/localtime&#39;</span>
+
+<div class="viewcode-block" id="MacOSXTimeZone.GetValue"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.macosx.MacOSXTimeZone.GetValue">[docs]</a>  <span class="k">def</span> <span class="nf">GetValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">searcher</span><span class="p">,</span> <span class="n">unused_knowledge_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines the local time zone settings.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      searcher: The file system searcher object (instance of</span>
+<span class="sd">                dfvfs.FileSystemSearcher).</span>
+<span class="sd">      knowledge_base: A knowledge base object (instance of KnowledgeBase),</span>
+<span class="sd">                      which contains information from the source data needed</span>
+<span class="sd">                      for parsing.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      The local timezone settings.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      errors.PreProcessFail: if the preprocessing fails.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ZONE_FILE_PATH</span>
+    <span class="n">file_entry</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FindFileEntry</span><span class="p">(</span><span class="n">searcher</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_entry</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">PreProcessFail</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to find file: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">link</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">PreProcessFail</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to retrieve timezone information from: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">path</span><span class="p">))</span>
+
+    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">zone</span> <span class="o">=</span> <span class="n">file_entry</span><span class="o">.</span><span class="n">link</span><span class="o">.</span><span class="n">partition</span><span class="p">(</span><span class="s1">u&#39;zoneinfo/&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">zone</span></div></div>
+
+
+<div class="viewcode-block" id="MacOSXUsers"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.macosx.MacOSXUsers">[docs]</a><span class="k">class</span> <span class="nc">MacOSXUsers</span><span class="p">(</span><span class="n">PlistPreprocessPlugin</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Get information about user accounts on a Mac OS X system.&quot;&quot;&quot;</span>
+
+  <span class="n">SUPPORTED_OS</span> <span class="o">=</span> <span class="p">[</span><span class="s1">u&#39;MacOSX&#39;</span><span class="p">]</span>
+  <span class="n">ATTRIBUTE</span> <span class="o">=</span> <span class="s1">u&#39;users&#39;</span>
+  <span class="n">WEIGHT</span> <span class="o">=</span> <span class="mi">1</span>
+
+  <span class="c1"># Define the path to the user account information.</span>
+  <span class="n">USER_PATH</span> <span class="o">=</span> <span class="s1">u&#39;/private/var/db/dslocal/nodes/Default/users/[^_].+.plist&#39;</span>
+
+  <span class="n">_KEYS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="s1">u&#39;name&#39;</span><span class="p">,</span> <span class="s1">u&#39;uid&#39;</span><span class="p">,</span> <span class="s1">u&#39;home&#39;</span><span class="p">,</span> <span class="s1">u&#39;realname&#39;</span><span class="p">])</span>
+
+  <span class="k">def</span> <span class="nf">_GetKeysDefaultEmpty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">top_level</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return keys nested in a plist dict, defaulting to an empty value.</span>
+
+<span class="sd">    The method GetKeys fails if the supplied key does not exist within the</span>
+<span class="sd">    plist object. This alternate method behaves the same way as GetKeys</span>
+<span class="sd">    except that instead of raising an error if the key doesn&#39;t exist it will</span>
+<span class="sd">    assign an empty string value (&#39;&#39;) to the field.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      top_level: Plist in dictionary form.</span>
+<span class="sd">      keys: A list of keys that should be returned.</span>
+<span class="sd">      depth: Defines how many levels deep to check for a match.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A dictionary with just the keys requested.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
+    <span class="n">match</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">if</span> <span class="n">depth</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">top_level</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+          <span class="n">match</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">parsed_key</span><span class="p">,</span> <span class="n">parsed_value</span> <span class="ow">in</span> <span class="n">plist_interface</span><span class="o">.</span><span class="n">RecurseKey</span><span class="p">(</span>
+          <span class="n">top_level</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="n">depth</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">parsed_key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+          <span class="n">match</span><span class="p">[</span><span class="n">parsed_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">parsed_value</span>
+          <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">match</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">==</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">match</span>
+    <span class="k">return</span> <span class="n">match</span>
+
+<div class="viewcode-block" id="MacOSXUsers.GetValue"><a class="viewcode-back" href="../../../plaso.preprocessors.html#plaso.preprocessors.macosx.MacOSXUsers.GetValue">[docs]</a>  <span class="k">def</span> <span class="nf">GetValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">searcher</span><span class="p">,</span> <span class="n">unused_knowledge_base</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines the user accounts.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      searcher: The file system searcher object (instance of</span>
+<span class="sd">                dfvfs.FileSystemSearcher).</span>
+<span class="sd">      knowledge_base: A knowledge base object (instance of KnowledgeBase),</span>
+<span class="sd">                      which contains information from the source data needed</span>
+<span class="sd">                      for parsing.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A list containing username information dicts.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      errors.PreProcessFail: if the preprocessing fails.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path_specs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_FindPathSpecs</span><span class="p">(</span><span class="n">searcher</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">USER_PATH</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path_specs</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">PreProcessFail</span><span class="p">(</span><span class="s1">u&#39;Unable to find user plist files.&#39;</span><span class="p">)</span>
+
+    <span class="n">users</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">path_spec</span> <span class="ow">in</span> <span class="n">path_specs</span><span class="p">:</span>
+      <span class="n">file_entry</span> <span class="o">=</span> <span class="n">searcher</span><span class="o">.</span><span class="n">GetFileEntryByPathSpec</span><span class="p">(</span><span class="n">path_spec</span><span class="p">)</span>
+
+      <span class="n">root_key</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetPlistRootKey</span><span class="p">(</span><span class="n">file_entry</span><span class="p">)</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">root_key</span><span class="p">:</span>
+        <span class="n">location</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">path_spec</span><span class="p">,</span> <span class="s1">u&#39;location&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">u&#39;Missing root key in plist: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">location</span><span class="p">))</span>
+        <span class="k">continue</span>
+
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">match</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetKeysDefaultEmpty</span><span class="p">(</span><span class="n">root_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_KEYS</span><span class="p">)</span>
+      <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+        <span class="n">location</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">path_spec</span><span class="p">,</span> <span class="s1">u&#39;location&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s1">u&#39;Unable to read user plist file: {0:s} with error: {1:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">location</span><span class="p">,</span> <span class="n">exception</span><span class="p">))</span>
+        <span class="k">continue</span>
+
+      <span class="c1"># TODO: as part of artifacts, create a proper object for this.</span>
+      <span class="n">user</span> <span class="o">=</span> <span class="p">{</span>
+          <span class="s1">u&#39;uid&#39;</span><span class="p">:</span> <span class="n">match</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;uid&#39;</span><span class="p">,</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])[</span><span class="mi">0</span><span class="p">],</span>
+          <span class="s1">u&#39;path&#39;</span><span class="p">:</span> <span class="n">match</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;home&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">u&#39;&lt;not set&gt;&#39;</span><span class="p">])[</span><span class="mi">0</span><span class="p">],</span>
+          <span class="s1">u&#39;name&#39;</span><span class="p">:</span> <span class="n">match</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;name&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">u&#39;&lt;not set&gt;&#39;</span><span class="p">])[</span><span class="mi">0</span><span class="p">],</span>
+          <span class="s1">u&#39;realname&#39;</span><span class="p">:</span> <span class="n">match</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;realname&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s1">u&#39;N/A&#39;</span><span class="p">])[</span><span class="mi">0</span><span class="p">]}</span>
+      <span class="n">users</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">users</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">PreProcessFail</span><span class="p">(</span><span class="s1">u&#39;Unable to find any users on the system.&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">users</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">PreprocessPluginsManager</span><span class="o">.</span><span class="n">RegisterPlugins</span><span class="p">([</span>
+    <span class="n">MacOSXBuild</span><span class="p">,</span> <span class="n">MacOSXHostname</span><span class="p">,</span> <span class="n">MacOSXKeyboard</span><span class="p">,</span> <span class="n">MacOSXTimeZone</span><span class="p">,</span> <span class="n">MacOSXUsers</span><span class="p">])</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

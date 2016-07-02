@@ -1,0 +1,373 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.output.mysql_4n6time &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.output.mysql_4n6time</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Defines the output module for the MySQL database used by 4n6time.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="k">try</span><span class="p">:</span>
+  <span class="kn">import</span> <span class="nn">MySQLdb</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+  <span class="n">MySQLdb</span> <span class="o">=</span> <span class="bp">None</span>
+
+<span class="kn">from</span> <span class="nn">plaso.output</span> <span class="kn">import</span> <span class="n">manager</span>
+<span class="kn">from</span> <span class="nn">plaso.output</span> <span class="kn">import</span> <span class="n">shared_4n6time</span>
+
+
+<div class="viewcode-block" id="MySQL4n6TimeOutputModule"><a class="viewcode-back" href="../../../plaso.output.html#plaso.output.mysql_4n6time.MySQL4n6TimeOutputModule">[docs]</a><span class="k">class</span> <span class="nc">MySQL4n6TimeOutputModule</span><span class="p">(</span><span class="n">shared_4n6time</span><span class="o">.</span><span class="n">Base4n6TimeOutputModule</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class defining the MySQL database output module for 4n6time.&quot;&quot;&quot;</span>
+
+  <span class="n">NAME</span> <span class="o">=</span> <span class="s1">&#39;4n6time_mysql&#39;</span>
+  <span class="n">DESCRIPTION</span> <span class="o">=</span> <span class="s1">u&#39;MySQL database output for the 4n6time tool.&#39;</span>
+
+  <span class="n">_META_FIELDS</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span>
+      <span class="s1">u&#39;sourcetype&#39;</span><span class="p">,</span> <span class="s1">u&#39;source&#39;</span><span class="p">,</span> <span class="s1">u&#39;user&#39;</span><span class="p">,</span> <span class="s1">u&#39;host&#39;</span><span class="p">,</span> <span class="s1">u&#39;MACB&#39;</span><span class="p">,</span> <span class="s1">u&#39;type&#39;</span><span class="p">,</span>
+      <span class="s1">u&#39;record_number&#39;</span><span class="p">])</span>
+
+  <span class="n">_CREATE_TABLE_QUERY</span> <span class="o">=</span> <span class="p">(</span>
+      <span class="s1">u&#39;CREATE TABLE IF NOT EXISTS log2timeline (&#39;</span>
+      <span class="s1">u&#39;rowid INT NOT NULL AUTO_INCREMENT, timezone VARCHAR(256), &#39;</span>
+      <span class="s1">u&#39;MACB VARCHAR(256), source VARCHAR(256), sourcetype VARCHAR(256), &#39;</span>
+      <span class="s1">u&#39;type VARCHAR(256), user VARCHAR(256), host VARCHAR(256), &#39;</span>
+      <span class="s1">u&#39;description TEXT, filename VARCHAR(256), inode VARCHAR(256), &#39;</span>
+      <span class="s1">u&#39;notes VARCHAR(256), format VARCHAR(256), &#39;</span>
+      <span class="s1">u&#39;extra TEXT, datetime datetime, reportnotes VARCHAR(256), &#39;</span>
+      <span class="s1">u&#39;inreport VARCHAR(256), tag VARCHAR(256), offset INT, &#39;</span>
+      <span class="s1">u&#39;vss_store_number INT, URL TEXT, record_number VARCHAR(256), &#39;</span>
+      <span class="s1">u&#39;event_identifier VARCHAR(256), event_type VARCHAR(256), &#39;</span>
+      <span class="s1">u&#39;source_name VARCHAR(256), user_sid VARCHAR(256), &#39;</span>
+      <span class="s1">u&#39;computer_name VARCHAR(256), evidence VARCHAR(256), &#39;</span>
+      <span class="s1">u&#39;PRIMARY KEY (rowid)) ENGINE=InnoDB ROW_FORMAT=COMPRESSED&#39;</span><span class="p">)</span>
+
+  <span class="n">_INSERT_QUERY</span> <span class="o">=</span> <span class="p">(</span>
+      <span class="s1">u&#39;INSERT INTO log2timeline(timezone, MACB, source, &#39;</span>
+      <span class="s1">u&#39;sourcetype, type, user, host, description, filename, &#39;</span>
+      <span class="s1">u&#39;inode, notes, format, extra, datetime, reportnotes, inreport, &#39;</span>
+      <span class="s1">u&#39;tag, offset, vss_store_number, URL, record_number, &#39;</span>
+      <span class="s1">u&#39;event_identifier, event_type, source_name, user_sid, computer_name, &#39;</span>
+      <span class="s1">u&#39;evidence) &#39;</span>
+      <span class="s1">u&#39;VALUES (:timezone, :MACB, :source, :sourcetype, :type, :user, :host, &#39;</span>
+      <span class="s1">u&#39;:description, :filename, :inode, :notes, :format, :extra, :datetime, &#39;</span>
+      <span class="s1">u&#39;:reportnotes, :inreport, :tag, :offset, :vss_store_number, :URL, &#39;</span>
+      <span class="s1">u&#39;:record_number, :event_identifier, :event_type, :source_name, &#39;</span>
+      <span class="s1">u&#39;:user_sid, :computer_name, :evidence)&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_mediator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the output module object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      output_mediator: The output mediator object (instance of OutputMediator).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">MySQL4n6TimeOutputModule</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">output_mediator</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_connection</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_dbname</span> <span class="o">=</span> <span class="s1">u&#39;log2timeline&#39;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_host</span> <span class="o">=</span> <span class="s1">u&#39;localhost&#39;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_password</span> <span class="o">=</span> <span class="s1">u&#39;forensic&#39;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_port</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_user</span> <span class="o">=</span> <span class="s1">u&#39;root&#39;</span>
+
+  <span class="k">def</span> <span class="nf">_GetDistinctValues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Query database for unique field types.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      field_name: name of the fieled to retrieve.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A dictionary containing fields from META_FIELDS.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="s1">u&#39;SELECT {0:s}, COUNT({0:s}) FROM log2timeline GROUP BY {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">field_name</span><span class="p">))</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+    <span class="k">while</span> <span class="n">row</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+        <span class="n">result</span><span class="p">[</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+      <span class="n">row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+  <span class="k">def</span> <span class="nf">_ListTags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Query database for unique tag types.&quot;&quot;&quot;</span>
+    <span class="n">all_tags</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="s1">u&#39;SELECT DISTINCT tag FROM log2timeline&#39;</span><span class="p">)</span>
+
+    <span class="c1"># This cleans up the messy SQL return.</span>
+    <span class="n">tag_row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+    <span class="k">while</span> <span class="n">tag_row</span><span class="p">:</span>
+      <span class="n">tag_string</span> <span class="o">=</span> <span class="n">tag_row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+      <span class="k">if</span> <span class="n">tag_string</span><span class="p">:</span>
+        <span class="n">tags</span> <span class="o">=</span> <span class="n">tag_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">u&#39;,&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">tags</span><span class="p">:</span>
+          <span class="k">if</span> <span class="n">tag</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">all_tags</span><span class="p">:</span>
+            <span class="n">all_tags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span>
+      <span class="n">tag_row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+    <span class="c1"># TODO: make this method an iterator.</span>
+    <span class="k">return</span> <span class="n">all_tags</span>
+
+<div class="viewcode-block" id="MySQL4n6TimeOutputModule.Close"><a class="viewcode-back" href="../../../plaso.output.html#plaso.output.mysql_4n6time.MySQL4n6TimeOutputModule.Close">[docs]</a>  <span class="k">def</span> <span class="nf">Close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Disconnects from the database.</span>
+
+<span class="sd">    This method will create the necessary indices and commit outstanding</span>
+<span class="sd">    transactions before disconnecting.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Build up indices for the fields specified in the args.</span>
+    <span class="c1"># It will commit the inserts automatically before creating index.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_append</span><span class="p">:</span>
+      <span class="k">for</span> <span class="n">field_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="s1">u&#39;CREATE INDEX {0:s}_idx ON log2timeline ({0:s})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">field_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_status</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_set_status</span><span class="p">(</span><span class="s1">u&#39;Created index: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">field_name</span><span class="p">))</span>
+
+    <span class="c1"># Get meta info and save into their tables.</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_status</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_set_status</span><span class="p">(</span><span class="s1">u&#39;Creating metadata...&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_META_FIELDS</span><span class="p">:</span>
+      <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetDistinctValues</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">u&#39;DELETE FROM l2t_{0:s}s&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">field</span><span class="p">))</span>
+      <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">frequency</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">((</span>
+            <span class="s1">u&#39;INSERT INTO l2t_{0:s}s ({1:s}s, frequency) &#39;</span>
+            <span class="s1">u&#39;VALUES(&quot;{2:s}&quot;, {3:d}) &#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">field</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">frequency</span><span class="p">))</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">u&#39;DELETE FROM l2t_tags&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ListTags</span><span class="p">():</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+          <span class="s1">u&#39;INSERT INTO l2t_tags (tag) VALUES (&quot;{0:s}&quot;)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tag</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_status</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_set_status</span><span class="p">(</span><span class="s1">u&#39;Database created.&#39;</span><span class="p">)</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_connection</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_connection</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_connection</span> <span class="o">=</span> <span class="bp">None</span></div>
+
+<div class="viewcode-block" id="MySQL4n6TimeOutputModule.Open"><a class="viewcode-back" href="../../../plaso.output.html#plaso.output.mysql_4n6time.MySQL4n6TimeOutputModule.Open">[docs]</a>  <span class="k">def</span> <span class="nf">Open</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Connects to the database and creates the required tables.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      IOError: If Unable to insert into database.</span>
+<span class="sd">      ValueError: If no database name given.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dbname</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">u&#39;Missing database name.&#39;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_append</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_connection</span> <span class="o">=</span> <span class="n">MySQLdb</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_host</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_password</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dbname</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_connection</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+
+      <span class="bp">self</span><span class="o">.</span><span class="n">_connection</span><span class="o">.</span><span class="n">set_character_set</span><span class="p">(</span><span class="s1">u&#39;utf8&#39;</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">u&#39;SET NAMES utf8&#39;</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">u&#39;SET CHARACTER SET utf8&#39;</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">u&#39;SET character_set_connection=utf8&#39;</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">u&#39;SET GLOBAL innodb_large_prefix=ON&#39;</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">u&#39;SET GLOBAL innodb_file_format=barracuda&#39;</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">u&#39;SET GLOBAL innodb_file_per_table=ON&#39;</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+          <span class="s1">u&#39;CREATE DATABASE IF NOT EXISTS {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dbname</span><span class="p">))</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s1">u&#39;USE {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dbname</span><span class="p">))</span>
+      <span class="c1"># Create tables.</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_CREATE_TABLE_QUERY</span><span class="p">)</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_status</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_status</span><span class="p">(</span><span class="s1">u&#39;Created table: log2timeline&#39;</span><span class="p">)</span>
+
+      <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_META_FIELDS</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+            <span class="s1">u&#39;CREATE TABLE IF NOT EXISTS l2t_{0}s ({0}s TEXT, frequency INT) &#39;</span>
+            <span class="s1">u&#39;ENGINE=InnoDB ROW_FORMAT=COMPRESSED&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">field</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_status</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_set_status</span><span class="p">(</span><span class="s1">u&#39;Created table: l2t_{0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">field</span><span class="p">))</span>
+
+      <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+          <span class="s1">u&#39;CREATE TABLE IF NOT EXISTS l2t_tags (tag TEXT) &#39;</span>
+          <span class="s1">u&#39;ENGINE=InnoDB ROW_FORMAT=COMPRESSED&#39;</span><span class="p">)</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_status</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_status</span><span class="p">(</span><span class="s1">u&#39;Created table: l2t_tags&#39;</span><span class="p">)</span>
+
+      <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+          <span class="s1">u&#39;CREATE TABLE IF NOT EXISTS l2t_saved_query (&#39;</span>
+          <span class="s1">u&#39;name TEXT, query TEXT) &#39;</span>
+          <span class="s1">u&#39;ENGINE=InnoDB ROW_FORMAT=COMPRESSED&#39;</span><span class="p">)</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_status</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_status</span><span class="p">(</span><span class="s1">u&#39;Created table: l2t_saved_query&#39;</span><span class="p">)</span>
+
+      <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+          <span class="s1">u&#39;CREATE TABLE IF NOT EXISTS l2t_disk (&#39;</span>
+          <span class="s1">u&#39;disk_type INT, mount_path TEXT, &#39;</span>
+          <span class="s1">u&#39;dd_path TEXT, dd_offset TEXT, &#39;</span>
+          <span class="s1">u&#39;storage_file TEXT, export_path TEXT) &#39;</span>
+          <span class="s1">u&#39;ENGINE=InnoDB ROW_FORMAT=COMPRESSED&#39;</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+          <span class="s1">u&#39;INSERT INTO l2t_disk (&#39;</span>
+          <span class="s1">u&#39;disk_type, mount_path, dd_path, &#39;</span>
+          <span class="s1">u&#39;dd_offset, storage_file, &#39;</span>
+          <span class="s1">u&#39;export_path) VALUES &#39;</span>
+          <span class="s1">u&#39;(0, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;, &quot;&quot;)&#39;</span><span class="p">)</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_status</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_status</span><span class="p">(</span><span class="s1">u&#39;Created table: l2t_disk&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">MySQLdb</span><span class="o">.</span><span class="n">Error</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">u&#39;Unable to insert into database with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+          <span class="n">exception</span><span class="p">))</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">=</span> <span class="mi">0</span></div>
+
+<div class="viewcode-block" id="MySQL4n6TimeOutputModule.SetCredentials"><a class="viewcode-back" href="../../../plaso.output.html#plaso.output.mysql_4n6time.MySQL4n6TimeOutputModule.SetCredentials">[docs]</a>  <span class="k">def</span> <span class="nf">SetCredentials</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">password</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Set the database credentials.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      username: an optional username field. Defaults to None.</span>
+<span class="sd">      password: an optional password field. Defaults to None.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">username</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_user</span> <span class="o">=</span> <span class="n">username</span>
+    <span class="k">if</span> <span class="n">password</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_password</span> <span class="o">=</span> <span class="n">password</span></div>
+
+<div class="viewcode-block" id="MySQL4n6TimeOutputModule.SetDatabaseName"><a class="viewcode-back" href="../../../plaso.output.html#plaso.output.mysql_4n6time.MySQL4n6TimeOutputModule.SetDatabaseName">[docs]</a>  <span class="k">def</span> <span class="nf">SetDatabaseName</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Set the database name.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      name: the database name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_dbname</span> <span class="o">=</span> <span class="n">name</span></div>
+
+<div class="viewcode-block" id="MySQL4n6TimeOutputModule.SetServerInformation"><a class="viewcode-back" href="../../../plaso.output.html#plaso.output.mysql_4n6time.MySQL4n6TimeOutputModule.SetServerInformation">[docs]</a>  <span class="k">def</span> <span class="nf">SetServerInformation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">server</span><span class="p">,</span> <span class="n">port</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Set the server information.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      server: the server name or IP address.</span>
+<span class="sd">      port: the port number the database listens on.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_host</span> <span class="o">=</span> <span class="n">server</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_port</span> <span class="o">=</span> <span class="n">port</span></div>
+
+<div class="viewcode-block" id="MySQL4n6TimeOutputModule.WriteEventBody"><a class="viewcode-back" href="../../../plaso.output.html#plaso.output.mysql_4n6time.MySQL4n6TimeOutputModule.WriteEventBody">[docs]</a>  <span class="k">def</span> <span class="nf">WriteEventBody</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes the body of an event object to the output.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: the event object (instance of EventObject).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="s1">u&#39;timestamp&#39;</span><span class="p">):</span>
+      <span class="k">return</span>
+
+    <span class="n">row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetSanitizedEventValues</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_INSERT_QUERY</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">MySQLdb</span><span class="o">.</span><span class="n">Error</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to insert into database with error: {0:s}.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">exception</span><span class="p">))</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="c1"># TODO: Experiment if committing the current transaction</span>
+    <span class="c1"># every 10000 inserts is the optimal approach.</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_count</span> <span class="o">%</span> <span class="mi">10000</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_connection</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_set_status</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_status</span><span class="p">(</span><span class="s1">u&#39;Inserting event: {0:d}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_count</span><span class="p">))</span></div></div>
+
+
+<span class="n">manager</span><span class="o">.</span><span class="n">OutputManager</span><span class="o">.</span><span class="n">RegisterOutput</span><span class="p">(</span>
+    <span class="n">MySQL4n6TimeOutputModule</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="n">MySQLdb</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>

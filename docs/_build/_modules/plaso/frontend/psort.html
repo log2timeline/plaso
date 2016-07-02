@@ -1,0 +1,755 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>plaso.frontend.psort &mdash; Plaso 1.4.1_20160603 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.4.1_20160603',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="Plaso 1.4.1_20160603 documentation" href="../../../index.html" />
+    <link rel="up" title="plaso" href="../../plaso.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" accesskey="U">plaso</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for plaso.frontend.psort</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;The psort front-end.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">multiprocessing</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">plaso</span> <span class="kn">import</span> <span class="n">formatters</span>   <span class="c1"># pylint: disable=unused-import</span>
+<span class="kn">from</span> <span class="nn">plaso</span> <span class="kn">import</span> <span class="n">output</span>   <span class="c1"># pylint: disable=unused-import</span>
+
+<span class="kn">from</span> <span class="nn">plaso.analysis</span> <span class="kn">import</span> <span class="n">manager</span> <span class="k">as</span> <span class="n">analysis_manager</span>
+<span class="kn">from</span> <span class="nn">plaso.analysis</span> <span class="kn">import</span> <span class="n">mediator</span> <span class="k">as</span> <span class="n">analysis_mediator</span>
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">knowledge_base</span>
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">plaso_queue</span>
+<span class="kn">from</span> <span class="nn">plaso.engine</span> <span class="kn">import</span> <span class="n">zeromq_queue</span>
+<span class="kn">from</span> <span class="nn">plaso.frontend</span> <span class="kn">import</span> <span class="n">analysis_frontend</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">bufferlib</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">event</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">py2to3</span>
+<span class="kn">from</span> <span class="nn">plaso.lib</span> <span class="kn">import</span> <span class="n">timelib</span>
+<span class="kn">from</span> <span class="nn">plaso.multi_processing</span> <span class="kn">import</span> <span class="n">multi_process</span>
+<span class="kn">from</span> <span class="nn">plaso.output</span> <span class="kn">import</span> <span class="n">event_buffer</span> <span class="k">as</span> <span class="n">output_event_buffer</span>
+<span class="kn">from</span> <span class="nn">plaso.output</span> <span class="kn">import</span> <span class="n">manager</span> <span class="k">as</span> <span class="n">output_manager</span>
+<span class="kn">from</span> <span class="nn">plaso.output</span> <span class="kn">import</span> <span class="n">mediator</span> <span class="k">as</span> <span class="n">output_mediator</span>
+<span class="kn">from</span> <span class="nn">plaso.storage</span> <span class="kn">import</span> <span class="n">time_range</span> <span class="k">as</span> <span class="n">storage_time_range</span>
+<span class="kn">from</span> <span class="nn">plaso.storage</span> <span class="kn">import</span> <span class="n">zip_file</span> <span class="k">as</span> <span class="n">storage_zip_file</span>
+
+<span class="kn">import</span> <span class="nn">pytz</span>  <span class="c1"># pylint: disable=wrong-import-order</span>
+
+
+<div class="viewcode-block" id="PsortFrontend"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.psort.PsortFrontend">[docs]</a><span class="k">class</span> <span class="nc">PsortFrontend</span><span class="p">(</span><span class="n">analysis_frontend</span><span class="o">.</span><span class="n">AnalysisFrontend</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements the psort front-end.&quot;&quot;&quot;</span>
+
+  <span class="c1"># The amount of time to wait for analysis plugins to compile their reports,</span>
+  <span class="c1"># in seconds.</span>
+  <span class="n">MAX_ANALYSIS_PLUGIN_REPORT_WAIT</span> <span class="o">=</span> <span class="mi">60</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the front-end object.&quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">PsortFrontend</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_analysis_process_info</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_data_location</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_filter_buffer</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_filter_expression</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="c1"># Instance of EventObjectFilter.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_filter_object</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_output_format</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_preferred_language</span> <span class="o">=</span> <span class="s1">u&#39;en-US&#39;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_quiet_mode</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_use_zeromq</span> <span class="o">=</span> <span class="bp">False</span>
+
+  <span class="k">def</span> <span class="nf">_AppendEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event_object</span><span class="p">,</span> <span class="n">output_buffer</span><span class="p">,</span> <span class="n">event_queues</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Appends an event object to an output buffer and queues.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      event_object: an event object (instance of EventObject).</span>
+<span class="sd">      output_buffer: the output buffer.</span>
+<span class="sd">      event_queues: a list of event queues that serve as input for</span>
+<span class="sd">                    the analysis plugins.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">output_buffer</span><span class="o">.</span><span class="n">Append</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+    <span class="c1"># Needed due to duplicate removals, if two events</span>
+    <span class="c1"># are merged then we&#39;ll just pick the first inode value.</span>
+    <span class="n">inode</span> <span class="o">=</span> <span class="n">event_object</span><span class="o">.</span><span class="n">inode</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inode</span><span class="p">,</span> <span class="n">py2to3</span><span class="o">.</span><span class="n">STRING_TYPES</span><span class="p">):</span>
+      <span class="n">inode_list</span> <span class="o">=</span> <span class="n">inode</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">u&#39;;&#39;</span><span class="p">)</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="n">new_inode</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">inode_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">10</span><span class="p">)</span>
+      <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">IndexError</span><span class="p">):</span>
+        <span class="n">new_inode</span> <span class="o">=</span> <span class="mi">0</span>
+
+      <span class="n">event_object</span><span class="o">.</span><span class="n">inode</span> <span class="o">=</span> <span class="n">new_inode</span>
+
+    <span class="k">for</span> <span class="n">event_queue</span> <span class="ow">in</span> <span class="n">event_queues</span><span class="p">:</span>
+      <span class="n">event_queue</span><span class="o">.</span><span class="n">ProduceItem</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_ProcessAnalysisPlugins</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">analysis_plugins</span><span class="p">,</span> <span class="n">analysis_report_incoming_queue</span><span class="p">,</span> <span class="n">storage_file</span><span class="p">,</span>
+      <span class="n">counter</span><span class="p">,</span> <span class="n">pre_obj</span><span class="p">,</span> <span class="n">preferred_encoding</span><span class="o">=</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Runs the analysis plugins.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      analysis_plugins: the analysis plugins.</span>
+<span class="sd">      analysis_report_incoming_queue: the analysis output queue (instance of</span>
+<span class="sd">                                      Queue).</span>
+<span class="sd">      storage_file: a storage file object (instance of StorageFile).</span>
+<span class="sd">      counter: a counter object (instance of collections.Counter).</span>
+<span class="sd">      pre_obj: The preprocessor object (instance of PreprocessObject).</span>
+<span class="sd">      preferred_encoding: optional preferred encoding.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">analysis_plugins</span><span class="p">:</span>
+      <span class="k">return</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">u&#39;Processing data from analysis plugins.&#39;</span><span class="p">)</span>
+
+    <span class="n">pre_obj</span><span class="o">.</span><span class="n">collection_information</span><span class="p">[</span><span class="s1">u&#39;Action&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">u&#39;Adding tags to storage.&#39;</span>
+    <span class="n">pre_obj</span><span class="o">.</span><span class="n">collection_information</span><span class="p">[</span><span class="s1">u&#39;time_of_run&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">GetNow</span><span class="p">()</span>
+
+    <span class="c1"># Wait for all analysis plugins to complete.</span>
+    <span class="k">for</span> <span class="n">analysis_process_info</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_analysis_process_info</span><span class="p">:</span>
+      <span class="n">name</span> <span class="o">=</span> <span class="n">analysis_process_info</span><span class="o">.</span><span class="n">plugin</span><span class="o">.</span><span class="n">NAME</span>
+      <span class="k">if</span> <span class="n">analysis_process_info</span><span class="o">.</span><span class="n">plugin</span><span class="o">.</span><span class="n">LONG_RUNNING_PLUGIN</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s1">u&#39;{0:s} may take a long time to run. It will not be automatically &#39;</span>
+            <span class="s1">u&#39;terminated.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+        <span class="n">report_wait</span> <span class="o">=</span> <span class="bp">None</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">report_wait</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">MAX_ANALYSIS_PLUGIN_REPORT_WAIT</span>
+
+      <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+          <span class="s1">u&#39;Waiting for analysis plugin: {0:s} to complete.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+
+      <span class="n">completion_event</span> <span class="o">=</span> <span class="n">analysis_process_info</span><span class="o">.</span><span class="n">completion_event</span>
+      <span class="k">if</span> <span class="n">completion_event</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span><span class="n">report_wait</span><span class="p">):</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">u&#39;Plugin {0:s} has completed.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s1">u&#39;Analysis process {0:s} failed to compile its report in a &#39;</span>
+            <span class="s1">u&#39;reasonable time. No report will be displayed or stored.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">name</span><span class="p">))</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">u&#39;All analysis plugins are now completed.&#39;</span><span class="p">)</span>
+
+    <span class="n">storage_writer</span> <span class="o">=</span> <span class="n">storage_zip_file</span><span class="o">.</span><span class="n">ZIPStorageFileWriter</span><span class="p">(</span>
+        <span class="n">storage_file</span><span class="p">,</span> <span class="n">pre_obj</span><span class="p">)</span>
+    <span class="n">analysis_report_consumer</span> <span class="o">=</span> <span class="n">PsortAnalysisReportQueueConsumer</span><span class="p">(</span>
+        <span class="n">analysis_report_incoming_queue</span><span class="p">,</span> <span class="n">storage_writer</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filter_expression</span><span class="p">,</span> <span class="n">preferred_encoding</span><span class="o">=</span><span class="n">preferred_encoding</span><span class="p">)</span>
+
+    <span class="n">analysis_report_consumer</span><span class="o">.</span><span class="n">ConsumeItems</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">iter</span><span class="p">(</span><span class="n">analysis_report_consumer</span><span class="o">.</span><span class="n">reports_counter</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+      <span class="n">counter</span><span class="p">[</span><span class="n">item</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+  <span class="k">def</span> <span class="nf">_StartAnalysisPlugins</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">storage_file_path</span><span class="p">,</span> <span class="n">analysis_plugins</span><span class="p">,</span> <span class="n">pre_obj</span><span class="p">,</span>
+      <span class="n">analysis_queue_port</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">analysis_report_incoming_queue</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+      <span class="n">command_line_arguments</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Start all the analysis plugin.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      storage_file_path: string containing the path of the storage file.</span>
+<span class="sd">      analysis_plugins: list of analysis plugin objects (instance of</span>
+<span class="sd">                        AnalysisPlugin) that should be started.</span>
+<span class="sd">      pre_obj: The preprocessor object (instance of PreprocessObject).</span>
+<span class="sd">      analysis_queue_port: optional TCP port that the ZeroMQ analysis report</span>
+<span class="sd">                           queues should use.</span>
+<span class="sd">      analysis_report_incoming_queue: optional queue (instance of Queue) that</span>
+<span class="sd">                                      reports should to pushed to, when ZeroMQ</span>
+<span class="sd">                                      is not in use.</span>
+<span class="sd">      command_line_arguments: optional string of the command line arguments or</span>
+<span class="sd">                              None if not set.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">u&#39;Starting analysis plugins.&#39;</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_SetAnalysisPluginProcessInformation</span><span class="p">(</span>
+        <span class="n">storage_file_path</span><span class="p">,</span> <span class="n">analysis_plugins</span><span class="p">,</span> <span class="n">pre_obj</span><span class="p">,</span>
+        <span class="n">command_line_arguments</span><span class="o">=</span><span class="n">command_line_arguments</span><span class="p">)</span>
+
+    <span class="n">knowledge_base_object</span> <span class="o">=</span> <span class="n">knowledge_base</span><span class="o">.</span><span class="n">KnowledgeBase</span><span class="p">(</span><span class="n">pre_obj</span><span class="o">=</span><span class="n">pre_obj</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">analysis_plugin</span> <span class="ow">in</span> <span class="n">analysis_plugins</span><span class="p">:</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_zeromq</span><span class="p">:</span>
+        <span class="n">analysis_plugin_output_queue</span> <span class="o">=</span> <span class="n">zeromq_queue</span><span class="o">.</span><span class="n">ZeroMQPushConnectQueue</span><span class="p">(</span>
+            <span class="n">delay_open</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">analysis_queue_port</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">analysis_plugin_output_queue</span> <span class="o">=</span> <span class="n">analysis_report_incoming_queue</span>
+
+      <span class="n">analysis_report_queue_producer</span> <span class="o">=</span> <span class="n">plaso_queue</span><span class="o">.</span><span class="n">ItemQueueProducer</span><span class="p">(</span>
+          <span class="n">analysis_plugin_output_queue</span><span class="p">)</span>
+
+      <span class="n">completion_event</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
+      <span class="n">analysis_mediator_object</span> <span class="o">=</span> <span class="n">analysis_mediator</span><span class="o">.</span><span class="n">AnalysisMediator</span><span class="p">(</span>
+          <span class="n">analysis_report_queue_producer</span><span class="p">,</span> <span class="n">knowledge_base_object</span><span class="p">,</span>
+          <span class="n">data_location</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_location</span><span class="p">,</span>
+          <span class="n">completion_event</span><span class="o">=</span><span class="n">completion_event</span><span class="p">)</span>
+      <span class="n">analysis_process</span> <span class="o">=</span> <span class="n">multiprocessing</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span>
+          <span class="n">name</span><span class="o">=</span><span class="s1">u&#39;Analysis {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">analysis_plugin</span><span class="o">.</span><span class="n">plugin_name</span><span class="p">),</span>
+          <span class="n">target</span><span class="o">=</span><span class="n">analysis_plugin</span><span class="o">.</span><span class="n">RunPlugin</span><span class="p">,</span>
+          <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">analysis_mediator_object</span><span class="p">,))</span>
+
+      <span class="n">process_info</span> <span class="o">=</span> <span class="n">PsortAnalysisProcess</span><span class="p">(</span>
+          <span class="n">completion_event</span><span class="p">,</span> <span class="n">analysis_plugin</span><span class="p">,</span> <span class="n">analysis_process</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_analysis_process_info</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">process_info</span><span class="p">)</span>
+
+      <span class="n">analysis_process</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+          <span class="s1">u&#39;Plugin: [{0:s}] started.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">analysis_plugin</span><span class="o">.</span><span class="n">plugin_name</span><span class="p">))</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">u&#39;Analysis plugins running&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">_SetAnalysisPluginProcessInformation</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">storage_file_path</span><span class="p">,</span> <span class="n">analysis_plugins</span><span class="p">,</span> <span class="n">pre_obj</span><span class="p">,</span>
+      <span class="n">command_line_arguments</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets analysis plugin options in a preprocessor object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      storage_file_path: string containing the path of the storage file.</span>
+<span class="sd">      analysis_plugins: the list of analysis plugins to add.</span>
+<span class="sd">      pre_obj: the preprocessor object (instance of PreprocessObject).</span>
+<span class="sd">      command_line_arguments: optional string of the command line arguments or</span>
+<span class="sd">                              None if not set.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">analysis_plugin_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">plugin</span><span class="o">.</span><span class="n">NAME</span> <span class="k">for</span> <span class="n">plugin</span> <span class="ow">in</span> <span class="n">analysis_plugins</span><span class="p">]</span>
+    <span class="n">time_of_run</span> <span class="o">=</span> <span class="n">timelib</span><span class="o">.</span><span class="n">Timestamp</span><span class="o">.</span><span class="n">GetNow</span><span class="p">()</span>
+
+    <span class="n">pre_obj</span><span class="o">.</span><span class="n">collection_information</span><span class="p">[</span><span class="s1">u&#39;cmd_line&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">command_line_arguments</span>
+    <span class="n">pre_obj</span><span class="o">.</span><span class="n">collection_information</span><span class="p">[</span><span class="s1">u&#39;file_processed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">storage_file_path</span>
+    <span class="n">pre_obj</span><span class="o">.</span><span class="n">collection_information</span><span class="p">[</span><span class="s1">u&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">u&#39;Running Analysis Plugins&#39;</span>
+    <span class="n">pre_obj</span><span class="o">.</span><span class="n">collection_information</span><span class="p">[</span><span class="s1">u&#39;plugins&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">analysis_plugin_names</span>
+    <span class="n">pre_obj</span><span class="o">.</span><span class="n">collection_information</span><span class="p">[</span><span class="s1">u&#39;time_of_run&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">time_of_run</span>
+    <span class="n">pre_obj</span><span class="o">.</span><span class="n">counter</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">Counter</span><span class="p">()</span>
+
+  <span class="c1"># TODO: fix docstring, function does not create the pre_obj the call to</span>
+  <span class="c1"># storage does. Likely refactor this functionality into the storage API.</span>
+  <span class="k">def</span> <span class="nf">_GetLastGoodPreprocess</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">storage_file</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Gets the last stored preprocessing object with time zone information.</span>
+
+<span class="sd">    From all preprocessing objects, try to get the last one that has</span>
+<span class="sd">    time zone information stored in it, the highest chance of it containing</span>
+<span class="sd">    the information we are seeking (defaulting to the last one). If there are</span>
+<span class="sd">    no preprocessing objects in the file, we&#39;ll make a new one</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      storage_file: a Plaso storage file object.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A preprocess object (instance of PreprocessObject), or None if there are</span>
+<span class="sd">      no preprocess objects in the storage file.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pre_objs</span> <span class="o">=</span> <span class="n">storage_file</span><span class="o">.</span><span class="n">GetStorageInformation</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">pre_objs</span><span class="p">:</span>
+      <span class="k">return</span> <span class="bp">None</span>
+    <span class="n">pre_obj</span> <span class="o">=</span> <span class="n">pre_objs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">pre_objs</span><span class="p">:</span>
+      <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">u&#39;time_zone_str&#39;</span><span class="p">,</span> <span class="s1">u&#39;&#39;</span><span class="p">):</span>
+        <span class="n">pre_obj</span> <span class="o">=</span> <span class="n">obj</span>
+
+    <span class="k">return</span> <span class="n">pre_obj</span>
+
+<div class="viewcode-block" id="PsortFrontend.GetAnalysisPluginsAndEventQueues"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.psort.PsortFrontend.GetAnalysisPluginsAndEventQueues">[docs]</a>  <span class="k">def</span> <span class="nf">GetAnalysisPluginsAndEventQueues</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analysis_plugins_string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return a list of analysis plugins and event queues.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      analysis_plugins_string: comma separated string with names of analysis</span>
+<span class="sd">                               plugins to load.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A tuple of two lists, one containing list of analysis plugins</span>
+<span class="sd">      and the other a list of event queues.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">analysis_plugins_string</span><span class="p">:</span>
+      <span class="k">return</span> <span class="p">[],</span> <span class="p">[]</span>
+
+    <span class="n">event_producers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c1"># These are the queues analysis plugins will read from.</span>
+    <span class="n">analysis_plugin_input_queues</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">analysis_plugins_list</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">name</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">analysis_plugins_string</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">u&#39;,&#39;</span><span class="p">)]</span>
+
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">analysis_plugins_list</span><span class="p">)):</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_zeromq</span><span class="p">:</span>
+        <span class="n">output_queue</span> <span class="o">=</span> <span class="n">zeromq_queue</span><span class="o">.</span><span class="n">ZeroMQPushBindQueue</span><span class="p">()</span>
+        <span class="c1"># Open the queue so it can bind to a random port, and we can get the</span>
+        <span class="c1"># port number to use in the input queue.</span>
+        <span class="n">output_queue</span><span class="o">.</span><span class="n">Open</span><span class="p">()</span>
+        <span class="n">queue_port</span> <span class="o">=</span> <span class="n">output_queue</span><span class="o">.</span><span class="n">port</span>
+        <span class="n">input_queue</span> <span class="o">=</span> <span class="n">zeromq_queue</span><span class="o">.</span><span class="n">ZeroMQPullConnectQueue</span><span class="p">(</span>
+            <span class="n">port</span><span class="o">=</span><span class="n">queue_port</span><span class="p">,</span> <span class="n">delay_open</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">analysis_plugin_input_queues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">input_queue</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">input_queue</span> <span class="o">=</span> <span class="n">multi_process</span><span class="o">.</span><span class="n">MultiProcessingQueue</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+        <span class="n">analysis_plugin_input_queues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">input_queue</span><span class="p">)</span>
+        <span class="n">output_queue</span> <span class="o">=</span> <span class="n">input_queue</span>
+      <span class="n">event_producers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">plaso_queue</span><span class="o">.</span><span class="n">ItemQueueProducer</span><span class="p">(</span><span class="n">output_queue</span><span class="p">))</span>
+
+    <span class="n">analysis_plugins</span> <span class="o">=</span> <span class="n">analysis_manager</span><span class="o">.</span><span class="n">AnalysisPluginManager</span><span class="o">.</span><span class="n">LoadPlugins</span><span class="p">(</span>
+        <span class="n">analysis_plugins_list</span><span class="p">,</span> <span class="n">analysis_plugin_input_queues</span><span class="p">)</span>
+
+    <span class="n">analysis_plugins</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">analysis_plugins</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">analysis_plugins</span><span class="p">,</span> <span class="n">event_producers</span></div>
+
+<div class="viewcode-block" id="PsortFrontend.GetAnalysisPluginInfo"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.psort.PsortFrontend.GetAnalysisPluginInfo">[docs]</a>  <span class="k">def</span> <span class="nf">GetAnalysisPluginInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves information about the registered analysis plugins.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A sorted list of tuples containing the name, docstring and type of each</span>
+<span class="sd">      analysis plugin.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">analysis_manager</span><span class="o">.</span><span class="n">AnalysisPluginManager</span><span class="o">.</span><span class="n">GetAllPluginInformation</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PsortFrontend.GetDisabledOutputClasses"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.psort.PsortFrontend.GetDisabledOutputClasses">[docs]</a>  <span class="k">def</span> <span class="nf">GetDisabledOutputClasses</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the disabled output classes.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An output module generator which yields tuples of output class names</span>
+<span class="sd">      and type object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">output_manager</span><span class="o">.</span><span class="n">OutputManager</span><span class="o">.</span><span class="n">GetDisabledOutputClasses</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PsortFrontend.GetOutputClasses"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.psort.PsortFrontend.GetOutputClasses">[docs]</a>  <span class="k">def</span> <span class="nf">GetOutputClasses</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Retrieves the available output classes.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      An output module generator which yields tuples of output class names</span>
+<span class="sd">      and type object.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">output_manager</span><span class="o">.</span><span class="n">OutputManager</span><span class="o">.</span><span class="n">GetOutputClasses</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="PsortFrontend.GetOutputModule"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.psort.PsortFrontend.GetOutputModule">[docs]</a>  <span class="k">def</span> <span class="nf">GetOutputModule</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">storage_file</span><span class="p">,</span> <span class="n">preferred_encoding</span><span class="o">=</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">,</span> <span class="n">timezone</span><span class="o">=</span><span class="n">pytz</span><span class="o">.</span><span class="n">UTC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Return an output module.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      storage_file: a storage file object (instance of StorageFile).</span>
+<span class="sd">      preferred_encoding: optional preferred encoding.</span>
+<span class="sd">      timezone: optional timezone.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      an output module object (instance of OutputModule) or None if not able to</span>
+<span class="sd">      open one up.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: if a non-recoverable situation is encountered.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">formatter_mediator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">GetFormatterMediator</span><span class="p">()</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">formatter_mediator</span><span class="o">.</span><span class="n">SetPreferredLanguageIdentifier</span><span class="p">(</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_preferred_language</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">exception</span><span class="p">)</span>
+
+    <span class="n">output_mediator_object</span> <span class="o">=</span> <span class="n">output_mediator</span><span class="o">.</span><span class="n">OutputMediator</span><span class="p">(</span>
+        <span class="n">formatter_mediator</span><span class="p">,</span> <span class="n">preferred_encoding</span><span class="o">=</span><span class="n">preferred_encoding</span><span class="p">,</span>
+        <span class="n">timezone</span><span class="o">=</span><span class="n">timezone</span><span class="p">)</span>
+    <span class="n">output_mediator_object</span><span class="o">.</span><span class="n">SetStorageFile</span><span class="p">(</span><span class="n">storage_file</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+      <span class="n">output_module</span> <span class="o">=</span> <span class="n">output_manager</span><span class="o">.</span><span class="n">OutputManager</span><span class="o">.</span><span class="n">NewOutputModule</span><span class="p">(</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_output_format</span><span class="p">,</span> <span class="n">output_mediator_object</span><span class="p">)</span>
+
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to create output module with error: {0:s}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+              <span class="n">exception</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">output_module</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">u&#39;Missing output module.&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">output_module</span></div>
+
+<div class="viewcode-block" id="PsortFrontend.HasOutputClass"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.psort.PsortFrontend.HasOutputClass">[docs]</a>  <span class="k">def</span> <span class="nf">HasOutputClass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Determines if a specific output class is registered with the manager.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      name: The name of the output module.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A boolean indicating if the output class is registered.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">output_manager</span><span class="o">.</span><span class="n">OutputManager</span><span class="o">.</span><span class="n">HasOutputClass</span><span class="p">(</span><span class="n">name</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="PsortFrontend.ProcessEventsFromStorage"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.psort.PsortFrontend.ProcessEventsFromStorage">[docs]</a>  <span class="k">def</span> <span class="nf">ProcessEventsFromStorage</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">storage_reader</span><span class="p">,</span> <span class="n">output_buffer</span><span class="p">,</span> <span class="n">analysis_queues</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+      <span class="n">filter_buffer</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">my_filter</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">time_slice</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Reads event objects from the storage to process and filter them.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      storage_reader: a storage reader object (instance of StorageReader).</span>
+<span class="sd">      output_buffer: an output buffer object (instance of EventBuffer).</span>
+<span class="sd">      analysis_queues: optional list of analysis queues.</span>
+<span class="sd">      filter_buffer: optional filter buffer used to store previously discarded</span>
+<span class="sd">                     events to store time slice history.</span>
+<span class="sd">      my_filter: optional filter object (instance of PFilter).</span>
+<span class="sd">      time_slice: optional time slice object (instance of TimeRange).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A counter object (instance of collections.Counter), that tracks the</span>
+<span class="sd">      number of unique events extracted from storage.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">counter</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">Counter</span><span class="p">()</span>
+    <span class="n">my_limit</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">my_filter</span><span class="p">,</span> <span class="s1">u&#39;limit&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">forward_entries</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">analysis_queues</span><span class="p">:</span>
+      <span class="n">analysis_queues</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">event_object</span> <span class="ow">in</span> <span class="n">storage_reader</span><span class="o">.</span><span class="n">GetEvents</span><span class="p">(</span><span class="n">time_range</span><span class="o">=</span><span class="n">time_slice</span><span class="p">):</span>
+      <span class="c1"># TODO: clean up this function.</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">my_filter</span><span class="p">:</span>
+        <span class="n">counter</span><span class="p">[</span><span class="s1">u&#39;Events Included&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_AppendEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">output_buffer</span><span class="p">,</span> <span class="n">analysis_queues</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">my_filter</span><span class="o">.</span><span class="n">Match</span><span class="p">(</span><span class="n">event_object</span><span class="p">):</span>
+          <span class="n">counter</span><span class="p">[</span><span class="s1">u&#39;Events Included&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+          <span class="k">if</span> <span class="n">filter_buffer</span><span class="p">:</span>
+            <span class="c1"># Indicate we want forward buffering.</span>
+            <span class="n">forward_entries</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="c1"># Empty the buffer.</span>
+            <span class="k">for</span> <span class="n">event_in_buffer</span> <span class="ow">in</span> <span class="n">filter_buffer</span><span class="o">.</span><span class="n">Flush</span><span class="p">():</span>
+              <span class="n">counter</span><span class="p">[</span><span class="s1">u&#39;Events Added From Slice&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+              <span class="n">counter</span><span class="p">[</span><span class="s1">u&#39;Events Included&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+              <span class="n">counter</span><span class="p">[</span><span class="s1">u&#39;Events Filtered Out&#39;</span><span class="p">]</span> <span class="o">-=</span> <span class="mi">1</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">_AppendEvent</span><span class="p">(</span><span class="n">event_in_buffer</span><span class="p">,</span> <span class="n">output_buffer</span><span class="p">,</span> <span class="n">analysis_queues</span><span class="p">)</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">_AppendEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">output_buffer</span><span class="p">,</span> <span class="n">analysis_queues</span><span class="p">)</span>
+          <span class="k">if</span> <span class="n">my_limit</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">counter</span><span class="p">[</span><span class="s1">u&#39;Events Included&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">my_limit</span><span class="p">:</span>
+              <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="k">if</span> <span class="n">filter_buffer</span> <span class="ow">and</span> <span class="n">forward_entries</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">forward_entries</span> <span class="o">&lt;=</span> <span class="n">filter_buffer</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">_AppendEvent</span><span class="p">(</span><span class="n">event_object</span><span class="p">,</span> <span class="n">output_buffer</span><span class="p">,</span> <span class="n">analysis_queues</span><span class="p">)</span>
+              <span class="n">forward_entries</span> <span class="o">+=</span> <span class="mi">1</span>
+              <span class="n">counter</span><span class="p">[</span><span class="s1">u&#39;Events Added From Slice&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+              <span class="n">counter</span><span class="p">[</span><span class="s1">u&#39;Events Included&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+              <span class="c1"># Reached the max, don&#39;t include other entries.</span>
+              <span class="n">forward_entries</span> <span class="o">=</span> <span class="mi">0</span>
+              <span class="n">counter</span><span class="p">[</span><span class="s1">u&#39;Events Filtered Out&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+          <span class="k">elif</span> <span class="n">filter_buffer</span><span class="p">:</span>
+            <span class="n">filter_buffer</span><span class="o">.</span><span class="n">Append</span><span class="p">(</span><span class="n">event_object</span><span class="p">)</span>
+            <span class="n">counter</span><span class="p">[</span><span class="s1">u&#39;Events Filtered Out&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+          <span class="k">else</span><span class="p">:</span>
+            <span class="n">counter</span><span class="p">[</span><span class="s1">u&#39;Events Filtered Out&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="k">for</span> <span class="n">analysis_queue</span> <span class="ow">in</span> <span class="n">analysis_queues</span><span class="p">:</span>
+      <span class="n">analysis_queue</span><span class="o">.</span><span class="n">Close</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">output_buffer</span><span class="o">.</span><span class="n">duplicate_counter</span><span class="p">:</span>
+      <span class="n">counter</span><span class="p">[</span><span class="s1">u&#39;Duplicate Removals&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">output_buffer</span><span class="o">.</span><span class="n">duplicate_counter</span>
+
+    <span class="k">if</span> <span class="n">my_limit</span><span class="p">:</span>
+      <span class="n">counter</span><span class="p">[</span><span class="s1">u&#39;Limited By&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">my_limit</span>
+    <span class="k">return</span> <span class="n">counter</span></div>
+
+<div class="viewcode-block" id="PsortFrontend.ProcessStorage"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.psort.PsortFrontend.ProcessStorage">[docs]</a>  <span class="k">def</span> <span class="nf">ProcessStorage</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">output_module</span><span class="p">,</span> <span class="n">storage_file</span><span class="p">,</span> <span class="n">storage_file_path</span><span class="p">,</span> <span class="n">analysis_plugins</span><span class="p">,</span>
+      <span class="n">event_queue_producers</span><span class="p">,</span> <span class="n">command_line_arguments</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+      <span class="n">deduplicate_events</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">preferred_encoding</span><span class="o">=</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">,</span>
+      <span class="n">time_slice</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">use_time_slicer</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Processes a plaso storage file.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      output_module: an output module (instance of OutputModule).</span>
+<span class="sd">      storage_file: the storage file object (instance of StorageFile).</span>
+<span class="sd">      storage_file_path: string containing the path of the storage file.</span>
+<span class="sd">      analysis_plugins: list of analysis plugin objects (instance of</span>
+<span class="sd">                        AnalysisPlugin).</span>
+<span class="sd">      event_queue_producers: list of event queue producer objects (instance</span>
+<span class="sd">                             of ItemQueueProducer).</span>
+<span class="sd">      command_line_arguments: optional string of the command line arguments or</span>
+<span class="sd">                              None if not set.</span>
+<span class="sd">      deduplicate_events: optional boolean value to indicate if the event</span>
+<span class="sd">                          objects should be deduplicated.</span>
+<span class="sd">      preferred_encoding: optional preferred encoding.</span>
+<span class="sd">      time_slice: optional time slice object (instance of TimeSlice).</span>
+<span class="sd">      use_time_slicer: optional boolean value to indicate the &#39;time slicer&#39;</span>
+<span class="sd">                       should be used. The &#39;time slicer&#39; will provide a</span>
+<span class="sd">                       context of events around an event of interest.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">      A counter (an instance of collections.Counter) that tracks the number of</span>
+<span class="sd">      events extracted from storage, and the analysis plugin results.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">      RuntimeError: if a non-recoverable situation is encountered.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">time_slice</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">time_slice</span><span class="o">.</span><span class="n">event_timestamp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">time_slice</span> <span class="o">=</span> <span class="n">storage_time_range</span><span class="o">.</span><span class="n">TimeRange</span><span class="p">(</span>
+            <span class="n">time_slice</span><span class="o">.</span><span class="n">start_timestamp</span><span class="p">,</span> <span class="n">time_slice</span><span class="o">.</span><span class="n">end_timestamp</span><span class="p">)</span>
+
+      <span class="k">elif</span> <span class="n">use_time_slicer</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_filter_buffer</span> <span class="o">=</span> <span class="n">bufferlib</span><span class="o">.</span><span class="n">CircularBuffer</span><span class="p">(</span><span class="n">time_slice</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span>
+
+    <span class="c1"># TODO: allow for single processing.</span>
+    <span class="c1"># TODO: add upper queue limit.</span>
+    <span class="n">analysis_queue_port</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_zeromq</span><span class="p">:</span>
+      <span class="n">analysis_report_incoming_queue</span> <span class="o">=</span> <span class="n">zeromq_queue</span><span class="o">.</span><span class="n">ZeroMQPullBindQueue</span><span class="p">(</span>
+          <span class="n">delay_open</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">linger_seconds</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+      <span class="n">analysis_queue_port</span> <span class="o">=</span> <span class="n">analysis_report_incoming_queue</span><span class="o">.</span><span class="n">port</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">analysis_report_incoming_queue</span> <span class="o">=</span> <span class="n">multi_process</span><span class="o">.</span><span class="n">MultiProcessingQueue</span><span class="p">(</span>
+          <span class="n">timeout</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+
+    <span class="n">pre_obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_GetLastGoodPreprocess</span><span class="p">(</span><span class="n">storage_file</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pre_obj</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+      <span class="n">pre_obj</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">PreprocessObject</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">analysis_plugins</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">_StartAnalysisPlugins</span><span class="p">(</span>
+          <span class="n">storage_file_path</span><span class="p">,</span> <span class="n">analysis_plugins</span><span class="p">,</span> <span class="n">pre_obj</span><span class="p">,</span>
+          <span class="n">analysis_queue_port</span><span class="o">=</span><span class="n">analysis_queue_port</span><span class="p">,</span>
+          <span class="n">analysis_report_incoming_queue</span><span class="o">=</span><span class="n">analysis_report_incoming_queue</span><span class="p">,</span>
+          <span class="n">command_line_arguments</span><span class="o">=</span><span class="n">command_line_arguments</span><span class="p">)</span>
+
+      <span class="c1"># Assign the preprocessing object to the storage.</span>
+      <span class="c1"># This is normally done in the construction of the storage object,</span>
+      <span class="c1"># however we cannot do that here since the preprocessing object is</span>
+      <span class="c1"># stored inside the storage file, so we need to open it first to</span>
+      <span class="c1"># be able to read it in, before we make changes to it. Thus we need</span>
+      <span class="c1"># to access this protected member of the class.</span>
+      <span class="c1"># pylint: disable=protected-access</span>
+      <span class="n">storage_file</span><span class="o">.</span><span class="n">_pre_obj</span> <span class="o">=</span> <span class="n">pre_obj</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">event_queue_producers</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">output_buffer</span> <span class="o">=</span> <span class="n">output_event_buffer</span><span class="o">.</span><span class="n">EventBuffer</span><span class="p">(</span>
+        <span class="n">output_module</span><span class="p">,</span> <span class="n">deduplicate_events</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">output_buffer</span><span class="p">:</span>
+      <span class="n">storage_reader</span> <span class="o">=</span> <span class="n">storage_zip_file</span><span class="o">.</span><span class="n">ZIPStorageFileReader</span><span class="p">(</span><span class="n">storage_file</span><span class="p">)</span>
+      <span class="n">counter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ProcessEventsFromStorage</span><span class="p">(</span>
+          <span class="n">storage_reader</span><span class="p">,</span> <span class="n">output_buffer</span><span class="p">,</span> <span class="n">analysis_queues</span><span class="o">=</span><span class="n">event_queue_producers</span><span class="p">,</span>
+          <span class="n">filter_buffer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_filter_buffer</span><span class="p">,</span> <span class="n">my_filter</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_filter_object</span><span class="p">,</span>
+          <span class="n">time_slice</span><span class="o">=</span><span class="n">time_slice</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">information</span> <span class="ow">in</span> <span class="n">storage_file</span><span class="o">.</span><span class="n">GetStorageInformation</span><span class="p">():</span>
+      <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">information</span><span class="p">,</span> <span class="s1">u&#39;counter&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="n">information</span><span class="o">.</span><span class="n">counter</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">u&#39;total&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">total</span><span class="p">:</span>
+          <span class="n">counter</span><span class="p">[</span><span class="s1">u&#39;Stored Events&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">total</span>
+
+    <span class="c1"># Get all reports and tags from analysis plugins.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_ProcessAnalysisPlugins</span><span class="p">(</span>
+        <span class="n">analysis_plugins</span><span class="p">,</span> <span class="n">analysis_report_incoming_queue</span><span class="p">,</span> <span class="n">storage_file</span><span class="p">,</span>
+        <span class="n">counter</span><span class="p">,</span> <span class="n">pre_obj</span><span class="p">,</span> <span class="n">preferred_encoding</span><span class="o">=</span><span class="n">preferred_encoding</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_object</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">counter</span><span class="p">[</span><span class="s1">u&#39;Limited By&#39;</span><span class="p">]:</span>
+      <span class="n">counter</span><span class="p">[</span><span class="s1">u&#39;Filter By Date&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+          <span class="n">counter</span><span class="p">[</span><span class="s1">u&#39;Stored Events&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">counter</span><span class="p">[</span><span class="s1">u&#39;Events Included&#39;</span><span class="p">]</span> <span class="o">-</span>
+          <span class="n">counter</span><span class="p">[</span><span class="s1">u&#39;Events Filtered Out&#39;</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">counter</span></div>
+
+<div class="viewcode-block" id="PsortFrontend.SetFilter"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.psort.PsortFrontend.SetFilter">[docs]</a>  <span class="k">def</span> <span class="nf">SetFilter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filter_object</span><span class="p">,</span> <span class="n">filter_expression</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Set the filter information.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      filter_object: a filter object (instance of FilterObject).</span>
+<span class="sd">      filter_expression: the filter expression string.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_filter_object</span> <span class="o">=</span> <span class="n">filter_object</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_filter_expression</span> <span class="o">=</span> <span class="n">filter_expression</span></div>
+
+<div class="viewcode-block" id="PsortFrontend.SetPreferredLanguageIdentifier"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.psort.PsortFrontend.SetPreferredLanguageIdentifier">[docs]</a>  <span class="k">def</span> <span class="nf">SetPreferredLanguageIdentifier</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">language_identifier</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the preferred language identifier.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      language_identifier: the language identifier string e.g. en-US for</span>
+<span class="sd">                           US English or is-IS for Icelandic.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_preferred_language</span> <span class="o">=</span> <span class="n">language_identifier</span></div>
+
+<div class="viewcode-block" id="PsortFrontend.SetOutputFormat"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.psort.PsortFrontend.SetOutputFormat">[docs]</a>  <span class="k">def</span> <span class="nf">SetOutputFormat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_format</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets the output format.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      output_format: the output format.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_output_format</span> <span class="o">=</span> <span class="n">output_format</span></div>
+
+<div class="viewcode-block" id="PsortFrontend.SetQuietMode"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.psort.PsortFrontend.SetQuietMode">[docs]</a>  <span class="k">def</span> <span class="nf">SetQuietMode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">quiet_mode</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets whether tools is in quiet mode or not.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      quiet_mode: boolean, when True the tool is in quiet mode.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_quiet_mode</span> <span class="o">=</span> <span class="n">quiet_mode</span></div>
+
+<div class="viewcode-block" id="PsortFrontend.SetUseZeroMQ"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.psort.PsortFrontend.SetUseZeroMQ">[docs]</a>  <span class="k">def</span> <span class="nf">SetUseZeroMQ</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">use_zeromq</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Sets whether the tool is using ZeroMQ for queueing or not.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      use_zeromq: boolean, when True the tool will use ZeroMQ for queuing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_use_zeromq</span> <span class="o">=</span> <span class="n">use_zeromq</span></div></div>
+
+
+<div class="viewcode-block" id="PsortAnalysisReportQueueConsumer"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.psort.PsortAnalysisReportQueueConsumer">[docs]</a><span class="k">class</span> <span class="nc">PsortAnalysisReportQueueConsumer</span><span class="p">(</span><span class="n">plaso_queue</span><span class="o">.</span><span class="n">ItemQueueConsumer</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Class that implements an analysis report queue consumer.</span>
+
+<span class="sd">  The consumer subscribes to updates on the queue and writes the analysis</span>
+<span class="sd">  reports to the storage.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    reports_counter: a counter containing the number of reports (instance of</span>
+<span class="sd">                     collections.Counter).</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
+      <span class="bp">self</span><span class="p">,</span> <span class="n">queue</span><span class="p">,</span> <span class="n">storage_writer</span><span class="p">,</span> <span class="n">filter_string</span><span class="p">,</span> <span class="n">preferred_encoding</span><span class="o">=</span><span class="s1">u&#39;utf-8&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes the item queue consumer.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      queue_object: a queue object (instance of Queue).</span>
+<span class="sd">      storage_writer: a storage writer (instance of StorageWriter).</span>
+<span class="sd">      filter_string: a string containing the filter expression.</span>
+<span class="sd">      preferred_encoding: optional string containing the preferred encoding.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">PsortAnalysisReportQueueConsumer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">queue</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_filter_string</span> <span class="o">=</span> <span class="n">filter_string</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_preferred_encoding</span> <span class="o">=</span> <span class="n">preferred_encoding</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_storage_writer</span> <span class="o">=</span> <span class="n">storage_writer</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_tags</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># Counter containing the number of reports.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">reports_counter</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">Counter</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">_ConsumeItem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analysis_report</span><span class="p">,</span> <span class="o">**</span><span class="n">unused_kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Consumes an item callback for ConsumeItems.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      analysis_report: an analysis report (instance of AnalysisReport).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_string</span><span class="p">:</span>
+      <span class="n">analysis_report</span><span class="o">.</span><span class="n">filter_string</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_string</span>
+
+    <span class="c1"># For now we print the report to disk and then save it.</span>
+    <span class="c1"># TODO: Have the option of saving to a separate file and</span>
+    <span class="c1"># do something more here, for instance saving into a HTML</span>
+    <span class="c1"># file, or something else (including potential images).</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_storage_writer</span><span class="o">.</span><span class="n">AddAnalysisReport</span><span class="p">(</span><span class="n">analysis_report</span><span class="p">)</span>
+
+    <span class="n">report_string</span> <span class="o">=</span> <span class="n">analysis_report</span><span class="o">.</span><span class="n">GetString</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+      <span class="c1"># TODO: move this print to the psort tool or equivalent.</span>
+      <span class="k">print</span><span class="p">(</span><span class="n">report_string</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_preferred_encoding</span><span class="p">))</span>
+    <span class="k">except</span> <span class="ne">UnicodeDecodeError</span><span class="p">:</span>
+      <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+          <span class="s1">u&#39;Unable to print report due to a Unicode decode error. &#39;</span>
+          <span class="s1">u&#39;The report is stored inside the storage file and can be &#39;</span>
+          <span class="s1">u&#39;viewed using pinfo [if unable to view please submit a &#39;</span>
+          <span class="s1">u&#39;bug report https://github.com/log2timeline/plaso/issues&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="PsortAnalysisProcess"><a class="viewcode-back" href="../../../plaso.frontend.html#plaso.frontend.psort.PsortAnalysisProcess">[docs]</a><span class="k">class</span> <span class="nc">PsortAnalysisProcess</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;A class to contain information about a running analysis process.</span>
+
+<span class="sd">  Attributes:</span>
+<span class="sd">    completion_event: an optional Event object (instance of</span>
+<span class="sd">                      Multiprocessing.Event, Queue.Event or similar) that will</span>
+<span class="sd">                      be set when the analysis plugin is complete.</span>
+<span class="sd">    plugin: the plugin running in the process (instance of AnalysisProcess).</span>
+<span class="sd">    process: the process (instance of Multiprocessing.Process) that</span>
+<span class="sd">             encapsulates the analysis process.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">completion_event</span><span class="p">,</span> <span class="n">plugin</span><span class="p">,</span> <span class="n">process</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Initializes an analysis process.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">      completion_event: a completion event (instance of Multiprocessing.Event,</span>
+<span class="sd">                        Queue.Event or similar) that will be set when the</span>
+<span class="sd">                        analysis plugin is complete.</span>
+<span class="sd">      plugin: the plugin running in the process (instance of AnalysisProcess).</span>
+<span class="sd">      process: the process (instance of Multiprocessing.Process) that</span>
+<span class="sd">               encapsulates the analysis process.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">PsortAnalysisProcess</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">completion_event</span> <span class="o">=</span> <span class="n">completion_event</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">plugin</span> <span class="o">=</span> <span class="n">plugin</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="o">=</span> <span class="n">process</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">Plaso 1.4.1_20160603 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &raquo;</li>
+          <li class="nav-item nav-item-2"><a href="../../plaso.html" >plaso</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright The Plaso Project Authors.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.2.
+    </div>
+  </body>
+</html>
