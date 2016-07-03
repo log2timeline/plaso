@@ -327,7 +327,7 @@ class CupsIppParser(interface.FileObjectParser):
     # Name = Length name + name + 0x00
     try:
       name = self.PAIR_NAME.parse_stream(file_object).text
-    except (IOError, construct.FieldError):
+    except (IOError, UnicodeDecodeError, construct.FieldError):
       logging.warning(
           u'[{0:s}] Unsupported name in file: {1:s}.'.format(
               self.NAME, parser_mediator.GetDisplayName()))
