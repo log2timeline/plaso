@@ -16,9 +16,11 @@ class TimesketchOutputHelper(interface.ArgumentsHelper):
   CATEGORY = u'output'
   DESCRIPTION = u'Argument helper for the timesketch output module.'
 
+  _DEFAULT_DOC_TYPE = u'plaso_event'
   _DEFAULT_FLUSH_INTERVAL = 1000
   _DEFAULT_NAME = u''
-  _DEFAULT_UUID = uuid.uuid4().hex
+  _DEFAULT_USERNAME = None
+  _DEFAULT_UUID = u'{0:s}'.format(uuid.uuid4().hex)
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -46,11 +48,21 @@ class TimesketchOutputHelper(interface.ArgumentsHelper):
             u'UUID'))
 
     argument_group.add_argument(
-        u'--flush_interval', '--flush-interval', dest=u'flush_interval',
+        u'--flush_interval', u'--flush-interval', dest=u'flush_interval',
         type=int, action=u'store', default=cls._DEFAULT_FLUSH_INTERVAL,
         required=False, help=(
             u'The number of events to queue up before sent in bulk '
             u'to Elasticsearch.'))
+
+    argument_group.add_argument(
+        u'--doc_type', dest=u'doc_type', type=str,
+        action=u'store', default=cls._DEFAULT_DOC_TYPE, help=(
+            u'Name of the document type that will be used in ElasticSearch.'))
+
+    argument_group.add_argument(
+        u'--username', dest=u'username', type=str,
+        action=u'store', default=cls._DEFAULT_USERNAME, help=(
+            u'Username of a Timesketch user that will own the timeline.'))
 
   @classmethod
   def ParseOptions(cls, options, output_module):
@@ -72,17 +84,24 @@ class TimesketchOutputHelper(interface.ArgumentsHelper):
     if output_format != u'timesketch':
       raise errors.BadConfigOption(u'Only works on Timesketch output module.')
 
+    doc_type = cls._ParseStringOption(
+        options, u'doc_time', default_value=cls._DEFAULT_DOC_TYPE)
+    output_module.SetDocType(doc_type)
+
     flush_interval = cls._ParseIntegerOption(
         options, u'flush_interval', default_value=cls._DEFAULT_FLUSH_INTERVAL)
     output_module.SetFlushInterval(flush_interval)
 
     index = cls._ParseStringOption(
         options, u'index', default_value=cls._DEFAULT_UUID)
-    output_module.SetIndex(index)
+    output_module.SetIndexName(index)
 
     name = cls._ParseStringOption(
         options, u'timeline_name', default_value=cls._DEFAULT_NAME)
-    output_module.SetName(name)
+    output_module.SetTimelineName(name)
 
+    username = cls._ParseStringOption(
+        options, u'username', default_value=cls._DEFAULT_USERNAME)
+    output_module.SetUserName(username)
 
 manager.ArgumentHelperManager.RegisterHelper(TimesketchOutputHelper)
