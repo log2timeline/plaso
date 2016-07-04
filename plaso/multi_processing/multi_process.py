@@ -12,7 +12,6 @@ import signal
 import sys
 import threading
 import time
-import uuid
 
 from dfvfs.resolver import context
 
@@ -28,32 +27,6 @@ from plaso.lib import errors
 from plaso.multi_processing import process_info
 from plaso.multi_processing import xmlrpc
 from plaso.parsers import mediator as parsers_mediator
-
-
-class MultiProcessTask(object):
-  """Class that defines the multi-processing task.
-
-  Attributes:
-    identifier (str): identifier of the task. The identifier is formatted as
-        a hexadecimal string of a random (version 4) UUID.
-    session_identifier (str): identifier of the session the task is part of.
-        The identifier is formatted as a hexadecimal string of a random
-        (version 4) UUID.
-    path_spec (dfvfs.PathSpec): path specification.
-  """
-
-  def __init__(self, session_identifier):
-    """Initializes the task.
-
-    Args:
-      session_identifier (str): identifier of the session the task is part of.
-          The identifier is formatted as a hexadecimal string of a random
-          (version 4) UUID.
-    """
-    super(MultiProcessTask, self).__init__()
-    self.identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
-    self.path_spec = None
-    self.session_identifier = session_identifier
 
 
 class MultiProcessBaseProcess(multiprocessing.Process):
@@ -680,7 +653,7 @@ class MultiProcessEngine(engine.BaseEngine):
         break
 
       # TODO: add support for more task types.
-      task = MultiProcessTask(self._session_identifier)
+      task = tasks.Task(self._session_identifier)
       task.path_spec = event_source.path_spec
 
       # TODO: register task with scheduler.
@@ -1214,9 +1187,9 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
     """Processes a task.
 
     Args:
-      task (MultiProcessTask): task.
+      task (Task): task.
     """
-    storage_writer = self._storage_writer.CreateTaskStorage(task.identifier)
+    storage_writer = self._storage_writer.CreateTaskStorage(task)
 
     if self._enable_profiling:
       storage_writer.EnableProfiling(profiling_type=self._profiling_type)
@@ -1226,9 +1199,7 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
     try:
       self._parser_mediator.SetStorageWriter(storage_writer)
 
-      task_start = tasks.TaskStart(session_identifier=self._session_identifier)
-      task_start.identifier = task.identifier
-      storage_writer.WriteTaskStart(task_start)
+      storage_writer.WriteTaskStart()
 
       # TODO: add support for more task types.
       self._extraction_worker.ProcessPathSpec(

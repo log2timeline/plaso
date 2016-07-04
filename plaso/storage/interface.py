@@ -4,6 +4,7 @@
 import abc
 
 from plaso.engine import profiler
+from plaso.lib import definitions
 
 
 class BaseStorage(object):
@@ -184,16 +185,21 @@ class StorageWriter(object):
     number_of_events: an integer containing the number of events written.
   """
 
-  def __init__(self, session):
+  def __init__(
+      self, session, storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
     """Initializes a storage writer object.
 
     Args:
       session (Session): session the storage changes are part of.
+      storage_type (Optional[str]): storage type.
+      task(Optional[Task]): task.
     """
     super(StorageWriter, self).__init__()
     self._enable_profiling = False
     self._profiling_type = u'all'
     self._session = session
+    self._storage_type = storage_type
+    self._task = task
     self.number_of_errors = 0
     self.number_of_event_sources = 0
     self.number_of_events = 0
@@ -343,9 +349,5 @@ class StorageWriter(object):
     """Writes task completion information."""
 
   @abc.abstractmethod
-  def WriteTaskStart(self, task_start):
-    """Writes task start information.
-
-    Args:
-      task_start: the task start information (instance of TaskStart).
-    """
+  def WriteTaskStart(self):
+    """Writes task start information."""

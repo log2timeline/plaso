@@ -1138,15 +1138,16 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
   def testWriteTaskStartAndCompletion(self):
     """Tests the WriteTaskStart and WriteTaskCompletion functions."""
     session = sessions.Session()
-    task_start = tasks.TaskStart(session_identifier=session.identifier)
+    task = tasks.Task(session_identifier=session.identifier)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'storage.plaso')
       storage_writer = zip_file.ZIPStorageFileWriter(
-          session, temp_file, storage_type=definitions.STORAGE_TYPE_TASK)
+          session, temp_file, storage_type=definitions.STORAGE_TYPE_TASK,
+          task=task)
       storage_writer.Open()
 
-      storage_writer.WriteTaskStart(task_start)
+      storage_writer.WriteTaskStart()
       storage_writer.WriteTaskCompletion()
 
       storage_writer.Close()
@@ -1157,7 +1158,7 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
       storage_writer.Open()
 
       with self.assertRaises(IOError):
-        storage_writer.WriteTaskStart(task_start)
+        storage_writer.WriteTaskStart()
 
       with self.assertRaises(IOError):
         storage_writer.WriteTaskCompletion()
