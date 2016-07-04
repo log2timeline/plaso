@@ -184,11 +184,16 @@ class StorageWriter(object):
     number_of_events: an integer containing the number of events written.
   """
 
-  def __init__(self):
-    """Initializes a storage writer object."""
+  def __init__(self, session):
+    """Initializes a storage writer object.
+
+    Args:
+      session (Session): session the storage changes are part of.
+    """
     super(StorageWriter, self).__init__()
     self._enable_profiling = False
     self._profiling_type = u'all'
+    self._session = session
     self.number_of_errors = 0
     self.number_of_event_sources = 0
     self.number_of_events = 0
@@ -330,12 +335,8 @@ class StorageWriter(object):
     """Writes session completion information."""
 
   @abc.abstractmethod
-  def WriteSessionStart(self, session_start):
-    """Writes session start information.
-
-    Args:
-      session_start: the session start information (instance of SessionStart).
-    """
+  def WriteSessionStart(self):
+    """Writes session start information."""
 
   @abc.abstractmethod
   def WriteTaskCompletion(self):

@@ -6,6 +6,7 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import events
+from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
@@ -137,7 +138,8 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     Returns:
       A storage writer object (instance of FakeStorageWriter).
     """
-    storage_writer = fake_storage.FakeStorageWriter()
+    session = sessions.Session()
+    storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)

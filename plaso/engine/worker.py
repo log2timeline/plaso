@@ -69,6 +69,9 @@ class EventExtractionWorker(object):
   _FIREFOX_CACHE2_DATA_FILE_RE = re.compile(r'^[0-9a-fA-F]{40}$')
   _FSEVENTSD_FILE_RE = re.compile(r'^[0-9a-fA-F]{16}$')
 
+  _TYPES_WITH_ROOT_METADATA = frozenset([
+      dfvfs_definitions.TYPE_INDICATOR_GZIP])
+
   def __init__(
       self, resolver_context, parser_filter_expression=None,
       process_archive_files=False):
@@ -498,7 +501,9 @@ class EventExtractionWorker(object):
     # We always want to extract the file entry metadata but we only want
     # to parse it once per file entry, so we only use it if we are
     # processing the default (nameless) data stream.
-    if not data_stream_name and not file_entry.IsRoot():
+    if (not data_stream_name and (
+        not file_entry.IsRoot() or
+        file_entry.type_indicator in self._TYPES_WITH_ROOT_METADATA)):
       self._event_extractor.ParseFileEntryMetadata(parser_mediator, file_entry)
 
     # Determine if the content of the file entry should not be extracted.

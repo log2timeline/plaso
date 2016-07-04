@@ -3,6 +3,7 @@
 
 from plaso.storage import fake_storage
 
+from plaso.containers import sessions
 from plaso.parsers import plist
 from tests.parsers import test_lib
 
@@ -52,7 +53,8 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
     Returns:
       A storage writer object (instance of FakeStorageWriter).
     """
-    storage_writer = fake_storage.FakeStorageWriter()
+    session = sessions.Session()
+    storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()
 
     parser_mediator = self._GetParserMediator(

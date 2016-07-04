@@ -7,6 +7,7 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.analysis import mediator
 from plaso.containers import reports
+from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.engine import plaso_queue
 from plaso.engine import single_process
@@ -98,7 +99,8 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     Returns:
       A storage writer object (instance of FakeStorageWriter).
     """
-    storage_writer = fake_storage.FakeStorageWriter()
+    session = sessions.Session()
+    storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()
 
     parser_mediator = parsers_mediator.ParserMediator(
