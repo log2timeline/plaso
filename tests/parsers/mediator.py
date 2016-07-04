@@ -8,6 +8,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.containers import sessions
 from plaso.storage import fake_storage
 
 from tests.parsers import test_lib
@@ -18,7 +19,8 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
 
   def testGetDisplayName(self):
     """Tests the GetDisplayName function."""
-    storage_writer = fake_storage.FakeStorageWriter()
+    session = sessions.Session()
+    storage_writer = fake_storage.FakeStorageWriter(session)
     parsers_mediator = self._GetParserMediator(
         storage_writer, knowledge_base_values=None)
 

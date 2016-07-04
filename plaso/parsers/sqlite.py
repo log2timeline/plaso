@@ -202,6 +202,7 @@ class SQLiteDatabase(object):
       self._temp_db_file_path = temp_file.name
 
       try:
+        file_object.seek(0, os.SEEK_SET)
         data = file_object.read(self._READ_BUFFER_SIZE)
         while data:
           temp_file.write(data)
@@ -341,7 +342,7 @@ class SQLiteParser(interface.FileEntryParser):
 
       # Reset file_object offset to 0 so we can re-open the database with the
       # WAL file.
-      file_object.seek(0)
+      file_object.seek(0, os.SEEK_SET)
 
       # Open second database with WAL file if available.
       database_wal, wal_file_entry = self._GetDatabaseWithWAL(

@@ -3,6 +3,7 @@
 
 import pyesedb
 
+from plaso.containers import sessions
 from plaso.parsers import esedb
 from plaso.storage import fake_storage
 
@@ -26,7 +27,8 @@ class EseDbPluginTestCase(test_lib.ParserTestCase):
     Returns:
       A storage writer object (instance of FakeStorageWriter).
     """
-    storage_writer = fake_storage.FakeStorageWriter()
+    session = sessions.Session()
+    storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()
 
     file_entry = self._GetTestFileEntryFromPath(path_segments)

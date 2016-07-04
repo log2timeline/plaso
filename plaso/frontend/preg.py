@@ -10,6 +10,7 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 from dfwinreg import registry as dfwinreg_registry
 
+from plaso.containers import sessions
 from plaso.engine import plaso_queue
 from plaso.frontend import extraction_frontend
 from plaso.lib import py2to3
@@ -740,7 +741,8 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
       return {}
 
     # TODO: refactor usage of fake storage.
-    storage_writer = fake_storage.FakeStorageWriter()
+    session = sessions.Session()
+    storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()
 
     parser_mediator = parsers_mediator.ParserMediator(

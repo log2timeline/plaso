@@ -28,7 +28,7 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
     """Tests the ProcessSources function."""
     test_engine = single_process.SingleProcessEngine()
     resolver_context = context.Context()
-    session_start = sessions.SessionStart()
+    session = sessions.Session()
 
     source_path = os.path.join(self._TEST_DATA_PATH, u'ímynd.dd')
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -39,11 +39,11 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
 
     test_engine.PreprocessSources([source_path_spec])
 
-    storage_writer = fake_storage.FakeStorageWriter()
+    storage_writer = fake_storage.FakeStorageWriter(session)
 
     preprocess_object = event.PreprocessObject()
     test_engine.ProcessSources(
-        [source_path_spec], session_start, preprocess_object, storage_writer,
+        [source_path_spec], preprocess_object, storage_writer,
         resolver_context, parser_filter_expression=u'filestat')
 
     self.assertEqual(len(storage_writer.events), 15)

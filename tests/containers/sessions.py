@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """This file contains the tests for the sessions attribute container objects."""
 
+import time
 import unittest
 import uuid
 
@@ -16,13 +17,15 @@ class SessionCompletionTest(test_lib.AttributeContainerTestCase):
 
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
+    timestamp = int(time.time() * 1000000)
     session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
     session_completion = sessions.SessionCompletion(
         identifier=session_identifier)
+    session_completion.timestamp = timestamp
 
     expected_dict = {
         u'identifier': session_completion.identifier,
-        u'timestamp': session_completion.timestamp}
+        u'timestamp': timestamp}
 
     test_dict = session_completion.CopyToDict()
 
@@ -36,7 +39,9 @@ class SessionStartTest(test_lib.AttributeContainerTestCase):
 
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
+    timestamp = int(time.time() * 1000000)
     session_start = sessions.SessionStart()
+    session_start.timestamp = timestamp
 
     self.assertIsNotNone(session_start.identifier)
 
@@ -50,7 +55,7 @@ class SessionStartTest(test_lib.AttributeContainerTestCase):
         u'preferred_encoding': u'utf-8',
         u'product_name': u'plaso',
         u'product_version': plaso.GetVersion(),
-        u'timestamp': session_start.timestamp}
+        u'timestamp': timestamp}
 
     test_dict = session_start.CopyToDict()
 
