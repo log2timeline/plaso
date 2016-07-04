@@ -20,7 +20,7 @@ class Session(interface.AttributeContainer):
                            00:00:00 UTC.
     debug_mode (bool): True if debug mode was enabled.
     event_tags_counter (collections.Counter): number of event tags per label.
-    filter_expression (str): filter expression.
+    filter_expression (str): expression to filter events.
     filter_file (str): path to a file with find specifications.
     identifier (str): unique identifier of the session.
     parser_filter_expression (str): parser filter expression.
@@ -130,7 +130,7 @@ class SessionStart(interface.AttributeContainer):
   Attributes:
     command_line_arguments (str): command line arguments.
     debug_mode (bool): True if debug mode was enabled.
-    filter_expression (str): filter expression.
+    filter_expression (str): expression to filter events.
     filter_file (str): path to a file with find specifications.
     identifier (str): unique identifier of the session.
     parser_filter_expression (str): parser filter expression.
