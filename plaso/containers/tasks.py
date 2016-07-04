@@ -10,6 +10,9 @@ from plaso.containers import interface
 class Task(interface.AttributeContainer):
   """Class to represent a task attribute container.
 
+  A task describes a piece of work for a multi processing worker process
+  e.g. to process a path specification or to analyze an event.
+
   Attributes:
     completion_time (int): time that the task was completed. Contains the
                            number of micro seconds since January 1, 1970,
