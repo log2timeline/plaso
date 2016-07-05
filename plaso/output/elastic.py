@@ -3,6 +3,7 @@
 
 from collections import Counter
 import logging
+
 from dfvfs.serializer.json_serializer import JsonPathSpecSerializer
 
 try:
@@ -100,7 +101,8 @@ class ElasticSearchHelper(object):
       # Ignore the regvalue attribute as it cause issues when indexing
       if attribute_name == u'regvalue':
         continue
-      elif attribute_name == u'pathspec':
+
+      if attribute_name == u'pathspec':
         try:
           attribute_value = JsonPathSpecSerializer.WriteSerialized(
               attribute_value)
@@ -167,14 +169,14 @@ class ElasticSearchOutputModule(interface.OutputModule):
     """
     super(ElasticSearchOutputModule, self).__init__(output_mediator)
 
-    self._output_mediator = output_mediator
-    self._host = None
-    self._port = None
-    self._flush_interval = None
-    self._index_name = None
     self._doc_type = None
-    self._mapping = None
     self._elastic = None
+    self._flush_interval = None
+    self._host = None
+    self._index_name = None
+    self._mapping = None
+    self._output_mediator = output_mediator
+    self._port = None
     self._raw_fields = False
 
   def Close(self):
@@ -227,7 +229,8 @@ class ElasticSearchOutputModule(interface.OutputModule):
     """Set raw (not analyzed) fields.
 
     This is used for sorting and aggregations in Elasticsearch.
-    https://www.elastic.co/guide/en/elasticsearch/guide/current/multi-fields.html
+    https://www.elastic.co/guide/en/elasticsearch/guide/current/
+    multi-fields.html
 
     Args:
       raw_fields (bool): Add not-analyzed index for string fields.
@@ -249,9 +252,6 @@ class ElasticSearchOutputModule(interface.OutputModule):
     if not self._mapping:
       self._mapping = {}
 
-    # Add index to the document with not-analyzed string fields. This is used
-    # for sorting and aggregations. See this link for more information:
-    # https://www.elastic.co/guide/en/elasticsearch/guide/current/multi-fields.html
     if self._raw_fields:
       if self._doc_type not in self._mapping:
         self._mapping[self._doc_type] = {}
