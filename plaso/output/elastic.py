@@ -4,6 +4,8 @@
 from collections import Counter
 import logging
 
+from dfvfs.serializer.json_serializer import JsonPathSpecSerializer
+
 try:
   from elasticsearch import Elasticsearch
   from elasticsearch.exceptions import ConnectionError
@@ -96,9 +98,16 @@ class ElasticSearchHelper(object):
     """
     event_values = {}
     for attribute_name, attribute_value in event_object.GetAttributes():
-      # Ignore certain attributes that cause issues when indexing.
-      if attribute_name in (u'pathspec', u'regvalue'):
+      # Ignore the regvalue attribute as it cause issues when indexing
+      if attribute_name == u'regvalue':
         continue
+
+      if attribute_name == u'pathspec':
+        try:
+          attribute_value = JsonPathSpecSerializer.WriteSerialized(
+              attribute_value)
+        except TypeError:
+          continue
       event_values[attribute_name] = attribute_value
 
     # Add string representation of the timestamp
@@ -160,14 +169,15 @@ class ElasticSearchOutputModule(interface.OutputModule):
     """
     super(ElasticSearchOutputModule, self).__init__(output_mediator)
 
-    self._output_mediator = output_mediator
-    self._host = None
-    self._port = None
-    self._flush_interval = None
-    self._index_name = None
     self._doc_type = None
-    self._mapping = None
     self._elastic = None
+    self._flush_interval = None
+    self._host = None
+    self._index_name = None
+    self._mapping = None
+    self._output_mediator = output_mediator
+    self._port = None
+    self._raw_fields = False
 
   def Close(self):
     """Close connection to the Elasticsearch database.
@@ -215,6 +225,20 @@ class ElasticSearchOutputModule(interface.OutputModule):
     self._doc_type = doc_type
     logging.info(u'Document type: {0:s}'.format(self._doc_type))
 
+  def SetRawFields(self, raw_fields):
+    """Set raw (not analyzed) fields.
+
+    This is used for sorting and aggregations in Elasticsearch.
+    https://www.elastic.co/guide/en/elasticsearch/guide/current/
+    multi-fields.html
+
+    Args:
+      raw_fields (bool): Add not-analyzed index for string fields.
+    """
+    self._raw_fields = raw_fields
+    logging.info(u'Add non analyzed string fields: {0!s}'.format(
+        self._raw_fields))
+
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
 
@@ -227,6 +251,25 @@ class ElasticSearchOutputModule(interface.OutputModule):
     """Setup the Elasticsearch index."""
     if not self._mapping:
       self._mapping = {}
+
+    if self._raw_fields:
+      if self._doc_type not in self._mapping:
+        self._mapping[self._doc_type] = {}
+
+      _raw_field_mapping = [{
+          u'strings': {
+              u'match_mapping_type': u'string',
+              u'mapping': {
+                  u'fields': {
+                      u'raw': {
+                          u'type': u'string',
+                          u'index': u'not_analyzed'
+                      }
+                  }
+              }
+          }
+      }]
+      self._mapping[self._doc_type][u'dynamic_templates'] = _raw_field_mapping
 
     self._elastic = ElasticSearchHelper(
         self._output_mediator, self._host, self._port, self._flush_interval,
