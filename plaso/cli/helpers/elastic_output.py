@@ -55,7 +55,7 @@ class ElasticOutputHelper(interface.ArgumentsHelper):
     argument_group.add_argument(
         u'--raw_fields', dest=u'raw_fields', type=bool,
         action=u'store', default=cls._DEFAULT_RAW_FIELDS, help=(
-            u'Add attribute with unanalyzed fields for all string values.'))
+            u'For all string fields add attribute that are not analyzed.'))
 
     ElasticServer.AddArguments(argument_group)
 

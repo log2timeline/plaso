@@ -224,13 +224,17 @@ class ElasticSearchOutputModule(interface.OutputModule):
     logging.info(u'Document type: {0:s}'.format(self._doc_type))
 
   def SetRawFields(self, raw_fields):
-    """Set the port.
+    """Set raw (not analyzed) fields.
+
+    This is used for sorting and aggregations in Elasticsearch.
+    https://www.elastic.co/guide/en/elasticsearch/guide/current/multi-fields.html
 
     Args:
       raw_fields (bool): Add not-analyzed index for string fields.
     """
     self._raw_fields = raw_fields
-    logging.info(u'Add raw fields: {0}'.format(self._raw_fields))
+    logging.info(u'Add non analyzed string fields: {0}'.format(
+        self._raw_fields))
 
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
