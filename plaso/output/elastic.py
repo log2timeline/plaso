@@ -168,6 +168,7 @@ class ElasticSearchOutputModule(interface.OutputModule):
     self._doc_type = None
     self._mapping = None
     self._elastic = None
+    self._raw_fields = False
 
   def Close(self):
     """Close connection to the Elasticsearch database.
@@ -215,6 +216,15 @@ class ElasticSearchOutputModule(interface.OutputModule):
     self._doc_type = doc_type
     logging.info(u'Document type: {0:s}'.format(self._doc_type))
 
+  def SetRawFields(self, raw_fields):
+    """Set the port.
+
+    Args:
+      raw_fields (bool): Add not-analyzed index for string fields.
+    """
+    self._raw_fields = raw_fields
+    logging.info(u'Add raw fields: {0}'.format(self._raw_fields))
+
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
 
@@ -227,6 +237,28 @@ class ElasticSearchOutputModule(interface.OutputModule):
     """Setup the Elasticsearch index."""
     if not self._mapping:
       self._mapping = {}
+
+    # Add index to the document with not-analyzed string fields. This is used
+    # for sorting and aggregations. See this link for more information:
+    # https://www.elastic.co/guide/en/elasticsearch/guide/current/multi-fields.html
+    if self._raw_fields:
+      if self._doc_type not in self._mapping:
+        self._mapping[self._doc_type] = {}
+
+      _raw_field_mapping = [{
+          u'strings': {
+              u'match_mapping_type': u'string',
+              u'mapping': {
+                  u'fields': {
+                      u'raw': {
+                          u'type': u'string',
+                          u'index': u'not_analyzed'
+                      }
+                  }
+              }
+          }
+      }]
+      self._mapping[self._doc_type][u'dynamic_templates'] = _raw_field_mapping
 
     self._elastic = ElasticSearchHelper(
         self._output_mediator, self._host, self._port, self._flush_interval,
