@@ -27,6 +27,8 @@ class ElasticOutputHelper(interface.ArgumentsHelper):
   _DEFAULT_INDEX_NAME = uuid4().hex
   _DEFAULT_DOC_TYPE = u'plaso_event'
   _DEFAULT_FLUSH_INTERVAL = 1000
+  # Raw fields are string fields that are not not analyzed by Lucene.
+  _DEFAULT_RAW_FIELDS = False
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -51,6 +53,10 @@ class ElasticOutputHelper(interface.ArgumentsHelper):
         u'--flush_interval', dest=u'flush_interval', type=int,
         action=u'store', default=cls._DEFAULT_FLUSH_INTERVAL, help=(
             u'Events to queue up before bulk insert to ElasticSearch.'))
+    argument_group.add_argument(
+        u'--raw_fields', dest=u'raw_fields', type=bool,
+        action=u'store', default=cls._DEFAULT_RAW_FIELDS, help=(
+            u'For all string fields add attribute that are not analyzed.'))
 
     ElasticServer.AddArguments(argument_group)
 
@@ -81,11 +87,14 @@ class ElasticOutputHelper(interface.ArgumentsHelper):
         options, u'doc_type', default_value=cls._DEFAULT_DOC_TYPE)
     flush_interval = cls._ParseIntegerOption(
         options, u'flush_interval', default_value=cls._DEFAULT_FLUSH_INTERVAL)
+    raw_fields = getattr(
+        options, u'raw_fields', cls._DEFAULT_RAW_FIELDS)
 
     ElasticServer.ParseOptions(options, output_module)
     output_module.SetIndexName(index_name)
     output_module.SetDocType(doc_type)
     output_module.SetFlushInterval(flush_interval)
+    output_module.SetRawFields(raw_fields)
 
 
 manager.ArgumentHelperManager.RegisterHelper(ElasticOutputHelper)
