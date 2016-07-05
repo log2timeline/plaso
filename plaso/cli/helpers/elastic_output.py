@@ -53,9 +53,9 @@ class ElasticOutputHelper(interface.ArgumentsHelper):
         action=u'store', default=cls._DEFAULT_FLUSH_INTERVAL, help=(
             u'Events to queue up before bulk insert to ElasticSearch.'))
     argument_group.add_argument(
-      u'--raw_fields', dest=u'raw_fields', type=bool,
-      action=u'store', default=cls._DEFAULT_RAW_FIELDS, help=(
-        u'Add attribute with unanalyzed fields for all string values.'))
+        u'--raw_fields', dest=u'raw_fields', type=bool,
+        action=u'store', default=cls._DEFAULT_RAW_FIELDS, help=(
+            u'Add attribute with unanalyzed fields for all string values.'))
 
     ElasticServer.AddArguments(argument_group)
 
@@ -87,7 +87,7 @@ class ElasticOutputHelper(interface.ArgumentsHelper):
     flush_interval = cls._ParseIntegerOption(
         options, u'flush_interval', default_value=cls._DEFAULT_FLUSH_INTERVAL)
     raw_fields = getattr(
-      options, u'raw_fields', cls._DEFAULT_RAW_FIELDS)
+        options, u'raw_fields', cls._DEFAULT_RAW_FIELDS)
 
     ElasticServer.ParseOptions(options, output_module)
     output_module.SetIndexName(index_name)
