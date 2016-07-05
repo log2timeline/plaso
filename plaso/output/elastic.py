@@ -10,6 +10,7 @@ try:
 except ImportError:
   Elasticsearch = None
 
+from dfvfs.serializer.json_serializer import JsonPathSpecSerializer
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.output import interface
@@ -96,8 +97,11 @@ class ElasticSearchHelper(object):
     """
     event_values = {}
     for attribute_name, attribute_value in event_object.GetAttributes():
-      # Ignore certain attributes that cause issues when indexing.
-      if attribute_name in (u'pathspec', u'regvalue'):
+      if attribute_name == u'pathspec':
+        attribute_value = JsonPathSpecSerializer.WriteSerialized(
+            attribute_value)
+      # Ignore the regvalue attribute as it cause issues when indexing
+      elif attribute_name == u'regvalue':
         continue
       event_values[attribute_name] = attribute_value
 
