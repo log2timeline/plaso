@@ -27,6 +27,7 @@ class ElasticOutputHelper(interface.ArgumentsHelper):
   _DEFAULT_INDEX_NAME = uuid4().hex
   _DEFAULT_DOC_TYPE = u'plaso_event'
   _DEFAULT_FLUSH_INTERVAL = 1000
+  # Raw fields are string fields that are not not analyzed by Lucene.
   _DEFAULT_RAW_FIELDS = False
 
   @classmethod
