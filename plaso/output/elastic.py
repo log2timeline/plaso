@@ -98,8 +98,11 @@ class ElasticSearchHelper(object):
     event_values = {}
     for attribute_name, attribute_value in event_object.GetAttributes():
       if attribute_name == u'pathspec':
-        attribute_value = JsonPathSpecSerializer.WriteSerialized(
-            attribute_value)
+        try:
+          attribute_value = JsonPathSpecSerializer.WriteSerialized(
+              attribute_value)
+        except TypeError:
+          continue
       # Ignore the regvalue attribute as it cause issues when indexing
       elif attribute_name == u'regvalue':
         continue
