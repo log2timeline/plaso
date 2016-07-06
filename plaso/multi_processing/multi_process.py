@@ -283,7 +283,6 @@ class MultiProcessEngine(engine.BaseEngine):
     self._status_update_callback = None
     self._storage_merge_thread = None
     self._storage_writer = None
-    self._tasks = {}
     self._task_queue = None
     self._task_queue_port = None
     self._task_scheduler_active = False
@@ -478,19 +477,6 @@ class MultiProcessEngine(engine.BaseEngine):
             memory_info.shared, memory_info.text, memory_info.lib,
             memory_info.data, memory_info.dirty, memory_info.percent * 100))
 
-  def _MergeTaskStorage(self):
-    """Merges task-based storage with the session-based storage."""
-    logging.debug(u'Storage merge started')
-
-    while len(self._tasks):
-      # Make a copy of the keys since we are changing the dictionary
-      # inside the loop.
-      for task_identifier in list(self._tasks.keys()):
-        if self._storage_writer.MergeTaskStorage(task_identifier):
-          del self._tasks[task_identifier]
-
-    logging.debug(u'Storage merge stopped')
-
   def _ProcessSources(
       self, source_path_specs, storage_writer, filter_find_specs=None):
     """Processes the sources.
@@ -503,12 +489,12 @@ class MultiProcessEngine(engine.BaseEngine):
                          of dfvfs.FindSpec).
     """
     self._number_of_consumed_sources = 0
-    number_of_produced_sources = 0
 
     self._processing_status.UpdateForemanStatus(
         u'Main', definitions.PROCESSING_STATUS_COLLECTING, self._pid, u'',
-        self._number_of_consumed_sources, number_of_produced_sources,
-        storage_writer.number_of_events, storage_writer.number_of_event_sources)
+        self._number_of_consumed_sources,
+        storage_writer.number_of_event_sources,
+        0, storage_writer.number_of_events)
     self._UpdateStatus()
 
     path_spec_extractor = extractors.PathSpecExtractor(self._resolver_context)
@@ -524,13 +510,11 @@ class MultiProcessEngine(engine.BaseEngine):
       event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
       storage_writer.AddEventSource(event_source)
 
-      number_of_produced_sources += 1
-
       self._processing_status.UpdateForemanStatus(
           u'Main', definitions.PROCESSING_STATUS_COLLECTING, self._pid, u'',
-          self._number_of_consumed_sources, number_of_produced_sources,
-          storage_writer.number_of_events,
-          storage_writer.number_of_event_sources)
+          self._number_of_consumed_sources,
+          storage_writer.number_of_event_sources,
+          0, storage_writer.number_of_events)
       self._UpdateStatus()
 
     self._new_event_sources = True
@@ -551,7 +535,6 @@ class MultiProcessEngine(engine.BaseEngine):
 
       self._task_scheduler_active = True
       self._StartTaskSchedulerThread()
-      # self._StartStorageMergeThread()
 
       # TODO: re-implement abort path on workers idle (raise EngineAbort).
       # TODO: change status check.
@@ -559,31 +542,24 @@ class MultiProcessEngine(engine.BaseEngine):
 
       # TODO: start thread that monitors for new task files.
 
-      while self._task_scheduler_active or len(self._tasks):
+      while self._task_scheduler_active:
         self._processing_status.UpdateForemanStatus(
             u'Main', definitions.PROCESSING_STATUS_RUNNING, self._pid, u'',
-            self._number_of_consumed_sources, number_of_produced_sources,
-            storage_writer.number_of_events,
-            storage_writer.number_of_event_sources)
+            self._number_of_consumed_sources,
+            storage_writer.number_of_event_sources,
+            0, storage_writer.number_of_events)
         self._CheckStatusWorkerProcesses()
         self._UpdateStatus()
-
-        # Make a copy of the keys since we are changing the dictionary
-        # inside the loop.
-        for task_identifier in list(self._tasks.keys()):
-          if self._storage_writer.MergeTaskStorage(task_identifier):
-            del self._tasks[task_identifier]
 
         time.sleep(self._STATUS_CHECK_SLEEP)
 
       self._StopTaskSchedulerThread()
-      # self._StopStorageMergeThread()
 
       self._processing_status.UpdateForemanStatus(
-          u'Main', definitions.PROCESSING_STATUS_IDLE, self._pid, u'',
-          self._number_of_consumed_sources, number_of_produced_sources,
-          storage_writer.number_of_events,
-          storage_writer.number_of_event_sources)
+          u'Main', definitions.PROCESSING_STATUS_RUNNING, self._pid, u'',
+          self._number_of_consumed_sources,
+          storage_writer.number_of_event_sources,
+          0, storage_writer.number_of_events)
       self._CheckStatusWorkerProcesses()
       self._UpdateStatus()
 
@@ -594,8 +570,9 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._processing_status.UpdateForemanStatus(
         u'Main', status, self._pid, u'',
-        self._number_of_consumed_sources, number_of_produced_sources,
-        storage_writer.number_of_events, storage_writer.number_of_event_sources)
+        self._number_of_consumed_sources,
+        storage_writer.number_of_event_sources,
+        0, storage_writer.number_of_events)
     self._UpdateStatus()
 
   def _RaiseIfNotMonitored(self, pid):
@@ -647,28 +624,71 @@ class MultiProcessEngine(engine.BaseEngine):
   def _ScheduleTasks(self):
     """Schedules tasks."""
     logging.debug(u'Task scheduler started')
-    for event_source in self._storage_writer.GetEventSources():
+
+    # TODO: make tasks persistent.
+
+    # TODO: protect task scheduler loop by catch all and
+    # handle abort path.
+
+    worker_tasks = {}
+    event_source_generator = self._storage_writer.GetEventSources()
+
+    try:
+      event_source = next(event_source_generator)
+    except StopIteration:
+      event_source = None
+
+    if event_source:
       self._new_event_sources = True
+
+    task = None
+    while event_source or len(worker_tasks):
       if self._abort:
         break
 
-      # TODO: add support for more task types.
-      task = tasks.Task(self._session_identifier)
-      task.path_spec = event_source.path_spec
+      if event_source and not task:
+        # TODO: add support for more task types.
+        task = tasks.Task(self._session_identifier)
+        task.path_spec = event_source.path_spec
 
-      # TODO: register task with scheduler.
-      self._tasks[task.identifier] = task
+      if task:
+        try:
+          self._task_queue.PushItem(task, block=False)
 
-      self._task_queue.PushItem(task)
+          # TODO: determine if a back off time is needed
+          # to prevent this from hot-looping.
+
+          # TODO: register task with scheduler.
+          worker_tasks[task.identifier] = task
+
+          event_source = None
+          task = None
+
+          self._number_of_consumed_sources += 1
+
+        except Queue.Full:
+          pass
+
+      # Make a copy of the keys since we are changing the dictionary
+      # inside the loop.
+      for task_identifier in list(worker_tasks.keys()):
+        # TODO: look into time slicing merge.
+        if self._storage_writer.MergeTaskStorage(task_identifier):
+          del worker_tasks[task_identifier]
+
+      if not event_source:
+        try:
+          # Retrieve the next event source after merging.
+          event_source = next(event_source_generator)
+        except StopIteration:
+          pass
 
     self._task_scheduler_active = False
-    logging.debug(u'Task scheduler stopped')
 
-  def _StartStorageMergeThread(self):
-    """Starts the storage merge thread."""
-    self._storage_merge_thread = threading.Thread(
-        name=u'Storage Merge', target=self._MergeTaskStorage)
-    self._storage_merge_thread.start()
+    if self._abort:
+      logging.debug(u'Task scheduler aborted')
+    else:
+      logging.debug(u'Task scheduler stopped')
 
   def _StartTaskSchedulerThread(self):
     """Starts the task scheduler thread."""
@@ -763,12 +783,6 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._rpc_clients_per_pid[pid] = rpc_client
     self._process_information_per_pid[pid] = process_info.ProcessInfo(pid)
-
-  def _StopStorageMergeThread(self):
-    """Stops the task scheduler thread."""
-    if self._storage_merge_thread.isAlive():
-      self._storage_merge_thread.join()
-    self._storage_merge_thread = None
 
   def _StopTaskSchedulerThread(self):
     """Stops the task scheduler thread."""
