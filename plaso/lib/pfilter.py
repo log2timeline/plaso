@@ -9,12 +9,12 @@ from plaso.formatters import mediator as formatters_mediator
 
 # TODO: Changes this so it becomes an attribute instead of having backend
 # load a front-end library.
-from plaso.frontend import presets
 from plaso.lib import errors
 from plaso.lib import objectfilter
 from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.lib import utils
+from plaso.parsers import presets as parsers_presets
 
 
 class DictObject(object):
@@ -210,7 +210,7 @@ class ParserList(objectfilter.GenericBinaryOperator):
   def __init__(self, *children, **kwargs):
     """Construct the parser list and retrieve a list of available parsers."""
     super(ParserList, self).__init__(*children, **kwargs)
-    self.compiled_list = presets.categories.get(
+    self.compiled_list = parsers_presets.CATEGORIES.get(
         self.right_operand.lower(), [])
 
   def Operation(self, x, unused_y):
