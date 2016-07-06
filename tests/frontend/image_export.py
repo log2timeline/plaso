@@ -17,7 +17,7 @@ from tests import test_lib as shared_test_lib
 from tests.frontend import test_lib
 
 
-class DateTimeFileEntryFilter(shared_test_lib.BaseTestCase):
+class DateTimeFileEntryFilterTest(shared_test_lib.BaseTestCase):
   """Tests for the date time file entry filter."""
 
   def testAddDateTimeRange(self):
