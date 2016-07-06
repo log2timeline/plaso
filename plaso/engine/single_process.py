@@ -48,15 +48,16 @@ class SingleProcessEngine(engine.BaseEngine):
     Returns:
       str: processing status.
     """
+    number_of_consumed_sources = 0
+
     self._processing_status.UpdateForemanStatus(
         u'Main', definitions.PROCESSING_STATUS_COLLECTING, self._pid, u'',
-        0, 0, 0, 0)
+        number_of_consumed_sources, storage_writer.number_of_event_sources,
+        0, storage_writer.number_of_events)
     self._UpdateStatus()
 
     path_spec_extractor = extractors.PathSpecExtractor(resolver_context)
 
-    number_of_collected_sources = 0
-    number_of_consumed_sources = 0
     for path_spec in path_spec_extractor.ExtractPathSpecs(
         source_path_specs, find_specs=filter_find_specs,
         recurse_file_system=False):
@@ -68,11 +69,10 @@ class SingleProcessEngine(engine.BaseEngine):
       event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
       storage_writer.AddEventSource(event_source)
 
-      number_of_collected_sources += 1
-
       self._processing_status.UpdateForemanStatus(
           u'Main', definitions.PROCESSING_STATUS_COLLECTING, self._pid, u'',
-          number_of_consumed_sources, number_of_collected_sources, 0, 0)
+          number_of_consumed_sources, storage_writer.number_of_event_sources,
+          0, storage_writer.number_of_events)
       self._UpdateStatus()
 
     new_event_sources = True
@@ -95,16 +95,11 @@ class SingleProcessEngine(engine.BaseEngine):
             parser_mediator, event_source.path_spec)
         number_of_consumed_sources += 1
 
-        number_of_produced_sources = (
-            number_of_collected_sources +
-            parser_mediator.number_of_produced_event_sources)
-
         self._processing_status.UpdateForemanStatus(
             u'Main', definitions.PROCESSING_STATUS_EXTRACTING, self._pid,
             extraction_worker.current_display_name,
-            number_of_consumed_sources, number_of_produced_sources,
-            storage_writer.number_of_events,
-            parser_mediator.number_of_produced_events)
+            number_of_consumed_sources, storage_writer.number_of_event_sources,
+            0, storage_writer.number_of_events)
         self._UpdateStatus()
 
     if self._abort:
@@ -112,15 +107,10 @@ class SingleProcessEngine(engine.BaseEngine):
     else:
       status = definitions.PROCESSING_STATUS_COMPLETED
 
-    number_of_produced_sources = (
-        number_of_collected_sources +
-        parser_mediator.number_of_produced_event_sources)
-
     self._processing_status.UpdateForemanStatus(
         u'Main', status, self._pid, u'',
-        number_of_consumed_sources, number_of_produced_sources,
-        storage_writer.number_of_events,
-        parser_mediator.number_of_produced_events)
+        number_of_consumed_sources, storage_writer.number_of_event_sources,
+        0, storage_writer.number_of_events)
 
     # Force the status update here to make sure the status is up to date
     # on exit.
