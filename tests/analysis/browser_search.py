@@ -38,7 +38,7 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.
     expected_text = u'\n'.join([
-        u' == ENGINE: GoogleSearch ==',
+        u' == ENGINE: Google Search ==',
         u'1 really really funny cats',
         u'1 java plugin',
         u'1 funnycats.exe',
@@ -49,7 +49,7 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
     self.assertEqual(analysis_report.text, expected_text)
     self.assertEqual(analysis_report.plugin_name, 'browser_search')
 
-    expected_keys = set([u'GoogleSearch'])
+    expected_keys = set([u'Google Search'])
     self.assertEqual(set(analysis_report.report_dict.keys()), expected_keys)
 
 
