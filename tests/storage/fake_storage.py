@@ -59,6 +59,7 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()
 
+    event_object = None
     for event_object in event_objects:
       storage_writer.AddEvent(event_object)
 
@@ -94,6 +95,7 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     for event_object in event_objects:
       storage_writer.AddEvent(event_object)
 
+    event_tag = None
     for event_tag in event_tags:
       storage_writer.AddEventTag(event_tag)
 
