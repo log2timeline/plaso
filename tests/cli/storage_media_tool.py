@@ -17,6 +17,8 @@ from tests.cli import test_lib
 class StorageMediaToolTest(test_lib.CLIToolTestCase):
   """Tests for the storage media tool object."""
 
+  # pylint: disable=protected-access
+
   _EXPECTED_OUTPUT_CREDENTIAL_OPTIONS = u'\n'.join([
       u'usage: storage_media_tool_test.py [--credential TYPE:DATA]',
       u'',

@@ -82,6 +82,8 @@ class TestEngine(engine.BaseEngine):
 class BaseEngineTest(shared_test_lib.BaseTestCase):
   """Tests for the engine object."""
 
+  # pylint: disable=protected-access
+
   def testGetSourceFileSystem(self):
     """Tests the GetSourceFileSystem function."""
     test_engine = engine.BaseEngine()
@@ -105,6 +107,9 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
 
     test_file_system.Close()
 
+    with self.assertRaises(RuntimeError):
+      test_engine.GetSourceFileSystem(None)
+
   def testPreprocessSources(self):
     """Tests the PreprocessSources function."""
     test_engine = TestEngine()
@@ -116,11 +121,21 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(test_engine.knowledge_base.platform, u'Windows')
 
+    test_engine.PreprocessSources([None])
+
   def testSetEnableDebugOutput(self):
     """Tests the SetDebugMode function."""
     test_engine = engine.BaseEngine()
 
     test_engine.SetEnableDebugOutput(True)
+
+  def testSignalAbort(self):
+    """Tests the SignalAbort function."""
+    test_engine = engine.BaseEngine()
+
+    self.assertFalse(test_engine._abort)
+    test_engine.SignalAbort()
+    self.assertTrue(test_engine._abort)
 
   def testSupportsMemoryProfiling(self):
     """Tests the SupportsMemoryProfiling function."""
