@@ -59,6 +59,7 @@ class ProcessingStatus(object):
   """The status of the overall extraction process (processing).
 
   Attributes:
+    aborted (bool): True if processing was aborted.
     error_detected (bool): True if an error was detected during processing.
     error_path_specs (list[str]): path specification strings that caused
                                   critical errors during processing.
@@ -74,6 +75,7 @@ class ProcessingStatus(object):
     self._workers_last_running_time = 0
     self._workers_status = {}
 
+    self.aborted = False
     self.error_detected = False
     self.error_path_specs = []
     self.foreman_status = None

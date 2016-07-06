@@ -4,9 +4,10 @@
 import collections
 import logging
 import os
-# TODO: reimplement debug hook.
-# import pdb
+import pdb
 import time
+
+from dfvfs.lib import errors as dfvfs_errors
 
 from plaso.containers import event_sources
 from plaso.engine import engine
@@ -28,6 +29,44 @@ class SingleProcessEngine(engine.BaseEngine):
     self._pid = os.getpid()
     self._status_update_callback = None
 
+  def _ProcessPathSpec(self, extraction_worker, parser_mediator, path_spec):
+    """Processes a path specification.
+
+    Args:
+      extraction_worker (worker.ExtractionWorker): extraction worker.
+      parser_mediator (ParserMediator): parser mediator.
+      path_spec (dfvfs.PathSpec): path specification.
+    """
+    try:
+      extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
+
+    except KeyboardInterrupt:
+      self.SignalAbort()
+
+    except IOError as exception:
+      logging.warning(
+          u'Unable to process path spec: {0:s} with error: {1:s}'.format(
+              extraction_worker.current_display_name, exception))
+
+    except dfvfs_errors.CacheFullError:
+      # TODO: signal engine of failure.
+      self._abort = True
+      logging.error((
+          u'ABORT: detected cache full error while processing '
+          u'path spec: {0:s}').format(
+              extraction_worker.current_display_name))
+
+    # All exceptions need to be caught here to prevent the worker
+    # from being killed by an uncaught exception.
+    except Exception as exception:  # pylint: disable=broad-except
+      logging.warning(
+          u'Unhandled exception while processing path spec: {0:s}.'.format(
+              extraction_worker.current_display_name))
+      logging.exception(exception)
+
+      if self._enable_debug_output:
+        pdb.post_mortem()
+
   def _ProcessSources(
       self, source_path_specs, resolver_context, extraction_worker,
       parser_mediator, storage_writer, filter_find_specs=None):
@@ -42,9 +81,6 @@ class SingleProcessEngine(engine.BaseEngine):
       storage_writer (StorageWriter): storage writer for a session storage.
       filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
           used in path specification extraction.
-
-    Returns:
-      str: processing status.
     """
     display_name = u''
     number_of_consumed_sources = 0
@@ -99,8 +135,8 @@ class SingleProcessEngine(engine.BaseEngine):
         if self._abort:
           break
 
-        extraction_worker.ProcessPathSpec(
-            parser_mediator, event_source.path_spec)
+        self._ProcessPathSpec(
+            extraction_worker, parser_mediator, event_source.path_spec)
         number_of_consumed_sources += 1
 
         event_source = storage_writer.GetNextEventSource()
@@ -129,8 +165,6 @@ class SingleProcessEngine(engine.BaseEngine):
     # Force the status update here to make sure the status is up to date
     # on exit.
     self._UpdateStatus(force=True)
-
-    return status
 
   def _UpdateStatus(self, force=False):
     """Updates the processing status.
@@ -196,9 +230,6 @@ class SingleProcessEngine(engine.BaseEngine):
         resolver_context, parser_filter_expression=parser_filter_expression,
         process_archive_files=process_archive_files)
 
-    # TODO: differentiate between debug output and debug mode.
-    extraction_worker.SetEnableDebugMode(self._enable_debug_output)
-
     if hasher_names_string:
       extraction_worker.SetHashers(hasher_names_string)
 
@@ -219,7 +250,7 @@ class SingleProcessEngine(engine.BaseEngine):
     try:
       storage_writer.WriteSessionStart()
 
-      status = self._ProcessSources(
+      self._ProcessSources(
           source_path_specs, resolver_context, extraction_worker,
           parser_mediator, storage_writer, filter_find_specs=filter_find_specs)
 
@@ -233,8 +264,9 @@ class SingleProcessEngine(engine.BaseEngine):
       if self._enable_profiling:
         storage_writer.DisableProfiling()
 
-    if status == definitions.PROCESSING_STATUS_ABORTED:
+    if self._abort:
       logging.debug(u'Processing aborted.')
+      self._processing_status.aborted = True
     else:
       logging.debug(u'Processing completed.')
 

@@ -98,7 +98,6 @@ class EventExtractionWorker(object):
     self._abort = False
     self._current_display_name = u''
     self._current_file_entry = None
-    self._enable_debug_mode = False
     self._enable_memory_profiling = False
     self._enable_parsers_profiling = False
     self._event_extractor = extractors.EventExtractor(
@@ -606,43 +605,16 @@ class EventExtractionWorker(object):
       parser_mediator (ParserMediator): parser mediator.
       path_spec (dfvfs.PathSpec): path specification.
     """
-    try:
-      file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-          path_spec, resolver_context=self._resolver_context)
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(
+        path_spec, resolver_context=self._resolver_context)
 
-      if file_entry is None:
-        logging.warning(
-            u'Unable to open file entry with path spec: {0:s}'.format(
-                self._current_display_name))
-        return
-
-      self._ProcessFileEntry(parser_mediator, file_entry)
-
-    except IOError as exception:
+    if file_entry is None:
       logging.warning(
-          u'Unable to process path spec: {0:s} with error: {1:s}'.format(
-              self._current_display_name, exception))
-
-    except dfvfs_errors.CacheFullError:
-      # TODO: signal engine of failure.
-      self._abort = True
-      logging.error((
-          u'ABORT: detected cache full error while processing '
-          u'path spec: {0:s}').format(self._current_display_name))
-
-    # All exceptions need to be caught here to prevent the worker
-    # from being killed by an uncaught exception.
-    except Exception as exception:  # pylint: disable=broad-except
-      logging.warning(
-          u'Unhandled exception while processing path spec: {0:s}.'.format(
+          u'Unable to open file entry with path spec: {0:s}'.format(
               self._current_display_name))
-      logging.exception(exception)
+      return
 
-      if self._enable_debug_mode:
-        self._DebugProcessPathSpec()
-
-    # Make sure frame.f_locals does not keep a reference to file_entry.
-    file_entry = None
+    self._ProcessFileEntry(parser_mediator, file_entry)
 
   def ProfilingStart(self, identifier):
     """Starts profiling.
@@ -679,15 +651,6 @@ class EventExtractionWorker(object):
 
     if self._enable_parsers_profiling:
       self._event_extractor.ProfilingStop()
-
-  def SetEnableDebugMode(self, enable_debug_mode):
-    """Enables or disables debug mode.
-
-    Args:
-      enable_debug_mode: boolean value to indicate if the debug mode
-                         should be enabled.
-    """
-    self._enable_debug_mode = enable_debug_mode
 
   def SetHashers(self, hasher_names_string):
     """Initializes the hasher objects.

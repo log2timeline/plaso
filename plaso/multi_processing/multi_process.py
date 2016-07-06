@@ -13,6 +13,7 @@ import sys
 import threading
 import time
 
+from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.resolver import context
 
 from plaso.containers import event_sources
@@ -533,18 +534,20 @@ class MultiProcessEngine(engine.BaseEngine):
       # TODO: change status check.
       self._CheckStatusWorkerProcesses()
 
-      # TODO: start thread that monitors for new task files.
+      try:
+        while self._task_scheduler_active:
+          self._processing_status.UpdateForemanStatus(
+              u'Main', definitions.PROCESSING_STATUS_RUNNING, self._pid, u'',
+              self._number_of_consumed_sources,
+              storage_writer.number_of_event_sources,
+              0, storage_writer.number_of_events)
+          self._CheckStatusWorkerProcesses()
+          self._UpdateStatus()
 
-      while self._task_scheduler_active:
-        self._processing_status.UpdateForemanStatus(
-            u'Main', definitions.PROCESSING_STATUS_RUNNING, self._pid, u'',
-            self._number_of_consumed_sources,
-            storage_writer.number_of_event_sources,
-            0, storage_writer.number_of_events)
-        self._CheckStatusWorkerProcesses()
-        self._UpdateStatus()
+          time.sleep(self._STATUS_UPDATE_INTERVAL)
 
-        time.sleep(self._STATUS_UPDATE_INTERVAL)
+      except KeyboardInterrupt:
+        self.SignalAbort()
 
       self._StopTaskSchedulerThread()
 
@@ -660,6 +663,9 @@ class MultiProcessEngine(engine.BaseEngine):
       # Make a copy of the keys since we are changing the dictionary
       # inside the loop.
       for task_identifier in list(worker_tasks.keys()):
+        if self._abort:
+          break
+
         # TODO: look into time slicing merge.
         if self._storage_writer.MergeTaskStorage(task_identifier):
           del worker_tasks[task_identifier]
@@ -781,7 +787,7 @@ class MultiProcessEngine(engine.BaseEngine):
     """Stops the extraction processes.
 
     Args:
-      abort: optional boolean to indicate the stop is issued on abort.
+      abort (bool): True to indicated the stop is issued on abort.
     """
     logging.debug(u'Stopping extraction processes.')
     self._StopProcessMonitoring()
@@ -1008,45 +1014,52 @@ class MultiProcessEngine(engine.BaseEngine):
       self._task_queue.Open()
       self._task_queue_port = self._task_queue.port
 
-    # Start the worker processes.
-    logging.debug(u'Starting processes.')
-
     for _ in range(0, number_of_worker_processes):
       extraction_process = self._StartExtractionWorkerProcess(
           self._storage_writer)
       self._StartMonitoringProcess(extraction_process.pid)
 
-    logging.debug(u'Processing started.')
-
-    self._storage_writer.Open()
-
     if self._enable_profiling:
       self._storage_writer.EnableProfiling(profiling_type=profiling_type)
 
-    self._storage_writer.WriteSessionStart()
+    self._storage_writer.Open()
 
-    # TODO: change in phased processing refactor.
-    self._ProcessSources(
-        source_path_specs, self._storage_writer,
-        filter_find_specs=filter_find_specs)
+    try:
+      self._storage_writer.WriteSessionStart()
 
-    if self._abort:
-      return
+      self._ProcessSources(
+          source_path_specs, self._storage_writer,
+          filter_find_specs=filter_find_specs)
 
-    self._StopExtractionProcesses(abort=self._processing_status.error_detected)
+      # TODO: refactor the use of preprocess_object.
+      self._storage_writer.WritePreprocessObject(preprocess_object)
 
-    logging.debug(u'Processing stopped.')
+      # TODO: on abort use WriteSessionAborted instead of completion?
+      self._storage_writer.WriteSessionCompletion()
 
-    # TODO: refactor the use of preprocess_object.
-    self._storage_writer.WritePreprocessObject(preprocess_object)
-    self._storage_writer.WriteSessionCompletion()
+    finally:
+      if self._enable_profiling:
+        storage_writer.DisableProfiling()
 
-    if self._enable_profiling:
-      self._storage_writer.DisableProfiling()
+    try:
+      self._StopExtractionProcesses(abort=self._abort)
 
-    self._storage_writer.StopTaskStorage()
+    except KeyboardInterrupt:
+      self._AbortKill()
+
+      # The abort can leave the main process unresponsive
+      # due to incorrectly finalized IPC.
+      self._KillProcess(os.getpid())
 
     self._task_queue.Close(abort=self._abort)
+
+    self._storage_writer.StopTaskStorage(abort=self._abort)
+
+    if self._abort:
+      logging.debug(u'Processing aborted.')
+      self._processing_status.aborted = True
+    else:
+      logging.debug(u'Processing completed.')
 
     # Reset values.
     self._enable_sigsegv_handler = None
@@ -1065,18 +1078,6 @@ class MultiProcessEngine(engine.BaseEngine):
     self._text_prepend = None
 
     return self._processing_status
-
-  def SignalAbort(self):
-    """Signals the engine to abort."""
-    try:
-      self._StopExtractionProcesses(abort=True)
-
-    except KeyboardInterrupt:
-      self._AbortKill()
-
-      # The abort can leave the main process unresponsive
-      # due to incorrectly finalized IPC.
-      self._KillProcess(os.getpid())
 
 
 class MultiProcessWorkerProcess(MultiProcessBaseProcess):
@@ -1212,6 +1213,27 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
       # TODO: on abort use WriteTaskAborted instead of completion?
       storage_writer.WriteTaskCompletion()
 
+    except IOError as exception:
+      logging.warning(
+          u'Unable to process path spec: {0:s} with error: {1:s}'.format(
+              self._extraction_worker.current_display_name, exception))
+
+    except dfvfs_errors.CacheFullError:
+      # TODO: signal engine of failure.
+      self._abort = True
+      logging.error((
+          u'ABORT: detected cache full error while processing '
+          u'path spec: {0:s}').format(
+              self._extraction_worker.current_display_name))
+
+    # All exceptions need to be caught here to prevent the worker
+    # from being killed by an uncaught exception.
+    except Exception as exception:  # pylint: disable=broad-except
+      logging.warning(
+          u'Unhandled exception while processing path spec: {0:s}.'.format(
+              self._extraction_worker.current_display_name))
+      logging.exception(exception)
+
     finally:
       self._parser_mediator.SetStorageWriter(None)
 
@@ -1247,9 +1269,6 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
         resolver_context,
         parser_filter_expression=self._parser_filter_expression,
         process_archive_files=self._process_archive_files)
-
-    # TODO: differentiate between debug output and debug mode.
-    self._extraction_worker.SetEnableDebugMode(self._enable_debug_output)
 
     if self._hasher_names_string:
       self._extraction_worker.SetHashers(self._hasher_names_string)
