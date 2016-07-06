@@ -9,30 +9,34 @@ class ProcessStatus(object):
 
   Attributes:
     display_name (str): display name of the file entry currently being
-                        processed by the worker.
-    identifier (str): worker identifier.
+        processed by the process.
+    identifier (str): process identifier.
     last_running_time (int): timestamp of the last update when the process had
-                             a running process status.
+        a running process status.
+    number_of_consumed_errors (int): total number of errors consumed by
+        the process.
+    number_of_consumed_errors_delta (int): number of errors consumed by
+        the process since the last status update.
     number_of_consumed_events (int): total number of events consumed by
-                                     the worker.
+        the process.
     number_of_consumed_events_delta (int): number of events consumed by
-                                           the worker since the last
-                                           status update.
+        the process since the last status update.
     number_of_consumed_sources (int): total number of event sources consumed
-                                      by the worker.
+        by the process.
     number_of_consumed_sources_delta (int): number of event sources consumed
-                                            by the worker since the last status
-                                            update.
+        by the process since the last status update.
+    number_of_produced_errors (int): total number of errors produced by
+        the process.
+    number_of_produced_errors_delta (int): number of errors produced by
+        the process since the last status update.
     number_of_produced_events (int): total number of events produced by
-                                     the worker.
+        the process.
     number_of_produced_events_delta (int): number of events produced by
-                                           the worker since the last status
-                                           update.
+        the process since the last status update.
     number_of_produced_sources (int): total number of event sources
-                                      produced by the worker.
+        produced by the process.
     number_of_produced_sources_delta (int): number of event sources produced
-                                            by the worker since the last status
-                                            update.
+        by the process since the last status update.
     pid (int): process identifier (PID).
     status (str): human readable status indication e.g. 'Hashing', 'Idle'.
   """
@@ -43,10 +47,14 @@ class ProcessStatus(object):
     self.display_name = None
     self.identifier = None
     self.last_running_time = 0
+    self.number_of_consumed_errors = 0
+    self.number_of_consumed_errors_delta = 0
     self.number_of_consumed_events = 0
     self.number_of_consumed_events_delta = 0
     self.number_of_consumed_sources = 0
     self.number_of_consumed_sources_delta = 0
+    self.number_of_produced_errors = 0
+    self.number_of_produced_errors_delta = 0
     self.number_of_produced_events = 0
     self.number_of_produced_events_delta = 0
     self.number_of_produced_sources = 0
@@ -54,29 +62,110 @@ class ProcessStatus(object):
     self.pid = None
     self.status = None
 
+  def UpdateNumberOfErrors(
+      self, number_of_consumed_errors, number_of_produced_errors):
+    """Updates the number of errors.
+
+    Args:
+      number_of_consumed_errors (int): total number of errors consumed by
+          the process.
+      number_of_produced_errors (int): total number of errors produced by
+          the process.
+
+    Returns:
+      bool: True if number of errors has increased.
+    """
+    consumed_errors_delta = number_of_consumed_errors
+    if consumed_errors_delta > 0:
+      consumed_errors_delta -= self.number_of_consumed_errors
+
+    self.number_of_consumed_errors = number_of_consumed_errors
+    self.number_of_consumed_errors_delta = consumed_errors_delta
+
+    produced_errors_delta = number_of_produced_errors
+    if produced_errors_delta > 0:
+      produced_errors_delta -= self.number_of_produced_errors
+
+    self.number_of_produced_errors = number_of_produced_errors
+    self.number_of_produced_errors_delta = produced_errors_delta
+
+    return consumed_errors_delta > 0 or produced_errors_delta > 0
+
+  def UpdateNumberOfEvents(
+      self, number_of_consumed_events, number_of_produced_events):
+    """Updates the number of events.
+
+    Args:
+      number_of_consumed_events (int): total number of events consumed by
+          the process.
+      number_of_produced_events (int): total number of events produced by
+          the process.
+
+    Returns:
+      bool: True if number of events has increased.
+    """
+    consumed_events_delta = number_of_consumed_events
+    if consumed_events_delta > 0:
+      consumed_events_delta -= self.number_of_consumed_events
+
+    self.number_of_consumed_events = number_of_consumed_events
+    self.number_of_consumed_events_delta = consumed_events_delta
+
+    produced_events_delta = number_of_produced_events
+    if produced_events_delta > 0:
+      produced_events_delta -= self.number_of_produced_events
+
+    self.number_of_produced_events = number_of_produced_events
+    self.number_of_produced_events_delta = produced_events_delta
+
+    return consumed_events_delta > 0 or produced_events_delta > 0
+
+  def UpdateNumberOfEventSources(
+      self, number_of_consumed_sources, number_of_produced_sources):
+    """Updates the number of event sources.
+
+    Args:
+      number_of_consumed_sources (int): total number of event sources consumed
+          by the process.
+      number_of_produced_sources (int): total number of event sources produced
+          by the process.
+
+    Returns:
+      bool: True if number of event sources has increased.
+    """
+    consumed_sources_delta = number_of_consumed_sources
+    if consumed_sources_delta > 0:
+      consumed_sources_delta -= self.number_of_consumed_sources
+
+    self.number_of_consumed_sources = number_of_consumed_sources
+    self.number_of_consumed_sources_delta = consumed_sources_delta
+
+    produced_sources_delta = number_of_produced_sources
+    if produced_sources_delta > 0:
+      produced_sources_delta -= self.number_of_produced_sources
+
+    self.number_of_produced_sources = number_of_produced_sources
+    self.number_of_produced_sources_delta = produced_sources_delta
+
+    return consumed_sources_delta > 0 or produced_sources_delta > 0
+
 
 class ProcessingStatus(object):
   """The status of the overall extraction process (processing).
 
   Attributes:
     aborted (bool): True if processing was aborted.
-    error_detected (bool): True if an error was detected during processing.
     error_path_specs (list[str]): path specification strings that caused
                                   critical errors during processing.
     foreman_status (ProcessingStatus): foreman processing status.
   """
 
-  # The idle timeout in seconds.
-  _IDLE_TIMEOUT = 5 * 60
-
   def __init__(self):
     """Initializes the processing status object."""
     super(ProcessingStatus, self).__init__()
-    self._workers_last_running_time = 0
     self._workers_status = {}
 
     self.aborted = False
-    self.error_detected = False
     self.error_path_specs = []
     self.foreman_status = None
 
@@ -89,97 +178,53 @@ class ProcessingStatus(object):
   def _UpdateProcessStatus(
       self, process_status, identifier, status, pid, display_name,
       number_of_consumed_sources, number_of_produced_sources,
-      number_of_consumed_events, number_of_produced_events):
+      number_of_consumed_events, number_of_produced_events,
+      number_of_consumed_errors, number_of_produced_errors):
     """Updates a process status.
 
     Args:
       process_status (ProcessStatus): process status.
-      identifier (str): worker identifier.
-      status (str): human readable status of the worker e.g. 'Idle'.
+      identifier (str): process identifier.
+      status (str): human readable status of the process e.g. 'Idle'.
       pid (int): process identifier (PID).
       display_name (str): display name of the file entry currently being
-                          processed by the worker.
+          processed by the process.
       number_of_consumed_sources (int): total number of event sources consumed
-                                        by the worker.
+          by the process.
       number_of_produced_sources (int): total number of event sources produced
-                                        by the worker.
+          by the process.
       number_of_consumed_events (int): total number of events consumed by
-                                       the worker.
+          the process.
       number_of_produced_events (int): total number of events produced by
-                                       the worker.
+          the process.
+      number_of_consumed_errors (int): total number of errors consumed by
+          the process.
+      number_of_produced_errors (int): total number of errors produced by
+          the process.
     """
-    timestamp = 0
+    new_sources = process_status.UpdateNumberOfEventSources(
+        number_of_consumed_sources, number_of_produced_sources)
 
-    number_of_events_delta = number_of_consumed_events
-    if number_of_events_delta > 0:
-      number_of_events_delta -= process_status.number_of_consumed_events
+    new_events = process_status.UpdateNumberOfEvents(
+        number_of_consumed_events, number_of_produced_events)
 
-    process_status.number_of_consumed_events = number_of_consumed_events
-    process_status.number_of_consumed_events_delta = number_of_events_delta
-
-    number_of_sources_delta = number_of_consumed_sources
-    if number_of_sources_delta > 0:
-      number_of_sources_delta -= process_status.number_of_consumed_sources
-
-    process_status.number_of_consumed_sources = number_of_consumed_sources
-    process_status.number_of_consumed_sources_delta = number_of_sources_delta
-
-    if number_of_events_delta > 0 or number_of_sources_delta > 0:
-      timestamp = time.time()
+    new_errors = process_status.UpdateNumberOfErrors(
+        number_of_consumed_errors, number_of_produced_errors)
 
     process_status.display_name = display_name
     process_status.identifier = identifier
     process_status.pid = pid
-
-    number_of_events_delta = number_of_produced_events
-    if number_of_events_delta > 0:
-      number_of_events_delta -= process_status.number_of_produced_events
-
-    process_status.number_of_produced_events = number_of_produced_events
-    process_status.number_of_produced_events_delta = number_of_events_delta
-
-    number_of_sources_delta = number_of_produced_sources
-    if number_of_sources_delta > 0:
-      number_of_sources_delta -= process_status.number_of_produced_sources
-
-    process_status.number_of_produced_sources = number_of_produced_sources
-    process_status.number_of_produced_sources_delta = number_of_sources_delta
-
-    if ((number_of_events_delta > 0 or number_of_sources_delta > 0) and
-        not timestamp):
-      timestamp = time.time()
-
     process_status.status = status
 
-    if timestamp:
+    if new_sources or new_events or new_errors:
+      timestamp = time.time()
       process_status.last_running_time = timestamp
-      self._workers_last_running_time = timestamp
-
-  def GetNumberOfConsumedEventSources(self):
-    """Retrieves the number of consumed event sources."""
-    number_of_sources = 0
-    for worker_status in iter(self._workers_status.values()):
-      number_of_sources += worker_status.number_of_consumed_sources
-    return number_of_sources
-
-  def GetNumberOfProducedEvents(self):
-    """Retrieves the number of produced events."""
-    number_of_events = 0
-    for worker_status in iter(self._workers_status.values()):
-      number_of_events += worker_status.number_of_events
-    return number_of_events
-
-  def GetNumberOfProducedEventSources(self):
-    """Retrieves the number of consumed event sources."""
-    number_of_sources = self.foreman_status.number_of_produced_sources
-    for worker_status in iter(self._workers_status.values()):
-      number_of_sources += worker_status.number_of_produced_sources
-    return number_of_sources
 
   def UpdateForemanStatus(
       self, identifier, status, pid, display_name,
       number_of_consumed_sources, number_of_produced_sources,
-      number_of_consumed_events, number_of_produced_events):
+      number_of_consumed_events, number_of_produced_events,
+      number_of_consumed_errors, number_of_produced_errors):
     """Updates the status of the foreman.
 
     Args:
@@ -187,15 +232,19 @@ class ProcessingStatus(object):
       status (str): human readable status of the foreman e.g. 'Idle'.
       pid (int): process identifier (PID).
       display_name (str): display name of the file entry currently being
-                          processed by the foreman.
+          processed by the foreman.
       number_of_consumed_sources (int): total number of event sources consumed
-                                        by the foreman.
+          by the foreman.
       number_of_produced_sources (int): total number of event sources produced
-                                        by the foreman.
+          by the foreman.
       number_of_consumed_events (int): total number of events consumed by
-                                       the foreman.
+          the foreman.
       number_of_produced_events (int): total number of events produced by
-                                       the foreman.
+          the foreman.
+      number_of_consumed_errors (int): total number of errors consumed by
+          the foreman.
+      number_of_produced_errors (int): total number of errors produced by
+          the foreman.
     """
     if not self.foreman_status:
       self.foreman_status = ProcessStatus()
@@ -203,12 +252,14 @@ class ProcessingStatus(object):
     self._UpdateProcessStatus(
         self.foreman_status, identifier, status, pid, display_name,
         number_of_consumed_sources, number_of_produced_sources,
-        number_of_consumed_events, number_of_produced_events)
+        number_of_consumed_events, number_of_produced_events,
+        number_of_consumed_errors, number_of_produced_errors)
 
   def UpdateWorkerStatus(
       self, identifier, status, pid, display_name,
       number_of_consumed_sources, number_of_produced_sources,
-      number_of_consumed_events, number_of_produced_events):
+      number_of_consumed_events, number_of_produced_events,
+      number_of_consumed_errors, number_of_produced_errors):
     """Updates the status of a worker.
 
     Args:
@@ -216,20 +267,26 @@ class ProcessingStatus(object):
       status (str): human readable status of the worker e.g. 'Idle'.
       pid (int): process identifier (PID).
       display_name (str): display name of the file entry currently being
-                          processed by the worker.
+          processed by the worker.
       number_of_consumed_sources (int): total number of event sources consumed
-                                        by the worker.
+          by the worker.
       number_of_produced_sources (int): total number of event sources produced
-                                        by the worker.
+          by the worker.
       number_of_consumed_events (int): total number of events consumed by
-                                       the worker.
+          the worker.
       number_of_produced_events (int): total number of events produced by
-                                       the worker.
+          the worker.
+      number_of_consumed_errors (int): total number of errors consumed by
+          the worker.
+      number_of_produced_errors (int): total number of errors produced by
+          the worker.
     """
     if identifier not in self._workers_status:
       self._workers_status[identifier] = ProcessStatus()
 
+    process_status = self._workers_status[identifier]
     self._UpdateProcessStatus(
-        self._workers_status[identifier], identifier, status, pid,
-        display_name, number_of_consumed_sources, number_of_produced_sources,
-        number_of_consumed_events, number_of_produced_events)
+        process_status, identifier, status, pid, display_name,
+        number_of_consumed_sources, number_of_produced_sources,
+        number_of_consumed_events, number_of_produced_events,
+        number_of_consumed_errors, number_of_produced_errors)

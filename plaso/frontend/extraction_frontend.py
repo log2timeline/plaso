@@ -7,8 +7,8 @@ import os
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 
-from plaso import parsers   # pylint: disable=unused-import
 from plaso import hashers   # pylint: disable=unused-import
+from plaso import parsers   # pylint: disable=unused-import
 from plaso.containers import sessions
 from plaso.engine import single_process
 from plaso.engine import utils as engine_utils
@@ -30,8 +30,8 @@ class ExtractionFrontend(frontend.Frontend):
 
   _DEFAULT_PROFILING_SAMPLE_RATE = 1000
 
-  # Approximately 250 MB of queued items per worker.
-  _DEFAULT_QUEUE_SIZE = 125000
+  # Maximum number of concurrent tasks during multi processing.
+  _MAXIMUM_NUMBER_OF_TASKS = 10000
 
   def __init__(self):
     """Initializes the front-end object."""
@@ -52,9 +52,7 @@ class ExtractionFrontend(frontend.Frontend):
     self._profiling_type = u'all'
     self._use_old_preprocess = False
     self._use_zeromq = False
-    self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._resolver_context = context.Context()
-    self._single_process_mode = False
     self._show_worker_memory_information = False
     self._storage_file_path = None
     self._text_prepend = None
@@ -77,7 +75,7 @@ class ExtractionFrontend(frontend.Frontend):
 
     dirname = os.path.dirname(storage_file_path)
     if not dirname:
-      dirname = '.'
+      dirname = u'.'
 
     # TODO: add a more thorough check to see if the storage file really is
     # a plaso storage file.
@@ -85,6 +83,56 @@ class ExtractionFrontend(frontend.Frontend):
     if not os.access(dirname, os.W_OK):
       raise errors.BadConfigOption(
           u'Unable to write to storage file: {0:s}'.format(storage_file_path))
+
+  def _CreateEngine(self, single_process_mode):
+    """Creates an engine based on the front end settings.
+
+    Args:
+      single_process_mode (bool): True if the front-end should run in single
+          process mode.
+
+    Returns:
+      BaseEngine: engine.
+    """
+    if single_process_mode:
+      engine = single_process.SingleProcessEngine()
+    else:
+      engine = multi_process.MultiProcessEngine(
+          maximum_number_of_tasks=self._MAXIMUM_NUMBER_OF_TASKS,
+          use_zeromq=self._use_zeromq)
+
+    engine.SetEnableDebugOutput(self._debug_mode)
+    engine.SetEnableProfiling(
+        self._enable_profiling,
+        profiling_sample_rate=self._profiling_sample_rate,
+        profiling_type=self._profiling_type)
+
+    return engine
+
+  def _CreateSession(
+      self, command_line_arguments=None, filter_file=None,
+      parser_filter_expression=None, preferred_encoding=u'utf-8'):
+    """Creates the session start information.
+
+    Args:
+      command_line_arguments (Optional[str]): the command line arguments.
+      filter_file (Optional[str]): path to a file with find specifications.
+      parser_filter_expression (Optional[str]): parser filter expression.
+      preferred_encoding (Optional[str]): preferred encoding.
+
+    Returns:
+      Session: session attribute container.
+    """
+    session = sessions.Session()
+
+    session.command_line_arguments = command_line_arguments
+    session.filter_expression = self._filter_expression
+    session.filter_file = filter_file
+    session.debug_mode = self._debug_mode
+    session.parser_filter_expression = parser_filter_expression
+    session.preferred_encoding = preferred_encoding
+
+    return session
 
   def _GetParserFilterPreset(self, os_guess=u'', os_version=u''):
     """Determines the parser filter preset.
@@ -205,31 +253,6 @@ class ExtractionFrontend(frontend.Frontend):
   # * source settings (support more than one source)
   #   * credentials (encryption)
   #   * mount point
-
-  def _CreateSession(
-      self, command_line_arguments=None, filter_file=None,
-      parser_filter_expression=None, preferred_encoding=u'utf-8'):
-    """Creates the session start information.
-
-    Args:
-      command_line_arguments (Optional[str]): the command line arguments.
-      filter_file (Optional[str]): path to a file with find specifications.
-      parser_filter_expression (Optional[str]): parser filter expression.
-      preferred_encoding (Optional[str]): preferred encoding.
-
-    Returns:
-      Session: session attribute container.
-    """
-    session = sessions.Session()
-
-    session.command_line_arguments = command_line_arguments
-    session.filter_expression = self._filter_expression
-    session.filter_file = filter_file
-    session.debug_mode = self._debug_mode
-    session.parser_filter_expression = parser_filter_expression
-    session.preferred_encoding = preferred_encoding
-
-    return session
 
   def _PreprocessSetCollectionInformation(self, preprocess_object):
     """Sets the collection information as part of the preprocessing.
@@ -389,23 +412,11 @@ class ExtractionFrontend(frontend.Frontend):
 
     self._CheckStorageFile(self._storage_file_path)
 
-    self._single_process_mode = single_process_mode
     if source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
       # No need to multi process a single file source.
-      self._single_process_mode = True
+      single_process_mode = True
 
-    if self._single_process_mode:
-      self._engine = single_process.SingleProcessEngine()
-    else:
-      self._engine = multi_process.MultiProcessEngine(
-          maximum_number_of_queued_items=self._queue_size,
-          use_zeromq=self._use_zeromq)
-
-    self._engine.SetEnableDebugOutput(self._debug_mode)
-    self._engine.SetEnableProfiling(
-        self._enable_profiling,
-        profiling_sample_rate=self._profiling_sample_rate,
-        profiling_type=self._profiling_type)
+    self._engine = self._CreateEngine(single_process_mode)
 
     preprocess_object = self._PreprocessSources(source_path_specs, source_type)
 
@@ -456,7 +467,7 @@ class ExtractionFrontend(frontend.Frontend):
 
     processing_status = None
     try:
-      if self._single_process_mode:
+      if single_process_mode:
         logging.debug(u'Starting extraction in single process mode.')
 
         processing_status = self._engine.ProcessSources(

@@ -18,10 +18,9 @@ class ParserMediator(object):
     """Initializes a parser mediator object.
 
     Args:
-      storage_writer: a storage writer object (instance of StorageWriter).
-      knowledge_base: a knowledge base object (instance of KnowledgeBase),
-                      which contains information from the source data needed
-                      for parsing.
+      storage_writer (StorageWriter): storage writer.
+      knowledge_base (KnowledgeBase): knowledge base which contains information
+          from the source data needed for parsing.
     """
     super(ParserMediator, self).__init__()
     self._abort = False
@@ -30,7 +29,7 @@ class ParserMediator(object):
     self._filter_object = None
     self._knowledge_base = knowledge_base
     self._mount_path = None
-    # TODO: refactor status indication.
+    self._number_of_errors = 0
     self._number_of_event_sources = 0
     self._number_of_events = 0
     self._parser_chain_components = []
@@ -49,37 +48,42 @@ class ParserMediator(object):
 
   @property
   def hostname(self):
-    """The hostname."""
+    """str: hostname."""
     return self._knowledge_base.hostname
 
   @property
   def knowledge_base(self):
-    """The knowledge base."""
+    """KnowledgeBase: knowledge base."""
     return self._knowledge_base
 
   @property
+  def number_of_produced_errors(self):
+    """int: number of produced errors."""
+    return self._number_of_errors
+
+  @property
   def number_of_produced_event_sources(self):
-    """The number of produced event sources."""
+    """int: number of produced event sources."""
     return self._number_of_event_sources
 
   @property
   def number_of_produced_events(self):
-    """The number of produced events."""
+    """int: number of produced events."""
     return self._number_of_events
 
   @property
   def platform(self):
-    """The platform."""
+    """str: platform."""
     return self._knowledge_base.platform
 
   @property
   def timezone(self):
-    """The timezone object."""
+    """datetime.tzinfo: timezone."""
     return self._knowledge_base.timezone
 
   @property
   def year(self):
-    """The year."""
+    """int: year."""
     return self._knowledge_base.year
 
   def _GetEarliestYearFromFileEntry(self):
@@ -89,7 +93,7 @@ class ParserMediator(object):
     time (metadata last modification time) is used.
 
     Returns:
-      An integer containing the year of the file entry or None.
+      int: year of the file entry.
     """
     file_entry = self.GetFileEntry()
     stat_object = file_entry.GetStat()
@@ -466,7 +470,6 @@ class ParserMediator(object):
       return
 
     self._storage_writer.AddEvent(event_object)
-    # TODO: refactor status indication.
     self._number_of_events += 1
 
   def ProduceEvents(self, event_objects, query=None):
@@ -493,7 +496,6 @@ class ParserMediator(object):
       raise RuntimeError(u'Storage writer not set.')
 
     self._storage_writer.AddEventSource(event_source)
-    # TODO: refactor status indication.
     self._number_of_event_sources += 1
 
   def ProduceExtractionError(self, message):
@@ -513,6 +515,7 @@ class ParserMediator(object):
     extraction_error = errors.ExtractionError(
         message=message, parser_chain=parser_chain, path_spec=path_spec)
     self._storage_writer.AddError(extraction_error)
+    self._number_of_errors += 1
 
   def ResetFileEntry(self):
     """Resets the active file entry."""

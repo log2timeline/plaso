@@ -17,7 +17,6 @@ from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.resolver import context
 
 from plaso.containers import event_sources
-from plaso.containers import tasks
 from plaso.engine import engine
 from plaso.engine import extractors
 from plaso.engine import plaso_queue
@@ -26,6 +25,7 @@ from plaso.engine import zeromq_queue
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_processing import process_info
+from plaso.multi_processing import task_tracker
 from plaso.multi_processing import xmlrpc
 from plaso.parsers import mediator as parsers_mediator
 
@@ -59,6 +59,11 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
     # We need to share the RPC port number with the engine process.
     self.rpc_port = multiprocessing.Value(u'I', 0)
+
+  @property
+  def name(self):
+    """The process name."""
+    return self._name
 
   @abc.abstractmethod
   def _GetStatus(self):
@@ -173,11 +178,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
       if time_slept >= self._PROCESS_JOIN_TIMEOUT:
         break
 
-  @property
-  def name(self):
-    """The process name."""
-    return self._name
-
   # This method is part of the multiprocessing.Process interface hence
   # its name does not follow the style guide.
   def run(self):
@@ -248,15 +248,14 @@ class MultiProcessEngine(engine.BaseEngine):
   _WORKER_PROCESSES_MINIMUM = 2
   _WORKER_PROCESSES_MAXIMUM = 15
 
-  def __init__(self, maximum_number_of_queued_items=0, use_zeromq=False):
+  def __init__(self, maximum_number_of_tasks=0, use_zeromq=False):
     """Initialize the multi-process engine object.
 
     Args:
-      maximum_number_of_queued_items: optional integer containing the maximum
-                                      number of queued items. The default is 0,
-                                      which represents no limit.
-      use_zeromq: optional boolean to indicate whether to use ZeroMQ for
-                  queuing. If False, the multiprocessing queue will be used.
+      maximum_number_of_tasks (Optional[int]): maximum number of concurrent
+          tasks, where 0 represents no limit.
+      use_zeromq (Optional[bool]): True if ZeroMQ should be used for queuing
+          instead of Python's multiprocessing queue.
     """
     super(MultiProcessEngine, self).__init__()
     self._enable_sigsegv_handler = False
@@ -264,7 +263,7 @@ class MultiProcessEngine(engine.BaseEngine):
     self._filter_object = None
     self._hasher_names_string = None
     self._last_worker_number = 0
-    self._maximum_number_of_queued_items = maximum_number_of_queued_items
+    self._maximum_number_of_tasks = maximum_number_of_tasks
     self._mount_path = None
     self._new_event_sources = False
     self._number_of_consumed_sources = 0
@@ -286,6 +285,8 @@ class MultiProcessEngine(engine.BaseEngine):
     self._task_queue_port = None
     self._task_scheduler_active = False
     self._task_scheduler_thread = None
+    self._task_tracker = task_tracker.TaskTracker(
+        maximum_number_of_tasks=maximum_number_of_tasks)
     self._text_prepend = None
     self._use_zeromq = use_zeromq
 
@@ -376,20 +377,13 @@ class MultiProcessEngine(engine.BaseEngine):
           u'processing_status': processing_status_string,
       }
 
-    if status_indicator == definitions.PROCESSING_STATUS_ERROR:
-      path_spec = process_status.get(u'path_spec', None)
-      if path_spec:
-        self._processing_status.error_path_specs.append(path_spec)
-
     self._UpdateProcessingStatus(pid, process_status)
 
     if status_indicator in definitions.PROCESSING_ERROR_STATUS:
       logging.error(
           (u'Process {0:s} (PID: {1:d}) is not functioning correctly. '
-           u'Status code {2!s}.').format(
+           u'Status code: {2!s}.').format(
                process.name, pid, status_indicator))
-
-      self._processing_status.error_detected = True
 
       self._TerminateProcess(pid)
 
@@ -489,12 +483,7 @@ class MultiProcessEngine(engine.BaseEngine):
     """
     self._number_of_consumed_sources = 0
 
-    self._processing_status.UpdateForemanStatus(
-        u'Main', definitions.PROCESSING_STATUS_COLLECTING, self._pid, u'',
-        self._number_of_consumed_sources,
-        storage_writer.number_of_event_sources,
-        0, storage_writer.number_of_events)
-    self._UpdateStatus()
+    self._UpdateStatus(definitions.PROCESSING_STATUS_COLLECTING, storage_writer)
 
     path_spec_extractor = extractors.PathSpecExtractor(self._resolver_context)
 
@@ -509,12 +498,8 @@ class MultiProcessEngine(engine.BaseEngine):
       event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
       storage_writer.AddEventSource(event_source)
 
-      self._processing_status.UpdateForemanStatus(
-          u'Main', definitions.PROCESSING_STATUS_COLLECTING, self._pid, u'',
-          self._number_of_consumed_sources,
-          storage_writer.number_of_event_sources,
-          0, storage_writer.number_of_events)
-      self._UpdateStatus()
+      self._UpdateStatus(
+          definitions.PROCESSING_STATUS_COLLECTING, storage_writer)
 
     self._new_event_sources = True
     while self._new_event_sources:
@@ -536,13 +521,9 @@ class MultiProcessEngine(engine.BaseEngine):
 
       try:
         while self._task_scheduler_active:
-          self._processing_status.UpdateForemanStatus(
-              u'Main', definitions.PROCESSING_STATUS_RUNNING, self._pid, u'',
-              self._number_of_consumed_sources,
-              storage_writer.number_of_event_sources,
-              0, storage_writer.number_of_events)
           self._CheckStatusWorkerProcesses()
-          self._UpdateStatus()
+          self._UpdateStatus(
+              definitions.PROCESSING_STATUS_RUNNING, storage_writer)
 
           time.sleep(self._STATUS_UPDATE_INTERVAL)
 
@@ -551,25 +532,15 @@ class MultiProcessEngine(engine.BaseEngine):
 
       self._StopTaskSchedulerThread()
 
-      self._processing_status.UpdateForemanStatus(
-          u'Main', definitions.PROCESSING_STATUS_RUNNING, self._pid, u'',
-          self._number_of_consumed_sources,
-          storage_writer.number_of_event_sources,
-          0, storage_writer.number_of_events)
       self._CheckStatusWorkerProcesses()
-      self._UpdateStatus()
+      self._UpdateStatus(definitions.PROCESSING_STATUS_RUNNING, storage_writer)
 
     if self._abort:
       status = definitions.PROCESSING_STATUS_ABORTED
     else:
       status = definitions.PROCESSING_STATUS_COMPLETED
 
-    self._processing_status.UpdateForemanStatus(
-        u'Main', status, self._pid, u'',
-        self._number_of_consumed_sources,
-        storage_writer.number_of_event_sources,
-        0, storage_writer.number_of_events)
-    self._UpdateStatus()
+    self._UpdateStatus(status, storage_writer)
 
   def _RaiseIfNotMonitored(self, pid):
     """Raises if the process is not monitored by the engine.
@@ -626,55 +597,57 @@ class MultiProcessEngine(engine.BaseEngine):
     # TODO: protect task scheduler loop by catch all and
     # handle abort path.
 
-    worker_tasks = {}
-
     event_source = self._storage_writer.GetNextEventSource()
     if event_source:
       self._new_event_sources = True
 
     task = None
-    while event_source or len(worker_tasks):
+    while event_source or self._task_tracker.HasActiveTasks():
       if self._abort:
         break
 
       if event_source and not task:
-        # TODO: add support for more task types.
-        task = tasks.Task(self._session_identifier)
+        task = self._task_tracker.CreateTask(self._session_identifier)
         task.path_spec = event_source.path_spec
+        event_source = None
+
+        self._number_of_consumed_sources += 1
 
       if task:
         try:
           self._task_queue.PushItem(task, block=False)
-
-          # TODO: determine if a back off time is needed
-          # to prevent this from hot-looping.
-
-          # TODO: register task with scheduler.
-          worker_tasks[task.identifier] = task
-
-          event_source = None
+          self._task_tracker.TrackTask(task.identifier)
           task = None
-
-          self._number_of_consumed_sources += 1
 
         except Queue.Full:
           pass
 
-      # Make a copy of the keys since we are changing the dictionary
-      # inside the loop.
-      for task_identifier in list(worker_tasks.keys()):
+      # GetTrackedTaskIdentifiers makes a copy of the keys since we are
+      # changing the dictionary inside the loop.
+      task_storage_merged = False
+      for task_identifier in self._task_tracker.GetTrackedTaskIdentifiers():
         if self._abort:
           break
 
+        if self._storage_writer.CheckTaskStorageReadyForMerge(task_identifier):
+          # Make sure completed tasks are not considered idle when not
+          # yet merged.
+          self._task_tracker.UpdateTask(task_identifier)
+
+        # Merge one task-based storage file per loop to keep tasks flowing.
+        if task_storage_merged:
+          continue
+
         # TODO: look into time slicing merge.
         if self._storage_writer.MergeTaskStorage(task_identifier):
-          del worker_tasks[task_identifier]
+          self._task_tracker.UntrackTask(task_identifier)
+          task_storage_merged = True
 
-          # Merge one task-based storage file per loop to keep tasks flowing.
-          break
-
-      if not event_source:
+      if not event_source and not task:
         event_source = self._storage_writer.GetNextEventSource()
+
+    for task in self._task_tracker.GetInactiveTasks():
+      self._processing_status.error_path_specs.append(task.path_spec)
 
     self._task_scheduler_active = False
 
@@ -904,23 +877,47 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._RaiseIfNotMonitored(pid)
 
+    display_name = process_status.get(u'display_name', u'')
+    number_of_consumed_errors = process_status.get(
+        u'number_of_consumed_errors', 0)
+    number_of_produced_errors = process_status.get(
+        u'number_of_produced_errors', 0)
     number_of_consumed_events = process_status.get(
         u'number_of_consumed_events', 0)
-    number_of_consumed_sources = process_status.get(
-        u'number_of_consumed_sources', 0)
-    display_name = process_status.get(u'display_name', u'')
     number_of_produced_events = process_status.get(
         u'number_of_produced_events', 0)
+    number_of_consumed_sources = process_status.get(
+        u'number_of_consumed_sources', 0)
     number_of_produced_sources = process_status.get(
         u'number_of_produced_sources', 0)
 
     self._processing_status.UpdateWorkerStatus(
         process.name, processing_status, pid, display_name,
         number_of_consumed_sources, number_of_produced_sources,
-        number_of_consumed_events, number_of_produced_events)
+        number_of_consumed_events, number_of_produced_events,
+        number_of_consumed_errors, number_of_produced_errors)
 
-  def _UpdateStatus(self):
-    """Updates the processing status."""
+    task_identifier = process_status.get(u'task_identifier', u'')
+    if task_identifier:
+      try:
+        self._task_tracker.UpdateTask(task_identifier)
+      except KeyError:
+        logging.error(u'Worker processing untracked task.')
+
+  def _UpdateStatus(self, status, storage_writer):
+    """Updates the processing status.
+
+    Args:
+      status (str): human readable status of the foreman e.g. 'Idle'.
+      storage_writer (StorageWriter): storage writer for a session storage.
+    """
+    self._processing_status.UpdateForemanStatus(
+        u'Main', status, self._pid, u'',
+        self._number_of_consumed_sources,
+        storage_writer.number_of_event_sources,
+        0, storage_writer.number_of_events,
+        0, storage_writer.number_of_errors)
+
     if self._status_update_callback:
       self._status_update_callback(self._processing_status)
 
@@ -1001,7 +998,7 @@ class MultiProcessEngine(engine.BaseEngine):
     # Set up the task queue.
     if not self._use_zeromq:
       self._task_queue = MultiProcessingQueue(
-          maximum_number_of_queued_items=self._maximum_number_of_queued_items)
+          maximum_number_of_queued_items=self._maximum_number_of_tasks)
 
     else:
       task_outbound_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
@@ -1053,7 +1050,12 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._task_queue.Close(abort=self._abort)
 
-    self._storage_writer.StopTaskStorage(abort=self._abort)
+    if self._processing_status.error_path_specs:
+      task_storage_abort = True
+    else:
+      task_storage_abort = self._abort
+
+    self._storage_writer.StopTaskStorage(abort=task_storage_abort)
 
     if self._abort:
       logging.debug(u'Processing aborted.')
@@ -1125,15 +1127,16 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
     super(MultiProcessWorkerProcess, self).__init__(**kwargs)
     self._abort = False
     self._buffer_size = 0
-    self._critical_error = False
     self._enable_debug_output = enable_debug_output
     self._extraction_worker = None
     self._knowledge_base = knowledge_base
+    self._number_of_consumed_events = 0
     self._number_of_consumed_sources = 0
     self._parser_mediator = None
     self._session_identifier = session_identifier
     self._status = definitions.PROCESSING_STATUS_INITIALIZED
     self._storage_writer = storage_writer
+    self._task_identifier = u''
     self._task_queue = task_queue
     self._worker_number = worker_number
 
@@ -1154,11 +1157,14 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
   def _GetStatus(self):
     """Returns a status dictionary."""
     if self._parser_mediator:
+      number_of_produced_errors = (
+          self._parser_mediator.number_of_produced_errors)
       number_of_produced_events = (
           self._parser_mediator.number_of_produced_events)
       number_of_produced_sources = (
           self._parser_mediator.number_of_produced_event_sources)
     else:
+      number_of_produced_errors = 0
       number_of_produced_events = 0
       number_of_produced_sources = 0
 
@@ -1168,21 +1174,17 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
         definitions.PROCESSING_STATUS_COMPLETED):
       processing_status = self._status
 
-    # TODO: add number of consumed events.
     status = {
-        u'number_of_consumed_events': 0,
-        u'number_of_consumed_sources': self._number_of_consumed_sources,
         u'display_name': self._extraction_worker.current_display_name,
         u'identifier': self._name,
-        u'processing_status': processing_status,
+        u'number_of_consumed_errors': 0,
+        u'number_of_consumed_events': self._number_of_consumed_events,
+        u'number_of_consumed_sources': self._number_of_consumed_sources,
+        u'number_of_produced_errors': number_of_produced_errors,
         u'number_of_produced_events': number_of_produced_events,
-        u'number_of_produced_sources': number_of_produced_sources}
-
-    if self._critical_error:
-      # Note seem unable to pass objects here.
-      current_path_spec = self._extraction_worker.current_path_spec
-      status[u'path_spec'] = current_path_spec.comparable
-      status[u'processing_status'] = definitions.PROCESSING_STATUS_ERROR
+        u'number_of_produced_sources': number_of_produced_sources,
+        u'processing_status': processing_status,
+        u'task_identifier': self._task_identifier}
 
     self._status_is_running = status.get(u'is_running', False)
     return status
@@ -1193,6 +1195,8 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
     Args:
       task (Task): task.
     """
+    self._task_identifier = task.identifier
+
     storage_writer = self._storage_writer.CreateTaskStorage(task)
 
     if self._enable_profiling:
@@ -1243,6 +1247,8 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
         storage_writer.DisableProfiling()
 
     self._storage_writer.PrepareMergeTaskStorage(task.identifier)
+
+    self._task_identifier = u''
 
   def _Main(self):
     """The main loop."""
@@ -1347,12 +1353,10 @@ class MultiProcessingQueue(plaso_queue.Queue):
     """Initializes the multi-processing queue object.
 
     Args:
-      maximum_number_of_queued_items: The maximum number of queued items.
-                                      The default is 0, which represents
-                                      no limit.
-      timeout: Optional floating point number of seconds for the get to
-               time out. The default is None, which means the get will
-               block until a new item is put onto the queue.
+      maximum_number_of_queued_items (Optional[int]): maximum number of queued
+          items, where 0 represents no limit.
+      timeout (Optional[float]): number of seconds for the get to time out,
+          where None will block until a new item is put onto the queue.
     """
     super(MultiProcessingQueue, self).__init__()
     self._timeout = timeout
