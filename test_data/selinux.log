@@ -8,3 +8,5 @@ msg=audit(1337845201.174:94984): missing type param, should be skipped by parser
 type=NOMSG msg=audit(1337845222.174:94984):
 type=UNDER_SCORE msg=audit(1337845666.174:94984): pid=25444 uid=0 old auid=4294967295 new auid=54321 old ses=4294967295 new ses=1166
 type=UNKNOWN[1323] msg=audit(1389164020.991:2159): fd=6 flags=0x802
+type=AVC msg=audit(1243332701.744:101): avc: denied { getattr } for pid=2714 comm="ls" path="/usr/lib/locale/locale-archive" dev=dm-0 ino=353593 scontext=system_u:object_r:unlabeled_t:s0 tcontext=system_u:object_r:locale_t:s0 tclass=file
+type=SYSCALL msg=audit(1243332701.744:101): arch=40000003 syscall=197 success=yes exit=0 a0=3 a1=553ac0 a2=552ff4 a3=bfc5eab0 items=0 ppid=2671 pid=2714 auid=0 uid=0 gid=0 euid=0 suid=0 fsuid=0 egid=0 sgid=0 fsgid=0 tty=pts1 ses=1 comm="ls" exe="/bin/ls" subj=system_u:object_r:unlabeled_t:s0 key=(null)
