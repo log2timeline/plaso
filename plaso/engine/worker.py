@@ -121,7 +121,7 @@ class EventExtractionWorker(object):
                   dfvfs.FileEntry)
 
     Returns:
-      bool: True if the content extraction can be skipped.
+      bool: True if content extraction can be skipped.
     """
     # TODO: make this filtering solution more generic. Also see:
     # https://github.com/log2timeline/plaso/issues/467
@@ -261,7 +261,7 @@ class EventExtractionWorker(object):
       path_spec (dfvfs.PathSpec): path specification.
 
     Returns:
-      bool: True if an archive file.
+      bool: True if the path specification refers to an archive file.
     """
     try:
       type_indicators = analyzer.Analyzer.GetArchiveTypeIndicators(
@@ -334,7 +334,7 @@ class EventExtractionWorker(object):
       path_spec (dfvfs.PathSpec): path specification.
 
     Returns:
-      bool: True if a compressed stream file.
+      bool: True if the path specification refers to a compressed stream file.
     """
     try:
       type_indicators = analyzer.Analyzer.GetCompressedStreamTypeIndicators(
