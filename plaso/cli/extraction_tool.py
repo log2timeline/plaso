@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The extraction CLI tool."""
 
-import os
-
 from plaso.cli import storage_media_tool
 from plaso.engine import engine
 from plaso.lib import definitions

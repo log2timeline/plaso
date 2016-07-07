@@ -360,7 +360,7 @@ class ExtractionFrontend(frontend.Frontend):
       number_of_extraction_workers=0, parser_filter_expression=None,
       preferred_encoding=u'utf-8', process_archive_files=False,
       single_process_mode=False, status_update_callback=None,
-      temp_directory=None, timezone=pytz.UTC):
+      timezone=pytz.UTC):
     """Processes the sources.
 
     Args:
@@ -384,8 +384,6 @@ class ExtractionFrontend(frontend.Frontend):
           run in single process mode.
       status_update_callback (Optional[function]): callback function for status
           updates.
-      temp_directory (Optional[str]): path of the directory for temporary
-          files.
       timezone (Optional[datetime.tzinfo]): timezone.
 
     Returns:
