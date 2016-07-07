@@ -205,7 +205,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
         u'--process_archives', u'--process-archives', dest=u'process_archives',
         action=u'store_true', default=False, help=(
             u'Process file entries embedded within archive files. This can '
-            u'make processing significant slower.'))
+            u'make processing significantly slower.'))
 
     argument_group.add_argument(
         '--use_old_preprocess', '--use-old-preprocess', dest='old_preprocess',
