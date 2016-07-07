@@ -4,15 +4,12 @@ import logging
 
 from dfvfs.resolver import context
 
-from plaso.containers import tasks
 from plaso.engine import worker, plaso_queue
 from plaso.lib import definitions, errors
-from plaso.multi_processing.multi_process import MultiProcessBaseProcess, \
-  MultiProcessingQueue
+from plaso.multi_processing import multi_process
 from plaso.parsers import mediator as parsers_mediator
 
-
-class MultiProcessWorkerProcess(MultiProcessBaseProcess):
+class WorkerProcess(multi_process.MultiProcessBaseProcess):
   """Class that defines a multi-processing worker process."""
 
   def __init__(
@@ -54,7 +51,7 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
                     event object.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
-    super(MultiProcessWorkerProcess, self).__init__(**kwargs)
+    super(WorkerProcess, self).__init__(**kwargs)
     self._abort = False
     self._buffer_size = 0
     self._critical_error = False
@@ -121,9 +118,9 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
     """Processes a task.
 
     Args:
-      task (MultiProcessTask): task.
+      task (Task): task.
     """
-    storage_writer = self._storage_writer.CreateTaskStorage(task.identifier)
+    storage_writer = self._storage_writer.CreateTaskStorage(task)
 
     if self._enable_profiling:
       storage_writer.EnableProfiling(profiling_type=self._profiling_type)
@@ -133,9 +130,7 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
     try:
       self._parser_mediator.SetStorageWriter(storage_writer)
 
-      task_start = tasks.TaskStart(session_identifier=self._session_identifier)
-      task_start.identifier = task.identifier
-      storage_writer.WriteTaskStart(task_start)
+      storage_writer.WriteTaskStart()
 
       # TODO: add support for more task types.
       self._extraction_worker.ProcessPathSpec(
@@ -242,7 +237,7 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
     logging.debug(u'Extraction worker: {0!s} (PID: {1:d}) stopped'.format(
         self._name, self._pid))
 
-    if isinstance(self._task_queue, MultiProcessingQueue):
+    if isinstance(self._task_queue, multi_process.MultiProcessingQueue):
       self._task_queue.Close(abort=True)
     else:
       self._task_queue.Close()
