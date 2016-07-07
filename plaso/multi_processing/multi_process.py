@@ -787,7 +787,7 @@ class MultiProcessEngine(engine.BaseEngine):
     """Stops the extraction processes.
 
     Args:
-      abort (bool): True to indicated the stop is issued on abort.
+      abort (bool): True when the stop is issued on abort.
     """
     logging.debug(u'Stopping extraction processes.')
     self._StopProcessMonitoring()

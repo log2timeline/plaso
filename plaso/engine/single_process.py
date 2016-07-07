@@ -48,6 +48,8 @@ class SingleProcessEngine(engine.BaseEngine):
           u'Unable to process path spec: {0:s} with error: {1:s}'.format(
               extraction_worker.current_display_name, exception))
 
+    # We cannot recover from a CacheFullError and abort processing when
+    # it is raised.
     except dfvfs_errors.CacheFullError:
       # TODO: signal engine of failure.
       self._abort = True
