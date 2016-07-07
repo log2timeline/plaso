@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+"""The multi-process worker process."""
 import logging
 
 from dfvfs.resolver import context

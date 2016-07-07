@@ -2,6 +2,7 @@
 """The multi-process processing engine."""
 import ctypes
 import logging
+import os
 import multiprocessing
 import signal
 import sys
@@ -10,7 +11,6 @@ import time
 
 from dfvfs.resolver import context
 
-import os
 from plaso.containers import event_sources
 from plaso.engine import engine, extractors, zeromq_queue, plaso_queue
 from plaso.lib import definitions
