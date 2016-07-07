@@ -30,9 +30,6 @@ class ExtractionFrontend(frontend.Frontend):
 
   _DEFAULT_PROFILING_SAMPLE_RATE = 1000
 
-  # Maximum number of concurrent tasks during multi processing.
-  _MAXIMUM_NUMBER_OF_TASKS = 10000
-
   def __init__(self):
     """Initializes the front-end object."""
     super(ExtractionFrontend, self).__init__()
@@ -97,9 +94,7 @@ class ExtractionFrontend(frontend.Frontend):
     if single_process_mode:
       engine = single_process.SingleProcessEngine()
     else:
-      engine = multi_process.MultiProcessEngine(
-          maximum_number_of_tasks=self._MAXIMUM_NUMBER_OF_TASKS,
-          use_zeromq=self._use_zeromq)
+      engine = multi_process.MultiProcessEngine(use_zeromq=self._use_zeromq)
 
     engine.SetEnableDebugOutput(self._debug_mode)
     engine.SetEnableProfiling(

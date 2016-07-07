@@ -155,7 +155,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
     Args:
       status (str): human readable status of the processing e.g. 'Idle'.
-      display_name (str): display name of the file entry currently being
+      display_name (str): human readable of the file entry currently being
           processed.
       number_of_consumed_sources (int): number of consumed sources.
       storage_writer (StorageWriter): storage writer for a session storage.

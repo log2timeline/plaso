@@ -8,7 +8,7 @@ class ProcessStatus(object):
   """The status of an individual process.
 
   Attributes:
-    display_name (str): display name of the file entry currently being
+    display_name (str): human readable of the file entry currently being
         processed by the process.
     identifier (str): process identifier.
     last_running_time (int): timestamp of the last update when the process had
@@ -73,18 +73,28 @@ class ProcessStatus(object):
           the process.
 
     Returns:
-      bool: True if number of errors has increased.
+      bool: True if either number of errors has increased.
+
+    Raises:
+      ValueError: if the consumer or produced number of errors is smaller
+          than the value of the previous update.
     """
-    consumed_errors_delta = number_of_consumed_errors
-    if consumed_errors_delta > 0:
-      consumed_errors_delta -= self.number_of_consumed_errors
+    if number_of_consumed_errors < self.number_of_consumed_errors:
+      raise ValueError(
+          u'Number of consumed errors smaller than previous update.')
+
+    if number_of_produced_errors < self.number_of_produced_errors:
+      raise ValueError(
+          u'Number of produced errors smaller than previous update.')
+
+    consumed_errors_delta = (
+        number_of_consumed_errors - self.number_of_consumed_errors)
 
     self.number_of_consumed_errors = number_of_consumed_errors
     self.number_of_consumed_errors_delta = consumed_errors_delta
 
-    produced_errors_delta = number_of_produced_errors
-    if produced_errors_delta > 0:
-      produced_errors_delta -= self.number_of_produced_errors
+    produced_errors_delta = (
+        number_of_produced_errors - self.number_of_produced_errors)
 
     self.number_of_produced_errors = number_of_produced_errors
     self.number_of_produced_errors_delta = produced_errors_delta
@@ -102,18 +112,28 @@ class ProcessStatus(object):
           the process.
 
     Returns:
-      bool: True if number of events has increased.
+      bool: True if either number of events has increased.
+
+    Raises:
+      ValueError: if the consumer or produced number of events is smaller
+          than the value of the previous update.
     """
-    consumed_events_delta = number_of_consumed_events
-    if consumed_events_delta > 0:
-      consumed_events_delta -= self.number_of_consumed_events
+    if number_of_consumed_events < self.number_of_consumed_events:
+      raise ValueError(
+          u'Number of consumed events smaller than previous update.')
+
+    if number_of_produced_events < self.number_of_produced_events:
+      raise ValueError(
+          u'Number of produced events smaller than previous update.')
+
+    consumed_events_delta = (
+        number_of_consumed_events - self.number_of_consumed_events)
 
     self.number_of_consumed_events = number_of_consumed_events
     self.number_of_consumed_events_delta = consumed_events_delta
 
-    produced_events_delta = number_of_produced_events
-    if produced_events_delta > 0:
-      produced_events_delta -= self.number_of_produced_events
+    produced_events_delta = (
+        number_of_produced_events - self.number_of_produced_events)
 
     self.number_of_produced_events = number_of_produced_events
     self.number_of_produced_events_delta = produced_events_delta
@@ -131,18 +151,28 @@ class ProcessStatus(object):
           by the process.
 
     Returns:
-      bool: True if number of event sources has increased.
+      bool: True if either number of event sources has increased.
+
+    Raises:
+      ValueError: if the consumer or produced number of event sources is
+          smaller than the value of the previous update.
     """
-    consumed_sources_delta = number_of_consumed_sources
-    if consumed_sources_delta > 0:
-      consumed_sources_delta -= self.number_of_consumed_sources
+    if number_of_consumed_sources < self.number_of_consumed_sources:
+      raise ValueError(
+          u'Number of consumed sources smaller than previous update.')
+
+    if number_of_produced_sources < self.number_of_produced_sources:
+      raise ValueError(
+          u'Number of produced sources smaller than previous update.')
+
+    consumed_sources_delta = (
+        number_of_consumed_sources - self.number_of_consumed_sources)
 
     self.number_of_consumed_sources = number_of_consumed_sources
     self.number_of_consumed_sources_delta = consumed_sources_delta
 
-    produced_sources_delta = number_of_produced_sources
-    if produced_sources_delta > 0:
-      produced_sources_delta -= self.number_of_produced_sources
+    produced_sources_delta = (
+        number_of_produced_sources - self.number_of_produced_sources)
 
     self.number_of_produced_sources = number_of_produced_sources
     self.number_of_produced_sources_delta = produced_sources_delta
@@ -156,7 +186,7 @@ class ProcessingStatus(object):
   Attributes:
     aborted (bool): True if processing was aborted.
     error_path_specs (list[str]): path specification strings that caused
-                                  critical errors during processing.
+        critical errors during processing.
     foreman_status (ProcessingStatus): foreman processing status.
   """
 
@@ -187,7 +217,7 @@ class ProcessingStatus(object):
       identifier (str): process identifier.
       status (str): human readable status of the process e.g. 'Idle'.
       pid (int): process identifier (PID).
-      display_name (str): display name of the file entry currently being
+      display_name (str): human readable of the file entry currently being
           processed by the process.
       number_of_consumed_sources (int): total number of event sources consumed
           by the process.
@@ -217,8 +247,7 @@ class ProcessingStatus(object):
     process_status.status = status
 
     if new_sources or new_events or new_errors:
-      timestamp = time.time()
-      process_status.last_running_time = timestamp
+      process_status.last_running_time = time.time()
 
   def UpdateForemanStatus(
       self, identifier, status, pid, display_name,
@@ -231,7 +260,7 @@ class ProcessingStatus(object):
       identifier (str): foreman identifier.
       status (str): human readable status of the foreman e.g. 'Idle'.
       pid (int): process identifier (PID).
-      display_name (str): display name of the file entry currently being
+      display_name (str): human readable of the file entry currently being
           processed by the foreman.
       number_of_consumed_sources (int): total number of event sources consumed
           by the foreman.
@@ -266,7 +295,7 @@ class ProcessingStatus(object):
       identifier (str): worker identifier.
       status (str): human readable status of the worker e.g. 'Idle'.
       pid (int): process identifier (PID).
-      display_name (str): display name of the file entry currently being
+      display_name (str): human readable of the file entry currently being
           processed by the worker.
       number_of_consumed_sources (int): total number of event sources consumed
           by the worker.

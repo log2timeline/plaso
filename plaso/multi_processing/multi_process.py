@@ -25,7 +25,7 @@ from plaso.engine import zeromq_queue
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_processing import process_info
-from plaso.multi_processing import task_tracker
+from plaso.multi_processing import task_manager
 from plaso.multi_processing import xmlrpc
 from plaso.parsers import mediator as parsers_mediator
 
@@ -233,6 +233,9 @@ class MultiProcessEngine(engine.BaseEngine):
   * the memory consumption of the processes.
   """
 
+  # Maximum number of concurrent tasks.
+  _MAXIMUM_NUMBER_OF_TASKS = 10000
+
   _PROCESS_ABORT_TIMEOUT = 2.0
   _PROCESS_JOIN_TIMEOUT = 5.0
   _PROCESS_TERMINATION_SLEEP = 0.5
@@ -248,7 +251,9 @@ class MultiProcessEngine(engine.BaseEngine):
   _WORKER_PROCESSES_MINIMUM = 2
   _WORKER_PROCESSES_MAXIMUM = 15
 
-  def __init__(self, maximum_number_of_tasks=0, use_zeromq=False):
+  def __init__(
+      self, maximum_number_of_tasks=_MAXIMUM_NUMBER_OF_TASKS,
+      use_zeromq=False):
     """Initialize the multi-process engine object.
 
     Args:
@@ -285,7 +290,7 @@ class MultiProcessEngine(engine.BaseEngine):
     self._task_queue_port = None
     self._task_scheduler_active = False
     self._task_scheduler_thread = None
-    self._task_tracker = task_tracker.TaskTracker(
+    self._task_manager = task_manager.TaskManager(
         maximum_number_of_tasks=maximum_number_of_tasks)
     self._text_prepend = None
     self._use_zeromq = use_zeromq
@@ -602,12 +607,12 @@ class MultiProcessEngine(engine.BaseEngine):
       self._new_event_sources = True
 
     task = None
-    while event_source or self._task_tracker.HasActiveTasks():
+    while event_source or self._task_manager.HasScheduledTasks():
       if self._abort:
         break
 
       if event_source and not task:
-        task = self._task_tracker.CreateTask(self._session_identifier)
+        task = self._task_manager.CreateTask(self._session_identifier)
         task.path_spec = event_source.path_spec
         event_source = None
 
@@ -616,23 +621,23 @@ class MultiProcessEngine(engine.BaseEngine):
       if task:
         try:
           self._task_queue.PushItem(task, block=False)
-          self._task_tracker.TrackTask(task.identifier)
+          self._task_manager.ScheduleTask(task.identifier)
           task = None
 
         except Queue.Full:
           pass
 
-      # GetTrackedTaskIdentifiers makes a copy of the keys since we are
+      # GetScheduledTaskIdentifiers makes a copy of the keys since we are
       # changing the dictionary inside the loop.
       task_storage_merged = False
-      for task_identifier in self._task_tracker.GetTrackedTaskIdentifiers():
+      for task_identifier in self._task_manager.GetScheduledTaskIdentifiers():
         if self._abort:
           break
 
         if self._storage_writer.CheckTaskStorageReadyForMerge(task_identifier):
           # Make sure completed tasks are not considered idle when not
           # yet merged.
-          self._task_tracker.UpdateTask(task_identifier)
+          self._task_manager.UpdateTask(task_identifier)
 
         # Merge one task-based storage file per loop to keep tasks flowing.
         if task_storage_merged:
@@ -640,13 +645,13 @@ class MultiProcessEngine(engine.BaseEngine):
 
         # TODO: look into time slicing merge.
         if self._storage_writer.MergeTaskStorage(task_identifier):
-          self._task_tracker.UntrackTask(task_identifier)
+          self._task_manager.CompleteTask(task_identifier)
           task_storage_merged = True
 
       if not event_source and not task:
         event_source = self._storage_writer.GetNextEventSource()
 
-    for task in self._task_tracker.GetInactiveTasks():
+    for task in self._task_manager.GetCancelledTasks():
       self._processing_status.error_path_specs.append(task.path_spec)
 
     self._task_scheduler_active = False
@@ -900,7 +905,7 @@ class MultiProcessEngine(engine.BaseEngine):
     task_identifier = process_status.get(u'task_identifier', u'')
     if task_identifier:
       try:
-        self._task_tracker.UpdateTask(task_identifier)
+        self._task_manager.UpdateTask(task_identifier)
       except KeyError:
         logging.error(u'Worker processing untracked task.')
 

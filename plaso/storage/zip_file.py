@@ -3222,7 +3222,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       task_name (str): unique name of the task.
 
     Returns:
-      bool: True if the task storage is ready for merge.
+      bool: True if the storage for the task is ready for merge.
 
     Raises:
       IOError: if the storage type is not supported or

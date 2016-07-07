@@ -19,8 +19,8 @@ class ParserMediator(object):
 
     Args:
       storage_writer (StorageWriter): storage writer.
-      knowledge_base (KnowledgeBase): knowledge base which contains information
-          from the source data needed for parsing.
+      knowledge_base (KnowledgeBase): knowledge base which contains
+          information from the source data needed for parsing.
     """
     super(ParserMediator, self).__init__()
     self._abort = False
