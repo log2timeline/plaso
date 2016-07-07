@@ -28,7 +28,6 @@ import logging
 import pyparsing
 
 from plaso.containers import text_events
-from plaso.lib import errors
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
