@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The multi-process processing engine."""
+"""Utility classes for multi processing."""
 
 import abc
 import logging
@@ -9,6 +9,7 @@ import Queue
 import random
 import signal
 import time
+import uuid
 
 from plaso.engine import plaso_queue
 from plaso.lib import errors

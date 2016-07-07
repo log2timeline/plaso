@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+"""The multi-process processing engine."""
 import ctypes
 import logging
 import multiprocessing
@@ -13,8 +15,7 @@ from plaso.containers import event_sources
 from plaso.engine import engine, extractors, zeromq_queue, plaso_queue
 from plaso.lib import definitions
 from plaso.multi_processing import xmlrpc, process_info
-from plaso.multi_processing.multi_process import MultiProcessTask, \
-  MultiProcessingQueue
+from plaso.multi_processing import multi_process
 from plaso.multi_processing.worker_process import MultiProcessWorkerProcess
 
 
@@ -224,7 +225,7 @@ class MultiProcessEngine(engine.BaseEngine):
         break
 
       # TODO: add support for more task types.
-      task = MultiProcessTask(self._session_identifier)
+      task = multi_process.MultiProcessTask(self._session_identifier)
       task.path_spec = event_source.path_spec
 
       # TODO: register task with scheduler.
@@ -586,7 +587,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     # For Multiprocessing queues, set abort to True to stop queue.join_thread()
     # from blocking.
-    if isinstance(self._task_queue, MultiProcessingQueue):
+    if isinstance(self._task_queue, multi_process.MultiProcessingQueue):
       self._task_queue.Close(abort=True)
 
     if abort:
@@ -773,7 +774,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     # Set up the task queue.
     if not self._use_zeromq:
-      self._task_queue = MultiProcessingQueue(
+      self._task_queue = multi_process.MultiProcessingQueue(
           maximum_number_of_queued_items=self._maximum_number_of_queued_items)
 
     else:
