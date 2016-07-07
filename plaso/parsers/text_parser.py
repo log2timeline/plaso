@@ -9,20 +9,15 @@ parser.
 import abc
 import csv
 import logging
-import os
 
 from dfvfs.helpers import text_file
 import pyparsing
 
 from plaso.containers import events
-from plaso.containers import text_events
 from plaso.lib import errors
-from plaso.lib import lexer
-from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.parsers import interface
 
-import pytz  # pylint: disable=wrong-import-order
 
 # Pylint complains about some functions not being implemented that shouldn't
 # be since they need to be implemented by children.

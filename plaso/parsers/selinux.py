@@ -24,14 +24,11 @@ taste_of_training/Summit_2010_SELinux.pdf
 """
 
 import logging
-import re
 
 import pyparsing
 
 from plaso.containers import text_events
 from plaso.lib import errors
-from plaso.lib import lexer
-from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -130,7 +127,7 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
 
     try:
       key_value_dict = self._SELINUX_KEY_VALUE_DICT.parseString(body_text)
-    except pyparsing.ParseException as exception:
+    except pyparsing.ParseException:
       key_value_dict = {}
 
     attributes = {
@@ -138,12 +135,12 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
         u'body': body_text,
         u'pid': key_value_dict.get(u'pid')
     }
-      
+
     event_object = SELinuxLineEvent(timestamp, 0, attributes)
     parser_mediator.ProduceEvent(event_object)
 
   def VerifyStructure(self, parser_mediator, line):
-    """Verifies if a line from a text file is in the expected format. 
+    """Verifies if a line from a text file is in the expected format.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
