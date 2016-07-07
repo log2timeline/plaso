@@ -8,7 +8,7 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
-import plaso.multi_processing.engine
+from plaso.multi_processing import engine
 from plaso.containers import sessions
 from plaso.lib import event
 from plaso.multi_processing import multi_process
@@ -23,7 +23,7 @@ class MultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
   def testProcessSources(self):
     """Tests the PreprocessSources and ProcessSources function."""
-    test_engine = plaso.multi_processing.engine.MultiProcessEngine(
+    test_engine = engine.MultiProcessEngine(
         maximum_number_of_queued_items=100)
 
     source_path = os.path.join(self._TEST_DATA_PATH, u'ímynd.dd')

@@ -15,6 +15,32 @@ from plaso.lib import errors
 from plaso.multi_processing import xmlrpc
 
 
+class MultiProcessTask(object):
+  """Class that defines the multi-processing task.
+
+  Attributes:
+    identifier (str): identifier of the task. The identifier is formatted as
+        a hexadecimal string of a random (version 4) UUID.
+    session_identifier (str): identifier of the session the task is part of.
+        The identifier is formatted as a hexadecimal string of a random
+        (version 4) UUID.
+    path_spec (dfvfs.PathSpec): path specification.
+  """
+
+  def __init__(self, session_identifier):
+    """Initializes the task.
+
+    Args:
+      session_identifier (str): identifier of the session the task is part of.
+          The identifier is formatted as a hexadecimal string of a random
+          (version 4) UUID.
+    """
+    super(MultiProcessTask, self).__init__()
+    self.identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
+    self.path_spec = None
+    self.session_identifier = session_identifier
+
+
 class MultiProcessBaseProcess(multiprocessing.Process):
   """Class that defines the multi-processing process interface.
 
