@@ -44,7 +44,6 @@ class ExtractionFrontend(frontend.Frontend):
     self._mount_path = None
     self._operating_system = None
     self._parser_names = None
-    self._process_archive_files = False
     self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
     self._profiling_type = u'all'
     self._use_old_preprocess = False
@@ -358,34 +357,36 @@ class ExtractionFrontend(frontend.Frontend):
   def ProcessSources(
       self, source_path_specs, source_type, command_line_arguments=None,
       enable_sigsegv_handler=False, filter_file=None, hasher_names_string=None,
-      number_of_extraction_workers=0, preferred_encoding=u'utf-8',
-      parser_filter_expression=None, single_process_mode=False,
-      status_update_callback=None,
-      timezone=pytz.UTC):
+      number_of_extraction_workers=0, parser_filter_expression=None,
+      preferred_encoding=u'utf-8', process_archive_files=False,
+      single_process_mode=False, status_update_callback=None,
+      temp_directory=None, timezone=pytz.UTC):
     """Processes the sources.
 
     Args:
-      source_path_specs: list of path specifications (instances of
-                         dfvfs.PathSpec) to process.
-      source_type: the dfVFS source type definition.
-      command_line_arguments: optional string of the command line arguments or
-                              None if not set.
-      enable_sigsegv_handler: optional boolean value to indicate the SIGSEGV
-                              handler should be enabled.
-      filter_file: optional path to a file that contains find specifications.
-      hasher_names_string: optional comma separated string of names of
-                           hashers to enable.
-      number_of_extraction_workers: the number of extraction workers to run. If
-                                    0, the number will be selected
-                                    automatically.
-      preferred_encoding: optional preferred encoding.
-      parser_filter_expression: optional string containing the parser filter
-                                expression, where None represents all parsers
-                                and plugins.
-      single_process_mode: optional boolean value to indicate if the front-end
-                           should run in single process mode.
-      status_update_callback: optional callback function for status updates.
-      timezone: optional preferred timezone.
+      source_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the sources to process.
+      source_type (str): the dfVFS source type definition.
+      command_line_arguments (Optional[str]): the command line arguments.
+      enable_sigsegv_handler (Optional[bool]): True if the SIGSEGV handler
+          should be enabled.
+      filter_file (Optional[str]): path to a file that contains find
+          specifications.
+      hasher_names_string (Optional[str]): comma separated string of names
+          of hashers to use during processing.
+      number_of_extraction_workers (Optional[int]): number of extraction
+          workers to run. If 0, the number will be selected automatically.
+      parser_filter_expression (Optional[str]): parser filter expression.
+      preferred_encoding (Optional[str]): preferred encoding.
+      process_archive_files (Optional[bool]): True if archive files should be
+          scanned for file entries.
+      single_process_mode (Optional[bool]): True if the front-end should
+          run in single process mode.
+      status_update_callback (Optional[function]): callback function for status
+          updates.
+      temp_directory (Optional[str]): path of the directory for temporary
+          files.
+      timezone (Optional[datetime.tzinfo]): timezone.
 
     Returns:
       The processing status (instance of ProcessingStatus) or None.
@@ -472,7 +473,7 @@ class ExtractionFrontend(frontend.Frontend):
             hasher_names_string=hasher_names_string,
             mount_path=self._mount_path,
             parser_filter_expression=parser_filter_expression,
-            process_archive_files=self._process_archive_files,
+            process_archive_files=process_archive_files,
             status_update_callback=status_update_callback,
             text_prepend=self._text_prepend)
 
@@ -488,7 +489,7 @@ class ExtractionFrontend(frontend.Frontend):
             mount_path=self._mount_path,
             number_of_worker_processes=number_of_extraction_workers,
             parser_filter_expression=parser_filter_expression,
-            process_archive_files=self._process_archive_files,
+            process_archive_files=process_archive_files,
             status_update_callback=status_update_callback,
             show_memory_usage=self._show_worker_memory_information,
             text_prepend=self._text_prepend)

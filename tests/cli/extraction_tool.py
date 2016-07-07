@@ -17,7 +17,8 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
   _EXPECTED_OUTPUT_EXTRACTION_OPTIONS = u'\n'.join([
       (u'usage: extraction_tool_test.py [--hashers HASHER_LIST] '
        u'[--parsers PARSER_LIST]'),
-      u'                               [-p] [--use_old_preprocess]',
+      u'                               [-p] [--process_archives]',
+      u'                               [--use_old_preprocess]',
       u'',
       u'Test argument parser.',
       u'',
@@ -66,6 +67,12 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       (u'                        point is being parsed then this parameter '
        u'needs to be'),
       u'                        set manually.',
+      u'  --process_archives, --process-archives',
+      (u'                        Process file entries embedded within archive '
+       u'files. Be'),
+      (u'                        aware that this can make processing '
+       u'significant'),
+      u'                        slower.',
       u'  --use_old_preprocess, --use-old-preprocess',
       (u'                        Only used in conjunction when appending to a '
        u'previous'),
