@@ -9,7 +9,7 @@ class FileStatEvent(time_events.TimestampEvent):
   """File system stat event.
 
   Attributes:
-    file_entry_type (int): file entry type.
+    file_entry_type (int): dfVFS file entry type.
     file_size (int): file size in bytes.
     file_system_type (str): file system type.
     is_allocated (bool): True if the file is allocated.
@@ -29,7 +29,7 @@ class FileStatEvent(time_events.TimestampEvent):
       timestamp_description (str): description of the timestamp.
       is_allocated (bool): True if the file entry is allocated.
       file_size (int): file size in bytes.
-      file_entry_type (int): file entry type.
+      file_entry_type (int): dfVFS file entry type.
       file_system_type (str): file system type.
     """
     super(FileStatEvent, self).__init__(timestamp, timestamp_description)
@@ -50,7 +50,7 @@ class NTFSFileStatEvent(time_events.FiletimeEvent):
     file_reference (int): NTFS file reference.
     file_system_type (str): file system type.
     is_allocated (bool): True if the MFT entry is allocated (marked as in use).
-    name (str): name associated with the stat event, e.g.  that of
+    name (str): name associated with the stat event, e.g. that of
         a $FILE_NAME attribute or None if not available.
     offset (int): offset of the stat data in bytes.
     parent_file_reference (int): NTFS file reference of the parent.
