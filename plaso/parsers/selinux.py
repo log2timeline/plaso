@@ -108,19 +108,22 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
 
     msg_value = structure.get(u'msg')
     if not msg_value:
-      raise errors.TimestampError(u'Missing msg value.')
+      parser_mediator.ProduceExtractionError(u'missing msg value')
+      return
 
     try:
       seconds = int(msg_value[0], 10)
     except ValueError:
-      raise errors.TimestampError(
-          u'Unsuppored number of seconds in msg value.')
+      parser_mediator.ProduceExtractionError(
+          u'unsuppored number of seconds in msg value')
+      return
 
     try:
       milliseconds = int(msg_value[1], 10)
     except ValueError:
-      raise errors.TimestampError(
-          u'Unsuppored number of milliseconds in msg value.')
+      parser_mediator.ProduceExtractionError(
+          u'unsuppored number of milliseconds in msg value')
+      return
 
     timestamp = ((seconds * 1000) + milliseconds) * 1000
     body_text = structure[2][0]
