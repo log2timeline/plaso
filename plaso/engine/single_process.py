@@ -73,9 +73,9 @@ class SingleProcessEngine(engine.BaseEngine):
       self.SignalAbort()
 
     except IOError as exception:
-      logging.warning(
-          u'Unable to process path spec: {0:s} with error: {1:s}'.format(
-              extraction_worker.current_display_name, exception))
+      logging.warning((
+          u'Unable to process path specification: {0:s} with error: '
+          u'{1:s}').format(extraction_worker.current_display_name, exception))
 
     # We cannot recover from a CacheFullError and abort processing when
     # it is raised.
