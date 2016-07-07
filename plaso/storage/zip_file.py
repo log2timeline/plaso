@@ -141,57 +141,56 @@ from plaso.serializer import json_serializer
 from plaso.storage import interface
 
 
-class _AttributeContainersHeap(object):
-  """Class that defines the attribute containers heap.
+class _AttributeContainersList(object):
+  """Class that defines the attribute containers list.
 
-  The heap is unsorted and pops attribute containers in the same order as
+  The list is unsorted and pops attribute containers in the same order as
   pushed to preserve order.
 
   The GetAttributeContainerByIndex method should be used to read attribute
-  containers from the heap while it being filled.
+  containers from the list while it being filled.
 
   Attributes:
     data_size (int): total data size of the serialized attribute containers
-                     on the heap.
+                     on the list.
   """
 
   def __init__(self):
-    """Initializes an attribute container heap."""
-    super(_AttributeContainersHeap, self).__init__()
-    self._index = 0
-    self._heap = []
+    """Initializes an attribute container list."""
+    super(_AttributeContainersList, self).__init__()
+    self._list = []
     self.data_size = 0
 
   @property
   def number_of_attribute_containers(self):
-    """The number of serialized attribute containers on the heap."""
-    return len(self._heap)
+    """The number of serialized attribute containers on the list."""
+    return len(self._list)
 
   def Empty(self):
-    """Empties the heap."""
-    self._heap = []
+    """Empties the list."""
+    self._list = []
     self.data_size = 0
 
-  def GetAttributeContainerByIndex(self, attribute_container_index):
-    """Retrieves a specific attribute container from the heap.
+  def GetAttributeContainerByIndex(self, index):
+    """Retrieves a specific attribute container from the list.
 
     Args:
-      attribute_container_index (int): attribute container index.
+      index (int): attribute container index.
 
     Returns:
       bytes: serialized attribute container data.
     """
-    if attribute_container_index < len(self._heap):
-      return self._heap[attribute_container_index]
+    if index < len(self._list):
+      return self._list[index]
 
   def PopAttributeContainer(self):
-    """Pops an attribute container from the heap.
+    """Pops an attribute container from the list.
 
     Returns:
       bytes: serialized attribute container data.
     """
     try:
-      serialized_data = self._heap.pop(0)
+      serialized_data = self._list.pop(0)
       self.data_size -= len(serialized_data)
       return serialized_data
 
@@ -199,12 +198,12 @@ class _AttributeContainersHeap(object):
       return
 
   def PushAttributeContainer(self, serialized_data):
-    """Pushes an attribute container onto the heap.
+    """Pushes an attribute container onto the list.
 
     Args:
       serialized_data (bytes): serialized attribute container data.
     """
-    self._heap.append(serialized_data)
+    self._list.append(serialized_data)
     self.data_size += len(serialized_data)
 
 
@@ -992,7 +991,7 @@ class ZIPStorageFile(interface.BaseStorage):
 
     super(ZIPStorageFile, self).__init__()
     self._error_stream_number = 1
-    self._errors_heap = _AttributeContainersHeap()
+    self._errors_list = _AttributeContainersList()
     self._event_offset_tables = {}
     self._event_offset_tables_lfu = []
     self._event_stream_number = 1
@@ -1001,7 +1000,7 @@ class ZIPStorageFile(interface.BaseStorage):
     self._event_source_offset_tables_lfu = []
     self._event_source_stream_number = 1
     self._event_source_streams = {}
-    self._event_sources_heap = _AttributeContainersHeap()
+    self._event_sources_list = _AttributeContainersList()
     self._event_tag_index = None
     self._event_tag_stream_number = 1
     self._event_timestamp_tables = {}
@@ -1960,12 +1959,12 @@ class ZIPStorageFile(interface.BaseStorage):
     return attribute_container_data
 
   def _WriteAttributeContainersHeap(
-      self, attribute_containers_heap, stream_name_prefix, stream_number):
+      self, attribute_containers_list, stream_name_prefix, stream_number):
     """Writes the contents of an attribute containers heap.
 
     Args:
-      attribute_containers_heap(_AttributeContainersHeap): attributes
-          containers heap.
+      attribute_containers_list(_AttributeContainersList): attribute
+          containers list.
       stream_name_prefix(str): stream name prefix.
       stream_number(int): stream number.
     """
@@ -1981,8 +1980,8 @@ class ZIPStorageFile(interface.BaseStorage):
     entry_data_offset = data_stream.WriteInitialize()
 
     try:
-      for _ in range(attribute_containers_heap.number_of_attribute_containers):
-        entry_data = attribute_containers_heap.PopAttributeContainer()
+      for _ in range(attribute_containers_list.number_of_attribute_containers):
+        entry_data = attribute_containers_list.PopAttributeContainer()
 
         offset_table.AddOffset(entry_data_offset)
 
@@ -1997,7 +1996,7 @@ class ZIPStorageFile(interface.BaseStorage):
 
   def _WriteSerializedErrors(self):
     """Writes the buffered serialized errors."""
-    if not self._errors_heap.data_size:
+    if not self._errors_list.data_size:
       return
 
     if self._serializers_profiler:
@@ -2005,7 +2004,7 @@ class ZIPStorageFile(interface.BaseStorage):
 
     try:
       self._WriteAttributeContainersHeap(
-          self._errors_heap, u'error',
+          self._errors_list, u'error',
           self._error_stream_number)
 
     finally:
@@ -2013,7 +2012,7 @@ class ZIPStorageFile(interface.BaseStorage):
         self._serializers_profiler.StopTiming(u'write')
 
     self._error_stream_number += 1
-    self._errors_heap.Empty()
+    self._errors_list.Empty()
 
   def _WriteSerializedEvents(self):
     """Writes the serialized events."""
@@ -2063,7 +2062,7 @@ class ZIPStorageFile(interface.BaseStorage):
 
   def _WriteSerializedEventSources(self):
     """Writes the serialized event sources."""
-    if not self._event_sources_heap.data_size:
+    if not self._event_sources_list.data_size:
       return
 
     if self._serializers_profiler:
@@ -2071,7 +2070,7 @@ class ZIPStorageFile(interface.BaseStorage):
 
     try:
       self._WriteAttributeContainersHeap(
-          self._event_sources_heap, u'event_source',
+          self._event_sources_list, u'event_source',
           self._event_source_stream_number)
 
     finally:
@@ -2079,7 +2078,7 @@ class ZIPStorageFile(interface.BaseStorage):
         self._serializers_profiler.StopTiming(u'write')
 
     self._event_source_stream_number += 1
-    self._event_sources_heap.Empty()
+    self._event_sources_list.Empty()
 
   def _WriteSerializedEventTags(self):
     """Writes the serialized event tags."""
@@ -2354,9 +2353,9 @@ class ZIPStorageFile(interface.BaseStorage):
     # processing if it is invalid.
     error_data = self._WriteAttributeContainer(error)
 
-    self._errors_heap.PushAttributeContainer(error_data)
+    self._errors_list.PushAttributeContainer(error_data)
 
-    if self._errors_heap.data_size > self._maximum_buffer_size:
+    if self._errors_list.data_size > self._maximum_buffer_size:
       self._WriteSerializedErrors()
 
   def AddEvent(self, event):
@@ -2406,9 +2405,9 @@ class ZIPStorageFile(interface.BaseStorage):
     # processing if it is invalid.
     event_source_data = self._WriteAttributeContainer(event_source)
 
-    self._event_sources_heap.PushAttributeContainer(event_source_data)
+    self._event_sources_list.PushAttributeContainer(event_source_data)
 
-    if self._event_sources_heap.data_size > self._maximum_buffer_size:
+    if self._event_sources_list.data_size > self._maximum_buffer_size:
       self._WriteSerializedEventSources()
 
   def AddEventTag(self, event_tag):
@@ -2628,11 +2627,11 @@ class ZIPStorageFile(interface.BaseStorage):
       yield event
       event = self._GetSortedEvent(time_range=time_range)
 
-  def GetEventSourceByIndex(self, event_source_index):
+  def GetEventSourceByIndex(self, index):
     """Retrieves a specific event source.
 
     Args:
-      event_source_index (int): event source index.
+      index (int): event source index.
 
     Returns:
       EventSource: event source.
@@ -2642,8 +2641,8 @@ class ZIPStorageFile(interface.BaseStorage):
     """
     for stream_number in range(1, self._event_source_stream_number):
       offset_table = self._GetSerializedEventSourceOffsetTable(stream_number)
-      if event_source_index >= offset_table.number_of_offsets:
-        event_source_index -= offset_table.number_of_offsets
+      if index >= offset_table.number_of_offsets:
+        index -= offset_table.number_of_offsets
         continue
 
       stream_name = u'event_source_data.{0:06}'.format(stream_number)
@@ -2653,14 +2652,13 @@ class ZIPStorageFile(interface.BaseStorage):
       data_stream = _SerializedDataStream(
           self._zipfile, self._zipfile_path, stream_name)
 
-      stream_offset = offset_table.GetOffset(event_source_index)
-      data_stream.SeekEntryAtOffset(event_source_index, stream_offset)
+      stream_offset = offset_table.GetOffset(index)
+      data_stream.SeekEntryAtOffset(index, stream_offset)
 
       return self._ReadAttributeContainersFromStream(
           data_stream, u'event_source')
 
-    entry_data = self._event_sources_heap.GetAttributeContainerByIndex(
-        event_source_index)
+    entry_data = self._event_sources_list.GetAttributeContainerByIndex(index)
     return self._ReadAttributeContainer(entry_data, u'event_source')
 
   def GetEventSources(self):
@@ -2722,7 +2720,7 @@ class ZIPStorageFile(interface.BaseStorage):
       number_of_event_sources += offset_table.number_of_offsets
 
     number_of_event_sources += (
-        self._event_sources_heap.number_of_attribute_containers)
+        self._event_sources_list.number_of_attribute_containers)
     return number_of_event_sources
 
   def GetSessions(self):
