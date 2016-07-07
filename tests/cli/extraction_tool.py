@@ -69,10 +69,9 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       u'                        set manually.',
       u'  --process_archives, --process-archives',
       (u'                        Process file entries embedded within archive '
-       u'files. Be'),
-      (u'                        aware that this can make processing '
-       u'significant'),
-      u'                        slower.',
+       u'files.'),
+      (u'                        This can make processing '
+       u'significant slower.'),
       u'  --use_old_preprocess, --use-old-preprocess',
       (u'                        Only used in conjunction when appending to a '
        u'previous'),
