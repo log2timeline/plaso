@@ -698,11 +698,14 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         status_update_callback=status_update_callback,
         timezone=self._timezone)
 
-    if processing_status and not processing_status.error_detected:
-      self._output_writer.Write(u'Processing completed.\n')
-    else:
-      self._output_writer.Write(u'Processing completed with errors.\n')
-    self._output_writer.Write(u'\n')
+    if processing_status:
+      if processing_status.aborted:
+        self._output_writer.Write(u'Processing aborted.\n')
+      elif processing_status.error_detected:
+        self._output_writer.Write(u'Processing completed with errors.\n')
+      else:
+        self._output_writer.Write(u'Processing completed.\n')
+      self._output_writer.Write(u'\n')
 
     if processing_status and processing_status.error_path_specs:
       self._output_writer.Write(u'Path specifications that caused errors:\n')

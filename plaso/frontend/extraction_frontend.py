@@ -3,8 +3,6 @@
 
 import logging
 import os
-import pdb
-import traceback
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
@@ -87,17 +85,6 @@ class ExtractionFrontend(frontend.Frontend):
     if not os.access(dirname, os.W_OK):
       raise errors.BadConfigOption(
           u'Unable to write to storage file: {0:s}'.format(storage_file_path))
-
-  # Note that this function is not called by the normal termination.
-  def _CleanUpAfterAbort(self):
-    """Signals the front-end to stop running nicely after an abort."""
-    if self._single_process_mode and self._debug_mode:
-      logging.warning(u'Running in debug mode, set up debugger.')
-      pdb.post_mortem()
-      return
-
-    if self._engine:
-      self._engine.SignalAbort()
 
   def _GetParserFilterPreset(self, os_guess=u'', os_version=u''):
     """Determines the parser filter preset.
@@ -499,23 +486,6 @@ class ExtractionFrontend(frontend.Frontend):
             status_update_callback=status_update_callback,
             show_memory_usage=self._show_worker_memory_information,
             text_prepend=self._text_prepend)
-
-    except KeyboardInterrupt:
-      self._CleanUpAfterAbort()
-      raise errors.UserAbort
-
-    # TODO: check if this still works and if still needed.
-    except Exception as exception:  # pylint: disable=broad-except
-      if not self._single_process_mode:
-        raise
-
-      # The tool should generally not be run in single process mode
-      # for other reasons than to debug. Hence the general error
-      # catching.
-      logging.error(u'An uncaught exception occurred: {0:s}.\n{1:s}'.format(
-          exception, traceback.format_exc()))
-      if self._debug_mode:
-        pdb.post_mortem()
 
     finally:
       storage_writer.Close()
