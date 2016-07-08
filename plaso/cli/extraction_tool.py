@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """The extraction CLI tool."""
 
-import argparse
-
 from plaso.cli import storage_media_tool
 from plaso.engine import engine
 from plaso.lib import definitions
@@ -90,7 +88,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
 
     self._old_preprocess = getattr(options, u'old_preprocess', False)
 
-    self._process_archive_files = getattr(options, u'scan_archives', False)
+    self._process_archive_files = getattr(options, u'process_archives', False)
 
   def _ParsePerformanceOptions(self, options):
     """Parses the performance options.
@@ -204,15 +202,10 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
             u'parsed then this parameter needs to be set manually.'))
 
     argument_group.add_argument(
-        u'--scan_archives', dest=u'scan_archives', action=u'store_true',
-        default=False, help=argparse.SUPPRESS)
-
-    # This option is "hidden" for the time being, still left in there for
-    # testing purposes, but hidden from the tool usage and help messages.
-    #    help=(u'Indicate that the tool should try to open files to extract '
-    #          u'embedded files within them, for instance to extract files '
-    #          u'from compressed containers, etc. Be AWARE THAT THIS IS '
-    #          u'EXTREMELY SLOW.'))
+        u'--process_archives', u'--process-archives', dest=u'process_archives',
+        action=u'store_true', default=False, help=(
+            u'Process file entries embedded within archive files. This can '
+            u'make processing significantly slower.'))
 
     argument_group.add_argument(
         '--use_old_preprocess', '--use-old-preprocess', dest='old_preprocess',

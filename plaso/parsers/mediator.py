@@ -498,11 +498,12 @@ class ParserMediator(object):
     self._storage_writer.AddEventSource(event_source)
     self._number_of_event_sources += 1
 
-  def ProduceExtractionError(self, message):
+  def ProduceExtractionError(self, message, path_spec=None):
     """Produces an extraction error.
 
     Args:
-      message: The message of the error.
+      message (str): message of the error.
+      path_spec (Optional[dfvfs.PathSpec]): path specification.
 
     Raises:
       RuntimeError: when storage writer is not set.
@@ -510,7 +511,9 @@ class ParserMediator(object):
     if not self._storage_writer:
       raise RuntimeError(u'Storage writer not set.')
 
-    path_spec = self._file_entry.path_spec
+    if not path_spec:
+      path_spec = self._file_entry.path_spec
+
     parser_chain = self.GetParserChain()
     extraction_error = errors.ExtractionError(
         message=message, parser_chain=parser_chain, path_spec=path_spec)
