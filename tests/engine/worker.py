@@ -63,10 +63,13 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     new_event_sources = True
     while new_event_sources:
       new_event_sources = False
-      for event_source in storage_writer.GetEventSources():
+      event_source = storage_writer.GetNextEventSource()
+      while event_source:
+        new_event_sources = True
+
         extraction_worker.ProcessPathSpec(
             parser_mediator, event_source.path_spec)
-        new_event_sources = True
+        event_source = storage_writer.GetNextEventSource()
 
     storage_writer.WriteSessionCompletion()
     storage_writer.Close()

@@ -262,13 +262,25 @@ class ParserMediator(object):
       raise ValueError(u'Missing file entry')
 
     path_spec = getattr(file_entry, u'path_spec', None)
+
     relative_path = self._GetRelativePath(path_spec)
-
     if not relative_path:
-      relative_path = file_entry.name
+      return file_entry.name
 
+    return self.GetDisplayNameFromPathSpec(path_spec)
+
+  def GetDisplayNameFromPathSpec(self, path_spec):
+    """Retrieves the display name for a path specification.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+
+    Returns:
+      str: human readable version of the path specification.
+    """
+    relative_path = self._GetRelativePath(path_spec)
     if not relative_path:
-      return file_entry.path_spec.type_indicator
+      return path_spec.type_indicator
 
     if self._text_prepend:
       relative_path = u'{0:s}{1:s}'.format(self._text_prepend, relative_path)
@@ -284,10 +296,9 @@ class ParserMediator(object):
       store_index = getattr(path_spec.parent, u'store_index', None)
       if store_index is not None:
         return u'VSS{0:d}:{1:s}:{2:s}'.format(
-            store_index + 1, file_entry.path_spec.type_indicator, relative_path)
+            store_index + 1, path_spec.type_indicator, relative_path)
 
-    return u'{0:s}:{1:s}'.format(
-        file_entry.path_spec.type_indicator, relative_path)
+    return u'{0:s}:{1:s}'.format(path_spec.type_indicator, relative_path)
 
   def GetEstimatedYear(self):
     """Retrieves an estimate of the year.

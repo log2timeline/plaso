@@ -196,6 +196,7 @@ class StorageWriter(object):
     """
     super(StorageWriter, self).__init__()
     self._enable_profiling = False
+    self._event_source_index = 0
     self._profiling_type = u'all'
     self._session = session
     self._storage_type = storage_type
@@ -275,17 +276,12 @@ class StorageWriter(object):
     self._enable_profiling = True
     self._profiling_type = profiling_type
 
-  # TODO: remove during phased processing refactor.
   @abc.abstractmethod
-  def ForceFlush(self):
-    """Forces the storage writer to flush."""
+  def GetNextEventSource(self):
+    """Retrieves the next event source.
 
-  @abc.abstractmethod
-  def GetEventSources(self):
-    """Retrieves the event sources.
-
-    Yields:
-      An event source object (instance of EventSource).
+    Returns:
+      EventSource: event source.
     """
 
   def MergeFromStorage(self, storage_reader):

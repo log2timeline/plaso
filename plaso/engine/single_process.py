@@ -21,8 +21,6 @@ from plaso.parsers import mediator as parsers_mediator
 class SingleProcessEngine(engine.BaseEngine):
   """Class that defines the single process engine."""
 
-  _STATUS_CHECK_SLEEP = 1.5
-
   def __init__(self):
     """Initializes the single process engine object."""
     super(SingleProcessEngine, self).__init__()
@@ -48,12 +46,14 @@ class SingleProcessEngine(engine.BaseEngine):
     Returns:
       str: processing status.
     """
+    display_name = u''
     number_of_consumed_sources = 0
 
     self._processing_status.UpdateForemanStatus(
-        u'Main', definitions.PROCESSING_STATUS_COLLECTING, self._pid, u'',
-        number_of_consumed_sources, storage_writer.number_of_event_sources,
-        0, storage_writer.number_of_events)
+        u'Main', definitions.PROCESSING_STATUS_COLLECTING, self._pid,
+        display_name, number_of_consumed_sources,
+        storage_writer.number_of_event_sources, 0,
+        storage_writer.number_of_events)
     self._UpdateStatus()
 
     path_spec_extractor = extractors.PathSpecExtractor(resolver_context)
@@ -64,29 +64,37 @@ class SingleProcessEngine(engine.BaseEngine):
       if self._abort:
         break
 
+      display_name = parser_mediator.GetDisplayNameFromPathSpec(path_spec)
+
       # TODO: determine if event sources should be DataStream or FileEntry
       # or both.
       event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
       storage_writer.AddEventSource(event_source)
 
       self._processing_status.UpdateForemanStatus(
-          u'Main', definitions.PROCESSING_STATUS_COLLECTING, self._pid, u'',
-          number_of_consumed_sources, storage_writer.number_of_event_sources,
-          0, storage_writer.number_of_events)
+          u'Main', definitions.PROCESSING_STATUS_COLLECTING, self._pid,
+          display_name, number_of_consumed_sources,
+          storage_writer.number_of_event_sources, 0,
+          storage_writer.number_of_events)
       self._UpdateStatus()
+
+    self._processing_status.UpdateForemanStatus(
+        u'Main', definitions.PROCESSING_STATUS_RUNNING, self._pid,
+        display_name, number_of_consumed_sources,
+        storage_writer.number_of_event_sources, 0,
+        storage_writer.number_of_events)
+
+    # Force the status update here to make sure the status is up to date.
+    self._UpdateStatus(force=True)
 
     new_event_sources = True
     while new_event_sources:
       if self._abort:
         break
 
-      # TODO: flushing the storage writer here for now to make sure the event
-      # sources are written to disk. Remove this during phased processing
-      # refactor.
-      storage_writer.ForceFlush()
-
       new_event_sources = False
-      for event_source in storage_writer.GetEventSources():
+      event_source = storage_writer.GetNextEventSource()
+      while event_source:
         new_event_sources = True
         if self._abort:
           break
@@ -95,8 +103,14 @@ class SingleProcessEngine(engine.BaseEngine):
             parser_mediator, event_source.path_spec)
         number_of_consumed_sources += 1
 
+        event_source = storage_writer.GetNextEventSource()
+
+        processing_status = extraction_worker.processing_status
+        if processing_status == definitions.PROCESSING_STATUS_IDLE:
+          processing_status = definitions.PROCESSING_STATUS_RUNNING
+
         self._processing_status.UpdateForemanStatus(
-            u'Main', definitions.PROCESSING_STATUS_EXTRACTING, self._pid,
+            u'Main', processing_status, self._pid,
             extraction_worker.current_display_name,
             number_of_consumed_sources, storage_writer.number_of_event_sources,
             0, storage_writer.number_of_events)
@@ -127,7 +141,7 @@ class SingleProcessEngine(engine.BaseEngine):
     """
     current_timestamp = time.time()
     if not force and current_timestamp < (
-        self._last_status_update_timestamp + self._STATUS_CHECK_SLEEP):
+        self._last_status_update_timestamp + self._STATUS_UPDATE_INTERVAL):
       return
 
     if self._status_update_callback:

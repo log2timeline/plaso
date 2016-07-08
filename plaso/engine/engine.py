@@ -22,6 +22,9 @@ class BaseEngine(object):
     knowledge_base: the knowledge base object (instance of KnowledgeBase).
   """
 
+  # The interval of status updates in number of seconds.
+  _STATUS_UPDATE_INTERVAL = 0.5
+
   def __init__(self):
     """Initializes the engine object."""
     super(BaseEngine, self).__init__()
