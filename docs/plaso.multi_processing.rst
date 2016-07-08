@@ -28,6 +28,14 @@ plaso.multi_processing.rpc module
     :undoc-members:
     :show-inheritance:
 
+plaso.multi_processing.task_manager module
+------------------------------------------
+
+.. automodule:: plaso.multi_processing.task_manager
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.multi_processing.xmlrpc module
 ------------------------------------
 

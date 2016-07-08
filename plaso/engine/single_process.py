@@ -84,18 +84,15 @@ class SingleProcessEngine(engine.BaseEngine):
       filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
           used in path specification extraction.
     """
-    display_name = u''
     number_of_consumed_sources = 0
 
-    self._processing_status.UpdateForemanStatus(
-        u'Main', definitions.PROCESSING_STATUS_COLLECTING, self._pid,
-        display_name, number_of_consumed_sources,
-        storage_writer.number_of_event_sources, 0,
-        storage_writer.number_of_events)
-    self._UpdateStatus()
+    self._UpdateStatus(
+        definitions.PROCESSING_STATUS_COLLECTING, u'',
+        number_of_consumed_sources, storage_writer)
 
     path_spec_extractor = extractors.PathSpecExtractor(resolver_context)
 
+    display_name = u''
     for path_spec in path_spec_extractor.ExtractPathSpecs(
         source_path_specs, find_specs=filter_find_specs,
         recurse_file_system=False):
@@ -109,21 +106,14 @@ class SingleProcessEngine(engine.BaseEngine):
       event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
       storage_writer.AddEventSource(event_source)
 
-      self._processing_status.UpdateForemanStatus(
-          u'Main', definitions.PROCESSING_STATUS_COLLECTING, self._pid,
-          display_name, number_of_consumed_sources,
-          storage_writer.number_of_event_sources, 0,
-          storage_writer.number_of_events)
-      self._UpdateStatus()
-
-    self._processing_status.UpdateForemanStatus(
-        u'Main', definitions.PROCESSING_STATUS_RUNNING, self._pid,
-        display_name, number_of_consumed_sources,
-        storage_writer.number_of_event_sources, 0,
-        storage_writer.number_of_events)
+      self._UpdateStatus(
+          definitions.PROCESSING_STATUS_COLLECTING, display_name,
+          number_of_consumed_sources, storage_writer)
 
     # Force the status update here to make sure the status is up to date.
-    self._UpdateStatus(force=True)
+    self._UpdateStatus(
+        definitions.PROCESSING_STATUS_RUNNING, display_name,
+        number_of_consumed_sources, storage_writer, force=True)
 
     new_event_sources = True
     while new_event_sources:
@@ -143,42 +133,48 @@ class SingleProcessEngine(engine.BaseEngine):
 
         event_source = storage_writer.GetNextEventSource()
 
-        processing_status = extraction_worker.processing_status
-        if processing_status == definitions.PROCESSING_STATUS_IDLE:
-          processing_status = definitions.PROCESSING_STATUS_RUNNING
-
-        self._processing_status.UpdateForemanStatus(
-            u'Main', processing_status, self._pid,
+        self._UpdateStatus(
+            extraction_worker.processing_status,
             extraction_worker.current_display_name,
-            number_of_consumed_sources, storage_writer.number_of_event_sources,
-            0, storage_writer.number_of_events)
-        self._UpdateStatus()
+            number_of_consumed_sources, storage_writer)
 
     if self._abort:
       status = definitions.PROCESSING_STATUS_ABORTED
     else:
       status = definitions.PROCESSING_STATUS_COMPLETED
 
-    self._processing_status.UpdateForemanStatus(
-        u'Main', status, self._pid, u'',
-        number_of_consumed_sources, storage_writer.number_of_event_sources,
-        0, storage_writer.number_of_events)
-
     # Force the status update here to make sure the status is up to date
     # on exit.
-    self._UpdateStatus(force=True)
+    self._UpdateStatus(
+        status, u'', number_of_consumed_sources, storage_writer, force=True)
 
-  def _UpdateStatus(self, force=False):
+  def _UpdateStatus(
+      self, status, display_name, number_of_consumed_sources, storage_writer,
+      force=False):
     """Updates the processing status.
 
     Args:
+      status (str): human readable status of the processing e.g. 'Idle'.
+      display_name (str): human readable of the file entry currently being
+          processed.
+      number_of_consumed_sources (int): number of consumed sources.
+      storage_writer (StorageWriter): storage writer for a session storage.
       force (Optional[bool]): True if the update should be forced ignoring
-                              the last status update time.
+          the last status update time.
     """
     current_timestamp = time.time()
     if not force and current_timestamp < (
         self._last_status_update_timestamp + self._STATUS_UPDATE_INTERVAL):
       return
+
+    if status == definitions.PROCESSING_STATUS_IDLE:
+      status = definitions.PROCESSING_STATUS_RUNNING
+
+    self._processing_status.UpdateForemanStatus(
+        u'Main', status, self._pid, display_name,
+        number_of_consumed_sources, storage_writer.number_of_event_sources,
+        0, storage_writer.number_of_events,
+        0, storage_writer.number_of_errors)
 
     if self._status_update_callback:
       self._status_update_callback(self._processing_status)
@@ -203,14 +199,14 @@ class SingleProcessEngine(engine.BaseEngine):
           used in path specification extraction.
       filter_object (Optional[objectfilter.Filter]): filter object.
       hasher_names_string (Optional[str]): comma separated string of names
-                                           of hashers to use during processing.
+          of hashers to use during processing.
       mount_path (Optional[str]): mount path.
       parser_filter_expression (Optional[str]): parser filter expression.
       process_archive_files (Optional[bool]): True if archive files should be
-                                              scanned for file entries.
+          scanned for file entries.
       profiling_type (Optional[str]): profiling type.
       status_update_callback (Optional[function]): callback function for status
-                                                   updates.
+          updates.
       text_prepend (Optional[str]): text to prepend to every event.
 
     Returns:

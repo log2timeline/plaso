@@ -64,7 +64,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()
 
-    parser_mediator = self._GetParserMediator(
+    parser_mediator = self._CreateParserMediator(
         storage_writer, file_entry=file_entry,
         knowledge_base_values=knowledge_base_values)
 

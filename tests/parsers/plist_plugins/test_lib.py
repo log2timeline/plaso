@@ -57,7 +57,7 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
     storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()
 
-    parser_mediator = self._GetParserMediator(
+    parser_mediator = self._CreateParserMediator(
         storage_writer, knowledge_base_values=knowledge_base_values)
 
     plugin_object.Process(

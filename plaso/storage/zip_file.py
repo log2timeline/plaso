@@ -3215,6 +3215,30 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     for label in event_tag.labels:
       self._session.event_tags_counter[label] += 1
 
+  def CheckTaskStorageReadyForMerge(self, task_name):
+    """Checks if a task storage is ready for with the session storage.
+
+    Args:
+      task_name (str): unique name of the task.
+
+    Returns:
+      bool: True if the storage for the task is ready for merge.
+
+    Raises:
+      IOError: if the storage type is not supported or
+               if the temporary path for the task storage does not exist.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
+    if not self._merge_task_storage_path:
+      raise IOError(u'Missing merge task storage path.')
+
+    storage_file_path = os.path.join(
+        self._merge_task_storage_path, u'{0:s}.plaso'.format(task_name))
+
+    return os.path.isfile(storage_file_path)
+
   def Close(self):
     """Closes the storage writer.
 
@@ -3289,8 +3313,8 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError(u'Unsupported storage type.')
 
-    if not self._task_storage_path:
-      raise IOError(u'Missing task storage path.')
+    if not self._merge_task_storage_path:
+      raise IOError(u'Missing merge task storage path.')
 
     storage_file_path = os.path.join(
         self._merge_task_storage_path, u'{0:s}.plaso'.format(task_name))
