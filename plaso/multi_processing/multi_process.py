@@ -1467,6 +1467,7 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
       identifier = u'{0:s}-processsing'.format(self._name)
       self._processing_profiler = profiler.ProcessingProfiler(
           identifier, path=self._profiling_directory)
+      self._extraction_worker.SetProcessingProfiler(self._processing_profiler)
 
     if self._profiling_type in (u'all', u'serializers'):
       identifier = u'{0:s}-serializers'.format(self._name)
@@ -1488,6 +1489,7 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
       self._parsers_profiler = None
 
     if self._profiling_type in (u'all', u'processing'):
+      self._extraction_worker.SetProcessingProfiler(None)
       self._processing_profiler.Write()
       self._processing_profiler = None
 

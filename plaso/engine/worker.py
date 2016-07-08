@@ -103,6 +103,7 @@ class EventExtractionWorker(object):
         resolver_context, parser_filter_expression=parser_filter_expression)
     self._hasher_names = None
     self._process_archive_files = process_archive_files
+    self._processing_profiler = None
     self._resolver_context = resolver_context
 
     self.processing_status = definitions.PROCESSING_STATUS_IDLE
@@ -181,6 +182,47 @@ class EventExtractionWorker(object):
 
     return False
 
+  def _ExtractContentFromDataStream(
+      self, parser_mediator, file_entry, data_stream_name):
+    """Extracts content from a data stream.
+
+    Args:
+      parser_mediator (ParserMediator): parser mediator.
+      file_entry (dfvfs.FileEntry): file entry to extract its content.
+      data_stream_name (str): data stream name to extract its content.
+    """
+    self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
+
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'extracting')
+
+    self._event_extractor.ParseDataStream(
+        parser_mediator, file_entry, data_stream_name=data_stream_name)
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'extracting')
+
+    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
+
+  def _ExtractMetadataFromFileEntry(self, parser_mediator, file_entry):
+    """Extracts metadata from a file entry.
+
+    Args:
+      parser_mediator (ParserMediator): parser mediator.
+      file_entry (dfvfs.FileEntry): file entry to extract its metadata.
+    """
+    self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
+
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'extracting')
+
+    self._event_extractor.ParseFileEntryMetadata(parser_mediator, file_entry)
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'extracting')
+
+    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
+
   def _HashDataStream(self, parser_mediator, file_entry, data_stream_name):
     """Hashes the contents of a specific data stream of a file entry.
 
@@ -198,6 +240,11 @@ class EventExtractionWorker(object):
     """
     if not self._hasher_names:
       return
+
+    self.processing_status = definitions.PROCESSING_STATUS_HASHING
+
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'hashing')
 
     logging.debug(u'[HashDataStream] hashing file: {0:s}'.format(
         self._current_display_name))
@@ -228,6 +275,11 @@ class EventExtractionWorker(object):
     logging.debug(
         u'[HashDataStream] completed hashing file: {0:s}'.format(
             self._current_display_name))
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'hashing')
+
+    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
 
   def _IsMetadataFile(self, file_entry):
     """Determines if the file entry is a metadata file.
@@ -381,6 +433,11 @@ class EventExtractionWorker(object):
       parser_mediator (ParserMediator): parser mediator.
       file_entry (dfvfs.FileEntry): file entry of the directory.
     """
+    self.processing_status = definitions.PROCESSING_STATUS_COLLECTING
+
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'collecting')
+
     for sub_file_entry in file_entry.sub_file_entries:
       if self._abort:
         break
@@ -405,6 +462,11 @@ class EventExtractionWorker(object):
           path_spec=sub_file_entry.path_spec)
       parser_mediator.ProduceEventSource(event_source)
 
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'collecting')
+
+    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
+
   def _ProcessFileEntry(self, parser_mediator, file_entry):
     """Processes a file entry.
 
@@ -423,6 +485,8 @@ class EventExtractionWorker(object):
         self._current_display_name))
 
     try:
+      self.processing_status = definitions.PROCESSING_STATUS_RUNNING
+
       if self._IsMetadataFile(file_entry):
         self._ProcessMetadataFile(parser_mediator, file_entry)
 
@@ -439,6 +503,8 @@ class EventExtractionWorker(object):
         if not file_entry_processed:
           # For when the file entry does not contain a data stream.
           self._ProcessFileEntryDataStream(parser_mediator, file_entry, u'')
+
+      self.processing_status = definitions.PROCESSING_STATUS_IDLE
 
     finally:
       if reference_count != self._resolver_context.GetFileObjectReferenceCount(
@@ -474,11 +540,7 @@ class EventExtractionWorker(object):
     # extract the metadata only.
     has_data_stream = file_entry.HasDataStream(data_stream_name)
     if has_data_stream:
-      self.processing_status = definitions.PROCESSING_STATUS_HASHING
-
       self._HashDataStream(parser_mediator, file_entry, data_stream_name)
-
-    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
 
     # We always want to extract the file entry metadata but we only want
     # to parse it once per file entry, so we only use it if we are
@@ -486,11 +548,7 @@ class EventExtractionWorker(object):
     if (not data_stream_name and (
         not file_entry.IsRoot() or
         file_entry.type_indicator in self._TYPES_WITH_ROOT_METADATA)):
-      self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
-
-      self._event_extractor.ParseFileEntryMetadata(parser_mediator, file_entry)
-
-    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
+      self._ExtractMetadataFromFileEntry(parser_mediator, file_entry)
 
     # Determine if the content of the file entry should not be extracted.
     skip_content_extraction = self._CanSkipContentExtraction(file_entry)
@@ -500,11 +558,7 @@ class EventExtractionWorker(object):
       return
 
     if file_entry.IsDirectory() and not data_stream_name:
-      self.processing_status = definitions.PROCESSING_STATUS_COLLECTING
-
       self._ProcessDirectory(parser_mediator, file_entry)
-
-    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
 
     is_archive = False
     is_compressed_stream = False
@@ -593,6 +647,14 @@ class EventExtractionWorker(object):
       parsers_profiler (ParsersProfiler): parsers profile.
     """
     self._event_extractor.SetParsersProfiler(parsers_profiler)
+
+  def SetProcessingProfiler(self, processing_profiler):
+    """Sets the parsers profiler.
+
+    Args:
+      processing_profiler (ProcessingProfiler): processing profile.
+    """
+    self._processing_profiler = processing_profiler
 
   def SignalAbort(self):
     """Signals the extraction worker to abort."""
