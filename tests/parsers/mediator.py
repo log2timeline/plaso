@@ -21,7 +21,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     """Tests the GetDisplayName function."""
     session = sessions.Session()
     storage_writer = fake_storage.FakeStorageWriter(session)
-    parsers_mediator = self._GetParserMediator(
+    parsers_mediator = self._CreateParserMediator(
         storage_writer, knowledge_base_values=None)
 
     with self.assertRaises(ValueError):

@@ -23,7 +23,7 @@ class MultiProcessEngineTest(shared_test_lib.BaseTestCase):
   def testProcessSources(self):
     """Tests the PreprocessSources and ProcessSources function."""
     test_engine = multi_process.MultiProcessEngine(
-        maximum_number_of_queued_items=100)
+        maximum_number_of_tasks=100)
 
     source_path = os.path.join(self._TEST_DATA_PATH, u'ímynd.dd')
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
