@@ -124,6 +124,7 @@ import heapq
 import io
 import logging
 import os
+import shutil
 import tempfile
 import warnings
 import zipfile
@@ -3369,8 +3370,11 @@ class ZIPStorageFileWriter(interface.StorageWriter):
         self._task_storage_path, u'merge')
     os.mkdir(self._merge_task_storage_path)
 
-  def StopTaskStorage(self):
+  def StopTaskStorage(self, abort=False):
     """Removes the temporary path for the task storage.
+
+    Args:
+      abort (bool): True to indicated the stop is issued on abort.
 
     Raises:
       IOError: if the storage type is not supported or
@@ -3383,10 +3387,16 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       raise IOError(u'Missing task storage path.')
 
     if os.path.isdir(self._merge_task_storage_path):
-      os.rmdir(self._merge_task_storage_path)
+      if abort:
+        shutil.rmtree(self._merge_task_storage_path)
+      else:
+        os.rmdir(self._merge_task_storage_path)
 
     if os.path.isdir(self._task_storage_path):
-      os.rmdir(self._task_storage_path)
+      if abort:
+        shutil.rmtree(self._task_storage_path)
+      else:
+        os.rmdir(self._task_storage_path)
 
     self._merge_task_storage_path = None
     self._task_storage_path = None
