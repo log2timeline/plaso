@@ -205,8 +205,6 @@ class EventExtractionWorker(object):
     if not self._hasher_names:
       return
 
-    self.processing_status = definitions.PROCESSING_STATUS_HASHING
-
     logging.debug(u'[HashDataStream] hashing file: {0:s}'.format(
         self._current_display_name))
 
@@ -239,8 +237,6 @@ class EventExtractionWorker(object):
     logging.debug(
         u'[HashDataStream] completed hashing file: {0:s}'.format(
             self._current_display_name))
-
-    self.processing_status = definitions.PROCESSING_STATUS_IDLE
 
   def _IsMetadataFile(self, file_entry):
     """Determines if the file entry is a metadata file.
@@ -492,11 +488,17 @@ class EventExtractionWorker(object):
       file_entry (dfvfs.FileEntry): file entry containing the data stream.
       data_stream_name (str): data stream name.
     """
+    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
+
     # Not every file entry has a data stream. In such cases we want to
     # extract the metadata only.
     has_data_stream = file_entry.HasDataStream(data_stream_name)
     if has_data_stream:
+      self.processing_status = definitions.PROCESSING_STATUS_HASHING
+
       self._HashDataStream(parser_mediator, file_entry, data_stream_name)
+
+    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
 
     # We always want to extract the file entry metadata but we only want
     # to parse it once per file entry, so we only use it if we are
@@ -504,7 +506,11 @@ class EventExtractionWorker(object):
     if (not data_stream_name and (
         not file_entry.IsRoot() or
         file_entry.type_indicator in self._TYPES_WITH_ROOT_METADATA)):
+      self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
+
       self._event_extractor.ParseFileEntryMetadata(parser_mediator, file_entry)
+
+    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
 
     # Determine if the content of the file entry should not be extracted.
     skip_content_extraction = self._CanSkipContentExtraction(file_entry)
@@ -513,12 +519,12 @@ class EventExtractionWorker(object):
           self._current_display_name))
       return
 
-    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
-
     if file_entry.IsDirectory() and not data_stream_name:
       self.processing_status = definitions.PROCESSING_STATUS_COLLECTING
 
       self._ProcessDirectory(parser_mediator, file_entry)
+
+    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
 
     is_archive = False
     is_compressed_stream = False

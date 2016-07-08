@@ -244,8 +244,6 @@ class MultiProcessEngine(engine.BaseEngine):
   _RPC_SERVER_TIMEOUT = 8.0
   _MAXIMUM_RPC_ERRORS = 10
 
-  _STATUS_CHECK_SLEEP = 1.5
-
   _WORKER_PROCESSES_MINIMUM = 2
   _WORKER_PROCESSES_MAXIMUM = 15
 
@@ -522,11 +520,6 @@ class MultiProcessEngine(engine.BaseEngine):
       if self._abort:
         return
 
-      # TODO: flushing the storage writer here for now to make sure the event
-      # sources are written to disk. Remove this during phased processing
-      # refactor.
-      storage_writer.ForceFlush()
-
       # Set new event sources to false so the task scheduler thread can set
       # it to true when there are new event sources. Since the task scheduler
       # thread is joined before this value is checked again there is
@@ -551,7 +544,7 @@ class MultiProcessEngine(engine.BaseEngine):
         self._CheckStatusWorkerProcesses()
         self._UpdateStatus()
 
-        time.sleep(self._STATUS_CHECK_SLEEP)
+        time.sleep(self._STATUS_UPDATE_INTERVAL)
 
       self._StopTaskSchedulerThread()
 
@@ -631,13 +624,8 @@ class MultiProcessEngine(engine.BaseEngine):
     # handle abort path.
 
     worker_tasks = {}
-    event_source_generator = self._storage_writer.GetEventSources()
 
-    try:
-      event_source = next(event_source_generator)
-    except StopIteration:
-      event_source = None
-
+    event_source = self._storage_writer.GetNextEventSource()
     if event_source:
       self._new_event_sources = True
 
@@ -676,12 +664,11 @@ class MultiProcessEngine(engine.BaseEngine):
         if self._storage_writer.MergeTaskStorage(task_identifier):
           del worker_tasks[task_identifier]
 
+          # Merge one task-based storage file per loop to keep tasks flowing.
+          break
+
       if not event_source:
-        try:
-          # Retrieve the next event source after merging.
-          event_source = next(event_source_generator)
-        except StopIteration:
-          pass
+        event_source = self._storage_writer.GetNextEventSource()
 
     self._task_scheduler_active = False
 
@@ -1175,7 +1162,9 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
       number_of_produced_sources = 0
 
     processing_status = self._extraction_worker.processing_status
-    if processing_status == definitions.PROCESSING_STATUS_IDLE:
+    if self._status in (
+        definitions.PROCESSING_STATUS_ABORTED,
+        definitions.PROCESSING_STATUS_COMPLETED):
       processing_status = self._status
 
     # TODO: add number of consumed events.

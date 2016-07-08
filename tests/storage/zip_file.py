@@ -463,6 +463,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file.Close()
 
   # TODO: add test for _WriteAttributeContainer.
+  # TODO: add test for _WriteAttributeContainersHeap.
   # TODO: add test for _WriteSerializedErrors.
   # TODO: add test for _WriteSerializedEvents.
   # TODO: add test for _WriteSerializedEventSources.
@@ -678,6 +679,8 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
+  # TODO: add test for GetEventSourceByIndex.
+
   def testGetEventSources(self):
     """Tests the GetEventSources function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
@@ -750,6 +753,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     self.assertEqual(event_object.tag.labels[0], u'Interesting')
     self.assertEqual(event_object.tag.labels[1], u'Malware')
 
+  # TODO: add test for GetNumberOfEventSources.
   # TODO: add test for GetSessions.
 
   def testHasAnalysisReports(self):
