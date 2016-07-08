@@ -270,7 +270,7 @@ class SingleProcessEngine(engine.BaseEngine):
       resolver_context, filter_find_specs=None, filter_object=None,
       hasher_names_string=None, mount_path=None, parser_filter_expression=None,
       process_archive_files=False, status_update_callback=None,
-      text_prepend=None):
+      temporary_directory=None, text_prepend=None):
     """Processes the sources.
 
     Args:
@@ -290,13 +290,16 @@ class SingleProcessEngine(engine.BaseEngine):
           scanned for file entries.
       status_update_callback (Optional[function]): callback function for status
           updates.
+      temporary_directory (Optional[str]): path of the directory for temporary
+          files.
       text_prepend (Optional[str]): text to prepend to every event.
 
     Returns:
       ProcessingStatus: processing status.
     """
     parser_mediator = parsers_mediator.ParserMediator(
-        storage_writer, self.knowledge_base)
+        storage_writer, self.knowledge_base,
+        temporary_directory=temporary_directory)
 
     if filter_object:
       parser_mediator.SetFilterObject(filter_object)
