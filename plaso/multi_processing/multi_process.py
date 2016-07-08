@@ -1173,14 +1173,15 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
       number_of_produced_events = 0
       number_of_produced_sources = 0
 
-    processing_status = self._extraction_worker.processing_status
-    if self._status in (
-        definitions.PROCESSING_STATUS_ABORTED,
-        definitions.PROCESSING_STATUS_COMPLETED):
+    if self._extraction_worker:
+      current_display_name = self._extraction_worker.current_display_name
+      processing_status = self._extraction_worker.processing_status
+    else:
+      current_display_name = u''
       processing_status = self._status
 
     status = {
-        u'display_name': self._extraction_worker.current_display_name,
+        u'display_name': current_display_name,
         u'identifier': self._name,
         u'number_of_consumed_errors': 0,
         u'number_of_consumed_events': self._number_of_consumed_events,
@@ -1193,6 +1194,38 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
 
     self._status_is_running = status.get(u'is_running', False)
     return status
+
+  def _ProcessPathSpec(self, extraction_worker, parser_mediator, path_spec):
+    """Processes a path specification.
+
+    Args:
+      extraction_worker (worker.ExtractionWorker): extraction worker.
+      parser_mediator (ParserMediator): parser mediator.
+      path_spec (dfvfs.PathSpec): path specification.
+    """
+    try:
+      extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
+
+    except IOError as exception:
+      logging.warning(
+          u'Unable to process path spec: {0:s} with error: {1:s}'.format(
+              extraction_worker.current_display_name, exception))
+
+    except dfvfs_errors.CacheFullError:
+      # TODO: signal engine of failure.
+      self._abort = True
+      logging.error((
+          u'ABORT: detected cache full error while processing '
+          u'path spec: {0:s}').format(
+              extraction_worker.current_display_name))
+
+    # All exceptions need to be caught here to prevent the worker
+    # from being killed by an uncaught exception.
+    except Exception as exception:  # pylint: disable=broad-except
+      logging.warning(
+          u'Unhandled exception while processing path spec: {0:s}.'.format(
+              extraction_worker.current_display_name))
+      logging.exception(exception)
 
   def _ProcessTask(self, task):
     """Processes a task.
@@ -1215,33 +1248,12 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
       storage_writer.WriteTaskStart()
 
       # TODO: add support for more task types.
-      self._extraction_worker.ProcessPathSpec(
-          self._parser_mediator, task.path_spec)
+      self._ProcessPathSpec(
+          self._extraction_worker, self._parser_mediator, task.path_spec)
       self._number_of_consumed_sources += 1
 
       # TODO: on abort use WriteTaskAborted instead of completion?
       storage_writer.WriteTaskCompletion()
-
-    except IOError as exception:
-      logging.warning(
-          u'Unable to process path spec: {0:s} with error: {1:s}'.format(
-              self._extraction_worker.current_display_name, exception))
-
-    except dfvfs_errors.CacheFullError:
-      # TODO: signal engine of failure.
-      self._abort = True
-      logging.error((
-          u'ABORT: detected cache full error while processing '
-          u'path spec: {0:s}').format(
-              self._extraction_worker.current_display_name))
-
-    # All exceptions need to be caught here to prevent the worker
-    # from being killed by an uncaught exception.
-    except Exception as exception:  # pylint: disable=broad-except
-      logging.warning(
-          u'Unhandled exception while processing path spec: {0:s}.'.format(
-              self._extraction_worker.current_display_name))
-      logging.exception(exception)
 
     finally:
       self._parser_mediator.SetStorageWriter(None)
