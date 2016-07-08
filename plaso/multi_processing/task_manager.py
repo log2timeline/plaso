@@ -20,8 +20,8 @@ class TaskManager(object):
           tasks, where 0 represents no limit.
     """
     super(TaskManager, self).__init__()
+    self._abandoned_tasks = {}
     self._active_tasks = {}
-    self._cancelled_tasks = {}
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._scheduled_tasks = {}
 
@@ -55,13 +55,13 @@ class TaskManager(object):
     self._active_tasks[task.identifier] = task
     return task
 
-  def GetCancelledTasks(self):
-    """Retrieves all cancelled tasks.
+  def GetAbandonedTasks(self):
+    """Retrieves all abandoned tasks.
 
     Returns:
       list[task]: task.
     """
-    return self._cancelled_tasks.values()
+    return self._abandoned_tasks.values()
 
   def GetScheduledTaskIdentifiers(self):
     """Retrieves all scheduled task identifiers.
@@ -74,10 +74,10 @@ class TaskManager(object):
   def HasScheduledTasks(self):
     """Determines if there are scheduled tasks.
 
-    A task will be cancelled if it last update exceeds the inactive time.
+    A task will be abandoned if it last update exceeds the inactive time.
 
     Returns:
-      bool: True if there are scheduled has active tasks.
+      bool: True if there are scheduled active tasks.
     """
     if not self._scheduled_tasks:
       return False
@@ -91,7 +91,7 @@ class TaskManager(object):
       else:
         del self._scheduled_tasks[task_identifier]
         task = self._active_tasks[task_identifier]
-        self._cancelled_tasks[task_identifier] = task
+        self._abandoned_tasks[task_identifier] = task
         del self._active_tasks[task_identifier]
 
     return has_active_tasks
