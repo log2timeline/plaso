@@ -128,15 +128,14 @@ class EventExtractor(object):
       del self._parsers[u'usnjrnl']
 
   def _ParseDataStreamWithParser(
-      self, parser_mediator, parser, file_entry, data_stream_name=u''):
+      self, parser_mediator, parser, file_entry, data_stream_name):
     """Parses a data stream of a file entry with a specific parser.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
       parser (BaseParser): parser.
       file_entry (dfvfs.FileEntry): file entry.
-      data_stream_name (Optional[str]): data stream name.
-          An empty string represents the default data stream.
+      data_stream_name (str): data stream name.
 
     Raises:
       RuntimeError: if the file-like object is missing.
@@ -210,14 +209,13 @@ class EventExtractor(object):
             u'[{0:s}] did not explicitly close file-object for file: '
             u'{1:s}.').format(parser.NAME, display_name))
 
-  def ParseDataStream(self, parser_mediator, file_entry, data_stream_name=u''):
+  def ParseDataStream(self, parser_mediator, file_entry, data_stream_name):
     """Parses a data stream of a file entry with the enabled parsers.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
       file_entry (dfvfs.FileEntry): file entry.
-      data_stream_name (Optional[str]): data stream name.
-          An empty string represents the default data stream.
+      data_stream_name (str): data stream name.
 
     Raises:
       RuntimeError: if the file-like object or the parser object is missing.
@@ -266,21 +264,20 @@ class EventExtractor(object):
           parser_mediator, self._filestat_parser, file_entry)
 
   def ParseMetadataFile(
-      self, parser_mediator, file_entry, data_stream_name=u''):
+      self, parser_mediator, file_entry, data_stream_name):
     """Parses a metadata file.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
       file_entry (dfvfs.FileEntry): file entry.
-      data_stream_name (Optional[str]): data stream name.
-          An empty string represents the default data stream.
+      data_stream_name (str): data stream name.
     """
     parent_path_spec = getattr(file_entry.path_spec, u'parent', None)
     filename_upper = file_entry.name.upper()
     if (self._mft_parser and parent_path_spec and
         filename_upper in (u'$MFT', u'$MFTMIRR') and not data_stream_name):
       self._ParseDataStreamWithParser(
-          parser_mediator, self._mft_parser, file_entry)
+          parser_mediator, self._mft_parser, file_entry, u'')
 
     elif (self._usnjrnl_parser and parent_path_spec and
           filename_upper == u'$USNJRNL' and data_stream_name == u'$J'):
@@ -329,6 +326,8 @@ class PathSpecExtractor(object):
   The path specification extractor extracts path specification from a source
   directory, file or storage media device or image.
   """
+
+  _MAXIMUM_DEPTH = 255
 
   def __init__(self, resolver_context, duplicate_file_check=False):
     """Initializes a path specification extractor object.
@@ -429,15 +428,20 @@ class PathSpecExtractor(object):
           recurse_file_system=recurse_file_system):
         yield path_spec
 
-  def _ExtractPathSpecsFromDirectory(self, file_entry):
+  def _ExtractPathSpecsFromDirectory(self, file_entry, depth=0):
     """Extracts path specification from a directory.
 
     Args:
       file_entry (dfvfs.FileEntry): file entry that refers to the directory.
+      depth (Optional[int]): current depth where 0 represents the file system
+          root.
 
     Yields:
       dfvfs.PathSpec: path specification of a file entry found in the directory.
     """
+    if depth >= self._MAXIMUM_DEPTH:
+      raise errors.MaximumRecursionDepth(u'Maximum recursion depth reached.')
+
     # Need to do a breadth-first search otherwise we'll hit the Python
     # maximum recursion depth.
     sub_directories = []
@@ -482,7 +486,8 @@ class PathSpecExtractor(object):
 
     for sub_file_entry in sub_directories:
       try:
-        for path_spec in self._ExtractPathSpecsFromDirectory(sub_file_entry):
+        for path_spec in self._ExtractPathSpecsFromDirectory(
+            sub_file_entry, depth=(depth + 1)):
           yield path_spec
 
       except (

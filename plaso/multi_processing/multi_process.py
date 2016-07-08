@@ -651,7 +651,7 @@ class MultiProcessEngine(engine.BaseEngine):
       if not event_source and not task:
         event_source = self._storage_writer.GetNextEventSource()
 
-    for task in self._task_manager.GetCancelledTasks():
+    for task in self._task_manager.GetAbandonedTasks():
       self._processing_status.error_path_specs.append(task.path_spec)
 
     self._task_scheduler_active = False
