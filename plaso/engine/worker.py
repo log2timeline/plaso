@@ -13,7 +13,6 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import event_sources
 from plaso.engine import extractors
-from plaso.engine import profiler
 from plaso.hashers import manager as hashers_manager
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -99,16 +98,11 @@ class EventExtractionWorker(object):
     super(EventExtractionWorker, self).__init__()
     self._abort = False
     self._current_display_name = u''
-    self._enable_memory_profiling = False
-    self._enable_parsers_profiling = False
+    self._current_file_entry = None
     self._event_extractor = extractors.EventExtractor(
         resolver_context, parser_filter_expression=parser_filter_expression)
     self._hasher_names = None
-    self._memory_profiler = None
-    self._open_files = False
     self._process_archive_files = process_archive_files
-    self._profiling_sample = 0
-    self._profiling_sample_rate = 1000
     self._resolver_context = resolver_context
 
     self.processing_status = definitions.PROCESSING_STATUS_IDLE
@@ -222,9 +216,6 @@ class EventExtractionWorker(object):
           buffer_size=self._DEFAULT_HASH_READ_SIZE)
     finally:
       file_object.close()
-
-    if self._enable_memory_profiling:
-      self._ProfilingSampleMemory()
 
     for hash_name, digest_hash_string in iter(digest_hashes.items()):
       attribute_name = u'{0:s}_hash'.format(hash_name)
@@ -463,9 +454,6 @@ class EventExtractionWorker(object):
       # Make sure frame.f_locals does not keep a reference to file_entry.
       file_entry = None
 
-    if self._enable_memory_profiling:
-      self._ProfilingSampleMemory()
-
     logging.debug(
         u'[ProcessFileEntry] done processing file entry: {0:s}'.format(
             self._current_display_name))
@@ -554,53 +542,17 @@ class EventExtractionWorker(object):
 
     self.processing_status = definitions.PROCESSING_STATUS_IDLE
 
-  def _ProfilingSampleMemory(self):
-    """Create a memory profiling sample."""
-    if not self._memory_profiler:
-      return
-
-    self._profiling_sample += 1
-
-    if self._profiling_sample >= self._profiling_sample_rate:
-      self._memory_profiler.Sample()
-      self._profiling_sample = 0
-
   @property
   def current_display_name(self):
-    """The current display name."""
+    """str: current display name."""
     return self._current_display_name
 
-  def DisableProfiling(self, profiling_type=u'all'):
-    """Disables profiling.
-
-    Args:
-      profiling_type (Optional[str]): profiling type.
-    """
-    if profiling_type in (u'all', u'memory'):
-      self._enable_memory_profiling = False
-
-    if profiling_type in (u'all', u'parsers'):
-      self._enable_parsers_profiling = False
-
-  def EnableProfiling(self, profiling_sample_rate=1000, profiling_type=u'all'):
-    """Enables profiling.
-
-    Args:
-      profiling_sample_rate (Optional[int]): the profiling sample rate.
-          Contains the number of event sources processed.
-      profiling_type (Optional[str]): type of profiling.
-          Supported types are:
-
-          * 'memory' to profile memory usage;
-          * 'parsers' to profile CPU time consumed by individual parsers.
-    """
-    self._profiling_sample_rate = profiling_sample_rate
-
-    if profiling_type in (u'all', u'memory'):
-      self._enable_memory_profiling = True
-
-    if profiling_type in (u'all', u'parsers'):
-      self._enable_parsers_profiling = True
+  @property
+  def current_path_spec(self):
+    """dfvfs.PathSpec: current path specification."""
+    if not self._current_file_entry:
+      return
+    return self._current_file_entry.path_spec
 
   def ProcessPathSpec(self, parser_mediator, path_spec):
     """Processes a path specification.
@@ -622,54 +574,25 @@ class EventExtractionWorker(object):
 
     self._ProcessFileEntry(parser_mediator, file_entry)
 
-    self.processing_status = definitions.PROCESSING_STATUS_IDLE
-
-  def ProfilingStart(self, identifier):
-    """Starts profiling.
-
-    Args:
-      identifier (str): profiling identifier.
-
-    Raises:
-      ValueError: if the memory profiler is already set.
-    """
-    self._profiling_sample = 0
-
-    if self._enable_memory_profiling:
-      if self._memory_profiler:
-        raise ValueError(u'Memory profiler already set.')
-
-      self._memory_profiler = profiler.GuppyMemoryProfiler(identifier)
-      self._memory_profiler.Start()
-
-    if self._enable_parsers_profiling:
-      self._event_extractor.ProfilingStart(identifier)
-
-  def ProfilingStop(self):
-    """Stops profiling.
-
-    Raises:
-      ValueError: if the memory profiler is not set.
-    """
-    if self._enable_memory_profiling:
-      if not self._memory_profiler:
-        raise ValueError(u'Memory profiler not set.')
-
-      self._memory_profiler.Sample()
-
-    if self._enable_parsers_profiling:
-      self._event_extractor.ProfilingStop()
-
   def SetHashers(self, hasher_names_string):
-    """Initializes the hasher objects.
+    """Sets the hasher names.
 
     Args:
-      hasher_names_string (str): comma separated names of hashers to enable.
+      hasher_names_string (str): comma separated names of the hashers
+          to enable.
     """
     names = hashers_manager.HashersManager.GetHasherNamesFromString(
         hasher_names_string)
     logging.debug(u'[SetHashers] Enabling hashers: {0:s}.'.format(names))
     self._hasher_names = names
+
+  def SetParsersProfiler(self, parsers_profiler):
+    """Sets the parsers profiler.
+
+    Args:
+      parsers_profiler (ParsersProfiler): parsers profile.
+    """
+    self._event_extractor.SetParsersProfiler(parsers_profiler)
 
   def SignalAbort(self):
     """Signals the extraction worker to abort."""

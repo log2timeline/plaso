@@ -20,6 +20,7 @@ from plaso.containers import event_sources
 from plaso.engine import engine
 from plaso.engine import extractors
 from plaso.engine import plaso_queue
+from plaso.engine import profiler
 from plaso.engine import worker
 from plaso.engine import zeromq_queue
 from plaso.lib import definitions
@@ -41,7 +42,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
   _PROCESS_JOIN_TIMEOUT = 5.0
 
   def __init__(self, enable_sigsegv_handler=False, **kwargs):
-    """Initializes the process object.
+    """Initializes a process object.
 
     Args:
       enable_sigsegv_handler (bool): True if the SIGSEGV handler should
@@ -252,25 +253,46 @@ class MultiProcessEngine(engine.BaseEngine):
   _WORKER_PROCESSES_MAXIMUM = 15
 
   def __init__(
-      self, maximum_number_of_tasks=_MAXIMUM_NUMBER_OF_TASKS,
-      use_zeromq=False):
-    """Initialize the multi-process engine object.
+      self, enable_profiling=False, maximum_number_of_tasks=0,
+      profiling_directory=None, profiling_sample_rate=1000,
+      profiling_type=u'all', use_zeromq=False):
+    """Initializes an engine object.
 
     Args:
+      enable_profiling (Optional[bool]): True if profiling should be enabled.
       maximum_number_of_tasks (Optional[int]): maximum number of concurrent
           tasks, where 0 represents no limit.
+      profiling_directory (Optional[str]): path to the directory where
+          the profiling sample files should be stored.
+      profiling_sample_rate (Optional[int]): the profiling sample rate.
+          Contains the number of event sources processed.
+      profiling_type (Optional[str]): type of profiling.
+          Supported types are:
+
+          * 'memory' to profile memory usage;
+          * 'parsers' to profile CPU time consumed by individual parsers;
+          * 'processing' to profile CPU time consumed by different parts of
+            the processing;
+          * 'serializers' to profile CPU time consumed by individual
+            serializers.
       use_zeromq (Optional[bool]): True if ZeroMQ should be used for queuing
           instead of Python's multiprocessing queue.
     """
-    super(MultiProcessEngine, self).__init__()
+    super(MultiProcessEngine, self).__init__(
+        enable_profiling=enable_profiling,
+        profiling_directory=profiling_directory,
+        profiling_sample_rate=profiling_sample_rate,
+        profiling_type=profiling_type)
     self._enable_sigsegv_handler = False
     self._filter_find_specs = None
     self._filter_object = None
     self._hasher_names_string = None
     self._last_worker_number = 0
     self._maximum_number_of_tasks = maximum_number_of_tasks
+    self._memory_profiler = None
     self._mount_path = None
     self._new_event_sources = False
+    self._name = u'Main'
     self._number_of_consumed_sources = 0
     self._number_of_worker_processes = 0
     self._parser_filter_expression = None
@@ -278,13 +300,14 @@ class MultiProcessEngine(engine.BaseEngine):
     self._process_archive_files = False
     self._process_information_per_pid = {}
     self._processes_per_pid = {}
+    self._processing_profiler = None
     self._resolver_context = context.Context()
     self._rpc_clients_per_pid = {}
     self._rpc_errors_per_pid = {}
+    self._serializers_profiler = None
     self._session_identifier = None
     self._show_memory_usage = False
     self._status_update_callback = None
-    self._storage_merge_thread = None
     self._storage_writer = None
     self._task_queue = None
     self._task_queue_port = None
@@ -547,6 +570,11 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._UpdateStatus(status, storage_writer)
 
+  def _ProfilingSampleMemory(self):
+    """Create a memory profiling sample."""
+    if self._memory_profiler:
+      self._memory_profiler.Sample()
+
   def _RaiseIfNotMonitored(self, pid):
     """Raises if the process is not monitored by the engine.
 
@@ -618,6 +646,9 @@ class MultiProcessEngine(engine.BaseEngine):
 
         self._number_of_consumed_sources += 1
 
+        if self._memory_profiler:
+          self._memory_profiler.Sample()
+
       if task:
         try:
           self._task_queue.PushItem(task, block=False)
@@ -639,14 +670,20 @@ class MultiProcessEngine(engine.BaseEngine):
           # yet merged.
           self._task_manager.UpdateTask(task_identifier)
 
-        # Merge one task-based storage file per loop to keep tasks flowing.
-        if task_storage_merged:
-          continue
+          # Merge one task-based storage file per loop to keep tasks flowing.
+          if task_storage_merged:
+            continue
 
-        # TODO: look into time slicing merge.
-        if self._storage_writer.MergeTaskStorage(task_identifier):
-          self._task_manager.CompleteTask(task_identifier)
-          task_storage_merged = True
+          if self._processing_profiler:
+            self._processing_profiler.StartTiming(u'merge')
+
+          # TODO: look into time slicing merge.
+          if self._storage_writer.MergeTaskStorage(task_identifier):
+            self._task_tracker.UntrackTask(task_identifier)
+            task_storage_merged = True
+
+          if self._processing_profiler:
+            self._processing_profiler.StopTiming(u'merge')
 
       if not event_source and not task:
         event_source = self._storage_writer.GetNextEventSource()
@@ -660,12 +697,6 @@ class MultiProcessEngine(engine.BaseEngine):
       logging.debug(u'Task scheduler aborted')
     else:
       logging.debug(u'Task scheduler stopped')
-
-  def _StartTaskSchedulerThread(self):
-    """Starts the task scheduler thread."""
-    self._task_scheduler_thread = threading.Thread(
-        name=u'Task Scheduler', target=self._ScheduleTasks)
-    self._task_scheduler_thread.start()
 
   def _StartExtractionWorkerProcess(self, storage_writer):
     """Creates, starts and registers an extraction worker process.
@@ -697,6 +728,7 @@ class MultiProcessEngine(engine.BaseEngine):
         mount_path=self._mount_path, name=process_name,
         parser_filter_expression=self._parser_filter_expression,
         process_archive_files=self._process_archive_files,
+        profiling_directory=self._profiling_directory,
         profiling_sample_rate=self._profiling_sample_rate,
         profiling_type=self._profiling_type, text_prepend=self._text_prepend)
 
@@ -755,11 +787,33 @@ class MultiProcessEngine(engine.BaseEngine):
     self._rpc_clients_per_pid[pid] = rpc_client
     self._process_information_per_pid[pid] = process_info.ProcessInfo(pid)
 
-  def _StopTaskSchedulerThread(self):
-    """Stops the task scheduler thread."""
-    if self._task_scheduler_thread.isAlive():
-      self._task_scheduler_thread.join()
-    self._task_scheduler_thread = None
+  def _StartProfiling(self):
+    """Starts profiling."""
+    if not self._enable_profiling:
+      return
+
+    if self._profiling_type in (u'all', u'memory'):
+      identifier = u'{0:s}-memory'.format(self._name)
+      self._memory_profiler = profiler.GuppyMemoryProfiler(
+          identifier, path=self._profiling_directory,
+          profiling_sample_rate=self._profiling_sample_rate)
+      self._memory_profiler.Start()
+
+    if self._profiling_type in (u'all', u'processing'):
+      identifier = u'{0:s}-processing'.format(self._name)
+      self._processing_profiler = profiler.ProcessingProfiler(
+          identifier, path=self._profiling_directory)
+
+    if self._profiling_type in (u'all', u'serializers'):
+      identifier = u'{0:s}-serializers'.format(self._name)
+      self._serializers_profiler = profiler.SerializersProfiler(
+          identifier, path=self._profiling_directory)
+
+  def _StartTaskSchedulerThread(self):
+    """Starts the task scheduler thread."""
+    self._task_scheduler_thread = threading.Thread(
+        name=u'Task Scheduler', target=self._ScheduleTasks)
+    self._task_scheduler_thread.start()
 
   def _StopExtractionProcesses(self, abort=False):
     """Stops the extraction processes.
@@ -839,6 +893,29 @@ class MultiProcessEngine(engine.BaseEngine):
     for pid in iter(self._process_information_per_pid.keys()):
       self._StopMonitoringProcess(pid)
 
+  def _StopProfiling(self):
+    """Stops profiling."""
+    if not self._enable_profiling:
+      return
+
+    if self._profiling_type in (u'all', u'memory'):
+      self._memory_profiler.Sample()
+      self._memory_profiler = None
+
+    if self._profiling_type in (u'all', u'processing'):
+      self._processing_profiler.Write()
+      self._processing_profiler = None
+
+    if self._profiling_type in (u'all', u'serializers'):
+      self._serializers_profiler.Write()
+      self._serializers_profiler = None
+
+  def _StopTaskSchedulerThread(self):
+    """Stops the task scheduler thread."""
+    if self._task_scheduler_thread.isAlive():
+      self._task_scheduler_thread.join()
+    self._task_scheduler_thread = None
+
   def _TerminateProcess(self, pid):
     """Terminate a process.
 
@@ -917,7 +994,7 @@ class MultiProcessEngine(engine.BaseEngine):
       storage_writer (StorageWriter): storage writer for a session storage.
     """
     self._processing_status.UpdateForemanStatus(
-        u'Main', status, self._pid, u'',
+        self._name, status, self._pid, u'',
         self._number_of_consumed_sources,
         storage_writer.number_of_event_sources,
         0, storage_writer.number_of_events,
@@ -931,8 +1008,8 @@ class MultiProcessEngine(engine.BaseEngine):
       storage_writer, enable_sigsegv_handler=False, filter_find_specs=None,
       filter_object=None, hasher_names_string=None, mount_path=None,
       number_of_worker_processes=0, parser_filter_expression=None,
-      process_archive_files=False, profiling_type=u'all',
-      status_update_callback=None, show_memory_usage=False, text_prepend=None):
+      process_archive_files=False, status_update_callback=None,
+      show_memory_usage=False, text_prepend=None):
     """Processes the sources and extract event objects.
 
     Args:
@@ -942,22 +1019,22 @@ class MultiProcessEngine(engine.BaseEngine):
       preprocess_object (PreprocessObject): preprocess object.
       storage_writer (StorageWriter): storage writer for a session storage.
       enable_sigsegv_handler (Optional[bool]): True if the SIGSEGV handler
-                                               should be enabled.
+          should be enabled.
       filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
           used in path specification extraction.
       filter_object (Optional[objectfilter.Filter]): filter object.
       hasher_names_string (Optional[str]): comma separated string of names
-                                           of hashers to use during processing.
+          of hashers to use during processing.
       mount_path (Optional[str]): mount path.
       number_of_worker_processes (Optional[int]): number of worker processes.
-      parser_filter_expression (Optional[str]): parser filter expression.
+      parser_filter_expression (Optional[str]): parser filter expression,
+          where None represents all parsers and plugins.
       process_archive_files (Optional[bool]): True if archive files should be
-                                              scanned for file entries.
-      profiling_type (Optional[str]): profiling type.
+          scanned for file entries.
       show_memory_usage (Optional[bool]): True if memory information should be
-                                          included in status updates.
+          included in status updates.
       status_update_callback (Optional[function]): callback function for status
-                                                   updates.
+          updates.
       text_prepend (Optional[str]): text to prepend to every event.
 
     Returns:
@@ -998,7 +1075,7 @@ class MultiProcessEngine(engine.BaseEngine):
     self._text_prepend = text_prepend
 
     # Set up the storage writer before the worker processes.
-    self._storage_writer.StartTaskStorage()
+    storage_writer.StartTaskStorage()
 
     # Set up the task queue.
     if not self._use_zeromq:
@@ -1017,31 +1094,36 @@ class MultiProcessEngine(engine.BaseEngine):
       self._task_queue_port = self._task_queue.port
 
     for _ in range(0, number_of_worker_processes):
-      extraction_process = self._StartExtractionWorkerProcess(
-          self._storage_writer)
+      extraction_process = self._StartExtractionWorkerProcess(storage_writer)
       self._StartMonitoringProcess(extraction_process.pid)
 
-    if self._enable_profiling:
-      self._storage_writer.EnableProfiling(profiling_type=profiling_type)
+    self._StartProfiling()
 
-    self._storage_writer.Open()
+    if self._serializers_profiler:
+      storage_writer.SetSerializersProfiler(self._serializers_profiler)
+
+    storage_writer.Open()
 
     try:
-      self._storage_writer.WriteSessionStart()
+      storage_writer.WriteSessionStart()
 
       self._ProcessSources(
-          source_path_specs, self._storage_writer,
+          source_path_specs, storage_writer,
           filter_find_specs=filter_find_specs)
 
       # TODO: refactor the use of preprocess_object.
-      self._storage_writer.WritePreprocessObject(preprocess_object)
+      storage_writer.WritePreprocessObject(preprocess_object)
 
       # TODO: on abort use WriteSessionAborted instead of completion?
-      self._storage_writer.WriteSessionCompletion()
+      storage_writer.WriteSessionCompletion()
 
     finally:
-      if self._enable_profiling:
-        storage_writer.DisableProfiling()
+      storage_writer.Close()
+
+      if self._serializers_profiler:
+        storage_writer.SetSerializersProfiler(None)
+
+      self._StopProfiling()
 
     try:
       self._StopExtractionProcesses(abort=self._abort)
@@ -1060,7 +1142,7 @@ class MultiProcessEngine(engine.BaseEngine):
     else:
       task_storage_abort = self._abort
 
-    self._storage_writer.StopTaskStorage(abort=task_storage_abort)
+    storage_writer.StopTaskStorage(abort=task_storage_abort)
 
     if self._abort:
       logging.debug(u'Processing aborted.')
@@ -1095,38 +1177,42 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
       worker_number, enable_debug_output=False, enable_profiling=False,
       filter_object=None, hasher_names_string=None, mount_path=None,
       parser_filter_expression=None, process_archive_files=False,
-      profiling_sample_rate=1000, profiling_type=u'all', text_prepend=None,
-      **kwargs):
-    """Initializes the process object.
+      profiling_directory=None, profiling_sample_rate=1000,
+      profiling_type=u'all', text_prepend=None, **kwargs):
+    """Initializes a process object.
 
     Args:
-      task_queue: the task queue object (instance of MultiProcessingQueue).
-      storage_writer: a storage writer object (instance of StorageWriter).
-      knowledge_base: a knowledge base object (instance of KnowledgeBase),
-                      which contains information from the source data needed
-                      for parsing.
-      session_identifier: a string containing the identifier of the session.
+      task_queue (MultiProcessingQueue): task queue.
+      storage_writer (StorageWriter): storage writer for a session storage.
+      knowledge_base (KnowledgeBase): knowledge base which contains
+          information from the source data needed for parsing.
+      session_identifier (str): identifier of the session.
       worker_number: a number that identifies the worker.
-      enable_debug_output: optional boolean value to indicate if the debug
-                           output should be enabled.
-      enable_profiling: optional boolean value to indicate if profiling should
-                        be enabled.
-      filter_object: optional filter object (instance of objectfilter.Filter).
-      hasher_names_string: optional comma separated string of names of
-                           hashers to enable enable.
-      mount_path: optional string containing the mount path. The default
-                  is None.
-      parser_filter_expression: optional string containing the parser filter
-                                expression, where None represents all parsers
-                                and plugins.
-      process_archive_files: optional boolean value to indicate if the worker
-                             should scan for file entries inside files.
-      profiling_sample_rate: optional integer indicating the profiling sample
-                             rate. The value contains the number of files
-                             processed. The default value is 1000.
-      profiling_type: optional profiling type.
-      text_prepend: optional string that contains the text to prepend to every
-                    event object.
+      enable_debug_output (Optional[bool]): True if debug output should be
+          enabled.
+      enable_profiling (Optional[bool]): True if profiling should be enabled.
+      filter_object (Optional[objectfilter.Filter]): filter object.
+      hasher_names_string (Optional[str]): comma separated string of names
+          of hashers to use during processing.
+      mount_path (Optional[str]): mount path.
+      parser_filter_expression (Optional[str]): parser filter expression,
+          where None represents all parsers and plugins.
+      process_archive_files (Optional[bool]): True if archive files should be
+          scanned for file entries.
+      profiling_directory (Optional[str]): path to the directory where
+          the profiling sample files should be stored.
+      profiling_sample_rate (Optional[int]): the profiling sample rate.
+          Contains the number of event sources processed.
+      profiling_type (Optional[str]): type of profiling.
+          Supported types are:
+
+          * 'memory' to profile memory usage;
+          * 'parsers' to profile CPU time consumed by individual parsers;
+          * 'processing' to profile CPU time consumed by different parts of
+            the processing;
+          * 'serializers' to profile CPU time consumed by individual
+            serializers.
+      text_prepend (Optional[str]): text to prepend to every event.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
     super(MultiProcessWorkerProcess, self).__init__(**kwargs)
@@ -1135,9 +1221,13 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
     self._enable_debug_output = enable_debug_output
     self._extraction_worker = None
     self._knowledge_base = knowledge_base
+    self._memory_profiler = None
     self._number_of_consumed_events = 0
     self._number_of_consumed_sources = 0
     self._parser_mediator = None
+    self._parsers_profiler = None
+    self._processing_profiler = None
+    self._serializers_profiler = None
     self._session_identifier = session_identifier
     self._status = definitions.PROCESSING_STATUS_INITIALIZED
     self._storage_writer = storage_writer
@@ -1147,6 +1237,7 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
 
     # Attributes for profiling.
     self._enable_profiling = enable_profiling
+    self._profiling_directory = profiling_directory
     self._profiling_sample_rate = profiling_sample_rate
     self._profiling_type = profiling_type
 
@@ -1195,6 +1286,90 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
     self._status_is_running = status.get(u'is_running', False)
     return status
 
+  def _Main(self):
+    """The main loop."""
+    self._parser_mediator = parsers_mediator.ParserMediator(
+        None, self._knowledge_base)
+
+    if self._filter_object:
+      self._parser_mediator.SetFilterObject(self._filter_object)
+
+    if self._mount_path:
+      self._parser_mediator.SetMountPath(self._mount_path)
+
+    if self._text_prepend:
+      self._parser_mediator.SetTextPrepend(self._text_prepend)
+
+    # We need a resolver context per process to prevent multi processing
+    # issues with file objects stored in images.
+    resolver_context = context.Context()
+
+    # We need to initialize the parser and hasher objects after the process
+    # has forked otherwise on Windows the "fork" will fail with
+    # a PickleError for Python modules that cannot be pickled.
+    self._extraction_worker = worker.EventExtractionWorker(
+        resolver_context,
+        parser_filter_expression=self._parser_filter_expression,
+        process_archive_files=self._process_archive_files)
+
+    if self._hasher_names_string:
+      self._extraction_worker.SetHashers(self._hasher_names_string)
+
+    self._StartProfiling()
+
+    logging.debug(u'Worker: {0!s} (PID: {1:d}) started'.format(
+        self._name, self._pid))
+
+    self._status = definitions.PROCESSING_STATUS_RUNNING
+
+    try:
+      logging.debug(
+          u'{0!s} (PID: {1:d}) started monitoring task queue.'.format(
+              self._name, self._pid))
+
+      while not self._abort:
+        try:
+          task = self._task_queue.PopItem()
+        except (errors.QueueClose, errors.QueueEmpty) as exception:
+          logging.debug(u'ConsumeItems exiting with exception {0:s}.'.format(
+              type(exception)))
+          break
+
+        if isinstance(task, plaso_queue.QueueAbort):
+          logging.debug(u'ConsumeItems exiting, dequeued QueueAbort object.')
+          break
+
+        self._ProcessTask(task)
+
+      logging.debug(
+          u'{0!s} (PID: {1:d}) stopped monitoring task queue.'.format(
+              self._name, self._pid))
+
+    except Exception as exception:  # pylint: disable=broad-except
+      logging.warning(
+          u'Unhandled exception in worker: {0!s} (PID: {1:d}).'.format(
+              self._name, self._pid))
+      logging.exception(exception)
+
+      self._abort = True
+
+    self._StopProfiling()
+    self._extraction_worker = None
+    self._parser_mediator = None
+
+    if self._abort:
+      self._status = definitions.PROCESSING_STATUS_ABORTED
+    else:
+      self._status = definitions.PROCESSING_STATUS_COMPLETED
+
+    logging.debug(u'Extraction worker: {0!s} (PID: {1:d}) stopped'.format(
+        self._name, self._pid))
+
+    if isinstance(self._task_queue, MultiProcessingQueue):
+      self._task_queue.Close(abort=True)
+    else:
+      self._task_queue.Close()
+
   def _ProcessPathSpec(self, extraction_worker, parser_mediator, path_spec):
     """Processes a path specification.
 
@@ -1237,8 +1412,8 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
 
     storage_writer = self._storage_writer.CreateTaskStorage(task)
 
-    if self._enable_profiling:
-      storage_writer.EnableProfiling(profiling_type=self._profiling_type)
+    if self._serializers_profiler:
+      storage_writer.SetSerializersProfiler(self._serializers_profiler)
 
     storage_writer.Open()
 
@@ -1252,6 +1427,9 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
           self._extraction_worker, self._parser_mediator, task.path_spec)
       self._number_of_consumed_sources += 1
 
+      if self._memory_profiler:
+        self._memory_profiler.Sample()
+
       # TODO: on abort use WriteTaskAborted instead of completion?
       storage_writer.WriteTaskCompletion()
 
@@ -1260,101 +1438,62 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
 
       storage_writer.Close()
 
-      if self._enable_profiling:
-        storage_writer.DisableProfiling()
+      if self._serializers_profiler:
+        storage_writer.SetSerializersProfiler(None)
 
     self._storage_writer.PrepareMergeTaskStorage(task.identifier)
 
     self._task_identifier = u''
 
-  def _Main(self):
-    """The main loop."""
-    self._parser_mediator = parsers_mediator.ParserMediator(
-        None, self._knowledge_base)
+  def _StartProfiling(self):
+    """Starts profiling."""
+    if not self._enable_profiling:
+      return
 
-    if self._filter_object:
-      self._parser_mediator.SetFilterObject(self._filter_object)
+    if self._profiling_type in (u'all', u'memory'):
+      identifier = u'{0:s}-memory'.format(self._name)
+      self._memory_profiler = profiler.GuppyMemoryProfiler(
+          identifier, path=self._profiling_directory,
+          profiling_sample_rate=self._profiling_sample_rate)
+      self._memory_profiler.Start()
 
-    if self._mount_path:
-      self._parser_mediator.SetMountPath(self._mount_path)
+    if self._profiling_type in (u'all', u'parsers'):
+      identifier = u'{0:s}-parsers'.format(self._name)
+      self._parsers_profiler = profiler.ParsersProfiler(
+          identifier, path=self._profiling_directory)
+      self._extraction_worker.SetParsersProfiler(self._parsers_profiler)
 
-    if self._text_prepend:
-      self._parser_mediator.SetTextPrepend(self._text_prepend)
+    if self._profiling_type in (u'all', u'processsing'):
+      identifier = u'{0:s}-processsing'.format(self._name)
+      self._processing_profiler = profiler.ProcessingProfiler(
+          identifier, path=self._profiling_directory)
 
-    # We need a resolver context per process to prevent multi processing
-    # issues with file objects stored in images.
-    resolver_context = context.Context()
+    if self._profiling_type in (u'all', u'serializers'):
+      identifier = u'{0:s}-serializers'.format(self._name)
+      self._serializers_profiler = profiler.SerializersProfiler(
+          identifier, path=self._profiling_directory)
 
-    # We need to initialize the parser and hasher objects after the process
-    # has forked otherwise on Windows the "fork" will fail with
-    # a PickleError for Python modules that cannot be pickled.
-    self._extraction_worker = worker.EventExtractionWorker(
-        resolver_context,
-        parser_filter_expression=self._parser_filter_expression,
-        process_archive_files=self._process_archive_files)
+  def _StopProfiling(self):
+    """Stops profiling."""
+    if not self._enable_profiling:
+      return
 
-    if self._hasher_names_string:
-      self._extraction_worker.SetHashers(self._hasher_names_string)
+    if self._profiling_type in (u'all', u'memory'):
+      self._memory_profiler.Sample()
+      self._memory_profiler = None
 
-    if self._enable_profiling:
-      self._extraction_worker.EnableProfiling(
-          profiling_sample_rate=self._profiling_sample_rate,
-          profiling_type=self._profiling_type)
+    if self._profiling_type in (u'all', u'parsers'):
+      self._extraction_worker.SetParsersProfiler(None)
+      self._parsers_profiler.Write()
+      self._parsers_profiler = None
 
-    self._extraction_worker.ProfilingStart(self._name)
+    if self._profiling_type in (u'all', u'processing'):
+      self._processing_profiler.Write()
+      self._processing_profiler = None
 
-    logging.debug(u'Worker: {0!s} (PID: {1:d}) started'.format(
-        self._name, self._pid))
-
-    self._status = definitions.PROCESSING_STATUS_RUNNING
-
-    try:
-      logging.debug(
-          u'{0!s} (PID: {1:d}) started monitoring task queue.'.format(
-              self._name, self._pid))
-
-      while not self._abort:
-        try:
-          task = self._task_queue.PopItem()
-        except (errors.QueueClose, errors.QueueEmpty) as exception:
-          logging.debug(u'ConsumeItems exiting with exception {0:s}.'.format(
-              type(exception)))
-          break
-
-        if isinstance(task, plaso_queue.QueueAbort):
-          logging.debug(u'ConsumeItems exiting, dequeued QueueAbort object.')
-          break
-
-        self._ProcessTask(task)
-
-      logging.debug(
-          u'{0!s} (PID: {1:d}) stopped monitoring task queue.'.format(
-              self._name, self._pid))
-
-    except Exception as exception:  # pylint: disable=broad-except
-      logging.warning(
-          u'Unhandled exception in worker: {0!s} (PID: {1:d}).'.format(
-              self._name, self._pid))
-      logging.exception(exception)
-
-      self._abort = True
-
-    self._extraction_worker.ProfilingStop()
-    self._extraction_worker = None
-    self._parser_mediator = None
-
-    if self._abort:
-      self._status = definitions.PROCESSING_STATUS_ABORTED
-    else:
-      self._status = definitions.PROCESSING_STATUS_COMPLETED
-
-    logging.debug(u'Extraction worker: {0!s} (PID: {1:d}) stopped'.format(
-        self._name, self._pid))
-
-    if isinstance(self._task_queue, MultiProcessingQueue):
-      self._task_queue.Close(abort=True)
-    else:
-      self._task_queue.Close()
+    if self._profiling_type in (u'all', u'serializers'):
+      self._serializers_profiler.Write()
+      self._serializers_profiler = None
 
   def SignalAbort(self):
     """Signals the process to abort."""
