@@ -56,7 +56,7 @@ class CPUTimeProfiler(object):
     """Initializes the CPU time profiler object.
 
     Args:
-      identifier (str): identifier of the profiling sessing used to create
+      identifier (str): identifier of the profiling session used to create
           the sample filename.
       path (Optional[str]): path to write the sample file.
     """
