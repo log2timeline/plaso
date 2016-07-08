@@ -224,7 +224,8 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
 
     argument_group.add_argument(
         u'--temporary_directory', u'--temporary-directory',
-        dest=u'temporary_directory', type=str, action=u'store', help=(
+        dest=u'temporary_directory', type=str, action=u'store',
+        metavar=u'DIRECTORY', help=(
             u'Path to the directory that should be used to store temporary '
             u'files created during extraction.'))
 
