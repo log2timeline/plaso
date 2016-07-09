@@ -6,6 +6,7 @@ import collections
 import multiprocessing
 import logging
 
+import plaso.multi_processing.multi_process_queue
 from plaso import formatters   # pylint: disable=unused-import
 from plaso import output   # pylint: disable=unused-import
 
@@ -21,7 +22,6 @@ from plaso.lib import bufferlib
 from plaso.lib import errors
 from plaso.lib import py2to3
 from plaso.lib import timelib
-from plaso.multi_processing import multi_process
 from plaso.output import event_buffer as output_event_buffer
 from plaso.output import manager as output_manager
 from plaso.output import mediator as output_mediator
@@ -201,7 +201,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
           delay_open=False, port=None, linger_seconds=5)
       analysis_queue_port = analysis_report_incoming_queue.port
     else:
-      analysis_report_incoming_queue = multi_process.MultiProcessingQueue(
+      analysis_report_incoming_queue = plaso.multi_processing.multi_process_queue.MultiProcessingQueue(
           timeout=5)
 
     self._knowledge_base.InitializeLookupDictionaries(storage_file)
@@ -380,7 +380,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
             port=queue_port, delay_open=True)
         analysis_plugin_input_queues.append(input_queue)
       else:
-        input_queue = multi_process.MultiProcessingQueue(timeout=5)
+        input_queue = multi_process_queue.MultiProcessingQueue(timeout=5)
         analysis_plugin_input_queues.append(input_queue)
         output_queue = input_queue
       event_producers.append(plaso_queue.ItemQueueProducer(output_queue))

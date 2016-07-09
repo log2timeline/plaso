@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+"""Base class for multi processing."""
+
 import logging
 import multiprocessing
 import random

@@ -6,10 +6,11 @@ from dfvfs.resolver import context
 
 from plaso.engine import worker, plaso_queue
 from plaso.lib import definitions, errors
-from plaso.multi_processing import multi_process
+from plaso.multi_processing import base_process
+from plaso.multi_processing import multi_process_queue
 from plaso.parsers import mediator as parsers_mediator
 
-class WorkerProcess(multi_process.MultiProcessBaseProcess):
+class WorkerProcess(base_process.MultiProcessBaseProcess):
   """Class that defines a multi-processing worker process."""
 
   def __init__(
@@ -237,7 +238,7 @@ class WorkerProcess(multi_process.MultiProcessBaseProcess):
     logging.debug(u'Extraction worker: {0!s} (PID: {1:d}) stopped'.format(
         self._name, self._pid))
 
-    if isinstance(self._task_queue, multi_process.MultiProcessingQueue):
+    if isinstance(self._task_queue, multi_process_queue.MultiProcessingQueue):
       self._task_queue.Close(abort=True)
     else:
       self._task_queue.Close()

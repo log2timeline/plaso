@@ -12,6 +12,7 @@ import time
 
 from dfvfs.resolver import context
 
+import plaso.multi_processing.multi_process_queue
 from plaso.containers import event_sources
 from plaso.containers import tasks
 from plaso.engine import engine
@@ -21,7 +22,6 @@ from plaso.engine import plaso_queue
 from plaso.lib import definitions
 from plaso.multi_processing import xmlrpc
 from plaso.multi_processing import process_info
-from plaso.multi_processing import multi_process
 from plaso.multi_processing import worker_process
 
 
@@ -632,7 +632,8 @@ class MultiProcessEngine(engine.BaseEngine):
 
     # For Multiprocessing queues, set abort to True to stop queue.join_thread()
     # from blocking.
-    if isinstance(self._task_queue, multi_process.MultiProcessingQueue):
+    if isinstance(self._task_queue,
+        plaso.multi_processing.multi_process_queue.MultiProcessingQueue):
       self._task_queue.Close(abort=True)
 
     if abort:
@@ -811,7 +812,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     # Set up the task queue.
     if not self._use_zeromq:
-      self._task_queue = multi_process.MultiProcessingQueue(
+      self._task_queue = plaso.multi_processing.multi_process_queue.MultiProcessingQueue(
           maximum_number_of_queued_items=self._maximum_number_of_queued_items)
 
     else:
