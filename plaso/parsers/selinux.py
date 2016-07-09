@@ -135,7 +135,7 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
     body_text = structure[2][0]
 
     try:
-      # Try to parser the body text as key value pairs. Note that not
+      # Try to parse the body text as key value pairs. Note that not
       # all log lines will be properly formatted key value pairs.
       key_value_dict = self._SELINUX_KEY_VALUE_DICT.parseString(body_text)
     except pyparsing.ParseException:
