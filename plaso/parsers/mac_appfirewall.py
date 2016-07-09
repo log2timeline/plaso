@@ -176,7 +176,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       structure: A pyparsing.ParseResults object from a line in the
                  log file.
     """
-    if key in [u'logline', u'repeated']:
+    if key in (u'logline', u'repeated'):
       self._ParseLogLine(parser_mediator, structure, key)
     else:
       logging.warning(
