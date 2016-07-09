@@ -22,31 +22,34 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
 
   def testBuildFindSpecsFromFile(self):
     """Tests the BuildFindSpecsFromFile function."""
-    filter_name = ''
+    filter_file_path = u''
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-      filter_name = temp_file.name
+      filter_file_path = temp_file.name
       # 2 hits.
-      temp_file.write('/test_data/testdir/filter_.+.txt\n')
+      temp_file.write(b'/test_data/testdir/filter_.+.txt\n')
       # A single hit.
-      temp_file.write('/test_data/.+evtx\n')
+      temp_file.write(b'/test_data/.+evtx\n')
       # A single hit.
-      temp_file.write('/AUTHORS\n')
-      temp_file.write('/does_not_exist/some_file_[0-9]+txt\n')
+      temp_file.write(b'/AUTHORS\n')
+      temp_file.write(b'/does_not_exist/some_file_[0-9]+txt\n')
+      # Path expansion.
+      temp_file.write(b'{systemroot}/Tasks/.+[.]job\n'),
       # This should not compile properly, missing file information.
-      temp_file.write('failing/\n')
+      temp_file.write(b'failing/\n')
       # This should not fail during initial loading, but fail later on.
-      temp_file.write('bad re (no close on that parenthesis/file\n')
+      temp_file.write(b'bad re (no close on that parenthesis/file\n')
 
-    find_specs = utils.BuildFindSpecsFromFile(filter_name)
+    find_specs = utils.BuildFindSpecsFromFile(
+        filter_file_path, path_attributes={u'SystemRoot': u'\\Windows'})
 
     try:
-      os.remove(filter_name)
+      os.remove(filter_file_path)
     except (OSError, IOError) as exception:
       logging.warning(
-          u'Unable to remove temporary file: {0:s} with error: {1:s}'.format(
-              filter_name, exception))
+          u'Unable to remove filter file: {0:s} with error: {1:s}'.format(
+              filter_file_path, exception))
 
-    self.assertEqual(len(find_specs), 4)
+    self.assertEqual(len(find_specs), 5)
 
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=u'.')
@@ -65,8 +68,6 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
       _ = utils.BuildFindSpecsFromFile('thisfiledoesnotexist')
 
     file_system.Close()
-
-    # TODO: add test with path_attributes.
 
 
 if __name__ == '__main__':

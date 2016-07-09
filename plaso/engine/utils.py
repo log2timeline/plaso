@@ -5,11 +5,13 @@ import logging
 
 from dfvfs.helpers import file_system_searcher
 
+from plaso.lib import py2to3
 
-class PathExpander(object):
-  """Class that implements the path expander."""
 
-  def ExpandPath(self, path, path_attributes=None):
+class _FilterFilePathExpander(object):
+  """Class that implements a filter file path expander."""
+
+  def ExpandPath(self, path, path_expander_attributes=None):
     """Expands a path based on attributes in pre calculated values.
 
     A path may contain paths that are attributes. A path attribute is
@@ -25,7 +27,8 @@ class PathExpander(object):
 
     Args:
       path (str): path before being expanded.
-      path_attributes (Optional[dict[str, str]]): path attributes.
+      path_expander_attributes (Optional[dict[str, str]]): path expander
+          attributes.
 
     Returns:
       str: path expanded based on path attributes.
@@ -34,11 +37,11 @@ class PathExpander(object):
       KeyError: If an attribute name is in the key path not set in
                 the path attributes.
     """
-    if not path_attributes:
+    if not path_expander_attributes:
       return path
 
     try:
-      expanded_path = path.format(**path_attributes)
+      expanded_path = path.format(**path_expander_attributes)
     except KeyError as exception:
       raise KeyError(
           u'Unable to expand path with error: {0:s}'.format(exception))
@@ -52,12 +55,21 @@ def BuildFindSpecsFromFile(filter_file_path, path_attributes=None):
   Args:
     filter_file_path (str): path to a file that contains find specifications.
     path_attributes (Optional[dict[str, str]]): path attributes e.g.
-        {'SystemRoot': 'C:\\Windows'}
+        {'SystemRoot': '\\Windows'}
   """
   find_specs = []
 
   if path_attributes:
-    path_expander = PathExpander()
+    path_expander = _FilterFilePathExpander()
+    path_expander_attributes = {}
+    for key, value in iter(path_attributes.items()):
+      if not isinstance(value, py2to3.STRING_TYPES):
+        continue
+
+      if value.startswith(u'\\'):
+        value = value.replace(u'\\', u'/')
+
+      path_expander_attributes[key.lower()] = value
 
   with open(filter_file_path, 'rb') as file_object:
     for line in file_object:
@@ -65,9 +77,10 @@ def BuildFindSpecsFromFile(filter_file_path, path_attributes=None):
       if line.startswith(u'#'):
         continue
 
-      if path_attributes:
+      if path_expander_attributes:
         try:
-          line = path_expander.ExpandPath(line, path_attributes=path_attributes)
+          line = path_expander.ExpandPath(
+              line, path_expander_attributes=path_expander_attributes)
         except KeyError as exception:
           logging.error((
               u'Unable to use collection filter line: {0:s} with error: '
