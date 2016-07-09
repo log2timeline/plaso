@@ -13,7 +13,6 @@ from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import event_sources
 from plaso.engine import extractors
-from plaso.engine import profiler
 from plaso.hashers import manager as hashers_manager
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -99,16 +98,11 @@ class EventExtractionWorker(object):
     super(EventExtractionWorker, self).__init__()
     self._abort = False
     self._current_display_name = u''
-    self._enable_memory_profiling = False
-    self._enable_parsers_profiling = False
     self._event_extractor = extractors.EventExtractor(
         resolver_context, parser_filter_expression=parser_filter_expression)
     self._hasher_names = None
-    self._memory_profiler = None
-    self._open_files = False
     self._process_archive_files = process_archive_files
-    self._profiling_sample = 0
-    self._profiling_sample_rate = 1000
+    self._processing_profiler = None
     self._resolver_context = resolver_context
 
     self.processing_status = definitions.PROCESSING_STATUS_IDLE
@@ -187,6 +181,47 @@ class EventExtractionWorker(object):
 
     return False
 
+  def _ExtractContentFromDataStream(
+      self, parser_mediator, file_entry, data_stream_name):
+    """Extracts content from a data stream.
+
+    Args:
+      parser_mediator (ParserMediator): parser mediator.
+      file_entry (dfvfs.FileEntry): file entry to extract its content.
+      data_stream_name (str): data stream name to extract its content.
+    """
+    self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
+
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'extracting')
+
+    self._event_extractor.ParseDataStream(
+        parser_mediator, file_entry, data_stream_name=data_stream_name)
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'extracting')
+
+    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
+
+  def _ExtractMetadataFromFileEntry(self, parser_mediator, file_entry):
+    """Extracts metadata from a file entry.
+
+    Args:
+      parser_mediator (ParserMediator): parser mediator.
+      file_entry (dfvfs.FileEntry): file entry to extract its metadata.
+    """
+    self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
+
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'extracting')
+
+    self._event_extractor.ParseFileEntryMetadata(parser_mediator, file_entry)
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'extracting')
+
+    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
+
   def _HashDataStream(self, parser_mediator, file_entry, data_stream_name):
     """Hashes the contents of a specific data stream of a file entry.
 
@@ -204,6 +239,11 @@ class EventExtractionWorker(object):
     """
     if not self._hasher_names:
       return
+
+    self.processing_status = definitions.PROCESSING_STATUS_HASHING
+
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'hashing')
 
     logging.debug(u'[HashDataStream] hashing file: {0:s}'.format(
         self._current_display_name))
@@ -223,9 +263,6 @@ class EventExtractionWorker(object):
     finally:
       file_object.close()
 
-    if self._enable_memory_profiling:
-      self._ProfilingSampleMemory()
-
     for hash_name, digest_hash_string in iter(digest_hashes.items()):
       attribute_name = u'{0:s}_hash'.format(hash_name)
       parser_mediator.AddEventAttribute(attribute_name, digest_hash_string)
@@ -237,6 +274,11 @@ class EventExtractionWorker(object):
     logging.debug(
         u'[HashDataStream] completed hashing file: {0:s}'.format(
             self._current_display_name))
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'hashing')
+
+    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
 
   def _IsMetadataFile(self, file_entry):
     """Determines if the file entry is a metadata file.
@@ -390,6 +432,11 @@ class EventExtractionWorker(object):
       parser_mediator (ParserMediator): parser mediator.
       file_entry (dfvfs.FileEntry): file entry of the directory.
     """
+    self.processing_status = definitions.PROCESSING_STATUS_COLLECTING
+
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'collecting')
+
     for sub_file_entry in file_entry.sub_file_entries:
       if self._abort:
         break
@@ -414,6 +461,11 @@ class EventExtractionWorker(object):
           path_spec=sub_file_entry.path_spec)
       parser_mediator.ProduceEventSource(event_source)
 
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'collecting')
+
+    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
+
   def _ProcessFileEntry(self, parser_mediator, file_entry):
     """Processes a file entry.
 
@@ -432,6 +484,8 @@ class EventExtractionWorker(object):
         self._current_display_name))
 
     try:
+      self.processing_status = definitions.PROCESSING_STATUS_RUNNING
+
       if self._IsMetadataFile(file_entry):
         self._ProcessMetadataFile(parser_mediator, file_entry)
 
@@ -449,6 +503,8 @@ class EventExtractionWorker(object):
           # For when the file entry does not contain a data stream.
           self._ProcessFileEntryDataStream(parser_mediator, file_entry, u'')
 
+      self.processing_status = definitions.PROCESSING_STATUS_IDLE
+
     finally:
       if reference_count != self._resolver_context.GetFileObjectReferenceCount(
           file_entry.path_spec):
@@ -462,9 +518,6 @@ class EventExtractionWorker(object):
 
       # Make sure frame.f_locals does not keep a reference to file_entry.
       file_entry = None
-
-    if self._enable_memory_profiling:
-      self._ProfilingSampleMemory()
 
     logging.debug(
         u'[ProcessFileEntry] done processing file entry: {0:s}'.format(
@@ -486,11 +539,7 @@ class EventExtractionWorker(object):
     # extract the metadata only.
     has_data_stream = file_entry.HasDataStream(data_stream_name)
     if has_data_stream:
-      self.processing_status = definitions.PROCESSING_STATUS_HASHING
-
       self._HashDataStream(parser_mediator, file_entry, data_stream_name)
-
-    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
 
     # We always want to extract the file entry metadata but we only want
     # to parse it once per file entry, so we only use it if we are
@@ -498,11 +547,7 @@ class EventExtractionWorker(object):
     if (not data_stream_name and (
         not file_entry.IsRoot() or
         file_entry.type_indicator in self._TYPES_WITH_ROOT_METADATA)):
-      self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
-
-      self._event_extractor.ParseFileEntryMetadata(parser_mediator, file_entry)
-
-    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
+      self._ExtractMetadataFromFileEntry(parser_mediator, file_entry)
 
     # Determine if the content of the file entry should not be extracted.
     skip_content_extraction = self._CanSkipContentExtraction(file_entry)
@@ -512,11 +557,7 @@ class EventExtractionWorker(object):
       return
 
     if file_entry.IsDirectory() and not data_stream_name:
-      self.processing_status = definitions.PROCESSING_STATUS_COLLECTING
-
       self._ProcessDirectory(parser_mediator, file_entry)
-
-    self.processing_status = definitions.PROCESSING_STATUS_RUNNING
 
     is_archive = False
     is_compressed_stream = False
@@ -554,53 +595,10 @@ class EventExtractionWorker(object):
 
     self.processing_status = definitions.PROCESSING_STATUS_IDLE
 
-  def _ProfilingSampleMemory(self):
-    """Create a memory profiling sample."""
-    if not self._memory_profiler:
-      return
-
-    self._profiling_sample += 1
-
-    if self._profiling_sample >= self._profiling_sample_rate:
-      self._memory_profiler.Sample()
-      self._profiling_sample = 0
-
   @property
   def current_display_name(self):
-    """The current display name."""
+    """str: current display name."""
     return self._current_display_name
-
-  def DisableProfiling(self, profiling_type=u'all'):
-    """Disables profiling.
-
-    Args:
-      profiling_type (Optional[str]): profiling type.
-    """
-    if profiling_type in (u'all', u'memory'):
-      self._enable_memory_profiling = False
-
-    if profiling_type in (u'all', u'parsers'):
-      self._enable_parsers_profiling = False
-
-  def EnableProfiling(self, profiling_sample_rate=1000, profiling_type=u'all'):
-    """Enables profiling.
-
-    Args:
-      profiling_sample_rate (Optional[int]): the profiling sample rate.
-          Contains the number of event sources processed.
-      profiling_type (Optional[str]): type of profiling.
-          Supported types are:
-
-          * 'memory' to profile memory usage;
-          * 'parsers' to profile CPU time consumed by individual parsers.
-    """
-    self._profiling_sample_rate = profiling_sample_rate
-
-    if profiling_type in (u'all', u'memory'):
-      self._enable_memory_profiling = True
-
-    if profiling_type in (u'all', u'parsers'):
-      self._enable_parsers_profiling = True
 
   def ProcessPathSpec(self, parser_mediator, path_spec):
     """Processes a path specification.
@@ -622,54 +620,33 @@ class EventExtractionWorker(object):
 
     self._ProcessFileEntry(parser_mediator, file_entry)
 
-    self.processing_status = definitions.PROCESSING_STATUS_IDLE
-
-  def ProfilingStart(self, identifier):
-    """Starts profiling.
-
-    Args:
-      identifier (str): profiling identifier.
-
-    Raises:
-      ValueError: if the memory profiler is already set.
-    """
-    self._profiling_sample = 0
-
-    if self._enable_memory_profiling:
-      if self._memory_profiler:
-        raise ValueError(u'Memory profiler already set.')
-
-      self._memory_profiler = profiler.GuppyMemoryProfiler(identifier)
-      self._memory_profiler.Start()
-
-    if self._enable_parsers_profiling:
-      self._event_extractor.ProfilingStart(identifier)
-
-  def ProfilingStop(self):
-    """Stops profiling.
-
-    Raises:
-      ValueError: if the memory profiler is not set.
-    """
-    if self._enable_memory_profiling:
-      if not self._memory_profiler:
-        raise ValueError(u'Memory profiler not set.')
-
-      self._memory_profiler.Sample()
-
-    if self._enable_parsers_profiling:
-      self._event_extractor.ProfilingStop()
-
   def SetHashers(self, hasher_names_string):
-    """Initializes the hasher objects.
+    """Sets the hasher names.
 
     Args:
-      hasher_names_string (str): comma separated names of hashers to enable.
+      hasher_names_string (str): comma separated names of the hashers
+          to enable.
     """
     names = hashers_manager.HashersManager.GetHasherNamesFromString(
         hasher_names_string)
     logging.debug(u'[SetHashers] Enabling hashers: {0:s}.'.format(names))
     self._hasher_names = names
+
+  def SetParsersProfiler(self, parsers_profiler):
+    """Sets the parsers profiler.
+
+    Args:
+      parsers_profiler (ParsersProfiler): parsers profile.
+    """
+    self._event_extractor.SetParsersProfiler(parsers_profiler)
+
+  def SetProcessingProfiler(self, processing_profiler):
+    """Sets the parsers profiler.
+
+    Args:
+      processing_profiler (ProcessingProfiler): processing profile.
+    """
+    self._processing_profiler = processing_profiler
 
   def SignalAbort(self):
     """Signals the extraction worker to abort."""

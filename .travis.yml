@@ -5,7 +5,7 @@ python:
   - "2.7"
 before_install:
   - sudo rm -f /etc/apt/sources.list.d/travis_ci_zeromq3-source.list
-  - if test `uname -s` = 'Linux'; then /bin/bash ./config/linux/install_gift_and_dependencies.sh include-test; fi
+  - if test `uname -s` = 'Linux'; then /bin/bash ./config/linux/install_gift_and_dependencies.sh include-test include-debug; fi
 script:
   - if test `uname -s` = 'Linux' && test ${TRAVIS_PYTHON_VERSION} = "2.7"; then coverage run --source=plaso --omit="*_test*,*__init__*,*test_lib*" ./run_tests.py; else ./run_tests.py; fi
   - python setup.py build

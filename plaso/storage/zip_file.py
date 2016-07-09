@@ -3342,9 +3342,6 @@ class ZIPStorageFileWriter(interface.StorageWriter):
         self._output_file, buffer_size=self._buffer_size,
         storage_type=self._storage_type)
 
-    if self._enable_profiling:
-      self._storage_file.EnableProfiling(profiling_type=self._profiling_type)
-
     self._event_source_index = self._storage_file.GetNumberOfEventSources()
 
   def PrepareMergeTaskStorage(self, task_name):
@@ -3370,6 +3367,14 @@ class ZIPStorageFileWriter(interface.StorageWriter):
         self._merge_task_storage_path, u'{0:s}.plaso'.format(task_name))
 
     os.rename(storage_file_path, merge_storage_file_path)
+
+  def SetSerializersProfiler(self, serializers_profiler):
+    """Sets the serializers profiler.
+
+    Args:
+      serializers_profiler (SerializersProfiler): serializers profile.
+    """
+    self._storage_file.SetSerializersProfiler(serializers_profiler)
 
   def StartTaskStorage(self):
     """Creates a temporary path for the task storage.

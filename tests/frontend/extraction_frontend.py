@@ -17,6 +17,8 @@ from tests import test_lib as shared_test_lib
 class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
   """Tests for the extraction front-end object."""
 
+  # pylint: disable=protected-access
+
   def _GetTestScanNode(self, scan_context):
     """Retrieves the scan node for testing.
 
@@ -40,6 +42,18 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
   # TODO: add test for _PreprocessSource
   # TODO: add test for _PreprocessSetCollectionInformation
   # TODO: add test for _PreprocessSetTimezone
+
+  def testEnableAndDisableProfiling(self):
+    """Tests the EnableProfiling and DisableProfiling functions."""
+    test_front_end = extraction_frontend.ExtractionFrontend()
+
+    self.assertFalse(test_front_end._enable_profiling)
+
+    test_front_end.EnableProfiling()
+    self.assertTrue(test_front_end._enable_profiling)
+
+    test_front_end.DisableProfiling()
+    self.assertFalse(test_front_end._enable_profiling)
 
   def testGetHashersInformation(self):
     """Tests the GetHashersInformation function."""
@@ -136,12 +150,6 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
     """Tests the SetEnablePreprocessing function."""
     test_front_end = extraction_frontend.ExtractionFrontend()
     test_front_end.SetEnablePreprocessing(True)
-
-  def testSetEnableProfiling(self):
-    """Tests the SetEnableProfiling function."""
-    test_front_end = extraction_frontend.ExtractionFrontend()
-    test_front_end.SetEnableProfiling(
-        True, profiling_sample_rate=5000, profiling_type=u'all')
 
   def testSetShowMemoryInformation(self):
     """Tests the SetShowMemoryInformation function."""

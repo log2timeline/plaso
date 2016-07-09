@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The extraction CLI tool."""
 
+import os
+
 from plaso.cli import storage_media_tool
 from plaso.engine import engine
 from plaso.lib import definitions
@@ -12,9 +14,9 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
   """Class that implements an extraction CLI tool.
 
   Attributes:
-    list_hashers: boolean value to indicate the hashers should be listed.
-    list_parsers_and_plugins: boolean value to indicate the parsers and
-                              plugins should be listed.
+    list_hashers (bool): True if the hashers should be listed.
+    list_parsers_and_plugins (bool): True if the parsers and plugins should
+        be listed.
   """
 
   _DEFAULT_PROFILING_SAMPLE_RATE = 1000
@@ -31,12 +33,10 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     """Initializes the CLI tool object.
 
     Args:
-      input_reader: the input reader (instance of InputReader).
-                    The default is None which indicates the use of the stdin
-                    input reader.
-      output_writer: the output writer (instance of OutputWriter).
-                     The default is None which indicates the use of the stdout
-                     output writer.
+      input_reader (Optional[InputReader]): input reader, where None indicates
+          that the stdin input reader should be used.
+      output_writer (Optional[OutputWriter]): output writer, where None
+          indicates that the stdout output writer should be used.
     """
     super(ExtractionTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
@@ -50,6 +50,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     self._output_module = None
     self._parser_filter_expression = None
     self._process_archive_files = False
+    self._profiling_directory = None
     self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
     self._profiling_type = u'all'
     self._queue_size = self._DEFAULT_QUEUE_SIZE
@@ -64,7 +65,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     """Parses the extraction options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
@@ -94,7 +95,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     """Parses the performance options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
@@ -126,12 +127,19 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     """Parses the profiling options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
     """
     self._enable_profiling = getattr(options, u'enable_profiling', False)
+
+    self._profiling_directory = getattr(options, u'profiling_directory', None)
+    if (self._profiling_directory and
+        not os.path.isdir(self._profiling_directory)):
+      raise errors.BadConfigOption(
+          u'No such profiling directory: {0:s}'.format(
+              self._profiling_directory))
 
     profiling_sample_rate = getattr(options, u'profiling_sample_rate', None)
     if profiling_sample_rate:
@@ -148,7 +156,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     """Parses the storage options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
@@ -165,8 +173,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     """Adds the extraction options to the argument group.
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
         u'--hashers', dest=u'hashers', type=str, action=u'store',
@@ -220,8 +227,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     """Adds the performance options to the argument group.
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
         u'--buffer_size', u'--buffer-size', u'--bs', dest=u'buffer_size',
@@ -238,8 +244,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     """Adds the profiling options to the argument group.
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
         u'--profile', dest=u'enable_profiling', action=u'store_true',
@@ -248,13 +253,21 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
             u'and performance issues.'))
 
     argument_group.add_argument(
+        u'--profiling_directory', u'--profiling-directory',
+        dest=u'profiling_directory', type=str, action=u'store',
+        metavar=u'DIRECTORY', help=(
+            u'Path to the directory that should be used to store the profiling '
+            u'sample files. By default the sample files are stored in the '
+            u'current working directory.'))
+
+    argument_group.add_argument(
         u'--profiling_sample_rate', u'--profiling-sample-rate',
         dest=u'profiling_sample_rate', action=u'store', metavar=u'SAMPLE_RATE',
         default=0, help=(
             u'The profiling sample rate (defaults to a sample every {0:d} '
             u'files).').format(self._DEFAULT_PROFILING_SAMPLE_RATE))
 
-    profiling_types = [u'all', u'parsers', u'serializers']
+    profiling_types = [u'all', u'parsers', u'processing', u'serializers']
     if engine.BaseEngine.SupportsMemoryProfiling():
       profiling_types.append(u'memory')
 
@@ -262,14 +275,14 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
         u'--profiling_type', u'--profiling-type', dest=u'profiling_type',
         choices=sorted(profiling_types), action=u'store',
         metavar=u'TYPE', default=None, help=(
-            u'The profiling type: "all", "memory", "parsers" or '
-            u'"serializers".'))
+            u'The profiling type: "all", "memory", "parsers", "processing" '
+            u'or "serializers".'))
 
   def ParseOptions(self, options):
     """Parses tool specific options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.

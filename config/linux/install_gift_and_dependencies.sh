@@ -51,6 +51,10 @@ TEST_DEPENDENCIES="python-coverage
                    python-docopt
                    python-mock"
 
+# Additional dependencies for doing Plaso debugging, alphabetized,
+# one per line.
+DEBUG_DEPENDENCIES="python-guppy"
+
 # Additional dependencies for doing Plaso development, alphabetized,
 # one per line.
 DEVELOPMENT_DEPENDENCIES="python-sphinx
@@ -59,10 +63,15 @@ DEVELOPMENT_DEPENDENCIES="python-sphinx
 sudo add-apt-repository ppa:gift/dev -y
 sudo apt-get update -q
 sudo apt-get install -y ${PLASO_DEPENDENCIES}
-if [[ "$*" =~ "include-test" ]]; then
-    sudo apt-get install -y ${TEST_DEPENDENCIES}
+
+if [[ "$*" =~ "include-debug" ]]; then
+    sudo apt-get install -y ${DEBUG_DEPENDENCIES}
 fi
 
 if [[ "$*" =~ "include-development" ]]; then
     sudo apt-get install -y ${DEVELOPMENT_DEPENDENCIES}
+fi
+
+if [[ "$*" =~ "include-test" ]]; then
+    sudo apt-get install -y ${TEST_DEPENDENCIES}
 fi

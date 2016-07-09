@@ -25,15 +25,36 @@ class BaseEngine(object):
   # The interval of status updates in number of seconds.
   _STATUS_UPDATE_INTERVAL = 0.5
 
-  def __init__(self):
-    """Initializes the engine object."""
+  def __init__(
+      self, enable_profiling=False, profiling_directory=None,
+      profiling_sample_rate=1000, profiling_type=u'all'):
+    """Initializes an engine object.
+
+    Args:
+      enable_profiling (Optional[bool]): True if profiling should be enabled.
+      profiling_directory (Optional[str]): path to the directory where
+          the profiling sample files should be stored.
+      profiling_sample_rate (Optional[int]): profiling sample rate.
+          Contains the number of event sources processed.
+      profiling_type (Optional[str]): type of profiling.
+          Supported types are:
+
+          * 'memory' to profile memory usage;
+          * 'parsers' to profile CPU time consumed by individual parsers;
+          * 'processing' to profile CPU time consumed by different parts of
+            the processing;
+          * 'serializers' to profile CPU time consumed by individual
+            serializers.
+    """
     super(BaseEngine, self).__init__()
     self._abort = False
     self._enable_debug_output = False
-    self._enable_profiling = False
+    self._enable_profiling = enable_profiling
     self._processing_status = processing_status.ProcessingStatus()
-    self._profiling_sample_rate = 1000
-    self._profiling_type = u'all'
+    self._profiling_directory = profiling_directory
+    self._profiling_sample_rate = profiling_sample_rate
+    self._profiling_type = profiling_type
+
     self.knowledge_base = knowledge_base.KnowledgeBase()
 
   def GetSourceFileSystem(self, source_path_spec, resolver_context=None):
@@ -115,23 +136,6 @@ class BaseEngine(object):
                            should be enabled.
     """
     self._enable_debug_output = enable_debug_output
-
-  def SetEnableProfiling(
-      self, enable_profiling, profiling_sample_rate=1000,
-      profiling_type=u'all'):
-    """Enables or disables profiling.
-
-    Args:
-      enable_profiling: boolean value to indicate if the profiling should
-                        be enabled.
-      profiling_sample_rate: optional integer indicating the profiling sample
-                             rate. The value contains the number of files
-                             processed. The default value is 1000.
-      profiling_type: optional profiling type.
-    """
-    self._enable_profiling = enable_profiling
-    self._profiling_sample_rate = profiling_sample_rate
-    self._profiling_type = profiling_type
 
   def SignalAbort(self):
     """Signals the engine to abort."""
