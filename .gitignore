@@ -35,4 +35,3 @@
 # Test files
 .coverage
 tests-coverage.txt
-/docs/_build/.buildinfo
