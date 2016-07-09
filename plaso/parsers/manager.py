@@ -5,8 +5,8 @@ import logging
 
 import pysigscan
 
-from plaso.frontend import presets
 from plaso.lib import specification
+from plaso.parsers import presets
 
 
 class ParsersManager(object):
@@ -39,7 +39,7 @@ class ParsersManager(object):
     includes = {}
     excludes = {}
 
-    preset_categories = presets.categories.keys()
+    preset_categories = presets.CATEGORIES.keys()
 
     for parser_filter in parser_filter_expression.split(u','):
       parser_filter = parser_filter.strip()
@@ -54,7 +54,8 @@ class ParsersManager(object):
 
       parser_filter = parser_filter.lower()
       if parser_filter in preset_categories:
-        for parser_in_category in presets.GetParsersFromCategory(parser_filter):
+        for parser_in_category in cls._GetParsersFromPresetCategory(
+            parser_filter):
           parser, _, plugin = parser_in_category.partition(u'/')
           active_dict.setdefault(parser, [])
           if plugin:
@@ -68,6 +69,28 @@ class ParsersManager(object):
 
     cls._ReduceParserFilters(includes, excludes)
     return includes, excludes
+
+  @classmethod
+  def _GetParsersFromPresetCategory(cls, category):
+    """Retrieves the parser names of specific preset category.
+
+    Args:
+      category (str): parser preset categories.
+
+    Returns:
+      list[str]: parser names.
+    """
+    parser_names = []
+    if category not in presets.CATEGORIES:
+      return parser_names
+
+    for element_name in presets.CATEGORIES.get(category):
+      if element_name in presets.CATEGORIES:
+        parser_names.extend(cls._GetParsersFromPresetCategory(element_name))
+      else:
+        parser_names.append(element_name)
+
+    return parser_names
 
   @classmethod
   def _ReduceParserFilters(cls, includes, excludes):

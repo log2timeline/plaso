@@ -52,14 +52,6 @@ plaso.frontend.preg module
     :undoc-members:
     :show-inheritance:
 
-plaso.frontend.presets module
------------------------------
-
-.. automodule:: plaso.frontend.presets
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.frontend.psort module
 ---------------------------
 

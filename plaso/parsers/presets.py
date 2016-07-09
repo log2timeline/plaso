@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-"""Helper file for filtering out parsers."""
+"""The parser preset categories."""
 
-categories = {
+CATEGORIES = {
     u'win_gen': [
         u'bencode', u'esedb', u'filestat', u'sqlite/google_drive', u'java_idx',
         u'lnk', u'mcafee_protection', u'olecf', u'openxml', u'pe', u'prefetch',
@@ -44,22 +44,3 @@ categories = {
         u'sqlite/android_calls', u'sqlite/android_sms',
         u'sqlite/android_webview', u'sqlite/android_webviewcache',
         u'sqlite/chrome_cookies', u'sqlite/chrome_history', u'sqlite/skype',]}
-
-
-def GetParsersFromCategory(category):
-  """Return a list of parsers from a parser category.
-
-  Args:
-    category: One of the parser categories.
-  """
-  return_list = []
-  if category not in categories:
-    return return_list
-
-  for item in categories.get(category):
-    if item in categories:
-      return_list.extend(GetParsersFromCategory(item))
-    else:
-      return_list.append(item)
-
-  return return_list

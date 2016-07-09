@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a method to expand Windows environment variables."""
+"""This file contains a function to expand Windows environment variables."""
 
 import re
 
@@ -17,7 +17,7 @@ def ExpandWindowsEnvironmentVariables(path, path_attributes):
   Args:
     path (str): path before being expanded.
     path_attributes (dict[str, str]): path attributes e.g.
-                                      {'SystemRoot': 'C:\\Windows'}
+        {'SystemRoot': 'C:\\Windows'}
 
   Returns:
     str: path expanded based on path attributes.
@@ -25,17 +25,26 @@ def ExpandWindowsEnvironmentVariables(path, path_attributes):
   if path_attributes is None:
     path_attributes = {}
 
-  win_environ_regex = re.compile(r'%([^%]+?)%')
-  components = []
-  offset = 0
-  for match in win_environ_regex.finditer(path):
-    components.append(path[offset:match.start()])
+  path_attributes = {
+      key.lower(): value for key, value in path_attributes.items()}
 
-    kb_value = path_attributes.get(match.group(1).lower(), None)
-    if isinstance(kb_value, py2to3.STRING_TYPES) and kb_value:
-      components.append(kb_value)
+  environment_variable_regexp = re.compile(r'%([^%]+?)%')
+
+  offset = 0
+  expanded_path_fragments = []
+  for match in environment_variable_regexp.finditer(path):
+    expanded_path_fragments.append(path[offset:match.start()])
+
+    environment_variable = match.group(1)
+
+    replacement_value = path_attributes.get(environment_variable.lower(), None)
+    if isinstance(replacement_value, py2to3.STRING_TYPES):
+      expanded_path_fragments.append(replacement_value)
     else:
-      components.append(u'%%{0:s}%%'.format(match.group(1)))
+      expanded_path_fragments.append(u'%{0:s}%'.format(environment_variable))
+
     offset = match.end()
-  components.append(path[offset:])
-  return u''.join(components)
+
+  expanded_path_fragments.append(path[offset:])
+
+  return u''.join(expanded_path_fragments)

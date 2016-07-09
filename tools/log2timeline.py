@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""The log2timeline front-end."""
+"""The log2timeline command line tool."""
 
 import argparse
 import logging
@@ -32,30 +32,32 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
   """Class that implements the log2timeline CLI tool.
 
   Attributes:
-    dependencies_check: a boolean value to indicate the availability and
-                        versions of dependencies should be checked.
-    list_output_modules: a boolean value to indicate information about the
-                         output modules should be shows.
-    show_info: a boolean value to indicate information about hashers, parsers,
-               plugins, etc. should be shown.
+    dependencies_check (bool): True if the availability and versions of
+        dependencies should be checked.
+    list_output_modules (bool): True if information about the output modules
+        should be shown.
+    show_info (bool): True if information about hashers, parsers, plugins,
+        etc. should be shown.
   """
 
   NAME = u'log2timeline'
   DESCRIPTION = textwrap.dedent(u'\n'.join([
       u'',
-      u'log2timeline is the main front-end to the plaso back-end, used to',
-      u'collect and correlate events extracted from a filesystem.',
+      (u'log2timeline is a command line tool to extract events from '
+       u'individual '),
+      u'files, recursing a directory (e.g. mount point) or storage media ',
+      u'image or device.',
       u'',
       u'More information can be gathered from here:',
-      u'    http://plaso.kiddaland.net/usage/log2timeline',
+      u'    https://github.com/log2timeline/plaso/wiki/Using-log2timeline',
       u'']))
 
   EPILOG = textwrap.dedent(u'\n'.join([
       u'',
       u'Example usage:',
       u'',
-      u'Run the tool against an image (full kitchen sink)',
-      u'    log2timeline.py /cases/mycase/plaso.plaso ímynd.dd',
+      u'Run the tool against a storage media image (full kitchen sink)',
+      u'    log2timeline.py /cases/mycase/storage.plaso ímynd.dd',
       u'',
       u'Instead of answering questions, indicate some of the options on the',
       u'command line (including data from particular VSS stores).',
@@ -69,12 +71,10 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Initializes the CLI tool object.
 
     Args:
-      input_reader: the input reader (instance of InputReader).
-                    The default is None which indicates the use of the stdin
-                    input reader.
-      output_writer: the output writer (instance of OutputWriter).
-                     The default is None which indicates the use of the stdout
-                     output writer.
+      input_reader (Optional[InputReader]): input reader, where None indicates
+          that the stdin input reader should be used.
+      output_writer (Optional[OutputWriter]): output writer, where None
+          indicates that the stdout output writer should be used.
     """
     super(Log2TimelineTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
@@ -166,7 +166,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Retrieves a filter object for a specific filter expression.
 
     Args:
-      filter_expression: string that contains the filter expression.
+      filter_expression (str): filter expression.
 
     Returns:
       A filter object (instance of objectfilter.TODO) or None.
@@ -184,7 +184,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Parses the experimental plugin options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
     """
     use_zeromq = getattr(options, u'use_zeromq', False)
     if use_zeromq:
@@ -194,7 +194,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Parses the output options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
@@ -211,7 +211,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Parses the processing options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
@@ -283,7 +283,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Prints the processing status as a stream of output.
 
     Args:
-      processing_status: the processing status (instance of ProcessingStatus).
+      processing_status (ProcessingStatus): processing status.
     """
     for worker_status in processing_status.workers_status:
       status_line = (
@@ -299,8 +299,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Adds experimental options to the argument group
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
         u'--use_zeromq', action=u'store_true', dest=u'use_zeromq', help=(
@@ -310,8 +309,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Adds the output options to the argument group.
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
         u'--output', dest=u'output_module', action=u'store', type=str,
@@ -334,8 +332,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Adds the processing options to the argument group.
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
         u'--single_process', u'--single-process', dest=u'single_process',
@@ -423,7 +420,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Parses the command line arguments.
 
     Returns:
-      A boolean value indicating the arguments were successfully parsed.
+      bool: True if the arguments were successfully parsed.
     """
     self._ConfigureLogging()
 
@@ -542,7 +539,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           u'risk.')
       time.sleep(5)
 
-    # TODO: added now since it can cause a deadlock.
     if self._process_archive_files:
       logging.warning(
           u'Scanning archive files currently can cause deadlock. Continue at '
@@ -566,7 +562,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Parses the options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
@@ -646,10 +642,11 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       UserAbort: if the user initiated an abort.
     """
     self._front_end.SetDebugMode(self._debug_mode)
-    self._front_end.SetEnableProfiling(
-        self._enable_profiling,
-        profiling_sample_rate=self._profiling_sample_rate,
-        profiling_type=self._profiling_type)
+    if self._enable_profiling:
+      self._front_end.EnableProfiling(
+          profiling_directory=self._profiling_directory,
+          profiling_sample_rate=self._profiling_sample_rate,
+          profiling_type=self._profiling_type)
     self._front_end.SetStorageFile(self._output)
     self._front_end.SetShowMemoryInformation(show_memory=self._foreman_verbose)
 
@@ -692,23 +689,47 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         filter_file=self._filter_file,
         hasher_names_string=self._hasher_names_string,
         number_of_extraction_workers=self._number_of_extraction_workers,
+        process_archive_files=self._process_archive_files,
         parser_filter_expression=self._parser_filter_expression,
         preferred_encoding=self.preferred_encoding,
         single_process_mode=self._single_process_mode,
         status_update_callback=status_update_callback,
         timezone=self._timezone)
 
-    if processing_status and not processing_status.error_detected:
-      self._output_writer.Write(u'Processing completed.\n')
-    else:
-      self._output_writer.Write(u'Processing completed with errors.\n')
-    self._output_writer.Write(u'\n')
+    if not processing_status:
+      self._output_writer.Write(
+          u'WARNING: missing processing status information.\n')
 
-    if processing_status and processing_status.error_path_specs:
-      self._output_writer.Write(u'Path specifications that caused errors:\n')
-      for path_spec_comparable in processing_status.error_path_specs:
-        self._output_writer.Write(path_spec_comparable)
-        self._output_writer.Write(u'\n')
+    else:
+      if processing_status.aborted:
+        self._output_writer.Write(u'Processing aborted.\n')
+      elif processing_status.error_path_specs:
+        self._output_writer.Write(u'Processing completed with errors.\n')
+      else:
+        self._output_writer.Write(u'Processing completed.\n')
+
+      number_of_errors = (
+          processing_status.foreman_status.number_of_produced_errors)
+      if number_of_errors:
+        output_text = u'\n'.join([
+            (u'Number of errors encountered while extracting events: '
+             u'{0:d}.').format(number_of_errors),
+            u'',
+            u'Use pinfo to inspect errors in more detail.',
+            u''])
+        self._output_writer.Write(output_text)
+
+      if processing_status.error_path_specs:
+        output_text = u'\n'.join([
+            u'',
+            u'Path specifications that could not be processed:',
+            u''])
+        self._output_writer.Write(output_text)
+        for path_spec in processing_status.error_path_specs:
+          self._output_writer.Write(path_spec.comparable)
+          self._output_writer.Write(u'\n')
+
+    self._output_writer.Write(u'\n')
 
   def ShowInfo(self):
     """Shows information about available hashers, parsers, plugins, etc."""

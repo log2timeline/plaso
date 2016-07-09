@@ -128,20 +128,10 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._is_open = False
 
-  # TODO: remove during phased processing refactor.
-  def ForceFlush(self):
-    """Forces the storage writer to flush.
+  def GetNextEventSource(self):
+    """Retrieves the next event source.
 
-    Raises:
-      IOError: when the storage writer is closed.
-    """
-    if not self._is_open:
-      raise IOError(u'Unable to write to closed storage writer.')
-
-  def GetEventSources(self):
-    """Retrieves the event sources.
-
-    Yields:
+    Returns:
       EventSource: event source.
 
     Raises:
@@ -150,12 +140,12 @@ class FakeStorageWriter(interface.StorageWriter):
     if not self._is_open:
       raise IOError(u'Unable to read from closed storage writer.')
 
-    for event_source_index, event_source in enumerate(self.event_sources):
-      if event_source_index < self._event_source_index:
-        continue
+    if self._event_source_index >= len(self.event_sources):
+      return
 
-      yield event_source
-      self._event_source_index += 1
+    event_source = self.event_sources[self._event_source_index]
+    self._event_source_index += 1
+    return event_source
 
   def Open(self):
     """Opens the storage writer.

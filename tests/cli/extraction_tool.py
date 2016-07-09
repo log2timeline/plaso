@@ -17,7 +17,9 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
   _EXPECTED_OUTPUT_EXTRACTION_OPTIONS = u'\n'.join([
       (u'usage: extraction_tool_test.py [--hashers HASHER_LIST] '
        u'[--parsers PARSER_LIST]'),
-      u'                               [-p] [--use_old_preprocess]',
+      u'                               [-p] [--process_archives]',
+      u'                               [--temporary_directory DIRECTORY]',
+      u'                               [--use_old_preprocess]',
       u'',
       u'Test argument parser.',
       u'',
@@ -66,6 +68,15 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       (u'                        point is being parsed then this parameter '
        u'needs to be'),
       u'                        set manually.',
+      u'  --process_archives, --process-archives',
+      (u'                        Process file entries embedded within archive '
+       u'files.'),
+      (u'                        This can make processing '
+       u'significantly slower.'),
+      u'  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY',
+      (u'                        Path to the directory that should be used to '
+       u'store'),
+      u'                        temporary files created during extraction.',
       u'  --use_old_preprocess, --use-old-preprocess',
       (u'                        Only used in conjunction when appending to a '
        u'previous'),
@@ -97,7 +108,8 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       u''])
 
   _EXPECTED_PROFILING_OPTIONS = u'\n'.join([
-      u'usage: extraction_tool_test.py [--profile]',
+      (u'usage: extraction_tool_test.py [--profile] '
+       u'[--profiling_directory DIRECTORY]'),
       u'                               [--profiling_sample_rate SAMPLE_RATE]',
       u'                               [--profiling_type TYPE]',
       u'',
@@ -107,6 +119,12 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       (u'  --profile             Enable profiling. Intended usage is to '
        u'troubleshoot'),
       u'                        memory and performance issues.',
+      u'  --profiling_directory DIRECTORY, --profiling-directory DIRECTORY',
+      (u'                        Path to the directory that should be used '
+       u'to store the'),
+      (u'                        profiling sample files. By default the '
+       u'sample files'),
+      u'                        are stored in the current working directory.',
       (u'  --profiling_sample_rate SAMPLE_RATE, '
        u'--profiling-sample-rate SAMPLE_RATE'),
       (u'                        The profiling sample rate (defaults to a '
@@ -114,8 +132,8 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       u'                        1000 files).',
       u'  --profiling_type TYPE, --profiling-type TYPE',
       (u'                        The profiling type: "all", "memory", '
-       u'"parsers" or'),
-      u'                        "serializers".',
+       u'"parsers",'),
+      u'                        "processing" or "serializers".',
       u''])
 
   def testAddExtractionOptions(self):

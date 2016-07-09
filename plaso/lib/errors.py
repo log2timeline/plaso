@@ -25,6 +25,10 @@ class EngineAbort(Error):
   """Class that defines an engine initiated abort exception."""
 
 
+class MaximumRecursionDepth(Error):
+  """Raised when the maximum recursion depth is reached."""
+
+
 class NotAText(Error):
   """Raised when trying to read a text on a non-text sample."""
 

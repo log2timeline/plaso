@@ -8,6 +8,8 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 from plaso.parsers import plugins
 
+from tests import test_lib as shared_test_lib
+
 
 class TestParser(interface.BaseParser):
   """Test parser."""
@@ -65,13 +67,13 @@ class TestPlugin(plugins.BasePlugin):
     return
 
 
-class ParsersManagerTest(unittest.TestCase):
+class ParsersManagerTest(shared_test_lib.BaseTestCase):
   """Tests for the parsers manager."""
 
   # pylint: disable=protected-access
 
   def testGetParserFilters(self):
-    """Tests the GetParserFilters function."""
+    """Tests the _GetParserFilters function."""
     parser_filter_expression = u''
     includes, excludes = manager.ParsersManager._GetParserFilters(
         parser_filter_expression)
@@ -103,6 +105,28 @@ class ParsersManagerTest(unittest.TestCase):
         parser_filter_expression)
     self.assertEqual(includes, {u'test': [u'include']})
     self.assertEqual(excludes, {u'test': [u'exclude', u'intersection']})
+
+  def testGetParsersFromPresetCategory(self):
+    """Tests the _GetParsersFromPresetCategory function."""
+    expected_parser_names = sorted([
+        u'bencode', u'esedb', u'filestat', u'sqlite/google_drive', u'java_idx',
+        u'lnk', u'mcafee_protection', u'olecf', u'openxml', u'pe', u'prefetch',
+        u'sccm', u'skydrive_log', u'skydrive_log_old', u'sqlite/skype',
+        u'symantec_scanlog', u'binary_cookies', u'chrome_cache',
+        u'sqlite/chrome_cookies', u'sqlite/chrome_extension_activity',
+        u'sqlite/chrome_history', u'chrome_preferences', u'firefox_cache',
+        u'sqlite/firefox_cookies', u'sqlite/firefox_downloads',
+        u'sqlite/firefox_history', u'java_idx', u'esedb/msie_webcache',
+        u'msiecf', u'opera_global', u'opera_typed_history',
+        u'plist/safari_history', u'winfirewall', u'winjob', u'winreg'])
+
+    parser_names = manager.ParsersManager._GetParsersFromPresetCategory(
+        u'win_gen')
+    self.assertEqual(sorted(parser_names), expected_parser_names)
+
+    parser_names = manager.ParsersManager._GetParsersFromPresetCategory(
+        u'bogus')
+    self.assertEqual(parser_names, [])
 
   def testReduceParserFilters(self):
     """Tests the ReduceParserFilters function."""

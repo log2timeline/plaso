@@ -299,6 +299,14 @@ plaso.parsers.popcontest module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.presets module
+----------------------------
+
+.. automodule:: plaso.parsers.presets
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.recycler module
 -----------------------------
 
