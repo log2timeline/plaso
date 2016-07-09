@@ -18,6 +18,7 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       (u'usage: extraction_tool_test.py [--hashers HASHER_LIST] '
        u'[--parsers PARSER_LIST]'),
       u'                               [-p] [--process_archives]',
+      u'                               [--temporary_directory DIRECTORY]',
       u'                               [--use_old_preprocess]',
       u'',
       u'Test argument parser.',
@@ -72,6 +73,10 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
        u'files.'),
       (u'                        This can make processing '
        u'significantly slower.'),
+      u'  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY',
+      (u'                        Path to the directory that should be used to '
+       u'store'),
+      u'                        temporary files created during extraction.',
       u'  --use_old_preprocess, --use-old-preprocess',
       (u'                        Only used in conjunction when appending to a '
        u'previous'),

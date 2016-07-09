@@ -56,6 +56,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._single_process_mode = False
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
+    self._temporary_directory = None
     self._text_prepend = None
 
     self.list_hashers = False
@@ -86,6 +87,13 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
       self.list_parsers_and_plugins = True
 
     # TODO: preprocess.
+
+    self._temporary_directory = getattr(options, u'temporary_directory', None)
+    if (self._temporary_directory and
+        not os.path.isdir(self._temporary_directory)):
+      raise errors.BadConfigOption(
+          u'No such temporary directory: {0:s}'.format(
+              self._temporary_directory))
 
     self._old_preprocess = getattr(options, u'old_preprocess', False)
 
@@ -215,8 +223,15 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
             u'make processing significantly slower.'))
 
     argument_group.add_argument(
-        '--use_old_preprocess', '--use-old-preprocess', dest='old_preprocess',
-        action='store_true', default=False, help=(
+        u'--temporary_directory', u'--temporary-directory',
+        dest=u'temporary_directory', type=str, action=u'store',
+        metavar=u'DIRECTORY', help=(
+            u'Path to the directory that should be used to store temporary '
+            u'files created during extraction.'))
+
+    argument_group.add_argument(
+        u'--use_old_preprocess', u'--use-old-preprocess',
+        dest=u'old_preprocess', action=u'store_true', default=False, help=(
             u'Only used in conjunction when appending to a previous storage '
             u'file. When this option is used then a new preprocessing object '
             u'is not calculated and instead the last one that got added to '
