@@ -33,7 +33,7 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
       temp_file.write(b'/AUTHORS\n')
       temp_file.write(b'/does_not_exist/some_file_[0-9]+txt\n')
       # Path expansion.
-      temp_file.write(b'{systemroot}/Tasks/.+[.]job\n'),
+      temp_file.write(b'{systemroot}/Tasks/.+[.]job\n')
       # This should not compile properly, missing file information.
       temp_file.write(b'failing/\n')
       # This should not fail during initial loading, but fail later on.
