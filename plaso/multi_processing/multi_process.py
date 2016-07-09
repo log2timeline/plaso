@@ -253,7 +253,8 @@ class MultiProcessEngine(engine.BaseEngine):
   _WORKER_PROCESSES_MAXIMUM = 15
 
   def __init__(
-      self, enable_profiling=False, maximum_number_of_tasks=0,
+      self, enable_profiling=False,
+      maximum_number_of_tasks=_MAXIMUM_NUMBER_OF_TASKS,
       profiling_directory=None, profiling_sample_rate=1000,
       profiling_type=u'all', use_zeromq=False):
     """Initializes an engine object.
@@ -679,7 +680,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
           # TODO: look into time slicing merge.
           if self._storage_writer.MergeTaskStorage(task_identifier):
-            self._task_tracker.UntrackTask(task_identifier)
+            self._task_manager.CompleteTask(task_identifier)
             task_storage_merged = True
 
           if self._processing_profiler:

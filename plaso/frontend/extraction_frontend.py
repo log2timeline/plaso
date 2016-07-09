@@ -44,7 +44,6 @@ class ExtractionFrontend(frontend.Frontend):
     self._mount_path = None
     self._operating_system = None
     self._parser_names = None
-    self._process_archive_files = False
     self._profiling_directory = None
     self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
     self._profiling_type = u'all'
@@ -101,7 +100,6 @@ class ExtractionFrontend(frontend.Frontend):
     else:
       engine = multi_process.MultiProcessEngine(
           enable_profiling=self._enable_profiling,
-          maximum_number_of_tasks=self._MAXIMUM_NUMBER_OF_TASKS,
           profiling_directory=self._profiling_directory,
           profiling_sample_rate=self._profiling_sample_rate,
           profiling_type=self._profiling_type, use_zeromq=self._use_zeromq)
@@ -506,7 +504,7 @@ class ExtractionFrontend(frontend.Frontend):
           hasher_names_string=hasher_names_string,
           mount_path=self._mount_path,
           parser_filter_expression=parser_filter_expression,
-          process_archive_files=self._process_archive_files,
+          process_archive_files=process_archive_files,
           status_update_callback=status_update_callback,
           text_prepend=self._text_prepend)
 
@@ -522,7 +520,7 @@ class ExtractionFrontend(frontend.Frontend):
           mount_path=self._mount_path,
           number_of_worker_processes=number_of_extraction_workers,
           parser_filter_expression=parser_filter_expression,
-          process_archive_files=self._process_archive_files,
+          process_archive_files=process_archive_files,
           status_update_callback=status_update_callback,
           show_memory_usage=self._show_worker_memory_information,
           text_prepend=self._text_prepend)

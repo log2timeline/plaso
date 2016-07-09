@@ -539,7 +539,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           u'risk.')
       time.sleep(5)
 
-    # TODO: added now since it can cause a deadlock.
     if self._process_archive_files:
       logging.warning(
           u'Scanning archive files currently can cause deadlock. Continue at '
@@ -690,6 +689,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         filter_file=self._filter_file,
         hasher_names_string=self._hasher_names_string,
         number_of_extraction_workers=self._number_of_extraction_workers,
+        process_archive_files=self._process_archive_files,
         parser_filter_expression=self._parser_filter_expression,
         preferred_encoding=self.preferred_encoding,
         single_process_mode=self._single_process_mode,
