@@ -32,6 +32,9 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
 
     storage_writer.Close()
 
+    with self.assertRaises(IOError):
+      storage_writer.AddAnalysisReport(analysis_report)
+
   def testAddError(self):
     """Tests the AddError function."""
     session = sessions.Session()
@@ -45,6 +48,9 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
 
     storage_writer.Close()
 
+    with self.assertRaises(IOError):
+      storage_writer.AddError(extraction_error)
+
   def testAddEvent(self):
     """Tests the AddEvent function."""
     session = sessions.Session()
@@ -53,10 +59,14 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()
 
+    event_object = None
     for event_object in event_objects:
       storage_writer.AddEvent(event_object)
 
     storage_writer.Close()
+
+    with self.assertRaises(IOError):
+      storage_writer.AddEvent(event_object)
 
   def testAddEventSource(self):
     """Tests the AddEventSource function."""
@@ -70,6 +80,9 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
 
     storage_writer.Close()
 
+    with self.assertRaises(IOError):
+      storage_writer.AddEventSource(event_source)
+
   def testAddEventTag(self):
     """Tests the AddEventTag function."""
     session = sessions.Session()
@@ -82,10 +95,14 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     for event_object in event_objects:
       storage_writer.AddEvent(event_object)
 
+    event_tag = None
     for event_tag in event_tags:
       storage_writer.AddEventTag(event_tag)
 
     storage_writer.Close()
+
+    with self.assertRaises(IOError):
+      storage_writer.AddEventTag(event_tag)
 
   def testOpenClose(self):
     """Tests the Open and Close functions."""
@@ -103,7 +120,14 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     storage_writer.Close()
 
     storage_writer.Open()
+
+    with self.assertRaises(IOError):
+      storage_writer.Open()
+
     storage_writer.Close()
+
+    with self.assertRaises(IOError):
+      storage_writer.Close()
 
   # TODO: add test for GetEventSources.
 
@@ -123,6 +147,8 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
 
     storage_writer.Close()
 
+  # TODO: add test for GetNextEventSource.
+
   def testWriteSessionStartAndCompletion(self):
     """Tests the WriteSessionStart and WriteSessionCompletion functions."""
     session = sessions.Session()
@@ -134,6 +160,12 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     storage_writer.WriteSessionCompletion()
 
     storage_writer.Close()
+
+    with self.assertRaises(IOError):
+      storage_writer.WriteSessionStart()
+
+    with self.assertRaises(IOError):
+      storage_writer.WriteSessionCompletion()
 
     storage_writer = fake_storage.FakeStorageWriter(
         session, storage_type=definitions.STORAGE_TYPE_TASK)
@@ -160,6 +192,12 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     storage_writer.WriteTaskCompletion()
 
     storage_writer.Close()
+
+    with self.assertRaises(IOError):
+      storage_writer.WriteTaskStart()
+
+    with self.assertRaises(IOError):
+      storage_writer.WriteTaskCompletion()
 
     storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()

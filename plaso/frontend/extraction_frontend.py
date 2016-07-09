@@ -13,13 +13,13 @@ from plaso.containers import sessions
 from plaso.engine import single_process
 from plaso.engine import utils as engine_utils
 from plaso.frontend import frontend
-from plaso.frontend import presets
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.multi_processing import multi_process
 from plaso.hashers import manager as hashers_manager
 from plaso.parsers import manager as parsers_manager
+from plaso.parsers import presets as parsers_presets
 from plaso.storage import zip_file as storage_zip_file
 
 import pytz  # pylint: disable=wrong-import-order
@@ -367,7 +367,7 @@ class ExtractionFrontend(frontend.Frontend):
       A list of tuples of parser preset names and related parsers names.
     """
     parser_presets_information = []
-    for preset_name, parser_names in sorted(presets.categories.items()):
+    for preset_name, parser_names in sorted(parsers_presets.CATEGORIES.items()):
       parser_presets_information.append((preset_name, u', '.join(parser_names)))
 
     return parser_presets_information
