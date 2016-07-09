@@ -28,6 +28,7 @@ import logging
 import pyparsing
 
 from plaso.containers import text_events
+from plaso.lib import errors
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -49,7 +50,7 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
 
   _SELINUX_KEY_VALUE_GROUP = pyparsing.Group(
       pyparsing.Word(pyparsing.alphanums).setResultsName(u'key') +
-      pyparsing.Literal(u'=').suppress() + (
+      pyparsing.Suppress(u'=') + (
           pyparsing.QuotedString(u'"') ^
           pyparsing.Word(pyparsing.printables)).setResultsName(u'value'))
 
@@ -62,17 +63,17 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
 
   _SELINUX_MSG_GROUP = pyparsing.Group(
       pyparsing.Literal(u'msg').setResultsName(u'key') +
-      pyparsing.Literal(u'=audit(').suppress() +
+      pyparsing.Suppress(u'=audit(') +
       pyparsing.Word(pyparsing.nums).setResultsName(u'seconds') +
-      pyparsing.Literal(u'.').suppress() +
+      pyparsing.Suppress(u'.') +
       pyparsing.Word(pyparsing.nums).setResultsName(u'milliseconds') +
-      pyparsing.Literal(u':').suppress() +
+      pyparsing.Suppress(u':') +
       pyparsing.Word(pyparsing.nums).setResultsName(u'serial') +
-      pyparsing.Literal(u'):').suppress())
+      pyparsing.Suppress(u'):'))
 
   _SELINUX_TYPE_GROUP = pyparsing.Group(
       pyparsing.Literal(u'type').setResultsName(u'key') +
-      pyparsing.Literal(u'=').suppress() + (
+      pyparsing.Suppress(u'=') + (
           pyparsing.Word(pyparsing.srange("[A-Z_]")) ^ (
               pyparsing.Literal(u'UNKNOWN[') +
               pyparsing.Word(pyparsing.nums) +
@@ -80,7 +81,7 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
 
   _SELINUX_TYPE_AVC_GROUP = pyparsing.Group(
       pyparsing.Literal(u'type').setResultsName(u'key') +
-      pyparsing.Literal(u'=').suppress() + (
+      pyparsing.Suppress(u'=') + (
           pyparsing.Word(u'AVC') ^
           pyparsing.Word(u'USER_AVC')).setResultsName(u'value'))
 
@@ -100,34 +101,42 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
       key (str): identifier of the structure of tokens.
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
+
+    Raises:
+      ParseError: when the structure type is unknown.
     """
     if key != u'line':
-      logging.warning(
+      raise errors.ParseError(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     msg_value = structure.get(u'msg')
     if not msg_value:
-      parser_mediator.ProduceExtractionError(u'missing msg value')
+      parser_mediator.ProduceExtractionError(
+          u'missing msg value: {0!s}'.format(structure))
       return
 
     try:
       seconds = int(msg_value[0], 10)
     except ValueError:
       parser_mediator.ProduceExtractionError(
-          u'unsuppored number of seconds in msg value')
+          u'unsupported number of seconds in msg value: {0!s}'.format(
+              structure))
       return
 
     try:
       milliseconds = int(msg_value[1], 10)
     except ValueError:
       parser_mediator.ProduceExtractionError(
-          u'unsuppored number of milliseconds in msg value')
+          u'unsupported number of milliseconds in msg value: {0!s}'.format(
+              structure))
       return
 
     timestamp = ((seconds * 1000) + milliseconds) * 1000
     body_text = structure[2][0]
 
     try:
+      # Try to parser the body text as key value pairs. Note that not
+      # all log lines will be properly formatted key value pairs.
       key_value_dict = self._SELINUX_KEY_VALUE_DICT.parseString(body_text)
     except pyparsing.ParseException:
       key_value_dict = {}
