@@ -56,7 +56,7 @@ class TestCase(object):
   case so it can be easily run on different input files.
 
   Attributes:
-    name: a string containing the name of the test case.
+    name (satr): name of the test case.
   """
 
   NAME = None
@@ -67,12 +67,11 @@ class TestCase(object):
     """Initializes a test case object.
 
     Args:
-      tools_path: a string containing the path to the plaso tools.
-      test_sources_path: a string containing the path to the test sources.
-      test_references_path: a string containing the path to the test references.
-      test_results_path: a string containing the path to store test results.
-      debug_output: optional boolean value to indicate that debug output
-                    should be generated.
+      tools_path (str): path to the plaso tools.
+      test_sources_path (str): path to the test sources.
+      test_references_path (str): path to the test references.
+      test_results_path (str): path to store test results.
+      debug_output (Optional[bool]): True if debug output should be generated.
     """
     super(TestCase, self).__init__()
     self._debug_output = debug_output
@@ -120,10 +119,10 @@ class TestCase(object):
     """Runs a command.
 
     Args:
-      command: a string containing the command to run.
+      command (str): command to run.
 
     Returns:
-      A boolean indicating the command ran successfully.
+      bool: True if the command ran successfully.
     """
     exit_code = subprocess.call(command, shell=True)
     if exit_code != 0:
@@ -137,12 +136,11 @@ class TestCase(object):
     """Reads the test definition attributes into to the test definition.
 
     Args:
-      test_definition_reader: a test definition reader object (instance of
-                              TestDefinitionReader).
-      test_definition: a test definition object (instance of TestDefinition).
+      test_definition_reader (TestDefinitionReader): test definition reader.
+      test_definition (TestDefinition): test definition.
 
     Returns:
-      A boolean indicating the read was successful.
+      bool: True if the read was successful.
     """
 
   @abc.abstractmethod
@@ -150,10 +148,10 @@ class TestCase(object):
     """Runs the test case with the parameters specified by the test definition.
 
     Args:
-      test_definition: a test definition object (instance of TestDefinition).
+      test_definition (TestDefinition): test definition.
 
     Returns:
-      A boolean value indicating the test ran successfully.
+      bool: True if the test ran successfully.
     """
 
 
@@ -170,7 +168,7 @@ class TestCasesManager(object):
     The test case classes are identified based on their lower case name.
 
     Args:
-      test_case_class: a class object of the test case.
+      test_case_class (type): test case class.
 
     Raises:
       KeyError: if test case class is not set for the corresponding name.
@@ -190,17 +188,15 @@ class TestCasesManager(object):
     """Retrieves the test case object for a specific name.
 
     Args:
-      name: a string containing the name of the test case.
-      tools_path: a string containing the path to the plaso tools.
-      test_sources_path: a string containing the path to the test sources.
-      test_references_path: a string containing the path to the test references.
-      test_results_path: a string containing the path to store test results.
-      debug_output: optional boolean value to indicate that debug output
-                    should be generated.
+      name (str): name of the test case.
+      tools_path (str): path to the plaso tools.
+      test_sources_path (str): path to the test sources.
+      test_references_path (str): path to the test references.
+      test_results_path (str): path to store test results.
+      debug_output (Optional[bool]): True if debug output should be generated.
 
     Returns:
-      The corresponding test case (instance of TestCase) or
-      None if not available.
+      TestCase: test case or None if not available.
     """
     name = name.lower()
     if name not in cls._test_case_objects:
@@ -226,7 +222,7 @@ class TestCasesManager(object):
     The test case classes are identified based on their lower case name.
 
     Args:
-      test_case_class: a class object of the test case.
+      test_case_class (type): test case class.
 
     Raises:
       KeyError: if test case class is already set for the corresponding
@@ -247,7 +243,7 @@ class TestCasesManager(object):
     The test case classes are identified based on their lower case name.
 
     Args:
-      test_case_classes: a list of class objects of the test cases.
+      test_case_classes (list[type]): test case classes.
 
     Raises:
       KeyError: if test case class is already set for the corresponding
@@ -261,15 +257,15 @@ class TestDefinition(object):
   """Class that implements a test definition.
 
   Attributes:
-    case: a string containing the name of test case.
-    name: a string containing the name of the test.
+    case (str): name of test case.
+    name (str): name of the test.
   """
 
   def __init__(self, name):
     """Initializes a test definition object.
 
     Args:
-      name: a string containing the name of the test.
+      name (str): name of the test.
     """
     super(TestDefinition, self).__init__()
     self.case = u''
@@ -289,12 +285,11 @@ class TestDefinitionReader(object):
     """Initializes a test definition reader object.
 
     Args:
-      tools_path: a string containing the path to the plaso tools.
-      test_sources_path: a string containing the path to the test sources.
-      test_references_path: a string containing the path to the test references.
-      test_results_path: a string containing the path to store test results.
-      debug_output: optional boolean value to indicate that debug output
-                    should be generated.
+      tools_path (str): path to the plaso tools.
+      test_sources_path (str): path to the test sources.
+      test_references_path (str): path to the test references.
+      test_results_path (str): path to store test results.
+      debug_output (Optional[bool]): True if debug output should be generated.
     """
     super(TestDefinitionReader, self).__init__()
     self._config_parser = None
@@ -308,12 +303,11 @@ class TestDefinitionReader(object):
     """Retrieves a value from the config parser.
 
     Args:
-      section_name: a string containing the name of the section that
-                    contains the value.
-      value_name: a string of the name of the value.
+      section_name (str): name of the section that contains the value.
+      value_name (str): the name of the value.
 
     Returns:
-      An object containing the value or None if the value does not exists.
+      object: value or None if the value does not exists.
 
     Raises:
       RuntimeError: if the configuration parser is not set.
@@ -330,10 +324,10 @@ class TestDefinitionReader(object):
     """Reads test definitions.
 
     Args:
-      file_object: a file-like object to read from.
+      file_object (file): a file-like object to read from.
 
     Yields:
-      End-to-end test definitions (instances of TestDefinition).
+      TestDefinition: end-to-end test definition.
     """
     # TODO: replace by:
     # self._config_parser = configparser. ConfigParser(interpolation=None)
@@ -387,12 +381,11 @@ class TestLauncher(object):
     """Initializes a test launcher object.
 
     Args:
-      tools_path: a string containing the path to the plaso tools.
-      test_sources_path: a string containing the path to the test sources.
-      test_references_path: a string containing the path to the test references.
-      test_results_path: a string containing the path to store test results.
-      debug_output: optional boolean value to indicate that debug output
-                    should be generated.
+      tools_path (str): path to the plaso tools.
+      test_sources_path (str): path to the test sources.
+      test_references_path (str): path to the test references.
+      test_results_path (str): path to store test results.
+      debug_output (Optional[bool]): True if debug output should be generated.
     """
     super(TestLauncher, self).__init__()
     self._debug_output = debug_output
@@ -406,7 +399,7 @@ class TestLauncher(object):
     """Runs the test.
 
     Args:
-      test_definition: a test definition object (instance of TestDefinition).
+      test_definition (TestDefinition): test definition.
 
     Returns:
       A boolean value indicating the test ran successfully.
@@ -425,8 +418,7 @@ class TestLauncher(object):
     """Reads the test definitions from the configuration file.
 
     Args:
-      configuration_file: a string containing the path of the configuration
-                          file.
+      configuration_file (str): path of the configuration file.
     """
     self._test_definitions = []
     with open(configuration_file) as file_object:
@@ -440,7 +432,7 @@ class TestLauncher(object):
     """Runs the tests.
 
     Returns:
-      A list of strings containing the names of the failed tests.
+      list[str]: names of the failed tests.
     """
     # TODO: set up test environment
 
@@ -469,12 +461,11 @@ class ExtractAndOutputTestCase(TestCase):
     """Initializes a test case object.
 
     Args:
-      tools_path: a string containing the path to the plaso tools.
-      test_sources_path: a string containing the path to the test sources.
-      test_references_path: a string containing the path to the test references.
-      test_results_path: a string containing the path to store test results.
-      debug_output: optional boolean value to indicate that debug output
-                    should be generated.
+      tools_path (str): path to the plaso tools.
+      test_sources_path (str): path to the test sources.
+      test_references_path (str): path to the test references.
+      test_results_path (str): path to store test results.
+      debug_output (Optional[bool]): True if debug output should be generated.
     """
     super(ExtractAndOutputTestCase, self).__init__(
         tools_path, test_sources_path, test_references_path,
@@ -488,13 +479,13 @@ class ExtractAndOutputTestCase(TestCase):
     """Runs log2timeline with the parameters specified by the test definition.
 
     Args:
-      test_definition: a test definition object (instance of TestDefinition).
-      temp_directory: a string containing the name of a temporary directory.
-      storage_file: a string containing the path of the storage file.
-      source_path: a string containing the path of the source.
+      test_definition (TestDefinition): test definition.
+      temp_directory (str): name of a temporary directory.
+      storage_file (str): path of the storage file.
+      source_path (str): path of the source.
 
     Returns:
-      A boolean value indicating log2timeline ran successfully.
+      bool: True if log2timeline ran successfully.
     """
     extract_options = u'--status-view=none {0:s}'.format(
         u' '.join(test_definition.extract_options))
@@ -529,12 +520,12 @@ class ExtractAndOutputTestCase(TestCase):
     """Runs pinfo on the storage file.
 
     Args:
-      test_definition: a test definition object (instance of TestDefinition).
-      temp_directory: a string containing the name of a temporary directory.
-      storage_file: a string containing the path of the storage file.
+      test_definition (TestDefinition): test definition.
+      temp_directory (str): name of a temporary directory.
+      storage_file (str): path of the storage file.
 
     Returns:
-      A boolean value indicating pinfo ran successfully.
+      bool: True if pinfo ran successfully.
     """
     stdout_file = os.path.join(
         temp_directory, u'{0:s}-pinfo.out'.format(test_definition.name))
@@ -562,12 +553,12 @@ class ExtractAndOutputTestCase(TestCase):
     """Runs pinfo --compare on the storage file and a reference storage file.
 
     Args:
-      test_definition: a test definition object (instance of TestDefinition).
-      temp_directory: a string containing the name of a temporary directory.
-      storage_file: a string containing the path of the storage file.
+      test_definition (TestDefinition): test definition.
+      temp_directory (str): name of a temporary directory.
+      storage_file (str): path of the storage file.
 
     Returns:
-      A boolean value indicating pinfo ran successfully.
+      bool: True if pinfo ran successfully.
     """
     reference_storage_file = test_definition.reference_storage_file
     if self._test_references_path:
@@ -603,15 +594,15 @@ class ExtractAndOutputTestCase(TestCase):
     return result
 
   def _RunPsort(self, test_definition, temp_directory, storage_file):
-    """Runs psort on the storage file.
+    """Runs psort on a storage file.
 
     Args:
-      test_definition: a test definition object (instance of TestDefinition).
-      temp_directory: a string containing the name of a temporary directory.
-      storage_file: a string containing the path of the storage file.
+      test_definition (TestDefinition): test definition.
+      temp_directory (str): name of a temporary directory.
+      storage_file (str): path of the storage file.
 
     Returns:
-      A boolean value indicating psort ran successfully.
+      bool: True if psort ran successfully.
     """
     stdout_file = os.path.join(
         temp_directory, u'{0:s}-psort.out'.format(test_definition.name))
@@ -639,12 +630,11 @@ class ExtractAndOutputTestCase(TestCase):
     """Reads the test definition attributes into to the test definition.
 
     Args:
-      test_definition_reader: a test definition reader object (instance of
-                              TestDefinitionReader).
-      test_definition: a test definition object (instance of TestDefinition).
+      test_definition_reader (TestDefinitionReader): test definition reader.
+      test_definition (TestDefinition): test definition.
 
     Returns:
-      A boolean indicating the read was successful.
+      bool: True if the read was successful.
     """
     test_definition.extract_options = test_definition_reader.GetConfigValue(
         test_definition.name, u'extract_options')
@@ -668,10 +658,10 @@ class ExtractAndOutputTestCase(TestCase):
     """Runs the test case with the parameters specified by the test definition.
 
     Args:
-      test_definition: a test definition object (instance of TestDefinition).
+      test_definition (TestDefinition): test definition.
 
     Returns:
-      A boolean value indicating the test ran successfully.
+      bool: True if the test ran successfully.
     """
     source_path = test_definition.source
     if self._test_sources_path:
@@ -724,12 +714,12 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
     """Runs psort with the tagging options specified by the test definition.
 
     Args:
-      test_definition: a test definition object (instance of TestDefinition).
-      temp_directory: a string containing the name of a temporary directory.
-      storage_file: a string containing the path of the storage file.
+      test_definition (TestDefinition): test definition.
+      temp_directory (str): name of a temporary directory.
+      storage_file (str): path of the storage file.
 
     Returns:
-      A boolean value indicating psort ran successfully.
+      bool: True if psort ran successfully.
     """
     # TODO: determine why --analysis=tagging fails.
     tagging_options = (
@@ -763,12 +753,11 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
     """Reads the test definition attributes into to the test definition.
 
     Args:
-      test_definition_reader: a test definition reader object (instance of
-                              TestDefinitionReader).
-      test_definition: a test definition object (instance of TestDefinition).
+      test_definition_reader (TestDefinitionReader): test definition reader.
+      test_definition (TestDefinition): test definition.
 
     Returns:
-      A boolean indicating the read was successful.
+      bool: True if the read was successful.
     """
     if not super(ExtractAndTagTestCase, self).ReadAttributes(
         test_definition_reader, test_definition):
@@ -783,10 +772,10 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
     """Runs the test case with the parameters specified by the test definition.
 
     Args:
-      test_definition: a test definition object (instance of TestDefinition).
+      test_definition (TestDefinition): test definition.
 
     Returns:
-      A boolean value indicating the test ran successfully.
+      bool: True if the test ran successfully.
     """
     source_path = test_definition.source
     if self._test_sources_path:
@@ -818,6 +807,133 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
     return True
 
 
+class ImageExportTestCase(TestCase):
+  """Class that implements the image export test case.
+
+  The image export test case runs image_export to extract files from a storage
+  media image, specified by the test definition.
+  """
+
+  NAME = u'image_export'
+
+  def __init__(
+      self, tools_path, test_sources_path, test_references_path,
+      test_results_path, debug_output=False):
+    """Initializes a test case object.
+
+    Args:
+      tools_path (str): path to the plaso tools.
+      test_sources_path (str): path to the test sources.
+      test_references_path (str): path to the test references.
+      test_results_path (str): path to store test results.
+      debug_output (Optional[bool]): True if debug output should be generated.
+    """
+    super(ImageExportTestCase, self).__init__(
+        tools_path, test_sources_path, test_references_path,
+        test_results_path, debug_output=debug_output)
+    self._image_export_path = None
+    self._InitializeImageExportPath()
+
+  def _InitializeImageExportPath(self):
+    """Initializes the location of image_export."""
+    for filename in (
+        u'image_export.exe', u'image_export.sh', u'image_export.py'):
+      self._image_export_path = os.path.join(self._tools_path, filename)
+      if os.path.exists(self._image_export_path):
+        break
+
+    if self._image_export_path.endswith(u'.py'):
+      self._image_export_path = u' '.join([
+          sys.executable, self._image_export_path])
+
+  def _RunImageExport(self, test_definition, temp_directory, source_path):
+    """Runs image_export on a storage media image.
+
+    Args:
+      test_definition (TestDefinition): test definition.
+      temp_directory (str): name of a temporary directory.
+      source_path (str): path of the source.
+
+    Returns:
+      bool: True if image_export ran successfully.
+    """
+    output_options = []
+
+    if test_definition.output_file:
+      output_file_path = os.path.join(temp_directory, u'export')
+      output_options.append(u'-w {0:s}'.format(output_file_path))
+
+    output_options = u' '.join(output_options)
+
+    stdout_file = os.path.join(
+        temp_directory, u'{0:s}-image_export.out'.format(test_definition.name))
+    stderr_file = os.path.join(
+        temp_directory, u'{0:s}-image_export.err'.format(test_definition.name))
+    command = u'{0:s} {1:s} {2:s} > {3:s} 2> {4:s}'.format(
+        self._image_export, output_options, source_path, stdout_file,
+        stderr_file)
+
+    logging.info(u'Running: {0:s}'.format(command))
+    result = self._RunCommand(command)
+
+    if self._debug_output:
+      with open(stderr_file, 'rb') as file_object:
+        output_data = file_object.read()
+        print(output_data)
+
+    # TODO: hash the files.
+
+    if os.path.exists(stdout_file):
+      shutil.copy(stdout_file, self._test_results_path)
+    if os.path.exists(stderr_file):
+      shutil.copy(stderr_file, self._test_results_path)
+
+    return result
+
+  def ReadAttributes(self, test_definition_reader, test_definition):
+    """Reads the test definition attributes into to the test definition.
+
+    Args:
+      test_definition_reader (TestDefinitionReader): test definition reader.
+      test_definition (TestDefinition): test definition.
+
+    Returns:
+      bool: True if the read was successful.
+    """
+    test_definition.filter_file = test_definition_reader.GetConfigValue(
+        test_definition.name, u'filter_file')
+
+    test_definition.source = test_definition_reader.GetConfigValue(
+        test_definition.name, u'source')
+
+    return True
+
+  def Run(self, test_definition):
+    """Runs the test case with the parameters specified by the test definition.
+
+    Args:
+      test_definition (TestDefinition): test definition.
+
+    Returns:
+      bool: True if the test ran successfully.
+    """
+    source_path = test_definition.source
+    if self._test_sources_path:
+      source_path = os.path.join(self._test_sources_path, source_path)
+
+    if not os.path.exists(source_path):
+      logging.error(u'No such source: {0:s}'.format(source_path))
+      return False
+
+    with TempDirectory() as temp_directory:
+      # Extract files with image_export.
+      if not self._RunImageExport(
+          test_definition, temp_directory, source_path):
+        return False
+
+    return True
+
+
 class OutputTestCase(TestCase):
   """Class that implements the output test case.
 
@@ -833,12 +949,11 @@ class OutputTestCase(TestCase):
     """Initializes a test case object.
 
     Args:
-      tools_path: a string containing the path to the plaso tools.
-      test_sources_path: a string containing the path to the test sources.
-      test_references_path: a string containing the path to the test references.
-      test_results_path: a string containing the path to store test results.
-      debug_output: optional boolean value to indicate that debug output
-                    should be generated.
+      tools_path (str): path to the plaso tools.
+      test_sources_path (str): path to the test sources.
+      test_references_path (str): path to the test references.
+      test_results_path (str): path to store test results.
+      debug_output (Optional[bool]): True if debug output should be generated.
     """
     super(OutputTestCase, self).__init__(
         tools_path, test_sources_path, test_references_path,
@@ -849,11 +964,11 @@ class OutputTestCase(TestCase):
     """Compares the output file with a reference output file.
 
     Args:
-      test_definition: a test definition object (instance of TestDefinition).
-      temp_directory: a string containing the name of a temporary directory.
+      test_definition (TestDefinition): test definition.
+      temp_directory (str): name of a temporary directory.
 
     Returns:
-      A boolean value indicating the output files are identical or not.
+      bool: True if he output files are identical.
     """
     if test_definition.output_format not in (
         u'dynamic', u'json', u'json_line', u'l2tcsv', u'l2ttln', u'rawpy',
@@ -894,12 +1009,12 @@ class OutputTestCase(TestCase):
     """Runs psort with the output options specified by the test definition.
 
     Args:
-      test_definition: a test definition object (instance of TestDefinition).
-      temp_directory: a string containing the name of a temporary directory.
-      storage_file: a string containing the path of the storage file.
+      test_definition (TestDefinition): test definition.
+      temp_directory (str): name of a temporary directory.
+      storage_file (str): path of the storage file.
 
     Returns:
-      A boolean value indicating psort ran successfully.
+      bool: True if psort ran successfully.
     """
     output_options = test_definition.output_options
 
@@ -944,12 +1059,11 @@ class OutputTestCase(TestCase):
     """Reads the test definition attributes into to the test definition.
 
     Args:
-      test_definition_reader: a test definition reader object (instance of
-                              TestDefinitionReader).
-      test_definition: a test definition object (instance of TestDefinition).
+      test_definition_reader (TestDefinitionReader): test definition reader.
+      test_definition (TestDefinition): test definition.
 
     Returns:
-      A boolean indicating the read was successful.
+      bool: True if the read was successful.
     """
     test_definition.output_file = test_definition_reader.GetConfigValue(
         test_definition.name, u'output_file')
@@ -979,10 +1093,10 @@ class OutputTestCase(TestCase):
     """Runs the test case with the parameters specified by the test definition.
 
     Args:
-      test_definition: a test definition object (instance of TestDefinition).
+      test_definition (TestDefinition): test definition.
 
     Returns:
-      A boolean value indicating the test ran successfully.
+      bool: True if the test ran successfully.
     """
     source_path = test_definition.source
     if self._test_sources_path:
@@ -1006,7 +1120,8 @@ class OutputTestCase(TestCase):
 
 
 TestCasesManager.RegisterTestCases([
-    ExtractAndOutputTestCase, ExtractAndTagTestCase, OutputTestCase])
+    ExtractAndOutputTestCase, ExtractAndTagTestCase, ImageExportTestCase,
+    OutputTestCase])
 
 
 def Main():
