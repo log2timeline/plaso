@@ -857,11 +857,8 @@ class ImageExportTestCase(TestCase):
     Returns:
       bool: True if image_export ran successfully.
     """
-    output_options = []
-
-    if test_definition.output_file:
-      output_file_path = os.path.join(temp_directory, u'export')
-      output_options.append(u'-w {0:s}'.format(output_file_path))
+    output_file_path = os.path.join(temp_directory, u'export')
+    output_options = [u'-w {0:s}'.format(output_file_path)]
 
     output_options = u' '.join(output_options)
 
