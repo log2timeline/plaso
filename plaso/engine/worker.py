@@ -442,7 +442,7 @@ class EventExtractionWorker(object):
         break
 
       try:
-        if not sub_file_entry.IsAllocated() or sub_file_entry.IsLink():
+        if not sub_file_entry.IsAllocated():
           continue
 
       except dfvfs_errors.BackEndError as exception:
@@ -554,6 +554,11 @@ class EventExtractionWorker(object):
     if skip_content_extraction:
       logging.info(u'Skipping content extraction of: {0:s}'.format(
           self._current_display_name))
+      self.processing_status = definitions.PROCESSING_STATUS_IDLE
+      return
+
+    if file_entry.IsLink() and not data_stream_name:
+      self.processing_status = definitions.PROCESSING_STATUS_IDLE
       return
 
     if file_entry.IsDirectory() and not data_stream_name:
