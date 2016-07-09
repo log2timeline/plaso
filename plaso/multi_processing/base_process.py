@@ -15,7 +15,6 @@ from plaso.multi_processing import xmlrpc
 
 class MultiProcessBaseProcess(multiprocessing.Process):
   """Class that defines the multi-processing process interface.
-
   Attributes:
     rpc_port (int): port number of the process status RPC server.
   """
@@ -55,18 +54,15 @@ class MultiProcessBaseProcess(multiprocessing.Process):
   @abc.abstractmethod
   def _Main(self):
     """The process main loop.
-
     This method is called when the process is ready to start. A sub class
     should override this method to do the necessary actions in the main loop.
     """
 
   def _OnCriticalError(self):
     """The process on critical error handler.
-
-    This method is called when the process encountered a critical error e.g.
+    This method is called when the process encounters a critical error e.g.
     a segfault. A sub class should override this method to do the necessary
     actions before the original critical error signal handler it called.
-
     Be aware that the state of the process should not be trusted a significant
     part of memory could have been overwritten before a segfault. This callback
     is primarily intended to salvage what we need to troubleshoot the error.
@@ -75,7 +71,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
   def _SigSegvHandler(self, unused_signal_number, unused_stack_frame):
     """Signal handler for the SIGSEGV signal.
-
     Args:
       signal_number: Numeric representation of the signal.
       stack_frame: The current stack frame (instance of frame object) or None.
@@ -90,7 +85,6 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
   def _SigTermHandler(self, unused_signal_number, unused_stack_frame):
     """Signal handler for the SIGTERM signal.
-
     Args:
       signal_number: Numeric representation of the signal.
       stack_frame: The current stack frame (instance of frame object) or None.

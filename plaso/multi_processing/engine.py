@@ -548,7 +548,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._RegisterProcess(process)
 
-    return worker_process
+    return process
 
   def _StartMonitoringProcess(self, pid):
     """Starts monitoring a process.
