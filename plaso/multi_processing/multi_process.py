@@ -316,6 +316,7 @@ class MultiProcessEngine(engine.BaseEngine):
     self._task_scheduler_thread = None
     self._task_manager = task_manager.TaskManager(
         maximum_number_of_tasks=maximum_number_of_tasks)
+    self._temporary_directory = None
     self._text_prepend = None
     self._use_zeromq = use_zeromq
 
@@ -734,7 +735,9 @@ class MultiProcessEngine(engine.BaseEngine):
         process_archive_files=self._process_archive_files,
         profiling_directory=self._profiling_directory,
         profiling_sample_rate=self._profiling_sample_rate,
-        profiling_type=self._profiling_type, text_prepend=self._text_prepend)
+        profiling_type=self._profiling_type,
+        temporary_directory=self._temporary_directory,
+        text_prepend=self._text_prepend)
 
     worker_process.start()
     self._last_worker_number += 1
@@ -1013,7 +1016,7 @@ class MultiProcessEngine(engine.BaseEngine):
       filter_object=None, hasher_names_string=None, mount_path=None,
       number_of_worker_processes=0, parser_filter_expression=None,
       process_archive_files=False, status_update_callback=None,
-      show_memory_usage=False, text_prepend=None):
+      show_memory_usage=False, temporary_directory=None, text_prepend=None):
     """Processes the sources and extract event objects.
 
     Args:
@@ -1039,6 +1042,8 @@ class MultiProcessEngine(engine.BaseEngine):
           included in status updates.
       status_update_callback (Optional[function]): callback function for status
           updates.
+      temporary_directory (Optional[str]): path of the directory for temporary
+          files.
       text_prepend (Optional[str]): text to prepend to every event.
 
     Returns:
@@ -1076,6 +1081,7 @@ class MultiProcessEngine(engine.BaseEngine):
     self._session_identifier = session_identifier
     self._status_update_callback = status_update_callback
     self._storage_writer = storage_writer
+    self._temporary_directory = temporary_directory
     self._text_prepend = text_prepend
 
     # Set up the storage writer before the worker processes.
@@ -1182,8 +1188,12 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
       filter_object=None, hasher_names_string=None, mount_path=None,
       parser_filter_expression=None, process_archive_files=False,
       profiling_directory=None, profiling_sample_rate=1000,
-      profiling_type=u'all', text_prepend=None, **kwargs):
+      profiling_type=u'all', temporary_directory=None, text_prepend=None,
+      **kwargs):
     """Initializes a process object.
+
+    Non-specified keyword arguments (kwargs) are directly passed to
+    multiprocessing.Process.
 
     Args:
       task_queue (MultiProcessingQueue): task queue.
@@ -1216,6 +1226,8 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
             the processing;
           * 'serializers' to profile CPU time consumed by individual
             serializers.
+      temporary_directory (Optional[str]): path of the directory for temporary
+          files.
       text_prepend (Optional[str]): text to prepend to every event.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
@@ -1223,36 +1235,32 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
     self._abort = False
     self._buffer_size = 0
     self._enable_debug_output = enable_debug_output
+    self._enable_profiling = enable_profiling
     self._extraction_worker = None
+    self._filter_object = filter_object
+    self._hasher_names_string = hasher_names_string
     self._knowledge_base = knowledge_base
     self._memory_profiler = None
+    self._mount_path = mount_path
     self._number_of_consumed_events = 0
     self._number_of_consumed_sources = 0
+    self._parser_filter_expression = parser_filter_expression
     self._parser_mediator = None
     self._parsers_profiler = None
     self._processing_profiler = None
     self._serializers_profiler = None
+    self._process_archive_files = process_archive_files
+    self._profiling_directory = profiling_directory
+    self._profiling_sample_rate = profiling_sample_rate
+    self._profiling_type = profiling_type
     self._session_identifier = session_identifier
     self._status = definitions.PROCESSING_STATUS_INITIALIZED
     self._storage_writer = storage_writer
     self._task_identifier = u''
     self._task_queue = task_queue
-    self._worker_number = worker_number
-
-    # Attributes for profiling.
-    self._enable_profiling = enable_profiling
-    self._profiling_directory = profiling_directory
-    self._profiling_sample_rate = profiling_sample_rate
-    self._profiling_type = profiling_type
-
-    # TODO: clean this up with the implementation of a task based
-    # multi-processing approach.
-    self._filter_object = filter_object
-    self._hasher_names_string = hasher_names_string
-    self._mount_path = mount_path
-    self._parser_filter_expression = parser_filter_expression
-    self._process_archive_files = process_archive_files
+    self._temporary_directory = temporary_directory
     self._text_prepend = text_prepend
+    self._worker_number = worker_number
 
   def _GetStatus(self):
     """Returns a status dictionary."""
@@ -1293,7 +1301,8 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
   def _Main(self):
     """The main loop."""
     self._parser_mediator = parsers_mediator.ParserMediator(
-        None, self._knowledge_base)
+        None, self._knowledge_base,
+        temporary_directory=self._temporary_directory)
 
     if self._filter_object:
       self._parser_mediator.SetFilterObject(self._filter_object)

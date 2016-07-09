@@ -186,9 +186,9 @@ class ExtractionFrontend(frontend.Frontend):
     """Preprocesses the sources.
 
     Args:
-      source_path_specs: list of path specifications (instances of
-                         dfvfs.PathSpec) to process.
-      source_type: the dfVFS source type definition.
+      source_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the sources to process.
+      source_type (str): the dfVFS source type definition.
 
     Returns:
       The preprocessing object (instance of PreprocessObject).
@@ -394,7 +394,7 @@ class ExtractionFrontend(frontend.Frontend):
       number_of_extraction_workers=0, parser_filter_expression=None,
       preferred_encoding=u'utf-8', process_archive_files=False,
       single_process_mode=False, status_update_callback=None,
-      timezone=pytz.UTC):
+      temporary_directory=None, timezone=pytz.UTC):
     """Processes the sources.
 
     Args:
@@ -418,6 +418,8 @@ class ExtractionFrontend(frontend.Frontend):
           run in single process mode.
       status_update_callback (Optional[function]): callback function for status
           updates.
+      temporary_directory (Optional[str]): path of the directory for temporary
+          files.
       timezone (Optional[datetime.tzinfo]): timezone.
 
     Returns:
@@ -506,6 +508,7 @@ class ExtractionFrontend(frontend.Frontend):
           parser_filter_expression=parser_filter_expression,
           process_archive_files=process_archive_files,
           status_update_callback=status_update_callback,
+          temporary_directory=temporary_directory,
           text_prepend=self._text_prepend)
 
     else:
@@ -523,6 +526,7 @@ class ExtractionFrontend(frontend.Frontend):
           process_archive_files=process_archive_files,
           status_update_callback=status_update_callback,
           show_memory_usage=self._show_worker_memory_information,
+          temporary_directory=temporary_directory,
           text_prepend=self._text_prepend)
 
     return processing_status

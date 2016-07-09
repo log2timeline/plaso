@@ -14,13 +14,15 @@ from plaso.lib import timelib
 class ParserMediator(object):
   """Class that implements the parser mediator."""
 
-  def __init__(self, storage_writer, knowledge_base):
+  def __init__(self, storage_writer, knowledge_base, temporary_directory=None):
     """Initializes a parser mediator object.
 
     Args:
       storage_writer (StorageWriter): storage writer.
-      knowledge_base (KnowledgeBase): knowledge base which contains
+      knowledge_base (KnowledgeBase): knowledge base, which contains
           information from the source data needed for parsing.
+      temporary_directory (Optional[str]): path of the directory for temporary
+          files.
     """
     super(ParserMediator, self).__init__()
     self._abort = False
@@ -34,6 +36,7 @@ class ParserMediator(object):
     self._number_of_events = 0
     self._parser_chain_components = []
     self._storage_writer = storage_writer
+    self._temporary_directory = temporary_directory
     self._text_prepend = None
 
   @property
@@ -75,6 +78,11 @@ class ParserMediator(object):
   def platform(self):
     """str: platform."""
     return self._knowledge_base.platform
+
+  @property
+  def temporary_directory(self):
+    """str: path of the directory for temporary files."""
+    return self._temporary_directory
 
   @property
   def timezone(self):
