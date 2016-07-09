@@ -3,7 +3,6 @@
 
 import abc
 
-from plaso.engine import profiler
 from plaso.lib import definitions
 
 
@@ -13,7 +12,6 @@ class BaseStorage(object):
   def __init__(self):
     """Initializes a storage object."""
     super(BaseStorage, self).__init__()
-    self._profiling_sample = 0
     self._serializers_profiler = None
 
   @abc.abstractmethod
@@ -43,20 +41,6 @@ class BaseStorage(object):
   @abc.abstractmethod
   def Close(self):
     """Closes the storage."""
-
-  def DisableProfiling(self):
-    """Disables profiling."""
-    self._serializers_profiler = None
-
-  def EnableProfiling(self, profiling_type=u'all'):
-    """Enables profiling.
-
-    Args:
-      profiling_type (Optional[str]): type of profiling to enable.
-    """
-    if (profiling_type in (u'all', u'serializers') and
-        not self._serializers_profiler):
-      self._serializers_profiler = profiler.SerializersProfiler(u'Storage')
 
   @abc.abstractmethod
   def GetAnalysisReports(self):
@@ -113,6 +97,14 @@ class BaseStorage(object):
   @abc.abstractmethod
   def Open(self, **kwargs):
     """Opens the storage."""
+
+  def SetSerializersProfiler(self, serializers_profiler):
+    """Sets the serializers profiler.
+
+    Args:
+      serializers_profiler (SerializersProfiler): serializers profile.
+    """
+    self._serializers_profiler = serializers_profiler
 
 
 class StorageReader(object):
@@ -195,9 +187,7 @@ class StorageWriter(object):
       task(Optional[Task]): task.
     """
     super(StorageWriter, self).__init__()
-    self._enable_profiling = False
     self._event_source_index = 0
-    self._profiling_type = u'all'
     self._session = session
     self._storage_type = storage_type
     self._task = task
@@ -263,19 +253,6 @@ class StorageWriter(object):
     """
     raise NotImplementedError()
 
-  def DisableProfiling(self):
-    """Disables profiling."""
-    self._enable_profiling = False
-
-  def EnableProfiling(self, profiling_type=u'all'):
-    """Enables profiling.
-
-    Args:
-      profiling_type (Optional[str]): type of profiling to enable.
-    """
-    self._enable_profiling = True
-    self._profiling_type = profiling_type
-
   @abc.abstractmethod
   def GetNextEventSource(self):
     """Retrieves the next event source.
@@ -321,16 +298,13 @@ class StorageWriter(object):
     """
     raise NotImplementedError()
 
-  def SetEnableProfiling(self, enable_profiling, profiling_type=u'all'):
-    """Enables or disables profiling.
+  @abc.abstractmethod
+  def SetSerializersProfiler(self, serializers_profiler):
+    """Sets the serializers profiler.
 
     Args:
-      enable_profiling: boolean value to indicate if profiling should
-                        be enabled.
-      profiling_type: optional profiling type.
+      serializers_profiler (SerializersProfiler): serializers profile.
     """
-    self._enable_profiling = enable_profiling
-    self._profiling_type = profiling_type
 
   @abc.abstractmethod
   def WriteSessionCompletion(self):

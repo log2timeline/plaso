@@ -46,8 +46,6 @@ class MultiProcessEngineTest(shared_test_lib.BaseTestCase):
           session.identifier, [source_path_spec], preprocess_object,
           storage_writer, parser_filter_expression=u'filestat')
 
-      storage_writer.Close()
-
     # TODO: implement a way to obtain the resuls without relying
     # on multi-process primitives e.g. by writing to a file.
     # self.assertEqual(len(storage_writer.events), 15)

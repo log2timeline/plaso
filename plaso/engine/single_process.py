@@ -13,6 +13,7 @@ from plaso.containers import event_sources
 from plaso.engine import engine
 from plaso.engine import extractors
 from plaso.engine import plaso_queue
+from plaso.engine import profiler
 from plaso.engine import worker
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -22,11 +23,39 @@ from plaso.parsers import mediator as parsers_mediator
 class SingleProcessEngine(engine.BaseEngine):
   """Class that defines the single process engine."""
 
-  def __init__(self):
-    """Initializes the single process engine object."""
-    super(SingleProcessEngine, self).__init__()
+  def __init__(
+      self, enable_profiling=False, profiling_directory=None,
+      profiling_sample_rate=1000, profiling_type=u'all'):
+    """Initializes an engine object.
+
+    Args:
+      enable_profiling (Optional[bool]): True if profiling should be enabled.
+      profiling_directory (Optional[str]): path to the directory where
+          the profiling sample files should be stored.
+      profiling_sample_rate (Optional[int]): the profiling sample rate.
+          Contains the number of event sources processed.
+      profiling_type (Optional[str]): type of profiling.
+          Supported types are:
+
+          * 'memory' to profile memory usage;
+          * 'parsers' to profile CPU time consumed by individual parsers;
+          * 'processing' to profile CPU time consumed by different parts of
+            the processing;
+          * 'serializers' to profile CPU time consumed by individual
+            serializers.
+    """
+    super(SingleProcessEngine, self).__init__(
+        enable_profiling=enable_profiling,
+        profiling_directory=profiling_directory,
+        profiling_sample_rate=profiling_sample_rate,
+        profiling_type=profiling_type)
     self._last_status_update_timestamp = 0.0
+    self._memory_profiler = None
+    self._name = u'Main'
+    self._parsers_profiler = None
     self._pid = os.getpid()
+    self._processing_profiler = None
+    self._serializers_profiler = None
     self._status_update_callback = None
 
   def _ProcessPathSpec(self, extraction_worker, parser_mediator, path_spec):
@@ -131,6 +160,9 @@ class SingleProcessEngine(engine.BaseEngine):
             extraction_worker, parser_mediator, event_source.path_spec)
         number_of_consumed_sources += 1
 
+        if self._memory_profiler:
+          self._memory_profiler.Sample()
+
         event_source = storage_writer.GetNextEventSource()
 
         self._UpdateStatus(
@@ -147,6 +179,58 @@ class SingleProcessEngine(engine.BaseEngine):
     # on exit.
     self._UpdateStatus(
         status, u'', number_of_consumed_sources, storage_writer, force=True)
+
+  def _StartProfiling(self):
+    """Starts profiling."""
+    if not self._enable_profiling:
+      return
+
+    if self._profiling_type in (u'all', u'memory'):
+      identifier = u'{0:s}-memory'.format(self._name)
+      self._memory_profiler = profiler.GuppyMemoryProfiler(
+          identifier, path=self._profiling_directory,
+          profiling_sample_rate=self._profiling_sample_rate)
+      self._memory_profiler.Start()
+
+    if self._profiling_type in (u'all', u'parsers'):
+      identifier = u'{0:s}-parsers'.format(self._name)
+      self._parsers_profiler = profiler.ParsersProfiler(
+          identifier, path=self._profiling_directory)
+      self._extraction_worker.SetParsersProfiler(self._parsers_profiler)
+
+    if self._profiling_type in (u'all', u'processing'):
+      identifier = u'{0:s}-processing'.format(self._name)
+      self._processing_profiler = profiler.ProcessingProfiler(
+          identifier, path=self._profiling_directory)
+      self._extraction_worker.SetProcessingProfiler(self._processing_profiler)
+
+    if self._profiling_type in (u'all', u'serializers'):
+      identifier = u'{0:s}-serializers'.format(self._name)
+      self._serializers_profiler = profiler.SerializersProfiler(
+          identifier, path=self._profiling_directory)
+
+  def _StopProfiling(self):
+    """Stops profiling."""
+    if not self._enable_profiling:
+      return
+
+    if self._profiling_type in (u'all', u'memory'):
+      self._memory_profiler.Sample()
+      self._memory_profiler = None
+
+    if self._profiling_type in (u'all', u'parsers'):
+      self._extraction_worker.SetParsersProfiler(None)
+      self._parsers_profiler.Write()
+      self._parsers_profiler = None
+
+    if self._profiling_type in (u'all', u'processing'):
+      self._extraction_worker.SetProcessingProfiler(None)
+      self._processing_profiler.Write()
+      self._processing_profiler = None
+
+    if self._profiling_type in (u'all', u'serializers'):
+      self._serializers_profiler.Write()
+      self._serializers_profiler = None
 
   def _UpdateStatus(
       self, status, display_name, number_of_consumed_sources, storage_writer,
@@ -171,7 +255,7 @@ class SingleProcessEngine(engine.BaseEngine):
       status = definitions.PROCESSING_STATUS_RUNNING
 
     self._processing_status.UpdateForemanStatus(
-        u'Main', status, self._pid, display_name,
+        self._name, status, self._pid, display_name,
         number_of_consumed_sources, storage_writer.number_of_event_sources,
         0, storage_writer.number_of_events,
         0, storage_writer.number_of_errors)
@@ -185,8 +269,8 @@ class SingleProcessEngine(engine.BaseEngine):
       self, source_path_specs, preprocess_object, storage_writer,
       resolver_context, filter_find_specs=None, filter_object=None,
       hasher_names_string=None, mount_path=None, parser_filter_expression=None,
-      process_archive_files=False, profiling_type=u'all',
-      status_update_callback=None, text_prepend=None):
+      process_archive_files=False, status_update_callback=None,
+      text_prepend=None):
     """Processes the sources.
 
     Args:
@@ -204,7 +288,6 @@ class SingleProcessEngine(engine.BaseEngine):
       parser_filter_expression (Optional[str]): parser filter expression.
       process_archive_files (Optional[bool]): True if archive files should be
           scanned for file entries.
-      profiling_type (Optional[str]): profiling type.
       status_update_callback (Optional[function]): callback function for status
           updates.
       text_prepend (Optional[str]): text to prepend to every event.
@@ -231,17 +314,14 @@ class SingleProcessEngine(engine.BaseEngine):
     if hasher_names_string:
       extraction_worker.SetHashers(hasher_names_string)
 
-    if self._enable_profiling:
-      extraction_worker.EnableProfiling(
-          profiling_sample_rate=self._profiling_sample_rate,
-          profiling_type=self._profiling_type)
-
     self._status_update_callback = status_update_callback
 
     logging.debug(u'Processing started.')
 
-    if self._enable_profiling:
-      storage_writer.EnableProfiling(profiling_type=profiling_type)
+    self._StartProfiling()
+
+    if self._serializers_profiler:
+      storage_writer.SetSerializersProfiler(self._serializers_profiler)
 
     storage_writer.Open()
 
@@ -259,8 +339,12 @@ class SingleProcessEngine(engine.BaseEngine):
       storage_writer.WriteSessionCompletion()
 
     finally:
-      if self._enable_profiling:
-        storage_writer.DisableProfiling()
+      storage_writer.Close()
+
+      if self._serializers_profiler:
+        storage_writer.SetSerializersProfiler(None)
+
+      self._StopProfiling()
 
     if self._abort:
       logging.debug(u'Processing aborted.')

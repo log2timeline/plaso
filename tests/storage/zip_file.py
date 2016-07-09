@@ -926,21 +926,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
-  def testEnableAndDisableProfiling(self):
-    """Tests the EnableProfiling and DisableProfiling function."""
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_file = zip_file.ZIPStorageFile()
-      storage_file.Open(path=temp_file, read_only=False)
-
-      storage_file.EnableProfiling()
-      storage_file.Close()
-      storage_file.DisableProfiling()
-
-      profiling_data_file = u'serializers-Storage.csv'
-      if os.path.exists(profiling_data_file):
-        os.remove(profiling_data_file)
-
   def testGetAnalysisReports(self):
     """Tests the GetAnalysisReports function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])

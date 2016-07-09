@@ -122,13 +122,6 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
 
     test_engine.SetEnableDebugOutput(True)
 
-  def testSetEnableProfiling(self):
-    """Tests the SetEnableProfiling function."""
-    test_engine = engine.BaseEngine()
-
-    test_engine.SetEnableProfiling(
-        True, profiling_sample_rate=5000, profiling_type=u'all')
-
   def testSupportsMemoryProfiling(self):
     """Tests the SupportsMemoryProfiling function."""
     test_engine = engine.BaseEngine()

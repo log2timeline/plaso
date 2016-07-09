@@ -15,7 +15,6 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.engine import profiler
 from plaso.lib import errors
 from plaso.parsers import interface as parsers_interface
 from plaso.parsers import manager as parsers_manager
@@ -293,31 +292,13 @@ class EventExtractor(object):
       finally:
         volume_file_object.close()
 
-  def ProfilingStart(self, identifier):
-    """Starts the profiling.
+  def SetParsersProfiler(self, parsers_profiler):
+    """Sets the parsers profiler.
 
     Args:
-      identifier (str): identifier of the profiling session e.g.
-                        the name of the worker process.
-
-    Raises:
-      ValueError: if the parsers profiler is already set.
+      parsers_profiler (ParsersProfiler): parsers profile.
     """
-    if self._parsers_profiler:
-      raise ValueError(u'Parsers profiler already set.')
-
-    self._parsers_profiler = profiler.ParsersProfiler(identifier)
-
-  def ProfilingStop(self):
-    """Stops the profiling.
-
-    Raises:
-      ValueError: if the parsers profiler is not set.
-    """
-    if not self._parsers_profiler:
-      raise ValueError(u'Parsers profiler not set.')
-
-    self._parsers_profiler.Write()
+    self._parsers_profiler = parsers_profiler
 
 
 class PathSpecExtractor(object):

@@ -44,6 +44,7 @@ class ExtractionFrontend(frontend.Frontend):
     self._mount_path = None
     self._operating_system = None
     self._parser_names = None
+    self._profiling_directory = None
     self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
     self._profiling_type = u'all'
     self._use_old_preprocess = False
@@ -57,7 +58,7 @@ class ExtractionFrontend(frontend.Frontend):
     """Checks if the storage file path is valid.
 
     Args:
-      storage_file_path: a string containing path of the storage file.
+      storage_file_path (str): path of the storage file.
 
     Raises:
       BadConfigOption: if the storage file path is invalid.
@@ -91,15 +92,19 @@ class ExtractionFrontend(frontend.Frontend):
       BaseEngine: engine.
     """
     if single_process_mode:
-      engine = single_process.SingleProcessEngine()
+      engine = single_process.SingleProcessEngine(
+          enable_profiling=self._enable_profiling,
+          profiling_directory=self._profiling_directory,
+          profiling_sample_rate=self._profiling_sample_rate,
+          profiling_type=self._profiling_type)
     else:
-      engine = multi_process.MultiProcessEngine(use_zeromq=self._use_zeromq)
+      engine = multi_process.MultiProcessEngine(
+          enable_profiling=self._enable_profiling,
+          profiling_directory=self._profiling_directory,
+          profiling_sample_rate=self._profiling_sample_rate,
+          profiling_type=self._profiling_type, use_zeromq=self._use_zeromq)
 
     engine.SetEnableDebugOutput(self._debug_mode)
-    engine.SetEnableProfiling(
-        self._enable_profiling,
-        profiling_sample_rate=self._profiling_sample_rate,
-        profiling_type=self._profiling_type)
 
     return engine
 
@@ -304,6 +309,35 @@ class ExtractionFrontend(frontend.Frontend):
     if not getattr(preprocess_object, u'zone', None):
       preprocess_object.zone = timezone
 
+  def DisableProfiling(self):
+    """Disabled profiling."""
+    self._enable_profiling = False
+
+  def EnableProfiling(
+      self, profiling_directory=None, profiling_sample_rate=1000,
+      profiling_type=u'all'):
+    """Enables profiling.
+
+    Args:
+      profiling_directory (Optional[str]): path to the directory where
+          the profiling sample files should be stored.
+      profiling_sample_rate (Optional[int]): the profiling sample rate.
+          Contains the number of event sources processed.
+      profiling_type (Optional[str]): type of profiling.
+          Supported types are:
+
+          * 'memory' to profile memory usage;
+          * 'parsers' to profile CPU time consumed by individual parsers;
+          * 'processing' to profile CPU time consumed by different parts of
+            the processing;
+          * 'serializers' to profile CPU time consumed by individual
+            serializers.
+    """
+    self._enable_profiling = True
+    self._profiling_directory = profiling_directory
+    self._profiling_sample_rate = profiling_sample_rate
+    self._profiling_type = profiling_type
+
   def GetHashersInformation(self):
     """Retrieves the hashers information.
 
@@ -460,40 +494,36 @@ class ExtractionFrontend(frontend.Frontend):
         session, self._storage_file_path)
 
     processing_status = None
-    try:
-      if single_process_mode:
-        logging.debug(u'Starting extraction in single process mode.')
+    if single_process_mode:
+      logging.debug(u'Starting extraction in single process mode.')
 
-        processing_status = self._engine.ProcessSources(
-            source_path_specs, preprocess_object, storage_writer,
-            self._resolver_context, filter_find_specs=filter_find_specs,
-            filter_object=self._filter_object,
-            hasher_names_string=hasher_names_string,
-            mount_path=self._mount_path,
-            parser_filter_expression=parser_filter_expression,
-            process_archive_files=process_archive_files,
-            status_update_callback=status_update_callback,
-            text_prepend=self._text_prepend)
+      processing_status = self._engine.ProcessSources(
+          source_path_specs, preprocess_object, storage_writer,
+          self._resolver_context, filter_find_specs=filter_find_specs,
+          filter_object=self._filter_object,
+          hasher_names_string=hasher_names_string,
+          mount_path=self._mount_path,
+          parser_filter_expression=parser_filter_expression,
+          process_archive_files=process_archive_files,
+          status_update_callback=status_update_callback,
+          text_prepend=self._text_prepend)
 
-      else:
-        logging.debug(u'Starting extraction in multi process mode.')
+    else:
+      logging.debug(u'Starting extraction in multi process mode.')
 
-        processing_status = self._engine.ProcessSources(
-            session.identifier, source_path_specs, preprocess_object,
-            storage_writer, enable_sigsegv_handler=enable_sigsegv_handler,
-            filter_find_specs=filter_find_specs,
-            filter_object=self._filter_object,
-            hasher_names_string=hasher_names_string,
-            mount_path=self._mount_path,
-            number_of_worker_processes=number_of_extraction_workers,
-            parser_filter_expression=parser_filter_expression,
-            process_archive_files=process_archive_files,
-            status_update_callback=status_update_callback,
-            show_memory_usage=self._show_worker_memory_information,
-            text_prepend=self._text_prepend)
-
-    finally:
-      storage_writer.Close()
+      processing_status = self._engine.ProcessSources(
+          session.identifier, source_path_specs, preprocess_object,
+          storage_writer, enable_sigsegv_handler=enable_sigsegv_handler,
+          filter_find_specs=filter_find_specs,
+          filter_object=self._filter_object,
+          hasher_names_string=hasher_names_string,
+          mount_path=self._mount_path,
+          number_of_worker_processes=number_of_extraction_workers,
+          parser_filter_expression=parser_filter_expression,
+          process_archive_files=process_archive_files,
+          status_update_callback=status_update_callback,
+          show_memory_usage=self._show_worker_memory_information,
+          text_prepend=self._text_prepend)
 
     return processing_status
 
@@ -515,23 +545,6 @@ class ExtractionFrontend(frontend.Frontend):
                             should be performed.
     """
     self._enable_preprocessing = enable_preprocessing
-
-  def SetEnableProfiling(
-      self, enable_profiling, profiling_sample_rate=1000,
-      profiling_type=u'all'):
-    """Enables or disables profiling.
-
-    Args:
-      enable_profiling: boolean value to indicate if the profiling should
-                        be enabled.
-      profiling_sample_rate: optional integer indicating the profiling sample
-                             rate. The value contains the number of files
-                             processed. The default value is 1000.
-      profiling_type: optional string containing the profiling type.
-    """
-    self._enable_profiling = enable_profiling
-    self._profiling_sample_rate = profiling_sample_rate
-    self._profiling_type = profiling_type
 
   def SetShowMemoryInformation(self, show_memory=True):
     """Sets a flag telling the worker monitor to show memory information.
