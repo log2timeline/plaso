@@ -59,9 +59,9 @@ def BuildFindSpecsFromFile(filter_file_path, path_attributes=None):
   """
   find_specs = []
 
+  path_expander_attributes = {}
   if path_attributes:
     path_expander = _FilterFilePathExpander()
-    path_expander_attributes = {}
     for key, value in iter(path_attributes.items()):
       if not isinstance(value, py2to3.STRING_TYPES):
         continue
