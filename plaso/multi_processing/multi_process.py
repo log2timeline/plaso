@@ -666,25 +666,28 @@ class MultiProcessEngine(engine.BaseEngine):
         if self._abort:
           break
 
-        if self._storage_writer.CheckTaskStorageReadyForMerge(task_identifier):
-          # Make sure completed tasks are not considered idle when not
-          # yet merged.
-          self._task_manager.UpdateTask(task_identifier)
+        if not self._storage_writer.CheckTaskStorageReadyForMerge(
+            task_identifier):
+          continue
 
-          # Merge one task-based storage file per loop to keep tasks flowing.
-          if task_storage_merged:
-            continue
+        # Make sure completed tasks are not considered idle when not
+        # yet merged.
+        self._task_manager.UpdateTask(task_identifier)
 
-          if self._processing_profiler:
-            self._processing_profiler.StartTiming(u'merge')
+        # Merge one task-based storage file per loop to keep tasks flowing.
+        if task_storage_merged:
+          continue
 
-          # TODO: look into time slicing merge.
-          if self._storage_writer.MergeTaskStorage(task_identifier):
-            self._task_manager.CompleteTask(task_identifier)
-            task_storage_merged = True
+        if self._processing_profiler:
+          self._processing_profiler.StartTiming(u'merge')
 
-          if self._processing_profiler:
-            self._processing_profiler.StopTiming(u'merge')
+        # TODO: look into time slicing merge.
+        if self._storage_writer.MergeTaskStorage(task_identifier):
+          self._task_manager.CompleteTask(task_identifier)
+          task_storage_merged = True
+
+        if self._processing_profiler:
+          self._processing_profiler.StopTiming(u'merge')
 
       if not event_source and not task:
         event_source = self._storage_writer.GetNextEventSource()

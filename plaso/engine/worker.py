@@ -98,7 +98,6 @@ class EventExtractionWorker(object):
     super(EventExtractionWorker, self).__init__()
     self._abort = False
     self._current_display_name = u''
-    self._current_file_entry = None
     self._event_extractor = extractors.EventExtractor(
         resolver_context, parser_filter_expression=parser_filter_expression)
     self._hasher_names = None
@@ -600,13 +599,6 @@ class EventExtractionWorker(object):
   def current_display_name(self):
     """str: current display name."""
     return self._current_display_name
-
-  @property
-  def current_path_spec(self):
-    """dfvfs.PathSpec: current path specification."""
-    if not self._current_file_entry:
-      return
-    return self._current_file_entry.path_spec
 
   def ProcessPathSpec(self, parser_mediator, path_spec):
     """Processes a path specification.
