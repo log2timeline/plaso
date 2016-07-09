@@ -396,5 +396,5 @@ class SummaryInfoOlecfPlugin(interface.OlecfPlugin):
         parser_mediator.ProduceEvent(event_object)
 
 
-olecf.OleCfParser.RegisterPlugins([
+olecf.OLECFParser.RegisterPlugins([
     DocumentSummaryOlecfPlugin, SummaryInfoOlecfPlugin])

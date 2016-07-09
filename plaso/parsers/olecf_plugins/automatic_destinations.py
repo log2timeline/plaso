@@ -264,4 +264,4 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
         # TODO: check for trailing data?
 
 
-olecf.OleCfParser.RegisterPlugin(AutomaticDestinationsOlecfPlugin)
+olecf.OLECFParser.RegisterPlugin(AutomaticDestinationsOlecfPlugin)

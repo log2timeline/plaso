@@ -111,4 +111,4 @@ class DefaultOleCFPlugin(interface.OlecfPlugin):
     self.ParseItems(parser_mediator, root_item=root_item)
 
 
-olecf.OleCfParser.RegisterPlugin(DefaultOleCFPlugin)
+olecf.OLECFParser.RegisterPlugin(DefaultOleCFPlugin)
