@@ -165,8 +165,8 @@ class MultiProcessBaseProcess(multiprocessing.Process):
   # its name does not follow the style guide.
   def run(self):
     """Runs the process."""
-    # Prevent KeyboardInterrupt being raised inside the process.
-    # This will prevent a process generating a traceback when interrupted.
+    # Prevent the KeyboardInterrupt being raised inside the process.
+    # This will prevent a process from generating a traceback when interrupted.
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
     # A SIGTERM signal handler is necessary to make sure IPC is cleaned up

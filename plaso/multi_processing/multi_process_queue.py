@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+"""A multiprocessing-backed queue."""
+
 import Queue
 import logging
 import multiprocessing
@@ -77,8 +80,8 @@ class MultiProcessingQueue(plaso_queue.Queue):
     """Pushes an item onto the queue.
 
     Args:
-      block: boolean value to indicate put should block
-             if the queue is full.
+      item (object): item to add.
+      block (bool): whether to block if the queue is full.
     """
     try:
       self._queue.put(item, block=block)

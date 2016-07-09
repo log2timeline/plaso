@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """The multi-process processing engine."""
+
 import ctypes
 import logging
 import os
@@ -22,6 +23,7 @@ from plaso.engine import plaso_queue
 from plaso.lib import definitions
 from plaso.multi_processing import xmlrpc
 from plaso.multi_processing import process_info
+from plaso.multi_processing import multi_process_queue
 from plaso.multi_processing import worker_process
 
 
@@ -35,6 +37,9 @@ class MultiProcessEngine(engine.BaseEngine):
   * the memory consumption of the processes.
   """
 
+  # Maximum number of concurrent tasks.
+  _MAXIMUM_NUMBER_OF_TASKS = 10000
+
   _PROCESS_ABORT_TIMEOUT = 2.0
   _PROCESS_JOIN_TIMEOUT = 5.0
   _PROCESS_TERMINATION_SLEEP = 0.5
@@ -47,30 +52,51 @@ class MultiProcessEngine(engine.BaseEngine):
   _RPC_SERVER_TIMEOUT = 8.0
   _MAXIMUM_RPC_ERRORS = 10
 
-  _STATUS_CHECK_SLEEP = 1.5
-
   _WORKER_PROCESSES_MINIMUM = 2
   _WORKER_PROCESSES_MAXIMUM = 15
 
-  def __init__(self, maximum_number_of_queued_items=0, use_zeromq=False):
-    """Initialize the multi-process engine object.
+  def __init__(
+      self, enable_profiling=False,
+      maximum_number_of_tasks=_MAXIMUM_NUMBER_OF_TASKS,
+      profiling_directory=None, profiling_sample_rate=1000,
+      profiling_type=u'all', use_zeromq=False):
+    """Initializes an engine object.
 
     Args:
-      maximum_number_of_queued_items: optional integer containing the maximum
-                                      number of queued items. The default is 0,
-                                      which represents no limit.
-      use_zeromq: optional boolean to indicate whether to use ZeroMQ for
-                  queuing. If False, the multiprocessing queue will be used.
+      enable_profiling (Optional[bool]): True if profiling should be enabled.
+      maximum_number_of_tasks (Optional[int]): maximum number of concurrent
+          tasks, where 0 represents no limit.
+      profiling_directory (Optional[str]): path to the directory where
+          the profiling sample files should be stored.
+      profiling_sample_rate (Optional[int]): the profiling sample rate.
+          Contains the number of event sources processed.
+      profiling_type (Optional[str]): type of profiling.
+          Supported types are:
+
+          * 'memory' to profile memory usage;
+          * 'parsers' to profile CPU time consumed by individual parsers;
+          * 'processing' to profile CPU time consumed by different parts of
+            the processing;
+          * 'serializers' to profile CPU time consumed by individual
+            serializers.
+      use_zeromq (Optional[bool]): True if ZeroMQ should be used for queuing
+          instead of Python's multiprocessing queue.
     """
-    super(MultiProcessEngine, self).__init__()
+    super(MultiProcessEngine, self).__init__(
+        enable_profiling=enable_profiling,
+        profiling_directory=profiling_directory,
+        profiling_sample_rate=profiling_sample_rate,
+        profiling_type=profiling_type)
     self._enable_sigsegv_handler = False
     self._filter_find_specs = None
     self._filter_object = None
     self._hasher_names_string = None
     self._last_worker_number = 0
-    self._maximum_number_of_queued_items = maximum_number_of_queued_items
+    self._maximum_number_of_tasks = maximum_number_of_tasks
+    self._memory_profiler = None
     self._mount_path = None
     self._new_event_sources = False
+    self._name = u'Main'
     self._number_of_consumed_sources = 0
     self._number_of_worker_processes = 0
     self._parser_filter_expression = None
@@ -78,18 +104,22 @@ class MultiProcessEngine(engine.BaseEngine):
     self._process_archive_files = False
     self._process_information_per_pid = {}
     self._processes_per_pid = {}
+    self._processing_profiler = None
     self._resolver_context = context.Context()
     self._rpc_clients_per_pid = {}
     self._rpc_errors_per_pid = {}
+    self._serializers_profiler = None
     self._session_identifier = None
     self._show_memory_usage = False
     self._status_update_callback = None
-    self._storage_merge_thread = None
     self._storage_writer = None
     self._task_queue = None
     self._task_queue_port = None
     self._task_scheduler_active = False
     self._task_scheduler_thread = None
+    self._task_manager = task_manager.TaskManager(
+        maximum_number_of_tasks=maximum_number_of_tasks)
+    self._temporary_directory = None
     self._text_prepend = None
     self._use_zeromq = use_zeromq
 
@@ -180,20 +210,13 @@ class MultiProcessEngine(engine.BaseEngine):
           u'processing_status': processing_status_string,
       }
 
-    if status_indicator == definitions.PROCESSING_STATUS_ERROR:
-      path_spec = process_status.get(u'path_spec', None)
-      if path_spec:
-        self._processing_status.error_path_specs.append(path_spec)
-
     self._UpdateProcessingStatus(pid, process_status)
 
     if status_indicator in definitions.PROCESSING_ERROR_STATUS:
       logging.error(
           (u'Process {0:s} (PID: {1:d}) is not functioning correctly. '
-           u'Status code {2!s}.').format(
+           u'Status code: {2!s}.').format(
                process.name, pid, status_indicator))
-
-      self._processing_status.error_detected = True
 
       self._TerminateProcess(pid)
 
@@ -294,12 +317,7 @@ class MultiProcessEngine(engine.BaseEngine):
     """
     self._number_of_consumed_sources = 0
 
-    self._processing_status.UpdateForemanStatus(
-        u'Main', definitions.PROCESSING_STATUS_COLLECTING, self._pid, u'',
-        self._number_of_consumed_sources,
-        storage_writer.number_of_event_sources,
-        0, storage_writer.number_of_events)
-    self._UpdateStatus()
+    self._UpdateStatus(definitions.PROCESSING_STATUS_COLLECTING, storage_writer)
 
     path_spec_extractor = extractors.PathSpecExtractor(self._resolver_context)
 
@@ -314,22 +332,13 @@ class MultiProcessEngine(engine.BaseEngine):
       event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
       storage_writer.AddEventSource(event_source)
 
-      self._processing_status.UpdateForemanStatus(
-          u'Main', definitions.PROCESSING_STATUS_COLLECTING, self._pid, u'',
-          self._number_of_consumed_sources,
-          storage_writer.number_of_event_sources,
-          0, storage_writer.number_of_events)
-      self._UpdateStatus()
+      self._UpdateStatus(
+          definitions.PROCESSING_STATUS_COLLECTING, storage_writer)
 
     self._new_event_sources = True
     while self._new_event_sources:
       if self._abort:
         return
-
-      # TODO: flushing the storage writer here for now to make sure the event
-      # sources are written to disk. Remove this during phased processing
-      # refactor.
-      storage_writer.ForceFlush()
 
       # Set new event sources to false so the task scheduler thread can set
       # it to true when there are new event sources. Since the task scheduler
@@ -344,40 +353,33 @@ class MultiProcessEngine(engine.BaseEngine):
       # TODO: change status check.
       self._CheckStatusWorkerProcesses()
 
-      # TODO: start thread that monitors for new task files.
+      try:
+        while self._task_scheduler_active:
+          self._CheckStatusWorkerProcesses()
+          self._UpdateStatus(
+              definitions.PROCESSING_STATUS_RUNNING, storage_writer)
 
-      while self._task_scheduler_active:
-        self._processing_status.UpdateForemanStatus(
-            u'Main', definitions.PROCESSING_STATUS_RUNNING, self._pid, u'',
-            self._number_of_consumed_sources,
-            storage_writer.number_of_event_sources,
-            0, storage_writer.number_of_events)
-        self._CheckStatusWorkerProcesses()
-        self._UpdateStatus()
+          time.sleep(self._STATUS_UPDATE_INTERVAL)
 
-        time.sleep(self._STATUS_CHECK_SLEEP)
+      except KeyboardInterrupt:
+        self.SignalAbort()
 
       self._StopTaskSchedulerThread()
 
-      self._processing_status.UpdateForemanStatus(
-          u'Main', definitions.PROCESSING_STATUS_RUNNING, self._pid, u'',
-          self._number_of_consumed_sources,
-          storage_writer.number_of_event_sources,
-          0, storage_writer.number_of_events)
       self._CheckStatusWorkerProcesses()
-      self._UpdateStatus()
+      self._UpdateStatus(definitions.PROCESSING_STATUS_RUNNING, storage_writer)
 
     if self._abort:
       status = definitions.PROCESSING_STATUS_ABORTED
     else:
       status = definitions.PROCESSING_STATUS_COMPLETED
 
-    self._processing_status.UpdateForemanStatus(
-        u'Main', status, self._pid, u'',
-        self._number_of_consumed_sources,
-        storage_writer.number_of_event_sources,
-        0, storage_writer.number_of_events)
-    self._UpdateStatus()
+    self._UpdateStatus(status, storage_writer)
+
+  def _ProfilingSampleMemory(self):
+    """Create a memory profiling sample."""
+    if self._memory_profiler:
+      self._memory_profiler.Sample()
 
   def _RaiseIfNotMonitored(self, pid):
     """Raises if the process is not monitored by the engine.
@@ -434,58 +436,69 @@ class MultiProcessEngine(engine.BaseEngine):
     # TODO: protect task scheduler loop by catch all and
     # handle abort path.
 
-    worker_tasks = {}
-    event_source_generator = self._storage_writer.GetEventSources()
-
-    try:
-      event_source = next(event_source_generator)
-    except StopIteration:
-      event_source = None
-
+    event_source = self._storage_writer.GetNextEventSource()
     if event_source:
       self._new_event_sources = True
 
     task = None
-    while event_source or len(worker_tasks):
+    while event_source or self._task_manager.HasScheduledTasks():
       if self._abort:
         break
 
       if event_source and not task:
-        # TODO: add support for more task types.
-        task = tasks.Task(self._session_identifier)
+        task = self._task_manager.CreateTask(self._session_identifier)
         task.path_spec = event_source.path_spec
+        event_source = None
+
+        self._number_of_consumed_sources += 1
+
+        if self._memory_profiler:
+          self._memory_profiler.Sample()
 
       if task:
         try:
           self._task_queue.PushItem(task, block=False)
-
-          # TODO: determine if a back off time is needed
-          # to prevent this from hot-looping.
-
-          # TODO: register task with scheduler.
-          worker_tasks[task.identifier] = task
-
-          event_source = None
+          self._task_manager.ScheduleTask(task.identifier)
           task = None
-
-          self._number_of_consumed_sources += 1
 
         except Queue.Full:
           pass
 
-      # Make a copy of the keys since we are changing the dictionary
-      # inside the loop.
-      for task_identifier in list(worker_tasks.keys()):
+      # GetScheduledTaskIdentifiers makes a copy of the keys since we are
+      # changing the dictionary inside the loop.
+      task_storage_merged = False
+      for task_identifier in self._task_manager.GetScheduledTaskIdentifiers():
+        if self._abort:
+          break
+
+        if not self._storage_writer.CheckTaskStorageReadyForMerge(
+            task_identifier):
+          continue
+
+        # Make sure completed tasks are not considered idle when not
+        # yet merged.
+        self._task_manager.UpdateTask(task_identifier)
+
+        # Merge one task-based storage file per loop to keep tasks flowing.
+        if task_storage_merged:
+          continue
+
+        if self._processing_profiler:
+          self._processing_profiler.StartTiming(u'merge')
+
         # TODO: look into time slicing merge.
         if self._storage_writer.MergeTaskStorage(task_identifier):
-          del worker_tasks[task_identifier]
+          self._task_manager.CompleteTask(task_identifier)
+          task_storage_merged = True
 
-      if not event_source:
-        try:
-          # Retrieve the next event source after merging.
-          event_source = next(event_source_generator)
-        except StopIteration:
-          pass
+        if self._processing_profiler:
+          self._processing_profiler.StopTiming(u'merge')
+
+      if not event_source and not task:
+        event_source = self._storage_writer.GetNextEventSource()
+
+    for task in self._task_manager.GetAbandonedTasks():
+      self._processing_status.error_path_specs.append(task.path_spec)
 
     self._task_scheduler_active = False
 
@@ -494,12 +507,6 @@ class MultiProcessEngine(engine.BaseEngine):
     else:
       logging.debug(u'Task scheduler stopped')
 
-  def _StartTaskSchedulerThread(self):
-    """Starts the task scheduler thread."""
-    self._task_scheduler_thread = threading.Thread(
-        name=u'Task Scheduler', target=self._ScheduleTasks)
-    self._task_scheduler_thread.start()
-
   def _StartExtractionWorkerProcess(self, storage_writer):
     """Creates, starts and registers an extraction worker process.
 
@@ -507,7 +514,7 @@ class MultiProcessEngine(engine.BaseEngine):
       storage_writer: a storage writer object (instance of StorageWriter).
 
     Returns:
-      An extraction worker process (instance of WorkerProcess).
+      An extraction worker process (instance of MultiProcessWorkerProcess).
     """
     process_name = u'Worker_{0:02d}'.format(self._last_worker_number)
 
@@ -530,15 +537,18 @@ class MultiProcessEngine(engine.BaseEngine):
         mount_path=self._mount_path, name=process_name,
         parser_filter_expression=self._parser_filter_expression,
         process_archive_files=self._process_archive_files,
+        profiling_directory=self._profiling_directory,
         profiling_sample_rate=self._profiling_sample_rate,
-        profiling_type=self._profiling_type, text_prepend=self._text_prepend)
+        profiling_type=self._profiling_type,
+        temporary_directory=self._temporary_directory,
+        text_prepend=self._text_prepend)
 
     process.start()
     self._last_worker_number += 1
 
     self._RegisterProcess(process)
 
-    return process
+    return worker_process
 
   def _StartMonitoringProcess(self, pid):
     """Starts monitoring a process.
@@ -588,17 +598,39 @@ class MultiProcessEngine(engine.BaseEngine):
     self._rpc_clients_per_pid[pid] = rpc_client
     self._process_information_per_pid[pid] = process_info.ProcessInfo(pid)
 
-  def _StopTaskSchedulerThread(self):
-    """Stops the task scheduler thread."""
-    if self._task_scheduler_thread.isAlive():
-      self._task_scheduler_thread.join()
-    self._task_scheduler_thread = None
+  def _StartProfiling(self):
+    """Starts profiling."""
+    if not self._enable_profiling:
+      return
+
+    if self._profiling_type in (u'all', u'memory'):
+      identifier = u'{0:s}-memory'.format(self._name)
+      self._memory_profiler = profiler.GuppyMemoryProfiler(
+          identifier, path=self._profiling_directory,
+          profiling_sample_rate=self._profiling_sample_rate)
+      self._memory_profiler.Start()
+
+    if self._profiling_type in (u'all', u'processing'):
+      identifier = u'{0:s}-processing'.format(self._name)
+      self._processing_profiler = profiler.ProcessingProfiler(
+          identifier, path=self._profiling_directory)
+
+    if self._profiling_type in (u'all', u'serializers'):
+      identifier = u'{0:s}-serializers'.format(self._name)
+      self._serializers_profiler = profiler.SerializersProfiler(
+          identifier, path=self._profiling_directory)
+
+  def _StartTaskSchedulerThread(self):
+    """Starts the task scheduler thread."""
+    self._task_scheduler_thread = threading.Thread(
+        name=u'Task Scheduler', target=self._ScheduleTasks)
+    self._task_scheduler_thread.start()
 
   def _StopExtractionProcesses(self, abort=False):
     """Stops the extraction processes.
 
     Args:
-      abort: optional boolean to indicate the stop is issued on abort.
+      abort (bool): True to indicated the stop is issued on abort.
     """
     logging.debug(u'Stopping extraction processes.')
     self._StopProcessMonitoring()
@@ -632,8 +664,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     # For Multiprocessing queues, set abort to True to stop queue.join_thread()
     # from blocking.
-    if isinstance(self._task_queue,
-        plaso.multi_processing.multi_process_queue.MultiProcessingQueue):
+    if isinstance(self._task_queue, multi_process_queue.MultiProcessingQueue):
       self._task_queue.Close(abort=True)
 
     if abort:
@@ -672,6 +703,29 @@ class MultiProcessEngine(engine.BaseEngine):
     """Stops monitoring processes."""
     for pid in iter(self._process_information_per_pid.keys()):
       self._StopMonitoringProcess(pid)
+
+  def _StopProfiling(self):
+    """Stops profiling."""
+    if not self._enable_profiling:
+      return
+
+    if self._profiling_type in (u'all', u'memory'):
+      self._memory_profiler.Sample()
+      self._memory_profiler = None
+
+    if self._profiling_type in (u'all', u'processing'):
+      self._processing_profiler.Write()
+      self._processing_profiler = None
+
+    if self._profiling_type in (u'all', u'serializers'):
+      self._serializers_profiler.Write()
+      self._serializers_profiler = None
+
+  def _StopTaskSchedulerThread(self):
+    """Stops the task scheduler thread."""
+    if self._task_scheduler_thread.isAlive():
+      self._task_scheduler_thread.join()
+    self._task_scheduler_thread = None
 
   def _TerminateProcess(self, pid):
     """Terminate a process.
@@ -716,23 +770,47 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._RaiseIfNotMonitored(pid)
 
+    display_name = process_status.get(u'display_name', u'')
+    number_of_consumed_errors = process_status.get(
+        u'number_of_consumed_errors', 0)
+    number_of_produced_errors = process_status.get(
+        u'number_of_produced_errors', 0)
     number_of_consumed_events = process_status.get(
         u'number_of_consumed_events', 0)
-    number_of_consumed_sources = process_status.get(
-        u'number_of_consumed_sources', 0)
-    display_name = process_status.get(u'display_name', u'')
     number_of_produced_events = process_status.get(
         u'number_of_produced_events', 0)
+    number_of_consumed_sources = process_status.get(
+        u'number_of_consumed_sources', 0)
     number_of_produced_sources = process_status.get(
         u'number_of_produced_sources', 0)
 
     self._processing_status.UpdateWorkerStatus(
         process.name, processing_status, pid, display_name,
         number_of_consumed_sources, number_of_produced_sources,
-        number_of_consumed_events, number_of_produced_events)
+        number_of_consumed_events, number_of_produced_events,
+        number_of_consumed_errors, number_of_produced_errors)
 
-  def _UpdateStatus(self):
-    """Updates the processing status."""
+    task_identifier = process_status.get(u'task_identifier', u'')
+    if task_identifier:
+      try:
+        self._task_manager.UpdateTask(task_identifier)
+      except KeyError:
+        logging.error(u'Worker processing untracked task.')
+
+  def _UpdateStatus(self, status, storage_writer):
+    """Updates the processing status.
+
+    Args:
+      status (str): human readable status of the foreman e.g. 'Idle'.
+      storage_writer (StorageWriter): storage writer for a session storage.
+    """
+    self._processing_status.UpdateForemanStatus(
+        self._name, status, self._pid, u'',
+        self._number_of_consumed_sources,
+        storage_writer.number_of_event_sources,
+        0, storage_writer.number_of_events,
+        0, storage_writer.number_of_errors)
+
     if self._status_update_callback:
       self._status_update_callback(self._processing_status)
 
@@ -741,8 +819,8 @@ class MultiProcessEngine(engine.BaseEngine):
       storage_writer, enable_sigsegv_handler=False, filter_find_specs=None,
       filter_object=None, hasher_names_string=None, mount_path=None,
       number_of_worker_processes=0, parser_filter_expression=None,
-      process_archive_files=False, profiling_type=u'all',
-      status_update_callback=None, show_memory_usage=False, text_prepend=None):
+      process_archive_files=False, status_update_callback=None,
+      show_memory_usage=False, temporary_directory=None, text_prepend=None):
     """Processes the sources and extract event objects.
 
     Args:
@@ -752,22 +830,24 @@ class MultiProcessEngine(engine.BaseEngine):
       preprocess_object (PreprocessObject): preprocess object.
       storage_writer (StorageWriter): storage writer for a session storage.
       enable_sigsegv_handler (Optional[bool]): True if the SIGSEGV handler
-                                               should be enabled.
+          should be enabled.
       filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
           used in path specification extraction.
       filter_object (Optional[objectfilter.Filter]): filter object.
       hasher_names_string (Optional[str]): comma separated string of names
-                                           of hashers to use during processing.
+          of hashers to use during processing.
       mount_path (Optional[str]): mount path.
       number_of_worker_processes (Optional[int]): number of worker processes.
-      parser_filter_expression (Optional[str]): parser filter expression.
+      parser_filter_expression (Optional[str]): parser filter expression,
+          where None represents all parsers and plugins.
       process_archive_files (Optional[bool]): True if archive files should be
-                                              scanned for file entries.
-      profiling_type (Optional[str]): profiling type.
+          scanned for file entries.
       show_memory_usage (Optional[bool]): True if memory information should be
-                                          included in status updates.
+          included in status updates.
       status_update_callback (Optional[function]): callback function for status
-                                                   updates.
+          updates.
+      temporary_directory (Optional[str]): path of the directory for temporary
+          files.
       text_prepend (Optional[str]): text to prepend to every event.
 
     Returns:
@@ -805,15 +885,16 @@ class MultiProcessEngine(engine.BaseEngine):
     self._session_identifier = session_identifier
     self._status_update_callback = status_update_callback
     self._storage_writer = storage_writer
+    self._temporary_directory = temporary_directory
     self._text_prepend = text_prepend
 
     # Set up the storage writer before the worker processes.
-    self._storage_writer.StartTaskStorage()
+    storage_writer.StartTaskStorage()
 
     # Set up the task queue.
     if not self._use_zeromq:
-      self._task_queue = plaso.multi_processing.multi_process_queue.MultiProcessingQueue(
-          maximum_number_of_queued_items=self._maximum_number_of_queued_items)
+      self._task_queue = multi_process_queue.MultiProcessingQueue(
+          maximum_number_of_queued_items=self._maximum_number_of_tasks)
 
     else:
       task_outbound_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
@@ -826,45 +907,62 @@ class MultiProcessEngine(engine.BaseEngine):
       self._task_queue.Open()
       self._task_queue_port = self._task_queue.port
 
-    # Start the worker processes.
-    logging.debug(u'Starting processes.')
-
     for _ in range(0, number_of_worker_processes):
-      extraction_process = self._StartExtractionWorkerProcess(
-          self._storage_writer)
+      extraction_process = self._StartExtractionWorkerProcess(storage_writer)
       self._StartMonitoringProcess(extraction_process.pid)
 
-    logging.debug(u'Processing started.')
+    self._StartProfiling()
 
-    self._storage_writer.Open()
+    if self._serializers_profiler:
+      storage_writer.SetSerializersProfiler(self._serializers_profiler)
 
-    if self._enable_profiling:
-      self._storage_writer.EnableProfiling(profiling_type=profiling_type)
+    storage_writer.Open()
 
-    self._storage_writer.WriteSessionStart()
+    try:
+      storage_writer.WriteSessionStart()
 
-    # TODO: change in phased processing refactor.
-    self._ProcessSources(
-        source_path_specs, self._storage_writer,
-        filter_find_specs=filter_find_specs)
+      self._ProcessSources(
+          source_path_specs, storage_writer,
+          filter_find_specs=filter_find_specs)
 
-    if self._abort:
-      return
+      # TODO: refactor the use of preprocess_object.
+      storage_writer.WritePreprocessObject(preprocess_object)
 
-    self._StopExtractionProcesses(abort=self._processing_status.error_detected)
+      # TODO: on abort use WriteSessionAborted instead of completion?
+      storage_writer.WriteSessionCompletion()
 
-    logging.debug(u'Processing stopped.')
+    finally:
+      storage_writer.Close()
 
-    # TODO: refactor the use of preprocess_object.
-    self._storage_writer.WritePreprocessObject(preprocess_object)
-    self._storage_writer.WriteSessionCompletion()
+      if self._serializers_profiler:
+        storage_writer.SetSerializersProfiler(None)
 
-    if self._enable_profiling:
-      self._storage_writer.DisableProfiling()
+      self._StopProfiling()
 
-    self._storage_writer.StopTaskStorage()
+    try:
+      self._StopExtractionProcesses(abort=self._abort)
+
+    except KeyboardInterrupt:
+      self._AbortKill()
+
+      # The abort can leave the main process unresponsive
+      # due to incorrectly finalized IPC.
+      self._KillProcess(os.getpid())
 
     self._task_queue.Close(abort=self._abort)
+
+    if self._processing_status.error_path_specs:
+      task_storage_abort = True
+    else:
+      task_storage_abort = self._abort
+
+    storage_writer.StopTaskStorage(abort=task_storage_abort)
+
+    if self._abort:
+      logging.debug(u'Processing aborted.')
+      self._processing_status.aborted = True
+    else:
+      logging.debug(u'Processing completed.')
 
     # Reset values.
     self._enable_sigsegv_handler = None
@@ -883,15 +981,3 @@ class MultiProcessEngine(engine.BaseEngine):
     self._text_prepend = None
 
     return self._processing_status
-
-  def SignalAbort(self):
-    """Signals the engine to abort."""
-    try:
-      self._StopExtractionProcesses(abort=True)
-
-    except KeyboardInterrupt:
-      self._AbortKill()
-
-      # The abort can leave the main process unresponsive
-      # due to incorrectly finalized IPC.
-      self._KillProcess(os.getpid())

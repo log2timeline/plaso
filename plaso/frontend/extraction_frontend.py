@@ -16,7 +16,7 @@ from plaso.frontend import frontend
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.multi_processing import engine
+from plaso.multi_processing import engine as multi_process_engine
 from plaso.hashers import manager as hashers_manager
 from plaso.parsers import manager as parsers_manager
 from plaso.parsers import presets as parsers_presets
@@ -98,7 +98,7 @@ class ExtractionFrontend(frontend.Frontend):
           profiling_sample_rate=self._profiling_sample_rate,
           profiling_type=self._profiling_type)
     else:
-      engine = multi_process.MultiProcessEngine(
+      engine = multi_process_engine.MultiProcessEngine(
           enable_profiling=self._enable_profiling,
           profiling_directory=self._profiling_directory,
           profiling_sample_rate=self._profiling_sample_rate,
