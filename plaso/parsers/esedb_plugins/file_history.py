@@ -32,7 +32,7 @@ class FileHistoryNamespaceEventObject(time_events.FiletimeEvent):
     self.usn_number = record_values.get(u'usn')
 
 
-class FileHistoryEseDbPlugin(interface.EseDbPlugin):
+class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
   """Parses a File History ESE database file."""
 
   NAME = u'esedb_file_history'
@@ -81,7 +81,7 @@ class FileHistoryEseDbPlugin(interface.EseDbPlugin):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       database: Optional database object (instance of pyesedb.file).
-      cache: Optional cache object (instance of EseDbCache).
+      cache: Optional cache object (instance of ESEDBCache).
       table: Optional table object (instance of pyesedb.table).
     """
     if database is None:
@@ -118,4 +118,4 @@ class FileHistoryEseDbPlugin(interface.EseDbPlugin):
         parser_mediator.ProduceEvent(event_object)
 
 
-esedb.EseDbParser.RegisterPlugin(FileHistoryEseDbPlugin)
+esedb.ESEDBParser.RegisterPlugin(FileHistoryESEDBPlugin)
