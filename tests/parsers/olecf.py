@@ -40,6 +40,5 @@ class OLECFParserTest(test_lib.ParserTestCase):
         eventdata.EventTimestamp.MODIFICATION_TIME)
 
 
-
 if __name__ == '__main__':
   unittest.main()
