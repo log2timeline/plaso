@@ -15,11 +15,11 @@ from tests import test_lib as shared_test_lib
 
 
 class MultiProcessEngineTest(shared_test_lib.BaseTestCase):
-  """Tests for the multi-process engine object."""
+  """Tests for the multi-process engine."""
 
   def testProcessSources(self):
     """Tests the PreprocessSources and ProcessSources function."""
-    test_engine = engine.MultiProcessEngine(maximum_number_of_queued_items=100)
+    test_engine = engine.MultiProcessEngine(maximum_number_of_tasks=100)
 
     source_path = os.path.join(self._TEST_DATA_PATH, u'ímynd.dd')
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
