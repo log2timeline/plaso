@@ -1386,9 +1386,9 @@ class MultiProcessWorkerProcess(MultiProcessBaseProcess):
       extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
 
     except IOError as exception:
-      logging.warning(
-          u'Unable to process path spec: {0:s} with error: {1:s}'.format(
-              extraction_worker.current_display_name, exception))
+      logging.warning((
+          u'Unable to process path specification: {0:s} with error: '
+          u'{1:s}').format(extraction_worker.current_display_name, exception))
 
     except dfvfs_errors.CacheFullError:
       # TODO: signal engine of failure.

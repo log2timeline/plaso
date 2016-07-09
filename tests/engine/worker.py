@@ -149,6 +149,20 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(storage_writer.number_of_events, 17)
 
+    # Process a storage media image with a symbolic link.
+    source_path = self._GetTestFilePath([u'image.vmdk'])
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_VMDK, parent=path_spec)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
+        parent=path_spec)
+    storage_writer = fake_storage.FakeStorageWriter(session)
+    self._TestProcessPathSpec(storage_writer, path_spec)
+
+    self.assertEqual(storage_writer.number_of_events, 18)
+
   def testExtractionWorkerHashing(self):
     """Test that the worker sets up and runs hashing code correctly."""
     resolver_context = context.Context()
