@@ -19,10 +19,7 @@
 # Sphinx documentation
 /docs/_build/doctrees/
 /docs/_build/html
-/docs/_build/.doctrees/
-/docs/_build/_modules/
-/docs/_build/_sources/
-/docs/_build/_static/
+
 
 
 # Code review files
