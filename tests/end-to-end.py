@@ -867,7 +867,7 @@ class ImageExportTestCase(TestCase):
     stderr_file = os.path.join(
         temp_directory, u'{0:s}-image_export.err'.format(test_definition.name))
     command = u'{0:s} {1:s} {2:s} > {3:s} 2> {4:s}'.format(
-        self._image_export, output_options, source_path, stdout_file,
+        self._image_export_path, output_options, source_path, stdout_file,
         stderr_file)
 
     logging.info(u'Running: {0:s}'.format(command))
