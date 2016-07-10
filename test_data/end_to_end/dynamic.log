@@ -7,12 +7,12 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
 2016-01-22T07:54:32+00:00,Content Modification Time,LOG,Log File,[Job] `cron.daily' terminated,syslog,OS:/tmp/test/test_data/syslog,-
 2016-03-23T23:01:18+00:00,Content Modification Time,LOG,Log File,[somrandomexe  pid: 19] This syslog message has a fractional value for seconds.,syslog,OS:/tmp/test/test_data/syslog,-
 2016-03-23T23:01:18+00:00,Content Modification Time,LOG,Log File,[somrandomexe  pid: 1915] This syslog message is brought to you by me (and not the other guy),syslog,OS:/tmp/test/test_data/syslog,-
-2016-06-25T09:21:40+00:00,ctime,FILE,OS ctime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
-2016-06-25T09:21:40+00:00,ctime,FILE,OS ctime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
-2016-06-25T09:21:40+00:00,mtime,FILE,OS mtime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
-2016-06-25T09:21:40+00:00,mtime,FILE,OS mtime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
-2016-06-25T09:21:41+00:00,atime,FILE,OS atime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
-2016-06-25T09:21:41+00:00,atime,FILE,OS atime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
+2016-07-10T18:25:14+00:00,ctime,FILE,OS ctime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
+2016-07-10T18:25:14+00:00,ctime,FILE,OS ctime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
+2016-07-10T18:25:14+00:00,mtime,FILE,OS mtime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
+2016-07-10T18:25:14+00:00,mtime,FILE,OS mtime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
+2016-07-10T18:25:15+00:00,atime,FILE,OS atime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
+2016-07-10T18:25:16+00:00,atime,FILE,OS atime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
 2016-11-18T01:15:20+00:00,Content Modification Time,LOG,Log File,[aprocess  pid: 10100] This is a multi-line message that screws up	many syslog parsers.,syslog,OS:/tmp/test/test_data/syslog,-
 2016-12-18T17:54:32+00:00,Content Modification Time,LOG,Log File,[anacron  pid: 1234] No true exit can exist (124 job run),syslog,OS:/tmp/test/test_data/syslog,-
 2016-12-31T17:54:32+00:00,Content Modification Time,LOG,Log File,[anacron  pid: 1234] Another one just like this (124 job run),syslog,OS:/tmp/test/test_data/syslog,-
