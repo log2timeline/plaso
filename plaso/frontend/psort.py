@@ -708,6 +708,11 @@ class PsortAnalysisReportQueueConsumer(plaso_queue.ItemQueueConsumer):
     # file, or something else (including potential images).
     self._storage_file.AddAnalysisReport(analysis_report)
 
+    # TODO: refactor this as part of psort rewrite.
+    event_tags = getattr(analysis_report, u'_event_tags', [])
+    for event_tag in event_tags:
+      self._storage_file.AddEventTag(event_tag)
+
     report_string = analysis_report.GetString()
     try:
       # TODO: move this print to the psort tool or equivalent.
