@@ -5,6 +5,7 @@
 import unittest
 
 from plaso.containers import events
+from plaso.engine import knowledge_base
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import eventdata
@@ -43,7 +44,9 @@ class OutputMediatorTest(unittest.TestCase):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self._output_mediator = mediator.OutputMediator(None)
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    self._output_mediator = mediator.OutputMediator(
+        knowledge_base_object, None)
 
   def testGetEventFormatter(self):
     """Tests the GetEventFormatter function."""

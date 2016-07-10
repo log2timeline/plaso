@@ -127,7 +127,7 @@ class SymantecParser(text_parser.TextCSVParser):
           row[u'time'], timezone=parser_mediator.timezone)
     except (TypeError, ValueError, errors.TimestampError) as exception:
       timestamp = timelib.Timestamp.NONE_TIMESTAMP
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to determine timestamp with error: {0:s}'.format(
               exception))
 

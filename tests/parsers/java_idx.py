@@ -18,14 +18,12 @@ class IDXTest(test_lib.ParserTestCase):
   def testParse602(self):
     """Tests the Parse function on a version 602 IDX file."""
     parser_object = java_idx.JavaIDXParser()
+    storage_writer = self._ParseFile(
+        [u'java_602.idx'], parser_object)
 
-    test_file = self._GetTestFilePath([u'java_602.idx'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    self.assertEqual(len(storage_writer.events), 2)
 
-    self.assertEqual(len(event_objects), 2)
-
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     idx_version_expected = 602
     self.assertEqual(event_object.idx_version, idx_version_expected)
@@ -44,7 +42,7 @@ class IDXTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Parse second event. Same metadata; different timestamp event.
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     self.assertEqual(event_object.idx_version, idx_version_expected)
     self.assertEqual(event_object.ip_address, ip_address_expected)
@@ -60,14 +58,12 @@ class IDXTest(test_lib.ParserTestCase):
   def testParse605(self):
     """Tests the Parse function on a version 605 IDX file."""
     parser_object = java_idx.JavaIDXParser()
+    storage_writer = self._ParseFile(
+        [u'java.idx'], parser_object)
 
-    test_file = self._GetTestFilePath([u'java.idx'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    self.assertEqual(len(storage_writer.events), 2)
 
-    self.assertEqual(len(event_objects), 2)
-
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     idx_version_expected = 605
     self.assertEqual(event_object.idx_version, idx_version_expected)
@@ -88,7 +84,7 @@ class IDXTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Parse second event. Same metadata; different timestamp event.
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     self.assertEqual(event_object.idx_version, idx_version_expected)
     self.assertEqual(event_object.ip_address, ip_address_expected)

@@ -89,17 +89,20 @@ class SQLiteDatabase(object):
 
   _READ_BUFFER_SIZE = 65536
 
-  def __init__(self, filename):
+  def __init__(self, filename, temporary_directory=None):
     """Initializes the database object.
 
     Args:
-      filename: string containing the name of the file entry.
+      filename (str): name of the file entry.
+      temporary_directory (Optional[str]): path of the directory for temporary
+          files.
     """
     self._database = None
     self._filename = filename
     self._is_open = False
     self._table_names = []
     self._temp_db_file_path = u''
+    self._temporary_directory = temporary_directory
     self._temp_wal_file_path = u''
 
   def _OpenWALFileObject(self, wal_file_object):
@@ -198,10 +201,14 @@ class SQLiteDatabase(object):
     # Note that data is filled here with the file header data and
     # that with will explicitly close the temporary files and thus
     # making sure it is available for sqlite3.connect().
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+    temp_file = tempfile.NamedTemporaryFile(
+        delete=False, dir=self._temporary_directory)
+
+    try:
       self._temp_db_file_path = temp_file.name
 
       try:
+        file_object.seek(0, os.SEEK_SET)
         data = file_object.read(self._READ_BUFFER_SIZE)
         while data:
           temp_file.write(data)
@@ -210,6 +217,9 @@ class SQLiteDatabase(object):
         os.remove(self._temp_db_file_path)
         self._temp_db_file_path = u''
         raise
+
+    finally:
+      temp_file.close()
 
     if wal_file_object:
       self._OpenWALFileObject(wal_file_object)
@@ -335,13 +345,14 @@ class SQLiteParser(interface.FileEntryParser):
     """
     file_object = file_entry.GetFileObject()
     filename = parser_mediator.GetFilename()
-    database = SQLiteDatabase(filename)
+    database = SQLiteDatabase(
+        filename, temporary_directory=parser_mediator.temporary_directory)
     try:
       database.Open(file_object)
 
       # Reset file_object offset to 0 so we can re-open the database with the
       # WAL file.
-      file_object.seek(0)
+      file_object.seek(0, os.SEEK_SET)
 
       # Open second database with WAL file if available.
       database_wal, wal_file_entry = self._GetDatabaseWithWAL(

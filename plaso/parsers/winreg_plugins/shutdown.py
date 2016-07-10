@@ -69,7 +69,7 @@ class ShutdownPlugin(interface.WindowsRegistryPlugin):
     try:
       filetime = self._UINT64_STRUCT.parse(value_integer)
     except construct.FieldError as exception:
-      parser_mediator.ProduceParseError((
+      parser_mediator.ProduceExtractionError((
           u'Unable to extract shutdown timestamp: {0:d} with error: '
           u'{1:s}').format(value_integer, exception))
       return

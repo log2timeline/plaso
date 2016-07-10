@@ -6,6 +6,7 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import selinux as selinux_formatter
+from plaso.lib import timelib
 from plaso.parsers import selinux
 
 from tests.parsers import test_lib
@@ -20,19 +21,19 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser_object = selinux.SELinuxParser()
-
     knowledge_base_values = {u'year': 2013}
-    test_file = self._GetTestFilePath([u'selinux.log'])
-    event_queue_consumer = self._ParseFile(
-        parser_object, test_file, knowledge_base_values=knowledge_base_values)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFile(
+        [u'selinux.log'], parser_object,
+        knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(len(event_objects), 5)
+    self.assertEqual(len(storage_writer.events), 7)
 
     # Test case: normal entry.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
-    self.assertEqual(event_object.timestamp, 1337845201174000)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-05-24 07:40:01.174')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[audit_type: LOGIN, pid: 25443] pid=25443 uid=0 old '
@@ -44,27 +45,33 @@ class SELinuxUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
     # Test case: short date.
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
-    self.assertEqual(event_object.timestamp, 1337845201000000)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-05-24 07:40:01')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_string = u'[audit_type: SHORTDATE] check rounding'
 
     self._TestGetMessageStrings(event_object, expected_string, expected_string)
 
     # Test case: no msg.
-    event_object = event_objects[2]
+    event_object = storage_writer.events[2]
 
-    self.assertEqual(event_object.timestamp, 1337845222174000)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-05-24 07:40:22.174')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_string = u'[audit_type: NOMSG]'
 
     self._TestGetMessageStrings(event_object, expected_string, expected_string)
 
     # Test case: under score.
-    event_object = event_objects[3]
+    event_object = storage_writer.events[3]
 
-    self.assertEqual(event_object.timestamp, 1337845666174000)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2012-05-24 07:47:46.174')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'[audit_type: UNDER_SCORE, pid: 25444] pid=25444 uid=0 old '

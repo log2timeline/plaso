@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""The log2timeline front-end."""
+"""The log2timeline command line tool."""
 
 import argparse
 import logging
@@ -32,30 +32,32 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
   """Class that implements the log2timeline CLI tool.
 
   Attributes:
-    dependencies_check: a boolean value to indicate the availability and
-                        versions of dependencies should be checked.
-    list_output_modules: a boolean value to indicate information about the
-                         output modules should be shows.
-    show_info: a boolean value to indicate information about hashers, parsers,
-               plugins, etc. should be shown.
+    dependencies_check (bool): True if the availability and versions of
+        dependencies should be checked.
+    list_output_modules (bool): True if information about the output modules
+        should be shown.
+    show_info (bool): True if information about hashers, parsers, plugins,
+        etc. should be shown.
   """
 
   NAME = u'log2timeline'
   DESCRIPTION = textwrap.dedent(u'\n'.join([
       u'',
-      u'log2timeline is the main front-end to the plaso back-end, used to',
-      u'collect and correlate events extracted from a filesystem.',
+      (u'log2timeline is a command line tool to extract events from '
+       u'individual '),
+      u'files, recursing a directory (e.g. mount point) or storage media ',
+      u'image or device.',
       u'',
       u'More information can be gathered from here:',
-      u'    http://plaso.kiddaland.net/usage/log2timeline',
+      u'    https://github.com/log2timeline/plaso/wiki/Using-log2timeline',
       u'']))
 
   EPILOG = textwrap.dedent(u'\n'.join([
       u'',
       u'Example usage:',
       u'',
-      u'Run the tool against an image (full kitchen sink)',
-      u'    log2timeline.py /cases/mycase/plaso.plaso ímynd.dd',
+      u'Run the tool against a storage media image (full kitchen sink)',
+      u'    log2timeline.py /cases/mycase/storage.plaso ímynd.dd',
       u'',
       u'Instead of answering questions, indicate some of the options on the',
       u'command line (including data from particular VSS stores).',
@@ -69,12 +71,10 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Initializes the CLI tool object.
 
     Args:
-      input_reader: the input reader (instance of InputReader).
-                    The default is None which indicates the use of the stdin
-                    input reader.
-      output_writer: the output writer (instance of OutputWriter).
-                     The default is None which indicates the use of the stdout
-                     output writer.
+      input_reader (Optional[InputReader]): input reader, where None indicates
+          that the stdin input reader should be used.
+      output_writer (Optional[OutputWriter]): output writer, where None
+          indicates that the stdout output writer should be used.
     """
     super(Log2TimelineTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
@@ -120,51 +120,53 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           screen_buffer_attributes, console_size, top_left_coordinate)
       screen_buffer.SetConsoleCursorPosition(top_left_coordinate)
 
-  def _FormatStatusTableRow(
-      self, identifier, pid, status, process_status, number_of_events,
-      number_of_events_delta, display_name):
+  def _FormatStatusTableRow(self, process_status):
     """Formats a status table row.
 
     Args:
-      identifier: identifier to describe the status table entry.
-      pid: the process identifier (PID).
-      status: the process status string.
-      process_status: string containing the process status.
-      number_of_events: the total number of events.
-      number_of_events_delta: the number of events since the last status update.
-      display_name: the display name of the file last processed.
+      process_status (ProcessStatus): processing status.
     """
-    if (process_status and number_of_events_delta == 0 and
-        status in [definitions.PROCESSING_STATUS_RUNNING,
-                   definitions.PROCESSING_STATUS_HASHING,
-                   definitions.PROCESSING_STATUS_PARSING]):
-      status = process_status
-
     # This check makes sure the columns are tab aligned.
+    identifier = process_status.identifier
     if len(identifier) < 8:
       identifier = u'{0:s}\t'.format(identifier)
 
+    status = process_status.status
     if len(status) < 8:
       status = u'{0:s}\t'.format(status)
 
-    if number_of_events is None or number_of_events_delta is None:
-      events = u''
-    else:
-      events = u'{0:d} ({1:d})'.format(number_of_events, number_of_events_delta)
+    sources = u''
+    if (process_status.number_of_produced_sources is not None and
+        process_status.number_of_produced_sources_delta is not None):
+      sources = u'{0:d} ({1:d})'.format(
+          process_status.number_of_produced_sources,
+          process_status.number_of_produced_sources_delta)
 
-      # This check makes sure the columns are tab aligned.
-      if len(events) < 8:
-        events = u'{0:s}\t'.format(events)
+    # This check makes sure the columns are tab aligned.
+    if len(sources) < 8:
+      sources = u'{0:s}\t'.format(sources)
+
+    events = u''
+    if (process_status.number_of_produced_events is not None and
+        process_status.number_of_produced_events_delta is not None):
+      events = u'{0:d} ({1:d})'.format(
+          process_status.number_of_produced_events,
+          process_status.number_of_produced_events_delta)
+
+    # This check makes sure the columns are tab aligned.
+    if len(events) < 8:
+      events = u'{0:s}\t'.format(events)
 
     # TODO: shorten display name to fit in 80 chars and show the filename.
-    return u'{0:s}\t{1:d}\t{2:s}\t{3:s}\t{4:s}'.format(
-        identifier, pid, status, events, display_name)
+    return u'{0:s}\t{1:d}\t{2:s}\t{3:s}\t{4:s}\t{5:s}'.format(
+        identifier, process_status.pid, status, sources, events,
+        process_status.display_name)
 
   def _GetMatcher(self, filter_expression):
     """Retrieves a filter object for a specific filter expression.
 
     Args:
-      filter_expression: string that contains the filter expression.
+      filter_expression (str): filter expression.
 
     Returns:
       A filter object (instance of objectfilter.TODO) or None.
@@ -182,7 +184,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Parses the experimental plugin options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
     """
     use_zeromq = getattr(options, u'use_zeromq', False)
     if use_zeromq:
@@ -192,7 +194,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Parses the output options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
@@ -209,7 +211,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Parses the processing options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
@@ -239,7 +241,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Prints the processing status.
 
     Args:
-      processing_status: the processing status (instance of ProcessingStatus).
+      processing_status (ProcessingStatus): processing status.
     """
     if self._stdout_output_writer:
       self._ClearScreen()
@@ -253,50 +255,22 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     # TODO: for win32console get current color and set intensity,
     # write the header separately then reset intensity.
-    status_header = u'Identifier\tPID\tStatus\t\tEvents\t\tFile'
+    status_header = u'Identifier\tPID\tStatus\t\tSources\t\tEvents\t\tFile'
     if not win32console:
       status_header = u'\x1b[1m{0:s}\x1b[0m'.format(status_header)
 
     status_table = [status_header]
 
-    status_row = self._FormatStatusTableRow(
-        processing_status.collector.identifier, processing_status.collector.pid,
-        processing_status.collector.status,
-        processing_status.collector.process_status, None, None, u'')
-
+    status_row = self._FormatStatusTableRow(processing_status.foreman_status)
     status_table.append(status_row)
 
-    for extraction_worker_status in processing_status.extraction_workers:
-      status_row = self._FormatStatusTableRow(
-          extraction_worker_status.identifier,
-          extraction_worker_status.pid,
-          extraction_worker_status.status,
-          extraction_worker_status.process_status,
-          extraction_worker_status.number_of_events,
-          extraction_worker_status.number_of_events_delta,
-          extraction_worker_status.display_name)
-
+    for worker_status in processing_status.workers_status:
+      status_row = self._FormatStatusTableRow(worker_status)
       status_table.append(status_row)
-
-    if processing_status.storage_writer:
-      status_row = self._FormatStatusTableRow(
-          processing_status.storage_writer.identifier,
-          processing_status.storage_writer.pid,
-          processing_status.storage_writer.status,
-          processing_status.storage_writer.process_status,
-          processing_status.storage_writer.number_of_events,
-          processing_status.storage_writer.number_of_events_delta, u'')
-
-    status_table.append(status_row)
 
     status_table.append(u'')
     self._output_writer.Write(u'\n'.join(status_table))
     self._output_writer.Write(u'\n')
-
-    if processing_status.GetExtractionCompleted():
-      self._output_writer.Write(
-          u'All extraction workers completed - waiting for storage.\n')
-      self._output_writer.Write(u'\n')
 
     # TODO: remove update flicker. For win32console we could set the cursor
     # top left, write the table, clean the remainder of the screen buffer
@@ -309,33 +283,23 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Prints the processing status as a stream of output.
 
     Args:
-      processing_status: the processing status (instance of ProcessingStatus).
+      processing_status (ProcessingStatus): processing status.
     """
-    if processing_status.GetExtractionCompleted():
-      self._output_writer.Write(
-          u'All extraction workers completed - waiting for storage.\n')
-
-    else:
-      for extraction_worker_status in processing_status.extraction_workers:
-        status = extraction_worker_status.status
-        self._output_writer.Write((
-            u'{0:s} (PID: {1:d}) - events extracted: {2:d} - file: {3:s} '
-            u'- running: {4!s} <{5:s}>\n').format(
-                extraction_worker_status.identifier,
-                extraction_worker_status.pid,
-                extraction_worker_status.number_of_events,
-                extraction_worker_status.display_name,
-                status in [definitions.PROCESSING_STATUS_RUNNING,
-                           definitions.PROCESSING_STATUS_HASHING,
-                           definitions.PROCESSING_STATUS_PARSING],
-                extraction_worker_status.process_status))
+    for worker_status in processing_status.workers_status:
+      status_line = (
+          u'{0:s} (PID: {1:d}) - events extracted: {2:d} - file: {3:s} '
+          u'- running: {4!s}\n').format(
+              worker_status.identifier, worker_status.pid,
+              worker_status.number_of_produced_events,
+              worker_status.display_name,
+              worker_status.status not in definitions.PROCESSING_ERROR_STATUS)
+      self._output_writer.Write(status_line)
 
   def AddExperimentalOptions(self, argument_group):
     """Adds experimental options to the argument group
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
         u'--use_zeromq', action=u'store_true', dest=u'use_zeromq', help=(
@@ -345,8 +309,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Adds the output options to the argument group.
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
         u'--output', dest=u'output_module', action=u'store', type=str,
@@ -369,8 +332,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Adds the processing options to the argument group.
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
         u'--single_process', u'--single-process', dest=u'single_process',
@@ -458,7 +420,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Parses the command line arguments.
 
     Returns:
-      A boolean value indicating the arguments were successfully parsed.
+      bool: True if the arguments were successfully parsed.
     """
     self._ConfigureLogging()
 
@@ -577,7 +539,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           u'risk.')
       time.sleep(5)
 
-    # TODO: added now since it can cause a deadlock.
     if self._process_archive_files:
       logging.warning(
           u'Scanning archive files currently can cause deadlock. Continue at '
@@ -601,7 +562,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """Parses the options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
@@ -681,10 +642,11 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       UserAbort: if the user initiated an abort.
     """
     self._front_end.SetDebugMode(self._debug_mode)
-    self._front_end.SetEnableProfiling(
-        self._enable_profiling,
-        profiling_sample_rate=self._profiling_sample_rate,
-        profiling_type=self._profiling_type)
+    if self._enable_profiling:
+      self._front_end.EnableProfiling(
+          profiling_directory=self._profiling_directory,
+          profiling_sample_rate=self._profiling_sample_rate,
+          profiling_type=self._profiling_type)
     self._front_end.SetStorageFile(self._output)
     self._front_end.SetShowMemoryInformation(show_memory=self._foreman_verbose)
 
@@ -727,23 +689,47 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         filter_file=self._filter_file,
         hasher_names_string=self._hasher_names_string,
         number_of_extraction_workers=self._number_of_extraction_workers,
+        process_archive_files=self._process_archive_files,
         parser_filter_expression=self._parser_filter_expression,
         preferred_encoding=self.preferred_encoding,
         single_process_mode=self._single_process_mode,
         status_update_callback=status_update_callback,
         timezone=self._timezone)
 
-    if processing_status and not processing_status.error_detected:
-      self._output_writer.Write(u'Processing completed.\n')
-    else:
-      self._output_writer.Write(u'Processing completed with errors.\n')
-    self._output_writer.Write(u'\n')
+    if not processing_status:
+      self._output_writer.Write(
+          u'WARNING: missing processing status information.\n')
 
-    if processing_status and processing_status.error_path_specs:
-      self._output_writer.Write(u'Path specifications that caused errors:\n')
-      for path_spec_comparable in processing_status.error_path_specs:
-        self._output_writer.Write(path_spec_comparable)
-        self._output_writer.Write(u'\n')
+    else:
+      if processing_status.aborted:
+        self._output_writer.Write(u'Processing aborted.\n')
+      elif processing_status.error_path_specs:
+        self._output_writer.Write(u'Processing completed with errors.\n')
+      else:
+        self._output_writer.Write(u'Processing completed.\n')
+
+      number_of_errors = (
+          processing_status.foreman_status.number_of_produced_errors)
+      if number_of_errors:
+        output_text = u'\n'.join([
+            (u'Number of errors encountered while extracting events: '
+             u'{0:d}.').format(number_of_errors),
+            u'',
+            u'Use pinfo to inspect errors in more detail.',
+            u''])
+        self._output_writer.Write(output_text)
+
+      if processing_status.error_path_specs:
+        output_text = u'\n'.join([
+            u'',
+            u'Path specifications that could not be processed:',
+            u''])
+        self._output_writer.Write(output_text)
+        for path_spec in processing_status.error_path_specs:
+          self._output_writer.Write(path_spec.comparable)
+          self._output_writer.Write(u'\n')
+
+    self._output_writer.Write(u'\n')
 
   def ShowInfo(self):
     """Shows information about available hashers, parsers, plugins, etc."""

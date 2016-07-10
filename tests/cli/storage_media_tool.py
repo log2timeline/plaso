@@ -17,6 +17,8 @@ from tests.cli import test_lib
 class StorageMediaToolTest(test_lib.CLIToolTestCase):
   """Tests for the storage media tool object."""
 
+  # pylint: disable=protected-access
+
   _EXPECTED_OUTPUT_CREDENTIAL_OPTIONS = u'\n'.join([
       u'usage: storage_media_tool_test.py [--credential TYPE:DATA]',
       u'',
@@ -263,6 +265,41 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     scan_node = volume_scan_node.sub_nodes[1]
     self.assertEqual(
         scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
+
+  def testFormatHumanReadableSize(self):
+    """Tests the _FormatHumanReadableSize function."""
+    test_tool = storage_media_tool.StorageMediaTool()
+
+    expected_size_string = u'1000 B'
+    size_string = test_tool._FormatHumanReadableSize(1000)
+    self.assertEqual(size_string, expected_size_string)
+
+    expected_size_string = u'1.0KiB / 1.0kB (1024 B)'
+    size_string = test_tool._FormatHumanReadableSize(1024)
+    self.assertEqual(size_string, expected_size_string)
+
+    expected_size_string = u'976.6KiB / 1.0MB (1000000 B)'
+    size_string = test_tool._FormatHumanReadableSize(1000000)
+    self.assertEqual(size_string, expected_size_string)
+
+    expected_size_string = u'1.0MiB / 1.0MB (1048576 B)'
+    size_string = test_tool._FormatHumanReadableSize(1048576)
+    self.assertEqual(size_string, expected_size_string)
+
+  # TODO: add test for _GetTSKPartitionIdentifiers.
+  # TODO: add test for _GetVSSStoreIdentifiers.
+  # TODO: add test for _ParseCredentialOptions.
+  # TODO: add test for _ParseFilterOptions.
+  # TODO: add test for _ParseStorageMediaImageOptions.
+  # TODO: add test for _ParseVSSProcessingOptions.
+  # TODO: add test for _ParseVSSStoresString.
+  # TODO: add test for _PromptUserForEncryptedVolumeCredential.
+  # TODO: add test for _PromptUserForPartitionIdentifier.
+  # TODO: add test for _PromptUserForVSSStoreIdentifiers.
+  # TODO: add test for _ScanVolume.
+  # TODO: add test for _ScanVolumeScanNode.
+  # TODO: add test for _ScanVolumeScanNodeEncrypted.
+  # TODO: add test for _ScanVolumeScanNodeVSS.
 
   def testAddCredentialOptions(self):
     """Tests the AddCredentialOptions function."""

@@ -59,7 +59,8 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
 
       resolver_context = context.Context()
       test_extractor = extractors.PathSpecExtractor(resolver_context)
-      path_specs = list(test_extractor.ExtractPathSpecs([source_path_spec]))
+      path_specs = list(test_extractor.ExtractPathSpecs(
+          [source_path_spec]))
 
       self.assertEqual(len(path_specs), 4)
 
@@ -68,13 +69,13 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=u'.')
 
-    filter_name = ''
+    filter_name = u''
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
       filter_name = temp_file.name
-      temp_file.write('/test_data/testdir/filter_.+.txt\n')
-      temp_file.write('/test_data/.+evtx\n')
-      temp_file.write('/AUTHORS\n')
-      temp_file.write('/does_not_exist/some_file_[0-9]+txt\n')
+      temp_file.write(b'/test_data/testdir/filter_.+.txt\n')
+      temp_file.write(b'/test_data/.+evtx\n')
+      temp_file.write(b'/AUTHORS\n')
+      temp_file.write(b'/does_not_exist/some_file_[0-9]+txt\n')
 
     resolver_context = context.Context()
     test_extractor = extractors.PathSpecExtractor(resolver_context)
@@ -144,7 +145,8 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
 
     resolver_context = context.Context()
     test_extractor = extractors.PathSpecExtractor(resolver_context)
-    path_specs = list(test_extractor.ExtractPathSpecs([source_path_spec]))
+    path_specs = list(test_extractor.ExtractPathSpecs(
+        [source_path_spec]))
 
     self.assertEqual(len(path_specs), 3)
 
@@ -158,12 +160,12 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=volume_path_spec)
 
-    filter_name = ''
+    filter_name = u''
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
       filter_name = temp_file.name
-      temp_file.write('/a_directory/.+zip\n')
-      temp_file.write('/a_directory/another.+\n')
-      temp_file.write('/passwords.txt\n')
+      temp_file.write(b'/a_directory/.+zip\n')
+      temp_file.write(b'/a_directory/another.+\n')
+      temp_file.write(b'/passwords.txt\n')
 
     resolver_context = context.Context()
     test_extractor = extractors.PathSpecExtractor(resolver_context)
@@ -226,8 +228,8 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
     resolver_context = context.Context()
     test_extractor = extractors.PathSpecExtractor(resolver_context)
 
-    path_specs = list(test_extractor.ExtractPathSpecs([
-        p1_file_system_path_spec, p2_file_system_path_spec]))
+    path_specs = list(test_extractor.ExtractPathSpecs(
+        [p1_file_system_path_spec, p2_file_system_path_spec]))
 
     expected_paths_p1 = [
         u'/$AttrDef',

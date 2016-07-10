@@ -18,12 +18,12 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
   def testParseFile(self):
     """Tests parsing a default profile Preferences file."""
     parser_object = chrome_preferences.ChromePreferencesParser()
+    storage_writer = self._ParseFile(
+        [u'Preferences'], parser_object)
 
-    test_file = self._GetTestFilePath([u'Preferences'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    self.assertEqual(len(storage_writer.events), 20)
 
-    event_object = event_objects[14]
+    event_object = storage_writer.events[14]
 
     self.assertIsInstance(
         event_object, chrome_preferences.ChromeExtensionInstallationEvent)
@@ -43,13 +43,15 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
         u'resources\\chrome_app')
     self.assertEqual(event_object.path, expected_path)
 
-    expected_msg = (
+    expected_message = (
         u'CRX ID: {0:s} CRX Name: {1:s} Path: {2:s}'.format(
             expected_id, expected_name, expected_path))
-    expected_short_path = (
-        u'C:\\Program Files\\Google\\Chrome\\Application\\3...')
-    expected_short = (u'{0:s} {1:s}'.format(expected_id, expected_short_path))
-    self._TestGetMessageStrings(event_object, expected_msg, expected_short)
+    expected_message_short = (
+        u'{0:s} '
+        u'C:\\Program Files\\Google\\Chrome\\Application\\3...').format(
+            expected_id)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_message_short)
 
 
 if __name__ == '__main__':

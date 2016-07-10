@@ -568,7 +568,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
 
     format_type = self._CheckSignature(value_data)
     if not format_type:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'Unsupported signature in AppCompatCache key: {0:s}'.format(
               registry_key.path))
       return
@@ -585,7 +585,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
         format_type, value_data, cached_entry_offset)
 
     if not cached_entry_size:
-      parser_mediator.ProduceParseError((
+      parser_mediator.ProduceExtractionError((
           u'Unsupported cached entry size at offset {0:d} in AppCompatCache '
           u'key: {1:s}').format(cached_entry_offset, registry_key.path))
       return

@@ -176,7 +176,7 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
     # Limit record size to 65536 to be on the safe side.
     record_size = file_header[u'record_size']
     if record_size > 65536:
-      parser_mediator.ProduceParseError((
+      parser_mediator.ProduceExtractionError((
           u'Record size: {0:d} is too large for INFO2. Defaulting to: '
           u'65535').format(record_size))
       record_size = 65535

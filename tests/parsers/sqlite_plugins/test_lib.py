@@ -5,8 +5,9 @@ from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.engine import single_process
+from plaso.containers import sessions
 from plaso.parsers import sqlite
+from plaso.storage import fake_storage
 
 from tests.parsers import test_lib
 
@@ -15,43 +16,39 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
   """The unit test case for SQLite database plugins."""
 
   def _ParseDatabaseFileWithPlugin(
-      self, plugin_object, path, cache=None, knowledge_base_values=None,
-      wal_path=None):
+      self, path_segments, plugin_object, cache=None,
+      knowledge_base_values=None, wal_path=None):
     """Parses a file as a SQLite database with a specific plugin.
 
     Args:
+      path_segments: a list of strings containinge the path segments inside
+                     the test data directory.
       plugin_object: The plugin object that is used to extract an event
                      generator.
-      path: The path to the SQLite database file.
-      cache: A cache object (instance of SQLiteCache).
+      cache: optional cache object (instance of SQLiteCache).
       knowledge_base_values: optional dict containing the knowledge base
                              values.
-      wal_path: optional path to the SQLite WAL file.
+      wal_path: optional string containing the path to the SQLite WAL file.
 
     Returns:
-      An event object queue consumer object (instance of
-      TestItemQueueConsumer).
+      A storage writer object (instance of FakeStorageWriter).
     """
-    event_queue = single_process.SingleProcessQueue()
-    event_queue_consumer = test_lib.TestItemQueueConsumer(event_queue)
+    session = sessions.Session()
+    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer.Open()
 
-    parse_error_queue = single_process.SingleProcessQueue()
-
-    parser_mediator = self._GetParserMediator(
-        event_queue, parse_error_queue,
+    file_entry = self._GetTestFileEntryFromPath(path_segments)
+    parser_mediator = self._CreateParserMediator(
+        storage_writer, file_entry=file_entry,
         knowledge_base_values=knowledge_base_values)
 
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_OS, location=path)
-    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     parser_mediator.SetFileEntry(file_entry)
 
+    wal_file_entry = None
     if wal_path:
       wal_path_spec = path_spec_factory.Factory.NewPathSpec(
           definitions.TYPE_INDICATOR_OS, location=wal_path)
       wal_file_entry = path_spec_resolver.Resolver.OpenFileEntry(wal_path_spec)
-    else:
-      wal_file_entry = None
 
     # AppendToParserChain needs to be run after SetFileEntry.
     parser_mediator.AppendToParserChain(plugin_object)
@@ -83,4 +80,4 @@ class SQLitePluginTestCase(test_lib.ParserTestCase):
       if database_wal:
         database_wal.Close()
 
-    return event_queue_consumer
+    return storage_writer

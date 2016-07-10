@@ -161,7 +161,7 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
             table.name, esedb_record, value_mappings=value_mappings)
 
       except UnicodeDecodeError:
-        parser_mediator.ProduceParseError((
+        parser_mediator.ProduceExtractionError((
             u'Unable to retrieve record values from record: {0:d} '
             u'in table: {1:s}').format(record_index, table.name))
         continue
@@ -248,7 +248,7 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
       table_name = u'Container_{0:d}'.format(container_identifier)
       esedb_table = database.get_table_by_name(table_name)
       if not esedb_table:
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'Missing table: {0:s}'.format(table_name))
         continue
 

@@ -17,14 +17,12 @@ class WinFirewallParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser_object = winfirewall.WinFirewallParser()
+    storage_writer = self._ParseFile(
+        [u'firewall.log'], parser_object)
 
-    test_file = self._GetTestFilePath([u'firewall.log'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    self.assertEqual(len(storage_writer.events), 15)
 
-    self.assertEqual(len(event_objects), 15)
-
-    event_object = event_objects[4]
+    event_object = storage_writer.events[4]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2005-04-11 08:06:02')
@@ -33,7 +31,7 @@ class WinFirewallParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.source_ip, u'123.45.78.90')
     self.assertEqual(event_object.dest_ip, u'123.156.78.90')
 
-    event_object = event_objects[7]
+    event_object = storage_writer.events[7]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2005-04-11 08:06:26')
@@ -56,7 +54,7 @@ class WinFirewallParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    event_object = event_objects[9]
+    event_object = storage_writer.events[9]
 
     self.assertEqual(event_object.icmp_type, 8)
     self.assertEqual(event_object.icmp_code, 0)

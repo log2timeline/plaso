@@ -3,12 +3,13 @@
 
 import collections
 import logging
+import re
 import urllib
 
 from plaso.analysis import interface
 from plaso.analysis import manager
+from plaso.containers import events
 from plaso.containers import reports
-from plaso.filters import manager as filters_manager
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import py2to3
 
@@ -19,146 +20,6 @@ SEARCH_OBJECT = collections.namedtuple(
     u'SEARCH_OBJECT', u'time source engine search_term')
 
 
-class FilterClass(object):
-  """A class that contains all the parser functions."""
-
-  @classmethod
-  def _ExtractSearchQueryFromURL(cls, url):
-    """Extracts the search query from the URL.
-
-    Args:
-      url: Unicode string containing the URL.
-
-    Returns:
-      The search query substring, between the substrings 'q=' and '&'.
-    """
-    if not cls._SearchAndQInLine(url):
-      return
-
-    return cls._GetBetweenQEqualsAndAmbersand(url).replace(u'+', u' ')
-
-  @classmethod
-  def _GetBetweenQEqualsAndAmbersand(cls, string):
-    """Determines the substring between the substrings 'q=' and '&'.
-
-    Returns:
-      A boolean value indicating a match.
-    """
-    if u'q=' not in string:
-      return string
-    _, _, line = string.partition(u'q=')
-    before_and, _, _ = line.partition(u'&')
-    if not before_and:
-      return line
-    return before_and.split()[0]
-
-  @classmethod
-  def _SearchAndQInLine(cls, string):
-    """Determines if the susbstring 'q=' and 'search' appear in string.
-
-    Returns:
-      A boolean value indicating a match.
-    """
-    return u'search' in string and u'q=' in string
-
-  @classmethod
-  def BingSearch(cls, url):
-    """Extracts the search query from the URL for Bing search.
-
-    Args:
-      url: Unicode string containing the URL.
-
-    Returns:
-      The search query substring.
-    """
-    return cls._ExtractSearchQueryFromURL(url)
-
-  @classmethod
-  def DuckDuckGo(cls, url):
-    """Extracts the search query from the URL for DuckDuckGo search.
-
-    Args:
-      url: Unicode string containing the URL.
-
-    Returns:
-      The search query substring.
-    """
-    if not u'q=' in url:
-      return
-
-    return cls._GetBetweenQEqualsAndAmbersand(url).replace(u'+', u' ')
-
-  @classmethod
-  def Gmail(cls, url):
-    """Extracts the search query from the URL for Gmail search.
-
-    Args:
-      url: Unicode string containing the URL.
-
-    Returns:
-      The search query substring.
-    """
-    if u'search/' not in url:
-      return
-
-    _, _, line = url.partition(u'search/')
-    first, _, _ = line.partition(u'/')
-    second, _, _ = first.partition(u'?compose')
-
-    return second.replace(u'+', u' ')
-
-  @classmethod
-  def GoogleSearch(cls, url):
-    """Extracts the search query from the URL for Google search.
-
-    Args:
-      url: Unicode string containing the URL.
-
-    Returns:
-      The search query substring.
-    """
-    if not cls._SearchAndQInLine(url):
-      return
-
-    line = cls._GetBetweenQEqualsAndAmbersand(url)
-    if not line:
-      return
-
-    return line.replace(u'+', u' ')
-
-  @classmethod
-  def Yandex(cls, url):
-    """Extracts the search query from the URL for Yandex search.
-
-    Args:
-      url: Unicode string containing the URL.
-
-    Returns:
-      The search query substring.
-    """
-    if u'text=' not in url:
-      return
-    _, _, line = url.partition(u'text=')
-    before_and, _, _ = line.partition(u'&')
-    if not before_and:
-      return
-    yandex_search_url = before_and.split()[0]
-
-    return yandex_search_url.replace(u'+', u' ')
-
-  @classmethod
-  def YouTube(cls, url):
-    """Extracts the search query from the URL for Youtube search.
-
-    Args:
-      url: Unicode string containing the URL.
-
-    Returns:
-      The search query substring.
-    """
-    return cls._ExtractSearchQueryFromURL(url)
-
-
 class BrowserSearchPlugin(interface.AnalysisPlugin):
   """Analyze browser search entries from events."""
 
@@ -167,47 +28,52 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
   # Indicate that we do not want to run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = False
 
+  # TODO: use groups to build a single RE.
+
   # Here we define filters and callback methods for all hits on each filter.
-  FILTERS = (
-      ((u'url iregexp "(www.|encrypted.|/)google." and url contains "search"'),
-       u'GoogleSearch'),
-      (u'url contains "youtube.com"', u'YouTube'),
-      ((u'source is "WEBHIST" and url contains "bing.com" and url contains '
-        u'"search"'), u'BingSearch'),
-      (u'url contains "mail.google.com"', u'Gmail'),
-      ((u'source is "WEBHIST" and url contains "yandex.com" and url contains '
-        u'"yandsearch"'), u'Yandex'),
-      (u'url contains "duckduckgo.com"', u'DuckDuckGo')
-  )
+  _URL_FILTERS = frozenset([
+      (u'Bing', re.compile(u'bing.com/search'), u'_ExtractSearchQueryFromURL'),
+      (u'DuckDuckGo', re.compile(r'duckduckgo\.com'),
+       u'_ExtractDuckDuckGoSearchQuery'),
+      (u'GMail', re.compile(r'mail\.google\.com'),
+       u'_ExtractGMailSearchQuery'),
+      (u'Google Docs', re.compile(r'docs.google.com'),
+       u'_ExtractGoogleDocsSearchQuery'),
+      (u'Google Drive', re.compile(r'drive\.google\.com/drive/search'),
+       u'_ExtractGoogleSearchQuery'),
+      (u'Google Search',
+       re.compile(r'(www\.|encrypted\.|/)google\.[^/]*/search'),
+       u'_ExtractGoogleSearchQuery'),
+      (u'Google Sites', re.compile(r'sites.google.com/site'),
+       u'_ExtractGoogleSearchQuery'),
+      (u'Yandex', re.compile(r'yandex\.com/search'),
+       u'_ExtractYandexSearchQuery'),
+      (u'Youtube', re.compile(r'youtube\.com'),
+       '_ExtractYouTubeSearchQuery'),
+  ])
 
   def __init__(self, incoming_queue):
-    """Initializes the browser search analysis plugin.
+    """Initializes an analysis plugin.
 
     Args:
-      incoming_queue: A queue that is used to listen to incoming events.
+      incoming_queue (Queue): queue for incoming events.
     """
     super(BrowserSearchPlugin, self).__init__(incoming_queue)
-    self._filter_dict = {}
     self._counter = collections.Counter()
 
     # Store a list of search terms in a timeline format.
     # The format is key = timestamp, value = (source, engine, search term).
     self._search_term_timeline = []
-
-    for filter_str, call_back in self.FILTERS:
-      filter_obj = filters_manager.FiltersManager.GetFilterObject(filter_str)
-      call_back_obj = getattr(FilterClass, call_back, None)
-      if filter_obj and call_back_obj:
-        self._filter_dict[filter_obj] = (call_back, call_back_obj)
+    self._tags = []
 
   def _DecodeURL(self, url):
     """Decodes the URL, replaces %XX to their corresponding characters.
 
     Args:
-      url: a string containing the encoded URL.
+      url (str): encoded URL.
 
     Returns:
-      A Unicode string containing the decoded URL.
+      str: decoded URL.
     """
     if not url:
       return u''
@@ -224,18 +90,167 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
 
     return decoded_url
 
+  def _ExtractDuckDuckGoSearchQuery(self, url):
+    """Extracts a search query from a DuckDuckGo search URL.
+
+    DuckDuckGo: https://duckduckgo.com/?q=query
+
+    Args:
+      url (str): URL.
+
+    Returns:
+      str: search query.
+    """
+    if u'q=' not in url:
+      return
+
+    return self._GetBetweenQEqualsAndAmbersand(url).replace(u'+', u' ')
+
+  def _ExtractGMailSearchQuery(self, url):
+    """Extracts a search query from a GMail search URL.
+
+    GMail: https://mail.google.com/mail/u/0/#search/query[/?]
+
+    Args:
+      url (str): URL.
+
+    Returns:
+      str: search query.
+    """
+    if u'search/' not in url:
+      return
+
+    _, _, line = url.partition(u'search/')
+    line, _, _ = line.partition(u'/')
+    line, _, _ = line.partition(u'?')
+
+    return line.replace(u'+', u' ')
+
+  def _ExtractGoogleDocsSearchQuery(self, url):
+    """Extracts a search query from a Google docs URL.
+
+    Google Docs: https://docs.google.com/.*/u/0/?q=query
+
+    Args:
+      url (str): URL.
+
+    Returns:
+      str: search query.
+    """
+    if u'q=' not in url:
+      return
+
+    line = self._GetBetweenQEqualsAndAmbersand(url)
+    if not line:
+      return
+
+    return line.replace(u'+', u' ')
+
+  def _ExtractGoogleSearchQuery(self, url):
+    """Extracts a search query from a Google URL.
+
+    Google Drive: https://drive.google.com/drive/search?q=query
+    Google Search: https://www.google.com/search?q=query
+    Google Sites: https://sites.google.com/site/.*/system/app/pages/
+                  search?q=query
+
+    Args:
+      url (str): URL.
+
+    Returns:
+      str: search query.
+    """
+    if u'search' not in url or u'q=' not in url:
+      return
+
+    line = self._GetBetweenQEqualsAndAmbersand(url)
+    if not line:
+      return
+
+    return line.replace(u'+', u' ')
+
+  def _ExtractYandexSearchQuery(self, url):
+    """Extracts a search query from a Yandex search URL.
+
+    Yandex: https://www.yandex.com/search/?text=query
+
+    Args:
+      url (str): URL.
+
+    Returns:
+      str: search query.
+    """
+    if u'text=' not in url:
+      return
+    _, _, line = url.partition(u'text=')
+    before_and, _, _ = line.partition(u'&')
+    if not before_and:
+      return
+    yandex_search_url = before_and.split()[0]
+
+    return yandex_search_url.replace(u'+', u' ')
+
+  def _ExtractYouTubeSearchQuery(self, url):
+    """Extracts a search query from a YouTube search URL.
+
+    YouTube: https://www.youtube.com/results?search_query=query
+
+    Args:
+      url (str): URL.
+
+    Returns:
+      str: search query.
+    """
+    return self._ExtractSearchQueryFromURL(url)
+
+  def _ExtractSearchQueryFromURL(self, url):
+    """Extracts a search query from the URL.
+
+    Bing: https://www.bing.com/search?q=query
+    GitHub: https://github.com/search?q=query
+
+    Args:
+      url (str): URL.
+
+    Returns:
+      str: search query, the value between 'q=' and '&'.
+    """
+    if u'search' not in url or u'q=' not in url:
+      return
+
+    return self._GetBetweenQEqualsAndAmbersand(url).replace(u'+', u' ')
+
+  def _GetBetweenQEqualsAndAmbersand(self, url):
+    """Retrieves the substring between the substrings 'q=' and '&'.
+
+    Args:
+      url (str): URL.
+
+    Returns:
+      str: search query, the value between 'q=' and '&'.
+    """
+    # Make sure we're analyzing the query part of the URL.
+    _, _, url = url.partition(u'?')
+    # Look for a key value pair named 'q'.
+    _, _, url = url.partition(u'q=')
+    if not url:
+      return u''
+
+    # Strip addional key value pairs.
+    url, _, _ = url.partition(u'&')
+    return url
+
   def CompileReport(self, analysis_mediator):
     """Compiles an analysis report.
 
     Args:
-      analysis_mediator: The analysis mediator object (instance of
-                         AnalysisMediator).
+      analysis_mediator (AnalysisMediator): analysis mediator.
 
     Returns:
-      The analysis report (instance of AnalysisReport).
+      AnalysisReport: analysis report.
     """
     results = {}
-    for key, count in self._counter.iteritems():
+    for key, count in iter(self._counter.items()):
       search_engine, _, search_term = key.partition(u':')
       results.setdefault(search_engine, {})
       results[search_engine][search_term] = count
@@ -245,7 +260,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       lines_of_text.append(u' == ENGINE: {0:s} =='.format(search_engine))
 
       for search_term, count in sorted(
-          terms.iteritems(), key=lambda x: (x[1], x[0]), reverse=True):
+          terms.items(), key=lambda x: (x[1], x[0]), reverse=True):
         lines_of_text.append(u'{0:d} {1:s}'.format(count, search_term))
 
       # An empty string is added to have SetText create an empty line.
@@ -255,48 +270,63 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     report_text = u'\n'.join(lines_of_text)
     analysis_report = reports.AnalysisReport(
         plugin_name=self.NAME, text=report_text)
+    analysis_report.SetTags(self._tags)
     analysis_report.report_array = self._search_term_timeline
     analysis_report.report_dict = results
     return analysis_report
 
-  def ExamineEvent(
-      self, unused_analysis_mediator, event_object, **unused_kwargs):
-    """Analyzes an event object.
+  def ExamineEvent(self, unused_analysis_mediator, event, **kwargs):
+    """Analyzes an event.
 
     Args:
-      analysis_mediator: The analysis mediator object (instance of
-                         AnalysisMediator).
-      event_object: An event object (instance of EventObject).
+      analysis_mediator (AnalysisMediator): analysis mediator.
+      event (EventObject): event.
     """
     # This event requires an URL attribute.
-    url_attribute = getattr(event_object, u'url', None)
-
-    if not url_attribute:
+    url = getattr(event, u'url', None)
+    if not url:
       return
 
     # TODO: refactor this the source should be used in formatting only.
     # Check if we are dealing with a web history event.
-    source, _ = formatters_manager.FormattersManager.GetSourceStrings(
-        event_object)
+    source, _ = formatters_manager.FormattersManager.GetSourceStrings(event)
 
     if source != u'WEBHIST':
       return
 
-    for filter_obj, call_backs in self._filter_dict.items():
-      call_back_name, call_back_object = call_backs
-      if filter_obj.Match(event_object):
-        url = call_back_object(url_attribute)
-        decoded_url = self._DecodeURL(url)
-        if not decoded_url:
-          continue
-        self._counter[u'{0:s}:{1:s}'.format(call_back_name, decoded_url)] += 1
+    for engine, url_expression, method_name in self._URL_FILTERS:
+      callback_method = getattr(self, method_name, None)
+      if not callback_method:
+        logging.warning(u'Missing method: {0:s}'.format(callback_method))
+        continue
 
-        # Add the timeline format for each search term.
-        timestamp = getattr(event_object, u'timestamp', 0)
-        source = getattr(event_object, u'parser', u'N/A')
-        source = getattr(event_object, u'plugin', source)
-        self._search_term_timeline.append(SEARCH_OBJECT(
-            timestamp, source, call_back_name, decoded_url))
+      match = url_expression.search(url)
+      if not match:
+        continue
+
+      search_query = callback_method(url)
+      if not search_query:
+        logging.warning(u'Missing search query for URL: {0:s}'.format(url))
+        continue
+
+      search_query = self._DecodeURL(search_query)
+      if not search_query:
+        continue
+
+      event_uuid = getattr(event, u'uuid', None)
+      event_tag = events.EventTag(
+          comment=u'Browser Search', event_uuid=event_uuid)
+      event_tag.AddLabels([u'browser_search'])
+      self._tags.append(event_tag)
+
+      self._counter[u'{0:s}:{1:s}'.format(engine, search_query)] += 1
+
+      # Add the timeline format for each search term.
+      timestamp = getattr(event, u'timestamp', 0)
+      source = getattr(event, u'parser', u'N/A')
+      source = getattr(event, u'plugin', source)
+      self._search_term_timeline.append(
+          SEARCH_OBJECT(timestamp, source, engine, search_query))
 
 
 manager.AnalysisPluginManager.RegisterPlugin(BrowserSearchPlugin)

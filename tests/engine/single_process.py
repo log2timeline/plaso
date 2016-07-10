@@ -7,6 +7,7 @@ import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import context
 
 from plaso.containers import sessions
 from plaso.engine import single_process
@@ -23,21 +24,12 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._test_engine = single_process.SingleProcessEngine(
-        maximum_number_of_queued_items=100)
-
-  def testCreateExtractionWorker(self):
-    """Tests the _CreateExtractionWorker function."""
-    test_extraction_worker = self._test_engine._CreateExtractionWorker(0)
-    self.assertIsNotNone(test_extraction_worker)
-    self.assertIsInstance(
-        test_extraction_worker,
-        single_process.SingleProcessEventExtractionWorker)
-
   def testProcessSources(self):
     """Tests the ProcessSources function."""
+    test_engine = single_process.SingleProcessEngine()
+    resolver_context = context.Context()
+    session = sessions.Session()
+
     source_path = os.path.join(self._TEST_DATA_PATH, u'ímynd.dd')
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
@@ -45,18 +37,14 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=os_path_spec)
 
-    self._test_engine.PreprocessSources([source_path_spec])
+    test_engine.PreprocessSources([source_path_spec])
 
-    session_start = sessions.SessionStart()
-
-    storage_writer = fake_storage.FakeStorageWriter()
-    storage_writer.Open()
-    storage_writer.WriteSessionStart(session_start)
+    storage_writer = fake_storage.FakeStorageWriter(session)
 
     preprocess_object = event.PreprocessObject()
-    self._test_engine.ProcessSources(
-        [source_path_spec], storage_writer, preprocess_object,
-        parser_filter_expression=u'filestat')
+    test_engine.ProcessSources(
+        [source_path_spec], preprocess_object, storage_writer,
+        resolver_context, parser_filter_expression=u'filestat')
 
     self.assertEqual(len(storage_writer.events), 15)
 

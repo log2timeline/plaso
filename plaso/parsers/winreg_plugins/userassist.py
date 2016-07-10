@@ -131,21 +131,22 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
     count_subkey = registry_key.GetSubkeyByName(u'Count')
 
     if not version_value:
-      parser_mediator.ProduceParseError(u'Missing version value')
+      parser_mediator.ProduceExtractionError(u'Missing version value')
       return
 
     if not version_value.DataIsInteger():
-      parser_mediator.ProduceParseError(u'Unsupported version value data type')
+      parser_mediator.ProduceExtractionError(
+          u'Unsupported version value data type')
       return
 
     format_version = version_value.GetDataAsObject()
     if format_version not in (3, 5):
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'Unsupported format version: {0:d}'.format(format_version))
       return
 
     if not count_subkey:
-      parser_mediator.ProduceParseError(u'Missing count subkey')
+      parser_mediator.ProduceExtractionError(u'Missing count subkey')
       return
 
     userassist_entry_index = 0
@@ -183,13 +184,13 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
         value_name = u'\\'.join(path_segments)
         # Check if we might need to substitute values.
         if u'%' in value_name:
-          # TODO: deprecate direct use of pre_obj.
+          path_attributes = parser_mediator.knowledge_base.GetPathAttributes()
           value_name = environ_expand.ExpandWindowsEnvironmentVariables(
-              value_name, parser_mediator.knowledge_base.pre_obj)
+              value_name, path_attributes)
 
       value_data_size = len(registry_value.data)
       if not registry_value.DataIsBinaryData():
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'Unsupported value data type: {0:s}'.format(
                 registry_value.data_type_string))
 
@@ -198,7 +199,7 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
 
       elif format_version == 3:
         if value_data_size != self._USERASSIST_V3_STRUCT.sizeof():
-          parser_mediator.ProduceParseError(
+          parser_mediator.ProduceExtractionError(
               u'Unsupported value data size: {0:d}'.format(value_data_size))
 
         else:
@@ -217,7 +218,7 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
 
       elif format_version == 5:
         if value_data_size != self._USERASSIST_V5_STRUCT.sizeof():
-          parser_mediator.ProduceParseError(
+          parser_mediator.ProduceExtractionError(
               u'Unsupported value data size: {0:d}'.format(value_data_size))
 
         parsed_data = self._USERASSIST_V5_STRUCT.parse(registry_value.data)

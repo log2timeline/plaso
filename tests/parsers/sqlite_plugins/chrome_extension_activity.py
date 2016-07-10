@@ -17,21 +17,16 @@ from tests.parsers.sqlite_plugins import test_lib
 class ChromeExtensionActivityPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Google Chrome extension activity database plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = chrome_extension_activity.ChromeExtensionActivityPlugin()
-
   def testProcess(self):
     """Tests the Process function on a Chrome extension activity database."""
-    test_file = self._GetTestFilePath([u'Extension Activity'])
+    plugin_object = chrome_extension_activity.ChromeExtensionActivityPlugin()
     cache = sqlite.SQLiteCache()
-    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
-        self._plugin, test_file, cache)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'Extension Activity'], plugin_object, cache=cache)
 
-    self.assertEqual(len(event_objects), 56)
+    self.assertEqual(len(storage_writer.events), 56)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.UNKNOWN)

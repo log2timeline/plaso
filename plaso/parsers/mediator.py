@@ -6,8 +6,7 @@ import os
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
-# TODO: disabled as long nothing is listening on the parse error queue.
-# from plaso.lib import event
+from plaso.containers import errors
 from plaso.lib import py2to3
 from plaso.lib import timelib
 
@@ -15,33 +14,30 @@ from plaso.lib import timelib
 class ParserMediator(object):
   """Class that implements the parser mediator."""
 
-  def __init__(
-      self, event_queue_producer, parse_error_queue_producer, knowledge_base):
+  def __init__(self, storage_writer, knowledge_base, temporary_directory=None):
     """Initializes a parser mediator object.
 
     Args:
-      event_queue_producer: the event object queue producer (instance of
-                            ItemQueueProducer).
-      parse_error_queue_producer: the parse error queue producer (instance of
-                                  ItemQueueProducer).
-      knowledge_base: A knowledge base object (instance of KnowledgeBase),
-                      which contains information from the source data needed
-                      for parsing.
+      storage_writer (StorageWriter): storage writer.
+      knowledge_base (KnowledgeBase): knowledge base, which contains
+          information from the source data needed for parsing.
+      temporary_directory (Optional[str]): path of the directory for temporary
+          files.
     """
     super(ParserMediator, self).__init__()
     self._abort = False
-    self._event_queue_producer = event_queue_producer
     self._extra_event_attributes = {}
     self._file_entry = None
     self._filter_object = None
     self._knowledge_base = knowledge_base
     self._mount_path = None
-    self._parse_error_queue_producer = parse_error_queue_producer
+    self._number_of_errors = 0
+    self._number_of_event_sources = 0
+    self._number_of_events = 0
     self._parser_chain_components = []
+    self._storage_writer = storage_writer
+    self._temporary_directory = temporary_directory
     self._text_prepend = None
-
-    self.number_of_events = 0
-    self.number_of_parse_errors = 0
 
   @property
   def abort(self):
@@ -55,27 +51,47 @@ class ParserMediator(object):
 
   @property
   def hostname(self):
-    """The hostname."""
+    """str: hostname."""
     return self._knowledge_base.hostname
 
   @property
   def knowledge_base(self):
-    """The knowledge base."""
+    """KnowledgeBase: knowledge base."""
     return self._knowledge_base
 
   @property
+  def number_of_produced_errors(self):
+    """int: number of produced errors."""
+    return self._number_of_errors
+
+  @property
+  def number_of_produced_event_sources(self):
+    """int: number of produced event sources."""
+    return self._number_of_event_sources
+
+  @property
+  def number_of_produced_events(self):
+    """int: number of produced events."""
+    return self._number_of_events
+
+  @property
   def platform(self):
-    """The platform."""
+    """str: platform."""
     return self._knowledge_base.platform
 
   @property
+  def temporary_directory(self):
+    """str: path of the directory for temporary files."""
+    return self._temporary_directory
+
+  @property
   def timezone(self):
-    """The timezone object."""
+    """datetime.tzinfo: timezone."""
     return self._knowledge_base.timezone
 
   @property
   def year(self):
-    """The year."""
+    """int: year."""
     return self._knowledge_base.year
 
   def _GetEarliestYearFromFileEntry(self):
@@ -85,7 +101,7 @@ class ParserMediator(object):
     time (metadata last modification time) is used.
 
     Returns:
-      An integer containing the year of the file entry or None.
+      int: year of the file entry.
     """
     file_entry = self.GetFileEntry()
     stat_object = file_entry.GetStat()
@@ -258,13 +274,25 @@ class ParserMediator(object):
       raise ValueError(u'Missing file entry')
 
     path_spec = getattr(file_entry, u'path_spec', None)
+
     relative_path = self._GetRelativePath(path_spec)
-
     if not relative_path:
-      relative_path = file_entry.name
+      return file_entry.name
 
+    return self.GetDisplayNameFromPathSpec(path_spec)
+
+  def GetDisplayNameFromPathSpec(self, path_spec):
+    """Retrieves the display name for a path specification.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+
+    Returns:
+      str: human readable version of the path specification.
+    """
+    relative_path = self._GetRelativePath(path_spec)
     if not relative_path:
-      return file_entry.path_spec.type_indicator
+      return path_spec.type_indicator
 
     if self._text_prepend:
       relative_path = u'{0:s}{1:s}'.format(self._text_prepend, relative_path)
@@ -280,10 +308,9 @@ class ParserMediator(object):
       store_index = getattr(path_spec.parent, u'store_index', None)
       if store_index is not None:
         return u'VSS{0:d}:{1:s}:{2:s}'.format(
-            store_index + 1, file_entry.path_spec.type_indicator, relative_path)
+            store_index + 1, path_spec.type_indicator, relative_path)
 
-    return u'{0:s}:{1:s}'.format(
-        file_entry.path_spec.type_indicator, relative_path)
+    return u'{0:s}:{1:s}'.format(path_spec.type_indicator, relative_path)
 
   def GetEstimatedYear(self):
     """Retrieves an estimate of the year.
@@ -369,7 +396,7 @@ class ParserMediator(object):
 
   def ProcessEvent(
       self, event_object, parser_chain=None, file_entry=None, query=None):
-    """Processes an event before it is emitted to the event queue.
+    """Processes an event before it written to the storage.
 
     Args:
       event_object: the event object (instance of EventObject).
@@ -431,12 +458,18 @@ class ParserMediator(object):
       setattr(event_object, attribute, value)
 
   def ProduceEvent(self, event_object, query=None):
-    """Produces an event onto the queue.
+    """Produces an event.
 
     Args:
-      event_object: the event object (instance of EventObject).
-      query: Optional query string.
+      event_object (EventObject): an event.
+      query (Optional[str]): query that was used to obtain the event.
+
+    Raises:
+      RuntimeError: when storage writer is not set.
     """
+    if not self._storage_writer:
+      raise RuntimeError(u'Storage writer not set.')
+
     self.ProcessEvent(
         event_object, parser_chain=self.GetParserChain(),
         file_entry=self._file_entry, query=query)
@@ -444,11 +477,11 @@ class ParserMediator(object):
     if self.MatchesFilter(event_object):
       return
 
-    self._event_queue_producer.ProduceItem(event_object)
-    self.number_of_events += 1
+    self._storage_writer.AddEvent(event_object)
+    self._number_of_events += 1
 
   def ProduceEvents(self, event_objects, query=None):
-    """Produces events onto the queue.
+    """Produces events.
 
     Args:
       event_objects: a list or generator of event objects (instances of
@@ -458,31 +491,42 @@ class ParserMediator(object):
     for event_object in event_objects:
       self.ProduceEvent(event_object, query=query)
 
-  def ProduceParseError(self, message):
-    """Produces a parse error.
+  def ProduceEventSource(self, event_source):
+    """Produces an event source.
 
     Args:
-      message: The message of the error.
+      event_source (EventSource): an event source.
+
+    Raises:
+      RuntimeError: when storage writer is not set.
     """
-    self.number_of_parse_errors += 1
-    # TODO: Remove call to logging when parser error queue is fully functional.
-    logging.error(
-        u'[{0:s}] unable to parse file: {1:s} with error: {2:s}'.format(
-            self.GetParserChain(), self.GetDisplayName(), message))
+    if not self._storage_writer:
+      raise RuntimeError(u'Storage writer not set.')
 
-    # TODO: disabled as long nothing is listening on the parse error queue.
-    # if self._parse_error_queue_producer:
-    #   path_spec = self._file_entry.path_spec
-    #   parser_chain = self.GetParserChain()
-    #   parse_error = event.ExtractionError(
-    #       parser_chain, message, path_spec=path_spec)
-    #   self._parse_error_queue_producer.ProduceItem(parse_error)
-    #   self.number_of_parse_errors += 1
+    self._storage_writer.AddEventSource(event_source)
+    self._number_of_event_sources += 1
 
-  def ResetCounters(self):
-    """Resets the counters."""
-    self.number_of_events = 0
-    self.number_of_parse_errors = 0
+  def ProduceExtractionError(self, message, path_spec=None):
+    """Produces an extraction error.
+
+    Args:
+      message (str): message of the error.
+      path_spec (Optional[dfvfs.PathSpec]): path specification.
+
+    Raises:
+      RuntimeError: when storage writer is not set.
+    """
+    if not self._storage_writer:
+      raise RuntimeError(u'Storage writer not set.')
+
+    if not path_spec:
+      path_spec = self._file_entry.path_spec
+
+    parser_chain = self.GetParserChain()
+    extraction_error = errors.ExtractionError(
+        message=message, parser_chain=parser_chain, path_spec=path_spec)
+    self._storage_writer.AddError(extraction_error)
+    self._number_of_errors += 1
 
   def ResetFileEntry(self):
     """Resets the active file entry."""
@@ -516,6 +560,14 @@ class ParserMediator(object):
       mount_path = mount_path[:-1]
 
     self._mount_path = mount_path
+
+  def SetStorageWriter(self, storage_writer):
+    """Sets the storage writer.
+
+    Args:
+      storage_writer (StorageWriter): storage writer.
+    """
+    self._storage_writer = storage_writer
 
   def SetTextPrepend(self, text_prepend):
     """Sets the text prepend.

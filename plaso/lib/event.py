@@ -28,6 +28,15 @@ class PreprocessObject(object):
     self.plugin_counter = None
     self.zone = pytz.UTC
 
+  def GetPathAttributes(self):
+    """Retrieves the path attributes.
+
+    Returns:
+      dict[str, str]]: path attributes e.g. {'SystemRoot': 'C:\\Windows'}
+    """
+    # TODO: improve this only return known enviroment variables.
+    return self.__dict__
+
   def GetUserMappings(self):
     """Returns a dictionary objects mapping SIDs or UIDs to usernames."""
     if self._user_ids_to_names is None:
@@ -97,7 +106,7 @@ class PreprocessObject(object):
       dict_object: dictionary object containing the counter values.
     """
     self.counter = collections.Counter()
-    for key, value in dict_object.iteritems():
+    for key, value in iter(dict_object.items()):
       self.counter[key] = value
 
   def SetPluginCounterValues(self, dict_object):
@@ -107,5 +116,5 @@ class PreprocessObject(object):
       dict_object: dictionary object containing the plugin counter values.
     """
     self.plugin_counter = collections.Counter()
-    for key, value in dict_object.iteritems():
+    for key, value in iter(dict_object.items()):
       self.plugin_counter[key] = value

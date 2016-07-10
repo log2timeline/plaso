@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """This file contains the tests for the sessions attribute container objects."""
 
+import time
 import unittest
 import uuid
 
@@ -16,12 +17,17 @@ class SessionCompletionTest(test_lib.AttributeContainerTestCase):
 
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
+    timestamp = int(time.time() * 1000000)
     session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
-    session_completion = sessions.SessionCompletion(session_identifier)
+    session_completion = sessions.SessionCompletion(
+        identifier=session_identifier)
+    session_completion.timestamp = timestamp
+
+    self.assertEquals(session_completion.identifier, session_identifier)
 
     expected_dict = {
         u'identifier': session_completion.identifier,
-        u'timestamp': session_completion.timestamp}
+        u'timestamp': timestamp}
 
     test_dict = session_completion.CopyToDict()
 
@@ -35,9 +41,14 @@ class SessionStartTest(test_lib.AttributeContainerTestCase):
 
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
-    session_start = sessions.SessionStart()
+    timestamp = int(time.time() * 1000000)
+    session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
+    session_start = sessions.SessionStart(identifier=session_identifier)
+    session_start.timestamp = timestamp
+    session_start.product_name = u'plaso'
+    session_start.product_version = plaso.GetVersion()
 
-    self.assertIsNotNone(session_start.identifier)
+    self.assertEquals(session_start.identifier, session_identifier)
 
     expected_dict = {
         u'command_line_arguments': u'',
@@ -49,7 +60,7 @@ class SessionStartTest(test_lib.AttributeContainerTestCase):
         u'preferred_encoding': u'utf-8',
         u'product_name': u'plaso',
         u'product_version': plaso.GetVersion(),
-        u'timestamp': session_start.timestamp}
+        u'timestamp': timestamp}
 
     test_dict = session_start.CopyToDict()
 

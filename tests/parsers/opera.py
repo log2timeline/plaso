@@ -17,14 +17,12 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser_object = opera.OperaTypedHistoryParser()
+    storage_writer = self._ParseFile(
+        [u'typed_history.xml'], parser_object)
 
-    test_file = self._GetTestFilePath([u'typed_history.xml'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    self.assertEqual(len(storage_writer.events), 4)
 
-    self.assertEqual(len(event_objects), 4)
-
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-11 23:45:27')
@@ -35,7 +33,7 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_string, expected_string)
 
-    event_object = event_objects[3]
+    event_object = storage_writer.events[3]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-11 22:46:07')
@@ -53,14 +51,12 @@ class OperaGlobalParserTest(test_lib.ParserTestCase):
   def testParseFile(self):
     """Read a history file and run a few tests."""
     parser_object = opera.OperaGlobalHistoryParser()
+    storage_writer = self._ParseFile(
+        [u'global_history.dat'], parser_object)
 
-    test_file = self._GetTestFilePath([u'global_history.dat'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    self.assertEqual(len(storage_writer.events), 37)
 
-    self.assertEqual(len(event_objects), 37)
-
-    event_object = event_objects[4]
+    event_object = storage_writer.events[4]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-11 22:45:46')
@@ -76,13 +72,13 @@ class OperaGlobalParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    event_object = event_objects[10]
+    event_object = storage_writer.events[10]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-11 22:45:55')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    event_object = event_objects[16]
+    event_object = storage_writer.events[16]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-11 22:46:16')

@@ -17,20 +17,25 @@ from tests.parsers.sqlite_plugins import test_lib as sqlite_plugins_test_lib
 class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
   """Tests for the Google Analytics plugin."""
 
-  def _GetAnalyticsCookies(self, event_queue_consumer):
-    """Return a list of analytics cookies."""
+  def _GetAnalyticsCookieEvents(self, storage_writer):
+    """Retrieves the analytics cookie events.
+
+    Returns:
+      A list of analytics cookie event objects (instances of
+      GoogleAnalyticsEvent).
+    """
     cookies = []
-    for event_object in self._GetEventObjectsFromQueue(event_queue_consumer):
+    for event_object in storage_writer.events:
       if isinstance(event_object, ganalytics.GoogleAnalyticsEvent):
         cookies.append(event_object)
     return cookies
 
   def testParsingFirefox29CookieDatabase(self):
     """Tests the Process function on a Firefox 29 cookie database file."""
-    plugin = firefox_cookies.FirefoxCookiePlugin()
-    test_file = self._GetTestFilePath([u'firefox_cookies.sqlite'])
-    event_queue_consumer = self._ParseDatabaseFileWithPlugin(plugin, test_file)
-    event_objects = self._GetAnalyticsCookies(event_queue_consumer)
+    plugin_object = firefox_cookies.FirefoxCookiePlugin()
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'firefox_cookies.sqlite'], plugin_object)
+    event_objects = self._GetAnalyticsCookieEvents(storage_writer)
 
     self.assertEqual(len(event_objects), 25)
 
@@ -57,10 +62,10 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
 
   def testParsingChromeCookieDatabase(self):
     """Test the process function on a Chrome cookie database."""
-    plugin = chrome_cookies.ChromeCookiePlugin()
-    test_file = self._GetTestFilePath([u'cookies.db'])
-    event_queue_consumer = self._ParseDatabaseFileWithPlugin(plugin, test_file)
-    event_objects = self._GetAnalyticsCookies(event_queue_consumer)
+    plugin_object = chrome_cookies.ChromeCookiePlugin()
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'cookies.db'], plugin_object)
+    event_objects = self._GetAnalyticsCookieEvents(storage_writer)
 
     # The cookie database contains 560 entries in total. Out of them
     # there are 75 events created by the Google Analytics plugin.

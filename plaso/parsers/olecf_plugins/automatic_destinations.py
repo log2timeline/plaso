@@ -134,7 +134,7 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
               exception))
 
     if header.format_version not in (1, 3, 4):
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unsupported format version: {0:d}.'.format(header.format_version))
 
     if header.format_version == 1:
@@ -169,7 +169,7 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
 
       except (TypeError, ValueError) as exception:
         droid_volume_identifier = u''
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'unable to read droid volume identifier with error: {0:s}'.format(
                 exception))
 
@@ -185,7 +185,7 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
 
       except (TypeError, ValueError) as exception:
         droid_file_identifier = u''
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'unable to read droid file identifier with error: {0:s}'.format(
                 exception))
 
@@ -201,7 +201,7 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
 
       except (TypeError, ValueError) as exception:
         birth_droid_volume_identifier = u''
-        parser_mediator.ProduceParseError((
+        parser_mediator.ProduceExtractionError((
             u'unable to read birth droid volume identifier with error: '
             u'{0:s}').format(
                 exception))
@@ -218,7 +218,7 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
 
       except (TypeError, ValueError) as exception:
         birth_droid_file_identifier = u''
-        parser_mediator.ProduceParseError((
+        parser_mediator.ProduceExtractionError((
             u'unable to read birth droid file identifier with error: '
             u'{0:s}').format(
                 exception))

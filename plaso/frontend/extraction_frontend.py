@@ -3,25 +3,23 @@
 
 import logging
 import os
-import pdb
-import traceback
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 
-from plaso import parsers   # pylint: disable=unused-import
 from plaso import hashers   # pylint: disable=unused-import
+from plaso import parsers   # pylint: disable=unused-import
 from plaso.containers import sessions
 from plaso.engine import single_process
 from plaso.engine import utils as engine_utils
 from plaso.frontend import frontend
-from plaso.frontend import presets
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import event
 from plaso.multi_processing import multi_process
 from plaso.hashers import manager as hashers_manager
 from plaso.parsers import manager as parsers_manager
+from plaso.parsers import presets as parsers_presets
 from plaso.storage import zip_file as storage_zip_file
 
 import pytz  # pylint: disable=wrong-import-order
@@ -32,13 +30,9 @@ class ExtractionFrontend(frontend.Frontend):
 
   _DEFAULT_PROFILING_SAMPLE_RATE = 1000
 
-  # Approximately 250 MB of queued items per worker.
-  _DEFAULT_QUEUE_SIZE = 125000
-
   def __init__(self):
     """Initializes the front-end object."""
     super(ExtractionFrontend, self).__init__()
-    self._buffer_size = 0
     self._collection_process = None
     self._debug_mode = False
     self._enable_preprocessing = False
@@ -50,14 +44,12 @@ class ExtractionFrontend(frontend.Frontend):
     self._mount_path = None
     self._operating_system = None
     self._parser_names = None
-    self._process_archive_files = False
+    self._profiling_directory = None
     self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
     self._profiling_type = u'all'
     self._use_old_preprocess = False
     self._use_zeromq = False
-    self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._resolver_context = context.Context()
-    self._single_process_mode = False
     self._show_worker_memory_information = False
     self._storage_file_path = None
     self._text_prepend = None
@@ -66,7 +58,7 @@ class ExtractionFrontend(frontend.Frontend):
     """Checks if the storage file path is valid.
 
     Args:
-      storage_file_path: The path of the storage file.
+      storage_file_path (str): path of the storage file.
 
     Raises:
       BadConfigOption: if the storage file path is invalid.
@@ -80,7 +72,7 @@ class ExtractionFrontend(frontend.Frontend):
 
     dirname = os.path.dirname(storage_file_path)
     if not dirname:
-      dirname = '.'
+      dirname = u'.'
 
     # TODO: add a more thorough check to see if the storage file really is
     # a plaso storage file.
@@ -89,16 +81,57 @@ class ExtractionFrontend(frontend.Frontend):
       raise errors.BadConfigOption(
           u'Unable to write to storage file: {0:s}'.format(storage_file_path))
 
-  # Note that this function is not called by the normal termination.
-  def _CleanUpAfterAbort(self):
-    """Signals the tool to stop running nicely after an abort."""
-    if self._single_process_mode and self._debug_mode:
-      logging.warning(u'Running in debug mode, set up debugger.')
-      pdb.post_mortem()
-      return
+  def _CreateEngine(self, single_process_mode):
+    """Creates an engine based on the front end settings.
 
-    if self._engine:
-      self._engine.SignalAbort()
+    Args:
+      single_process_mode (bool): True if the front-end should run in single
+          process mode.
+
+    Returns:
+      BaseEngine: engine.
+    """
+    if single_process_mode:
+      engine = single_process.SingleProcessEngine(
+          enable_profiling=self._enable_profiling,
+          profiling_directory=self._profiling_directory,
+          profiling_sample_rate=self._profiling_sample_rate,
+          profiling_type=self._profiling_type)
+    else:
+      engine = multi_process.MultiProcessEngine(
+          enable_profiling=self._enable_profiling,
+          profiling_directory=self._profiling_directory,
+          profiling_sample_rate=self._profiling_sample_rate,
+          profiling_type=self._profiling_type, use_zeromq=self._use_zeromq)
+
+    engine.SetEnableDebugOutput(self._debug_mode)
+
+    return engine
+
+  def _CreateSession(
+      self, command_line_arguments=None, filter_file=None,
+      parser_filter_expression=None, preferred_encoding=u'utf-8'):
+    """Creates the session start information.
+
+    Args:
+      command_line_arguments (Optional[str]): the command line arguments.
+      filter_file (Optional[str]): path to a file with find specifications.
+      parser_filter_expression (Optional[str]): parser filter expression.
+      preferred_encoding (Optional[str]): preferred encoding.
+
+    Returns:
+      Session: session attribute container.
+    """
+    session = sessions.Session()
+
+    session.command_line_arguments = command_line_arguments
+    session.filter_expression = self._filter_expression
+    session.filter_file = filter_file
+    session.debug_mode = self._debug_mode
+    session.parser_filter_expression = parser_filter_expression
+    session.preferred_encoding = preferred_encoding
+
+    return session
 
   def _GetParserFilterPreset(self, os_guess=u'', os_version=u''):
     """Determines the parser filter preset.
@@ -153,9 +186,9 @@ class ExtractionFrontend(frontend.Frontend):
     """Preprocesses the sources.
 
     Args:
-      source_path_specs: list of path specifications (instances of
-                         dfvfs.PathSpec) to process.
-      source_type: the dfVFS source type definition.
+      source_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the sources to process.
+      source_type (str): the dfVFS source type definition.
 
     Returns:
       The preprocessing object (instance of PreprocessObject).
@@ -220,34 +253,6 @@ class ExtractionFrontend(frontend.Frontend):
   #   * credentials (encryption)
   #   * mount point
 
-  def _CreateSessionStart(
-      self, command_line_arguments=None, filter_file=None,
-      parser_filter_expression=None, preferred_encoding=u'utf-8'):
-    """Creates the session start information.
-
-    Args:
-      command_line_arguments: optional string containing the command line
-                              arguments.
-      filter_file: optional string containing the path to a file with find
-                   specifications.
-      parser_filter_expression: optional string containining the parser filter
-                                expression.
-      preferred_encoding: optional string containing the preferred encoding.
-
-    Returns:
-      A session start attribute container (instance of SessionStart).
-    """
-    session_start = sessions.SessionStart()
-
-    session_start.command_line_arguments = command_line_arguments
-    session_start.filter_expression = self._filter_expression
-    session_start.filter_file = filter_file
-    session_start.debug_mode = self._debug_mode
-    session_start.parser_filter_expression = parser_filter_expression
-    session_start.preferred_encoding = preferred_encoding
-
-    return session_start
-
   def _PreprocessSetCollectionInformation(self, preprocess_object):
     """Sets the collection information as part of the preprocessing.
 
@@ -304,6 +309,35 @@ class ExtractionFrontend(frontend.Frontend):
     if not getattr(preprocess_object, u'zone', None):
       preprocess_object.zone = timezone
 
+  def DisableProfiling(self):
+    """Disabled profiling."""
+    self._enable_profiling = False
+
+  def EnableProfiling(
+      self, profiling_directory=None, profiling_sample_rate=1000,
+      profiling_type=u'all'):
+    """Enables profiling.
+
+    Args:
+      profiling_directory (Optional[str]): path to the directory where
+          the profiling sample files should be stored.
+      profiling_sample_rate (Optional[int]): the profiling sample rate.
+          Contains the number of event sources processed.
+      profiling_type (Optional[str]): type of profiling.
+          Supported types are:
+
+          * 'memory' to profile memory usage;
+          * 'parsers' to profile CPU time consumed by individual parsers;
+          * 'processing' to profile CPU time consumed by different parts of
+            the processing;
+          * 'serializers' to profile CPU time consumed by individual
+            serializers.
+    """
+    self._enable_profiling = True
+    self._profiling_directory = profiling_directory
+    self._profiling_sample_rate = profiling_sample_rate
+    self._profiling_type = profiling_type
+
   def GetHashersInformation(self):
     """Retrieves the hashers information.
 
@@ -333,7 +367,7 @@ class ExtractionFrontend(frontend.Frontend):
       A list of tuples of parser preset names and related parsers names.
     """
     parser_presets_information = []
-    for preset_name, parser_names in sorted(presets.categories.items()):
+    for preset_name, parser_names in sorted(parsers_presets.CATEGORIES.items()):
       parser_presets_information.append((preset_name, u', '.join(parser_names)))
 
     return parser_presets_information
@@ -357,34 +391,36 @@ class ExtractionFrontend(frontend.Frontend):
   def ProcessSources(
       self, source_path_specs, source_type, command_line_arguments=None,
       enable_sigsegv_handler=False, filter_file=None, hasher_names_string=None,
-      number_of_extraction_workers=0, preferred_encoding=u'utf-8',
-      parser_filter_expression=None, single_process_mode=False,
-      status_update_callback=None,
-      timezone=pytz.UTC):
+      number_of_extraction_workers=0, parser_filter_expression=None,
+      preferred_encoding=u'utf-8', process_archive_files=False,
+      single_process_mode=False, status_update_callback=None,
+      temporary_directory=None, timezone=pytz.UTC):
     """Processes the sources.
 
     Args:
-      source_path_specs: list of path specifications (instances of
-                         dfvfs.PathSpec) to process.
-      source_type: the dfVFS source type definition.
-      command_line_arguments: optional string of the command line arguments or
-                              None if not set.
-      enable_sigsegv_handler: optional boolean value to indicate the SIGSEGV
-                              handler should be enabled.
-      filter_file: optional path to a file that contains find specifications.
-      hasher_names_string: optional comma separated string of names of
-                           hashers to enable.
-      number_of_extraction_workers: the number of extraction workers to run. If
-                                    0, the number will be selected
-                                    automatically.
-      preferred_encoding: optional preferred encoding.
-      parser_filter_expression: optional string containing the parser filter
-                                expression, where None represents all parsers
-                                and plugins.
-      single_process_mode: optional boolean value to indicate if the front-end
-                           should run in single process mode.
-      status_update_callback: optional callback function for status updates.
-      timezone: optional preferred timezone.
+      source_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the sources to process.
+      source_type (str): the dfVFS source type definition.
+      command_line_arguments (Optional[str]): the command line arguments.
+      enable_sigsegv_handler (Optional[bool]): True if the SIGSEGV handler
+          should be enabled.
+      filter_file (Optional[str]): path to a file that contains find
+          specifications.
+      hasher_names_string (Optional[str]): comma separated string of names
+          of hashers to use during processing.
+      number_of_extraction_workers (Optional[int]): number of extraction
+          workers to run. If 0, the number will be selected automatically.
+      parser_filter_expression (Optional[str]): parser filter expression.
+      preferred_encoding (Optional[str]): preferred encoding.
+      process_archive_files (Optional[bool]): True if archive files should be
+          scanned for file entries.
+      single_process_mode (Optional[bool]): True if the front-end should
+          run in single process mode.
+      status_update_callback (Optional[function]): callback function for status
+          updates.
+      temporary_directory (Optional[str]): path of the directory for temporary
+          files.
+      timezone (Optional[datetime.tzinfo]): timezone.
 
     Returns:
       The processing status (instance of ProcessingStatus) or None.
@@ -406,23 +442,11 @@ class ExtractionFrontend(frontend.Frontend):
 
     self._CheckStorageFile(self._storage_file_path)
 
-    self._single_process_mode = single_process_mode
     if source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
       # No need to multi process a single file source.
-      self._single_process_mode = True
+      single_process_mode = True
 
-    if self._single_process_mode:
-      self._engine = single_process.SingleProcessEngine(self._queue_size)
-    else:
-      self._engine = multi_process.MultiProcessEngine(
-          maximum_number_of_queued_items=self._queue_size,
-          use_zeromq=self._use_zeromq)
-
-    self._engine.SetEnableDebugOutput(self._debug_mode)
-    self._engine.SetEnableProfiling(
-        self._enable_profiling,
-        profiling_sample_rate=self._profiling_sample_rate,
-        profiling_type=self._profiling_type)
+    self._engine = self._CreateEngine(single_process_mode)
 
     preprocess_object = self._PreprocessSources(source_path_specs, source_type)
 
@@ -452,83 +476,58 @@ class ExtractionFrontend(frontend.Frontend):
     self._PreprocessSetTimezone(preprocess_object, timezone=timezone)
 
     if filter_file:
+      path_attributes = self._engine.knowledge_base.GetPathAttributes()
       filter_find_specs = engine_utils.BuildFindSpecsFromFile(
-          filter_file, pre_obj=preprocess_object)
+          filter_file, path_attributes=path_attributes)
     else:
       filter_find_specs = None
 
     # TODO: deprecate the need for this function.
     self._PreprocessSetCollectionInformation(preprocess_object)
 
-    session_start = self._CreateSessionStart(
+    session = self._CreateSession(
         command_line_arguments=command_line_arguments, filter_file=filter_file,
         parser_filter_expression=parser_filter_expression,
         preferred_encoding=preferred_encoding)
 
+    # TODO: we are directly invoking ZIP file storage here. In storage rewrite
+    # come up with a more generic solution.
     storage_writer = storage_zip_file.ZIPStorageFileWriter(
-        self._storage_file_path, buffer_size=self._buffer_size)
-
-    if self._enable_profiling:
-      storage_writer.EnableProfiling(profiling_type=self._profiling_type)
-
-    storage_writer.Open()
-    storage_writer.WriteSessionStart(session_start)
+        session, self._storage_file_path)
 
     processing_status = None
-    try:
-      if self._single_process_mode:
-        logging.debug(u'Starting extraction in single process mode.')
+    if single_process_mode:
+      logging.debug(u'Starting extraction in single process mode.')
 
-        processing_status = self._engine.ProcessSources(
-            source_path_specs, storage_writer, preprocess_object,
-            filter_find_specs=filter_find_specs,
-            filter_object=self._filter_object,
-            hasher_names_string=hasher_names_string,
-            mount_path=self._mount_path,
-            parser_filter_expression=parser_filter_expression,
-            process_archive_files=self._process_archive_files,
-            resolver_context=self._resolver_context,
-            status_update_callback=status_update_callback,
-            text_prepend=self._text_prepend)
+      processing_status = self._engine.ProcessSources(
+          source_path_specs, preprocess_object, storage_writer,
+          self._resolver_context, filter_find_specs=filter_find_specs,
+          filter_object=self._filter_object,
+          hasher_names_string=hasher_names_string,
+          mount_path=self._mount_path,
+          parser_filter_expression=parser_filter_expression,
+          process_archive_files=process_archive_files,
+          status_update_callback=status_update_callback,
+          temporary_directory=temporary_directory,
+          text_prepend=self._text_prepend)
 
-      else:
-        logging.debug(u'Starting extraction in multi process mode.')
+    else:
+      logging.debug(u'Starting extraction in multi process mode.')
 
-        # TODO: pass number_of_extraction_workers.
-        processing_status = self._engine.ProcessSources(
-            source_path_specs, storage_writer, preprocess_object,
-            enable_sigsegv_handler=enable_sigsegv_handler,
-            filter_find_specs=filter_find_specs,
-            filter_object=self._filter_object,
-            hasher_names_string=hasher_names_string,
-            mount_path=self._mount_path,
-            number_of_extraction_workers=number_of_extraction_workers,
-            parser_filter_expression=parser_filter_expression,
-            process_archive_files=self._process_archive_files,
-            status_update_callback=status_update_callback,
-            show_memory_usage=self._show_worker_memory_information,
-            text_prepend=self._text_prepend)
-
-    except KeyboardInterrupt:
-      self._CleanUpAfterAbort()
-      raise errors.UserAbort
-
-    # TODO: check if this still works and if still needed.
-    except Exception as exception:  # pylint: disable=broad-except
-      if not self._single_process_mode:
-        raise
-
-      # The tool should generally not be run in single process mode
-      # for other reasons than to debug. Hence the general error
-      # catching.
-      logging.error(u'An uncaught exception occurred: {0:s}.\n{1:s}'.format(
-          exception, traceback.format_exc()))
-      if self._debug_mode:
-        pdb.post_mortem()
-
-    finally:
-      if self._enable_profiling:
-        storage_writer.DisableProfiling()
+      processing_status = self._engine.ProcessSources(
+          session.identifier, source_path_specs, preprocess_object,
+          storage_writer, enable_sigsegv_handler=enable_sigsegv_handler,
+          filter_find_specs=filter_find_specs,
+          filter_object=self._filter_object,
+          hasher_names_string=hasher_names_string,
+          mount_path=self._mount_path,
+          number_of_worker_processes=number_of_extraction_workers,
+          parser_filter_expression=parser_filter_expression,
+          process_archive_files=process_archive_files,
+          status_update_callback=status_update_callback,
+          show_memory_usage=self._show_worker_memory_information,
+          temporary_directory=temporary_directory,
+          text_prepend=self._text_prepend)
 
     return processing_status
 
@@ -550,23 +549,6 @@ class ExtractionFrontend(frontend.Frontend):
                             should be performed.
     """
     self._enable_preprocessing = enable_preprocessing
-
-  def SetEnableProfiling(
-      self, enable_profiling, profiling_sample_rate=1000,
-      profiling_type=u'all'):
-    """Enables or disables profiling.
-
-    Args:
-      enable_profiling: boolean value to indicate if the profiling should
-                        be enabled.
-      profiling_sample_rate: optional integer indicating the profiling sample
-                             rate. The value contains the number of files
-                             processed. The default value is 1000.
-      profiling_type: optional profiling type.
-    """
-    self._enable_profiling = enable_profiling
-    self._profiling_sample_rate = profiling_sample_rate
-    self._profiling_type = profiling_type
 
   def SetShowMemoryInformation(self, show_memory=True):
     """Sets a flag telling the worker monitor to show memory information.

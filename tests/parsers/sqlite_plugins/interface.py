@@ -10,10 +10,10 @@ from plaso.parsers.sqlite_plugins import interface
 from tests.parsers.sqlite_plugins import test_lib
 
 
-class BogusSQLitePlugin(interface.SQLitePlugin):
-  """Convenience class for Bogus sqlite plugin."""
+class TestSQLitePlugin(interface.SQLitePlugin):
+  """Convenience class for a test SQLite plugin."""
 
-  NAME = u'bogus'
+  NAME = u'test'
 
   QUERIES = [(
       u'SELECT Field1, Field2, Field3 FROM MyTable', u'ParseMyTableRow')]
@@ -22,7 +22,7 @@ class BogusSQLitePlugin(interface.SQLitePlugin):
 
   def __init__(self):
     """Initializes SQLite plugin."""
-    super(BogusSQLitePlugin, self).__init__()
+    super(TestSQLitePlugin, self).__init__()
     self.results = []
 
   def ParseMyTableRow(self, parser_mediator, row, **unused_kwargs):
@@ -51,13 +51,11 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
 
   def testProcessWithWAL(self):
     """Tests the Process function on a database with WAL file."""
-    bogus_plugin = BogusSQLitePlugin()
-    database_file = self._GetTestFilePath([u'wal_database.db'])
-    wal_file = self._GetTestFilePath([u'wal_database.db-wal'])
-
+    plugin_object = TestSQLitePlugin()
     cache = sqlite.SQLiteCache()
+    wal_file = self._GetTestFilePath([u'wal_database.db-wal'])
     self._ParseDatabaseFileWithPlugin(
-        bogus_plugin, database_file, cache=cache, wal_path=wal_file)
+        [u'wal_database.db'], plugin_object, cache=cache, wal_path=wal_file)
 
     expected_results = [
         ((u'Committed Text 1', 1, b'None'), False),
@@ -75,15 +73,14 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
         ((u'New Text 1', 12, b'None'), True),
         ((u'New Text 2', 13, b'None'), True)]
 
-    self.assertEqual(expected_results, bogus_plugin.results)
+    self.assertEqual(expected_results, plugin_object.results)
 
   def testProcessWithoutWAL(self):
     """Tests the Process function on a database without WAL file."""
-    bogus_plugin = BogusSQLitePlugin()
-    database_file = self._GetTestFilePath([u'wal_database.db'])
-
+    plugin_object = TestSQLitePlugin()
     cache = sqlite.SQLiteCache()
-    self._ParseDatabaseFileWithPlugin(bogus_plugin, database_file, cache=cache)
+    self._ParseDatabaseFileWithPlugin(
+        [u'wal_database.db'], plugin_object, cache=cache)
 
     expected_results = [
         ((u'Committed Text 1', 1, b'None'), False),
@@ -97,7 +94,7 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
         ((u'Committed Text 7', 9, b'None'), False),
         ((u'Unhashable Row 1', 10, b'Binary Text!\x01\x02\x03'), False)]
 
-    self.assertEqual(expected_results, bogus_plugin.results)
+    self.assertEqual(expected_results, plugin_object.results)
 
 
 if __name__ == '__main__':

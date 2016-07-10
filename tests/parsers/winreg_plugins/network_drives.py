@@ -136,15 +136,16 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
     key_path = u'HKEY_CURRENT_USER\\Network'
     time_string = u'2013-01-30 10:47:57'
     registry_key = self._CreateTestKey(key_path, time_string)
-    plugin = network_drives.NetworkDrivesPlugin()
 
-    event_queue_consumer = self._ParseKeyWithPlugin(plugin, registry_key)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = network_drives.NetworkDrivesPlugin()
+    storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
 
-    self.assertEqual(len(event_objects), 2)
+    self.assertEqual(len(storage_writer.events), 2)
+
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
-    self.assertEqual(event_objects[0].timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_message = (
         u'[{0:s}] '
@@ -155,7 +156,7 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
     expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
     self._TestGetMessageStrings(
-        event_objects[0], expected_message, expected_short_message)
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

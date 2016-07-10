@@ -17,10 +17,6 @@ import pytz  # pylint: disable=wrong-import-order
 class TestDefaultPlist(test_lib.PlistPluginTestCase):
   """Tests for the default plist plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = default.DefaultPlugin()
-
   def testProcessSingle(self):
     """Tests Process on a plist containing a root, value and timestamp."""
     top_level_dict_single = {
@@ -29,13 +25,13 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
             datetime.datetime(
                 2012, 11, 2, 1, 21, 38, 997672, tzinfo=pytz.UTC)}}
 
-    event_object_generator = self._ParsePlistWithPlugin(
-        self._plugin, u'single', top_level_dict_single)
-    event_objects = self._GetEventObjectsFromQueue(event_object_generator)
+    plugin_object = default.DefaultPlugin()
+    storage_writer = self._ParsePlistWithPlugin(
+        plugin_object, u'single', top_level_dict_single)
 
-    self.assertEqual(len(event_objects), 1)
+    self.assertEqual(len(storage_writer.events), 1)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-11-02 01:21:38.997672')
@@ -75,13 +71,13 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
                 u'LastInquiryUpdate': datetime.datetime(
                     2012, 7, 10, 22, 5, 0, 20116, tzinfo=pytz.UTC)}}}
 
-    event_queue_consumer = self._ParsePlistWithPlugin(
-        self._plugin, u'nested', top_level_dict_many_keys)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = default.DefaultPlugin()
+    storage_writer = self._ParsePlistWithPlugin(
+        plugin_object, u'nested', top_level_dict_many_keys)
 
-    self.assertEqual(len(event_objects), 5)
+    self.assertEqual(len(storage_writer.events), 5)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-04-07 17:56:53.524275')

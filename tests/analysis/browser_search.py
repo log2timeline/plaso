@@ -5,11 +5,8 @@
 import unittest
 
 from plaso.analysis import browser_search
-# pylint: disable=unused-import
-from plaso.formatters import chrome as chrome_formatter
-from plaso.lib import event
+from plaso.engine import single_process
 from plaso.parsers import sqlite
-from plaso.parsers.sqlite_plugins import chrome
 
 from tests.analysis import test_lib
 
@@ -17,16 +14,16 @@ from tests.analysis import test_lib
 class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
   """Tests for the browser search analysis plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = sqlite.SQLiteParser()
-
   def testAnalyzeFile(self):
     """Read a storage file that contains URL data and analyze it."""
+    parser = sqlite.SQLiteParser()
     knowledge_base = self._SetUpKnowledgeBase()
+    storage_writer = self._ParseFile(['History'], parser, knowledge_base)
 
-    test_file = self._GetTestFilePath(['History'])
-    event_queue = self._ParseFile(self._parser, test_file, knowledge_base)
+    event_queue = single_process.SingleProcessQueue()
+    event_queue_producer = test_lib.TestEventObjectProducer(
+        event_queue, storage_writer)
+    event_queue_producer.Run()
 
     analysis_plugin = browser_search.BrowserSearchPlugin(event_queue)
     analysis_report_queue_consumer = self._RunAnalysisPlugin(
@@ -41,7 +38,7 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.
     expected_text = u'\n'.join([
-        u' == ENGINE: GoogleSearch ==',
+        u' == ENGINE: Google Search ==',
         u'1 really really funny cats',
         u'1 java plugin',
         u'1 funnycats.exe',
@@ -52,7 +49,7 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
     self.assertEqual(analysis_report.text, expected_text)
     self.assertEqual(analysis_report.plugin_name, 'browser_search')
 
-    expected_keys = set([u'GoogleSearch'])
+    expected_keys = set([u'Google Search'])
     self.assertEqual(set(analysis_report.report_dict.keys()), expected_keys)
 
 

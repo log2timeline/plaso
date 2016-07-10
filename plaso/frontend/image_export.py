@@ -629,8 +629,9 @@ class ImageExportFrontend(frontend.Frontend):
       if not os.path.isdir(destination_path):
         os.makedirs(destination_path)
 
+      path_attributes = self._knowledge_base.GetPathAttributes()
       find_specs = engine_utils.BuildFindSpecsFromFile(
-          filter_file_path, pre_obj=self._knowledge_base.pre_obj)
+          filter_file_path, path_attributes=path_attributes)
 
       # Save the regular files.
       file_saver = FileSaver(skip_duplicates=remove_duplicates)

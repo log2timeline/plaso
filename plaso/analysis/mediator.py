@@ -29,7 +29,6 @@ class AnalysisMediator(object):
 
     self.number_of_produced_analysis_reports = 0
 
-
   @property
   def users(self):
     """The list of users."""

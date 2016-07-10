@@ -36,16 +36,14 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser_object = symantec.SymantecParser()
-
-    test_file = self._GetTestFilePath([u'Symantec.Log'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFile(
+        [u'Symantec.Log'], parser_object)
 
     # The file contains 8 lines which should result in 8 event objects.
-    self.assertEqual(len(event_objects), 8)
+    self.assertEqual(len(storage_writer.events), 8)
 
     # Test the second entry:
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-11-30 10:47:29')

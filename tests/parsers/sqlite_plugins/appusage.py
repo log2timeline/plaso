@@ -14,22 +14,17 @@ from tests.parsers.sqlite_plugins import test_lib
 class ApplicationUsagePluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Mac OS X application usage activity database plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = appusage.ApplicationUsagePlugin()
-
   def testProcess(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath([u'application_usage.sqlite'])
-    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
-        self._plugin, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = appusage.ApplicationUsagePlugin()
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'application_usage.sqlite'], plugin_object)
 
     # The sqlite database contains 5 events.
-    self.assertEqual(len(event_objects), 5)
+    self.assertEqual(len(storage_writer.events), 5)
 
     # Check the first event.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-05-07 18:52:02')

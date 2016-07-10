@@ -15,10 +15,6 @@ from tests.parsers.sqlite_plugins import test_lib
 class SkypePluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Skype main.db history database plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = skype.SkypePlugin()
-
   def testProcess(self):
     """Tests the Process function on a Skype History database file.
 
@@ -35,17 +31,16 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
       id =  1 -> Chat
       id = 14 -> ChatRoom
     """
-    test_file = self._GetTestFilePath([u'skype_main.db'])
+    plugin_object = skype.SkypePlugin()
     cache = sqlite.SQLiteCache()
-    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
-        self._plugin, test_file, cache)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'skype_main.db'], plugin_object, cache=cache)
 
     calls = 0
     files = 0
     sms = 0
     chats = 0
-    for event_object in event_objects:
+    for event_object in storage_writer.events:
       if event_object.data_type == u'skype:event:call':
         calls += 1
       if event_object.data_type == u'skype:event:transferfile':
@@ -55,7 +50,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
       if event_object.data_type == u'skype:event:chat':
         chats += 1
 
-    self.assertEqual(len(event_objects), 24)
+    self.assertEqual(len(storage_writer.events), 24)
     self.assertEqual(files, 4)
     self.assertEqual(sms, 1)
     self.assertEqual(chats, 15)
@@ -63,11 +58,11 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
 
     # TODO: Split this up into separate functions for testing each type of
     # event, e.g. testSMS, etc.
-    sms_event_object = event_objects[16]
-    call_event_object = event_objects[22]
-    event_file = event_objects[18]
-    chat_event_object = event_objects[1]
-    chat_room_event_object = event_objects[14]
+    sms_event_object = storage_writer.events[16]
+    call_event_object = storage_writer.events[22]
+    event_file = storage_writer.events[18]
+    chat_event_object = storage_writer.events[1]
+    chat_room_event_object = storage_writer.events[14]
 
     # Test cache processing and format strings.
     expected_msg = (
@@ -76,7 +71,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
         u'[SENDSOLICITUDE]')
 
     self._TestGetMessageStrings(
-        event_objects[17], expected_msg, expected_msg[0:77] + '...')
+        storage_writer.events[17], expected_msg, expected_msg[0:77] + '...')
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-01 22:14:22')

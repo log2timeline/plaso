@@ -9,10 +9,8 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.engine import knowledge_base
-from plaso.engine import plaso_queue
 from plaso.engine import processing_status
 from plaso.engine import profiler
-from plaso.lib import definitions
 from plaso.preprocessors import interface as preprocess_interface
 from plaso.preprocessors import manager as preprocess_manager
 
@@ -24,22 +22,39 @@ class BaseEngine(object):
     knowledge_base: the knowledge base object (instance of KnowledgeBase).
   """
 
-  def __init__(self, path_spec_queue, event_object_queue, parse_error_queue):
-    """Initialize the engine object.
+  # The interval of status updates in number of seconds.
+  _STATUS_UPDATE_INTERVAL = 0.5
+
+  def __init__(
+      self, enable_profiling=False, profiling_directory=None,
+      profiling_sample_rate=1000, profiling_type=u'all'):
+    """Initializes an engine object.
 
     Args:
-      path_spec_queue: the path specification queue object (instance of Queue).
-      event_object_queue: the event object queue object (instance of Queue).
-      parse_error_queue: the parser error queue object (instance of Queue).
+      enable_profiling (Optional[bool]): True if profiling should be enabled.
+      profiling_directory (Optional[str]): path to the directory where
+          the profiling sample files should be stored.
+      profiling_sample_rate (Optional[int]): profiling sample rate.
+          Contains the number of event sources processed.
+      profiling_type (Optional[str]): type of profiling.
+          Supported types are:
+
+          * 'memory' to profile memory usage;
+          * 'parsers' to profile CPU time consumed by individual parsers;
+          * 'processing' to profile CPU time consumed by different parts of
+            the processing;
+          * 'serializers' to profile CPU time consumed by individual
+            serializers.
     """
+    super(BaseEngine, self).__init__()
+    self._abort = False
     self._enable_debug_output = False
-    self._enable_profiling = False
-    self._event_object_queue = event_object_queue
-    self._path_spec_queue = path_spec_queue
-    self._parse_error_queue = parse_error_queue
+    self._enable_profiling = enable_profiling
     self._processing_status = processing_status.ProcessingStatus()
-    self._profiling_sample_rate = 1000
-    self._profiling_type = u'all'
+    self._profiling_directory = profiling_directory
+    self._profiling_sample_rate = profiling_sample_rate
+    self._profiling_type = profiling_type
+
     self.knowledge_base = knowledge_base.KnowledgeBase()
 
   def GetSourceFileSystem(self, source_path_spec, resolver_context=None):
@@ -122,104 +137,12 @@ class BaseEngine(object):
     """
     self._enable_debug_output = enable_debug_output
 
-  def SetEnableProfiling(
-      self, enable_profiling, profiling_sample_rate=1000,
-      profiling_type=u'all'):
-    """Enables or disables profiling.
-
-    Args:
-      enable_profiling: boolean value to indicate if the profiling should
-                        be enabled.
-      profiling_sample_rate: optional integer indicating the profiling sample
-                             rate. The value contains the number of files
-                             processed. The default value is 1000.
-      profiling_type: optional profiling type.
-    """
-    self._enable_profiling = enable_profiling
-    self._profiling_sample_rate = profiling_sample_rate
-    self._profiling_type = profiling_type
+  def SignalAbort(self):
+    """Signals the engine to abort."""
+    logging.warning(u'Aborted by user.')
+    self._abort = True
 
   @classmethod
   def SupportsMemoryProfiling(cls):
     """Returns a boolean value to indicate if memory profiling is supported."""
     return profiler.GuppyMemoryProfiler.IsSupported()
-
-
-# TODO: remove this class further in the phased processing refactor.
-class EventObjectQueueConsumer(plaso_queue.ItemQueueConsumer):
-  """Class that implements an event object queue consumer.
-
-  The consumer subscribes to updates on the queue.
-  """
-
-  def __init__(self, queue_object, storage_writer):
-    """Initializes the item queue consumer.
-
-    Args:
-      queue_object: a queue object (instance of Queue).
-      storage_writer: a storage writer (instance of StorageWriter).
-    """
-    super(EventObjectQueueConsumer, self).__init__(queue_object)
-    self._status = definitions.PROCESSING_STATUS_INITIALIZED
-    self._storage_writer = storage_writer
-
-  def _ConsumeItem(self, event_object, **kwargs):
-    """Consumes an item callback for ConsumeItems.
-
-    Args:
-      event_object: an event object (instance of EventObject).
-    """
-    self._storage_writer.AddEvent(event_object)
-
-  def GetStatus(self):
-    """Returns a dictionary containing the status."""
-    return {
-        u'number_of_events': self.number_of_consumed_items,
-        u'processing_status': self._status,
-        u'type': definitions.PROCESS_TYPE_STORAGE_WRITER}
-
-  def Run(self):
-    """Consumes event object from the queue."""
-    self._status = definitions.PROCESSING_STATUS_RUNNING
-    self.ConsumeItems()
-    self._status = definitions.PROCESSING_STATUS_COMPLETED
-
-
-class PathSpecQueueProducer(plaso_queue.ItemQueueProducer):
-  """Class that implements a path specification queue producer."""
-
-  def __init__(self, path_spec_queue, storage_writer):
-    """Initializes a queue producer object.
-
-    Args:
-      path_spec_queue: the path specification queue (instance of Queue).
-                       This queue contains path specifications (instances
-                       of dfvfs.PathSpec) of the file entries that need
-                       to be processed.
-      storage_writer: a storage object (instance of StorageWriter).
-    """
-    super(PathSpecQueueProducer, self).__init__(path_spec_queue)
-    self._status = definitions.PROCESSING_STATUS_INITIALIZED
-    self._storage_writer = storage_writer
-
-  def GetStatus(self):
-    """Returns a dictionary containing the status."""
-    return {
-        u'processing_status': self._status,
-        u'produced_number_of_path_specs': self._number_of_produced_items,
-        u'path_spec_queue_port': getattr(self._queue, u'port', None),
-        u'type': definitions.PROCESS_TYPE_COLLECTOR}
-
-  def Run(self):
-    """Produces path specifications onto the queue."""
-    self._status = definitions.PROCESSING_STATUS_RUNNING
-    for event_source in self._storage_writer.GetEventSources():
-      if self._abort:
-        break
-
-      self.ProduceItem(event_source.path_spec)
-
-    if self._abort:
-      self._status = definitions.PROCESSING_STATUS_ABORTED
-    else:
-      self._status = definitions.PROCESSING_STATUS_COMPLETED

@@ -17,16 +17,14 @@ class MacOSXBsmParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function on a Mac OS X BSM file."""
     parser_object = bsm.BsmParser()
-
     knowledge_base_values = {u'guessed_os': u'MacOSX'}
-    test_file = self._GetTestFilePath([u'apple.bsm'])
-    event_queue_consumer = self._ParseFile(
-        parser_object, test_file, knowledge_base_values=knowledge_base_values)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFile(
+        [u'apple.bsm'], parser_object,
+        knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(len(event_objects), 54)
+    self.assertEqual(len(storage_writer.events), 54)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     self.assertEqual(event_object.data_type, u'mac:bsm:event')
 
@@ -56,7 +54,7 @@ class MacOSXBsmParserTest(test_lib.ParserTestCase):
         u'[BSM_TOKEN_RETURN32: Success (0), System call status: 0]')
     self.assertEqual(event_object.return_value, expected_return_value)
 
-    event_object = event_objects[15]
+    event_object = storage_writer.events[15]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-04 18:36:26.000171')
@@ -75,7 +73,7 @@ class MacOSXBsmParserTest(test_lib.ParserTestCase):
         u'[BSM_TOKEN_RETURN32: Unknown (255), System call status: 5000]')
     self.assertEqual(event_object.return_value, expected_return_value)
 
-    event_object = event_objects[31]
+    event_object = storage_writer.events[31]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-04 18:36:26.000530')
@@ -94,7 +92,7 @@ class MacOSXBsmParserTest(test_lib.ParserTestCase):
         u'[BSM_TOKEN_RETURN32: Success (0), System call status: 0]')
     self.assertEqual(event_object.return_value, expected_return_value)
 
-    event_object = event_objects[50]
+    event_object = storage_writer.events[50]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-04 18:37:36.000399')
@@ -122,14 +120,12 @@ class OpenBsmParserTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function on a "generic" BSM file."""
     parser_object = bsm.BsmParser()
-
     knowledge_base_values = {u'guessed_os': u'openbsm'}
-    test_file = self._GetTestFilePath([u'openbsm.bsm'])
-    event_queue_consumer = self._ParseFile(
-        parser_object, test_file, knowledge_base_values=knowledge_base_values)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFile(
+        [u'openbsm.bsm'], parser_object,
+        knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(len(event_objects), 50)
+    self.assertEqual(len(storage_writer.events), 50)
 
     expected_extra_tokens = [
         u'[BSM_TOKEN_ARGUMENT32: test_arg32_token(3) is 0xABCDEF00]',
@@ -169,7 +165,8 @@ class OpenBsmParserTest(test_lib.ParserTestCase):
 
     extra_tokens = []
     for event_object_index in range(0, 19):
-      extra_tokens.append(event_objects[event_object_index].extra_tokens)
+      event_object = storage_writer.events[event_object_index]
+      extra_tokens.append(event_object.extra_tokens)
 
     self.assertEqual(extra_tokens, expected_extra_tokens)
 

@@ -17,15 +17,13 @@ class PlsRecallTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser_object = pls_recall.PlsRecallParser()
-
-    test_file = self._GetTestFilePath([u'PLSRecall_Test.dat'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFile(
+        [u'PLSRecall_Test.dat'], parser_object)
 
     # There are two events in test file.
-    self.assertEqual(len(event_objects), 2)
+    self.assertEqual(len(storage_writer.events), 2)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     timestamp_expected = timelib.Timestamp.CopyFromString(
         u'2013-06-18 19:50:00:00:00')

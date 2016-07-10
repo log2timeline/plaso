@@ -90,7 +90,7 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
       timestamp = self._ConvertToTimestamp(
           row[u'date'], row[u'time'], parser_mediator.timezone)
     except errors.TimestampError as exception:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'Unable to parse time string: [{0:s} {1:s}] with error {2:s}'.format(
               repr(row[u'date']), repr(row[u'time']), exception))
       return

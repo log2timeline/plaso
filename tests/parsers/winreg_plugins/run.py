@@ -14,10 +14,6 @@ from tests.parsers.winreg_plugins import test_lib
 class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the auto rus Windows Registry plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = run.AutoRunsPlugin()
-
   def testProcessNtuserRun(self):
     """Tests the Process function on a Run key."""
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-RunTests.DAT'])
@@ -27,18 +23,19 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, file_entry=test_file_entry)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 1)
+    plugin_object = run.AutoRunsPlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry)
 
-    event_object = event_objects[0]
+    self.assertEqual(len(storage_writer.events), 1)
+
+    event_object = storage_writer.events[0]
 
     self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, plugin_object.plugin_name)
 
     # Timestamp is: 2012-04-05T17:03:53.992061+00:00
     self.assertEqual(event_object.timestamp, 1333645433992061)
@@ -60,18 +57,19 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, file_entry=test_file_entry)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 1)
+    plugin_object = run.AutoRunsPlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry)
 
-    event_object = event_objects[0]
+    self.assertEqual(len(storage_writer.events), 1)
+
+    event_object = storage_writer.events[0]
 
     self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, plugin_object.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-04-05 17:03:53.992061')
@@ -94,18 +92,19 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, file_entry=test_file_entry)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 3)
+    plugin_object = run.AutoRunsPlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry)
 
-    event_object = event_objects[0]
+    self.assertEqual(len(storage_writer.events), 3)
+
+    event_object = storage_writer.events[0]
 
     self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, plugin_object.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-09-16 20:57:09.067575')
@@ -121,7 +120,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-09-16 20:57:09.067575')
-    self.assertEqual(event_objects[1].timestamp, expected_timestamp)
+    self.assertEqual(storage_writer.events[1].timestamp, expected_timestamp)
 
   def testProcessSoftwareRunOnce(self):
     """Tests the Process function on a RunOnce key."""
@@ -132,18 +131,19 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, file_entry=test_file_entry)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 1)
+    plugin_object = run.AutoRunsPlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry)
 
-    event_object = event_objects[0]
+    self.assertEqual(len(storage_writer.events), 1)
+
+    event_object = storage_writer.events[0]
 
     self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, plugin_object.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-04-06 14:07:27.750000')

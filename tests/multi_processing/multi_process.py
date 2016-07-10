@@ -11,7 +11,7 @@ from dfvfs.path import factory as path_spec_factory
 from plaso.containers import sessions
 from plaso.lib import event
 from plaso.multi_processing import multi_process
-from plaso.storage import fake_storage
+from plaso.storage import zip_file as storage_zip_file
 
 from tests import test_lib as shared_test_lib
 from tests.engine import test_lib as engine_test_lib
@@ -23,7 +23,7 @@ class MultiProcessEngineTest(shared_test_lib.BaseTestCase):
   def testProcessSources(self):
     """Tests the PreprocessSources and ProcessSources function."""
     test_engine = multi_process.MultiProcessEngine(
-        maximum_number_of_queued_items=100)
+        maximum_number_of_tasks=100)
 
     source_path = os.path.join(self._TEST_DATA_PATH, u'ímynd.dd')
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -34,16 +34,17 @@ class MultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     test_engine.PreprocessSources([source_path_spec])
 
-    session_start = sessions.SessionStart()
+    session = sessions.Session()
 
-    storage_writer = fake_storage.FakeStorageWriter()
-    storage_writer.Open()
-    storage_writer.WriteSessionStart(session_start)
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      storage_writer = storage_zip_file.ZIPStorageFileWriter(
+          session, temp_file)
 
-    preprocess_object = event.PreprocessObject()
-    test_engine.ProcessSources(
-        [source_path_spec], storage_writer, preprocess_object,
-        parser_filter_expression=u'filestat')
+      preprocess_object = event.PreprocessObject()
+      test_engine.ProcessSources(
+          session.identifier, [source_path_spec], preprocess_object,
+          storage_writer, parser_filter_expression=u'filestat')
 
     # TODO: implement a way to obtain the resuls without relying
     # on multi-process primitives e.g. by writing to a file.

@@ -20,14 +20,12 @@ class WinIISUnitTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser_object = iis.WinIISParser()
+    storage_writer = self._ParseFile(
+        [u'iis.log'], parser_object)
 
-    test_file = self._GetTestFilePath([u'iis.log'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    self.assertEqual(len(storage_writer.events), 11)
 
-    self.assertEqual(len(event_objects), 11)
-
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-30 00:00:00')
@@ -49,7 +47,7 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    event_object = event_objects[5]
+    event_object = storage_writer.events[5]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-30 00:00:05')
@@ -60,7 +58,7 @@ class WinIISUnitTest(test_lib.ParserTestCase):
     self.assertEqual(
         event_object.requested_uri_stem, u'/some/image/path/something.jpg')
 
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     expected_msg = (
         u'GET /some/image/path/something.htm '
@@ -78,14 +76,12 @@ class WinIISUnitTest(test_lib.ParserTestCase):
   def testParseWithoutDate(self):
     """Tests the Parse function with logs without a date column."""
     parser_object = iis.WinIISParser()
+    storage_writer = self._ParseFile(
+        [u'iis_without_date.log'], parser_object)
 
-    test_file = self._GetTestFilePath([u'iis_without_date.log'])
-    event_queue_consumer = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    self.assertEqual(len(storage_writer.events), 11)
 
-    self.assertEqual(len(event_objects), 11)
-
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-30 00:00:03')

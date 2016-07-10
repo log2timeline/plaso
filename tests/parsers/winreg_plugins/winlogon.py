@@ -272,17 +272,17 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
         u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
     time_string = u'2013-01-30 10:47:57'
     registry_key = self._CreateTestKey(key_path, time_string)
-    plugin = winlogon.WinlogonPlugin()
 
-    event_queue_consumer = self._ParseKeyWithPlugin(plugin, registry_key)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = winlogon.WinlogonPlugin()
+    storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
 
-    self.assertEqual(len(event_objects), 14)
+    self.assertEqual(len(storage_writer.events), 14)
 
     # Because the order the subkeys are parsed are not guaranteed we will sort
-    # the event_objects.
+    # the events.
+    # TODO: look into this.
     event_objects = sorted(
-        event_objects, key=lambda evt: evt.EqualityString())
+        storage_writer.events, key=lambda evt: evt.EqualityString())
 
     event_object = event_objects[0]
 

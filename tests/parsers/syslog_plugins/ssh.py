@@ -15,16 +15,17 @@ class SSHSyslogParserTest(test_lib.SyslogPluginTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath([u'syslog_ssh.log'])
-    event_queue_consumer = self._ParseFileWithPlugin(u'ssh', test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFileWithPlugin(
+        [u'syslog_ssh.log'], u'ssh')
 
-    event = event_objects[0]
+    self.assertEqual(len(storage_writer.events), 9)
+
+    event = storage_writer.events[0]
 
     expected_data_type = syslog.SyslogLineEvent.DATA_TYPE
     self.assertEqual(event.DATA_TYPE, expected_data_type)
 
-    event = event_objects[1]
+    event = storage_writer.events[1]
 
     expected_data_type = ssh.SSHLoginEvent.DATA_TYPE
     self.assertEqual(event.DATA_TYPE, expected_data_type)
@@ -45,7 +46,7 @@ class SSHSyslogParserTest(test_lib.SyslogPluginTestCase):
         u'RSA 00:aa:bb:cc:dd:ee:ff:11:22:33:44:55:66:77:88:99')
     self.assertEqual(expected_fingerprint, event.fingerprint)
 
-    event = event_objects[3]
+    event = storage_writer.events[3]
 
     expected_data_type = ssh.SSHFailedConnectionEvent.DATA_TYPE
     self.assertEqual(event.DATA_TYPE, expected_data_type)
@@ -56,15 +57,13 @@ class SSHSyslogParserTest(test_lib.SyslogPluginTestCase):
     expected_port = u'8759'
     self.assertEqual(expected_port, event.port)
 
-    event = event_objects[4]
+    event = storage_writer.events[4]
 
     expected_data_type = ssh.SSHOpenedConnectionEvent.DATA_TYPE
     self.assertEqual(event.DATA_TYPE, expected_data_type)
 
     expected_address = u'188.124.3.41'
     self.assertEqual(expected_address, event.address)
-
-    self.assertEqual(len(event_objects), 9)
 
 
 if __name__ == '__main__':

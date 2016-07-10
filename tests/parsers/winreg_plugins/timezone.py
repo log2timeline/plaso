@@ -18,10 +18,6 @@ from tests.parsers.winreg_plugins import test_lib
 class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the timezone Windows Registry plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = winreg_timezone.WinRegTimezonePlugin()
-
   def _CreateTestKey(self, key_path, time_string):
     """Creates Registry keys and values for testing.
 
@@ -116,13 +112,15 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
     time_string = u'2013-01-30 10:47:57'
     registry_key = self._CreateTestKey(key_path, time_string)
 
-    event_queue_consumer = self._ParseKeyWithPlugin(self._plugin, registry_key)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = winreg_timezone.WinRegTimezonePlugin()
+    storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
 
-    self.assertEqual(len(event_objects), 1)
+    self.assertEqual(len(storage_writer.events), 1)
+
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
-    self.assertEqual(event_objects[0].timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_message = (
         u'[{0:s}] '
@@ -137,7 +135,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
     expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
     self._TestGetMessageStrings(
-        event_objects[0], expected_message, expected_short_message)
+        event_object, expected_message, expected_short_message)
 
   def testProcessFile(self):
     """Tests the Process function on registry file."""
@@ -148,15 +146,18 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, file_entry=test_file_entry)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 1)
+    plugin_object = winreg_timezone.WinRegTimezonePlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry)
+
+    self.assertEqual(len(storage_writer.events), 1)
+
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-03-11 07:00:00.000642')
-    self.assertEqual(event_objects[0].timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_message = (
         u'[{0:s}] '
@@ -171,7 +172,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
     expected_short_message = u'{0:s}...'.format(expected_message[0:77])
 
     self._TestGetMessageStrings(
-        event_objects[0], expected_message, expected_short_message)
+        event_object, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

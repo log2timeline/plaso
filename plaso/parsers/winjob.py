@@ -199,7 +199,7 @@ class WinJobParser(interface.FileObjectParser):
           timezone=parser_mediator.timezone)
     except errors.TimestampError as exception:
       last_run_date = None
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to determine last run date with error: {0:s}'.format(
               exception))
 
@@ -214,7 +214,7 @@ class WinJobParser(interface.FileObjectParser):
           timezone=parser_mediator.timezone)
     except errors.TimestampError as exception:
       scheduled_date = None
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to determine scheduled date with error: {0:s}'.format(
               exception))
 
@@ -253,7 +253,7 @@ class WinJobParser(interface.FileObjectParser):
             timezone=parser_mediator.timezone)
       except errors.TimestampError as exception:
         scheduled_end_date = None
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'unable to determine scheduled end date with error: {0:s}'.format(
                 exception))
 

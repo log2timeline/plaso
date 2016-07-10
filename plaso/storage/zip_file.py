@@ -11,10 +11,10 @@ There are multiple types of streams:
   The error index streams contain the stream offset to the serialized
   error objects.
 * event_data.#
-  The event data streams contain the serialized event objects.
+  The event data streams contain the serialized events.
 * event_index.#
   The event index streams contain the stream offset to the serialized
-  event objects.
+  events.
 * event_source_data.#
   The event source data streams contain the serialized event source objects.
 * event_source_index.#
@@ -27,22 +27,30 @@ There are multiple types of streams:
   event tag objects.
 * event_timestamps.#
   The event timestamps streams contain the timestamp of the serialized
-  event objects.
+  events.
 * information.dump
   The serialized preprocessing object.
 * metadata.txt
   Stream that contains the storage metadata.
 * session_completion.#
   Stream that contains information about the completion of a session.
+  Only applies to session-based storage.
 * session_start.#
   Stream that contains information about the start of a session.
+  Only applies to session-based storage.
+* task_completion.#
+  Stream that contains information about the completion of a task.
+  Only applies to task-based storage.
+* task_start.#
+  Stream that contains information about the start of a task.
+  Only applies to task-based storage.
 
 The # in a stream name is referred to as the "store number". Streams with
 the same prefix e.g. "event_" and "store number" are related.
 
 + The event data streams
 
-The event data streams contain the serialized event objects. The serialized
+The event data streams contain the serialized events. The serialized
 events are stored in ascending timestamp order within an individual event data
 stream. Note that the event data streams themselves are not ordered.
 
@@ -69,7 +77,7 @@ An event data stream consists of an array of 32-bit integers:
 + The event timestamps stream
 
 The event timestamps streams contain the timestamp of the serialized
-event objects.
+events.
 
 An event data stream consists of an array of 64-bit integers:
 +-----------+-----------+-...-+
@@ -78,7 +86,7 @@ An event data stream consists of an array of 64-bit integers:
 
 + The event tag index stream
 
-The event tag index streams contain information about the event object
+The event tag index streams contain information about the event
 the tag applies to.
 
 An event data stream consists of an array of event tag index values.
@@ -98,9 +106,9 @@ Deprecated in version 20160501:
 Deprecated in version 20160511:
 * plaso_index.#
   The event index streams contain the stream offset to the serialized
-  event objects.
+  events.
 * plaso_proto.#
-  The event data streams contain the serialized event objects.
+  The event data streams contain the serialized events.
 * plaso_report.#
 * plaso_tagging.#
   The event tag data streams contain the serialized event tag objects.
@@ -109,14 +117,15 @@ Deprecated in version 20160511:
   event tag objects.
 * plaso_timestamps.#
   The event timestamps streams contain the timestamp of the serialized
-  event objects.
+  events.
 """
 
-import collections
 import heapq
 import io
 import logging
 import os
+import shutil
+import tempfile
 import warnings
 import zipfile
 
@@ -127,71 +136,134 @@ except ImportError:
 
 import construct
 
-from plaso.containers import sessions
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.serializer import json_serializer
 from plaso.storage import interface
 
 
-class _EventsHeap(object):
-  """Class that defines the event objects heap."""
+class _AttributeContainersList(object):
+  """Class that defines the attribute containers list.
+
+  The list is unsorted and pops attribute containers in the same order as
+  pushed to preserve order.
+
+  The GetAttributeContainerByIndex method should be used to read attribute
+  containers from the list while it being filled.
+
+  Attributes:
+    data_size (int): total data size of the serialized attribute containers
+        on the list.
+  """
 
   def __init__(self):
-    """Initializes an event objects heap."""
+    """Initializes an attribute container list."""
+    super(_AttributeContainersList, self).__init__()
+    self._list = []
+    self.data_size = 0
+
+  @property
+  def number_of_attribute_containers(self):
+    """int: number of serialized attribute containers on the list."""
+    return len(self._list)
+
+  def Empty(self):
+    """Empties the list."""
+    self._list = []
+    self.data_size = 0
+
+  def GetAttributeContainerByIndex(self, index):
+    """Retrieves a specific attribute container from the list.
+
+    Args:
+      index (int): attribute container index.
+
+    Returns:
+      bytes: serialized attribute container data.
+    """
+    if index < len(self._list):
+      return self._list[index]
+
+  def PopAttributeContainer(self):
+    """Pops an attribute container from the list.
+
+    Returns:
+      bytes: serialized attribute container data.
+    """
+    try:
+      serialized_data = self._list.pop(0)
+      self.data_size -= len(serialized_data)
+      return serialized_data
+
+    except IndexError:
+      return
+
+  def PushAttributeContainer(self, serialized_data):
+    """Pushes an attribute container onto the list.
+
+    Args:
+      serialized_data (bytes): serialized attribute container data.
+    """
+    self._list.append(serialized_data)
+    self.data_size += len(serialized_data)
+
+
+class _EventsHeap(object):
+  """Class that defines the events heap."""
+
+  def __init__(self):
+    """Initializes an events heap."""
     super(_EventsHeap, self).__init__()
     self._heap = []
 
   @property
   def number_of_events(self):
-    """The number of serialized event objects on the heap."""
+    """int: number of serialized events on the heap."""
     return len(self._heap)
 
   def PopEvent(self):
-    """Pops an event object from the heap.
+    """Pops an event from the heap.
 
     Returns:
-      A tuple containing an event object (instance of EventObject),
+      A tuple containing an event (instance of EventObject),
       an integer containing the number of the stream.
       If the heap is empty the values in the tuple will be None.
     """
     try:
-      _, stream_number, _, event_object = heapq.heappop(self._heap)
-      return event_object, stream_number
+      _, stream_number, _, event = heapq.heappop(self._heap)
+      return event, stream_number
 
     except IndexError:
       return None, None
 
-  def PushEvent(self, event_object, stream_number, entry_index):
-    """Pushes an event object onto the heap.
+  def PushEvent(self, event, stream_number, entry_index):
+    """Pushes an event onto the heap.
 
     Args:
-      event_object: an event object (instance of EventObject).
-      stream_number: an integer containing the number of the stream.
-      entry_index: an integer containing the serialized data stream entry index.
+      event (EventObject): event.
+      stream_number (int): serialized data stream number.
+      entry_index (int): serialized data stream entry index.
     """
-    heap_values = (
-        event_object.timestamp, stream_number, entry_index, event_object)
+    heap_values = (event.timestamp, stream_number, entry_index, event)
     heapq.heappush(self._heap, heap_values)
 
 
 class _SerializedEventsHeap(object):
-  """Class that defines the serialized event objects heap.
+  """Class that defines the serialized events heap.
 
   Attributes:
-    data_size: an integer containing the total data size of the serialized
-               event objects on the heap.
+    data_size (int): total data size of the serialized events on the heap.
   """
 
   def __init__(self):
-    """Initializes a serialized event objects heap."""
+    """Initializes a serialized events heap."""
     super(_SerializedEventsHeap, self).__init__()
     self._heap = []
     self.data_size = 0
 
   @property
   def number_of_events(self):
-    """The number of serialized event objects on the heap."""
+    """int: number of serialized events on the heap."""
     return len(self._heap)
 
   def Empty(self):
@@ -200,45 +272,44 @@ class _SerializedEventsHeap(object):
     self.data_size = 0
 
   def PopEvent(self):
-    """Pops an event object from the heap.
+    """Pops an event from the heap.
 
     Returns:
       A tuple containing an integer containing the event timestamp and
-      a binary string containing the serialized event object data.
+      a binary string containing the serialized event data.
       If the heap is empty the values in the tuple will be None.
     """
     try:
-      timestamp, event_object_data = heapq.heappop(self._heap)
+      timestamp, event_data = heapq.heappop(self._heap)
 
-      self.data_size -= len(event_object_data)
-      return timestamp, event_object_data
+      self.data_size -= len(event_data)
+      return timestamp, event_data
 
     except IndexError:
       return None, None
 
-  def PushEvent(self, timestamp, event_object_data):
-    """Pushes a serialized event object onto the heap.
+  def PushEvent(self, timestamp, event_data):
+    """Pushes a serialized event onto the heap.
 
     Args:
-      timestamp: an integer containing the event timestamp.
-      event_object_data: binary string containing the serialized
-                         event object data.
+      timestamp (int): event timestamp, which contains the number of
+          micro seconds since January 1, 1970, 00:00:00 UTC.
+      event_data (bytes): serialized event data.
     """
-    heap_values = (timestamp, event_object_data)
+    heap_values = (timestamp, event_data)
     heapq.heappush(self._heap, heap_values)
-    self.data_size += len(event_object_data)
+    self.data_size += len(event_data)
 
 
 class _EventTagIndexValue(object):
   """Class that defines the event tag index value.
 
   Attributes:
-    event_uuid: a string containing the event identifier (UUID) or None.
-    offset: an integer containing the serialized event tag data offset.
-    store_number: optional integer containing the store number.
-    store_index: optional integer containing the index relative
-                  to the start of the store.
-    tag_type: an integer containing the tag type.
+    event_uuid (str): event identifier formatted as an UUID.
+    offset (int): serialized event tag data offset.
+    store_number (int): serialized data stream number.
+    store_index (int): serialized data stream entry index.
+    tag_type (int): tag type.
   """
   TAG_TYPE_UNDEFINED = 0
   TAG_TYPE_NUMERIC = 1
@@ -250,12 +321,11 @@ class _EventTagIndexValue(object):
     """Initializes the tag index value.
 
     Args:
-      tag_type: an integer containing the tag type.
-      offset: an integer containing the serialized event tag data offset.
-      event_uuid: optional string containing the event identifier (UUID).
-      store_number: optional integer containing the store number.
-      store_index: optional integer containing the index relative
-                    to the start of the store.
+      tag_type (int): tag type.
+      offset (int): serialized event tag data offset.
+      event_uuid (Optional[str]): event identifier formatted as an UUID.
+      store_number (Optional[int]): serialized data stream number.
+      store_index (Optional[int]): serialized data stream entry index.
     """
     super(_EventTagIndexValue, self).__init__()
     self._identifier = None
@@ -266,7 +336,7 @@ class _EventTagIndexValue(object):
     self.tag_type = tag_type
 
   def __str__(self):
-    """Retrieve a string representation of the event tag identifier."""
+    """str: string representation of the event tag identifier."""
     string = u'tag_type: {0:d} offset: 0x{1:08x}'.format(
         self.tag_type, self.offset)
 
@@ -281,7 +351,7 @@ class _EventTagIndexValue(object):
 
   @property
   def identifier(self):
-    """A string containing the event object identifier."""
+    """str: event identifier."""
     if not self._identifier:
       if self.tag_type == self.TAG_TYPE_NUMERIC:
         self._identifier = u'{0:d}:{1:d}'.format(
@@ -313,9 +383,9 @@ class _SerializedDataStream(object):
     """Initializes a serialized data stream object.
 
     Args:
-      zip_file: the ZIP file object that contains the stream.
-      storage_file_path: string containing the path of the storage file.
-      stream_name: string containing the name of the stream.
+      zip_file (zipfile.ZipFile): ZIP file that contains the stream.
+      storage_file_path (str): path of the storage file.
+      stream_name (str): name of the stream.
     """
     super(_SerializedDataStream, self).__init__()
     self._entry_index = 0
@@ -327,7 +397,7 @@ class _SerializedDataStream(object):
 
   @property
   def entry_index(self):
-    """The entry index."""
+    """int: entry index."""
     return self._entry_index
 
   def _OpenFileObject(self):
@@ -357,8 +427,7 @@ class _SerializedDataStream(object):
     """Reads an entry from the data stream.
 
     Returns:
-      A binary string containing the data or None if there is no data
-      remaining.
+      bytes: data or None if no data remaining.
 
     Raises:
       IOError: if the entry cannot be read.
@@ -393,8 +462,8 @@ class _SerializedDataStream(object):
     """Seeks a specific serialized data stream entry at a specific offset.
 
     Args:
-      entry_index: an integer containing the serialized data stream entry index.
-      stream_offset: an integer containing the data stream offset.
+      entry_index (int): serialized data stream entry index.
+      stream_offset (int): data stream offset.
     """
     if not self._file_object:
       self._OpenFileObject()
@@ -429,10 +498,10 @@ class _SerializedDataStream(object):
     """Writes an entry to the file-like object.
 
     Args:
-      data: a binary string containing the data.
+      data (bytes): data.
 
     Returns:
-      An integer containing the offset of the temporary file.
+      int: offset of the entry within the temporary file.
 
     Raises:
       IOError: if the entry cannot be written.
@@ -449,7 +518,7 @@ class _SerializedDataStream(object):
     Writes the temporary file with the serialized data to the zip file.
 
     Returns:
-      An integer containing the offset of the temporary file.
+      int: offset of the entry within the temporary file.
 
     Raises:
       IOError: if the serialized data stream cannot be written.
@@ -474,7 +543,7 @@ class _SerializedDataStream(object):
     Creates a temporary file to store the serialized data.
 
     Returns:
-      An integer containing the offset of the temporary file.
+      int: offset of the entry within the temporary file.
 
     Raises:
       IOError: if the serialized data stream cannot be written.
@@ -499,19 +568,24 @@ class _SerializedDataOffsetTable(object):
     """Initializes a serialized data offset table object.
 
     Args:
-      zip_file: the ZIP file object that contains the stream.
-      stream_name: string containing the name of the stream.
+      zip_file (zipfile.ZipFile): ZIP file that contains the stream.
+      stream_name (str): name of the stream.
     """
     super(_SerializedDataOffsetTable, self).__init__()
     self._offsets = []
     self._stream_name = stream_name
     self._zip_file = zip_file
 
+  @property
+  def number_of_offsets(self):
+    """int: number of offsets."""
+    return len(self._offsets)
+
   def AddOffset(self, offset):
     """Adds an offset.
 
     Args:
-      offset: an integer containing the offset.
+      offset (int): offset.
     """
     self._offsets.append(offset)
 
@@ -519,10 +593,10 @@ class _SerializedDataOffsetTable(object):
     """Retrieves a specific serialized data offset.
 
     Args:
-      entry_index: an integer containing the table entry index.
+      entry_index (int): table entry index.
 
     Returns:
-      An integer containing the serialized data offset.
+      int: serialized data offset.
 
     Raises:
       IndexError: if the table entry index is out of bounds.
@@ -581,24 +655,25 @@ class _SerializedDataTimestampTable(object):
     """Initializes a serialized data timestamp table object.
 
     Args:
-      zip_file: the ZIP file object that contains the stream.
-      stream_name: string containing the name of the stream.
+      zip_file (zipfile.ZipFile): ZIP file that contains the stream.
+      stream_name (str): name of the stream.
     """
     super(_SerializedDataTimestampTable, self).__init__()
-    self._timestamps = []
     self._stream_name = stream_name
+    self._timestamps = []
     self._zip_file = zip_file
 
   @property
   def number_of_timestamps(self):
-    """The number of timestamps."""
+    """int: number of timestamps."""
     return len(self._timestamps)
 
   def AddTimestamp(self, timestamp):
     """Adds a timestamp.
 
     Args:
-      timestamp: an integer containing the timestamp.
+      timestamp (int): event timestamp, which contains the number of
+          micro seconds since January 1, 1970, 00:00:00 UTC.
     """
     self._timestamps.append(timestamp)
 
@@ -606,10 +681,11 @@ class _SerializedDataTimestampTable(object):
     """Retrieves a specific timestamp.
 
     Args:
-      entry_index: an integer containing the table entry index.
+      entry_index (int): table entry index.
 
     Returns:
-      An integer containing the timestamp.
+      int: event timestamp, which contains the number of micro seconds since
+          January 1, 1970, 00:00:00 UTC.
 
     Raises:
       IndexError: if the table entry index is out of bounds.
@@ -679,8 +755,8 @@ class _SerializedEventTagIndexTable(object):
     """Initializes a serialized event tag index table object.
 
     Args:
-      zip_file: the ZIP file object that contains the stream.
-      stream_name: string containing the name of the stream.
+      zip_file (zipfile.ZipFile): ZIP file that contains the stream.
+      stream_name (str): name of the stream.
     """
     super(_SerializedEventTagIndexTable, self).__init__()
     self._event_tag_indexes = []
@@ -689,7 +765,7 @@ class _SerializedEventTagIndexTable(object):
 
   @property
   def number_of_entries(self):
-    """The number of event tag index entries."""
+    """int: number of event tag index entries."""
     return len(self._event_tag_indexes)
 
   def AddEventTagIndex(
@@ -698,12 +774,11 @@ class _SerializedEventTagIndexTable(object):
     """Adds an event tag index.
 
     Args:
-      tag_type: an integer containing the tag type.
-      offset: an integer containing the serialized event tag data offset.
-      event_uuid: optional string containing the event identifier (UUID).
-      store_number: optional integer containing the store number.
-      store_index: optional integer containing the index relative
-                    to the start of the store.
+      tag_type (int): event tag type.
+      offset (int): serialized event tag data offset.
+      event_uuid (Optional[str]): event identifier formatted as an UUID.
+      store_number (Optional[str]): store number.
+      store_index (Optional[str]): index relative to the start of the store.
     """
     event_tag_index = _EventTagIndexValue(
         tag_type, offset, event_uuid=event_uuid, store_number=store_number,
@@ -714,10 +789,10 @@ class _SerializedEventTagIndexTable(object):
     """Retrieves a specific event tag index.
 
     Args:
-      entry_index: an integer containing the table entry index.
+      entry_index (int): table entry index.
 
     Returns:
-      An event tag index object (instance of _EventTagIndexValue).
+      _EventTagIndexValue: event tag index value.
 
     Raises:
       IndexError: if the table entry index is out of bounds.
@@ -792,8 +867,9 @@ class _StorageMetadata(object):
   """Class that implements storage metadata.
 
   Attributes:
-    format_version: an integer containing the storage format version.
-    serialization_format: a string containing the serialization format.
+    format_version (int): storage format version.
+    serialization_format (str): serialization format.
+    storage_type (str): storage type.
   """
 
   def __init__(self):
@@ -801,6 +877,7 @@ class _StorageMetadata(object):
     super(_StorageMetadata, self).__init__()
     self.format_version = None
     self.serialization_format = None
+    self.storage_type = None
 
 
 class _StorageMetadataReader(object):
@@ -810,12 +887,12 @@ class _StorageMetadataReader(object):
     """Retrieves a value from the config parser.
 
     Args:
-      config_parser: the configuration parser (instance of ConfigParser).
-      section_name: the name of the section that contains the value.
-      value_name: the name of the value.
+      config_parser (ConfigParser): configuration parser.
+      section_name (str): name of the section that contains the value.
+      value_name (str): name of the value.
 
     Returns:
-      An object containing the value or None if the value does not exists.
+      object: value or None if the value does not exists.
     """
     try:
       return config_parser.get(section_name, value_name).decode('utf-8')
@@ -826,10 +903,10 @@ class _StorageMetadataReader(object):
     """Reads the storage metadata.
 
     Args:
-      stream_data: a byte string containing the data of the steam.
+      stream_data (bytes): data of the steam.
 
     Returns:
-      The storeage metadata (instance of _StorageMetadata).
+      _StorageMetadata: storage metadata.
     """
     config_parser = configparser.RawConfigParser()
     config_parser.readfp(io.BytesIO(stream_data))
@@ -849,6 +926,12 @@ class _StorageMetadataReader(object):
     storage_metadata.serialization_format = self._GetConfigValue(
         config_parser, section_name, u'serialization_format')
 
+    storage_metadata.storage_type = self._GetConfigValue(
+        config_parser, section_name, u'storage_type')
+
+    if not storage_metadata.storage_type:
+      storage_metadata.storage_type = definitions.STORAGE_TYPE_SESSION
+
     return storage_metadata
 
 
@@ -856,21 +939,17 @@ class _StorageMetadataReader(object):
 class ZIPStorageFile(interface.BaseStorage):
   """Class that defines the ZIP-based storage file.
 
-  This class contains the lower-level stream management functionality.
-
-  The ZIP-based storage file contains several streams (files) that contain
-  serialized attribute containers. E.g. event objects:
-
-        event_data.#
-
-  Where # is an increasing integer that starts at 1.
+  Attributes:
+    format_version (int): storage format version.
+    serialization_format (str): serialization format.
+    storage_type (str): storage type.
   """
 
   # TODO: remove after merge of ZIPStorageFile and StorageFile.
   # pylint: disable=abstract-method
 
   # The format version.
-  _FORMAT_VERSION = 20160516
+  _FORMAT_VERSION = 20160525
 
   # The earliest format version, stored in-file, that this class
   # is able to read.
@@ -890,44 +969,60 @@ class ZIPStorageFile(interface.BaseStorage):
   # The maximum serialized report size (24 MiB).
   _MAXIMUM_SERIALIZED_REPORT_SIZE = 24 * 1024 * 1024
 
-  def __init__(self):
-    """Initializes a ZIP-based storage file object."""
+  def __init__(
+      self, maximum_buffer_size=0,
+      storage_type=definitions.STORAGE_TYPE_SESSION):
+    """Initializes a ZIP-based storage file object.
+
+    Args:
+      maximum_buffer_size (Optional[int]):
+          maximum size of a single storage stream. A value of 0 indicates
+          the limit is _MAXIMUM_BUFFER_SIZE.
+      storage_type (Optional[str]): storage type.
+
+    Raises:
+      ValueError: if the maximum buffer size value is out of bounds.
+    """
+    if (maximum_buffer_size < 0 or
+        maximum_buffer_size > self._MAXIMUM_BUFFER_SIZE):
+      raise ValueError(u'Maximum buffer size value out of bounds.')
+
+    if not maximum_buffer_size:
+      maximum_buffer_size = self._MAXIMUM_BUFFER_SIZE
+
     super(ZIPStorageFile, self).__init__()
     self._error_stream_number = 1
+    self._errors_list = _AttributeContainersList()
     self._event_offset_tables = {}
     self._event_offset_tables_lfu = []
     self._event_stream_number = 1
     self._event_streams = {}
-    self._event_source_stream_number = 1
     self._event_source_offset_tables = {}
     self._event_source_offset_tables_lfu = []
+    self._event_source_stream_number = 1
     self._event_source_streams = {}
+    self._event_sources_list = _AttributeContainersList()
     self._event_tag_index = None
     self._event_tag_stream_number = 1
     self._event_timestamp_tables = {}
     self._event_timestamp_tables_lfu = []
     self._event_heap = None
-    self._format_version = self._FORMAT_VERSION
     self._is_open = False
     self._last_session = 0
-    self._maximum_buffer_size = self._MAXIMUM_BUFFER_SIZE
+    self._last_task = 0
+    self._maximum_buffer_size = maximum_buffer_size
     self._read_only = True
-    self._serialized_errors = []
-    self._serialized_errors_size = 0
-    self._serialized_event_sources = []
-    self._serialized_event_sources_size = 0
     self._serialized_event_tags = []
     self._serialized_event_tags_size = 0
-    self._serialized_events = _SerializedEventsHeap()
+    self._serialized_events_heap = _SerializedEventsHeap()
     self._serializer = json_serializer.JSONAttributeContainerSerializer
-    self._serializer_format = definitions.SERIALIZER_FORMAT_JSON
     self._path = None
     self._zipfile = None
+    self._zipfile_path = None
 
-  @property
-  def serialization_format(self):
-    """The serialization format."""
-    return self._serializer_format
+    self.format_version = self._FORMAT_VERSION
+    self.serialization_format = definitions.SERIALIZER_FORMAT_JSON
+    self.storage_type = storage_type
 
   def _BuildTagIndex(self):
     """Builds the tag index that contains the offsets for each tag.
@@ -935,7 +1030,7 @@ class ZIPStorageFile(interface.BaseStorage):
     Raises:
       IOError: if the stream cannot be opened.
     """
-    if self._format_version <= 20160501:
+    if self.format_version <= 20160501:
       stream_name_prefix = u'plaso_tag_index.'
     else:
       stream_name_prefix = u'event_tag_index.'
@@ -955,55 +1050,56 @@ class ZIPStorageFile(interface.BaseStorage):
         self._event_tag_index[tag_index_value.identifier] = tag_index_value
 
   def _GetEventObject(self, stream_number, entry_index=-1):
-    """Reads an event object from a specific stream.
+    """Reads an event from a specific stream.
 
     Args:
-      stream_number: an integer containing the number of the serialized event
-                     object stream.
-      entry_index: an optional integer containing the number of the serialized
-                   event object within the stream. Where -1 represents the next
-                   available event object.
+      stream_number (int): number of the serialized event object stream.
+      entry_index (Optional[int]): number of the serialized event within
+          the stream, where -1 represents the next available event.
 
     Returns:
-      An event object (instance of EventObject) or None.
+      EventObject: event or None.
     """
-    event_object_data, entry_index = self._GetEventObjectSerializedData(
+    event_data, entry_index = self._GetEventObjectSerializedData(
         stream_number, entry_index=entry_index)
-    if not event_object_data:
+    if not event_data:
       return
 
     if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(u'event_object')
+      self._serializers_profiler.StartTiming(u'event')
 
-    event_object = self._serializer.ReadSerialized(event_object_data)
+    event = self._serializer.ReadSerialized(event_data)
 
     if self._serializers_profiler:
-      self._serializers_profiler.StopTiming(u'event_object')
+      self._serializers_profiler.StopTiming(u'event')
 
-    event_object.store_number = stream_number
-    event_object.store_index = entry_index
+    event.store_number = stream_number
+    event.store_index = entry_index
 
-    return event_object
+    return event
 
   def _GetEventObjectSerializedData(self, stream_number, entry_index=-1):
-    """Retrieves specific event object serialized data.
+    """Retrieves specific event serialized data.
 
     By default the first available entry in the specific serialized stream
     is read, however any entry can be read using the index stream.
 
     Args:
-      stream_number: an integer containing the number of the stream.
-      entry_index: an optional integer containing the number of the serialized
-                   event object within the stream. Where -1 represents the next
-                   available event object.
+      stream_number (int): number of the serialized event object stream.
+      entry_index (Optional[int]): number of the serialized event within
+          the stream, where -1 represents the next available event.
 
     Returns:
-      A tuple containing the event object serialized data and the entry index
-      of the event object within the storage file.
+      A tuple containing the event serialized data and the entry index
+      of the event within the storage file.
 
     Raises:
       IOError: if the stream cannot be opened.
+      ValueError: if the entry index is out of bounds.
     """
+    if entry_index < -1:
+      raise ValueError(u'Entry index out of bounds.')
+
     try:
       data_stream = self._GetSerializedEventStream(stream_number)
     except IOError as exception:
@@ -1016,7 +1112,7 @@ class ZIPStorageFile(interface.BaseStorage):
       try:
         offset_table = self._GetSerializedEventOffsetTable(stream_number)
         stream_offset = offset_table.GetOffset(entry_index)
-      except (IOError, IndexError):
+      except (IndexError, IOError):
         logging.error((
             u'Unable to read entry index: {0:d} from serialized data stream: '
             u'{1:d}').format(entry_index, stream_number))
@@ -1024,29 +1120,28 @@ class ZIPStorageFile(interface.BaseStorage):
 
       data_stream.SeekEntryAtOffset(entry_index, stream_offset)
 
-    event_object_entry_index = data_stream.entry_index
+    event_entry_index = data_stream.entry_index
     try:
-      event_object_data = data_stream.ReadEntry()
+      event_data = data_stream.ReadEntry()
     except IOError as exception:
       logging.error((
           u'Unable to read entry from serialized data steam: {0:d} '
           u'with error: {1:s}.').format(stream_number, exception))
       return None, None
 
-    return event_object_data, event_object_entry_index
+    return event_data, event_entry_index
 
   def _GetEventSource(self, stream_number, entry_index=-1):
     """Reads an event source from a specific stream.
 
     Args:
-      stream_number: an integer containing the number of the serialized event
-                     object stream.
-      entry_index: an optional integer containing the number of the serialized
-                   event source within the stream. Where -1 represents the next
-                   available event source.
+      stream_number (int): number of the serialized event source object stream.
+      entry_index (Optional[int]): number of the serialized event source
+          within the stream, where -1 represents the next available event
+          source.
 
     Returns:
-      An event source (instance of EventSource) or None.
+      EventSource: event source or None.
     """
     event_source_data, entry_index = self._GetEventSourceSerializedData(
         stream_number, entry_index=entry_index)
@@ -1070,10 +1165,10 @@ class ZIPStorageFile(interface.BaseStorage):
     is read, however any entry can be read using the index stream.
 
     Args:
-      stream_number: an integer containing the number of the stream.
-      entry_index: an optional integer containing the number of the serialized
-                   event source within the stream. Where -1 represents the next
-                   available event source.
+      stream_number (int): number of the serialized event source object stream.
+      entry_index (Optional[int]): number of the serialized event source
+          within the stream, where -1 represents the next available event
+          source.
 
     Returns:
       A tuple containing the event source serialized data and the entry index
@@ -1081,9 +1176,13 @@ class ZIPStorageFile(interface.BaseStorage):
 
     Raises:
       IOError: if the stream cannot be opened.
+      ValueError: if the entry index is out of bounds.
     """
+    if entry_index < -1:
+      raise ValueError(u'Entry index out of bounds.')
+
     try:
-      data_stream = self._GetSerializedEventStream(stream_number)
+      data_stream = self._GetSerializedEventSourceStream(stream_number)
     except IOError as exception:
       logging.error((
           u'Unable to retrieve serialized data steam: {0:d} '
@@ -1117,9 +1216,9 @@ class ZIPStorageFile(interface.BaseStorage):
     """Retrieves an event tag index value.
 
     Args:
-      store_number: the store number.
-      entry_index: an integer containing the serialized data stream entry index.
-      uuid: the UUID string.
+      store_number (int): store number.
+      entry_index (int): serialized data stream entry index.
+      uuid (str): event identifier formatted as an UUID.
 
     Returns:
       An event tag index value (instance of _EventTagIndexValue).
@@ -1141,10 +1240,10 @@ class ZIPStorageFile(interface.BaseStorage):
     """Retrieves the last stream number.
 
     Args:
-      stream_name_prefix: a string containing the stream name prefix.
+      stream_name_prefix (str): stream name prefix.
 
     Returns:
-      An integer containing the last stream number.
+      int: last stream number.
 
     Raises:
       IOError: if the stream number format is not supported.
@@ -1166,15 +1265,16 @@ class ZIPStorageFile(interface.BaseStorage):
     return last_stream_number + 1
 
   def _InitializeMergeBuffer(self, time_range=None):
-    """Initializes the event objects into the merge buffer.
+    """Initializes the events into the merge buffer.
 
-    This function fills the merge buffer with the first relevant event object
+    This function fills the merge buffer with the first relevant event
     from each stream.
 
     Args:
-      time_range: an optional time range object (instance of TimeRange).
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
     """
-    if self._format_version <= 20160501:
+    if self.format_version <= 20160501:
       stream_name_prefix = u'plaso_timestamps'
     else:
       stream_name_prefix = u'event_timestamps'
@@ -1207,40 +1307,39 @@ class ZIPStorageFile(interface.BaseStorage):
               entry_index = table_index
               break
 
-      event_object = self._GetEventObject(
-          stream_number, entry_index=entry_index)
+      event = self._GetEventObject(stream_number, entry_index=entry_index)
       # Check the lower bound in case no timestamp table was available.
-      while (event_object and time_range and
-             event_object.timestamp < time_range.start_timestamp):
-        event_object = self._GetEventObject(stream_number)
+      while (event and time_range and
+             event.timestamp < time_range.start_timestamp):
+        event = self._GetEventObject(stream_number)
 
-      if event_object:
-        if time_range and event_object.timestamp > time_range.end_timestamp:
+      if event:
+        if time_range and event.timestamp > time_range.end_timestamp:
           continue
 
         self._event_heap.PushEvent(
-            event_object, stream_number, event_object.store_number)
+            event, stream_number, event.store_number)
 
-        reference_timestamp = event_object.timestamp
-        while event_object.timestamp == reference_timestamp:
-          event_object = self._GetEventObject(stream_number)
-          if not event_object:
+        reference_timestamp = event.timestamp
+        while event.timestamp == reference_timestamp:
+          event = self._GetEventObject(stream_number)
+          if not event:
             break
 
           self._event_heap.PushEvent(
-              event_object, stream_number, event_object.store_number)
+              event, stream_number, event.store_number)
 
   def _GetSerializedDataStream(
       self, streams_cache, stream_name_prefix, stream_number):
     """Retrieves the serialized data stream.
 
     Args:
-      streams_cache: a dictionary containing the streams cache.
-      stream_name_prefix: a string containing the stream name prefix.
-      stream_number: an integer containing the number of the stream.
+      streams_cache (dict): streams cache.
+      stream_name_prefix (str): stream name prefix.
+      stream_number (int): number of the stream.
 
     Returns:
-      A serialized data stream object (instance of _SerializedDataStream).
+      _SerializedDataStream: serialized data stream.
 
     Raises:
       IOError: if the stream cannot be opened.
@@ -1252,7 +1351,7 @@ class ZIPStorageFile(interface.BaseStorage):
         raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
       data_stream = _SerializedDataStream(
-          self._zipfile, self._path, stream_name)
+          self._zipfile, self._zipfile_path, stream_name)
       streams_cache[stream_number] = data_stream
 
     return data_stream
@@ -1263,14 +1362,14 @@ class ZIPStorageFile(interface.BaseStorage):
     """Retrieves the serialized data offset table.
 
     Args:
-      offset_tables_cache: a dictionary containing the offset tables cache.
-      offset_tables_lfu: a list containing the the least frequently used (LFU)
-                         offset tables.
-      stream_name_prefix: a string containing the stream name prefix.
-      stream_number: an integer containing the number of the stream.
+      offset_tables_cache (dict): offset tables cache.
+      offset_tables_lfu (list[_SerializedDataOffsetTable]): least frequently
+          used (LFU) offset tables.
+      stream_name_prefix (str): stream name prefix.
+      stream_number (str): number of the stream.
 
     Returns:
-      A serialized data offset table (instance of _SerializedDataOffsetTable).
+      _SerializedDataOffsetTable: serialized data offset table.
 
     Raises:
       IOError: if the stream cannot be opened.
@@ -1303,10 +1402,10 @@ class ZIPStorageFile(interface.BaseStorage):
     """Retrieves the available serialized data stream numbers.
 
     Args:
-      stream_name_prefix: a string containing the stream name prefix.
+      stream_name_prefix (str): stream name prefix.
 
     Returns:
-      A sorted list of integers of the available serialized data stream numbers.
+      list[int]: available serialized data stream numbers sorted numerically.
     """
     stream_numbers = []
     for stream_name in self._zipfile.namelist():
@@ -1328,15 +1427,15 @@ class ZIPStorageFile(interface.BaseStorage):
     """Retrieves the serialized event stream offset table.
 
     Args:
-      stream_number: an integer containing the number of the stream.
+      stream_number (int): number of the stream.
 
     Returns:
-      A serialized data offset table (instance of _SerializedDataOffsetTable).
+      _SerializedDataOffsetTable: serialized data offset table.
 
     Raises:
       IOError: if the stream cannot be opened.
     """
-    if self._format_version <= 20160501:
+    if self.format_version <= 20160501:
       stream_name_prefix = u'plaso_index'
     else:
       stream_name_prefix = u'event_index'
@@ -1349,10 +1448,10 @@ class ZIPStorageFile(interface.BaseStorage):
     """Retrieves the serialized event source stream offset table.
 
     Args:
-      stream_number: an integer containing the number of the stream.
+      stream_number (int): number of the stream.
 
     Returns:
-      A serialized data offset table (instance of _SerializedDataOffsetTable).
+      _SerializedDataOffsetTable: serialized data offset table.
 
     Raises:
       IOError: if the stream cannot be opened.
@@ -1365,10 +1464,10 @@ class ZIPStorageFile(interface.BaseStorage):
     """Retrieves the serialized event source stream.
 
     Args:
-      stream_number: an integer containing the number of the stream.
+      stream_number (int): number of the stream.
 
     Returns:
-      A serialized data stream object (instance of _SerializedDataStream).
+      _SerializedDataStream: serialized data stream.
 
     Raises:
       IOError: if the stream cannot be opened.
@@ -1380,15 +1479,15 @@ class ZIPStorageFile(interface.BaseStorage):
     """Retrieves the serialized event stream.
 
     Args:
-      stream_number: an integer containing the number of the stream.
+      stream_number (int): number of the stream.
 
     Returns:
-      A serialized data stream object (instance of _SerializedDataStream).
+      _SerializedDataStream: serialized data stream.
 
     Raises:
       IOError: if the stream cannot be opened.
     """
-    if self._format_version <= 20160501:
+    if self.format_version <= 20160501:
       stream_name_prefix = u'plaso_proto'
     else:
       stream_name_prefix = u'event_data'
@@ -1400,7 +1499,7 @@ class ZIPStorageFile(interface.BaseStorage):
     """Retrieves the available serialized event source stream numbers.
 
     Returns:
-      A sorted list of integers of the available serialized data stream numbers.
+      list[int]: available serialized data stream numbers sorted numerically.
     """
     return self._GetSerializedDataStreamNumbers(u'event_source_data.')
 
@@ -1408,9 +1507,9 @@ class ZIPStorageFile(interface.BaseStorage):
     """Retrieves the available serialized event stream numbers.
 
     Returns:
-      A sorted list of integers of the available serialized data stream numbers.
+      list[int]: available serialized data stream numbers sorted numerically.
     """
-    if self._format_version <= 20160501:
+    if self.format_version <= 20160501:
       stream_name_prefix = u'plaso_proto.'
     else:
       stream_name_prefix = u'event_data.'
@@ -1421,16 +1520,15 @@ class ZIPStorageFile(interface.BaseStorage):
     """Retrieves the serialized event stream timestamp table.
 
     Args:
-      stream_number: an integer containing the number of the stream.
+      stream_number (int): number of the stream.
 
     Returns:
-      A serialized data timestamp table (instance of
-       _SerializedDataTimestampTable).
+      _SerializedDataTimestampTable: serialized data timestamp table.
 
     Raises:
       IOError: if the stream cannot be opened.
     """
-    if self._format_version <= 20160501:
+    if self.format_version <= 20160501:
       stream_name_prefix = u'plaso_timestamps'
     else:
       stream_name_prefix = u'event_timestamps'
@@ -1461,20 +1559,62 @@ class ZIPStorageFile(interface.BaseStorage):
     """Retrieves the stream names.
 
     Yields:
-      A string containing the stream name.
+      str: stream name.
     """
     if self._zipfile:
       for stream_name in self._zipfile.namelist():
         yield stream_name
 
+  def _GetSortedEvent(self, time_range=None):
+    """Retrieves the events in increasing chronological order.
+
+    Args:
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
+
+    Returns:
+      EventObject: event.
+    """
+    if not self._event_heap:
+      self._InitializeMergeBuffer(time_range=time_range)
+      if not self._event_heap:
+        return
+
+    event, stream_number = self._event_heap.PopEvent()
+    if not event:
+      return
+
+    # Stop as soon as we hit the upper bound.
+    if time_range and event.timestamp > time_range.end_timestamp:
+      return
+
+    next_event = self._GetEventObject(stream_number)
+    if next_event:
+      self._event_heap.PushEvent(
+          next_event, stream_number, event.store_index)
+
+      reference_timestamp = next_event.timestamp
+      while next_event.timestamp == reference_timestamp:
+        next_event = self._GetEventObject(stream_number)
+        if not next_event:
+          break
+
+        self._event_heap.PushEvent(
+            next_event, stream_number, event.store_index)
+
+    event.tag = self._ReadEventTagByIdentifier(
+        event.store_number, event.store_index, event.uuid)
+
+    return event
+
   def _HasStream(self, stream_name):
     """Determines if the ZIP file contains a specific stream.
 
     Args:
-      stream_name: string containing the name of the stream.
+      stream_name (str): name of the stream.
 
     Returns:
-      A boolean indicating if the ZIP file contains the stream.
+      bool: True if the ZIP file contains the stream.
     """
     try:
       file_object = self._zipfile.open(stream_name, 'r')
@@ -1493,19 +1633,19 @@ class ZIPStorageFile(interface.BaseStorage):
       if self._read_only:
         logging.warning(u'Storage file does not contain a metadata stream.')
 
-      stored_serializer_format = self._ReadSerializerStream()
-      if stored_serializer_format:
-        self._format_version = self._LEGACY_FORMAT_VERSION
+      stored_serialization_format = self._ReadSerializerStream()
+      if stored_serialization_format:
+        self.format_version = self._LEGACY_FORMAT_VERSION
 
-        self._serializer_format = stored_serializer_format
+        self.serialization_format = stored_serialization_format
 
-    if self._serializer_format != definitions.SERIALIZER_FORMAT_JSON:
-      raise IOError(u'Unsupported serializer format: {0:s}'.format(
-          self._serializer_format))
+    if self.serialization_format != definitions.SERIALIZER_FORMAT_JSON:
+      raise IOError(u'Unsupported serialization format: {0:s}'.format(
+          self.serialization_format))
 
     self._serializer = json_serializer.JSONAttributeContainerSerializer
 
-    if self._format_version <= 20160501:
+    if self.format_version <= 20160501:
       stream_name_prefix = u'plaso_proto.'
     else:
       stream_name_prefix = u'event_data.'
@@ -1515,7 +1655,7 @@ class ZIPStorageFile(interface.BaseStorage):
     self._event_source_stream_number = self._GetLastStreamNumber(
         u'event_source_data.')
 
-    if self._format_version <= 20160501:
+    if self.format_version <= 20160501:
       stream_name_prefix = u'plaso_tagging.'
     else:
       stream_name_prefix = u'event_tag_data.'
@@ -1532,15 +1672,24 @@ class ZIPStorageFile(interface.BaseStorage):
 
     self._last_session = last_session_completion
 
+    last_task_start = self._GetLastStreamNumber(u'task_start.')
+    last_task_completion = self._GetLastStreamNumber(u'task_completion.')
+
+    # TODO: handle open tasks.
+    if last_task_start != last_task_completion:
+      logging.warning(u'Detected unclosed task.')
+
+    self._last_task = last_task_completion
+
   def _OpenStream(self, stream_name, access_mode='r'):
     """Opens a stream.
 
     Args:
-      stream_name: string containing the name of the stream.
-      access_mode: optional string indicating the access mode.
+      stream_name (str): name of the stream.
+      access_mode (Optional[str]): access mode.
 
     Returns:
-      The stream file-like object (instance of zipfile.ZipExtFile) or None.
+      zipfile.ZipExtFile: stream file-like object or None.
     """
     try:
       return self._zipfile.open(stream_name, mode=access_mode)
@@ -1559,9 +1708,8 @@ class ZIPStorageFile(interface.BaseStorage):
     """Opens the ZIP file.
 
     Args:
-      path: a string containing the path of the ZIP file.
-      read_only: boolean value to indicate if the file should be
-                 opened in read-only mode.
+      path (str): path of the ZIP file.
+      read_only (bool): True if the file should be opened in read-only mode.
 
     Raises:
       IOError: if the ZIP file is already opened or if the ZIP file cannot
@@ -1572,17 +1720,30 @@ class ZIPStorageFile(interface.BaseStorage):
 
     if read_only:
       access_mode = 'r'
+
+      zipfile_path = path
     else:
       access_mode = 'a'
 
+      # Create a temporary directory to prevent multiple ZIP storage
+      # files in the same directory conflicting with eachother.
+      directory_name = os.path.dirname(path)
+      basename = os.path.basename(path)
+      directory_name = tempfile.mkdtemp(dir=directory_name)
+      zipfile_path = os.path.join(directory_name, basename)
+
+      if os.path.exists(path):
+        os.rename(path, zipfile_path)
+
     try:
       self._zipfile = zipfile.ZipFile(
-          path, mode=access_mode, compression=zipfile.ZIP_DEFLATED,
+          zipfile_path, mode=access_mode, compression=zipfile.ZIP_DEFLATED,
           allowZip64=True)
+      self._zipfile_path = zipfile_path
 
     except zipfile.BadZipfile as exception:
       raise IOError(u'Unable to open ZIP file: {0:s} with error: {1:s}'.format(
-          path, exception))
+          zipfile_path, exception))
 
     self._is_open = True
     self._path = path
@@ -1592,12 +1753,11 @@ class ZIPStorageFile(interface.BaseStorage):
     """Reads an attribute container.
 
     Args:
-      container_data: a binary string containing the serialized attribute
-                      container data.
-      container_type: a string containing the attribute container type.
+      container_data (bytes): serialized attribute container data.
+      container_type (str): attribute container type.
 
     Returns:
-      An attribute container (instance of AttributeContainer) or None.
+      AttributeContainer: attribute container or None.
     """
     if not container_data:
       return
@@ -1616,11 +1776,11 @@ class ZIPStorageFile(interface.BaseStorage):
     """Reads an attribute container entry from a data stream.
 
     Args:
-      data_stream: the data stream object (instance of _SerializedDataStream).
-      container_type: a string containing the attribute container type.
+      data_stream (_SerializedDataStream): data stream.
+      container_type (str): attribute container type.
 
     Returns:
-      An attribute container (instance of AttributeContainer) or None.
+      AttributeContainer: attribute container or None.
     """
     entry_data = data_stream.ReadEntry()
     return self._ReadAttributeContainer(entry_data, container_type)
@@ -1629,11 +1789,11 @@ class ZIPStorageFile(interface.BaseStorage):
     """Reads attribute containers from a data stream.
 
     Args:
-      data_stream: the data stream object (instance of _SerializedDataStream).
-      container_type: a string containing the attribute container type.
+      data_stream (_SerializedDataStream): data stream.
+      container_type (str): attribute container type.
 
     Yields:
-      Attribute containers (instances of AttributeContainer).
+      AttributeContainer: attribute container.
     """
     attribute_container = self._ReadAttributeContainerFromStreamEntry(
         data_stream, container_type)
@@ -1648,12 +1808,12 @@ class ZIPStorageFile(interface.BaseStorage):
     """Reads an event tag by identifier.
 
     Args:
-      store_number: the store number.
-      entry_index: an integer containing the serialized data stream entry index.
-      uuid: the UUID string.
+      store_number (int): store number.
+      entry_index (int): serialized data stream entry index.
+      uuid (str): event identifier formatted as an UUID.
 
     Returns:
-      The event tag (instance of EventTag) or None.
+      EventTag: event tag or None.
 
     Raises:
       IOError: if the event tag data stream cannot be opened.
@@ -1663,7 +1823,7 @@ class ZIPStorageFile(interface.BaseStorage):
     if tag_index_value is None:
       return
 
-    if self._format_version <= 20160501:
+    if self.format_version <= 20160501:
       stream_name_prefix = u'plaso_tagging'
     else:
       stream_name_prefix = u'event_tag_data'
@@ -1673,7 +1833,8 @@ class ZIPStorageFile(interface.BaseStorage):
     if not self._HasStream(stream_name):
       raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
-    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
+    data_stream = _SerializedDataStream(
+        self._zipfile, self._zipfile_path, stream_name)
     data_stream.SeekEntryAtOffset(entry_index, tag_index_value.store_index)
 
     return self._ReadAttributeContainerFromStreamEntry(data_stream, u'event')
@@ -1685,7 +1846,7 @@ class ZIPStorageFile(interface.BaseStorage):
     20160501 in favor of the the store metadata stream.
 
     Returns:
-      The stored serializer format.
+      str: stored serializer format.
 
     Raises:
       ValueError: if the serializer format is not supported.
@@ -1694,19 +1855,19 @@ class ZIPStorageFile(interface.BaseStorage):
     if not self._HasStream(stream_name):
       return
 
-    serializer_format = self._ReadStream(stream_name)
-    if serializer_format != definitions.SERIALIZER_FORMAT_JSON:
+    serialization_format = self._ReadStream(stream_name)
+    if serialization_format != definitions.SERIALIZER_FORMAT_JSON:
       raise ValueError(
-          u'Unsupported stored serializer format: {0:s}'.format(
-              serializer_format))
+          u'Unsupported stored serialization format: {0:s}'.format(
+              serialization_format))
 
-    return serializer_format
+    return serialization_format
 
   def _ReadStorageMetadata(self):
     """Reads the storage metadata.
 
     Returns:
-      A boolean value to indicate if the storage metadata was read.
+      bool: True if the storage metadata was read.
 
     Raises:
       IOError: if the format version or the serializer format is not supported.
@@ -1734,12 +1895,16 @@ class ZIPStorageFile(interface.BaseStorage):
 
     serialization_format = storage_metadata.serialization_format
     if serialization_format != definitions.SERIALIZER_FORMAT_JSON:
-      raise IOError(
-          u'Unsupported serialization format: {0:s}'.format(
-              serialization_format))
+      raise IOError(u'Unsupported serialization format: {0:s}'.format(
+          serialization_format))
 
-    self._format_version = storage_metadata.format_version
-    self._serializer_format = serialization_format
+    if storage_metadata.storage_type not in definitions.STORAGE_TYPES:
+      raise IOError(u'Unsupported storage type: {0:s}'.format(
+          storage_metadata.storage_type))
+
+    self.format_version = storage_metadata.format_version
+    self.serialization_format = serialization_format
+    self.storage_type = storage_metadata.storage_type
 
     return True
 
@@ -1747,10 +1912,10 @@ class ZIPStorageFile(interface.BaseStorage):
     """Reads data from a stream.
 
     Args:
-      stream_name: string containing the name of the stream.
+      stream_name (str): name of the stream.
 
     Returns:
-      A byte string containing the data of the stream.
+      bytes: data of the stream.
     """
     file_object = self._OpenStream(stream_name)
     if not file_object:
@@ -1767,11 +1932,10 @@ class ZIPStorageFile(interface.BaseStorage):
     """Writes an attribute container.
 
     Args:
-      attribute_container: an attribute container ((instance of
-                           AttributeContainer).
+      attribute_container (AttributeContainer): attribute container.
 
     Returns:
-      A binary string containing the serialized attribute container.
+      bytes: serialized attribute container.
 
     Raises:
       IOError: if the attribute container cannot be serialized.
@@ -1795,47 +1959,65 @@ class ZIPStorageFile(interface.BaseStorage):
 
     return attribute_container_data
 
-  def _WriteSerializedErrors(self):
-    """Writes the buffered serialized errors to the storage file."""
-    if not self._serialized_errors_size:
-      return
+  def _WriteAttributeContainersHeap(
+      self, attribute_containers_list, stream_name_prefix, stream_number):
+    """Writes the contents of an attribute containers heap.
 
-    stream_name = u'error_index.{0:06d}'.format(self._error_stream_number)
+    Args:
+      attribute_containers_list(_AttributeContainersList): attribute
+          containers list.
+      stream_name_prefix(str): stream name prefix.
+      stream_number(int): stream number.
+    """
+    stream_name = u'{0:s}_index.{1:06d}'.format(
+        stream_name_prefix, stream_number)
     offset_table = _SerializedDataOffsetTable(self._zipfile, stream_name)
 
-    if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(u'write')
+    stream_name = u'{0:s}_data.{1:06d}'.format(
+        stream_name_prefix, stream_number)
 
-    stream_name = u'error_data.{0:06d}'.format(self._error_stream_number)
-    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
+    data_stream = _SerializedDataStream(
+        self._zipfile, self._zipfile_path, stream_name)
     entry_data_offset = data_stream.WriteInitialize()
 
     try:
-      for entry_data in self._serialized_errors:
+      for _ in range(attribute_containers_list.number_of_attribute_containers):
+        entry_data = attribute_containers_list.PopAttributeContainer()
+
         offset_table.AddOffset(entry_data_offset)
+
         entry_data_offset = data_stream.WriteEntry(entry_data)
 
     except:
       data_stream.WriteAbort()
-
-      if self._serializers_profiler:
-        self._serializers_profiler.StopTiming(u'write')
-
       raise
 
     offset_table.Write()
     data_stream.WriteFinalize()
 
+  def _WriteSerializedErrors(self):
+    """Writes the buffered serialized errors."""
+    if not self._errors_list.data_size:
+      return
+
     if self._serializers_profiler:
-      self._serializers_profiler.StopTiming(u'write')
+      self._serializers_profiler.StartTiming(u'write')
+
+    try:
+      self._WriteAttributeContainersHeap(
+          self._errors_list, u'error',
+          self._error_stream_number)
+
+    finally:
+      if self._serializers_profiler:
+        self._serializers_profiler.StopTiming(u'write')
 
     self._error_stream_number += 1
-    self._serialized_errors = []
-    self._serialized_errors_size = 0
+    self._errors_list.Empty()
 
   def _WriteSerializedEvents(self):
-    """Writes the serialized events to the storage file."""
-    if not self._serialized_events.data_size:
+    """Writes the serialized events."""
+    if not self._serialized_events_heap.data_size:
       return
 
     stream_name = u'event_index.{0:06d}'.format(self._event_stream_number)
@@ -1848,12 +2030,13 @@ class ZIPStorageFile(interface.BaseStorage):
       self._serializers_profiler.StartTiming(u'write')
 
     stream_name = u'event_data.{0:06d}'.format(self._event_stream_number)
-    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
+    data_stream = _SerializedDataStream(
+        self._zipfile, self._zipfile_path, stream_name)
     entry_data_offset = data_stream.WriteInitialize()
 
     try:
-      for _ in range(0, self._serialized_events.number_of_events):
-        timestamp, entry_data = self._serialized_events.PopEvent()
+      for _ in range(self._serialized_events_heap.number_of_events):
+        timestamp, entry_data = self._serialized_events_heap.PopEvent()
 
         timestamp_table.AddTimestamp(timestamp)
         offset_table.AddOffset(entry_data_offset)
@@ -1876,57 +2059,34 @@ class ZIPStorageFile(interface.BaseStorage):
       self._serializers_profiler.StopTiming(u'write')
 
     self._event_stream_number += 1
-    self._serialized_events.Empty()
+    self._serialized_events_heap.Empty()
 
   def _WriteSerializedEventSources(self):
-    """Writes the serialized event sources to the storage file."""
-    if not self._serialized_event_sources_size:
+    """Writes the serialized event sources."""
+    if not self._event_sources_list.data_size:
       return
-
-    stream_name = u'event_source_index.{0:06d}'.format(
-        self._event_source_stream_number)
-    offset_table = _SerializedDataOffsetTable(self._zipfile, stream_name)
 
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(u'write')
 
-    stream_name = u'event_source_data.{0:06d}'.format(
-        self._event_source_stream_number)
-    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
-    entry_data_offset = data_stream.WriteInitialize()
-
     try:
-      for _ in range(len(self._serialized_event_sources)):
-        entry_data = heapq.heappop(self._serialized_event_sources)
+      self._WriteAttributeContainersHeap(
+          self._event_sources_list, u'event_source',
+          self._event_source_stream_number)
 
-        offset_table.AddOffset(entry_data_offset)
-
-        entry_data_offset = data_stream.WriteEntry(entry_data)
-
-    except:
-      data_stream.WriteAbort()
-
+    finally:
       if self._serializers_profiler:
         self._serializers_profiler.StopTiming(u'write')
 
-      raise
-
-    offset_table.Write()
-    data_stream.WriteFinalize()
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StopTiming(u'write')
-
     self._event_source_stream_number += 1
-    self._serialized_event_sources_size = 0
-    self._serialized_event_sources = []
+    self._event_sources_list.Empty()
 
   def _WriteSerializedEventTags(self):
-    """Writes the serialized event tags to the storage file."""
+    """Writes the serialized event tags."""
     if not self._serialized_event_tags_size:
       return
 
-    if self._format_version <= 20160501:
+    if self.format_version <= 20160501:
       stream_name_prefix = u'plaso_tag_index'
     else:
       stream_name_prefix = u'event_tag_index'
@@ -1939,14 +2099,15 @@ class ZIPStorageFile(interface.BaseStorage):
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(u'write')
 
-    if self._format_version <= 20160501:
+    if self.format_version <= 20160501:
       stream_name_prefix = u'plaso_tagging'
     else:
       stream_name_prefix = u'event_tag_data'
 
     stream_name = u'{0:s}.{1:06d}'.format(
         stream_name_prefix, self._event_tag_stream_number)
-    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
+    data_stream = _SerializedDataStream(
+        self._zipfile, self._zipfile_path, stream_name)
     entry_data_offset = data_stream.WriteInitialize()
 
     try:
@@ -1983,6 +2144,59 @@ class ZIPStorageFile(interface.BaseStorage):
     self._serialized_event_tags_size = 0
     self._serialized_event_tags = []
 
+  def _WriteSessionCompletion(self, session_completion):
+    """Writes a session completion attribute container.
+
+    Args:
+      session_completion (SessionCompletion): session completion attribute
+          container.
+
+    Raises:
+      IOError: if the storage type does not support writing a session
+               completion or the session completion already exists.
+    """
+    if self.storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Session completion not supported by storage type.')
+
+    stream_name = u'session_completion.{0:06d}'.format(self._last_session)
+    if self._HasStream(stream_name):
+      raise IOError(u'Session completion: {0:06d} already exists.'.format(
+          self._last_session))
+
+    session_completion_data = self._WriteAttributeContainer(session_completion)
+
+    data_stream = _SerializedDataStream(
+        self._zipfile, self._zipfile_path, stream_name)
+    data_stream.WriteInitialize()
+    data_stream.WriteEntry(session_completion_data)
+    data_stream.WriteFinalize()
+
+  def _WriteSessionStart(self, session_start):
+    """Writes a session start attribute container
+
+    Args:
+      session_start (SessionStart): session start attribute container.
+
+    Raises:
+      IOError: if the storage type does not support writing a session
+               start or the session start already exists.
+    """
+    if self.storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Session completion not supported by storage type.')
+
+    stream_name = u'session_start.{0:06d}'.format(self._last_session)
+    if self._HasStream(stream_name):
+      raise IOError(u'Session start: {0:06d} already exists.'.format(
+          self._last_session))
+
+    session_start_data = self._WriteAttributeContainer(session_start)
+
+    data_stream = _SerializedDataStream(
+        self._zipfile, self._zipfile_path, stream_name)
+    data_stream.WriteInitialize()
+    data_stream.WriteEntry(session_start_data)
+    data_stream.WriteFinalize()
+
   def _WriteStorageMetadata(self):
     """Writes the storage metadata."""
     stream_name = u'metadata.txt'
@@ -1993,59 +2207,18 @@ class ZIPStorageFile(interface.BaseStorage):
         b'[plaso_storage_file]\n'
         b'format_version: {0:d}\n'
         b'serialization_format: {1:s}\n'
-        b'\n').format(self._FORMAT_VERSION, self._serializer_format)
+        b'storage_type: {2:s}\n'
+        b'\n').format(
+            self._FORMAT_VERSION, self.serialization_format, self.storage_type)
 
     self._WriteStream(stream_name, stream_data)
-
-  def _WriteSessionCompletion(self, session_completion):
-    """Writes session completion information.
-
-    Args:
-      session_completion: the session completion information (instance of
-                          SessionCompletion).
-
-    Raises:
-      IOError: if the session completion already exists.
-    """
-    stream_name = u'session_completion.{0:06d}'.format(self._last_session)
-    if self._HasStream(stream_name):
-      raise IOError(u'Session completion: {0:06d} already exists.'.format(
-          self._last_session))
-
-    session_completion_data = self._WriteAttributeContainer(session_completion)
-
-    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
-    data_stream.WriteInitialize()
-    data_stream.WriteEntry(session_completion_data)
-    data_stream.WriteFinalize()
-
-  def _WriteSessionStart(self, session_start):
-    """Writes session start information.
-
-    Args:
-      session_start: the session start information (instance of SessionStart).
-
-    Raises:
-      IOError: if the session start already exists.
-    """
-    stream_name = u'session_start.{0:06d}'.format(self._last_session)
-    if self._HasStream(stream_name):
-      raise IOError(u'Session start: {0:06d} already exists.'.format(
-          self._last_session))
-
-    session_start_data = self._WriteAttributeContainer(session_start)
-
-    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
-    data_stream.WriteInitialize()
-    data_stream.WriteEntry(session_start_data)
-    data_stream.WriteFinalize()
 
   def _WriteStream(self, stream_name, stream_data):
     """Writes data to a stream.
 
     Args:
-      stream_name: a string containing the name of the stream.
-      stream_data: a byte string containing the data of the steam.
+      stream_name (str): name of the stream.
+      stream_data (bytes): data of the steam.
     """
     # TODO: this can raise an IOError e.g. "Stale NFS file handle".
     # Determine if this be handled more error resiliently.
@@ -2055,11 +2228,63 @@ class ZIPStorageFile(interface.BaseStorage):
       warnings.simplefilter(u'ignore')
       self._zipfile.writestr(stream_name, stream_data)
 
-  def AddAnalysisReport(self, analysis_report):
-    """Adds an analysis report to the storage.
+  def _WriteTaskCompletion(self, task_completion):
+    """Writes a task completion attribute container.
 
     Args:
-      analysis_report: an analysis report object (instance of AnalysisReport).
+      task_completion (TaskCompletion): task completion attribute container.
+
+    Raises:
+      IOError: if the storage type does not support writing a task
+               completion or the task completion already exists.
+    """
+    if self.storage_type != definitions.STORAGE_TYPE_TASK:
+      raise IOError(u'Task completion not supported by storage type.')
+
+    stream_name = u'task_completion.{0:06d}'.format(self._last_task)
+    if self._HasStream(stream_name):
+      raise IOError(u'Task completion: {0:06d} already exists.'.format(
+          self._last_task))
+
+    task_completion_data = self._WriteAttributeContainer(task_completion)
+
+    data_stream = _SerializedDataStream(
+        self._zipfile, self._zipfile_path, stream_name)
+    data_stream.WriteInitialize()
+    data_stream.WriteEntry(task_completion_data)
+    data_stream.WriteFinalize()
+
+  def _WriteTaskStart(self, task_start):
+    """Writes a task start attribute container.
+
+    Args:
+      task_start (TaskStart): task start attribute container.
+
+    Raises:
+      IOError: if the storage type does not support writing a task start
+               or the task start already exists.
+    """
+    if self.storage_type != definitions.STORAGE_TYPE_TASK:
+      raise IOError(u'Task start not supported by storage type.')
+
+    stream_name = u'task_start.{0:06d}'.format(self._last_task)
+    if self._HasStream(stream_name):
+      raise IOError(u'Task start: {0:06d} already exists.'.format(
+          self._last_task))
+
+    task_start_data = self._WriteAttributeContainer(task_start)
+
+    data_stream = _SerializedDataStream(
+        self._zipfile, self._zipfile_path, stream_name)
+    data_stream.WriteInitialize()
+    data_stream.WriteEntry(task_start_data)
+    data_stream.WriteFinalize()
+
+  def AddAnalysisReport(self, analysis_report):
+    """Adds an analysis report.
+
+    Args:
+      analysis_report (AnalysisReport): analysis report.
 
     Raises:
       IOError: when the storage file is closed or read-only.
@@ -2070,7 +2295,7 @@ class ZIPStorageFile(interface.BaseStorage):
     if self._read_only:
       raise IOError(u'Unable to write to read-only storage file.')
 
-    if self._format_version <= 20160501:
+    if self.format_version <= 20160501:
       stream_name_prefix = u'plaso_report.'
     else:
       stream_name_prefix = u'analysis_report_data.'
@@ -2088,7 +2313,7 @@ class ZIPStorageFile(interface.BaseStorage):
         if number >= report_number:
           report_number = number + 1
 
-    if self._format_version <= 20160501:
+    if self.format_version <= 20160501:
       stream_name_prefix = u'plaso_report'
     else:
       stream_name_prefix = u'analysis_report_data'
@@ -2103,20 +2328,20 @@ class ZIPStorageFile(interface.BaseStorage):
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming(u'analysis_report')
 
-    if self._format_version <= 20160501:
+    if self.format_version <= 20160501:
       self._WriteStream(stream_name, serialized_report)
     else:
       data_stream = _SerializedDataStream(
-          self._zipfile, self._path, stream_name)
+          self._zipfile, self._zipfile_path, stream_name)
       data_stream.WriteInitialize()
       data_stream.WriteEntry(serialized_report)
       data_stream.WriteFinalize()
 
   def AddError(self, error):
-    """Adds an error to the storage.
+    """Adds an error.
 
     Args:
-      error: an error (instance of AnalysisError or ExtractionError).
+      error (ExtractionError): error.
 
     Raises:
       IOError: when the storage file is closed or read-only or
@@ -2128,21 +2353,20 @@ class ZIPStorageFile(interface.BaseStorage):
     # processing if it is invalid.
     error_data = self._WriteAttributeContainer(error)
 
-    self._serialized_errors.append(error_data)
-    self._serialized_errors_size += len(error_data)
+    self._errors_list.PushAttributeContainer(error_data)
 
-    if self._serialized_errors_size > self._max_buffer_size:
+    if self._errors_list.data_size > self._maximum_buffer_size:
       self._WriteSerializedErrors()
 
-  def AddEvent(self, event_object):
-    """Adds an event to the storage.
+  def AddEvent(self, event):
+    """Adds an event.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
 
     Raises:
       IOError: when the storage file is closed or read-only or
-               if the event object cannot be serialized.
+               if the event cannot be serialized.
     """
     if not self._is_open:
       raise IOError(u'Unable to write to closed storage file.')
@@ -2150,21 +2374,20 @@ class ZIPStorageFile(interface.BaseStorage):
     if self._read_only:
       raise IOError(u'Unable to write to read-only storage file.')
 
-    # We try to serialize the event object first, so we can skip some
+    # We try to serialize the event first, so we can skip some
     # processing if it is invalid.
-    event_object_data = self._WriteAttributeContainer(event_object)
+    event_data = self._WriteAttributeContainer(event)
 
-    self._serialized_events.PushEvent(
-        event_object.timestamp, event_object_data)
+    self._serialized_events_heap.PushEvent(event.timestamp, event_data)
 
-    if self._serialized_events.data_size > self._maximum_buffer_size:
+    if self._serialized_events_heap.data_size > self._maximum_buffer_size:
       self._WriteSerializedEvents()
 
   def AddEventSource(self, event_source):
-    """Adds an event source to the storage.
+    """Adds an event source.
 
     Args:
-      event_source: an event source (instance of EventSource).
+      event_source (EventSource): event source.
 
     Raises:
       IOError: when the storage file is closed or read-only or
@@ -2182,17 +2405,16 @@ class ZIPStorageFile(interface.BaseStorage):
     # processing if it is invalid.
     event_source_data = self._WriteAttributeContainer(event_source)
 
-    heapq.heappush(self._serialized_event_sources, event_source_data)
-    self._serialized_event_sources_size += len(event_source_data)
+    self._event_sources_list.PushAttributeContainer(event_source_data)
 
-    if self._serialized_event_sources_size > self._maximum_buffer_size:
+    if self._event_sources_list.data_size > self._maximum_buffer_size:
       self._WriteSerializedEventSources()
 
   def AddEventTag(self, event_tag):
-    """Adds an event tag to the storage.
+    """Adds an event tag.
 
     Args:
-      event_tag: an event tag (instance of EventTag).
+      event_tag (EventTag): event tag.
 
     Raises:
       IOError: when the storage file is closed or read-only or
@@ -2220,10 +2442,10 @@ class ZIPStorageFile(interface.BaseStorage):
       self._WriteSerializedEventSources()
 
   def AddEventTags(self, event_tags):
-    """Adds event tags to the storage.
+    """Adds event tags.
 
     Args:
-      event_tags: a list of event tags (instances of EventTag).
+      event_tag (list[EventTag]): event tags.
 
     Raises:
       IOError: when the storage file is closed or read-only or
@@ -2238,7 +2460,7 @@ class ZIPStorageFile(interface.BaseStorage):
     if self._event_tag_index is None:
       self._BuildTagIndex()
 
-    if self._format_version <= 20160501:
+    if self.format_version <= 20160501:
       stream_name_prefix = u'plaso_tagging'
     else:
       stream_name_prefix = u'event_tag_data'
@@ -2256,7 +2478,7 @@ class ZIPStorageFile(interface.BaseStorage):
           raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
         data_stream = _SerializedDataStream(
-            self._zipfile, self._path, stream_name)
+            self._zipfile, self._zipfile_path, stream_name)
         # TODO: replace 0 by the actual event tag entry index.
         # This is for code consistency rather then a functional purpose.
         data_stream.SeekEntryAtOffset(0, tag_index_value.offset)
@@ -2311,6 +2533,14 @@ class ZIPStorageFile(interface.BaseStorage):
     self._zipfile = None
     self._is_open = False
 
+    if self._path != self._zipfile_path and os.path.exists(self._zipfile_path):
+      os.rename(self._zipfile_path, self._path)
+      directory_name = os.path.dirname(self._zipfile_path)
+      os.rmdir(directory_name)
+
+    self._path = None
+    self._zipfile_path = None
+
   def Flush(self):
     """Forces the serialized attribute containers to be written to file.
 
@@ -2331,12 +2561,12 @@ class ZIPStorageFile(interface.BaseStorage):
     """Retrieves the analysis reports.
 
     Yields:
-      Analysis reports (instances of AnalysisReport).
+      AnalysisReport: analysis report.
 
     Raises:
       IOError: if the stream cannot be opened.
     """
-    if self._format_version <= 20160501:
+    if self.format_version <= 20160501:
       stream_name_prefix = u'plaso_report.'
     else:
       stream_name_prefix = u'analysis_report_data.'
@@ -2345,7 +2575,7 @@ class ZIPStorageFile(interface.BaseStorage):
       if not stream_name.startswith(stream_name_prefix):
         continue
 
-      if self._format_version <= 20160501:
+      if self.format_version <= 20160501:
         file_object = self._OpenStream(stream_name)
         if file_object is None:
           raise IOError(u'Unable to open stream: {0:s}'.format(stream_name))
@@ -2355,45 +2585,98 @@ class ZIPStorageFile(interface.BaseStorage):
 
       else:
         data_stream = _SerializedDataStream(
-            self._zipfile, self._path, stream_name)
+            self._zipfile, self._zipfile_path, stream_name)
 
         for analysis_report in self._ReadAttributeContainersFromStream(
             data_stream, u'analysis_report'):
           yield analysis_report
 
+  def GetErrors(self):
+    """Retrieves the errors.
+
+    Yields:
+      ExtractionError: error.
+
+    Raises:
+      IOError: if a stream is missing.
+    """
+    for stream_number in range(1, self._error_stream_number):
+      stream_name = u'error_data.{0:06}'.format(stream_number)
+      if not self._HasStream(stream_name):
+        raise IOError(u'No such stream: {0:s}'.format(stream_name))
+
+      data_stream = _SerializedDataStream(
+          self._zipfile, self._zipfile_path, stream_name)
+
+      for error in self._ReadAttributeContainersFromStream(
+          data_stream, u'error'):
+        yield error
+
+  def GetEvents(self, time_range=None):
+    """Retrieves the events in increasing chronological order.
+
+    Args:
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
+
+    Yields:
+      EventObject: event.
+    """
+    event = self._GetSortedEvent(time_range=time_range)
+    while event:
+      yield event
+      event = self._GetSortedEvent(time_range=time_range)
+
+  def GetEventSourceByIndex(self, index):
+    """Retrieves a specific event source.
+
+    Args:
+      index (int): event source index.
+
+    Returns:
+      EventSource: event source.
+
+    Raises:
+      IOError: if a stream is missing.
+    """
+    for stream_number in range(1, self._event_source_stream_number):
+      offset_table = self._GetSerializedEventSourceOffsetTable(stream_number)
+      if index >= offset_table.number_of_offsets:
+        index -= offset_table.number_of_offsets
+        continue
+
+      stream_name = u'event_source_data.{0:06}'.format(stream_number)
+      if not self._HasStream(stream_name):
+        raise IOError(u'No such stream: {0:s}'.format(stream_name))
+
+      data_stream = _SerializedDataStream(
+          self._zipfile, self._zipfile_path, stream_name)
+
+      stream_offset = offset_table.GetOffset(index)
+      data_stream.SeekEntryAtOffset(index, stream_offset)
+
+      return self._ReadAttributeContainerFromStreamEntry(
+          data_stream, u'event_source')
+
+    entry_data = self._event_sources_list.GetAttributeContainerByIndex(index)
+    return self._ReadAttributeContainer(entry_data, u'event_source')
+
   def GetEventSources(self):
     """Retrieves the event sources.
 
     Yields:
-      Event sources (instances of EventSource).
-    """
-    stream_name_prefix = u'event_source_data.'
+      EventSource: event source.
 
-    for stream_name in self._GetStreamNames():
-      if not stream_name.startswith(stream_name_prefix):
-        continue
+    Raises:
+      IOError: if a stream is missing.
+    """
+    for stream_number in range(1, self._event_source_stream_number):
+      stream_name = u'event_source_data.{0:06}'.format(stream_number)
+      if not self._HasStream(stream_name):
+        raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
       data_stream = _SerializedDataStream(
-          self._zipfile, self._path, stream_name)
-
-      for event_source in self._ReadAttributeContainersFromStream(
-          data_stream, u'event_source'):
-        yield event_source
-
-  def GetEventSourcesCurrentSession(self):
-    """Retrieves the event sources of the current session.
-
-    Yields:
-      Event sources (instances of EventSource).
-    """
-    stream_name_prefix = u'event_source_data.'
-
-    for stream_name in self._GetStreamNames():
-      if not stream_name.startswith(stream_name_prefix):
-        continue
-
-      data_stream = _SerializedDataStream(
-          self._zipfile, self._path, stream_name)
+          self._zipfile, self._zipfile_path, stream_name)
 
       for event_source in self._ReadAttributeContainersFromStream(
           data_stream, u'event_source'):
@@ -2403,23 +2686,42 @@ class ZIPStorageFile(interface.BaseStorage):
     """Retrieves the event tags.
 
     Yields:
-      Event tags (instances of EventTag).
-    """
-    if self._format_version <= 20160501:
-      stream_name_prefix = u'plaso_tagging.'
-    else:
-      stream_name_prefix = u'event_tag_data.'
+      EventTag: event tag.
 
-    for stream_name in self._GetStreamNames():
-      if not stream_name.startswith(stream_name_prefix):
-        continue
+    Raises:
+      IOError: if a stream is missing.
+    """
+    if self.format_version <= 20160501:
+      stream_name_prefix = u'plaso_tagging'
+    else:
+      stream_name_prefix = u'event_tag_data'
+
+    for stream_number in range(1, self._event_tag_stream_number):
+      stream_name = u'{0:s}.{1:06}'.format(stream_name_prefix, stream_number)
+      if not self._HasStream(stream_name):
+        raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
       data_stream = _SerializedDataStream(
-          self._zipfile, self._path, stream_name)
+          self._zipfile, self._zipfile_path, stream_name)
 
       for event_tag in self._ReadAttributeContainersFromStream(
           data_stream, u'event_tag'):
         yield event_tag
+
+  def GetNumberOfEventSources(self):
+    """Retrieves the number event sources.
+
+    Returns:
+      int: number of event sources.
+    """
+    number_of_event_sources = 0
+    for stream_number in range(1, self._event_source_stream_number):
+      offset_table = self._GetSerializedEventSourceOffsetTable(stream_number)
+      number_of_event_sources += offset_table.number_of_offsets
+
+    number_of_event_sources += (
+        self._event_sources_list.number_of_attribute_containers)
+    return number_of_event_sources
 
   def GetSessions(self):
     """Retrieves the sessions.
@@ -2430,15 +2732,18 @@ class ZIPStorageFile(interface.BaseStorage):
       The session completion value can be None if not available.
 
     Raises:
-      IOError: if a session start stream is missing.
+      IOError: if a stream is missing.
     """
-    for stream_number in range(0, self._last_session):
+    if self.format_version <= 20160501:
+      return
+
+    for stream_number in range(1, self._last_session):
       stream_name = u'session_start.{0:06d}'.format(stream_number)
       if not self._HasStream(stream_name):
         raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
       data_stream = _SerializedDataStream(
-          self._zipfile, self._path, stream_name)
+          self._zipfile, self._zipfile_path, stream_name)
 
       session_start = self._ReadAttributeContainerFromStreamEntry(
           data_stream, u'session_start')
@@ -2447,61 +2752,20 @@ class ZIPStorageFile(interface.BaseStorage):
       stream_name = u'session_completion.{0:06d}'.format(stream_number)
       if self._HasStream(stream_name):
         data_stream = _SerializedDataStream(
-            self._zipfile, self._path, stream_name)
+            self._zipfile, self._zipfile_path, stream_name)
 
         session_completion = self._ReadAttributeContainerFromStreamEntry(
             data_stream, u'session_completion')
 
         yield session_start, session_completion
 
-  def GetSortedEntry(self, time_range=None):
-    """Retrieves a sorted entry.
-
-    Args:
-      time_range: an optional time range object (instance of TimeRange).
-
-    Returns:
-      An event object (instance of EventObject).
-    """
-    if not self._event_heap:
-      self._InitializeMergeBuffer(time_range=time_range)
-      if not self._event_heap:
-        return
-
-    event_object, stream_number = self._event_heap.PopEvent()
-    if not event_object:
-      return
-
-    # Stop as soon as we hit the upper bound.
-    if time_range and event_object.timestamp > time_range.end_timestamp:
-      return
-
-    next_event_object = self._GetEventObject(stream_number)
-    if next_event_object:
-      self._event_heap.PushEvent(
-          next_event_object, stream_number, event_object.store_index)
-
-      reference_timestamp = next_event_object.timestamp
-      while next_event_object.timestamp == reference_timestamp:
-        next_event_object = self._GetEventObject(stream_number)
-        if not next_event_object:
-          break
-
-        self._event_heap.PushEvent(
-            next_event_object, stream_number, event_object.store_index)
-
-    event_object.tag = self._ReadEventTagByIdentifier(
-        event_object.store_number, event_object.store_index, event_object.uuid)
-
-    return event_object
-
   def HasAnalysisReports(self):
     """Determines if a storage contains analysis reports.
 
     Returns:
-      A boolean value indicating if the storage contains analysis reports.
+      bool: True if the storage contains analysis reports.
     """
-    if self._format_version <= 20160501:
+    if self.format_version <= 20160501:
       stream_name_prefix = u'plaso_report.'
     else:
       stream_name_prefix = u'analysis_report_data.'
@@ -2516,9 +2780,9 @@ class ZIPStorageFile(interface.BaseStorage):
     """Determines if a storage contains event tags.
 
     Returns:
-      A boolean value indicating if the storage contains event tags.
+      bool: True if the storage contains event tags.
     """
-    if self._format_version <= 20160501:
+    if self.format_version <= 20160501:
       stream_name_prefix = u'plaso_tagging.'
     else:
       stream_name_prefix = u'event_tag_data.'
@@ -2533,9 +2797,9 @@ class ZIPStorageFile(interface.BaseStorage):
     """Opens the storage file.
 
     Args:
-      path: optional string containing the path of the storage file.
-      read_only: optional boolean value to indicate if the file should be
-                 opened in read-only mode.
+      path (Optional[str]): path of the storage file.
+      read_only (Optional[bool]): True if the file should be opened in
+          read-only mode.
 
     Raises:
       ValueError: if path is missing.
@@ -2553,8 +2817,7 @@ class ZIPStorageFile(interface.BaseStorage):
     """Writes session completion information.
 
     Args:
-      session_completion: the session completion information (instance of
-                          SessionCompletion).
+      session_completion (SessionCompletion): session completion information.
 
     Raises:
       IOError: when the storage file is closed or read-only.
@@ -2565,7 +2828,7 @@ class ZIPStorageFile(interface.BaseStorage):
     if self._read_only:
       raise IOError(u'Unable to write to read-only storage file.')
 
-    if self._format_version < 20160511:
+    if self.format_version < 20160511:
       return
 
     self.Flush()
@@ -2577,7 +2840,7 @@ class ZIPStorageFile(interface.BaseStorage):
     """Writes session start information.
 
     Args:
-      session_start: the session start information (instance of SessionStart).
+      session_start (SessionStart): session start information.
 
     Raises:
       IOError: when the storage file is closed or read-only.
@@ -2588,37 +2851,82 @@ class ZIPStorageFile(interface.BaseStorage):
     if self._read_only:
       raise IOError(u'Unable to write to read-only storage file.')
 
-    if self._format_version < 20160511:
+    if self.format_version < 20160511:
       return
 
     self._WriteSessionStart(session_start)
+
+  def WriteTaskCompletion(self, session_completion):
+    """Writes task completion information.
+
+    Args:
+      session_completion (TaskCompletion): session completion information.
+
+    Raises:
+      IOError: when the storage file is closed or read-only.
+    """
+    if not self._is_open:
+      raise IOError(u'Unable to write to closed storage file.')
+
+    if self._read_only:
+      raise IOError(u'Unable to write to read-only storage file.')
+
+    if self.format_version < 20160525:
+      return
+
+    self.Flush()
+
+    self._WriteTaskCompletion(session_completion)
+
+  def WriteTaskStart(self, session_start):
+    """Writes task start information.
+
+    Args:
+      session_start (TaskStart): session start information.
+
+    Raises:
+      IOError: when the storage file is closed or read-only.
+    """
+    if not self._is_open:
+      raise IOError(u'Unable to write to closed storage file.')
+
+    if self._read_only:
+      raise IOError(u'Unable to write to read-only storage file.')
+
+    if self.format_version < 20160525:
+      return
+
+    self._WriteTaskStart(session_start)
 
 
 # TODO: remove StorageFile.
 class StorageFile(ZIPStorageFile):
   """Class that defines the ZIP-based storage file."""
 
-  def __init__(self, output_file, buffer_size=0, read_only=False):
+  def __init__(
+      self, output_file, buffer_size=0, read_only=False,
+      storage_type=definitions.STORAGE_TYPE_SESSION):
     """Initializes the storage file.
 
     Args:
       output_file: a string containing the name of the output file.
-      buffer_size: optional maximum size of a single storage file.
-                   The default is 0, which indicates the limit is
-                   _MAXIMUM_BUFFER_SIZE.
+      buffer_size: optional integer containing the maximum size of
+                   a single storage stream. A value of 0 indicates
+                   the limit is _MAXIMUM_BUFFER_SIZE.
       read_only: optional boolean to indicate we are opening the storage file
                  for reading only.
+      storage_type: optional string containing the storage type.
 
     Raises:
       IOError: if we open the file in read only mode and the file does
                not exist.
     """
-    super(StorageFile, self).__init__()
-    self._maximum_buffer_size = buffer_size or self._MAXIMUM_BUFFER_SIZE
+    super(StorageFile, self).__init__(
+        maximum_buffer_size=buffer_size, storage_type=storage_type)
     self._preprocess_object_serializer = (
         json_serializer.JSONPreprocessObjectSerializer)
 
-    self.Open(output_file, read_only=read_only)
+    self.Open(path=output_file, read_only=read_only)
 
   def _ReadPreprocessObject(self, data_stream):
     """Reads a preprocessing object.
@@ -2653,14 +2961,15 @@ class StorageFile(ZIPStorageFile):
     """Retrieves storage (preprocessing) information stored in the storage file.
 
     Returns:
-      A list of preprocessing objects (instances of PreprocessingObject)
+      A list of preprocessing objects (instances of PreprocessObject)
       that contain the storage information.
     """
     stream_name = u'information.dump'
     if not self._HasStream(stream_name):
       return []
 
-    data_stream = _SerializedDataStream(self._zipfile, self._path, stream_name)
+    data_stream = _SerializedDataStream(
+        self._zipfile, self._zipfile_path, stream_name)
 
     information = []
     preprocess_object = self._ReadPreprocessObject(data_stream)
@@ -2671,7 +2980,7 @@ class StorageFile(ZIPStorageFile):
     return information
 
   def WritePreprocessObject(self, preprocess_object):
-    """Writes a preprocess object to the storage file.
+    """Writes a preprocess object.
 
     Args:
       preprocess_object: the preprocess object (instance of PreprocessObject).
@@ -2714,95 +3023,110 @@ class StorageFile(ZIPStorageFile):
 class ZIPStorageFileReader(interface.StorageReader):
   """Class that implements the ZIP-based storage file reader."""
 
-  def __init__(self, zip_storage_file):
+  def __init__(self, input_file):
     """Initializes a storage reader object.
 
     Args:
-      zip_storage_file: a ZIP-based storage file (instance of ZIPStorageFile).
+      input_file: a string containing the path to the output file.
     """
     super(ZIPStorageFileReader, self).__init__()
-    self._zip_storage_file = zip_storage_file
+    self._storage_file = ZIPStorageFile()
+    self._storage_file.Open(path=input_file)
 
-  def __exit__(self, unused_type, unused_value, unused_traceback):
-    """Make usable with "with" statement."""
-    self._zip_storage_file.Close()
+  def Close(self):
+    """Closes the storage reader."""
+    if self._storage_file:
+      self._storage_file.Close()
+      self._storage_file = None
+
+  def GetAnalysisReports(self):
+    """Retrieves the analysis reports.
+
+    Returns:
+      A generator of analysis report objects (instances of AnalysisReport).
+    """
+    return self._storage_file.GetAnalysisReports()
+
+  def GetErrors(self):
+    """Retrieves the errors.
+
+    Returns:
+      A generator of error objects (instances of AnalysisError or
+      ExtractionError).
+    """
+    return self._storage_file.GetErrors()
 
   def GetEvents(self, time_range=None):
-    """Retrieves events.
+    """Retrieves the events in increasing chronological order.
 
     Args:
-      time_range: an optional time range object (instance of TimeRange).
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
 
-    Yields:
-      Event objects (instances of EventObject).
+    Returns:
+      EventObject: event.
     """
-    event_object = self._zip_storage_file.GetSortedEntry(
-        time_range=time_range)
-
-    while event_object:
-      yield event_object
-      event_object = self._zip_storage_file.GetSortedEntry(
-          time_range=time_range)
+    return self._storage_file.GetEvents(time_range=time_range)
 
   def GetEventSources(self):
-    """Retrieves event sources.
+    """Retrieves the event sources.
 
     Returns:
       A generator of event source objects (instances of EventSourceObject).
     """
-    return self._zip_storage_file.GetEventSources()
+    return self._storage_file.GetEventSources()
+
+  def GetEventTags(self):
+    """Retrieves the event tags.
+
+    Returns:
+      A generator of event tag objects (instances of EventTagObject).
+    """
+    return self._storage_file.GetEventTags()
 
 
 class ZIPStorageFileWriter(interface.StorageWriter):
-  """Class that implements the ZIP-based storage file writer.
+  """Class that implements the ZIP-based storage file writer."""
 
-  Attributes:
-    reports_counter: a counter containing the number of reports (instance of
-                     collections.Counter).
-  """
-
-  def __init__(self, output_file, buffer_size=0):
+  def __init__(
+      self, session, output_file, buffer_size=0,
+      storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
     """Initializes a storage writer object.
 
     Args:
-      output_file: a string containing the path to the output file.
-      buffer_size: optional integer containing the estimated size of
-                   a protobuf file.
+      session (Session): session the storage changes are part of.
+      output_file (str): path to the output file.
+      buffer_size (Optional[int]): estimated size of a protobuf file.
+      storage_type (Optional[str]): storage type.
+      task(Optional[Task]): task.
     """
-    super(ZIPStorageFileWriter, self).__init__()
+    super(ZIPStorageFileWriter, self).__init__(
+        session, storage_type=storage_type, task=task)
     self._buffer_size = buffer_size
     self._event_tags = []
+    self._merge_task_storage_path = u''
     self._output_file = output_file
-    # Counter containing the number of events per parser.
-    self._parsers_counter = collections.Counter()
-    # Counter containing the number of events per parser plugin.
-    self._parser_plugins_counter = collections.Counter()
-    self._session_identifier = None
     self._storage_file = None
-    # Counter containing the number of tags per label.
-    self._tags_counter = collections.Counter()
+    self._task_storage_path = None
 
-    # Counter containing the number of reports.
-    self.reports_counter = collections.Counter()
-
-  def _UpdateCounters(self, event_object):
+  def _UpdateCounters(self, event):
     """Updates the counters.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event: an event (instance of EventObject).
     """
-    self._parsers_counter[u'total'] += 1
+    self._session.parsers_counter[u'total'] += 1
 
-    parser_name = getattr(event_object, u'parser', u'N/A')
-    self._parsers_counter[parser_name] += 1
+    parser_name = getattr(event, u'parser', u'N/A')
+    self._session.parsers_counter[parser_name] += 1
 
     # TODO: remove plugin, add parser chain.
-    if hasattr(event_object, u'plugin'):
-      plugin_name = getattr(event_object, u'plugin', u'N/A')
-      self._parser_plugins_counter[plugin_name] += 1
+    if hasattr(event, u'plugin'):
+      plugin_name = getattr(event, u'plugin', u'N/A')
+      self._session.parser_plugins_counter[plugin_name] += 1
 
   def AddAnalysisReport(self, analysis_report):
-    """Adds an analysis report to the storage.
+    """Adds an analysis report.
 
     Args:
       analysis_report: an analysis report object (instance of AnalysisReport).
@@ -2820,11 +3144,11 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     report_identifier = u'Report: {0:s}'.format(analysis_report.plugin_name)
 
-    self.reports_counter[u'Total Reports'] += 1
-    self.reports_counter[report_identifier] += 1
+    self._session.analysis_reports_counter[u'Total Reports'] += 1
+    self._session.analysis_reports_counter[report_identifier] += 1
 
   def AddError(self, error):
-    """Adds an error to the storage.
+    """Adds an error.
 
     Args:
       error: an error object (instance of AnalysisError or ExtractionError).
@@ -2838,11 +3162,11 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self._storage_file.AddError(error)
     self.number_of_errors += 1
 
-  def AddEvent(self, event_object):
-    """Adds an event to the storage.
+  def AddEvent(self, event):
+    """Adds an event.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event: an event (instance of EventObject).
 
     Raises:
       IOError: when the storage writer is closed.
@@ -2850,13 +3174,13 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     if not self._storage_file:
       raise IOError(u'Unable to write to closed storage writer.')
 
-    self._storage_file.AddEvent(event_object)
+    self._storage_file.AddEvent(event)
     self.number_of_events += 1
 
-    self._UpdateCounters(event_object)
+    self._UpdateCounters(event)
 
   def AddEventSource(self, event_source):
-    """Adds an event source to the storage.
+    """Adds an event source.
 
     Args:
       event_source: an event source object (instance of EventSource).
@@ -2871,7 +3195,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self.number_of_event_sources += 1
 
   def AddEventTag(self, event_tag):
-    """Adds an event tag to the storage.
+    """Adds an event tag.
 
     Args:
       event_tag: an event tag object (instance of EventTag).
@@ -2884,9 +3208,33 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     self._event_tags.append(event_tag)
 
-    self._tags_counter[u'Total Tags'] += 1
+    self._session.event_tags_counter[u'Total Tags'] += 1
     for label in event_tag.labels:
-      self._tags_counter[label] += 1
+      self._session.event_tags_counter[label] += 1
+
+  def CheckTaskStorageReadyForMerge(self, task_name):
+    """Checks if a task storage is ready for with the session storage.
+
+    Args:
+      task_name (str): unique name of the task.
+
+    Returns:
+      bool: True if the storage for the task is ready for merge.
+
+    Raises:
+      IOError: if the storage type is not supported or
+               if the temporary path for the task storage does not exist.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
+    if not self._merge_task_storage_path:
+      raise IOError(u'Missing merge task storage path.')
+
+    storage_file_path = os.path.join(
+        self._merge_task_storage_path, u'{0:s}.plaso'.format(task_name))
+
+    return os.path.isfile(storage_file_path)
 
   def Close(self):
     """Closes the storage writer.
@@ -2900,44 +3248,86 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self._storage_file.Close()
     self._storage_file = None
 
-  # TODO: remove during phased processing refactor.
-  def ForceClose(self):
-    """Forces the storage writer to close.
+  def CreateTaskStorage(self, task):
+    """Creates a task storage.
 
-    Raises:
-      IOError: when the storage writer is closed.
-    """
-    if not self._storage_file:
-      raise IOError(u'Unable to write to closed storage writer.')
+    The task storage is used to store attributes created by the task.
 
-    self._storage_file.Close()
-    self._storage_file = None
-
-  # TODO: remove during phased processing refactor.
-  def ForceFlush(self):
-    """Forces the storage writer to flush.
-
-    Raises:
-      IOError: when the storage writer is closed.
-    """
-    if not self._storage_file:
-      raise IOError(u'Unable to write to closed storage writer.')
-
-    self._storage_file.Flush()
-
-  def GetEventSources(self):
-    """Retrieves the event sources.
+    Args:
+      task(Task): task.
 
     Returns:
-      A generator of event source objects (instances of EventSourceObject).
+      StorageWriter: storage writer.
+
+    Raises:
+      IOError: if the storage type is not supported or
+               if the temporary path for the task storage does not exist.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
+    if not self._task_storage_path:
+      raise IOError(u'Missing task storage path.')
+
+    storage_file_path = os.path.join(
+        self._task_storage_path, u'{0:s}.plaso'.format(task.identifier))
+
+    return ZIPStorageFileWriter(
+        self._session, storage_file_path, buffer_size=self._buffer_size,
+        storage_type=definitions.STORAGE_TYPE_TASK, task=task)
+
+  def GetNextEventSource(self):
+    """Retrieves the next event source.
+
+    Returns:
+      EventSource: event source.
 
     Raises:
       IOError: when the storage writer is closed.
     """
     if not self._storage_file:
-      raise IOError(u'Unable to write to closed storage writer.')
+      raise IOError(u'Unable to read from closed storage writer.')
 
-    return self._storage_file.GetEventSourcesCurrentSession()
+    event_source = self._storage_file.GetEventSourceByIndex(
+        self._event_source_index)
+    if event_source:
+      self._event_source_index += 1
+    return event_source
+
+  def MergeTaskStorage(self, task_name):
+    """Merges a task storage with the session storage.
+
+    Args:
+      task_name (str): unique name of the task.
+
+    Returns:
+      bool: True if the task storage was merged.
+
+    Raises:
+      IOError: if the storage type is not supported or
+               if the temporary path for the task storage does not exist.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
+    if not self._merge_task_storage_path:
+      raise IOError(u'Missing merge task storage path.')
+
+    storage_file_path = os.path.join(
+        self._merge_task_storage_path, u'{0:s}.plaso'.format(task_name))
+
+    if not os.path.isfile(storage_file_path):
+      return False
+
+    storage_reader = ZIPStorageFileReader(storage_file_path)
+    self.MergeFromStorage(storage_reader)
+
+    # Force close the storage reader so we can remove the file.
+    storage_reader.Close()
+
+    os.remove(storage_file_path)
+
+    return True
 
   def Open(self):
     """Opens the storage writer.
@@ -2949,10 +3339,93 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       raise IOError(u'Storage writer already opened.')
 
     self._storage_file = StorageFile(
-        self._output_file, buffer_size=self._buffer_size)
+        self._output_file, buffer_size=self._buffer_size,
+        storage_type=self._storage_type)
 
-    if self._enable_profiling:
-      self._storage_file.EnableProfiling(profiling_type=self._profiling_type)
+    self._event_source_index = self._storage_file.GetNumberOfEventSources()
+
+  def PrepareMergeTaskStorage(self, task_name):
+    """Prepares a task storage for merging.
+
+    Args:
+      task_name (str): unique name of the task.
+
+    Raises:
+      IOError: if the storage type is not supported or
+               if the temporary path for the task storage does not exist.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
+    if not self._task_storage_path:
+      raise IOError(u'Missing task storage path.')
+
+    storage_file_path = os.path.join(
+        self._task_storage_path, u'{0:s}.plaso'.format(task_name))
+
+    merge_storage_file_path = os.path.join(
+        self._merge_task_storage_path, u'{0:s}.plaso'.format(task_name))
+
+    os.rename(storage_file_path, merge_storage_file_path)
+
+  def SetSerializersProfiler(self, serializers_profiler):
+    """Sets the serializers profiler.
+
+    Args:
+      serializers_profiler (SerializersProfiler): serializers profile.
+    """
+    self._storage_file.SetSerializersProfiler(serializers_profiler)
+
+  def StartTaskStorage(self):
+    """Creates a temporary path for the task storage.
+
+    Raises:
+      IOError: if the storage type is not supported or
+               if the temporary path for the task storage already exists.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
+    if self._task_storage_path:
+      raise IOError(u'Task storage path already exists.')
+
+    output_directory = os.path.dirname(self._output_file)
+    self._task_storage_path = tempfile.mkdtemp(dir=output_directory)
+
+    self._merge_task_storage_path = os.path.join(
+        self._task_storage_path, u'merge')
+    os.mkdir(self._merge_task_storage_path)
+
+  def StopTaskStorage(self, abort=False):
+    """Removes the temporary path for the task storage.
+
+    Args:
+      abort (bool): True to indicated the stop is issued on abort.
+
+    Raises:
+      IOError: if the storage type is not supported or
+               if the temporary path for the task storage does not exist.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
+    if not self._task_storage_path:
+      raise IOError(u'Missing task storage path.')
+
+    if os.path.isdir(self._merge_task_storage_path):
+      if abort:
+        shutil.rmtree(self._merge_task_storage_path)
+      else:
+        os.rmdir(self._merge_task_storage_path)
+
+    if os.path.isdir(self._task_storage_path):
+      if abort:
+        shutil.rmtree(self._task_storage_path)
+      else:
+        os.rmdir(self._task_storage_path)
+
+    self._merge_task_storage_path = None
+    self._task_storage_path = None
 
   # TODO: remove during phased processing refactor.
   def WritePreprocessObject(self, preprocess_object):
@@ -2983,28 +3456,62 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     """Writes session completion information.
 
     Raises:
-      IOError: when the storage writer is closed.
+      IOError: if the storage type is not supported or
+               when the storage writer is closed.
     """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
     if not self._storage_file:
       raise IOError(u'Unable to write to closed storage writer.')
 
-    session_completion = sessions.SessionCompletion(self._session_identifier)
-    session_completion.parsers_counter = self._parsers_counter
-    session_completion.parser_plugins_counter = self._parser_plugins_counter
-
+    session_completion = self._session.CreateSessionCompletion()
     self._storage_file.WriteSessionCompletion(session_completion)
 
-  def WriteSessionStart(self, session_start):
+  def WriteSessionStart(self):
     """Writes session start information.
 
-    Args:
-      session_start: the session start information (instance of SessionStart).
-
     Raises:
-      IOError: when the storage writer is closed.
+      IOError: if the storage type is not supported or
+               when the storage writer is closed.
     """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
     if not self._storage_file:
       raise IOError(u'Unable to write to closed storage writer.')
 
+    session_start = self._session.CreateSessionStart()
     self._storage_file.WriteSessionStart(session_start)
-    self._session_identifier = session_start.identifier
+
+  def WriteTaskCompletion(self):
+    """Writes task completion information.
+
+    Raises:
+      IOError: if the storage type is not supported or
+               when the storage writer is closed.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_TASK:
+      raise IOError(u'Unsupported storage type.')
+
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    task_completion = self._task.CreateTaskCompletion()
+    self._storage_file.WriteTaskCompletion(task_completion)
+
+  def WriteTaskStart(self):
+    """Writes task start information.
+
+    Raises:
+      IOError: if the storage type is not supported or
+               when the storage writer is closed.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_TASK:
+      raise IOError(u'Unsupported storage type.')
+
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    task_start = self._task.CreateTaskStart()
+    self._storage_file.WriteTaskStart(task_start)

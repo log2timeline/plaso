@@ -161,8 +161,9 @@ class CLITableView(BaseTableView):
     if self._title and len(self._title) > self._MAXIMUM_WIDTH:
       raise RuntimeError(u'Title length out of bounds.')
 
-    if self._number_of_columns != 2:
-      raise RuntimeError(u'Unsupported number of columns.')
+    if self._number_of_columns not in (0, 2):
+      raise RuntimeError(u'Unsupported number of columns: {0:d}.'.format(
+          self._number_of_columns))
 
     if self._column_width < 0 or self._column_width >= self._MAXIMUM_WIDTH:
       raise RuntimeError(u'Column width out of bounds.')

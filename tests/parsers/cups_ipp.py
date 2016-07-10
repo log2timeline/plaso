@@ -17,15 +17,13 @@ class CupsIppParserTest(test_lib.ParserTestCase):
 
   def testParse(self):
     """Tests the Parse function."""
-    parser_object = cups_ipp.CupsIppParser()
-
     # TODO: only tested against Mac OS X Cups IPP (Version 2.0)
-    test_file = self._GetTestFilePath([u'mac_cups_ipp'])
-    events = self._ParseFile(parser_object, test_file)
-    event_objects = self._GetEventObjectsFromQueue(events)
+    parser_object = cups_ipp.CupsIppParser()
+    storage_writer = self._ParseFile(
+        [u'mac_cups_ipp'], parser_object)
 
-    self.assertEqual(len(event_objects), 3)
-    event_object = event_objects[0]
+    self.assertEqual(len(storage_writer.events), 3)
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-03 18:07:21')
@@ -57,7 +55,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         u'Job Name: Assignament 1')
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-03 18:07:21')
@@ -67,7 +65,7 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         event_object.timestamp_desc,
         eventdata.EventTimestamp.START_TIME)
 
-    event_object = event_objects[2]
+    event_object = storage_writer.events[2]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-03 18:07:32')

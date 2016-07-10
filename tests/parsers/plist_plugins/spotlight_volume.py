@@ -6,7 +6,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import plist as plist_formatter
-from plaso.parsers import plist
 from plaso.parsers.plist_plugins import spotlight_volume
 
 from tests.parsers.plist_plugins import test_lib
@@ -15,37 +14,37 @@ from tests.parsers.plist_plugins import test_lib
 class SpotlightVolumePluginTest(test_lib.PlistPluginTestCase):
   """Tests for the Spotlight Volume configuration plist plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = spotlight_volume.SpotlightVolumePlugin()
-    self._parser = plist.PlistParser()
-
   def testProcess(self):
     """Tests the Process function."""
     plist_name = u'VolumeConfiguration.plist'
-    event_queue_consumer = self._ParsePlistFileWithPlugin(
-        self._parser, self._plugin, [plist_name], plist_name)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 2)
+    plugin_object = spotlight_volume.SpotlightVolumePlugin()
+    storage_writer = self._ParsePlistFileWithPlugin(
+        plugin_object, [plist_name], plist_name)
 
-    timestamps = []
-    for event_object in event_objects:
-      timestamps.append(event_object.timestamp)
-    expected_timestamps = frozenset([
+    self.assertEqual(len(storage_writer.events), 2)
+
+    timestamps = sorted([
+        event_object.timestamp for event_object in storage_writer.events])
+    expected_timestamps = sorted([
         1372139683000000, 1369657656000000])
-    self.assertTrue(set(timestamps) == expected_timestamps)
 
-    event_object = event_objects[1]
+    self.assertEqual(timestamps, expected_timestamps)
+
+    event_object = storage_writer.events[0]
+
     self.assertEqual(event_object.key, u'')
     self.assertEqual(event_object.root, u'/Stores')
-    expected_desc = (u'Spotlight Volume 4D4BFEB5-7FE6-4033-AAAA-'
-                     u'AAAABBBBCCCCDDDD (/.MobileBackups) activated.')
-    self.assertEqual(event_object.desc, expected_desc)
-    expected_string = u'/Stores/ {0:s}'.format(expected_desc)
-    expected_short = expected_string[:77] + u'...'
+
+    expected_description = (
+        u'Spotlight Volume 4D4BFEB5-7FE6-4033-AAAA-AAAABBBBCCCCDDDD '
+        u'(/.MobileBackups) activated.')
+    self.assertEqual(event_object.desc, expected_description)
+
+    expected_message = u'/Stores/ {0:s}'.format(expected_description)
+    expected_message_short = u'{0:s}...'.format(expected_message[:77])
     self._TestGetMessageStrings(
-        event_object, expected_string, expected_short)
+        event_object, expected_message, expected_message_short)
 
 
 if __name__ == '__main__':

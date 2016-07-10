@@ -16,19 +16,14 @@ from tests.parsers.sqlite_plugins import test_lib
 class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Google Drive database plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = gdrive.GoogleDrivePlugin()
-
   def testProcess(self):
     """Tests the Process function on a Google Drive database file."""
-    test_file = self._GetTestFilePath([u'snapshot.db'])
+    plugin_object = gdrive.GoogleDrivePlugin()
     cache = sqlite.SQLiteCache()
-    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
-        self._plugin, test_file, cache=cache)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'snapshot.db'], plugin_object, cache=cache)
 
-    self.assertEqual(len(event_objects), 30)
+    self.assertEqual(len(storage_writer.events), 30)
 
     # Let's verify that we've got the correct balance of cloud and local
     # entry events.
@@ -37,7 +32,7 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
     #     10 Local Entries (one timestamp per entry).
     local_entries = []
     cloud_entries = []
-    for event_object in event_objects:
+    for event_object in storage_writer.events:
       if event_object.data_type == u'gdrive:snapshot:local_entry':
         local_entries.append(event_object)
       else:

@@ -14,10 +14,6 @@ from tests.parsers.winreg_plugins import test_lib
 class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Task Cache key Windows Registry plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = task_scheduler.TaskCachePlugin()
-
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntryFromPath([u'SOFTWARE-RunTests'])
@@ -27,17 +23,18 @@ class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, file_entry=test_file_entry)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 174)
+    plugin_object = task_scheduler.TaskCachePlugin()
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry)
 
-    event_object = event_objects[0]
+    self.assertEqual(len(storage_writer.events), 174)
+
+    event_object = storage_writer.events[0]
 
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, plugin_object.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-14 04:53:25.811618')
@@ -54,7 +51,7 @@ class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
 
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-14 05:08:50.811626')

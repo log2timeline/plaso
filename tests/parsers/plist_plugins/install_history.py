@@ -6,7 +6,6 @@ import unittest
 
 # pylint: disable=unused-import
 from plaso.formatters import plist as plist_formatter
-from plaso.parsers import plist
 from plaso.parsers.plist_plugins import install_history
 
 from tests.parsers.plist_plugins import test_lib
@@ -15,32 +14,29 @@ from tests.parsers.plist_plugins import test_lib
 class InstallHistoryPluginTest(test_lib.PlistPluginTestCase):
   """Tests for the install history plist plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = install_history.InstallHistoryPlugin()
-    self._parser = plist.PlistParser()
-
   def testProcess(self):
     """Tests the Process function."""
     plist_name = u'InstallHistory.plist'
-    event_queue_consumer = self._ParsePlistFileWithPlugin(
-        self._parser, self._plugin, [plist_name], plist_name)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
 
-    self.assertEqual(len(event_objects), 7)
+    plugin_object = install_history.InstallHistoryPlugin()
+    storage_writer = self._ParsePlistFileWithPlugin(
+        plugin_object, [plist_name], plist_name)
 
-    timestamps = []
-    for event_object in event_objects:
-      timestamps.append(event_object.timestamp)
-    expected_timestamps = frozenset([
+    self.assertEqual(len(storage_writer.events), 7)
+
+    expected_timestamps = sorted([
         1384225175000000, 1388205491000000, 1388232883000000, 1388232883000000,
         1388232883000000, 1388232883000000, 1390941528000000])
-    self.assertTrue(set(timestamps) == expected_timestamps)
+    timestamps = sorted([
+        event_object.timestamp for event_object in storage_writer.events])
 
-    event_object = event_objects[0]
+    self.assertEqual(timestamps, expected_timestamps)
+
+    event_object = storage_writer.events[0]
     self.assertEqual(event_object.key, u'')
     self.assertEqual(event_object.root, u'/item')
-    expected_desc = (
+
+    expected_description = (
         u'Installation of [OS X 10.9 (13A603)] using [OS X Installer]. '
         u'Packages: com.apple.pkg.BaseSystemBinaries, '
         u'com.apple.pkg.BaseSystemResources, '
@@ -51,11 +47,12 @@ class InstallHistoryPluginTest(test_lib.PlistPluginTestCase):
         u'com.apple.pkg.JavaEssentials, com.apple.pkg.OxfordDictionaries, '
         u'com.apple.pkg.X11redirect, com.apple.pkg.OSInstall, '
         u'com.apple.pkg.update.compatibility.2013.001.')
-    self.assertEqual(event_object.desc, expected_desc)
-    expected_string = u'/item/ {0:s}'.format(expected_desc)
-    expected_short = expected_string[:77] + u'...'
+    self.assertEqual(event_object.desc, expected_description)
+
+    expected_message = u'/item/ {0:s}'.format(expected_description)
+    expected_message_short = u'{0:s}...'.format(expected_message[:77])
     self._TestGetMessageStrings(
-        event_object, expected_string, expected_short)
+        event_object, expected_message, expected_message_short)
 
 
 if __name__ == '__main__':

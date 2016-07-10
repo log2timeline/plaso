@@ -15,21 +15,16 @@ from tests.parsers.sqlite_plugins import test_lib
 class MacKeeperCachePluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the MacKeeper Cache database plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = mackeeper_cache.MacKeeperCachePlugin()
-
   def testProcess(self):
     """Tests the Process function on a MacKeeper Cache database file."""
-    test_file = self._GetTestFilePath([u'mackeeper_cache.db'])
-    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
-        self._plugin, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = mackeeper_cache.MacKeeperCachePlugin()
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'mackeeper_cache.db'], plugin_object)
 
     # The cache file contains 198 entries.
-    self.assertEqual(len(event_objects), 198)
+    self.assertEqual(len(storage_writer.events), 198)
 
-    event_object = event_objects[41]
+    event_object = storage_writer.events[41]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-12 19:30:31')

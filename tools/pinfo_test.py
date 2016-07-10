@@ -43,7 +43,7 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
 
   def testPrintStorageInformation(self):
     """Tests the PrintStorageInformation function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
 
     options = cli_test_lib.TestOptions()
     options.storage_file = test_file
@@ -52,139 +52,40 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
 
     self._test_tool.PrintStorageInformation()
 
-    expected_parsers = u', '.join(sorted([
-        u'android_app_usage',
-        u'asl_log',
-        u'bencode',
-        u'binary_cookies',
-        u'bsm_log',
-        u'chrome_cache',
-        u'chrome_preferences',
-        u'cups_ipp',
-        u'custom_destinations',
-        u'dockerjson',
-        u'esedb',
-        u'filestat',
-        u'firefox_cache',
-        u'firefox_cache2',
-        u'hachoir',
-        u'java_idx',
-        u'lnk',
-        u'mac_appfirewall_log',
-        u'mac_keychain',
-        u'mac_securityd',
-        u'mactime',
-        u'macwifi',
-        u'mcafee_protection',
-        u'mft',
-        u'msiecf',
-        u'olecf',
-        u'openxml',
-        u'opera_global',
-        u'opera_typed_history',
-        u'pe',
-        u'plist',
-        u'pls_recall',
-        u'popularity_contest',
-        u'prefetch',
-        u'recycle_bin',
-        u'recycle_bin_info2',
-        u'rplog',
-        u'sccm',
-        u'selinux',
-        u'skydrive_log',
-        u'skydrive_log_old',
-        u'sqlite',
-        u'symantec_scanlog',
-        u'syslog',
-        u'usnjrnl',
-        u'utmp',
-        u'utmpx',
-        u'winevt',
-        u'winevtx',
-        u'winfirewall',
-        u'winiis',
-        u'winjob',
-        u'winreg',
-        u'xchatlog',
-        u'xchatscrollback']))
-
     expected_output = (
+        b'\n'
+        b'************************** Plaso Storage Information ****************'
+        b'***********\n'
+        b'            Filename : pinfo_test.json.plaso\n'
+        b'      Format version : 20160525\n'
+        b'Serialization format : json\n'
         b'---------------------------------------------------------------------'
         b'-----------\n'
-        b'\t\tPlaso Storage Information\n'
+        b'\n'
+        b'*********************************** Sessions ************************'
+        b'***********\n'
+        b'de1ccbe8-558f-43ea-a97e-e034cd329a13 : '
+        b'2016-06-25T09:22:04.011015+00:00\n'
         b'---------------------------------------------------------------------'
         b'-----------\n'
-        b'Storage file:\t\t{0:s}\n'
-        b'Serialization format:\tjson\n'
-        b'Source processed:\tN/A\n'
-        b'Time of processing:\t2016-05-01T12:19:29+00:00\n'
         b'\n'
-        b'Collection information:\n'
-        b'\tparser_selection = (no list set)\n'
-        b'\trecursive = False\n'
-        b'\tpreferred_encoding = UTF-8\n'
-        b'\tos_detected = N/A\n'
-        b'\tconfigured_zone = UTC\n'
-        b'\toutput_file = psort_test.json.plaso\n'
-        b'\tpreprocess = False\n'
-        b'\tversion = 1.4.1_20160414\n'
-        b'\tcmd_line = ./tools/log2timeline.py --buffer_size=300 --quiet '
-        b'psort_test.json.plaso test_data/syslog\n'
-        b'\tdebug = False\n'
-        b'\truntime = single process mode\n'
-        b'\tparsers = {1:s}\n'
-        b'\tmethod = OS collection\n'
-        b'\tprotobuf_size = 0\n'
-        b'\n'
-        b'Parser counter information:\n'
-        b'\tfilestat = 3\n'
-        b'\tsyslog = 13\n'
-        b'\tTotal = 16\n'
-        b'\n'
-        b'Preprocessing information omitted (to see use: --verbose).\n'
-        b'\n'
-        b'-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+'
-        b'-+-+-+-+-+-+\n'
+        b'**************** Session: de1ccbe8-558f-43ea-a97e-e034cd329a13 ******'
+        b'***********\n'
+        b'              Start time : 2016-06-25T09:22:04.011015+00:00\n'
+        b'         Completion time : 2016-06-25T09:22:10.268912+00:00\n'
+        b'            Product name : plaso\n'
+        b'         Product version : 1.4.1_20160617\n'
+        b'  Command line arguments : ./tools/log2timeline.py --partition=all '
+        b'--quiet\n'
+        b'                           pinfo_test.json.plaso\n'
+        b'                           test_data/tsk_volume_system.raw\n'
+        b'Parser filter expression : \n'
+        b'      Preferred encoding : UTF-8\n'
+        b'              Debug mode : False\n'
+        b'             Filter file : \n'
+        b'       Filter expression : \n'
         b'---------------------------------------------------------------------'
-        b'-----------\n'
-        b'\t\tPlaso Storage Information\n'
-        b'---------------------------------------------------------------------'
-        b'-----------\n'
-        b'Storage file:\t\t{0:s}\n'
-        b'Serialization format:\tjson\n'
-        b'Source processed:\tN/A\n'
-        b'Time of processing:\t2016-05-01T12:19:30+00:00\n'
-        b'\n'
-        b'Collection information:\n'
-        b'\tparser_selection = (no list set)\n'
-        b'\trecursive = False\n'
-        b'\tpreferred_encoding = UTF-8\n'
-        b'\tos_detected = N/A\n'
-        b'\tconfigured_zone = Iceland\n'
-        b'\toutput_file = psort_test.json.plaso\n'
-        b'\tpreprocess = False\n'
-        b'\tversion = 1.4.1_20160414\n'
-        b'\tcmd_line = ./tools/log2timeline.py --quiet --timezone=Iceland '
-        b'psort_test.json.plaso test_data/syslog\n'
-        b'\tdebug = False\n'
-        b'\truntime = single process mode\n'
-        b'\tparsers = {1:s}\n'
-        b'\tmethod = OS collection\n'
-        b'\tprotobuf_size = 0\n'
-        b'\n'
-        b'Parser counter information:\n'
-        b'\tfilestat = 3\n'
-        b'\tsyslog = 13\n'
-        b'\tTotal = 16\n'
-        b'\n'
-        b'Preprocessing information omitted (to see use: --verbose).\n'
-        b'\n'
-        b'Reporting information omitted (to see use: --verbose).\n'
-        b'-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+'
-        b'-+-+-+-+-+-+\n').format(
-            options.storage_file.encode(u'utf-8'),
-            expected_parsers.encode(u'utf-8'))
+        b'-----------\n')
 
     output = self._output_writer.ReadOutput()
 

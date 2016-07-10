@@ -1,424 +1,321 @@
 # -*- coding: utf-8 -*-
 """The processing status classes."""
 
-import logging
 import time
 
-from plaso.lib import definitions
 
-
-class CollectorStatus(object):
-  """The collector status.
+class ProcessStatus(object):
+  """The status of an individual process.
 
   Attributes:
-    identifier: the extraction worker identifier.
-    last_running_time: timestamp of the last update when the process
-                       had a running process status.
-    path_spec_queue_port: the port that the path specification queue is bound
-                          to, or None if the queue is not yet bound, or the
-                          queue does not use a port.
-    pid: the collector process identifier (PID).
-    process_status: string containing the process status.
-    produced_number_of_path_specs: the total number of path specifications
-                                   produced by the collector.
-    produced_number_of_path_specs_delta: the number of path specifications
-                                         produced since the last status update.
-    status: string containing the collector status.
-    """
+    display_name (str): human readable of the file entry currently being
+        processed by the process.
+    identifier (str): process identifier.
+    last_running_time (int): timestamp of the last update when the process had
+        a running process status.
+    number_of_consumed_errors (int): total number of errors consumed by
+        the process.
+    number_of_consumed_errors_delta (int): number of errors consumed by
+        the process since the last status update.
+    number_of_consumed_events (int): total number of events consumed by
+        the process.
+    number_of_consumed_events_delta (int): number of events consumed by
+        the process since the last status update.
+    number_of_consumed_sources (int): total number of event sources consumed
+        by the process.
+    number_of_consumed_sources_delta (int): number of event sources consumed
+        by the process since the last status update.
+    number_of_produced_errors (int): total number of errors produced by
+        the process.
+    number_of_produced_errors_delta (int): number of errors produced by
+        the process since the last status update.
+    number_of_produced_events (int): total number of events produced by
+        the process.
+    number_of_produced_events_delta (int): number of events produced by
+        the process since the last status update.
+    number_of_produced_sources (int): total number of event sources
+        produced by the process.
+    number_of_produced_sources_delta (int): number of event sources produced
+        by the process since the last status update.
+    pid (int): process identifier (PID).
+    status (str): human readable status indication e.g. 'Hashing', 'Idle'.
+  """
 
   def __init__(self):
-    """Initializes the collector status object."""
-    super(CollectorStatus, self).__init__()
-    self.identifier = None
-    self.last_running_time = 0
-    self.path_spec_queue_port = None
-    self.pid = None
-    self.process_status = None
-    self.produced_number_of_path_specs = 0
-    self.produced_number_of_path_specs_delta = 0
-    self.status = None
-
-
-class ExtractionWorkerStatus(object):
-  """The extraction worker status.
-
-  Attributes:
-    consumed_number_of_path_specs: the total number of path specifications
-                                   consumed by the extraction worker.
-    consumed_number_of_path_specs_delta: the number of path specifications
-                                         consumed since the last status update.
-    display_name: the display name of the file entry currently being
-                  processed by the extraction worker.
-    identifier: the extraction worker identifier.
-    last_running_time: timestamp of the last update when the process
-                       had a running process status.
-    number_of_events: the total number of events extracted
-                      by the extraction worker.
-    number_of_events_delta: the number of events since the last status update.
-    pid: the extraction worker process identifier (PID).
-    process_status: string containing the process status.
-    produced_number_of_path_specs: the total number of path specifications
-                                   produced by the collector.
-    produced_number_of_path_specs_delta: the number of path specifications
-                                         produced since the last status update.
-    status: string containing the extraction worker status.
-    """
-
-  def __init__(self):
-    """Initializes the extraction worker status object."""
-    super(ExtractionWorkerStatus, self).__init__()
-    self.consumed_number_of_path_specs = 0
-    self.consumed_number_of_path_specs_delta = 0
+    """Initializes the process status object."""
+    super(ProcessStatus, self).__init__()
     self.display_name = None
     self.identifier = None
     self.last_running_time = 0
-    self.number_of_events = 0
-    self.number_of_events_delta = 0
+    self.number_of_consumed_errors = 0
+    self.number_of_consumed_errors_delta = 0
+    self.number_of_consumed_events = 0
+    self.number_of_consumed_events_delta = 0
+    self.number_of_consumed_sources = 0
+    self.number_of_consumed_sources_delta = 0
+    self.number_of_produced_errors = 0
+    self.number_of_produced_errors_delta = 0
+    self.number_of_produced_events = 0
+    self.number_of_produced_events_delta = 0
+    self.number_of_produced_sources = 0
+    self.number_of_produced_sources_delta = 0
     self.pid = None
-    self.process_status = None
-    self.produced_number_of_path_specs = 0
-    self.produced_number_of_path_specs_delta = 0
     self.status = None
 
+  def UpdateNumberOfErrors(
+      self, number_of_consumed_errors, number_of_produced_errors):
+    """Updates the number of errors.
 
-class StorageWriterStatus(object):
-  """The storage writer status.
+    Args:
+      number_of_consumed_errors (int): total number of errors consumed by
+          the process.
+      number_of_produced_errors (int): total number of errors produced by
+          the process.
 
-  Attributes:
-    event_object_queue_port: the port that the event object queue is bound to,
-                             or None if the queue is not yet bound, or the
-                             queue does not use a port.
-    identifier: the extraction worker identifier.
-    last_running_time: timestamp of the last update when the process
-                       had a running process status.
-    number_of_events: the total number of events received
-                      by the storage writer.
-    parse_error_queue_port: the port that the path spec queue is bound to, or
-                            None if the queue is not yet bound, or the the queue
-                            does not use a port.
-    pid: the storage writer process identifier (PID).
-    process_status: string containing the process status.
-    status: string containing the storage writer status.
+    Returns:
+      bool: True if either number of errors has increased.
+
+    Raises:
+      ValueError: if the consumer or produced number of errors is smaller
+          than the value of the previous update.
     """
+    if number_of_consumed_errors < self.number_of_consumed_errors:
+      raise ValueError(
+          u'Number of consumed errors smaller than previous update.')
 
-  def __init__(self):
-    """Initializes the storage writer status object."""
-    super(StorageWriterStatus, self).__init__()
-    self.event_object_queue_port = None
-    self.identifier = None
-    self.last_running_time = 0
-    self.number_of_events = 0
-    self.number_of_events_delta = 0
-    self.parse_error_queue_port = None
-    self.pid = None
-    self.process_status = None
-    self.status = None
+    if number_of_produced_errors < self.number_of_produced_errors:
+      raise ValueError(
+          u'Number of produced errors smaller than previous update.')
+
+    consumed_errors_delta = (
+        number_of_consumed_errors - self.number_of_consumed_errors)
+
+    self.number_of_consumed_errors = number_of_consumed_errors
+    self.number_of_consumed_errors_delta = consumed_errors_delta
+
+    produced_errors_delta = (
+        number_of_produced_errors - self.number_of_produced_errors)
+
+    self.number_of_produced_errors = number_of_produced_errors
+    self.number_of_produced_errors_delta = produced_errors_delta
+
+    return consumed_errors_delta > 0 or produced_errors_delta > 0
+
+  def UpdateNumberOfEvents(
+      self, number_of_consumed_events, number_of_produced_events):
+    """Updates the number of events.
+
+    Args:
+      number_of_consumed_events (int): total number of events consumed by
+          the process.
+      number_of_produced_events (int): total number of events produced by
+          the process.
+
+    Returns:
+      bool: True if either number of events has increased.
+
+    Raises:
+      ValueError: if the consumer or produced number of events is smaller
+          than the value of the previous update.
+    """
+    if number_of_consumed_events < self.number_of_consumed_events:
+      raise ValueError(
+          u'Number of consumed events smaller than previous update.')
+
+    if number_of_produced_events < self.number_of_produced_events:
+      raise ValueError(
+          u'Number of produced events smaller than previous update.')
+
+    consumed_events_delta = (
+        number_of_consumed_events - self.number_of_consumed_events)
+
+    self.number_of_consumed_events = number_of_consumed_events
+    self.number_of_consumed_events_delta = consumed_events_delta
+
+    produced_events_delta = (
+        number_of_produced_events - self.number_of_produced_events)
+
+    self.number_of_produced_events = number_of_produced_events
+    self.number_of_produced_events_delta = produced_events_delta
+
+    return consumed_events_delta > 0 or produced_events_delta > 0
+
+  def UpdateNumberOfEventSources(
+      self, number_of_consumed_sources, number_of_produced_sources):
+    """Updates the number of event sources.
+
+    Args:
+      number_of_consumed_sources (int): total number of event sources consumed
+          by the process.
+      number_of_produced_sources (int): total number of event sources produced
+          by the process.
+
+    Returns:
+      bool: True if either number of event sources has increased.
+
+    Raises:
+      ValueError: if the consumer or produced number of event sources is
+          smaller than the value of the previous update.
+    """
+    if number_of_consumed_sources < self.number_of_consumed_sources:
+      raise ValueError(
+          u'Number of consumed sources smaller than previous update.')
+
+    if number_of_produced_sources < self.number_of_produced_sources:
+      raise ValueError(
+          u'Number of produced sources smaller than previous update.')
+
+    consumed_sources_delta = (
+        number_of_consumed_sources - self.number_of_consumed_sources)
+
+    self.number_of_consumed_sources = number_of_consumed_sources
+    self.number_of_consumed_sources_delta = consumed_sources_delta
+
+    produced_sources_delta = (
+        number_of_produced_sources - self.number_of_produced_sources)
+
+    self.number_of_produced_sources = number_of_produced_sources
+    self.number_of_produced_sources_delta = produced_sources_delta
+
+    return consumed_sources_delta > 0 or produced_sources_delta > 0
 
 
 class ProcessingStatus(object):
-  """The processing status.
+  """The status of the overall extraction process (processing).
 
   Attributes:
-    error_detected: boolean value to indicate if an error was detected
-                    during processing.
-    error_path_specs: a list of path specification strings that caused
-                      critical errors during processing.
+    aborted (bool): True if processing was aborted.
+    error_path_specs (list[str]): path specification strings that caused
+        critical errors during processing.
+    foreman_status (ProcessingStatus): foreman processing status.
   """
-
-  # The idle timeout in seconds.
-  _IDLE_TIMEOUT = 5 * 60
 
   def __init__(self):
     """Initializes the processing status object."""
     super(ProcessingStatus, self).__init__()
-    self._collector = None
-    self._collector_completed = False
-    self._collector_completed_count = 0
-    self._extraction_workers = {}
-    self._extraction_workers_last_running_time = 0
-    self._storage_writer = None
+    self._workers_status = {}
 
-    self.error_detected = False
+    self.aborted = False
     self.error_path_specs = []
+    self.foreman_status = None
 
   @property
-  def collector(self):
-    """The collector status object."""
-    return self._collector
+  def workers_status(self):
+    """The worker status objects sorted by identifier."""
+    return [self._workers_status[identifier]
+            for identifier in sorted(self._workers_status.keys())]
 
-  @property
-  def extraction_workers(self):
-    """The extraction worker status objects sorted by identifier."""
-    return [
-        self._extraction_workers[identifier]
-        for identifier in sorted(self._extraction_workers.keys())]
-
-  @property
-  def storage_writer(self):
-    """The storage writer status object."""
-    return self._storage_writer
-
-  def GetExtractionCompleted(self):
-    """Determines whether extraction is completed.
-
-    Extraction is considered complete when the collector has finished producing
-    path specifications and all workers have stopped running.
-
-    Returns:
-      A boolean value indicating the completed status.
-    """
-    if not self._collector_completed:
-      return False
-
-    produced_number_of_path_specs = self.GetProducedNumberOfPathSpecs()
-    consumed_number_of_path_specs = self.GetConsumedNumberOfPathSpecs()
-    path_specs_remaining = (
-        produced_number_of_path_specs - consumed_number_of_path_specs)
-    if path_specs_remaining > 0:
-      logging.debug(
-          (u'[ProcessingStatus] {0:d} pathspecs produced, {1:d} processed. '
-           u'{2:d} remaining. Extraction incomplete.').format(
-               produced_number_of_path_specs, consumed_number_of_path_specs,
-               path_specs_remaining))
-      return False
-
-    workers_running = self.WorkersRunning()
-
-    # Determining if extraction is completed can be a bit flaky
-    # at the moment. Hence we wait until the condition is met at least
-    # consecutive 3 times.
-    if workers_running:
-      self._collector_completed_count = 0
-
-    elif self._collector_completed_count < 3:
-      self._collector_completed_count += 1
-      workers_running = True
-
-    return not workers_running
-
-  def GetNumberOfExtractedEvents(self):
-    """Retrieves the number of extracted events."""
-    number_of_events = 0
-    for extraction_worker_status in iter(self._extraction_workers.values()):
-      number_of_events += extraction_worker_status.number_of_events
-    return number_of_events
-
-  def GetConsumedNumberOfPathSpecs(self):
-    """Retrieves the number of consumed path specifications."""
-    number_of_path_specs = 0
-    for extraction_worker_status in iter(self._extraction_workers.values()):
-      number_of_path_specs += (
-          extraction_worker_status.consumed_number_of_path_specs)
-    return number_of_path_specs
-
-  def GetProducedNumberOfPathSpecs(self):
-    """Retrieves the number of consumed path specifications."""
-    number_of_path_specs = self._collector.produced_number_of_path_specs
-    for extraction_worker_status in iter(self._extraction_workers.values()):
-      number_of_path_specs += (
-          extraction_worker_status.produced_number_of_path_specs)
-    return number_of_path_specs
-
-  def GetProcessingCompleted(self):
-    """Determines the processing completed status.
-
-    Processing is considered complete when the storage writer has consumed
-    the event objects produces by the workers.
-
-    Returns:
-      A boolean value indicating the completed status.
-    """
-    if not self._storage_writer:
-      logging.debug(u'Processing incomplete - missing storage writer.')
-      return False
-
-    extraction_completed = self.GetExtractionCompleted()
-    if not extraction_completed:
-      logging.debug(u'Processing incomplete - extraction still in progress.')
-      return False
-
-    number_of_extracted_events = self.GetNumberOfExtractedEvents()
-    number_of_written_events = self._storage_writer.number_of_events
-    events_remaining = number_of_extracted_events - number_of_written_events
-
-    if events_remaining > 0:
-      logging.debug((
-          u'{0:d} events extracted, {1:d} written to storage. {2:d} '
-          u'remaining').format(
-              number_of_extracted_events, number_of_written_events,
-              events_remaining))
-      return False
-
-    return True
-
-  def UpdateCollectorStatus(
-      self, identifier, pid, produced_number_of_path_specs, status,
-      process_status):
-    """Updates the collector status.
+  def _UpdateProcessStatus(
+      self, process_status, identifier, status, pid, display_name,
+      number_of_consumed_sources, number_of_produced_sources,
+      number_of_consumed_events, number_of_produced_events,
+      number_of_consumed_errors, number_of_produced_errors):
+    """Updates a process status.
 
     Args:
-      identifier: the extraction worker identifier.
-      pid: the collector process identifier (PID).
-      produced_number_of_path_specs: the total number of path specifications
-                                     produced by the collector.
-      status: string containing the collector status.
-      process_status: string containing the process status.
+      process_status (ProcessStatus): process status.
+      identifier (str): process identifier.
+      status (str): human readable status of the process e.g. 'Idle'.
+      pid (int): process identifier (PID).
+      display_name (str): human readable of the file entry currently being
+          processed by the process.
+      number_of_consumed_sources (int): total number of event sources consumed
+          by the process.
+      number_of_produced_sources (int): total number of event sources produced
+          by the process.
+      number_of_consumed_events (int): total number of events consumed by
+          the process.
+      number_of_produced_events (int): total number of events produced by
+          the process.
+      number_of_consumed_errors (int): total number of errors consumed by
+          the process.
+      number_of_produced_errors (int): total number of errors produced by
+          the process.
     """
-    if not self._collector:
-      self._collector = CollectorStatus()
+    new_sources = process_status.UpdateNumberOfEventSources(
+        number_of_consumed_sources, number_of_produced_sources)
 
-    produced_number_of_path_specs_delta = produced_number_of_path_specs
-    if produced_number_of_path_specs_delta > 0:
-      produced_number_of_path_specs_delta -= (
-          self._collector.produced_number_of_path_specs)
+    new_events = process_status.UpdateNumberOfEvents(
+        number_of_consumed_events, number_of_produced_events)
 
-    self._collector.identifier = identifier
-    self._collector.pid = pid
-    self._collector.process_status = process_status
-    self._collector.produced_number_of_path_specs = (
-        produced_number_of_path_specs)
-    self._collector.produced_number_of_path_specs_delta = (
-        produced_number_of_path_specs)
-    self._collector.status = status
+    new_errors = process_status.UpdateNumberOfErrors(
+        number_of_consumed_errors, number_of_produced_errors)
 
-    if status == definitions.PROCESSING_STATUS_COMPLETED:
-      self._collector_completed = True
-    else:
-      self._collector.last_running_time = time.time()
+    process_status.display_name = display_name
+    process_status.identifier = identifier
+    process_status.pid = pid
+    process_status.status = status
 
-  def UpdateExtractionWorkerStatus(
-      self, identifier, pid, display_name, number_of_events,
-      consumed_number_of_path_specs, produced_number_of_path_specs, status,
-      process_status):
-    """Updates the extraction worker status.
+    if new_sources or new_events or new_errors:
+      process_status.last_running_time = time.time()
+
+  def UpdateForemanStatus(
+      self, identifier, status, pid, display_name,
+      number_of_consumed_sources, number_of_produced_sources,
+      number_of_consumed_events, number_of_produced_events,
+      number_of_consumed_errors, number_of_produced_errors):
+    """Updates the status of the foreman.
 
     Args:
-      identifier: the extraction worker identifier.
-      pid: the extraction worker process identifier (PID).
-      display_name: the display name of the file entry currently being
-                    processed by the extraction worker.
-      number_of_events: the total number of events extracted
-                        by the extraction worker.
-      consumed_number_of_path_specs: the total number of path specifications
-                                     consumed by the extraction worker.
-      produced_number_of_path_specs: the total number of path specifications
-                                     produced by the collector.
-      status: string containing the extraction worker status.
-      process_status: string containing the process status.
+      identifier (str): foreman identifier.
+      status (str): human readable status of the foreman e.g. 'Idle'.
+      pid (int): process identifier (PID).
+      display_name (str): human readable of the file entry currently being
+          processed by the foreman.
+      number_of_consumed_sources (int): total number of event sources consumed
+          by the foreman.
+      number_of_produced_sources (int): total number of event sources produced
+          by the foreman.
+      number_of_consumed_events (int): total number of events consumed by
+          the foreman.
+      number_of_produced_events (int): total number of events produced by
+          the foreman.
+      number_of_consumed_errors (int): total number of errors consumed by
+          the foreman.
+      number_of_produced_errors (int): total number of errors produced by
+          the foreman.
     """
-    if identifier not in self._extraction_workers:
-      self._extraction_workers[identifier] = ExtractionWorkerStatus()
+    if not self.foreman_status:
+      self.foreman_status = ProcessStatus()
 
-    extraction_worker_status = self._extraction_workers[identifier]
+    self._UpdateProcessStatus(
+        self.foreman_status, identifier, status, pid, display_name,
+        number_of_consumed_sources, number_of_produced_sources,
+        number_of_consumed_events, number_of_produced_events,
+        number_of_consumed_errors, number_of_produced_errors)
 
-    number_of_events_delta = number_of_events
-    if number_of_events_delta > 0:
-      number_of_events_delta -= extraction_worker_status.number_of_events
-
-    consumed_number_of_path_specs_delta = consumed_number_of_path_specs
-    if consumed_number_of_path_specs_delta > 0:
-      consumed_number_of_path_specs_delta -= (
-          extraction_worker_status.consumed_number_of_path_specs)
-
-    produced_number_of_path_specs_delta = produced_number_of_path_specs
-    if produced_number_of_path_specs_delta > 0:
-      produced_number_of_path_specs_delta -= (
-          extraction_worker_status.produced_number_of_path_specs)
-
-    extraction_worker_status.consumed_number_of_path_specs = (
-        consumed_number_of_path_specs)
-    extraction_worker_status.consumed_number_of_path_specs_delta = (
-        consumed_number_of_path_specs_delta)
-    extraction_worker_status.display_name = display_name
-    extraction_worker_status.identifier = identifier
-    extraction_worker_status.number_of_events = number_of_events
-    extraction_worker_status.number_of_events_delta = number_of_events_delta
-    extraction_worker_status.pid = pid
-    extraction_worker_status.process_status = process_status
-    extraction_worker_status.produced_number_of_path_specs = (
-        produced_number_of_path_specs)
-    extraction_worker_status.produced_number_of_path_specs_delta = (
-        produced_number_of_path_specs_delta)
-    extraction_worker_status.status = status
-
-    if (number_of_events_delta > 0 or
-        consumed_number_of_path_specs_delta > 0 or
-        produced_number_of_path_specs_delta > 0):
-      timestamp = time.time()
-      extraction_worker_status.last_running_time = timestamp
-      self._extraction_workers_last_running_time = timestamp
-
-  def UpdateStorageWriterStatus(
-      self, identifier, pid, number_of_events, status, process_status):
-    """Updates the storage writer status.
+  def UpdateWorkerStatus(
+      self, identifier, status, pid, display_name,
+      number_of_consumed_sources, number_of_produced_sources,
+      number_of_consumed_events, number_of_produced_events,
+      number_of_consumed_errors, number_of_produced_errors):
+    """Updates the status of a worker.
 
     Args:
-      identifier: the extraction worker identifier.
-      pid: the storage writer process identifier (PID).
-      number_of_events: the total number of events received
-                        by the storage writer.
-      status: string containing the storage writer status.
-      process_status: string containing the process status.
+      identifier (str): worker identifier.
+      status (str): human readable status of the worker e.g. 'Idle'.
+      pid (int): process identifier (PID).
+      display_name (str): human readable of the file entry currently being
+          processed by the worker.
+      number_of_consumed_sources (int): total number of event sources consumed
+          by the worker.
+      number_of_produced_sources (int): total number of event sources produced
+          by the worker.
+      number_of_consumed_events (int): total number of events consumed by
+          the worker.
+      number_of_produced_events (int): total number of events produced by
+          the worker.
+      number_of_consumed_errors (int): total number of errors consumed by
+          the worker.
+      number_of_produced_errors (int): total number of errors produced by
+          the worker.
     """
-    if not self._storage_writer:
-      self._storage_writer = StorageWriterStatus()
+    if identifier not in self._workers_status:
+      self._workers_status[identifier] = ProcessStatus()
 
-    number_of_events_delta = number_of_events
-    if number_of_events_delta > 0:
-      number_of_events_delta -= self._storage_writer.number_of_events
-
-    self._storage_writer.identifier = identifier
-    self._storage_writer.number_of_events = number_of_events
-    self._storage_writer.number_of_events_delta = number_of_events_delta
-    self._storage_writer.pid = pid
-    self._storage_writer.process_status = process_status
-    self._storage_writer.status = status
-
-    if number_of_events_delta > 0:
-      self._storage_writer.last_running_time = time.time()
-
-  def StorageWriterIdle(self):
-    """Determines if the storage writer is idle."""
-    timestamp = time.time()
-    if (self._storage_writer.last_running_time == 0 or
-        self._storage_writer.last_running_time >= timestamp):
-      return False
-
-    timestamp -= self._storage_writer.last_running_time
-    if timestamp < self._IDLE_TIMEOUT:
-      return False
-    return True
-
-  def WorkersIdle(self):
-    """Determines if the workers are idle."""
-    timestamp = time.time()
-    if (self._extraction_workers_last_running_time == 0 or
-        self._extraction_workers_last_running_time >= timestamp):
-      return False
-
-    timestamp -= self._extraction_workers_last_running_time
-    if timestamp < self._IDLE_TIMEOUT:
-      return False
-    return True
-
-  def WorkersRunning(self):
-    """Determines if the workers are running."""
-    for worker_name, extraction_worker_status in iter(
-        self._extraction_workers.items()):
-
-      if (extraction_worker_status.status ==
-          definitions.PROCESSING_STATUS_COMPLETED):
-        logging.debug(u'{0:s} has completed.'.format(worker_name))
-        continue
-      logging.debug(u'{0:s} is {1:s}.'.format(
-          worker_name, extraction_worker_status.status))
-      if (extraction_worker_status.number_of_events_delta > 0 or
-          extraction_worker_status.consumed_number_of_path_specs_delta > 0 or
-          extraction_worker_status.produced_number_of_path_specs_delta > 0 or
-          (extraction_worker_status.status ==
-           definitions.PROCESSING_STATUS_HASHING)):
-        logging.debug(u'Workers are running.')
-        return True
-
-    logging.debug(u'Workers are not running.')
-    return False
+    process_status = self._workers_status[identifier]
+    self._UpdateProcessStatus(
+        process_status, identifier, status, pid, display_name,
+        number_of_consumed_sources, number_of_produced_sources,
+        number_of_consumed_events, number_of_produced_events,
+        number_of_consumed_errors, number_of_produced_errors)

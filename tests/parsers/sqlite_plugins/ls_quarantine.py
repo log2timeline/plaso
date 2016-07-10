@@ -14,22 +14,17 @@ from tests.parsers.sqlite_plugins import test_lib
 class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the LS Quarantine database plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = ls_quarantine.LsQuarantinePlugin()
-
   def testProcess(self):
     """Tests the Process function on a LS Quarantine database file."""
-    test_file = self._GetTestFilePath([u'quarantine.db'])
-    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
-        self._plugin, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = ls_quarantine.LsQuarantinePlugin()
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'quarantine.db'], plugin_object)
 
-    # The quarantine database contains 14 event_objects.
-    self.assertEqual(len(event_objects), 14)
+    # The quarantine database contains 14 events.
+    self.assertEqual(len(storage_writer.events), 14)
 
     # Examine a VLC event.
-    event_object = event_objects[3]
+    event_object = storage_writer.events[3]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-08 21:12:03')
@@ -44,14 +39,14 @@ class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
     self.assertTrue(u'vlc-2.0.7-intel64.dmg' in event_object.data)
 
     # Examine a MacKeeper event.
-    event_object = event_objects[9]
+    event_object = storage_writer.events[9]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-12 19:28:58')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Examine a SpeedTest event.
-    event_object = event_objects[10]
+    event_object = storage_writer.events[10]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-12 19:30:16')

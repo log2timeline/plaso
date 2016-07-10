@@ -56,14 +56,14 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
     try:
       header_struct = self._HEADER_STRUCT.parse(value_data)
     except construct.FieldError as exception:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to parse header with error: {0:s}'.format(
               exception))
       return
 
     format_version = header_struct.get(u'format_version')
     if format_version not in [0x01, 0x09, 0x0c, 0x13]:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unsupported format version: 0x{0:08x}'.format(format_version))
       return
 
@@ -84,7 +84,7 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
         entry_footer_struct = self._ENTRY_FOOTER_STRUCT.parse(
             value_data[value_data_offset:])
       except construct.FieldError as exception:
-        parser_mediator.ProduceParseError((
+        parser_mediator.ProduceExtractionError((
             u'unable to parse sentinel at offset: 0x{0:08x} '
             u'with error: {1:s}').format(value_data_offset, exception))
         return
@@ -99,7 +99,7 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
         entry_header_struct = self._ENTRY_HEADER_STRUCT.parse(
             value_data[value_data_offset:])
       except construct.FieldError as exception:
-        parser_mediator.ProduceParseError((
+        parser_mediator.ProduceExtractionError((
             u'unable to parse entry header at offset: 0x{0:08x} '
             u'with error: {1:s}').format(value_data_offset, exception))
         break
@@ -125,7 +125,7 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
         entry_footer_struct = self._ENTRY_FOOTER_STRUCT.parse(
             value_data[value_data_offset:])
       except construct.FieldError as exception:
-        parser_mediator.ProduceParseError((
+        parser_mediator.ProduceExtractionError((
             u'unable to parse entry footer at offset: 0x{0:08x} '
             u'with error: {1:s}').format(value_data_offset, exception))
         break
