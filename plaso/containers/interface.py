@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The attribute container interface."""
 
+from efilter.protocols import structured
+
 
 class AttributeContainer(object):
   """Class that defines the attribute container interface.
@@ -29,14 +31,34 @@ class AttributeContainer(object):
     return dictionary
 
   def GetAttributes(self):
-    """Retrieves the attributes from the attribute container.
+    """Retrieves the attribute names and values.
 
     Attributes that are set to None are ignored.
 
     Yields:
-      A tuple containing the attribute container attribute name and value.
+      A tuple containing an attribute name and value.
     """
     for attribute_name in iter(self.__dict__.keys()):
       attribute_value = getattr(self, attribute_name, None)
       if attribute_value is not None:
         yield attribute_name, attribute_value
+
+  def GetAttributeNames(self):
+    """Retrieves the names of all attributes.
+
+    Attributes that are set to None are ignored.
+
+    Returns:
+      A list containing the attribute container attribute names.
+    """
+    return [name for name, _ in list(self.GetAttributes())]
+
+
+# Efilter protocol definition to enable filtering of containers.
+structured.IStructured.implement(
+    for_type=AttributeContainer,
+    implementations={
+        structured.resolve:
+            lambda container, key: getattr(container, key, None),
+        structured.getmembers_runtime:
+            lambda container: container.GetAttributeNames()})

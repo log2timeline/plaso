@@ -22,6 +22,10 @@ class TestChromeDownloadEvent(events.EventObject):
   """A test event type for the tagging analysis plugin."""
   DATA_TYPE = u'chrome:history:file_downloaded'
 
+class TestEvtRecordEvent(events.EventObject):
+  """A test event type for the tagging analysis plugin."""
+  DATA_TYPE = u'windows:evt:record'
+
 
 class TaggingTest(test_lib.AnalysisPluginTestCase):
   """Test for the tagging analysis plugin."""
@@ -40,7 +44,13 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
       {u'event_type': u'something_else',
        u'timestamp': timelib.Timestamp.CopyFromString(u'2015-02-19 08:00:01'),
        u'attributes': {}
-      }
+      },
+      {u'event_type': u'evt',
+       u'timestamp': timelib.Timestamp.CopyFromString(u'2016-05-25 13:00:06'),
+       u'attributes': {
+           u'source_name': u'Security',
+           u'event_identifier': 538}
+      },
   ]
 
   def _CreateTestEventObject(self, test_event_dict):
@@ -49,11 +59,13 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
       event_object = TestPrefetchEvent()
     elif test_event_dict[u'event_type'] == u'chrome_download':
       event_object = TestChromeDownloadEvent()
+    elif test_event_dict[u'event_type'] == u'evt':
+      event_object = TestEvtRecordEvent()
     else:
       event_object = events.EventObject()
 
     event_object.timestamp = test_event_dict[u'timestamp']
-    for key, value in test_event_dict[u'attributes']:
+    for key, value in iter(test_event_dict[u'attributes'].items()):
       setattr(event_object, key, value)
     return event_object
 
@@ -62,24 +74,18 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
     event_queue = single_process.SingleProcessQueue()
     analysis_plugin = tagging.TaggingPlugin(event_queue)
     # pylint: disable=protected-access
-    tags = analysis_plugin._ParseTaggingFile(
+    tag_expression = analysis_plugin._ParseTaggingFile(
         self._GetTestFilePath([self._TEST_TAG_FILE_NAME]))
-    self.assertEqual(len(tags), 2)
-    self.assertIn(u'application_execution', tags.keys())
-    self.assertIn(u'file_downloaded', tags.keys())
+    self.assertEqual(len(tag_expression.children), 3)
 
   def testInvalidTagParsing(self):
     """Test parsing of definition files that contain invalid directives."""
     event_queue = single_process.SingleProcessQueue()
     analysis_plugin = tagging.TaggingPlugin(event_queue)
     # pylint: disable=protected-access
-    tags = analysis_plugin._ParseTaggingFile(
+    tag_expression = analysis_plugin._ParseTaggingFile(
         self._GetTestFilePath([self._INVALID_TEST_TAG_FILE_NAME]))
-    self.assertEqual(len(tags), 3)
-    self.assertTrue(u'Invalid Tag' in tags)
-    self.assertEqual(len(tags[u'Invalid Tag']), 0)
-    self.assertTrue(u'Partially Valid Tag' in tags)
-    self.assertEqual(len(tags[u'Partially Valid Tag']), 1)
+    self.assertEqual(len(tag_expression.children), 2)
 
   def testTag(self):
     """Test that the tagging plugin successfully tags events."""
@@ -102,7 +108,17 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
 
     self.assertEqual(len(analysis_reports), 1)
     report = analysis_reports[0]
-    self.assertEqual(len(report.GetTags()), 2)
+    tags = report.GetTags()
+    self.assertEqual(len(tags), 3)
+
+    labels = []
+    for tag in tags:
+      for label in tag.labels:
+        labels.append(label)
+    # This is from a tag rule declared in objectfilter syntax.
+    self.assertIn(u'application_execution', labels)
+    # This is from a tag rule declared in dotty syntax.
+    self.assertIn(u'login_attempt', labels)
 
 
 if __name__ == '__main__':
