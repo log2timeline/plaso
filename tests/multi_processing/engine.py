@@ -4,26 +4,22 @@
 
 import os
 import unittest
-
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.containers import sessions
 from plaso.lib import event
-from plaso.multi_processing import multi_process
+from plaso.multi_processing import engine
 from plaso.storage import zip_file as storage_zip_file
-
 from tests import test_lib as shared_test_lib
-from tests.engine import test_lib as engine_test_lib
 
 
 class MultiProcessEngineTest(shared_test_lib.BaseTestCase):
-  """Tests for the multi-process engine object."""
+  """Tests for the multi-process engine."""
 
   def testProcessSources(self):
     """Tests the PreprocessSources and ProcessSources function."""
-    test_engine = multi_process.MultiProcessEngine(
-        maximum_number_of_tasks=100)
+    test_engine = engine.MultiProcessEngine(maximum_number_of_tasks=100)
 
     source_path = os.path.join(self._TEST_DATA_PATH, u'ímynd.dd')
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -46,30 +42,9 @@ class MultiProcessEngineTest(shared_test_lib.BaseTestCase):
           session.identifier, [source_path_spec], preprocess_object,
           storage_writer, parser_filter_expression=u'filestat')
 
-    # TODO: implement a way to obtain the resuls without relying
+    # TODO: implement a way to obtain the results without relying
     # on multi-process primitives e.g. by writing to a file.
     # self.assertEqual(len(storage_writer.events), 15)
-
-
-class MultiProcessingQueueTest(shared_test_lib.BaseTestCase):
-  """Tests the multi-processing queue object."""
-
-  _ITEMS = frozenset([u'item1', u'item2', u'item3', u'item4'])
-
-  def testPushPopItem(self):
-    """Tests the PushItem and PopItem functions."""
-    # A timeout is used to prevent the multi processing queue to close and
-    # stop blocking the current process
-    test_queue = multi_process.MultiProcessingQueue(timeout=0.1)
-
-    for item in self._ITEMS:
-      test_queue.PushItem(item)
-
-    test_queue_consumer = engine_test_lib.TestQueueConsumer(test_queue)
-    test_queue_consumer.ConsumeItems()
-
-    self.assertEqual(test_queue_consumer.number_of_items, len(self._ITEMS))
-
 
 if __name__ == '__main__':
   unittest.main()
