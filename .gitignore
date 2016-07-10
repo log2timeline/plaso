@@ -13,10 +13,17 @@
 /.tox
 /__pycache__
 /build/
-/docs/_build/doctrees/
-/docs/_build/html
 /dist/
 /plaso.egg-info
+
+# Auto-generated Sphinx documentation files
+/docs/_build/doctrees/
+/docs/_build/html
+/docs/_build/.doctrees/
+/docs/_build/_modules/
+/docs/_build/_sources/
+/docs/_build/_static/
+
 
 # Code review files
 /.review
