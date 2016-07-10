@@ -13,10 +13,13 @@ class Session(interface.AttributeContainer):
   """Class to represent a session attribute container.
 
   Attributes:
+    analysis_reports_counter (collections.Counter): number of analysis reports
+        per analysis plugin.
     command_line_arguments (str): command line arguments.
     completion_time (int): time that the session was completed. Contains the
         number of micro seconds since January 1, 1970, 00:00:00 UTC.
     debug_mode (bool): True if debug mode was enabled.
+    event_labels_counter (collections.Counter): number of event tags per label.
     filter_expression (str): expression to filter events.
     filter_file (str): path to a file with find specifications.
     identifier (str): unique identifier of the session.
@@ -35,9 +38,11 @@ class Session(interface.AttributeContainer):
   def __init__(self):
     """Initializes a session attribute container."""
     super(Session, self).__init__()
+    self.analysis_reports_counter = collections.Counter()
     self.command_line_arguments = u''
     self.completion_time = None
     self.debug_mode = False
+    self.event_labels_counter = collections.Counter()
     self.filter_expression = u''
     self.filter_file = u''
     self.identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
@@ -62,8 +67,16 @@ class Session(interface.AttributeContainer):
     if self.identifier != session_completion.identifier:
       raise ValueError(u'Session identifier mismatch.')
 
+    if session_completion.analysis_reports_counter:
+      self.analysis_reports_counter = session_completion.analysis_reports_counter
+
     self.completion_time = session_completion.timestamp
-    self.parsers_counter = session_completion.parsers_counter
+
+    if session_completion.event_labels_counter:
+      self.event_labels_counter = session_completion.event_labels_counter
+
+    if session_completion.parsers_counter:
+      self.parsers_counter = session_completion.parsers_counter
 
   def CopyAttributesFromSessionStart(self, session_start):
     """Copies attributes from a session start.
@@ -91,6 +104,8 @@ class Session(interface.AttributeContainer):
     self.completion_time = int(time.time() * 1000000)
 
     session_completion = SessionCompletion()
+    session_completion.analysis_reports_counter = self.analysis_reports_counter
+    session_completion.event_labels_counter = self.event_labels_counter
     session_completion.identifier = self.identifier
     session_completion.parsers_counter = self.parsers_counter
     session_completion.timestamp = self.completion_time
@@ -120,6 +135,9 @@ class SessionCompletion(interface.AttributeContainer):
   """Class to represent a session completion attribute container.
 
   Attributes:
+    analysis_reports_counter (collections.Counter): number of analysis reports
+        per analysis plugin.
+    event_labels_counter (collections.Counter): number of event tags per label.
     identifier (str): unique identifier of the session.
     parsers_counter (collections.Counter): number of events per parser or
         parser plugin.
@@ -137,6 +155,8 @@ class SessionCompletion(interface.AttributeContainer):
           session start information.
     """
     super(SessionCompletion, self).__init__()
+    self.analysis_reports_counter = None
+    self.event_labels_counter = None
     self.identifier = identifier
     self.parsers_counter = None
     self.timestamp = None

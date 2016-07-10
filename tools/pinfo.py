@@ -367,25 +367,6 @@ class PinfoTool(analysis_tool.AnalysisTool):
         text = self._FormatPreprocessingInformationValue(key, value)
         lines_of_text.append(text)
 
-  def _FormatReports(self, storage_file):
-    """Formats the reports.
-
-    Args:
-      storage_file (StorageFile): storage file.
-
-    Returns:
-      str: formatted reports.
-    """
-    if not storage_file.HasAnalysisReports():
-      return u'No analysis reports stored.'
-
-    if not self._verbose:
-      return u'Reporting information omitted (to see use: --verbose).'
-
-    report_strings = [
-        report.GetString() for report in storage_file.GetAnalysisReports()]
-    return u'\n'.join(report_strings)
-
   def _FormatStorageInformation(
       self, lines_of_text, storage_information, storage_file, last_entry=False):
     """Formats the storage information.
@@ -413,10 +394,6 @@ class PinfoTool(analysis_tool.AnalysisTool):
     self._FormatPreprocessingInformation(lines_of_text, storage_information)
 
     lines_of_text.append(u'')
-    if last_entry:
-      reports = self._FormatReports(storage_file)
-      lines_of_text.append(reports)
-
     lines_of_text.append(u'-+' * 40)
     lines_of_text.append(u'')
 
@@ -450,12 +427,69 @@ class PinfoTool(analysis_tool.AnalysisTool):
         lines_of_text.append(
             u'\t{0:s} =\n{1!s}'.format(key, printer_object.pformat(value)))
 
+  def _PrintAnalysisReportCounter(
+      self, analysis_reports_counter, session_identifier=None):
+    """Prints the analysis reports counter.
+
+    Args:
+      analysis_reports_counter (collections.Counter): number of analysis
+          reports per analysis plugin.
+      session_identifier (Optional[str]): sessio identifier.
+    """
+    if not analysis_reports_counter:
+      return
+
+    title = u'Reports generated per plugin'
+    if session_identifier:
+      title = u'{0:s}: {1:s}'.format(title, session_identifier)
+
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type,
+        column_names=[u'Plugin name', u'Number of reports'], title=title)
+
+    for key, value in sorted(analysis_reports_counter.items()):
+      if key == u'total':
+        continue
+      table_view.AddRow([key, value])
+
+    try:
+      total = analysis_reports_counter[u'total']
+    except KeyError:
+      total = u'N/A'
+
+    table_view.AddRow([u'Total', total])
+
+    table_view.Write(self._output_writer)
+
+  def _PrintAnalysisReportsDetails(self, storage):
+    """Prints the details of the analysis reports.
+
+    Args:
+      storage (BaseStorage): storage.
+    """
+    if not storage.HasAnalysisReports():
+      self._output_writer.Write(u'No analysis reports stored.\n\n')
+      return
+
+    for index, analysis_report in enumerate(storage.GetAnalysisReports()):
+      title = u'Analysis report: {0:d}'.format(index)
+      table_view = cli_views.ViewsFactory.GetTableView(
+          self._views_format_type, title=title)
+
+      table_view.AddRow([u'String', analysis_report.GetString()])
+
+      table_view.Write(self._output_writer)
+
   def _PrintErrorsDetails(self, storage):
     """Prints the details of the errors.
 
     Args:
       storage (BaseStorage): storage.
     """
+    if not storage.HasErrors():
+      self._output_writer.Write(u'No errors stored.\n\n')
+      return
+
     for index, error in enumerate(storage.GetErrors()):
       title = u'Error: {0:d}'.format(index)
       table_view = cli_views.ViewsFactory.GetTableView(
@@ -466,21 +500,59 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
       table_view.Write(self._output_writer)
 
+  def _PrintEventLabelsCounter(
+      self, event_labels_counter, session_identifier=None):
+    """Prints the event labels counter.
+
+    Args:
+      event_labels_counter (collections.Counter): number of event tags per
+          label.
+      session_identifier (Optional[str]): sessio identifier.
+    """
+    if not event_labels_counter:
+      return
+
+    title = u'Event tags generated per label'
+    if session_identifier:
+      title = u'{0:s}: {1:s}'.format(title, session_identifier)
+
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type,
+        column_names=[u'Label', u'Number of event tags'], title=title)
+
+    for key, value in sorted(event_labels_counter.items()):
+      if key == u'total':
+        continue
+      table_view.AddRow([key, value])
+
+    try:
+      total = event_labels_counter[u'total']
+    except KeyError:
+      total = u'N/A'
+
+    table_view.AddRow([u'Total', total])
+
+    table_view.Write(self._output_writer)
+
   def _PrintParsersCounter(self, parsers_counter, session_identifier=None):
     """Prints the parsers counter
 
     Args:
-      parsers_counter (collections.Counter): parsers counter.
+      parsers_counter (collections.Counter): number of events per parser or
+          parser plugin.
       session_identifier (Optional[str]): sessio identifier.
     """
+    if not parsers_counter:
+      return
+
+    title = u'Events generated per parser'
     if session_identifier:
-      title = u'Events generated per parser: {0:s}'.format(session_identifier)
-    else:
-      title = u'Events generated per parser'
+      title = u'{0:s}: {1:s}'.format(title, session_identifier)
 
     table_view = cli_views.ViewsFactory.GetTableView(
         self._views_format_type,
-        column_names=[u'Parser name', u'Number of events'], title=title)
+        column_names=[u'Parser (plugin) name', u'Number of events'],
+        title=title)
 
     for key, value in sorted(parsers_counter.items()):
       if key == u'total':
@@ -534,6 +606,14 @@ class PinfoTool(analysis_tool.AnalysisTool):
         self._PrintParsersCounter(
             session.parsers_counter, session_identifier=session_identifier)
 
+        self._PrintAnalysisReportCounter(
+            session.analysis_reports_counter,
+            session_identifier=session_identifier)
+
+        self._PrintEventLabelsCounter(
+            session.event_labels_counter,
+            session_identifier=session_identifier)
+
   def _PrintSessionsOverview(self, storage):
     """Prints a sessions overview.
 
@@ -568,24 +648,60 @@ class PinfoTool(analysis_tool.AnalysisTool):
       self._PrintSessionsOverview(storage)
       self._PrintSessionsDetails(storage)
 
+      analysis_reports_counter = collections.Counter()
+      analysis_reports_counter_error = False
+      event_labels_counter = collections.Counter()
+      event_labels_counter_error = False
       parsers_counter = collections.Counter()
-      print_error = False
+      parsers_counter_error = False
+
       for session in storage.GetSessions():
+        # Check for a dict for backwards compatibility.
+        if isinstance(session.analysis_reports_counter, dict):
+          analysis_reports_counter += collections.Counter(
+              session.analysis_reports_counter)
+        elif isinstance(session.analysis_reports_counter, collections.Counter):
+          analysis_reports_counter += session.analysis_reports_counter
+        else:
+          analysis_reports_counter_error = True
+
+        # Check for a dict for backwards compatibility.
+        if isinstance(session.event_labels_counter, dict):
+          event_labels_counter += collections.Counter(
+              session.event_labels_counter)
+        elif isinstance(session.event_labels_counter, collections.Counter):
+          event_labels_counter += session.event_labels_counter
+        else:
+          event_labels_counter_error = True
+
         # Check for a dict for backwards compatibility.
         if isinstance(session.parsers_counter, dict):
           parsers_counter += collections.Counter(session.parsers_counter)
         elif isinstance(session.parsers_counter, collections.Counter):
           parsers_counter += session.parsers_counter
         else:
-          print_error = True
+          parsers_counter_error = True
 
-      if print_error:
+      if parsers_counter_error:
         self._output_writer.Write(
             u'Unable to determine number of events generated per parser.\n')
       else:
         self._PrintParsersCounter(parsers_counter)
 
+      if analysis_reports_counter_error:
+        self._output_writer.Write(
+            u'Unable to determine number of reports generated per plugin.\n')
+      else:
+        self._PrintAnalysisReportCounter(analysis_reports_counter)
+
+      if event_labels_counter_error:
+        self._output_writer.Write(
+            u'Unable to determine number of event tags generated per label.\n')
+      else:
+        self._PrintEventLabelsCounter(event_labels_counter)
+
       self._PrintErrorsDetails(storage)
+      self._PrintAnalysisReportsDetails(storage)
 
     elif storage.storage_type == definitions.STORAGE_TYPE_TASK:
       self._PrintTasksInformation(storage)
