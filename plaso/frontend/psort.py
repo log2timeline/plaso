@@ -87,7 +87,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     # TODO: implement clean up logic.
     return
 
-  def _CreateSessionStart(
+  def _CreateSession(
       self, command_line_arguments=None, preferred_encoding=u'utf-8'):
     """Creates the session start information.
 
@@ -96,14 +96,14 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       preferred_encoding (Optional[str]): preferred encoding.
 
     Returns:
-      SessionStart: session start attribute container.
+      Session: session attribute container.
     """
-    session_start = sessions.SessionStart()
+    session = sessions.Session()
 
-    session_start.command_line_arguments = command_line_arguments
-    session_start.preferred_encoding = preferred_encoding
+    session.command_line_arguments = command_line_arguments
+    session.preferred_encoding = preferred_encoding
 
-    return session_start
+    return session
 
   def _ProcessAnalysisPlugins(
       self, analysis_plugins, analysis_report_incoming_queue, storage_file,
@@ -213,11 +213,12 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
           analysis_plugins, analysis_queue_port=analysis_queue_port,
           analysis_report_incoming_queue=analysis_report_incoming_queue)
 
-      session_start = self._CreateSessionStart(
+      session = self._CreateSession(
           command_line_arguments=command_line_arguments,
           preferred_encoding=preferred_encoding)
 
       # TODO: refactor to use storage writer.
+      session_start = session.CreateSessionStart()
       storage_file.WriteSessionStart(session_start)
 
     # TODO: refactor to first apply the analysis plugins
@@ -237,9 +238,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         counter, preferred_encoding=preferred_encoding)
 
     if analysis_plugins:
-      session_completion = sessions.SessionCompletion(
-          identifier=session_start.identifier)
-
+      session_completion = session.CreateSessionCompletion()
       storage_file.WriteSessionCompletion(session_completion)
 
     for information in storage_file.GetStorageInformation():
