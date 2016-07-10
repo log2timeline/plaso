@@ -197,7 +197,7 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(lines), 18)
 
     expected_line = (
-        u'2016-06-25T09:21:41+00:00,'
+        u'2016-07-10T19:10:47+00:00,'
         u'atime,'
         u'FILE,'
         u'OS atime,'
