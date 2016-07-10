@@ -276,7 +276,7 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
     preprocessor_object = test_front_end._GetLastGoodPreprocess(storage_file)
     self.assertIsNotNone(preprocessor_object)
     timezone = getattr(preprocessor_object, u'zone')
-    self.assertEqual(timezone.zone, u'Iceland')
+    self.assertEqual(timezone.zone, u'UTC')
 
   def testSetAnalysisPluginProcessInformation(self):
     """Test the _SetAnalysisPluginProcessInformation method."""
