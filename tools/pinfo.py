@@ -367,15 +367,12 @@ class PinfoTool(analysis_tool.AnalysisTool):
         text = self._FormatPreprocessingInformationValue(key, value)
         lines_of_text.append(text)
 
-  def _FormatStorageInformation(
-      self, lines_of_text, storage_information, storage_file, last_entry=False):
+  def _FormatStorageInformation(self, lines_of_text, storage_information):
     """Formats the storage information.
 
     Args:
       lines_of_text (list[str]): lines of text.
       storage_information (PreprocessObject): storage information.
-      storage_file (StorageFile): storage file.
-      last_entry (Optional[bool]): True if this is the last information entry.
     """
     self._FormatCollectionInformation(lines_of_text, storage_information)
 

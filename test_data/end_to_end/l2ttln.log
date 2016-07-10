@@ -7,12 +7,12 @@ Time|Source|Host|User|Description|TZ|Notes
 1453449272|LOG|myhostname.myhost.com|-|2016-01-22T07:54:32+00:00; Content Modification Time; [Job] `cron.daily' terminated|UTC|File: OS:/tmp/test/test_data/syslog inode: 0
 1458774078|LOG|myhostname.myhost.com|-|2016-03-23T23:01:18+00:00; Content Modification Time; [somrandomexe, pid: 19] This syslog message has a fractional value for seconds.|UTC|File: OS:/tmp/test/test_data/syslog inode: 0
 1458774078|LOG|myhostname.myhost.com|-|2016-03-23T23:01:18+00:00; Content Modification Time; [somrandomexe, pid: 1915] This syslog message is brought to you by me (and not the other guy)|UTC|File: OS:/tmp/test/test_data/syslog inode: 0
-1468176430|FILE|-|-|2016-07-10T18:47:10+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
-1468176430|FILE|-|-|2016-07-10T18:47:10+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
-1468176430|FILE|-|-|2016-07-10T18:47:10+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
-1468176430|FILE|-|-|2016-07-10T18:47:10+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
-1468176431|FILE|-|-|2016-07-10T18:47:11+00:00; atime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
-1468176432|FILE|-|-|2016-07-10T18:47:12+00:00; atime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1468177846|FILE|-|-|2016-07-10T19:10:46+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1468177846|FILE|-|-|2016-07-10T19:10:46+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1468177846|FILE|-|-|2016-07-10T19:10:46+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1468177846|FILE|-|-|2016-07-10T19:10:46+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1468177847|FILE|-|-|2016-07-10T19:10:47+00:00; atime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1468177848|FILE|-|-|2016-07-10T19:10:48+00:00; atime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
 1479431720|LOG|myhostname.myhost.com|-|2016-11-18T01:15:20+00:00; Content Modification Time; [aprocess, pid: 10100] This is a multi-line message that screws up	many syslog parsers.|UTC|File: OS:/tmp/test/test_data/syslog inode: 0
 1482083672|LOG|myhostname.myhost.com|-|2016-12-18T17:54:32+00:00; Content Modification Time; [anacron, pid: 1234] No true exit can exist (124 job run)|UTC|File: OS:/tmp/test/test_data/syslog inode: 0
 1483206872|LOG|myhostname.myhost.com|-|2016-12-31T17:54:32+00:00; Content Modification Time; [anacron, pid: 1234] Another one just like this (124 job run)|UTC|File: OS:/tmp/test/test_data/syslog inode: 0

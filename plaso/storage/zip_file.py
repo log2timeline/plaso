@@ -3165,7 +3165,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self._storage_file.AddAnalysisReport(analysis_report)
 
     report_identifier = analysis_report.plugin_name
-    self._session.analysis_reports_counter[u'total'] += 1 
+    self._session.analysis_reports_counter[u'total'] += 1
     self._session.analysis_reports_counter[report_identifier] += 1
 
   def AddError(self, error):
@@ -3229,9 +3229,9 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     self._event_tags.append(event_tag)
 
-    self._session.event_labels_counter[u'total'] += 1  
-    for label in event_tag.labels:    
-      self._session.event_labels_counter[label] += 1    
+    self._session.event_labels_counter[u'total'] += 1
+    for label in event_tag.labels:
+      self._session.event_labels_counter[label] += 1
 
   def CheckTaskStorageReadyForMerge(self, task_name):
     """Checks if a task storage is ready for with the session storage.

@@ -68,7 +68,8 @@ class Session(interface.AttributeContainer):
       raise ValueError(u'Session identifier mismatch.')
 
     if session_completion.analysis_reports_counter:
-      self.analysis_reports_counter = session_completion.analysis_reports_counter
+      self.analysis_reports_counter = (
+          session_completion.analysis_reports_counter)
 
     self.completion_time = session_completion.timestamp
 
