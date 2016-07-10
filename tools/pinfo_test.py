@@ -85,6 +85,16 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
         b'             Filter file : \n'
         b'       Filter expression : \n'
         b'---------------------------------------------------------------------'
+        b'-----------\n'
+        b'\n'
+        b'************************* Events generated per parser ***************'
+        b'***********\n'
+        b'Parser name : Number of events\n'
+        b'---------------------------------------------------------------------'
+        b'-----------\n'
+        b'   filestat : 3\n'
+        b'      Total : 3\n'
+        b'---------------------------------------------------------------------'
         b'-----------\n')
 
     output = self._output_writer.ReadOutput()

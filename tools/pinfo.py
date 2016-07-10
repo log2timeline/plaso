@@ -6,6 +6,7 @@ pinfo stands for Plaso INniheldurFleiriOrd or plaso contains more words.
 """
 
 import argparse
+import collections
 import logging
 import os
 import pprint
@@ -53,12 +54,10 @@ class PinfoTool(analysis_tool.AnalysisTool):
     """Initializes the CLI tool object.
 
     Args:
-      input_reader: the input reader (instance of InputReader).
-                    The default is None which indicates the use of the stdin
-                    input reader.
-      output_writer: the output writer (instance of OutputWriter).
-                     The default is None which indicates the use of the stdout
-                     output writer.
+      input_reader (Optional[InputReader]): input reader, where None indicates
+          that the stdin input reader should be used.
+      output_writer (Optional[OutputWriter]): output writer, where None
+          indicates that the stdout output writer should be used.
     """
     super(PinfoTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
@@ -75,17 +74,14 @@ class PinfoTool(analysis_tool.AnalysisTool):
     """Compares the information dictionaries.
 
     Args:
-      identifier: The identifier of the dictionary to compare.
-      storage_information: The storage information object (instance of
-                            PreprocessObject).
-      compare_storage_information: The storage information object (instance of
-                                   PreprocessObject) to compare against.
-      ignore_values: optional list of value identifier to ignore. The default
-                     is None.
+      identifier (str): identifier of the dictionary to compare.
+      storage_information (PreprocessObject): storage information.
+      compare_storage_information (PreprocessObject): storage information
+          to compare against.
+      ignore_values (Optional[list[str]]): value identifiers to ignore.
 
     Returns:
-      A boolean value indicating if the information dictionaries are identical
-      or not.
+      bool: True if the storage information are identical.
     """
     information = getattr(storage_information, identifier, None)
     compare_information = getattr(compare_storage_information, identifier, None)
@@ -118,13 +114,13 @@ class PinfoTool(analysis_tool.AnalysisTool):
     """Compares the information values.
 
     Args:
-      identifier: The identifier of the value to compare.
-      description: Human readable description of the value.
-      information: The information dictionary.
-      compare_information: The information dictionary to compare against.
+      identifier (str): identifier of the value to compare.
+      description (str): human readable description of the value.
+      information (dict): information dictionary.
+      compare_information (dict): information dictionary to compare against.
 
     Returns:
-      A boolean value indicating if the information values are identical or not.
+      bool: True if the information dictionaries are identical.
     """
     has_value = information.has_key(identifier)
     compare_has_value = compare_information.has_key(identifier)
@@ -157,14 +153,12 @@ class PinfoTool(analysis_tool.AnalysisTool):
     """Compares the storage information objects.
 
     Args:
-      storage_information: The storage information object (instance of
-                            PreprocessObject).
-      compare_storage_information: The storage information object (instance of
-                                   PreprocessObject) to compare against.
+      storage_information (PreprocessObject): storage information.
+      compare_storage_information (PreprocessObject): storage information
+          to compare against.
 
     Returns:
-      A boolean value indicating if the storage information objects are
-      identical or not.
+      bool: True if the storage information are identical.
     """
     result = True
     if not self._CompareInformationDict(
@@ -191,13 +185,11 @@ class PinfoTool(analysis_tool.AnalysisTool):
     """Compares the storage information.
 
     Args:
-      storage_file: The storage file (instance of StorageFile).
-      compare_storage_file: The storage file (instance of StorageFile) to
-                            compare against.
+      storage_file (StorageFile): storage file.
+      compare_storage_file (StorageFile): storage file to compare against.
 
     Returns:
-      A boolean value indicating if the storage information objects are
-      identical or not.
+      bool: True if the contents of the storage files is identical.
     """
     storage_information_list = storage_file.GetStorageInformation()
     compare_storage_information_list = (
@@ -246,9 +238,8 @@ class PinfoTool(analysis_tool.AnalysisTool):
     """Formats the collection information.
 
     Args:
-      lines_of_text: A list containing the lines of text.
-      storage_information: The storage information object (instance of
-                            PreprocessObject).
+      lines_of_text (list[str]): lines of text.
+      storage_information (PreprocessObject): storage information.
     """
     collection_information = getattr(
         storage_information, u'collection_information', None)
@@ -278,7 +269,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     """Formats the counter information.
 
     Args:
-      lines_of_text: A list containing the lines of text.
+      lines_of_text (list[str]): lines of text.
       description: The counter information description.
       counter_information: The counter information dict.
     """
@@ -304,11 +295,11 @@ class PinfoTool(analysis_tool.AnalysisTool):
     """Formats a processing information value.
 
     Args:
-      key: The key of the value.
-      value: The value.
+      key (str): key of the value.
+      value (object): value.
 
     Returns:
-      A line of text containing the formatted processing information value.
+      str: line of text containing the formatted processing information value.
     """
     description = self._PREPROCESSING_VALUE_DESCRIPTIONS.get(key, key)
     # Make sure we have the same tab alignment for all the values.
@@ -325,9 +316,8 @@ class PinfoTool(analysis_tool.AnalysisTool):
     """Formats the processing information.
 
     Args:
-      lines_of_text: A list containing the lines of text.
-      storage_information: The storage information object (instance of
-                           PreprocessObject).
+      lines_of_text (list[str]): lines of text.
+      storage_information (PreprocessObject): storage information.
     """
     if lines_of_text:
       lines_of_text.append(u'')
@@ -381,10 +371,10 @@ class PinfoTool(analysis_tool.AnalysisTool):
     """Formats the reports.
 
     Args:
-      storage_file: The storage file (instance of StorageFile).
+      storage_file (StorageFile): storage file.
 
     Returns:
-      A string containing the formatted reports.
+      str: formatted reports.
     """
     if not storage_file.HasAnalysisReports():
       return u'No analysis reports stored.'
@@ -401,12 +391,10 @@ class PinfoTool(analysis_tool.AnalysisTool):
     """Formats the storage information.
 
     Args:
-      lines_of_text: A list containing the lines of text.
-      storage_information: The storage information object (instance of
-                           PreprocessObject).
-      storage_file: The storage file (instance of StorageFile).
-      last_entry: Optional boolean value to indicate this is the last
-                  information entry.
+      lines_of_text (list[str]): lines of text.
+      storage_information (PreprocessObject): storage information.
+      storage_file (StorageFile): storage file.
+      last_entry (Optional[bool]): True if this is the last information entry.
     """
     self._FormatCollectionInformation(lines_of_text, storage_information)
 
@@ -437,10 +425,9 @@ class PinfoTool(analysis_tool.AnalysisTool):
     """Formats the store information.
 
     Args:
-      printer_object: A pretty printer object (instance of PrettyPrinter).
-      lines_of_text: A list containing the lines of text.
-      storage_information: The storage information object (instance of
-                           PreprocessObject).
+      printer_object (PrettyPrinter): pretty printer.
+      lines_of_text (list[str]): lines of text.
+      storage_information (PreprocessObject): storage information.
     """
     store_information = getattr(storage_information, u'stores', None)
     if not store_information:
@@ -463,39 +450,89 @@ class PinfoTool(analysis_tool.AnalysisTool):
         lines_of_text.append(
             u'\t{0:s} =\n{1!s}'.format(key, printer_object.pformat(value)))
 
+  def _PrintErrorsDetails(self, storage):
+    """Prints the details of the errors.
+
+    Args:
+      storage (BaseStorage): storage.
+    """
+    for index, error in enumerate(storage.GetErrors()):
+      title = u'Error: {0:d}'.format(index)
+      table_view = cli_views.ViewsFactory.GetTableView(
+          self._views_format_type, title=title)
+
+      table_view.AddRow([u'Message', error.message])
+      table_view.AddRow([u'Parser chain', error.parser_chain])
+
+      table_view.Write(self._output_writer)
+
+  def _PrintParsersCounter(self, parsers_counter, session_identifier=None):
+    """Prints the parsers counter
+
+    Args:
+      parsers_counter (collections.Counter): parsers counter.
+      session_identifier (Optional[str]): sessio identifier.
+    """
+    if session_identifier:
+      title = u'Events generated per parser: {0:s}'.format(session_identifier)
+    else:
+      title = u'Events generated per parser'
+
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type,
+        column_names=[u'Parser name', u'Number of events'], title=title)
+
+    for key, value in sorted(parsers_counter.items()):
+      if key == u'total':
+        continue
+      table_view.AddRow([key, value])
+
+    table_view.AddRow([u'Total', parsers_counter[u'total']])
+
+    table_view.Write(self._output_writer)
+
   def _PrintSessionsDetails(self, storage):
     """Prints the details of the sessions.
 
     Args:
       storage (BaseStorage): storage.
     """
-    for session_start, session_completion in storage.GetSessions():
-      session_identifier = uuid.UUID(hex=session_start.identifier)
+    for session in storage.GetSessions():
+      session_identifier = uuid.UUID(hex=session.identifier)
+
+      if session.start_time is not None:
+        start_time = timelib.Timestamp.CopyToIsoFormat(session.start_time)
+      else:
+        start_time = u'N/A'
+
+      if session.completion_time is not None:
+        completion_time = timelib.Timestamp.CopyToIsoFormat(
+            session.completion_time)
+      else:
+        completion_time = u'N/A'
+
       title = u'Session: {0!s}'.format(session_identifier)
       table_view = cli_views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
 
-      start_time = timelib.Timestamp.CopyToIsoFormat(
-          session_start.timestamp)
       table_view.AddRow([u'Start time', start_time])
-
-      completion_time = timelib.Timestamp.CopyToIsoFormat(
-          session_completion.timestamp)
       table_view.AddRow([u'Completion time', completion_time])
-
-      table_view.AddRow([u'Product name', session_start.product_name])
-      table_view.AddRow([u'Product version', session_start.product_version])
+      table_view.AddRow([u'Product name', session.product_name])
+      table_view.AddRow([u'Product version', session.product_version])
       table_view.AddRow([
-          u'Command line arguments', session_start.command_line_arguments])
+          u'Command line arguments', session.command_line_arguments])
       table_view.AddRow([
-          u'Parser filter expression', session_start.parser_filter_expression])
-      table_view.AddRow([
-          u'Preferred encoding', session_start.preferred_encoding])
-      table_view.AddRow([u'Debug mode', session_start.debug_mode])
-      table_view.AddRow([u'Filter file', session_start.filter_file])
-      table_view.AddRow([u'Filter expression', session_start.filter_expression])
+          u'Parser filter expression', session.parser_filter_expression])
+      table_view.AddRow([u'Preferred encoding', session.preferred_encoding])
+      table_view.AddRow([u'Debug mode', session.debug_mode])
+      table_view.AddRow([u'Filter file', session.filter_file])
+      table_view.AddRow([u'Filter expression', session.filter_expression])
 
       table_view.Write(self._output_writer)
+
+      if self._verbose:
+        self._PrintParsersCounter(
+            session.parsers_counter, session_identifier=session_identifier)
 
   def _PrintSessionsOverview(self, storage):
     """Prints a sessions overview.
@@ -506,10 +543,10 @@ class PinfoTool(analysis_tool.AnalysisTool):
     table_view = cli_views.ViewsFactory.GetTableView(
         self._views_format_type, title=u'Sessions')
 
-    for session_start, _ in storage.GetSessions():
+    for session in storage.GetSessions():
       start_time = timelib.Timestamp.CopyToIsoFormat(
-          session_start.timestamp)
-      session_identifier = uuid.UUID(hex=session_start.identifier)
+          session.start_time)
+      session_identifier = uuid.UUID(hex=session.identifier)
       table_view.AddRow([str(session_identifier), start_time])
 
     table_view.Write(self._output_writer)
@@ -530,6 +567,25 @@ class PinfoTool(analysis_tool.AnalysisTool):
     if storage.storage_type == definitions.STORAGE_TYPE_SESSION:
       self._PrintSessionsOverview(storage)
       self._PrintSessionsDetails(storage)
+
+      parsers_counter = collections.Counter()
+      print_error = False
+      for session in storage.GetSessions():
+        # Check for a dict for backwards compatibility.
+        if isinstance(session.parsers_counter, dict):
+          parsers_counter += collections.Counter(session.parsers_counter)
+        elif isinstance(session.parsers_counter, collections.Counter):
+          parsers_counter += session.parsers_counter
+        else:
+          print_error = True
+
+      if print_error:
+        self._output_writer.Write(
+            u'Unable to determine number of events generated per parser.\n')
+      else:
+        self._PrintParsersCounter(parsers_counter)
+
+      self._PrintErrorsDetails(storage)
 
     elif storage.storage_type == definitions.STORAGE_TYPE_TASK:
       self._PrintTasksInformation(storage)
@@ -557,8 +613,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     """Compares the storage information.
 
     Returns:
-      A boolean value indicating if the storage information objects are
-      identical or not.
+      bool: True if the storage information are identical.
     """
     try:
       storage_file = storage_zip_file.StorageFile(
@@ -590,7 +645,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     """Parses the command line arguments.
 
     Returns:
-      A boolean value indicating the arguments were successfully parsed.
+      bool: True if the arguments were successfully parsed.
     """
     self._ConfigureLogging()
 
@@ -635,7 +690,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     """Parses the options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.

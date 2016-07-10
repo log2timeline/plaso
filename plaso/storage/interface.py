@@ -87,6 +87,14 @@ class BaseStorage(object):
     """
 
   @abc.abstractmethod
+  def HasErrors(self):
+    """Determines if a storage contains extraction errors.
+
+    Returns:
+      bool: True if the storage contains extraction errors.
+    """
+
+  @abc.abstractmethod
   def HasEventTags(self):
     """Determines if a storage contains event tags.
 

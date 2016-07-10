@@ -136,6 +136,7 @@ except ImportError:
 
 import construct
 
+from plaso.containers import sessions
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.serializer import json_serializer
@@ -2727,12 +2728,12 @@ class ZIPStorageFile(interface.BaseStorage):
     """Retrieves the sessions.
 
     Yields:
-      Tuples of a session start (instance of SessionStart) and
-      a session completion (instance of SessionCompletion) object.
-      The session completion value can be None if not available.
+      Session: session attribute container.
 
     Raises:
-      IOError: if a stream is missing.
+      IOError: if a stream is missing or there is a mismatch in session
+          identifiers between the session start and completion attribute
+          containers.
     """
     if self.format_version <= 20160501:
       return
@@ -2757,7 +2758,17 @@ class ZIPStorageFile(interface.BaseStorage):
         session_completion = self._ReadAttributeContainerFromStreamEntry(
             data_stream, u'session_completion')
 
-        yield session_start, session_completion
+      session = sessions.Session()
+      session.CopyAttributesFromSessionStart(session_start)
+      if session_completion:
+        try:
+          session.CopyAttributesFromSessionCompletion(session_completion)
+        except ValueError:
+          raise IOError(
+              u'Session identifier mismatch in stream: {0:s}'.format(
+                  stream_name))
+
+      yield session
 
   def HasAnalysisReports(self):
     """Determines if a storage contains analysis reports.
@@ -2772,6 +2783,18 @@ class ZIPStorageFile(interface.BaseStorage):
 
     for name in self._GetStreamNames():
       if name.startswith(stream_name_prefix):
+        return True
+
+    return False
+
+  def HasErrors(self):
+    """Determines if a storage contains extraction errors.
+
+    Returns:
+      bool: True if the storage contains extraction errors.
+    """
+    for name in self._GetStreamNames():
+      if name.startswith(u'error_data.'):
         return True
 
     return False
@@ -3117,13 +3140,12 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     """
     self._session.parsers_counter[u'total'] += 1
 
-    parser_name = getattr(event, u'parser', u'N/A')
+    # Here we want the name of the parser or plugin not the parser chain.
+    parser_name = getattr(event, u'parser', u'')
+    _, _, parser_name = parser_name.rpartition(u'/')
+    if not parser_name:
+      parser_name = u'N/A'
     self._session.parsers_counter[parser_name] += 1
-
-    # TODO: remove plugin, add parser chain.
-    if hasattr(event, u'plugin'):
-      plugin_name = getattr(event, u'plugin', u'N/A')
-      self._session.parser_plugins_counter[plugin_name] += 1
 
   def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
@@ -3141,11 +3163,6 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       self.AddEventTag(event_tag)
 
     self._storage_file.AddAnalysisReport(analysis_report)
-
-    report_identifier = u'Report: {0:s}'.format(analysis_report.plugin_name)
-
-    self._session.analysis_reports_counter[u'Total Reports'] += 1
-    self._session.analysis_reports_counter[report_identifier] += 1
 
   def AddError(self, error):
     """Adds an error.
@@ -3207,10 +3224,6 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       raise IOError(u'Unable to write to closed storage writer.')
 
     self._event_tags.append(event_tag)
-
-    self._session.event_tags_counter[u'Total Tags'] += 1
-    for label in event_tag.labels:
-      self._session.event_tags_counter[label] += 1
 
   def CheckTaskStorageReadyForMerge(self, task_name):
     """Checks if a task storage is ready for with the session storage.

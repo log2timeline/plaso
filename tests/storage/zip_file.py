@@ -1092,8 +1092,8 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    session_tuples = list(storage_file.GetSessions())
-    self.assertEqual(len(session_tuples), 2)
+    sessions_list = list(storage_file.GetSessions())
+    self.assertEqual(len(sessions_list), 2)
 
     storage_file.Close()
 
@@ -1114,6 +1114,24 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     has_reports = storage_file.HasAnalysisReports()
     self.assertFalse(has_reports)
+
+    storage_file.Close()
+
+  def testHasErrors(self):
+    """Tests the HasErrors function."""
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    storage_file = zip_file.ZIPStorageFile()
+    storage_file.Open(path=test_file)
+
+    self.assertTrue(storage_file.HasErrors())
+
+    storage_file.Close()
+
+    test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
+    storage_file = zip_file.ZIPStorageFile()
+    storage_file.Open(path=test_file)
+
+    self.assertFalse(storage_file.HasErrors())
 
     storage_file.Close()
 
