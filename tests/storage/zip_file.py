@@ -590,7 +590,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file.Open(path=test_file)
 
     stream_names = list(storage_file._GetStreamNames())
-    self.assertEqual(len(stream_names), 23)
+    self.assertEqual(len(stream_names), 33)
 
     storage_file.Close()
 
@@ -615,7 +615,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    expected_timestamp = 1466846500000000
+    expected_timestamp = 1468177846000000
 
     event_object = storage_file._GetSortedEvent(time_range=test_time_range)
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -1093,7 +1093,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file.Open(path=test_file)
 
     sessions_list = list(storage_file.GetSessions())
-    self.assertEqual(len(sessions_list), 2)
+    self.assertEqual(len(sessions_list), 4)
 
     storage_file.Close()
 
@@ -1141,20 +1141,17 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    self.assertFalse(storage_file.HasEventTags())
+    self.assertTrue(storage_file.HasEventTags())
 
     storage_file.Close()
 
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      self._CreateTestStorageFileWithTags(temp_file)
+    test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
+    storage_file = zip_file.ZIPStorageFile()
+    storage_file.Open(path=test_file)
 
-      storage_file = zip_file.ZIPStorageFile()
-      storage_file.Open(path=temp_file)
+    self.assertFalse(storage_file.HasEventTags())
 
-      self.assertTrue(storage_file.HasEventTags())
-
-      storage_file.Close()
+    storage_file.Close()
 
   def testOpenClose(self):
     """Tests the Open and Close functions."""
@@ -1266,7 +1263,7 @@ class StorageFileTest(test_lib.StorageTestCase):
     storage_file = zip_file.StorageFile(test_file, read_only=True)
 
     storage_information = storage_file.GetStorageInformation()
-    self.assertEqual(len(storage_information), 2)
+    self.assertEqual(len(storage_information), 4)
 
     storage_file.Close()
 
@@ -1300,8 +1297,8 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
         1453449181000000, 1453449181000000, 1453449241000000, 1453449241000000,
         1453449241000000, 1453449241000000, 1453449272000000, 1453449272000000,
         1456708543000000, 1456708543000000, 1458774078000000, 1458774078000000,
-        1458774078000000, 1458774078000000, 1466846500000000, 1466846500000000,
-        1466846500000000, 1466846500000000, 1466846501000000, 1466846501000000,
+        1458774078000000, 1458774078000000, 1468177846000000, 1468177846000000,
+        1468177846000000, 1468177846000000, 1468177847000000, 1468177848000000,
         1479431720000000, 1479431720000000, 1479431743000000, 1479431743000000,
         1482083672000000, 1482083672000000, 1483206872000000, 1483206872000000]
 
@@ -1319,8 +1316,8 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
         timestamps.append(event_object.timestamp)
 
     expected_timestamps = [
-        1466846500000000, 1466846500000000, 1466846500000000, 1466846500000000,
-        1466846501000000, 1466846501000000, 1479431720000000, 1479431720000000,
+        1468177846000000, 1468177846000000, 1468177846000000, 1468177846000000,
+        1468177847000000, 1468177848000000, 1479431720000000, 1479431720000000,
         1479431743000000, 1479431743000000, 1482083672000000, 1482083672000000,
         1483206872000000, 1483206872000000]
 

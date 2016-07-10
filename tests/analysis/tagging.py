@@ -22,6 +22,7 @@ class TestChromeDownloadEvent(events.EventObject):
   """A test event type for the tagging analysis plugin."""
   DATA_TYPE = u'chrome:history:file_downloaded'
 
+
 class TestEvtRecordEvent(events.EventObject):
   """A test event type for the tagging analysis plugin."""
   DATA_TYPE = u'windows:evt:record'
@@ -29,6 +30,9 @@ class TestEvtRecordEvent(events.EventObject):
 
 class TaggingTest(test_lib.AnalysisPluginTestCase):
   """Test for the tagging analysis plugin."""
+
+  # pylint: disable=protected-access
+
   _INVALID_TEST_TAG_FILE_NAME = u'invalid_test_tag_file.txt'
   _TEST_TAG_FILE_NAME = u'test_tag_file.txt'
 
@@ -73,7 +77,6 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
     """Test that the tagging plugin can parse a tag definition file."""
     event_queue = single_process.SingleProcessQueue()
     analysis_plugin = tagging.TaggingPlugin(event_queue)
-    # pylint: disable=protected-access
     tag_expression = analysis_plugin._ParseTaggingFile(
         self._GetTestFilePath([self._TEST_TAG_FILE_NAME]))
     self.assertEqual(len(tag_expression.children), 3)
@@ -82,7 +85,6 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
     """Test parsing of definition files that contain invalid directives."""
     event_queue = single_process.SingleProcessQueue()
     analysis_plugin = tagging.TaggingPlugin(event_queue)
-    # pylint: disable=protected-access
     tag_expression = analysis_plugin._ParseTaggingFile(
         self._GetTestFilePath([self._INVALID_TEST_TAG_FILE_NAME]))
     self.assertEqual(len(tag_expression.children), 2)
