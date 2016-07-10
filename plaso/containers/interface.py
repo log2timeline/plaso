@@ -53,6 +53,7 @@ class AttributeContainer(object):
     """
     return [name for name, _ in list(self.GetAttributes())]
 
+
 # Efilter protocol definition to enable filtering of containers.
 structured.IStructured.implement(
     for_type=AttributeContainer,
@@ -60,4 +61,4 @@ structured.IStructured.implement(
         structured.resolve:
             lambda container, key: getattr(container, key, None),
         structured.getmembers_runtime:
-            lambda container: container.GetAttributeNames(),})
+            lambda container: container.GetAttributeNames()})
