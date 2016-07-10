@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
-"""Base class for multi processing."""
+"""Base class for a process used in multi processing."""
 
+import abc
 import logging
 import multiprocessing
+import os
 import random
 import signal
 import time
-
-import abc
-import os
 
 from plaso.multi_processing import xmlrpc
 
 
 class MultiProcessBaseProcess(multiprocessing.Process):
   """Class that defines the multi-processing process interface.
+
   Attributes:
     rpc_port (int): port number of the process status RPC server.
   """
@@ -27,7 +27,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
     Args:
       enable_sigsegv_handler (bool): True if the SIGSEGV handler should
-                                     be enabled.
+          be enabled.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
     super(MultiProcessBaseProcess, self).__init__(**kwargs)
@@ -54,23 +54,28 @@ class MultiProcessBaseProcess(multiprocessing.Process):
   @abc.abstractmethod
   def _Main(self):
     """The process main loop.
+
     This method is called when the process is ready to start. A sub class
     should override this method to do the necessary actions in the main loop.
     """
 
   def _OnCriticalError(self):
     """The process on critical error handler.
+
     This method is called when the process encounters a critical error e.g.
     a segfault. A sub class should override this method to do the necessary
     actions before the original critical error signal handler it called.
-    Be aware that the state of the process should not be trusted a significant
-    part of memory could have been overwritten before a segfault. This callback
-    is primarily intended to salvage what we need to troubleshoot the error.
+
+    Be aware that the state of the process should not be trusted, as a
+    significant part of memory could have been overwritten before a segfault.
+    This callback is primarily intended to salvage what we need to troubleshoot
+    the error.
     """
     return
 
   def _SigSegvHandler(self, unused_signal_number, unused_stack_frame):
     """Signal handler for the SIGSEGV signal.
+
     Args:
       signal_number: Numeric representation of the signal.
       stack_frame: The current stack frame (instance of frame object) or None.

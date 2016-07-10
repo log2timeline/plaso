@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """A multiprocessing-backed queue."""
 
-import Queue
 import logging
 import multiprocessing
+import Queue
 
 from plaso.engine import plaso_queue
 from plaso.lib import errors

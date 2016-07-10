@@ -28,5 +28,6 @@ class MultiProcessingQueueTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(test_queue_consumer.number_of_items, len(self._ITEMS))
 
+
 if __name__ == '__main__':
   unittest.main()

@@ -3,8 +3,8 @@
 
 import ctypes
 import logging
-import os
 import multiprocessing
+import os
 import Queue
 import signal
 import sys
@@ -16,15 +16,15 @@ from dfvfs.resolver import context
 from plaso.containers import event_sources
 from plaso.engine import engine
 from plaso.engine import extractors
-from plaso.engine import zeromq_queue
-from plaso.engine import profiler
 from plaso.engine import plaso_queue
+from plaso.engine import profiler
+from plaso.engine import zeromq_queue
 from plaso.lib import definitions
-from plaso.multi_processing import xmlrpc
-from plaso.multi_processing import process_info
 from plaso.multi_processing import multi_process_queue
+from plaso.multi_processing import process_info
 from plaso.multi_processing import task_manager
 from plaso.multi_processing import worker_process
+from plaso.multi_processing import xmlrpc
 
 
 class MultiProcessEngine(engine.BaseEngine):

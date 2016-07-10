@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """The multi-process worker process."""
+
 import logging
 
 from dfvfs.lib import errors as dfvfs_errors
@@ -13,6 +14,7 @@ from plaso.lib import errors
 from plaso.multi_processing import base_process
 from plaso.multi_processing import multi_process_queue
 from plaso.parsers import mediator as parsers_mediator
+
 
 class WorkerProcess(base_process.MultiProcessBaseProcess):
   """Class that defines a multi-processing worker process."""
@@ -98,7 +100,11 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._worker_number = worker_number
 
   def _GetStatus(self):
-    """Returns a status dictionary."""
+    """Returns a status dictionary.
+
+    Returns:
+      dict [str, object]: status attributes, indexed by name.
+    """
     if self._parser_mediator:
       number_of_produced_errors = (
           self._parser_mediator.number_of_produced_errors)

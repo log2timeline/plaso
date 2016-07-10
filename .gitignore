@@ -16,7 +16,7 @@
 /dist/
 /plaso.egg-info
 
-# Sphinx documentation
+# Auto-generated Sphinx documentation files
 /docs/_build/doctrees/
 /docs/_build/html
 /docs/_build/.doctrees/
