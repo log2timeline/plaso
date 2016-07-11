@@ -606,12 +606,6 @@ class MultiProcessEngine(engine.BaseEngine):
       self._serializers_profiler = profiler.SerializersProfiler(
           identifier, path=self._profiling_directory)
 
-  def _StartTaskSchedulerThread(self):
-    """Starts the task scheduler thread."""
-    self._task_scheduler_thread = threading.Thread(
-        name=u'Task Scheduler', target=self._ScheduleTasks)
-    self._task_scheduler_thread.start()
-
   def _StopExtractionProcesses(self, abort=False):
     """Stops the extraction processes.
 
@@ -706,12 +700,6 @@ class MultiProcessEngine(engine.BaseEngine):
     if self._profiling_type in (u'all', u'serializers'):
       self._serializers_profiler.Write()
       self._serializers_profiler = None
-
-  def _StopTaskSchedulerThread(self):
-    """Stops the task scheduler thread."""
-    if self._task_scheduler_thread.isAlive():
-      self._task_scheduler_thread.join()
-    self._task_scheduler_thread = None
 
   def _TerminateProcess(self, pid):
     """Terminate a process.
