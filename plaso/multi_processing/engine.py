@@ -442,16 +442,16 @@ class MultiProcessEngine(engine.BaseEngine):
         if task:
           try:
             self._task_queue.PushItem(task, block=False)
-            self._task_manager.TrackTask(task.identifier)
+            self._task_manager.ScheduleTask(task.identifier)
             task = None
 
           except Queue.Full:
             pass
 
-        # GetTrackedTaskIdentifiers makes a copy of the keys since we are
+        # GetScheduledTaskIdentifiers makes a copy of the keys since we are
         # changing the dictionary inside the loop.
         task_storage_merged = False
-        for task_identifier in self._task_manager.GetTrackedTaskIdentifiers():
+        for task_identifier in self._task_manager.GetScheduledTaskIdentifiers():
           if self._abort:
             break
 
