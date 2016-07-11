@@ -2,6 +2,7 @@
 """Event source related attribute container object definitions."""
 
 from plaso.containers import interface
+from plaso.containers import manager
 
 
 class EventSource(interface.AttributeContainer):
@@ -40,3 +41,6 @@ class FileEntryEventSource(EventSource):
   within a file system.
   """
   DATA_TYPE = u'file_entry'
+
+
+manager.AttributeContainersManager.RegisterAttributeContainer(EventSource)
