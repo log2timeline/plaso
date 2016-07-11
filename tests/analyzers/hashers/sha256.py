@@ -3,9 +3,9 @@
 
 import unittest
 
-from plaso.hashers import sha256
+from plaso.analyzers.hashers import sha256
 
-from tests.hashers import test_lib
+from tests.analyzers.hashers import test_lib
 
 
 class SHA256Test(test_lib.HasherTestCase):

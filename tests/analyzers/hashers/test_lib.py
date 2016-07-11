@@ -19,9 +19,10 @@ class HasherTestCase(shared_test_lib.BaseTestCase):
     """Test that a hasher returns a given result when it hashes a file.
 
     Args:
-      hasher: The hasher (subclass of BaseHasher) to test.
-      file_entry: The dfVFS file entry to hash.
-      hash: The digest the hasher should return.
+      hasher (Class): hasher to test.
+      file_entry (dfvfs.file_entry): file entry whose default data stream will
+          be hashed.
+      digest (str): The digest the hasher should return.
     """
     file_object = file_entry.GetFileObject()
     # Make sure we are starting from the beginning of the file.
@@ -58,9 +59,9 @@ class HasherTestCase(shared_test_lib.BaseTestCase):
     """Check if a hasher returns a given result when it hashes a test file.
 
     Args:
-      hasher: The hasher (subclass of BaseHasher) to test.
-      file_entry: The dfVFS file entry to hash.
-      hash: The hash the hasher should return.
+      hasher (Class): hasher class to test.
+      path_segments (list[str]): path segments inside the test data directory.
+      digest (str): hash the hasher should return.
     """
     file_entry = self._GetTestFileEntry(path_segments)
     self._AssertFileEntryBinaryDigestMatch(hasher, file_entry, digest)
@@ -69,9 +70,9 @@ class HasherTestCase(shared_test_lib.BaseTestCase):
     """Check if a hasher returns a given result when it hashes a test file.
 
     Args:
-      hasher: The hasher (subclass of BaseHasher) to test.
-      file_entry: The dfVFS file entry to hash.
-      hash: The digest the hasher should return.
+      hasher (Class): hasher class to test.
+      path_segments (list[str]): path segments inside the test data directory.
+
     """
     file_entry = self._GetTestFileEntry(path_segments)
     self._AssertFileEntryStringDigestMatch(hasher, file_entry, digest)

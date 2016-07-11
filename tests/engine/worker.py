@@ -168,10 +168,38 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     resolver_context = context.Context()
     extraction_worker = worker.EventExtractionWorker(resolver_context)
 
-    extraction_worker.SetHashers(hasher_names_string=u'md5')
-    self.assertEqual(1, len(extraction_worker._hasher_names))
+    extraction_worker.SetHashers(u'md5')
+    self.assertIn(u'hashing', extraction_worker.analyzer_names)
 
-    # TODO: test hashing results.
+    session = sessions.Session()
+    empty_file_md5 = u'd41d8cd98f00b204e9800998ecf8427e'
+    path_spec = self._GetTestFilePathSpec([u'empty_file'])
+    storage_writer = fake_storage.FakeStorageWriter(session)
+    self._TestProcessPathSpec(storage_writer, path_spec)
+
+    for event in storage_writer.events:
+      self.assertEqual(event[u'md5_hash'], empty_file_md5)
+
+  def testExtractionWorkerYara(self):
+    """Test that the worker sets up and runs hashing code correctly."""
+    resolver_context = context.Context()
+    extraction_worker = worker.EventExtractionWorker(resolver_context)
+
+    rule_path = self._GetTestFilePath([u'yara.rules'])
+    with open(rule_path, 'r') as rule_file:
+      rule_string = rule_file.read()
+
+    extraction_worker.SetYaraRules(rule_string)
+    self.assertIn(u'yara', extraction_worker.analyzer_names)
+
+    session = sessions.Session()
+    yara_match_name = u'PEfile'
+    path_spec = self._GetTestFilePathSpec([u'test_pe.exe'])
+    storage_writer = fake_storage.FakeStorageWriter(session)
+    self._TestProcessPathSpec(storage_writer, path_spec)
+
+    for event in storage_writer.events:
+      self.assertEqual(event[u'yara_match'], yara_match_name)
 
 
 if __name__ == '__main__':

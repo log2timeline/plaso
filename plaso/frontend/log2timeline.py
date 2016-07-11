@@ -7,8 +7,8 @@ import sys
 import plaso
 # The following import makes sure the filters are registered.
 from plaso import filters  # pylint: disable=unused-import
-# The following import makes sure the hashers are registered.
-from plaso import hashers  # pylint: disable=unused-import
+# The following import makes sure the analyzers are registered.
+from plaso import analyzers  # pylint: disable=unused-import
 # The following import makes sure the parsers are registered.
 from plaso import parsers  # pylint: disable=unused-import
 # The following import makes sure the output modules are registered.
@@ -22,8 +22,8 @@ class LoggingFilter(logging.Filter):
   """Class that implements basic filtering of log events for plaso.
 
   Some libraries, like binplist, introduce excessive amounts of
-  logging that clutters down the debug logs of plaso, making them
-  almost non-usable. This class implements a filter designed to make
+  logging that clutters the debug logs of plaso, making them
+  almost unusable. This class implements a filter designed to make
   the debug logs more clutter-free.
   """
 

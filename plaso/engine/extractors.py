@@ -23,7 +23,7 @@ from plaso.parsers import manager as parsers_manager
 class EventExtractor(object):
   """Class that implements an event extractor object.
 
-  The event extractor extracts events from event sources.
+  An event extractor extracts events from event sources.
   """
 
   def __init__(self, resolver_context, parser_filter_expression=None):
@@ -304,7 +304,7 @@ class EventExtractor(object):
 class PathSpecExtractor(object):
   """Class that implements a path specification extractor object.
 
-  The path specification extractor extracts path specification from a source
+  A path specification extractor extracts path specification from a source
   directory, file or storage media device or image.
   """
 

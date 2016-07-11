@@ -26,7 +26,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       parser_filter_expression=None, process_archive_files=False,
       profiling_directory=None, profiling_sample_rate=1000,
       profiling_type=u'all', temporary_directory=None, text_prepend=None,
-      **kwargs):
+      yara_rules_string=None, **kwargs):
     """Initializes a worker process.
 
     Non-specified keyword arguments (kwargs) are directly passed to
@@ -66,6 +66,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       temporary_directory (Optional[str]): path of the directory for temporary
           files.
       text_prepend (Optional[str]): text to prepend to every event.
+      yara_rules_string (Optional[str]): unparsed yara rule definitions.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
     super(WorkerProcess, self).__init__(**kwargs)
@@ -98,6 +99,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._temporary_directory = temporary_directory
     self._text_prepend = text_prepend
     self._worker_number = worker_number
+    self._yara_rules_string = yara_rules_string
 
   def _GetStatus(self):
     """Returns a status dictionary.
@@ -168,6 +170,9 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
     if self._hasher_names_string:
       self._extraction_worker.SetHashers(self._hasher_names_string)
+
+    if self._yara_rules_string:
+      self._extraction_worker.SetYaraRules(self._yara_rules_string)
 
     self._StartProfiling()
 
@@ -317,8 +322,8 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
           identifier, path=self._profiling_directory)
       self._extraction_worker.SetParsersProfiler(self._parsers_profiler)
 
-    if self._profiling_type in (u'all', u'processsing'):
-      identifier = u'{0:s}-processsing'.format(self._name)
+    if self._profiling_type in (u'all', u'processing'):
+      identifier = u'{0:s}-processing'.format(self._name)
       self._processing_profiler = profiler.ProcessingProfiler(
           identifier, path=self._profiling_directory)
       self._extraction_worker.SetProcessingProfiler(self._processing_profiler)

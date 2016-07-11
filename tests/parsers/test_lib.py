@@ -22,7 +22,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
   def _CreateParserMediator(
       self, storage_writer, file_entry=None, knowledge_base_values=None,
       parser_chain=None):
-    """Creates a parser mediator object.
+    """Creates a parser mediator.
 
     Args:
       storage_writer (StorageWriter): storage writer.
