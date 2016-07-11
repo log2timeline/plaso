@@ -37,23 +37,27 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
 
   def _TestProcessPathSpec(
-      self, storage_writer, path_spec, process_archive_files=False):
+      self, storage_writer, path_spec, extraction_worker=None,
+      process_archive_files=False):
     """Tests processing a path specification.
 
     Args:
-      storage_writer: a storage writer object (instance of StorageWriter).
-      path_spec: a path specification (dfvfs.PathSpec).
+      storage_writer (StorageWriter): storage writer.
+      path_spec (dfvfs.PathSpec): path specification.
+      extraction_worker (Optional[EventExtractorWorker]: worker to process the
+        pathspec. If None, a new worker will be created.
       process_archive_files: optional boolean value to indicate if archive
                              files should be processed.
     """
     knowledge_base_object = knowledge_base.KnowledgeBase()
-    resolver_context = context.Context()
-
     parser_mediator = parsers_mediator.ParserMediator(
         storage_writer, knowledge_base_object)
 
-    extraction_worker = worker.EventExtractionWorker(
-        resolver_context, process_archive_files=process_archive_files)
+    if not extraction_worker:
+      resolver_context = context.Context()
+
+      extraction_worker = worker.EventExtractionWorker(
+          resolver_context, process_archive_files=process_archive_files)
 
     storage_writer.Open()
     storage_writer.WriteSessionStart()
@@ -175,10 +179,11 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     empty_file_md5 = u'd41d8cd98f00b204e9800998ecf8427e'
     path_spec = self._GetTestFilePathSpec([u'empty_file'])
     storage_writer = fake_storage.FakeStorageWriter(session)
-    self._TestProcessPathSpec(storage_writer, path_spec)
+    self._TestProcessPathSpec(
+        storage_writer, path_spec, extraction_worker=extraction_worker)
 
     for event in storage_writer.events:
-      self.assertEqual(event[u'md5_hash'], empty_file_md5)
+      self.assertEqual(getattr(event, u'md5_hash', None), empty_file_md5)
 
   def testExtractionWorkerYara(self):
     """Test that the worker sets up and runs hashing code correctly."""
@@ -196,10 +201,11 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     yara_match_name = u'PEfile'
     path_spec = self._GetTestFilePathSpec([u'test_pe.exe'])
     storage_writer = fake_storage.FakeStorageWriter(session)
-    self._TestProcessPathSpec(storage_writer, path_spec)
+    self._TestProcessPathSpec(
+        storage_writer, path_spec, extraction_worker=extraction_worker)
 
     for event in storage_writer.events:
-      self.assertEqual(event[u'yara_match'], yara_match_name)
+      self.assertEqual(getattr(event, u'yara_match', None), yara_match_name)
 
 
 if __name__ == '__main__':

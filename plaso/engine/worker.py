@@ -263,7 +263,7 @@ class EventExtractionWorker(object):
 
     try:
       analyzer_results = analyzers_manager.AnalyzersManager.AnalyzeFileObject(
-          file_object, parser_mediator, self._analyzers)
+          parser_mediator, file_object, self._analyzers)
     finally:
       file_object.close()
 
