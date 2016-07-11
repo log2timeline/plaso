@@ -8,6 +8,7 @@ import os
 import Queue
 import signal
 import sys
+import threading
 import time
 
 from dfvfs.resolver import context
@@ -94,10 +95,15 @@ class MultiProcessEngine(engine.BaseEngine):
     self._last_worker_number = 0
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._memory_profiler = None
+    self._merge_task_identifier = u''
     self._mount_path = None
     self._name = u'Main'
-    self._new_event_sources = False
+    self._number_of_consumed_errors = 0
+    self._number_of_consumed_events = 0
     self._number_of_consumed_sources = 0
+    self._number_of_produced_errors = 0
+    self._number_of_produced_events = 0
+    self._number_of_produced_sources = 0
     self._number_of_worker_processes = 0
     self._parser_filter_expression = None
     self._pid = os.getpid()
@@ -112,7 +118,10 @@ class MultiProcessEngine(engine.BaseEngine):
     self._serializers_profiler = None
     self._session_identifier = None
     self._show_memory_usage = False
+    self._status = definitions.PROCESSING_STATUS_IDLE
+    self._status_update_active = False
     self._status_update_callback = None
+    self._status_update_thread = None
     self._storage_writer = None
     self._task_queue = None
     self._task_queue_port = None
@@ -240,11 +249,6 @@ class MultiProcessEngine(engine.BaseEngine):
     elif self._show_memory_usage:
       self._LogMemoryUsage(pid)
 
-  def _CheckStatusWorkerProcesses(self):
-    """Checks status of the worker processes."""
-    for pid in iter(self._process_information_per_pid.keys()):
-      self._CheckStatusWorkerProcess(pid)
-
   def _GetProcessStatus(self, process):
     """Queries a process to determine its status.
 
@@ -316,9 +320,13 @@ class MultiProcessEngine(engine.BaseEngine):
       filter_find_specs: optional list of filter find specifications (instances
                          of dfvfs.FindSpec).
     """
+    self._status = definitions.PROCESSING_STATUS_COLLECTING
+    self._number_of_consumed_errors = 0
+    self._number_of_consumed_events = 0
     self._number_of_consumed_sources = 0
-
-    self._UpdateStatus(definitions.PROCESSING_STATUS_COLLECTING, storage_writer)
+    self._number_of_produced_errors = 0
+    self._number_of_produced_events = 0
+    self._number_of_produced_sources = 0
 
     path_spec_extractor = extractors.PathSpecExtractor(self._resolver_context)
 
@@ -333,23 +341,18 @@ class MultiProcessEngine(engine.BaseEngine):
       event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
       storage_writer.AddEventSource(event_source)
 
-      self._UpdateStatus(
-          definitions.PROCESSING_STATUS_COLLECTING, storage_writer)
-
-    # Force the status update here to make sure the status is up to date.
-    self._UpdateStatus(
-        definitions.PROCESSING_STATUS_COLLECTING, storage_writer, force=True)
+      self._number_of_produced_sources = storage_writer.number_of_event_sources
 
     self._ScheduleTasks(storage_writer)
 
     if self._abort:
-      status = definitions.PROCESSING_STATUS_ABORTED
+      self._status = definitions.PROCESSING_STATUS_ABORTED
     else:
-      status = definitions.PROCESSING_STATUS_COMPLETED
+      self._status = definitions.PROCESSING_STATUS_COMPLETED
 
-    # Force the status update here to make sure the status is up to date
-    # on exit.
-    self._UpdateStatus(status, storage_writer, force=True)
+    self._number_of_produced_errors = storage_writer.number_of_errors
+    self._number_of_produced_events = storage_writer.number_of_events
+    self._number_of_produced_sources = storage_writer.number_of_event_sources
 
   def _ProfilingSampleMemory(self):
     """Create a memory profiling sample."""
@@ -410,6 +413,8 @@ class MultiProcessEngine(engine.BaseEngine):
     """
     logging.debug(u'Task scheduler started')
 
+    self._status = definitions.PROCESSING_STATUS_RUNNING
+
     # TODO: make tasks persistent.
 
     # TODO: protect task scheduler loop by catch all and
@@ -465,6 +470,9 @@ class MultiProcessEngine(engine.BaseEngine):
           if task_storage_merged:
             continue
 
+          self._status = definitions.PROCESSING_STATUS_MERGING
+          self._merge_task_identifier = task_identifier
+
           if self._processing_profiler:
             self._processing_profiler.StartTiming(u'merge')
 
@@ -476,8 +484,12 @@ class MultiProcessEngine(engine.BaseEngine):
           if self._processing_profiler:
             self._processing_profiler.StopTiming(u'merge')
 
-        self._UpdateStatus(
-            definitions.PROCESSING_STATUS_RUNNING, storage_writer)
+          self._status = definitions.PROCESSING_STATUS_RUNNING
+          self._merge_task_identifier = u''
+          self._number_of_produced_errors = storage_writer.number_of_errors
+          self._number_of_produced_events = storage_writer.number_of_events
+          self._number_of_produced_sources = (
+              storage_writer.number_of_event_sources)
 
         if not event_source and not task:
           event_source = storage_writer.GetNextEventSource()
@@ -485,7 +497,7 @@ class MultiProcessEngine(engine.BaseEngine):
       for task in self._task_manager.GetAbandonedTasks():
         self._processing_status.error_path_specs.append(task.path_spec)
 
-      self._UpdateStatus(definitions.PROCESSING_STATUS_RUNNING, storage_writer)
+    self._status = definitions.PROCESSING_STATUS_IDLE
 
     if self._abort:
       logging.debug(u'Task scheduler aborted')
@@ -606,6 +618,32 @@ class MultiProcessEngine(engine.BaseEngine):
       self._serializers_profiler = profiler.SerializersProfiler(
           identifier, path=self._profiling_directory)
 
+  def _StartStatusUpdateThread(self):
+    """Starts the status update thread."""
+    self._status_update_thread = threading.Thread(
+        name=u'Status update', target=self._StatusUpdateThreadMain)
+    self._status_update_active = True
+    self._status_update_thread.start()
+
+  def _StatusUpdateThreadMain(self):
+    """Main function of the status update thread."""
+    while self._status_update_active:
+      # Make a local copy of the PIDs in case the dict changes by
+      # the main thread.
+      for pid in list(self._process_information_per_pid.keys()):
+        self._CheckStatusWorkerProcess(pid)
+
+      self._processing_status.UpdateForemanStatus(
+          self._name, self._status, self._pid, self._merge_task_identifier,
+          self._number_of_consumed_sources, self._number_of_produced_sources,
+          self._number_of_consumed_events, self._number_of_produced_events,
+          self._number_of_consumed_errors, self._number_of_produced_errors)
+
+      if self._status_update_callback:
+        self._status_update_callback(self._processing_status)
+
+      time.sleep(self._STATUS_UPDATE_INTERVAL)
+
   def _StopExtractionProcesses(self, abort=False):
     """Stops the extraction processes.
 
@@ -701,6 +739,13 @@ class MultiProcessEngine(engine.BaseEngine):
       self._serializers_profiler.Write()
       self._serializers_profiler = None
 
+  def _StopStatusUpdateThread(self):
+    """Stops the status update thread."""
+    self._status_update_active = False
+    if self._status_update_thread.isAlive():
+      self._status_update_thread.join()
+    self._status_update_thread = None
+
   def _TerminateProcess(self, pid):
     """Terminate a process.
 
@@ -770,33 +815,6 @@ class MultiProcessEngine(engine.BaseEngine):
         self._task_manager.UpdateTask(task_identifier)
       except KeyError:
         logging.error(u'Worker processing untracked task.')
-
-  def _UpdateStatus(self, status, storage_writer, force=False):
-    """Updates the processing status.
-
-    Args:
-      status (str): human readable status of the foreman e.g. 'Idle'.
-      storage_writer (StorageWriter): storage writer for a session storage.
-      force (Optional[bool]): True if the update should be forced ignoring
-          the last status update time.
-    """
-    current_timestamp = time.time()
-    if not force and current_timestamp < (
-        self._last_status_update_timestamp + self._STATUS_UPDATE_INTERVAL):
-      return
-
-    self._CheckStatusWorkerProcesses()
-    self._processing_status.UpdateForemanStatus(
-        self._name, status, self._pid, u'',
-        self._number_of_consumed_sources,
-        storage_writer.number_of_event_sources,
-        0, storage_writer.number_of_events,
-        0, storage_writer.number_of_errors)
-
-    if self._status_update_callback:
-      self._status_update_callback(self._processing_status)
-
-    self._last_status_update_timestamp = current_timestamp
 
   def ProcessSources(
       self, session_identifier, source_path_specs, preprocess_object,
@@ -905,6 +923,10 @@ class MultiProcessEngine(engine.BaseEngine):
 
     storage_writer.Open()
 
+    # Start the status update thread after open of the storage writer
+    # so we don't have to clean up the thread if the open fails.
+    self._StartStatusUpdateThread()
+
     try:
       storage_writer.WriteSessionStart()
 
@@ -920,6 +942,10 @@ class MultiProcessEngine(engine.BaseEngine):
 
     finally:
       storage_writer.Close()
+
+      # Stop the status update thread after close of the storage writer
+      # so we include the storage sync to disk in the status updates.
+      self._StopStatusUpdateThread()
 
       if self._serializers_profiler:
         storage_writer.SetSerializersProfiler(None)
