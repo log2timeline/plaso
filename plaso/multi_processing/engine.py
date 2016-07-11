@@ -8,7 +8,6 @@ import os
 import Queue
 import signal
 import sys
-import threading
 import time
 
 from dfvfs.resolver import context
@@ -91,6 +90,7 @@ class MultiProcessEngine(engine.BaseEngine):
     self._filter_find_specs = None
     self._filter_object = None
     self._hasher_names_string = None
+    self._last_status_update_timestamp = 0.0
     self._last_worker_number = 0
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._memory_profiler = None
@@ -336,46 +336,20 @@ class MultiProcessEngine(engine.BaseEngine):
       self._UpdateStatus(
           definitions.PROCESSING_STATUS_COLLECTING, storage_writer)
 
-    self._new_event_sources = True
-    while self._new_event_sources:
-      if self._abort:
-        return
+    # Force the status update here to make sure the status is up to date.
+    self._UpdateStatus(
+        definitions.PROCESSING_STATUS_COLLECTING, storage_writer, force=True)
 
-      # Set new event sources to false so the task scheduler thread can set
-      # it to true when there are new event sources. Since the task scheduler
-      # thread is joined before this value is checked again there is
-      # no need for a synchronization primitive.
-      self._new_event_sources = False
-
-      self._task_scheduler_active = True
-      self._StartTaskSchedulerThread()
-
-      # TODO: re-implement abort path on workers idle (raise EngineAbort).
-      # TODO: change status check.
-      self._CheckStatusWorkerProcesses()
-
-      try:
-        while self._task_scheduler_active:
-          self._CheckStatusWorkerProcesses()
-          self._UpdateStatus(
-              definitions.PROCESSING_STATUS_RUNNING, storage_writer)
-
-          time.sleep(self._STATUS_UPDATE_INTERVAL)
-
-      except KeyboardInterrupt:
-        self.SignalAbort()
-
-      self._StopTaskSchedulerThread()
-
-      self._CheckStatusWorkerProcesses()
-      self._UpdateStatus(definitions.PROCESSING_STATUS_RUNNING, storage_writer)
+    self._ScheduleTasks(storage_writer)
 
     if self._abort:
       status = definitions.PROCESSING_STATUS_ABORTED
     else:
       status = definitions.PROCESSING_STATUS_COMPLETED
 
-    self._UpdateStatus(status, storage_writer)
+    # Force the status update here to make sure the status is up to date
+    # on exit.
+    self._UpdateStatus(status, storage_writer, force=True)
 
   def _ProfilingSampleMemory(self):
     """Create a memory profiling sample."""
@@ -428,8 +402,12 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._processes_per_pid[process.pid] = process
 
-  def _ScheduleTasks(self):
-    """Schedules tasks."""
+  def _ScheduleTasks(self, storage_writer):
+    """Schedule tasks.
+
+    Args:
+      storage_writer: a storage writer object (instance of StorageWriter).
+    """
     logging.debug(u'Task scheduler started')
 
     # TODO: make tasks persistent.
@@ -437,71 +415,77 @@ class MultiProcessEngine(engine.BaseEngine):
     # TODO: protect task scheduler loop by catch all and
     # handle abort path.
 
-    event_source = self._storage_writer.GetNextEventSource()
-    if event_source:
-      self._new_event_sources = True
-
     task = None
-    while event_source or self._task_manager.HasScheduledTasks():
+
+    new_event_sources = True
+    while new_event_sources:
       if self._abort:
-        break
+        return
 
-      if event_source and not task:
-        task = self._task_manager.CreateTask(self._session_identifier)
-        task.path_spec = event_source.path_spec
-        event_source = None
-
-        self._number_of_consumed_sources += 1
-
-        if self._memory_profiler:
-          self._memory_profiler.Sample()
-
-      if task:
-        try:
-          self._task_queue.PushItem(task, block=False)
-          self._task_manager.ScheduleTask(task.identifier)
-          task = None
-
-        except Queue.Full:
-          pass
-
-      # GetScheduledTaskIdentifiers makes a copy of the keys since we are
-      # changing the dictionary inside the loop.
-      task_storage_merged = False
-      for task_identifier in self._task_manager.GetScheduledTaskIdentifiers():
+      new_event_sources = False
+      event_source = storage_writer.GetNextEventSource()
+      while event_source or self._task_manager.HasScheduledTasks():
+        new_event_sources = True
         if self._abort:
           break
 
-        if not self._storage_writer.CheckTaskStorageReadyForMerge(
-            task_identifier):
-          continue
+        if event_source and not task:
+          task = self._task_manager.CreateTask(self._session_identifier)
+          task.path_spec = event_source.path_spec
+          event_source = None
 
-        # Make sure completed tasks are not considered idle when not
-        # yet merged.
-        self._task_manager.UpdateTask(task_identifier)
+          self._number_of_consumed_sources += 1
 
-        # Merge one task-based storage file per loop to keep tasks flowing.
-        if task_storage_merged:
-          continue
+          if self._memory_profiler:
+            self._memory_profiler.Sample()
 
-        if self._processing_profiler:
-          self._processing_profiler.StartTiming(u'merge')
+        if task:
+          try:
+            self._task_queue.PushItem(task, block=False)
+            self._task_manager.TrackTask(task.identifier)
+            task = None
 
-        # TODO: look into time slicing merge.
-        if self._storage_writer.MergeTaskStorage(task_identifier):
-          self._task_manager.CompleteTask(task_identifier)
-          task_storage_merged = True
+          except Queue.Full:
+            pass
 
-        if self._processing_profiler:
-          self._processing_profiler.StopTiming(u'merge')
+        # GetTrackedTaskIdentifiers makes a copy of the keys since we are
+        # changing the dictionary inside the loop.
+        task_storage_merged = False
+        for task_identifier in self._task_manager.GetTrackedTaskIdentifiers():
+          if self._abort:
+            break
 
-      if not event_source and not task:
-        event_source = self._storage_writer.GetNextEventSource()
+          if storage_writer.CheckTaskStorageReadyForMerge(
+              task_identifier):
+            # Make sure completed tasks are not considered idle when not
+            # yet merged.
+            self._task_manager.UpdateTask(task_identifier)
 
-    for task in self._task_manager.GetAbandonedTasks():
-      self._processing_status.error_path_specs.append(task.path_spec)
+          # Merge one task-based storage file per loop to keep tasks flowing.
+          if task_storage_merged:
+            continue
 
-    self._task_scheduler_active = False
+          if self._processing_profiler:
+            self._processing_profiler.StartTiming(u'merge')
+
+          # TODO: look into time slicing merge.
+          if storage_writer.MergeTaskStorage(task_identifier):
+            self._task_manager.CompleteTask(task_identifier)
+            task_storage_merged = True
+
+          if self._processing_profiler:
+            self._processing_profiler.StopTiming(u'merge')
+
+        self._UpdateStatus(
+            definitions.PROCESSING_STATUS_RUNNING, storage_writer)
+
+        if not event_source and not task:
+          event_source = storage_writer.GetNextEventSource()
+
+      for task in self._task_manager.GetAbandonedTasks():
+        self._processing_status.error_path_specs.append(task.path_spec)
+
+      self._UpdateStatus(definitions.PROCESSING_STATUS_RUNNING, storage_writer)
 
     if self._abort:
       logging.debug(u'Task scheduler aborted')
@@ -799,13 +783,21 @@ class MultiProcessEngine(engine.BaseEngine):
       except KeyError:
         logging.error(u'Worker processing untracked task.')
 
-  def _UpdateStatus(self, status, storage_writer):
+  def _UpdateStatus(self, status, storage_writer, force=False):
     """Updates the processing status.
 
     Args:
       status (str): human readable status of the foreman e.g. 'Idle'.
       storage_writer (StorageWriter): storage writer for a session storage.
+      force (Optional[bool]): True if the update should be forced ignoring
+          the last status update time.
     """
+    current_timestamp = time.time()
+    if not force and current_timestamp < (
+        self._last_status_update_timestamp + self._STATUS_UPDATE_INTERVAL):
+      return
+
+    self._CheckStatusWorkerProcesses()
     self._processing_status.UpdateForemanStatus(
         self._name, status, self._pid, u'',
         self._number_of_consumed_sources,
@@ -815,6 +807,8 @@ class MultiProcessEngine(engine.BaseEngine):
 
     if self._status_update_callback:
       self._status_update_callback(self._processing_status)
+
+    self._last_status_update_timestamp = current_timestamp
 
   def ProcessSources(
       self, session_identifier, source_path_specs, preprocess_object,
