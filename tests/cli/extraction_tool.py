@@ -37,7 +37,7 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       (u'                        hashers. Use "--hashers list" or "--info" to '
        u'list the'),
       u'                        available hashers.',
-      u'  --yara-rules-path PATH',
+      u'  --yara-rules-path PATH, --yara_rules_path PATH',
       (u'                        Path to a file containing Yara rules '
        u'definitions.'),
       u'  --parsers PARSER_LIST',
