@@ -173,7 +173,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     extraction_worker = worker.EventExtractionWorker(resolver_context)
 
     extraction_worker.SetHashers(u'md5')
-    self.assertIn(u'hashing', extraction_worker.analyzer_names)
+    self.assertIn(u'hashing', extraction_worker.GetAnalyzerNames())
 
     session = sessions.Session()
     empty_file_md5 = u'd41d8cd98f00b204e9800998ecf8427e'
@@ -195,7 +195,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
       rule_string = rule_file.read()
 
     extraction_worker.SetYaraRules(rule_string)
-    self.assertIn(u'yara', extraction_worker.analyzer_names)
+    self.assertIn(u'yara', extraction_worker.GetAnalyzerNames())
 
     session = sessions.Session()
     yara_match_name = u'PEfile'
