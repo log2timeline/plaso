@@ -110,7 +110,8 @@ class ExtractionFrontend(frontend.Frontend):
 
   def _CreateSession(
       self, command_line_arguments=None, filter_file=None,
-      parser_filter_expression=None, preferred_encoding=u'utf-8'):
+      parser_filter_expression=None, preferred_encoding=u'utf-8',
+      preferred_year=None):
     """Creates the session start information.
 
     Args:
@@ -118,6 +119,7 @@ class ExtractionFrontend(frontend.Frontend):
       filter_file (Optional[str]): path to a file with find specifications.
       parser_filter_expression (Optional[str]): parser filter expression.
       preferred_encoding (Optional[str]): preferred encoding.
+      preferred_year (Optional[int]): preferred year.
 
     Returns:
       Session: session attribute container.
@@ -130,6 +132,7 @@ class ExtractionFrontend(frontend.Frontend):
     session.debug_mode = self._debug_mode
     session.parser_filter_expression = parser_filter_expression
     session.preferred_encoding = preferred_encoding
+    session.preferred_year = preferred_year
 
     return session
 
@@ -390,11 +393,12 @@ class ExtractionFrontend(frontend.Frontend):
 
   def ProcessSources(
       self, source_path_specs, source_type, command_line_arguments=None,
-      enable_sigsegv_handler=False, filter_file=None, hasher_names_string=None,
+      enable_sigsegv_handler=False, filter_file=None,
+      force_preprocessing=False, hasher_names_string=None,
       number_of_extraction_workers=0, parser_filter_expression=None,
-      preferred_encoding=u'utf-8', process_archive_files=False,
-      single_process_mode=False, status_update_callback=None,
-      temporary_directory=None, timezone=pytz.UTC):
+      preferred_encoding=u'utf-8', preferred_year=None,
+      process_archive_files=False, single_process_mode=False,
+      status_update_callback=None, temporary_directory=None, timezone=pytz.UTC):
     """Processes the sources.
 
     Args:
@@ -406,12 +410,15 @@ class ExtractionFrontend(frontend.Frontend):
           should be enabled.
       filter_file (Optional[str]): path to a file that contains find
           specifications.
+      force_preprocessing (Optional[bool]): True is preprocessiong should be
+          forced.
       hasher_names_string (Optional[str]): comma separated string of names
           of hashers to use during processing.
       number_of_extraction_workers (Optional[int]): number of extraction
           workers to run. If 0, the number will be selected automatically.
       parser_filter_expression (Optional[str]): parser filter expression.
       preferred_encoding (Optional[str]): preferred encoding.
+      preferred_year (Optional[int]): preferred year.
       process_archive_files (Optional[bool]): True if archive files should be
           scanned for file entries.
       single_process_mode (Optional[bool]): True if the front-end should
@@ -432,7 +439,7 @@ class ExtractionFrontend(frontend.Frontend):
     """
     # If the source is a directory or a storage media image
     # run pre-processing.
-    if source_type in [
+    if force_preprocessing or source_type in [
         dfvfs_definitions.SOURCE_TYPE_DIRECTORY,
         dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
         dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]:
@@ -488,7 +495,7 @@ class ExtractionFrontend(frontend.Frontend):
     session = self._CreateSession(
         command_line_arguments=command_line_arguments, filter_file=filter_file,
         parser_filter_expression=parser_filter_expression,
-        preferred_encoding=preferred_encoding)
+        preferred_encoding=preferred_encoding, preferred_year=preferred_year)
 
     # TODO: we are directly invoking ZIP file storage here. In storage rewrite
     # come up with a more generic solution.
@@ -506,6 +513,7 @@ class ExtractionFrontend(frontend.Frontend):
           hasher_names_string=hasher_names_string,
           mount_path=self._mount_path,
           parser_filter_expression=parser_filter_expression,
+          preferred_year=preferred_year,
           process_archive_files=process_archive_files,
           status_update_callback=status_update_callback,
           temporary_directory=temporary_directory,
@@ -523,6 +531,7 @@ class ExtractionFrontend(frontend.Frontend):
           mount_path=self._mount_path,
           number_of_worker_processes=number_of_extraction_workers,
           parser_filter_expression=parser_filter_expression,
+          preferred_year=preferred_year,
           process_archive_files=process_archive_files,
           status_update_callback=status_update_callback,
           show_memory_usage=self._show_worker_memory_information,

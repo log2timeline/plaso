@@ -14,13 +14,16 @@ from plaso.lib import timelib
 class ParserMediator(object):
   """Class that implements the parser mediator."""
 
-  def __init__(self, storage_writer, knowledge_base, temporary_directory=None):
+  def __init__(
+      self, storage_writer, knowledge_base, preferred_year=None,
+      temporary_directory=None):
     """Initializes a parser mediator object.
 
     Args:
       storage_writer (StorageWriter): storage writer.
       knowledge_base (KnowledgeBase): knowledge base, which contains
           information from the source data needed for parsing.
+      preferred_year (Optional[int]): preferred year.
       temporary_directory (Optional[str]): path of the directory for temporary
           files.
     """
@@ -35,6 +38,7 @@ class ParserMediator(object):
     self._number_of_event_sources = 0
     self._number_of_events = 0
     self._parser_chain_components = []
+    self._preferred_year = preferred_year
     self._storage_writer = storage_writer
     self._temporary_directory = temporary_directory
     self._text_prepend = None
@@ -101,7 +105,7 @@ class ParserMediator(object):
     time (metadata last modification time) is used.
 
     Returns:
-      int: year of the file entry.
+      int: year of the file entry or None.
     """
     file_entry = self.GetFileEntry()
     stat_object = file_entry.GetStat()
@@ -112,7 +116,7 @@ class ParserMediator(object):
 
     if posix_time is None:
       logging.warning(
-          u'Unable to determine creation year from file stat information.')
+          u'Unable to determine earliest year from file stat information.')
       return
 
     try:
@@ -121,7 +125,7 @@ class ParserMediator(object):
       return year
     except ValueError as exception:
       logging.error((
-          u'Unable to determine creation year from file stat information with '
+          u'Unable to determine earliest year from file stat information with '
           u'error: {0:s}').format(exception))
       return
 
@@ -315,26 +319,31 @@ class ParserMediator(object):
   def GetEstimatedYear(self):
     """Retrieves an estimate of the year.
 
-    This function first looks to see if the knowledge base defines a year, if
-    not it tries to determine the year based on the file entry metadata, if
-    that fails the current year is used.
+    This function determines the year in the following manner:
+    * see if the user provided a preferred year;
+    * see if knowledge base defines a year e.g. derived from preprocessing;
+    * determine the year based on the file entry metadata;
+    * default to the current year;
 
     Returns:
-      An integer containing the year of the file entry or the current year.
+      int: user provided preferred year, year of the file entry or
+          the current year.
     """
     # TODO: improve this method to get a more reliable estimate.
     # Preserve the year-less date and sort this out in the psort phase.
-    year = self._knowledge_base.year
+    if self._preferred_year:
+      return self._preferred_year
 
-    if not year:
-      # TODO: Find a decent way to actually calculate the correct year
-      # instead of relying on stats object.
-      year = self._GetEarliestYearFromFileEntry()
+    if self._knowledge_base.year:
+      return self._knowledge_base.year
 
-    if not year:
-      year = timelib.GetCurrentYear()
+    # TODO: Find a decent way to actually calculate the correct year
+    # instead of relying on stats object.
+    year = self._GetEarliestYearFromFileEntry()
+    if year:
+      return year
 
-    return year
+    return timelib.GetCurrentYear()
 
   def GetFileEntry(self):
     """Retrieves the active file entry.

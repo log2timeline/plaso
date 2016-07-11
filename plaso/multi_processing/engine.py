@@ -95,15 +95,16 @@ class MultiProcessEngine(engine.BaseEngine):
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._memory_profiler = None
     self._mount_path = None
-    self._new_event_sources = False
     self._name = u'Main'
+    self._new_event_sources = False
     self._number_of_consumed_sources = 0
     self._number_of_worker_processes = 0
     self._parser_filter_expression = None
     self._pid = os.getpid()
+    self._preferred_year = None
     self._process_archive_files = False
-    self._process_information_per_pid = {}
     self._processes_per_pid = {}
+    self._process_information_per_pid = {}
     self._processing_profiler = None
     self._resolver_context = context.Context()
     self._rpc_clients_per_pid = {}
@@ -115,10 +116,10 @@ class MultiProcessEngine(engine.BaseEngine):
     self._storage_writer = None
     self._task_queue = None
     self._task_queue_port = None
-    self._task_scheduler_active = False
-    self._task_scheduler_thread = None
     self._task_manager = task_manager.TaskManager(
         maximum_number_of_tasks=maximum_number_of_tasks)
+    self._task_scheduler_active = False
+    self._task_scheduler_thread = None
     self._temporary_directory = None
     self._text_prepend = None
     self._use_zeromq = use_zeromq
@@ -536,6 +537,7 @@ class MultiProcessEngine(engine.BaseEngine):
         hasher_names_string=self._hasher_names_string,
         mount_path=self._mount_path, name=process_name,
         parser_filter_expression=self._parser_filter_expression,
+        preferred_year=self._preferred_year,
         process_archive_files=self._process_archive_files,
         profiling_directory=self._profiling_directory,
         profiling_sample_rate=self._profiling_sample_rate,
@@ -819,8 +821,9 @@ class MultiProcessEngine(engine.BaseEngine):
       storage_writer, enable_sigsegv_handler=False, filter_find_specs=None,
       filter_object=None, hasher_names_string=None, mount_path=None,
       number_of_worker_processes=0, parser_filter_expression=None,
-      process_archive_files=False, status_update_callback=None,
-      show_memory_usage=False, temporary_directory=None, text_prepend=None):
+      preferred_year=None, process_archive_files=False,
+      status_update_callback=None, show_memory_usage=False,
+      temporary_directory=None, text_prepend=None):
     """Processes the sources and extract event objects.
 
     Args:
@@ -840,6 +843,7 @@ class MultiProcessEngine(engine.BaseEngine):
       number_of_worker_processes (Optional[int]): number of worker processes.
       parser_filter_expression (Optional[str]): parser filter expression,
           where None represents all parsers and plugins.
+      preferred_year (Optional[int]): preferred year.
       process_archive_files (Optional[bool]): True if archive files should be
           scanned for file entries.
       show_memory_usage (Optional[bool]): True if memory information should be
@@ -881,6 +885,7 @@ class MultiProcessEngine(engine.BaseEngine):
     self._hasher_names_string = hasher_names_string
     self._mount_path = mount_path
     self._parser_filter_expression = parser_filter_expression
+    self._preferred_year = preferred_year
     self._process_archive_files = process_archive_files
     self._session_identifier = session_identifier
     self._status_update_callback = status_update_callback
@@ -974,6 +979,7 @@ class MultiProcessEngine(engine.BaseEngine):
     self._hasher_names_string = None
     self._mount_path = None
     self._parser_filter_expression = None
+    self._preferred_year = None
     self._process_archive_files = None
     self._session_identifier = None
     self._status_update_callback = None

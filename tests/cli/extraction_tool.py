@@ -17,7 +17,8 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
   _EXPECTED_OUTPUT_EXTRACTION_OPTIONS = u'\n'.join([
       (u'usage: extraction_tool_test.py [--hashers HASHER_LIST] '
        u'[--parsers PARSER_LIST]'),
-      u'                               [-p] [--process_archives]',
+      u'                               [--preferred_year YEAR] [-p]',
+      u'                               [--process_archives]',
       u'                               [--temporary_directory DIRECTORY]',
       u'                               [--use_old_preprocess]',
       u'',
@@ -61,6 +62,11 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       (u'                        case insensitive. Use "--parsers list" or '
        u'"--info" to'),
       u'                        list the available parsers.',
+      u'  --preferred_year YEAR, --preferred-year YEAR',
+      (u'                        When a format does not describe a year e.g. '
+       u'syslog'),
+      u'                        apply the preferred year instead of trying to',
+      u'                        determine the earliest year.',
       (u'  -p, --preprocess      Turn on preprocessing. Preprocessing is '
        u'turned on by'),
       (u'                        default when parsing image files, however if '

@@ -269,8 +269,9 @@ class SingleProcessEngine(engine.BaseEngine):
       self, source_path_specs, preprocess_object, storage_writer,
       resolver_context, filter_find_specs=None, filter_object=None,
       hasher_names_string=None, mount_path=None, parser_filter_expression=None,
-      process_archive_files=False, status_update_callback=None,
-      temporary_directory=None, text_prepend=None):
+      preferred_year=None, process_archive_files=False,
+      status_update_callback=None, temporary_directory=None,
+      text_prepend=None):
     """Processes the sources.
 
     Args:
@@ -286,6 +287,7 @@ class SingleProcessEngine(engine.BaseEngine):
           of hashers to use during processing.
       mount_path (Optional[str]): mount path.
       parser_filter_expression (Optional[str]): parser filter expression.
+      preferred_year (Optional[int]): preferred year.
       process_archive_files (Optional[bool]): True if archive files should be
           scanned for file entries.
       status_update_callback (Optional[function]): callback function for status
@@ -298,7 +300,7 @@ class SingleProcessEngine(engine.BaseEngine):
       ProcessingStatus: processing status.
     """
     parser_mediator = parsers_mediator.ParserMediator(
-        storage_writer, self.knowledge_base,
+        storage_writer, self.knowledge_base, preferred_year=preferred_year,
         temporary_directory=temporary_directory)
 
     if filter_object:

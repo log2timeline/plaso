@@ -23,9 +23,10 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       self, task_queue, storage_writer, knowledge_base, session_identifier,
       worker_number, enable_debug_output=False, enable_profiling=False,
       filter_object=None, hasher_names_string=None, mount_path=None,
-      parser_filter_expression=None, process_archive_files=False,
-      profiling_directory=None, profiling_sample_rate=1000,
-      profiling_type=u'all', temporary_directory=None, text_prepend=None,
+      parser_filter_expression=None, preferred_year=None,
+      process_archive_files=False, profiling_directory=None,
+      profiling_sample_rate=1000, profiling_type=u'all',
+      temporary_directory=None, text_prepend=None,
       **kwargs):
     """Initializes a worker process.
 
@@ -48,6 +49,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       mount_path (Optional[str]): mount path.
       parser_filter_expression (Optional[str]): parser filter expression,
           where None represents all parsers and plugins.
+      preferred_year (Optional[int]): preferred year.
       process_archive_files (Optional[bool]): True if archive files should be
           scanned for file entries.
       profiling_directory (Optional[str]): path to the directory where
@@ -84,12 +86,13 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._parser_filter_expression = parser_filter_expression
     self._parser_mediator = None
     self._parsers_profiler = None
-    self._processing_profiler = None
-    self._serializers_profiler = None
+    self._preferred_year = preferred_year
     self._process_archive_files = process_archive_files
+    self._processing_profiler = None
     self._profiling_directory = profiling_directory
     self._profiling_sample_rate = profiling_sample_rate
     self._profiling_type = profiling_type
+    self._serializers_profiler = None
     self._session_identifier = session_identifier
     self._status = definitions.PROCESSING_STATUS_INITIALIZED
     self._storage_writer = storage_writer
@@ -142,7 +145,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
   def _Main(self):
     """The main loop."""
     self._parser_mediator = parsers_mediator.ParserMediator(
-        None, self._knowledge_base,
+        None, self._knowledge_base, preferred_year=self._preferred_year,
         temporary_directory=self._temporary_directory)
 
     if self._filter_object:
