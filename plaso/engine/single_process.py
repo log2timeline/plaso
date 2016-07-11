@@ -7,267 +7,258 @@ import os
 import pdb
 import time
 
-from dfvfs.resolver import context
+from dfvfs.lib import errors as dfvfs_errors
 
-from plaso.engine import collector
+from plaso.containers import event_sources
 from plaso.engine import engine
+from plaso.engine import extractors
 from plaso.engine import plaso_queue
+from plaso.engine import profiler
 from plaso.engine import worker
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.parsers import mediator as parsers_mediator
 
 
-class SingleProcessCollector(collector.Collector):
-  """Class that implements a single process collector object."""
-
-  def __init__(self, path_spec_queue, resolver_context=None):
-    """Initializes the collector object.
-
-       The collector discovers all the files that need to be processed by
-       the workers. Once a file is discovered it is added to the process queue
-       as a path specification (instance of dfvfs.PathSpec).
-
-    Args:
-      path_spec_queue: the path specification queue (instance of Queue).
-                       This queue contains the path specifications (instances
-                       of dfvfs.PathSpec) of the file entries that need
-                       to be processed.
-      resolver_context: optional resolver context (instance of dfvfs.Context).
-    """
-    super(SingleProcessCollector, self).__init__(
-        path_spec_queue, resolver_context=resolver_context)
-
-    self._extraction_worker = None
-    self._fs_collector = SingleProcessFileSystemCollector(
-        path_spec_queue, resolver_context=resolver_context,
-        status_update_callback=self._UpdateStatus)
-
-  def _FlushQueue(self):
-    """Flushes the queue callback for the QueueFull exception."""
-    self._UpdateStatus()
-    while not self._queue.IsEmpty():
-      self._extraction_worker.Run()
-
-  def _UpdateStatus(self):
-    """Updates the processing status."""
-    # Set the collector status to waiting while emptying the queue.
-    self._status = definitions.PROCESSING_STATUS_WAITING
-
-  def SetExtractionWorker(self, extraction_worker):
-    """Sets the extraction worker.
-
-    Args:
-      extraction_worker: the extraction worker object (instance of
-                         EventExtractionWorker).
-    """
-    self._extraction_worker = extraction_worker
-
-    self._fs_collector.SetExtractionWorker(extraction_worker)
-
-
 class SingleProcessEngine(engine.BaseEngine):
   """Class that defines the single process engine."""
 
-  _STATUS_CHECK_SLEEP = 1.5
-
-  def __init__(self, maximum_number_of_queued_items=0):
-    """Initialize the single process engine object.
+  def __init__(
+      self, enable_profiling=False, profiling_directory=None,
+      profiling_sample_rate=1000, profiling_type=u'all'):
+    """Initializes an engine object.
 
     Args:
-      maximum_number_of_queued_items: the maximum number of queued items.
-                                      The default is 0, which represents
-                                      no limit.
-    """
-    path_spec_queue = SingleProcessQueue(
-        maximum_number_of_queued_items=maximum_number_of_queued_items)
-    event_object_queue = SingleProcessQueue(
-        maximum_number_of_queued_items=maximum_number_of_queued_items)
-    parse_error_queue = SingleProcessQueue(
-        maximum_number_of_queued_items=maximum_number_of_queued_items)
+      enable_profiling (Optional[bool]): True if profiling should be enabled.
+      profiling_directory (Optional[str]): path to the directory where
+          the profiling sample files should be stored.
+      profiling_sample_rate (Optional[int]): the profiling sample rate.
+          Contains the number of event sources processed.
+      profiling_type (Optional[str]): type of profiling.
+          Supported types are:
 
+          * 'memory' to profile memory usage;
+          * 'parsers' to profile CPU time consumed by individual parsers;
+          * 'processing' to profile CPU time consumed by different parts of
+            the processing;
+          * 'serializers' to profile CPU time consumed by individual
+            serializers.
+    """
     super(SingleProcessEngine, self).__init__(
-        path_spec_queue, event_object_queue, parse_error_queue)
-
-    self._collector = None
-    self._extraction_worker = None
-    self._event_queue_producer = SingleProcessItemQueueProducer(
-        event_object_queue)
-    self._last_status_update_timestamp = time.time()
-    self._parse_error_queue_producer = SingleProcessItemQueueProducer(
-        parse_error_queue)
+        enable_profiling=enable_profiling,
+        profiling_directory=profiling_directory,
+        profiling_sample_rate=profiling_sample_rate,
+        profiling_type=profiling_type)
+    self._last_status_update_timestamp = 0.0
+    self._memory_profiler = None
+    self._name = u'Main'
+    self._parsers_profiler = None
+    self._pid = os.getpid()
+    self._processing_profiler = None
+    self._serializers_profiler = None
     self._status_update_callback = None
-    self._storage_writer = None
 
-  def _CreateCollector(
-      self, filter_find_specs=None, include_directory_stat=True,
-      resolver_context=None):
-    """Creates a collector object.
-
-       The collector discovers all the files that need to be processed by
-       the workers. Once a file is discovered it is added to the process queue
-       as a path specification (instance of dfvfs.PathSpec).
+  def _ProcessPathSpec(self, extraction_worker, parser_mediator, path_spec):
+    """Processes a path specification.
 
     Args:
-      filter_find_specs: optional list of filter find specifications (instances
-                         of dfvfs.FindSpec).
-      include_directory_stat: optional boolean value to indicate whether
-                              directory stat information should be collected.
-      resolver_context: optional resolver context (instance of dfvfs.Context).
-
-    Returns:
-      A collector object (instance of Collector).
+      extraction_worker (worker.ExtractionWorker): extraction worker.
+      parser_mediator (ParserMediator): parser mediator.
+      path_spec (dfvfs.PathSpec): path specification.
     """
-    collector_object = SingleProcessCollector(
-        self._path_spec_queue, resolver_context=resolver_context)
+    try:
+      extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
 
-    collector_object.SetCollectDirectoryMetadata(include_directory_stat)
+    except KeyboardInterrupt:
+      self.SignalAbort()
 
-    if filter_find_specs:
-      collector_object.SetFilter(filter_find_specs)
+    except IOError as exception:
+      logging.warning((
+          u'Unable to process path specification: {0:s} with error: '
+          u'{1:s}').format(extraction_worker.current_display_name, exception))
 
-    return collector_object
+    # We cannot recover from a CacheFullError and abort processing when
+    # it is raised.
+    except dfvfs_errors.CacheFullError:
+      # TODO: signal engine of failure.
+      self._abort = True
+      logging.error((
+          u'ABORT: detected cache full error while processing '
+          u'path spec: {0:s}').format(
+              extraction_worker.current_display_name))
 
-  def _CreateExtractionWorker(
-      self, worker_number, filter_object=None, mount_path=None,
-      process_archive_files=False, text_prepend=None):
-    """Creates an extraction worker object.
+    # All exceptions need to be caught here to prevent the worker
+    # from being killed by an uncaught exception.
+    except Exception as exception:  # pylint: disable=broad-except
+      logging.warning(
+          u'Unhandled exception while processing path spec: {0:s}.'.format(
+              extraction_worker.current_display_name))
+      logging.exception(exception)
+
+      if self._enable_debug_output:
+        pdb.post_mortem()
+
+  def _ProcessSources(
+      self, source_path_specs, resolver_context, extraction_worker,
+      parser_mediator, storage_writer, filter_find_specs=None):
+    """Processes the sources.
 
     Args:
-      worker_number: a number that identifies the worker.
-      filter_object: optional filter object (instance of objectfilter.Filter).
-      mount_path: optional string containing the mount path.
-      process_archive_files: optional boolean value to indicate if the worker
-                             should scan for file entries inside files.
-      text_prepend: optional string that contains the text to prepend to every
-                    event object.
-
-    Returns:
-      An extraction worker (instance of worker.ExtractionWorker).
+      source_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the sources to process.
+      resolver_context (dfvfs.Context): resolver context.
+      extraction_worker (worker.ExtractionWorker): extraction worker.
+      parser_mediator (ParserMediator): parser mediator.
+      storage_writer (StorageWriter): storage writer for a session storage.
+      filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
+          used in path specification extraction.
     """
-    parser_mediator = parsers_mediator.ParserMediator(
-        self._event_queue_producer, self._parse_error_queue_producer,
-        self.knowledge_base)
+    number_of_consumed_sources = 0
 
-    resolver_context = context.Context()
+    self._UpdateStatus(
+        definitions.PROCESSING_STATUS_COLLECTING, u'',
+        number_of_consumed_sources, storage_writer)
 
-    extraction_worker = SingleProcessEventExtractionWorker(
-        worker_number, self._path_spec_queue, self._event_queue_producer,
-        self._parse_error_queue_producer, parser_mediator,
-        resolver_context=resolver_context,
-        status_update_callback=self._UpdateStatus)
+    path_spec_extractor = extractors.PathSpecExtractor(resolver_context)
 
-    # TODO: differentiate between debug output and debug mode.
-    extraction_worker.SetEnableDebugMode(self._enable_debug_output)
+    display_name = u''
+    for path_spec in path_spec_extractor.ExtractPathSpecs(
+        source_path_specs, find_specs=filter_find_specs,
+        recurse_file_system=False):
+      if self._abort:
+        break
 
-    extraction_worker.SetEnableProfiling(
-        self._enable_profiling,
-        profiling_sample_rate=self._profiling_sample_rate,
-        profiling_type=self._profiling_type)
+      display_name = parser_mediator.GetDisplayNameFromPathSpec(path_spec)
 
-    extraction_worker.SetProcessArchiveFiles(process_archive_files)
+      # TODO: determine if event sources should be DataStream or FileEntry
+      # or both.
+      event_source = event_sources.FileEntryEventSource(path_spec=path_spec)
+      storage_writer.AddEventSource(event_source)
 
-    if filter_object:
-      extraction_worker.SetFilterObject(filter_object)
+      self._UpdateStatus(
+          definitions.PROCESSING_STATUS_COLLECTING, display_name,
+          number_of_consumed_sources, storage_writer)
 
-    if mount_path:
-      extraction_worker.SetMountPath(mount_path)
+    # Force the status update here to make sure the status is up to date.
+    self._UpdateStatus(
+        definitions.PROCESSING_STATUS_RUNNING, display_name,
+        number_of_consumed_sources, storage_writer, force=True)
 
-    if text_prepend:
-      extraction_worker.SetTextPrepend(text_prepend)
+    new_event_sources = True
+    while new_event_sources:
+      if self._abort:
+        break
 
-    return extraction_worker
+      new_event_sources = False
+      event_source = storage_writer.GetNextEventSource()
+      while event_source:
+        new_event_sources = True
+        if self._abort:
+          break
 
-  def _UpdateCollectorStatus(self, processing_completed=False):
-    """Updates the collector status.
+        self._ProcessPathSpec(
+            extraction_worker, parser_mediator, event_source.path_spec)
+        number_of_consumed_sources += 1
 
-    Args:
-      processing_completed: optional boolean value the processing has been
-                            completed.
-    """
-    status = self._collector.GetStatus()
-    status_indicator = status.get(u'processing_status', None)
-    produced_number_of_path_specs = status.get(
-        u'produced_number_of_path_specs', 0)
+        if self._memory_profiler:
+          self._memory_profiler.Sample()
 
-    if processing_completed:
-      status_indicator = definitions.PROCESSING_STATUS_COMPLETED
-    elif status_indicator == definitions.PROCESSING_STATUS_INITIALIZED:
-      status_indicator = definitions.PROCESSING_STATUS_RUNNING
+        event_source = storage_writer.GetNextEventSource()
 
-    self._processing_status.UpdateCollectorStatus(
-        u'Collector', os.getpid(), produced_number_of_path_specs,
-        status_indicator, None)
+        self._UpdateStatus(
+            extraction_worker.processing_status,
+            extraction_worker.current_display_name,
+            number_of_consumed_sources, storage_writer)
 
-  def _UpdateExtractionWorkerStatus(self, processing_completed=False):
-    """Updates the extraction worker status.
+    if self._abort:
+      status = definitions.PROCESSING_STATUS_ABORTED
+    else:
+      status = definitions.PROCESSING_STATUS_COMPLETED
 
-    Args:
-      processing_completed: optional boolean value the processing has been
-                            completed.
-    """
-    status = self._extraction_worker.GetStatus()
-    status_indicator = status.get(u'processing_status', None)
-    consumed_number_of_path_specs = status.get(
-        u'consumed_number_of_path_specs', 0)
-    display_name = status.get(u'display_name', u'')
-    number_of_events = status.get(u'number_of_events', 0)
-    produced_number_of_path_specs = status.get(
-        u'produced_number_of_path_specs', 0)
+    # Force the status update here to make sure the status is up to date
+    # on exit.
+    self._UpdateStatus(
+        status, u'', number_of_consumed_sources, storage_writer, force=True)
 
-    if processing_completed:
-      status_indicator = definitions.PROCESSING_STATUS_COMPLETED
-    elif status_indicator in (
-        definitions.PROCESSING_STATUS_COMPLETED,
-        definitions.PROCESSING_STATUS_INITIALIZED):
-      # If the worker is initialized or completed in single
-      # processing mode it is actually waiting for input.
-      status_indicator = definitions.PROCESSING_STATUS_WAITING
+  def _StartProfiling(self):
+    """Starts profiling."""
+    if not self._enable_profiling:
+      return
 
-    self._processing_status.UpdateExtractionWorkerStatus(
-        u'Worker', os.getpid(), display_name, number_of_events,
-        consumed_number_of_path_specs, produced_number_of_path_specs,
-        status_indicator, None)
+    if self._profiling_type in (u'all', u'memory'):
+      identifier = u'{0:s}-memory'.format(self._name)
+      self._memory_profiler = profiler.GuppyMemoryProfiler(
+          identifier, path=self._profiling_directory,
+          profiling_sample_rate=self._profiling_sample_rate)
+      self._memory_profiler.Start()
 
-  def _UpdateStorageWriterStatus(self, processing_completed=False):
-    """Updates the storage writer status.
+    if self._profiling_type in (u'all', u'parsers'):
+      identifier = u'{0:s}-parsers'.format(self._name)
+      self._parsers_profiler = profiler.ParsersProfiler(
+          identifier, path=self._profiling_directory)
+      self._extraction_worker.SetParsersProfiler(self._parsers_profiler)
 
-    Args:
-      processing_completed: optional boolean value the processing has been
-                            completed.
-    """
-    status = self._storage_writer.GetStatus()
-    status_indicator = status.get(u'processing_status', None)
-    number_of_events = status.get(u'number_of_events', 0)
+    if self._profiling_type in (u'all', u'processing'):
+      identifier = u'{0:s}-processing'.format(self._name)
+      self._processing_profiler = profiler.ProcessingProfiler(
+          identifier, path=self._profiling_directory)
+      self._extraction_worker.SetProcessingProfiler(self._processing_profiler)
 
-    if processing_completed:
-      status_indicator = definitions.PROCESSING_STATUS_COMPLETED
-    elif status_indicator in (
-        definitions.PROCESSING_STATUS_COMPLETED,
-        definitions.PROCESSING_STATUS_INITIALIZED):
-      # If the storage writer is initialized or completed in single
-      # processing mode it is actually waiting for input.
-      status_indicator = definitions.PROCESSING_STATUS_WAITING
+    if self._profiling_type in (u'all', u'serializers'):
+      identifier = u'{0:s}-serializers'.format(self._name)
+      self._serializers_profiler = profiler.SerializersProfiler(
+          identifier, path=self._profiling_directory)
 
-    self._processing_status.UpdateStorageWriterStatus(
-        u'StorageWriter', os.getpid(), number_of_events, status_indicator, None)
+  def _StopProfiling(self):
+    """Stops profiling."""
+    if not self._enable_profiling:
+      return
 
-  def _UpdateStatus(self, processing_completed=False):
+    if self._profiling_type in (u'all', u'memory'):
+      self._memory_profiler.Sample()
+      self._memory_profiler = None
+
+    if self._profiling_type in (u'all', u'parsers'):
+      self._extraction_worker.SetParsersProfiler(None)
+      self._parsers_profiler.Write()
+      self._parsers_profiler = None
+
+    if self._profiling_type in (u'all', u'processing'):
+      self._extraction_worker.SetProcessingProfiler(None)
+      self._processing_profiler.Write()
+      self._processing_profiler = None
+
+    if self._profiling_type in (u'all', u'serializers'):
+      self._serializers_profiler.Write()
+      self._serializers_profiler = None
+
+  def _UpdateStatus(
+      self, status, display_name, number_of_consumed_sources, storage_writer,
+      force=False):
     """Updates the processing status.
 
     Args:
-      processing_completed: optional boolean value the processing has been
-                            completed.
+      status (str): human readable status of the processing e.g. 'Idle'.
+      display_name (str): human readable of the file entry currently being
+          processed.
+      number_of_consumed_sources (int): number of consumed sources.
+      storage_writer (StorageWriter): storage writer for a session storage.
+      force (Optional[bool]): True if the update should be forced ignoring
+          the last status update time.
     """
     current_timestamp = time.time()
-    if current_timestamp < (
-        self._last_status_update_timestamp + self._STATUS_CHECK_SLEEP):
+    if not force and current_timestamp < (
+        self._last_status_update_timestamp + self._STATUS_UPDATE_INTERVAL):
       return
 
-    self._UpdateCollectorStatus(processing_completed=processing_completed)
-    self._UpdateExtractionWorkerStatus(
-        processing_completed=processing_completed)
-    self._UpdateStorageWriterStatus(processing_completed=processing_completed)
+    if status == definitions.PROCESSING_STATUS_IDLE:
+      status = definitions.PROCESSING_STATUS_RUNNING
+
+    self._processing_status.UpdateForemanStatus(
+        self._name, status, self._pid, display_name,
+        number_of_consumed_sources, storage_writer.number_of_event_sources,
+        0, storage_writer.number_of_events,
+        0, storage_writer.number_of_errors)
 
     if self._status_update_callback:
       self._status_update_callback(self._processing_status)
@@ -275,222 +266,98 @@ class SingleProcessEngine(engine.BaseEngine):
     self._last_status_update_timestamp = current_timestamp
 
   def ProcessSources(
-      self, source_path_specs, storage_writer, filter_find_specs=None,
-      filter_object=None, hasher_names_string=None, include_directory_stat=True,
-      mount_path=None, parser_filter_string=None, process_archive_files=False,
-      resolver_context=None, status_update_callback=None, text_prepend=None):
-    """Processes the sources and extract event objects.
+      self, source_path_specs, preprocess_object, storage_writer,
+      resolver_context, filter_find_specs=None, filter_object=None,
+      hasher_names_string=None, mount_path=None, parser_filter_expression=None,
+      process_archive_files=False, status_update_callback=None,
+      temporary_directory=None, text_prepend=None):
+    """Processes the sources.
 
     Args:
-      source_path_specs: list of path specifications (instances of
-                         dfvfs.PathSpec) to process.
-      storage_writer: a storage writer object (instance of BaseStorageWriter).
-      filter_find_specs: optional list of filter find specifications (instances
-                         of dfvfs.FindSpec).
-      filter_object: optional filter object (instance of objectfilter.Filter).
-      hasher_names_string: optional comma separated string of names of
-                           hashers to enable.
-      include_directory_stat: optional boolean value to indicate whether
-                              directory stat information should be collected.
-      mount_path: optional string containing the mount path.
-      parser_filter_string: optional parser filter string.
-      process_archive_files: optional boolean value to indicate if the worker
-                             should scan for file entries inside files.
-      resolver_context: optional resolver context (instance of dfvfs.Context).
-      status_update_callback: optional callback function for status updates.
-      text_prepend: optional string that contains the text to prepend to every
-                    event object.
+      source_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the sources to process.
+      preprocess_object (PreprocessObject): preprocess object.
+      storage_writer (StorageWriter): storage writer for a session storage.
+      resolver_context (dfvfs.Context): resolver context.
+      filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
+          used in path specification extraction.
+      filter_object (Optional[objectfilter.Filter]): filter object.
+      hasher_names_string (Optional[str]): comma separated string of names
+          of hashers to use during processing.
+      mount_path (Optional[str]): mount path.
+      parser_filter_expression (Optional[str]): parser filter expression.
+      process_archive_files (Optional[bool]): True if archive files should be
+          scanned for file entries.
+      status_update_callback (Optional[function]): callback function for status
+          updates.
+      temporary_directory (Optional[str]): path of the directory for temporary
+          files.
+      text_prepend (Optional[str]): text to prepend to every event.
 
     Returns:
-      The processing status (instance of ProcessingStatus).
+      ProcessingStatus: processing status.
     """
-    self._collector = self._CreateCollector(
-        filter_find_specs=filter_find_specs,
-        include_directory_stat=include_directory_stat,
-        resolver_context=resolver_context)
+    parser_mediator = parsers_mediator.ParserMediator(
+        storage_writer, self.knowledge_base,
+        temporary_directory=temporary_directory)
 
-    self._extraction_worker = self._CreateExtractionWorker(
-        0, filter_object=filter_object, mount_path=mount_path,
-        process_archive_files=process_archive_files,
-        text_prepend=text_prepend)
+    if filter_object:
+      parser_mediator.SetFilterObject(filter_object)
 
-    self._storage_writer = storage_writer
+    if mount_path:
+      parser_mediator.SetMountPath(mount_path)
 
-    self._status_update_callback = status_update_callback
+    if text_prepend:
+      parser_mediator.SetTextPrepend(text_prepend)
+
+    extraction_worker = worker.EventExtractionWorker(
+        resolver_context, parser_filter_expression=parser_filter_expression,
+        process_archive_files=process_archive_files)
 
     if hasher_names_string:
-      self._extraction_worker.SetHashers(hasher_names_string)
+      extraction_worker.SetHashers(hasher_names_string)
 
-    self._extraction_worker.InitializeParserObjects(
-        parser_filter_string=parser_filter_string)
-
-    # Set the extraction worker and storage writer values so that they
-    # can be accessed if the QueueFull exception is raised. This is
-    # needed in single process mode to prevent the queue consuming too
-    # much memory.
-    self._collector.SetExtractionWorker(self._extraction_worker)
-    self._event_queue_producer.SetStorageWriter(self._storage_writer)
-    self._parse_error_queue_producer.SetStorageWriter(self._storage_writer)
+    self._status_update_callback = status_update_callback
 
     logging.debug(u'Processing started.')
 
-    self._UpdateStatus()
-    self._collector.Collect(source_path_specs)
+    self._StartProfiling()
 
-    self._UpdateStatus()
-    self._extraction_worker.Run()
+    if self._serializers_profiler:
+      storage_writer.SetSerializersProfiler(self._serializers_profiler)
 
-    self._UpdateStatus()
-    self._storage_writer.WriteEventObjects()
+    storage_writer.Open()
 
-    self._UpdateStatus(processing_completed=True)
+    try:
+      storage_writer.WriteSessionStart()
 
-    # Reset the extraction worker and storage writer values to return
-    # the objects in their original state. This will prevent access
-    # to the extraction worker outside this function and allow it
-    # to be garbage collected.
-    self._extraction_worker = None
-    self._storage_writer = None
+      self._ProcessSources(
+          source_path_specs, resolver_context, extraction_worker,
+          parser_mediator, storage_writer, filter_find_specs=filter_find_specs)
+
+      # TODO: refactor the use of preprocess_object.
+      storage_writer.WritePreprocessObject(preprocess_object)
+
+      # TODO: on abort use WriteSessionAborted instead of completion?
+      storage_writer.WriteSessionCompletion()
+
+    finally:
+      storage_writer.Close()
+
+      if self._serializers_profiler:
+        storage_writer.SetSerializersProfiler(None)
+
+      self._StopProfiling()
+
+    if self._abort:
+      logging.debug(u'Processing aborted.')
+      self._processing_status.aborted = True
+    else:
+      logging.debug(u'Processing completed.')
+
     self._status_update_callback = None
-    self._event_queue_producer.SetStorageWriter(None)
-    self._parse_error_queue_producer.SetStorageWriter(None)
-    self._collector = None
-
-    logging.debug(u'Processing completed.')
 
     return self._processing_status
-
-  def SignalAbort(self):
-    """Signals the engine to abort."""
-    self._event_queue_producer.SignalAbort()
-    self._parse_error_queue_producer.SignalAbort()
-
-    if self._collector:
-      self._collector.SignalAbort()
-
-
-class SingleProcessEventExtractionWorker(worker.BaseEventExtractionWorker):
-  """Class that defines the single process event extraction worker."""
-
-  def __init__(
-      self, identifier, path_spec_queue, event_queue_producer,
-      parse_error_queue_producer, parser_mediator, resolver_context=None,
-      status_update_callback=None):
-    """Initializes the event extraction worker object.
-
-    Args:
-      identifier: the identifier, usually an incrementing integer.
-      path_spec_queue: the path specification queue (instance of Queue).
-                       This queue contains the path specifications (instances
-                       of dfvfs.PathSpec) of the file entries that need
-                       to be processed.
-      event_queue_producer: the event object queue producer (instance of
-                            ItemQueueProducer).
-      parse_error_queue_producer: the parse error queue producer (instance of
-                                  ItemQueueProducer).
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      resolver_context: optional resolver context (instance of dfvfs.Context).
-      status_update_callback: optional callback function for status updates.
-    """
-    super(SingleProcessEventExtractionWorker, self).__init__(
-        identifier, path_spec_queue, event_queue_producer,
-        parse_error_queue_producer, parser_mediator,
-        resolver_context=resolver_context)
-
-    self._status_update_callback = status_update_callback
-
-  def _ConsumeItem(self, path_spec, **kwargs):
-    """Consumes an item callback for ConsumeItems.
-
-    Args:
-      path_spec: a path specification (instance of dfvfs.PathSpec).
-
-    Raises:
-      QueueFull: If a queue is full.
-    """
-    if self._status_update_callback:
-      self._status_update_callback()
-
-    super(SingleProcessEventExtractionWorker, self)._ConsumeItem(
-        path_spec, **kwargs)
-
-  def _DebugProcessPathSpec(self):
-    """Callback for debugging path specification processing failures."""
-    pdb.post_mortem()
-
-
-class SingleProcessFileSystemCollector(collector.FileSystemCollector):
-  """Class that implements a single process file system collector object."""
-
-  def __init__(
-      self, path_spec_queue, resolver_context=None,
-      status_update_callback=None):
-    """Initializes the collector object.
-
-       The collector discovers all the files that need to be processed by
-       the workers. Once a file is discovered it is added to the process queue
-       as a path specification (instance of dfvfs.PathSpec).
-
-    Args:
-      path_spec_queue: the path specification queue (instance of Queue).
-                       This queue contains the path specifications (instances
-                       of dfvfs.PathSpec) of the file entries that need
-                       to be processed.
-      processing_status: the processing status (instance of ProcessingStatus).
-      resolver_context: optional resolver context (instance of dfvfs.Context).
-      status_update_callback: optional callback function for status updates.
-                              This callback is invoked when the collector
-                              flushes its queue.
-    """
-    super(SingleProcessFileSystemCollector, self).__init__(
-        path_spec_queue, resolver_context=resolver_context)
-
-    self._extraction_worker = None
-    self._status_update_callback = status_update_callback
-
-  def _FlushQueue(self):
-    """Flushes the queue callback for the QueueFull exception."""
-    if self._status_update_callback:
-      self._status_update_callback()
-
-    while not self._queue.IsEmpty():
-      self._extraction_worker.Run()
-
-  def SetExtractionWorker(self, extraction_worker):
-    """Sets the extraction worker.
-
-    Args:
-      extraction_worker: the extraction worker object (instance of
-                         EventExtractionWorker).
-    """
-    self._extraction_worker = extraction_worker
-
-
-class SingleProcessItemQueueProducer(plaso_queue.ItemQueueProducer):
-  """Class that implements a single process item queue producer."""
-
-  def __init__(self, queue_object):
-    """Initializes the queue producer.
-
-    Args:
-      queue_object: the queue object (instance of Queue).
-    """
-    super(SingleProcessItemQueueProducer, self).__init__(queue_object)
-
-    self._storage_writer = None
-
-  def _FlushQueue(self):
-    """Flushes the queue callback for the QueueFull exception."""
-    self._storage_writer.WriteEventObjects()
-
-  def SetStorageWriter(self, storage_writer):
-    """Sets the storage writer.
-
-    Args:
-      storage_writer: the storage writer object (instance of
-                      BaseStorageWriter).
-    """
-    self._storage_writer = storage_writer
 
 
 class SingleProcessQueue(plaso_queue.Queue):

@@ -15,22 +15,18 @@ from tests.parsers import test_lib
 class SafariCookieParserTest(test_lib.ParserTestCase):
   """Tests for the Safari cookie parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = safari_cookies.BinaryCookieParser()
-
   def testParseFile(self):
     """Tests the Parse function on a version 17 Prefetch file."""
-    test_file = self._GetTestFilePath([u'Cookies.binarycookies'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    parser_object = safari_cookies.BinaryCookieParser()
+    storage_writer = self._ParseFile(
+        [u'Cookies.binarycookies'], parser_object)
 
     # There should be 182 events from the safari cookie parser in addition
     # to those created by cookie plugins.
-    self.assertTrue(len(event_objects) >= 182)
+    self.assertTrue(len(storage_writer.events) >= 182)
 
     cookie_events = []
-    for event_object in event_objects:
+    for event_object in storage_writer.events:
       if isinstance(event_object, safari_cookies.BinaryCookieEvent):
         cookie_events.append(event_object)
 

@@ -15,19 +15,15 @@ from tests.parsers import test_lib
 class MacKeychainParserTest(test_lib.ParserTestCase):
   """Tests for keychain file parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = mac_keychain.KeychainParser()
-
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath([u'login.keychain'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    parser_object = mac_keychain.KeychainParser()
+    storage_writer = self._ParseFile(
+        [u'login.keychain'], parser_object)
 
-    self.assertEqual(len(event_objects), 5)
+    self.assertEqual(len(storage_writer.events), 5)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-01-26 14:51:48')
@@ -45,7 +41,9 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
     expected_msg = u'Name: Secret Application Account: moxilo'
     expected_msg_short = u'Secret Application'
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
-    event_object = event_objects[1]
+
+    event_object = storage_writer.events[1]
+
     self.assertEqual(
         event_object.timestamp_desc,
         eventdata.EventTimestamp.MODIFICATION_TIME)
@@ -54,7 +52,7 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
         u'2014-01-26 14:52:29')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    event_object = event_objects[2]
+    event_object = storage_writer.events[2]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-01-26 14:53:29')
@@ -67,7 +65,7 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
     expected_msg_short = u'Secret Note'
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    event_object = event_objects[3]
+    event_object = storage_writer.events[3]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-01-26 14:54:33')

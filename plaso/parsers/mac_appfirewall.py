@@ -137,7 +137,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       timestamp = self._ConvertToTimestamp(
           structure.day, month, self._year_use, structure.time)
     except errors.TimestampError as exception:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to determine timestamp with error: {0:s}'.format(
               exception))
       return
@@ -176,7 +176,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
       structure: A pyparsing.ParseResults object from a line in the
                  log file.
     """
-    if key in [u'logline', u'repeated']:
+    if key in (u'logline', u'repeated'):
       self._ParseLogLine(parser_mediator, structure, key)
     else:
       logging.warning(

@@ -14,30 +14,26 @@ from tests.parsers.winreg_plugins import test_lib
 class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the BagMRU plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = bagmru.BagMRUPlugin()
-
   def testProcess(self):
     """Tests the Process function."""
+    plugin_object = bagmru.BagMRUPlugin()
     test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER.DAT'])
     key_path = (
         u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\ShellNoRoam\\BagMRU')
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
-    event_queue_consumer = self._ParseKeyWithPlugin(
-        self._plugin, registry_key, file_entry=test_file_entry)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseKeyWithPlugin(
+        registry_key, plugin_object, file_entry=test_file_entry)
 
-    self.assertEqual(len(event_objects), 15)
+    self.assertEqual(len(storage_writer.events), 15)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     self.assertEqual(event_object.pathspec, test_file_entry.path_spec)
     # This should just be the plugin name, as we're invoking it directly,
     # and not through the parser.
-    self.assertEqual(event_object.parser, self._plugin.plugin_name)
+    self.assertEqual(event_object.parser, plugin_object.plugin_name)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-08-04 15:19:16.997750')
@@ -52,7 +48,7 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
 
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-08-04 15:19:10.669625')
@@ -67,7 +63,7 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
 
-    event_object = event_objects[14]
+    event_object = storage_writer.events[14]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-08-04 15:19:16.997750')

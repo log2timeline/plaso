@@ -7,10 +7,10 @@ import unittest
 from plaso.engine import zeromq_queue
 from plaso.lib import errors
 
-from tests.engine import test_lib
+from tests import test_lib as shared_test_lib
 
 
-class testZeroMQQueues(test_lib.EngineTestCase):
+class testZeroMQQueues(shared_test_lib.BaseTestCase):
   """Tests for ZeroMQ queues."""
 
   # pylint: disable=protected-access

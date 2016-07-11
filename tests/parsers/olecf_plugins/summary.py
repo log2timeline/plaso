@@ -14,21 +14,16 @@ from tests.parsers.olecf_plugins import test_lib
 class TestSummaryInfoOlecfPlugin(test_lib.OleCfPluginTestCase):
   """Tests for the OLECF summary information plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._summary_plugin = summary.SummaryInfoOlecfPlugin()
-    self._test_file = self._GetTestFilePath([u'Document.doc'])
-
   def testProcess(self):
     """Tests the Process function on a SummaryInformation stream."""
-    event_queue_consumer = self._ParseOleCfFileWithPlugin(
-        self._test_file, self._summary_plugin)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = summary.SummaryInfoOlecfPlugin()
+    storage_writer = self._ParseOleCfFileWithPlugin(
+        [u'Document.doc'], plugin_object)
 
     # There is one summary info stream with three event objects.
-    self.assertEqual(len(event_objects), 3)
+    self.assertEqual(len(storage_writer.events), 3)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
     self.assertEqual(event_object.name, u'Summary Information')
 
     self.assertEqual(event_object.title, u'Table of Context')
@@ -71,21 +66,16 @@ class TestSummaryInfoOlecfPlugin(test_lib.OleCfPluginTestCase):
 class TestDocumentSummaryInfoOlecfPlugin(test_lib.OleCfPluginTestCase):
   """Tests for the OLECF document summary information plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._document_summary_plugin = summary.DocumentSummaryOlecfPlugin()
-    self._test_file = self._GetTestFilePath([u'Document.doc'])
-
   def testProcess(self):
     """Tests the Process function on a DocumentSummaryInformation stream."""
-    event_queue_consumer = self._ParseOleCfFileWithPlugin(
-        self._test_file, self._document_summary_plugin)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = summary.DocumentSummaryOlecfPlugin()
+    storage_writer = self._ParseOleCfFileWithPlugin(
+        [u'Document.doc'], plugin_object)
 
     # There should only be one summary info stream with one event.
-    self.assertEqual(len(event_objects), 1)
+    self.assertEqual(len(storage_writer.events), 1)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
     self.assertEqual(event_object.name, u'Document Summary Information')
 
     self.assertEqual(event_object.number_of_lines, 1)

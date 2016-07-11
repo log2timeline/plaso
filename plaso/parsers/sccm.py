@@ -130,7 +130,7 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
     try:
       microseconds = int(structure.microsecond, 10)
     except ValueError as exception:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to determine microseconds with error: {0:s}'.format(
               exception))
       return
@@ -146,7 +146,7 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
           structure.hour, structure.minute, structure.second, microseconds)
     except errors.TimestampError as exception:
       timestamp = timelib.Timestamp.NONE_TIMESTAMP
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to determine timestamp with error: {0:s}'.format(
               exception))
 

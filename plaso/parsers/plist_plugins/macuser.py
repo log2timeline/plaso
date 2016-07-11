@@ -105,7 +105,7 @@ class MacUserPlugin(interface.PlistPlugin):
         try:
           timestamp = timelib.Timestamp.FromTimeString(time_string)
         except errors.TimestampError:
-          parser_mediator.ProduceParseError(
+          parser_mediator.ProduceExtractionError(
               u'Unable to parse time string: {0:s}'.format(time_string))
           timestamp = 0
 
@@ -125,8 +125,9 @@ class MacUserPlugin(interface.PlistPlugin):
           resolver_context = context.Context()
           fake_file = fake_file_io.FakeFile(
               resolver_context, shadow_hash_data)
-          fake_file.open(path_spec=fake_path_spec.FakePathSpec(
-              location=u'ShadowHashData'))
+          shadow_hash_data_path_spec = fake_path_spec.FakePathSpec(
+              location=u'ShadowHashData')
+          fake_file.open(path_spec=shadow_hash_data_path_spec)
 
           try:
             plist_file = binplist.BinaryPlist(file_obj=fake_file)
@@ -153,7 +154,7 @@ class MacUserPlugin(interface.PlistPlugin):
         try:
           timestamp = timelib.Timestamp.FromTimeString(time_string)
         except errors.TimestampError:
-          parser_mediator.ProduceParseError(
+          parser_mediator.ProduceExtractionError(
               u'Unable to parse time string: {0:s}'.format(time_string))
           timestamp = 0
 
@@ -168,7 +169,7 @@ class MacUserPlugin(interface.PlistPlugin):
         try:
           timestamp = timelib.Timestamp.FromTimeString(time_string)
         except errors.TimestampError:
-          parser_mediator.ProduceParseError(
+          parser_mediator.ProduceExtractionError(
               u'Unable to parse time string: {0:s}'.format(time_string))
           timestamp = 0
 

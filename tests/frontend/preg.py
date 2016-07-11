@@ -11,10 +11,10 @@ from dfvfs.path import factory as path_spec_factory
 from plaso.engine import knowledge_base
 from plaso.frontend import preg
 
-from tests.frontend import test_lib
+from tests import test_lib as shared_test_lib
 
 
-class PregFrontendTest(test_lib.FrontendTestCase):
+class PregFrontendTest(shared_test_lib.BaseTestCase):
   """Tests for the preg front-end."""
 
   def _ConfigureSingleFileTest(self, knowledge_base_values=None):

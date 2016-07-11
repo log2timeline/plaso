@@ -8,19 +8,22 @@ OS_MACOSX = u'MacOSX'
 OS_UNKNOWN = u'None'
 OS_WINDOWS = u'Windows'
 
-PROCESS_TYPE_COLLECTOR = u'collector'
-PROCESS_TYPE_STORAGE_WRITER = u'storage_writer'
-PROCESS_TYPE_WORKER = u'worker'
-
 PROCESSING_STATUS_ABORTED = u'aborted'
+PROCESSING_STATUS_ANALYZING = u'analyzing'
+PROCESSING_STATUS_COLLECTING = u'collecting'
 PROCESSING_STATUS_COMPLETED = u'completed'
 PROCESSING_STATUS_ERROR = u'error'
+PROCESSING_STATUS_EXTRACTING = u'extracting'
 PROCESSING_STATUS_HASHING = u'hashing'
+PROCESSING_STATUS_IDLE = u'idle'
 PROCESSING_STATUS_INITIALIZED = u'initialized'
 PROCESSING_STATUS_KILLED = u'killed'
-PROCESSING_STATUS_PARSING = u'parsing'
 PROCESSING_STATUS_RUNNING = u'running'
-PROCESSING_STATUS_WAITING = u'waiting'
+
+PROCESSING_ERROR_STATUS = frozenset([
+    PROCESSING_STATUS_ABORTED,
+    PROCESSING_STATUS_ERROR,
+    PROCESSING_STATUS_KILLED])
 
 RESERVED_VARIABLE_NAMES = frozenset([
     u'body',
@@ -52,3 +55,13 @@ RESERVED_VARIABLE_NAMES = frozenset([
 SERIALIZER_FORMAT_JSON = u'json'
 
 SERIALIZER_FORMATS = frozenset([SERIALIZER_FORMAT_JSON])
+
+# The session storage contains the results of one or more sessions.
+# A typical session is e.g. a single run of a tool (log2timeline.py).
+# The task storage contains the results of one or more tasks. Tasks
+# are used to split work within a session. A typical task is e.g.
+# a single run of a worker process.
+STORAGE_TYPE_SESSION = u'session'
+STORAGE_TYPE_TASK = u'task'
+
+STORAGE_TYPES = frozenset([STORAGE_TYPE_SESSION, STORAGE_TYPE_TASK])

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The arguments helper for the Elastic Search output module."""
 
+from uuid import uuid4
+
 from plaso.lib import errors
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import manager
@@ -22,8 +24,11 @@ class ElasticOutputHelper(interface.ArgumentsHelper):
   CATEGORY = u'output'
   DESCRIPTION = u'Argument helper for the Elastic Search output module.'
 
-  _DEFAULT_CASE = u''
-  _DEFAULT_DOCUMENT_TYPE = u''
+  _DEFAULT_INDEX_NAME = uuid4().hex
+  _DEFAULT_DOC_TYPE = u'plaso_event'
+  _DEFAULT_FLUSH_INTERVAL = 1000
+  # Raw fields are string fields that are not not analyzed by Lucene.
+  _DEFAULT_RAW_FIELDS = False
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -37,15 +42,21 @@ class ElasticOutputHelper(interface.ArgumentsHelper):
                       or argparse.ArgumentParser).
     """
     argument_group.add_argument(
-        u'--case_name', dest=u'case_name', type=str, action=u'store',
-        default=cls._DEFAULT_CASE, help=(
-            u'Add a case name. This will be the name of the index in '
-            u'ElasticSearch.'))
+        u'--index_name', dest=u'index_name', type=str, action=u'store',
+        default=cls._DEFAULT_INDEX_NAME, help=(
+            u'Name of the index in ElasticSearch.'))
     argument_group.add_argument(
-        u'--document_type', dest=u'document_type', type=str,
-        action=u'store', default=cls._DEFAULT_DOCUMENT_TYPE, help=(
-            u'Name of the document type. This is the name of the document '
-            u'type that will be used in ElasticSearch.'))
+        u'--doc_type', dest=u'doc_type', type=str,
+        action=u'store', default=cls._DEFAULT_DOC_TYPE, help=(
+            u'Name of the document type that will be used in ElasticSearch.'))
+    argument_group.add_argument(
+        u'--flush_interval', dest=u'flush_interval', type=int,
+        action=u'store', default=cls._DEFAULT_FLUSH_INTERVAL, help=(
+            u'Events to queue up before bulk insert to ElasticSearch.'))
+    argument_group.add_argument(
+        u'--raw_fields', dest=u'raw_fields', type=bool,
+        action=u'store', default=cls._DEFAULT_RAW_FIELDS, help=(
+            u'For all string fields add attribute that are not analyzed.'))
 
     ElasticServer.AddArguments(argument_group)
 
@@ -66,17 +77,24 @@ class ElasticOutputHelper(interface.ArgumentsHelper):
           u'Output module is not an instance of ElasticSearchOutputModule')
 
     output_format = getattr(options, u'output_format', None)
-    if output_format != u'elastic':
-      raise errors.BadConfigOption(u'Only works on Elastic output module.')
+    if output_format not in [u'elastic', u'timesketch']:
+      raise errors.BadConfigOption(
+          u'Only works on Elastic or Timesketch output module.')
 
-    case_name = cls._ParseStringOption(
-        options, u'case_name', default_value=cls._DEFAULT_CASE)
-    document_type = cls._ParseStringOption(
-        options, u'document_type', default_value=cls._DEFAULT_DOCUMENT_TYPE)
+    index_name = cls._ParseStringOption(
+        options, u'index_name', default_value=cls._DEFAULT_INDEX_NAME)
+    doc_type = cls._ParseStringOption(
+        options, u'doc_type', default_value=cls._DEFAULT_DOC_TYPE)
+    flush_interval = cls._ParseIntegerOption(
+        options, u'flush_interval', default_value=cls._DEFAULT_FLUSH_INTERVAL)
+    raw_fields = getattr(
+        options, u'raw_fields', cls._DEFAULT_RAW_FIELDS)
 
     ElasticServer.ParseOptions(options, output_module)
-    output_module.SetCaseName(case_name)
-    output_module.SetDocumentType(document_type)
+    output_module.SetIndexName(index_name)
+    output_module.SetDocType(doc_type)
+    output_module.SetFlushInterval(flush_interval)
+    output_module.SetRawFields(raw_fields)
 
 
 manager.ArgumentHelperManager.RegisterHelper(ElasticOutputHelper)

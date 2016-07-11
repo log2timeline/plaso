@@ -99,7 +99,7 @@ class WinPrefetchParser(interface.FileObjectParser):
     try:
       scca_file.open_file_object(file_object)
     except IOError as exception:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to open file with error: {0:s}'.format(exception))
       return
 
@@ -139,7 +139,7 @@ class WinPrefetchParser(interface.FileObjectParser):
     for entry_index, file_metrics in enumerate(scca_file.file_metrics_entries):
       mapped_file_string = file_metrics.filename
       if not mapped_file_string:
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'missing filename for file metrics entry: {0:d}'.format(
                 entry_index))
         continue
@@ -155,7 +155,7 @@ class WinPrefetchParser(interface.FileObjectParser):
 
     timestamp = scca_file.get_last_run_time_as_integer(0)
     if not timestamp:
-      parser_mediator.ProduceParseError(u'missing last run time')
+      parser_mediator.ProduceExtractionError(u'missing last run time')
       timestamp = timelib.Timestamp.NONE_TIMESTAMP
 
     event_object = WinPrefetchExecutionEvent(

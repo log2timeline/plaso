@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 """Tests for the cron syslog plugin."""
+
 import unittest
 
 from plaso.lib import timelib
@@ -12,19 +13,14 @@ from tests.parsers.syslog_plugins import test_lib
 class SyslogCronPluginTest(test_lib.SyslogPluginTestCase):
   """Tests for the cron syslog plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = cron.CronPlugin()
-
   def testParse(self):
     """Tests the parsing functionality on a sample file."""
-    test_file = self._GetTestFilePath([u'syslog_cron.log'])
-    event_queue_consumer = self._ParseFileWithPlugin(self._plugin, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFileWithPlugin(
+        [u'syslog_cron.log'], u'cron')
 
-    self.assertEqual(len(event_objects), 9)
+    self.assertEqual(len(storage_writer.events), 9)
 
-    event = event_objects[1]
+    event = storage_writer.events[1]
     self.assertEqual(cron.CronTaskRunEvent.DATA_TYPE, event.DATA_TYPE)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-03-11 19:26:39')
@@ -34,7 +30,7 @@ class SyslogCronPluginTest(test_lib.SyslogPluginTestCase):
     expected_username = u'root'
     self.assertEqual(expected_username, event.username)
 
-    event = event_objects[8]
+    event = storage_writer.events[8]
     expected_command = u'/sbin/status.mycheck'
     self.assertEqual(expected_command, event.command)
     expected_pid = 31067

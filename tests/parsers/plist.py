@@ -14,20 +14,28 @@ from tests.parsers import test_lib
 class PlistParserTest(test_lib.ParserTestCase):
   """Tests the plist parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = plist.PlistParser()
+  # pylint: disable=protected-access
+
+  def testEnablePlugins(self):
+    """Tests the EnablePlugins function."""
+    parser_object = plist.PlistParser()
+    parser_object.EnablePlugins([u'airport'])
+
+    self.assertIsNotNone(parser_object)
+    self.assertIsNotNone(parser_object._default_plugin)
+    self.assertNotEqual(parser_object._plugin_objects, [])
+    self.assertEqual(len(parser_object._plugin_objects), 1)
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath([u'plist_binary'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    parser_object = plist.PlistParser()
+    storage_writer = self._ParseFile(
+        [u'plist_binary'], parser_object)
 
-    self.assertEqual(len(event_objects), 12)
+    self.assertEqual(len(storage_writer.events), 12)
 
     timestamps, roots, keys = zip(
-        *[(evt.timestamp, evt.root, evt.key) for evt in event_objects])
+        *[(evt.timestamp, evt.root, evt.key) for evt in storage_writer.events])
 
     expected_timestamps = frozenset([
         1345251192528750, 1351827808261762, 1345251268370453,

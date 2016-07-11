@@ -14,20 +14,16 @@ from tests.parsers import test_lib
 class PlsRecallTest(test_lib.ParserTestCase):
   """Tests for PL-SQL recall file parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = pls_recall.PlsRecallParser()
-
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath([u'PLSRecall_Test.dat'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    parser_object = pls_recall.PlsRecallParser()
+    storage_writer = self._ParseFile(
+        [u'PLSRecall_Test.dat'], parser_object)
 
     # There are two events in test file.
-    self.assertEqual(len(event_objects), 2)
+    self.assertEqual(len(storage_writer.events), 2)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     timestamp_expected = timelib.Timestamp.CopyFromString(
         u'2013-06-18 19:50:00:00:00')

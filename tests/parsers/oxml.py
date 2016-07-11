@@ -15,19 +15,15 @@ from tests.parsers import test_lib
 class OXMLTest(test_lib.ParserTestCase):
   """Tests for the OXML parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = oxml.OpenXMLParser()
-
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath([u'Document.docx'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    parser_object = oxml.OpenXMLParser()
+    storage_writer = self._ParseFile(
+        [u'Document.docx'], parser_object)
 
-    self.assertEqual(len(event_objects), 2)
+    self.assertEqual(len(storage_writer.events), 2)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-11-07 23:29:00')
@@ -35,7 +31,7 @@ class OXMLTest(test_lib.ParserTestCase):
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     self.assertEqual(event_object.number_of_characters, u'13')
     self.assertEqual(event_object.total_time, u'1385')

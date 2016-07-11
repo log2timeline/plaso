@@ -217,7 +217,7 @@ class ASLParser(interface.FileObjectParser):
       # Sanity check, the last read element must be the same as
       # indicated by the header.
       if offset == 0 and previous_offset != header_last_offset:
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'Unable to parse header. Last element header does not match '
             u'header offset.')
       previous_offset = offset
@@ -243,7 +243,7 @@ class ASLParser(interface.FileObjectParser):
     try:
       dynamic_data = file_object.read(offset - dynamic_data_offset)
     except IOError as exception:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to read ASL record dynamic data with error: {0:s}'.format(
               exception))
       return None, None
@@ -254,7 +254,7 @@ class ASLParser(interface.FileObjectParser):
     try:
       record_struct = self._ASL_RECORD_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to parse ASL record with error: {0:s}'.format(exception))
       return None, None
 
@@ -297,7 +297,7 @@ class ASLParser(interface.FileObjectParser):
       try:
         field_data = file_object.read(8)
       except IOError as exception:
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'unable to read ASL field with error: {0:s}'.format(exception))
         return None, None
 
@@ -319,7 +319,7 @@ class ASLParser(interface.FileObjectParser):
       try:
         pointer_value = self._ASL_POINTER.parse(field_data)
       except ValueError as exception:
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'unable to parse ASL field with error: {0:s}'.format(exception))
         return None, None
 
@@ -342,7 +342,7 @@ class ASLParser(interface.FileObjectParser):
           values.append(dyn_value)
 
         except (IOError, construct.FieldError) as exception:
-          parser_mediator.ProduceParseError((
+          parser_mediator.ProduceExtractionError((
               u'unable to parse ASL record dynamic value with error: '
               u'{0:s}').format(exception))
           return None, None
@@ -363,7 +363,7 @@ class ASLParser(interface.FileObjectParser):
             values.append(dyn_value)
 
           except (IOError, construct.FieldError):
-            parser_mediator.ProduceParseError((
+            parser_mediator.ProduceExtractionError((
                 u'the pointer at {0:d} (0x{0:08x}) points to invalid '
                 u'information.').format(
                     main_position - self._ASL_POINTER.sizeof()))
@@ -395,7 +395,7 @@ class ASLParser(interface.FileObjectParser):
     # The first four are always the host, sender, facility, and message.
     number_of_values = len(values)
     if number_of_values < 4:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'less than four values read from an ASL event.')
 
     computer_name = u'N/A'
@@ -420,13 +420,13 @@ class ASLParser(interface.FileObjectParser):
     extra_information = u''
     if number_of_values > 4 and number_of_values % 2 == 0:
       # Taking all the extra attributes and merging them together,
-      # eg: a = [1, 2, 3, 4] will look like "1: 2, 3: 4".
+      # e.g. a = [1, 2, 3, 4] will look like "1: 2, 3: 4".
       try:
         extra_values = map(py2to3.UNICODE_TYPE, values[4:])
         extra_information = u', '.join(
             map(u': '.join, zip(extra_values[0::2], extra_values[1::2])))
       except UnicodeDecodeError as exception:
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'Unable to decode all ASL values in the extra information fields.')
 
     event_object = ASLEvent(

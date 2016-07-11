@@ -1,263 +1,174 @@
 # -*- coding: utf-8 -*-
 """Parser related functions and classes for testing."""
 
-import os
-import unittest
-
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.containers import events
+from plaso.containers import sessions
 from plaso.engine import knowledge_base
-from plaso.engine import plaso_queue
-from plaso.engine import single_process
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 from plaso.parsers import interface
 from plaso.parsers import mediator
+from plaso.storage import fake_storage
+
+from tests import test_lib as shared_test_lib
 
 
-class TestItemQueueConsumer(plaso_queue.ItemQueueConsumer):
-  """Class that implements a list event object queue consumer."""
-
-  def __init__(self, event_queue):
-    """Initializes the list event object queue consumer.
-
-    Args:
-      event_queue: the event object queue (instance of Queue).
-    """
-    super(TestItemQueueConsumer, self).__init__(event_queue)
-    self.events = []
-
-  def _ConsumeItem(self, event_object, **unused_kwargs):
-    """Consumes an item callback for ConsumeItems."""
-    self.events.append(event_object)
-
-
-class ParserTestCase(unittest.TestCase):
+class ParserTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for a parser."""
 
-  _DATA_PATH = os.path.join(os.getcwd(), u'data')
-  _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
-
-  # Show full diff results, part of TestCase so does not follow our naming
-  # conventions.
-  maxDiff = None
-
-  def _GetEventObjects(self, event_generator):
-    """Retrieves the event objects from the event generator.
-
-    This function will extract event objects from a generator.
+  def _CreateParserMediator(
+      self, storage_writer, file_entry=None, knowledge_base_values=None,
+      parser_chain=None):
+    """Creates a parser mediator object.
 
     Args:
-      event_generator: the event generator as returned by the parser.
+      storage_writer (StorageWriter): storage writer.
+      file_entry (Optional[dfvfs.FileEntry]): file entry object being parsed.
+      knowledge_base_values (Optional[dict]): knowledge base values.
+      parser_chain (Optional[str]): parsing chain up to this point.
 
     Returns:
-      A list of event objects (instances of EventObject).
+      ParserMediator: parser mediator.
     """
-    test_events = []
-
-    for event_object in event_generator:
-      self.assertIsInstance(event_object, events.EventObject)
-      # Every event needs to have its parser and pathspec fields set, so that
-      # it's possible to trace its provenance.
-      self.assertIsNotNone(event_object.pathspec)
-      self.assertIsNotNone(event_object.parser)
-      test_events.append(event_object)
-
-    return test_events
-
-  def _GetEventObjectsFromQueue(self, event_queue_consumer):
-    """Retrieves the event objects from the queue consumer.
-
-    Args:
-      event_queue_consumer: the event object queue consumer object (instance of
-                            TestItemQueueConsumer).
-
-    Returns:
-      A list of event objects (instances of EventObject).
-    """
-    event_queue_consumer.ConsumeItems()
-
-    test_events = []
-    for event_object in event_queue_consumer.events:
-      self.assertIsInstance(event_object, events.EventObject)
-      test_events.append(event_object)
-
-    return test_events
-
-  def _GetParserMediator(
-      self, event_queue, parse_error_queue, knowledge_base_values=None,
-      file_entry=None, parser_chain=None):
-    """Retrieves a parser mediator object.
-
-    Args:
-      event_queue: the event queue (instance of Queue).
-      parse_error_queue: the parse error queue (instance of Queue).
-      knowledge_base_values: optional dict containing the knowledge base
-                             values.
-      file_entry: optional dfVFS file_entry object (instance of dfvfs.FileEntry)
-                  being parsed.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point.
-
-    Returns:
-      A parser mediator object (instance of ParserMediator).
-    """
-    event_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
-    parse_error_queue_producer = plaso_queue.ItemQueueProducer(
-        parse_error_queue)
-
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
       for identifier, value in iter(knowledge_base_values.items()):
         knowledge_base_object.SetValue(identifier, value)
 
-    new_mediator = mediator.ParserMediator(
-        event_queue_producer, parse_error_queue_producer,
-        knowledge_base_object)
+    parser_mediator = mediator.ParserMediator(
+        storage_writer, knowledge_base_object)
+
     if file_entry:
-      new_mediator.SetFileEntry(file_entry)
+      parser_mediator.SetFileEntry(file_entry)
 
     if parser_chain:
-      new_mediator.parser_chain = parser_chain
-    return new_mediator
+      parser_mediator.parser_chain = parser_chain
+
+    return parser_mediator
 
   def _GetShortMessage(self, message_string):
     """Shortens a message string to a maximum of 80 character width.
 
     Args:
-      message_string: the message string.
+      message_string (str): message string.
 
     Returns:
-      The same short message string, if it is longer than 80 characters it will
-      be shortened to it's first 77 characters followed by a "...".
+      str: short message string, if it is longer than 80 characters it will
+           be shortened to it's first 77 characters followed by a "...".
     """
     if len(message_string) > 80:
       return u'{0:s}...'.format(message_string[0:77])
 
     return message_string
 
-  def _GetTestFilePath(self, path_segments):
-    """Retrieves the path of a test file relative to the test data directory.
-
-    Args:
-      path_segments: the path segments inside the test data directory.
-
-    Returns:
-      A path of the test file.
-    """
-    # Note that we need to pass the individual path segments to os.path.join
-    # and not a list.
-    return os.path.join(self._TEST_DATA_PATH, *path_segments)
-
   def _GetTestFileEntryFromPath(self, path_segments):
-    """Creates a file entry that references a file in the test dir.
+    """Retrieves the file entry of a file in the test directory.
 
     Args:
-      path_segments: the path segments inside the test data directory.
+      path_segments (list[str]): path segments inside the test data directory.
 
     Returns:
-      A file entry object (instance of dfvfs.FileEntry).
+      dfvfs.FileEntry: file entry.
     """
     path = self._GetTestFilePath(path_segments)
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
     return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
-  def _ParseFile(self, parser_object, path, knowledge_base_values=None):
-    """Parses a file using the parser object.
+  def _ParseFile(self, path_segments, parser, knowledge_base_values=None):
+    """Parses a file with a parser and writes results to a storage writer.
 
     Args:
-      parser_object: the parser object.
-      path: the path of the file to parse.
-      knowledge_base_values: optional dict containing the knowledge base
-                             values.
+      path_segments (list[str]): path segments inside the test data directory.
+      parser (BaseParser): parser.
+      knowledge_base_values (Optional[dict]): knowledge base values.
 
     Returns:
-      An event object queue consumer object (instance of
-      TestItemQueueConsumer).
+      FakeStorageWriter: storage writer.
     """
+    path = self._GetTestFilePath(path_segments)
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
     return self._ParseFileByPathSpec(
-        parser_object, path_spec, knowledge_base_values=knowledge_base_values)
+        path_spec, parser, knowledge_base_values=knowledge_base_values)
 
   def _ParseFileByPathSpec(
-      self, parser_object, path_spec, knowledge_base_values=None):
-    """Parses a file using the parser object.
+      self, path_spec, parser, knowledge_base_values=None):
+    """Parses a file with a parser and writes results to a storage writer.
 
     Args:
-      parser_object: the parser object.
-      path_spec: the path specification of the file to parse.
-      knowledge_base_values: optional dict containing the knowledge base
-                             values.
+      path_spec (dfvfs.PathSpec): path specification.
+      parser (BaseParser): parser.
+      knowledge_base_values (Optional[dict]): knowledge base values.
 
     Returns:
-      An event object queue consumer object (instance of
-      TestItemQueueConsumer).
+      FakeStorageWriter: storage writer.
     """
-    event_queue = single_process.SingleProcessQueue()
-    event_queue_consumer = TestItemQueueConsumer(event_queue)
+    session = sessions.Session()
+    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer.Open()
 
-    parse_error_queue = single_process.SingleProcessQueue()
-
-    parser_mediator = self._GetParserMediator(
-        event_queue, parse_error_queue,
-        knowledge_base_values=knowledge_base_values)
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-    parser_mediator.SetFileEntry(file_entry)
+    parser_mediator = self._CreateParserMediator(
+        storage_writer, file_entry=file_entry,
+        knowledge_base_values=knowledge_base_values)
 
-    if isinstance(parser_object, interface.FileEntryParser):
-      parser_object.Parse(parser_mediator)
+    if isinstance(parser, interface.FileEntryParser):
+      parser.Parse(parser_mediator)
 
-    elif isinstance(parser_object, interface.FileObjectParser):
+    elif isinstance(parser, interface.FileObjectParser):
       file_object = file_entry.GetFileObject()
       try:
-        parser_object.Parse(parser_mediator, file_object)
+        parser.Parse(parser_mediator, file_object)
       finally:
         file_object.close()
 
-    return event_queue_consumer
+    else:
+      self.fail(u'Got unsupported parser type: {0:s}'.format(
+          type(parser)))
+
+    return storage_writer
 
   def _TestGetMessageStrings(
-      self, event_object, expected_message, expected_message_short):
+      self, event, expected_message, expected_message_short):
     """Tests the formatting of the message strings.
 
-       This function invokes the GetMessageStrings function of the event
-       formatter on the event object and compares the resulting messages
-       strings with those expected.
+    This function invokes the GetMessageStrings function of the event
+    formatter on the event object and compares the resulting messages
+    strings with those expected.
 
     Args:
-      event_object: the event object (instance of EventObject).
-      expected_message: the expected message string.
-      expected_message_short: the expected short message string.
+      event (EventObject): event.
+      expected_message (str): expected message string.
+      expected_message_short (str): expected short message string.
     """
     formatter_mediator = formatters_mediator.FormatterMediator(
         data_location=self._DATA_PATH)
     message, message_short = (
         formatters_manager.FormattersManager.GetMessageStrings(
-            formatter_mediator, event_object))
+            formatter_mediator, event))
     self.assertEqual(message, expected_message)
     self.assertEqual(message_short, expected_message_short)
 
   def _TestGetSourceStrings(
-      self, event_object, expected_source, expected_source_short):
+      self, event, expected_source, expected_source_short):
     """Tests the formatting of the source strings.
 
-       This function invokes the GetSourceStrings function of the event
-       formatter on the event object and compares the resulting source
-       strings with those expected.
+    This function invokes the GetSourceStrings function of the event
+    formatter on the event object and compares the resulting source
+    strings with those expected.
 
     Args:
-      event_object: the event object (instance of EventObject).
-      expected_source: the expected source string.
-      expected_source_short: the expected short source string.
+      event (EventObject): event.
+      expected_source (str): expected source string.
+      expected_source_short (str): expected short source string.
     """
     # TODO: change this to return the long variant first so it is consistent
     # with GetMessageStrings.
     source_short, source = (
-        formatters_manager.FormattersManager.GetSourceStrings(event_object))
+        formatters_manager.FormattersManager.GetSourceStrings(event))
     self.assertEqual(source, expected_source)
     self.assertEqual(source_short, expected_source_short)

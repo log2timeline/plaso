@@ -94,13 +94,17 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
 
   def testRealEvents(self):
     """Test the plugin with text output against real events from the parser."""
-    parser = winreg.WinRegistryParser()
     # We could remove the non-Services plugins, but testing shows that the
     # performance gain is negligible.
 
+    parser = winreg.WinRegistryParser()
     knowledge_base = self._SetUpKnowledgeBase()
-    test_path = self._GetTestFilePath([u'SYSTEM'])
-    event_queue = self._ParseFile(parser, test_path, knowledge_base)
+    storage_writer = self._ParseFile([u'SYSTEM'], parser, knowledge_base)
+
+    event_queue = single_process.SingleProcessQueue()
+    event_queue_producer = test_lib.TestEventObjectProducer(
+        event_queue, storage_writer)
+    event_queue_producer.Run()
 
     # Run the analysis plugin.
     analysis_plugin = windows_services.WindowsServicesPlugin(event_queue)
@@ -127,13 +131,17 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
 
   def testRealEventsYAML(self):
     """Test the plugin with YAML output against real events from the parser."""
-    parser = winreg.WinRegistryParser()
     # We could remove the non-Services plugins, but testing shows that the
     # performance gain is negligible.
 
+    parser = winreg.WinRegistryParser()
     knowledge_base = self._SetUpKnowledgeBase()
-    test_path = self._GetTestFilePath([u'SYSTEM'])
-    event_queue = self._ParseFile(parser, test_path, knowledge_base)
+    storage_writer = self._ParseFile([u'SYSTEM'], parser, knowledge_base)
+
+    event_queue = single_process.SingleProcessQueue()
+    event_queue_producer = test_lib.TestEventObjectProducer(
+        event_queue, storage_writer)
+    event_queue_producer.Run()
 
     # Run the analysis plugin.
     analysis_plugin = windows_services.WindowsServicesPlugin(event_queue)

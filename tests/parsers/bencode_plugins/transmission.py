@@ -16,39 +16,36 @@ from tests.parsers.bencode_plugins import test_lib
 class BencodeTest(test_lib.BencodePluginTestCase):
   """Tests for bencode parser plugin for Transmission BitTorrent files."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = bencode_parser.BencodeParser()
-
   def testProcess(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath([u'bencode_transmission'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    parser_object = bencode_parser.BencodeParser()
 
-    self.assertEqual(len(event_objects), 3)
+    storage_writer = self._ParseFile(
+        [u'bencode_transmission'], parser_object)
 
-    event_object = event_objects[0]
+    self.assertEqual(len(storage_writer.events), 3)
 
-    destination_expected = u'/Users/brian/Downloads'
-    self.assertEqual(event_object.destination, destination_expected)
+    event_object = storage_writer.events[0]
+
+    expected_destination = u'/Users/brian/Downloads'
+    self.assertEqual(event_object.destination, expected_destination)
 
     self.assertEqual(event_object.seedtime, 4)
 
-    description_expected = eventdata.EventTimestamp.ADDED_TIME
-    self.assertEqual(event_object.timestamp_desc, description_expected)
+    expected_description = eventdata.EventTimestamp.ADDED_TIME
+    self.assertEqual(event_object.timestamp_desc, expected_description)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-08 15:31:20')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Test on second event of first torrent.
-    event_object = event_objects[1]
-    self.assertEqual(event_object.destination, destination_expected)
+    event_object = storage_writer.events[1]
+    self.assertEqual(event_object.destination, expected_destination)
     self.assertEqual(event_object.seedtime, 4)
 
-    description_expected = eventdata.EventTimestamp.FILE_DOWNLOADED
-    self.assertEqual(event_object.timestamp_desc, description_expected)
+    expected_description = eventdata.EventTimestamp.FILE_DOWNLOADED
+    self.assertEqual(event_object.timestamp_desc, expected_description)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-08 18:24:24')

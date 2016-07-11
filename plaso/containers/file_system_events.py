@@ -9,11 +9,11 @@ class FileStatEvent(time_events.TimestampEvent):
   """File system stat event.
 
   Attributes:
-    file_entry_type: an integer containing the file entry type.
-    file_size: an integer containing the file size.
-    file_system_type: a string containing the file system type.
-    is_allocated: boolean value to indicate the file is allocated.
-    offset: an integer containing the offset of the stat data.
+    file_entry_type (int): dfVFS file entry type.
+    file_size (int): file size in bytes.
+    file_system_type (str): file system type.
+    is_allocated (bool): True if the file is allocated.
+    offset (int): the offset of the stat data in bytes.
   """
 
   DATA_TYPE = u'fs:stat'
@@ -24,16 +24,15 @@ class FileStatEvent(time_events.TimestampEvent):
     """Initializes the event object.
 
     Args:
-      timestamp: the timestamp time value. The timestamp contains the
-                 number of microseconds since Jan 1, 1970 00:00:00 UTC
-      timestamp_description: a description string for the timestamp value.
-      is_allocated: boolean value to indicate the file entry is allocated.
-      file_size: an integer containing the file size in bytes.
-      file_entry_type: an integer containing the file entry type.
-      file_system_type: a string containing the file system type.
+      timestamp (int): timestamp, which contains the number of microseconds
+          since Jan 1, 1970 00:00:00 UTC
+      timestamp_description (str): description of the timestamp.
+      is_allocated (bool): True if the file entry is allocated.
+      file_size (int): file size in bytes.
+      file_entry_type (int): dfVFS file entry type.
+      file_system_type (str): file system type.
     """
     super(FileStatEvent, self).__init__(timestamp, timestamp_description)
-
     self.file_entry_type = file_entry_type
     self.file_size = file_size
     self.file_system_type = file_system_type
@@ -45,19 +44,16 @@ class NTFSFileStatEvent(time_events.FiletimeEvent):
   """NTFS file system stat event.
 
   Attributes:
-    attribute_type: the attribute type e.g. 0x00000030 which represents
-                    $FILE_NAME.
-    file_attribute_flags: the NTFS file attribute flags or None if
-                          not available.
-    file_reference: integer containing the NTFS file reference.
-    file_system_type: the file system type.
-    is_allocated: boolean value to indicate the MFT entry is allocated
-                 (marked as in use).
-    name: string containing the name associated with the stat event, e.g.
-          that of a $FILE_NAME attribute or None if not available.
-    offset: integer containing the offset of the stat data.
-    parent_file_reference: optional integer containing the NTFS file
-                           reference of the parent or None if not available.
+    attribute_type (int): attribute type e.g. 0x00000030 which represents
+        $FILE_NAME.
+    file_attribute_flags (int): NTFS file attribute flags.
+    file_reference (int): NTFS file reference.
+    file_system_type (str): file system type.
+    is_allocated (bool): True if the MFT entry is allocated (marked as in use).
+    name (str): name associated with the stat event, e.g. that of
+        a $FILE_NAME attribute or None if not available.
+    offset (int): offset of the stat data in bytes.
+    parent_file_reference (int): NTFS file reference of the parent.
   """
 
   DATA_TYPE = u'fs:stat:ntfs'
@@ -69,22 +65,19 @@ class NTFSFileStatEvent(time_events.FiletimeEvent):
     """Initializes the event object.
 
     Args:
-      timestamp: the FILETIME value for the timestamp.
-      timestamp_description: the usage string for the timestamp value.
-      file_reference: integer containing the NTFS file reference.
-      attribute_type: the attribute type e.g. 0x00000030 which represents
-                      $FILE_NAME.
-      file_attribute_flags: optional NTFS file attribute flags or None
-                            if not available.
-      is_allocated: optional boolean value to indicate the MFT entry is
-                    is allocated (marked as in use).
-      name: optional string containing the name associated with the stat event,
-            e.g. that of a $FILE_NAME attribute or None if not available.
-      parent_file_reference: optional integer containing the NTFS file
-                             reference of the parent or None if not available.
+      timestamp (int): timestamp, which contains a FILETIME timestamp.
+      timestamp_description (str): description of the timestamp.
+      file_reference (int): NTFS file reference.
+      attribute_type (int): attribute type e.g. 0x00000030 which represents
+          $FILE_NAME.
+      file_attribute_flags (Optional[int]): NTFS file attribute flags.
+      is_allocated (Optional[bool]): True if the MFT entry is is allocated
+          (marked as in use).
+      name (Optional[str]): name associated with the stat event, e.g. that of
+          a $FILE_NAME attribute or None if not available.
+      parent_file_reference (Optional[int]): NTFS file reference of the parent.
     """
     super(NTFSFileStatEvent, self).__init__(timestamp, timestamp_description)
-
     self.attribute_type = attribute_type
     self.file_attribute_flags = file_attribute_flags
     self.file_reference = file_reference
@@ -99,17 +92,15 @@ class NTFSUSNChangeEvent(time_events.FiletimeEvent):
   """NTFS USN change event.
 
   Attributes:
-    file_attribute_flags: the NTFS file attribute flags or None if
-                          not available.
-    file_reference: integer containing the NTFS file reference.
-    update_sequence_number: integer containing the update sequence number.
-    update_source_flags: integer containing the update source flags.
-    update_reason_flags: integer containing the update reason flags.
-    filename: string containing the name of the file associated with the event.
-    file_system_type: the file system type.
-    offset: integer containing the offset of the corresponding USN record.
-    parent_file_reference: optional integer containing the NTFS file
-                           reference of the parent or None if not available.
+    file_attribute_flags (int): NTFS file attribute flags.
+    file_reference (int): NTFS file reference.
+    update_sequence_number (int): update sequence number.
+    update_source_flags (int): update source flags.
+    update_reason_flags (int): update reason flags.
+    filename (str): name of the file associated with the event.
+    file_system_type (str): file system type.
+    offset (int): offset of the corresponding USN record in bytes.
+    parent_file_reference (int): NTFS file reference of the parent.
   """
 
   DATA_TYPE = u'fs:ntfs:usn_change'
@@ -121,22 +112,18 @@ class NTFSUSNChangeEvent(time_events.FiletimeEvent):
     """Initializes the event object.
 
     Args:
-      timestamp: the FILETIME value for the timestamp.
-      offset: integer containing the offset of the corresponding USN record.
-      filename: string containing the name of the file associated with
-                the event.
-      file_reference: integer containing the NTFS file reference.
-      update_sequence_number: integer containing the update sequence number.
-      update_source_flags: integer containing the update source flags.
-      update_reason_flags: integer containing the update reason flags.
-      file_attribute_flags: optional NTFS file attribute flags or None
-                            if not available.
-      parent_file_reference: optional integer containing the NTFS file
-                             reference of the parent or None if not available.
+      timestamp (int): timestamp, which contains a FILETIME timestamp.
+      offset (int): offset of the corresponding USN record in bytes.
+      filename (str): name of the file associated with the event.
+      file_reference (int): NTFS file reference.
+      update_sequence_number (int): update sequence number.
+      update_source_flags (int): update source flags.
+      update_reason_flags (int): update reason flags.
+      file_attribute_flags (Optional[int]): NTFS file attribute flags.
+      parent_file_reference (Optional[int]): NTFS file reference of the parent.
     """
     super(NTFSUSNChangeEvent, self).__init__(
         timestamp, eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME)
-
     self.file_attribute_flags = file_attribute_flags
     self.file_reference = file_reference
     self.filename = filename

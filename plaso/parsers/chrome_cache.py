@@ -353,7 +353,7 @@ class ChromeCacheParser(interface.FileEntryParser):
       cache_address_chain_length = 0
       while cache_address.value != 0x00000000:
         if cache_address_chain_length >= 64:
-          parser_mediator.ProduceParseError(
+          parser_mediator.ProduceExtractionError(
               u'Maximum allowed cache address chain length reached.')
           break
 
@@ -361,13 +361,13 @@ class ChromeCacheParser(interface.FileEntryParser):
         if not data_file:
           message = u'Cache address: 0x{0:08x} missing data file.'.format(
               cache_address.value)
-          parser_mediator.ProduceParseError(message)
+          parser_mediator.ProduceExtractionError(message)
           break
 
         try:
           cache_entry = data_file.ReadCacheEntry(cache_address.block_offset)
         except (IOError, UnicodeDecodeError) as exception:
-          parser_mediator.ProduceParseError(
+          parser_mediator.ProduceExtractionError(
               u'Unable to parse cache entry with error: {0:s}'.format(
                   exception))
           break
@@ -376,7 +376,7 @@ class ChromeCacheParser(interface.FileEntryParser):
           original_url = cache_entry.key.decode(u'ascii')
         except UnicodeDecodeError:
           original_url = cache_entry.key.decode(u'ascii', errors=u'replace')
-          parser_mediator.ProduceParseError((
+          parser_mediator.ProduceExtractionError((
               u'unable to decode cache entry key at cache address: '
               u'0x{0:08x}. Characters that cannot be decoded will be '
               u'replaced with "?" or "\\ufffd".').format(cache_address.value))
@@ -455,13 +455,13 @@ class ChromeCacheParser(interface.FileEntryParser):
           message = (
               u'Unable to open data block file: {0:s} with error: '
               u'{1:s}'.format(kwargs[u'location'], exception))
-          parser_mediator.ProduceParseError(message)
+          parser_mediator.ProduceExtractionError(message)
           data_block_file_entry = None
 
         if not data_block_file_entry:
           message = u'Missing data block file: {0:s}'.format(
               cache_address.filename)
-          parser_mediator.ProduceParseError(message)
+          parser_mediator.ProduceExtractionError(message)
           data_block_file = None
 
         else:
@@ -474,7 +474,7 @@ class ChromeCacheParser(interface.FileEntryParser):
             message = (
                 u'Unable to open data block file: {0:s} with error: '
                 u'{1:s}').format(cache_address.filename, exception)
-            parser_mediator.ProduceParseError(message)
+            parser_mediator.ProduceExtractionError(message)
             data_block_file = None
 
         data_block_files[cache_address.filename] = data_block_file

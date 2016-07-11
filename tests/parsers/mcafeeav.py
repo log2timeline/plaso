@@ -14,21 +14,17 @@ from tests.parsers import test_lib
 class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
   """Tests for the McAfee AV Log parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = mcafeeav.McafeeAccessProtectionParser()
-
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath([u'AccessProtectionLog.txt'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    parser_object = mcafeeav.McafeeAccessProtectionParser()
+    storage_writer = self._ParseFile(
+        [u'AccessProtectionLog.txt'], parser_object)
 
     # The file contains 14 lines which results in 14 event objects.
-    self.assertEqual(len(event_objects), 14)
+    self.assertEqual(len(storage_writer.events), 14)
 
     # Test that the UTF-8 byte order mark gets removed from the first line.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     self.assertEqual(event_object.timestamp, 1380292946000000)
 
@@ -39,7 +35,7 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     # Protection:Prevent termination of McAfee processes  Action blocked :
     # Terminate
 
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     self.assertEqual(event_object.timestamp, 1380292959000000)
     self.assertEqual(event_object.username, u'SOMEDOMAIN\\someUser')

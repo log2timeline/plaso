@@ -157,14 +157,52 @@ class WindowsRegistryServiceEvent(WindowsRegistryEvent):
   DATA_TYPE = 'windows:registry:service'
 
 
+class WindowsRegistryNetworkEvent(time_events.SystemtimeEvent):
+  """Convenience class for a Windows network event.
+
+  Attributes:
+    connection_type: a string containing the type of connection.
+    default_gateway_mac: MAC address for the default gateway.
+    description: a string containing the description of the wireless connection.
+    dns_suffix: the DNS suffix.
+    source_append: optional string to append to the source_long of the event.
+    ssid: the SSID of the connection.
+  """
+  DATA_TYPE = 'windows:registry:network'
+
+  def __init__(
+      self, systemtime, timestamp_description, ssid, description,
+      connection_type, default_gateway_mac, dns_suffix):
+    """Initializes an event object.
+
+    Args:
+      systemtime: a bytestring containing the SYSTEMTIME timestamp value.
+      timestamp_description: string containing timestamp description.
+      ssid: the SSID of the connection.
+      description: a string containing the description of the wireless
+                   connection.
+      connection_type: a string containing the type of connection.
+      default_gateway_mac: MAC address for the default gateway.
+      dns_suffix: the DNS suffix.
+    """
+    super(WindowsRegistryNetworkEvent, self).__init__(
+        systemtime, timestamp_description)
+
+    self.connection_type = connection_type
+    self.default_gateway_mac = default_gateway_mac
+    self.description = description
+    self.dns_suffix = dns_suffix
+    self.ssid = ssid
+
+
 class WindowsVolumeCreationEvent(time_events.FiletimeEvent):
   """Convenience class for a Windows volume creation event.
 
   Attributes:
     device_path: a string containing the volume device path.
-    serial_number: a string containing the volume serial number.
     origin: a string containing the origin of the event (event source).
             E.g. corresponding Prefetch file name.
+    serial_number: a string containing the volume serial number.
   """
   DATA_TYPE = 'windows:volume:creation'
 
@@ -174,13 +212,13 @@ class WindowsVolumeCreationEvent(time_events.FiletimeEvent):
     Args:
       filetime: an integer containing the FILETIME timestamp value.
       device_path: a string containing the volume device path.
-      serial_number: a string containing the volume serial number.
       origin: a string containing the origin of the event (event source).
               E.g. corresponding Prefetch file name.
+      serial_number: a string containing the volume serial number.
     """
     super(WindowsVolumeCreationEvent, self).__init__(
         filetime, eventdata.EventTimestamp.CREATION_TIME)
 
     self.device_path = device_path
-    self.serial_number = serial_number
     self.origin = origin
+    self.serial_number = serial_number

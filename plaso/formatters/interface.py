@@ -310,7 +310,7 @@ class ConditionalEventFormatter(EventFormatter):
 
     return set(self._format_string_attribute_names)
 
-  def GetMessages(self, unused_ormatter_mediator, event_object):
+  def GetMessages(self, unused_formatter_mediator, event_object):
     """Determines the formatted message strings for an event object.
 
     Args:

@@ -4,25 +4,30 @@
 from plaso.containers import interface
 
 
+# TODO: add AnalysisError.
+
+
 class ExtractionError(interface.AttributeContainer):
   """Class to represent an extraction error attribute container.
 
   Attributes:
-    name: a string containing the parser or parser plugin name.
-    description: a string containing the description of the error.
-    path_spec: optional path specification of the file entry (instance of
-               dfvfs.PathSpec) or None.
+    message (str): error message.
+    parser_chain (str): parser chain to which the error applies.
+    path_spec (dfvfs.PathSpec):
+        path specification of the file entry to which the error applies.
   """
-  def __init__(self, name, description, path_spec=None):
+  CONTAINER_TYPE = u'extraction_error'
+
+  def __init__(self, message=None, parser_chain=None, path_spec=None):
     """Initializes a parse error.
 
     Args:
-      name: a string containing the parser or parser plugin name.
-      description: a string containing the description of the error.
-      path_spec: optional path specification of the file entry (instance of
-                 dfvfs.PathSpec).
+      message (Optional[str]): error message.
+      parser_chain (Optional[str]): parser chain to which the error applies.
+      path_spec (Optional[dfvfs.PathSpec]):
+          path specification of the file entry to which the error applies.
     """
     super(ExtractionError, self).__init__()
-    self.description = description
-    self.name = name
+    self.message = message
+    self.parser_chain = parser_chain
     self.path_spec = path_spec

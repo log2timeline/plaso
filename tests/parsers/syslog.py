@@ -29,49 +29,54 @@ class NewSyslogUnitTest(test_lib.ParserTestCase):
   def testParseRsyslog(self):
     """Tests the Parse function on an Ubuntu-style syslog file"""
     knowledge_base_values = {u'year': 2016}
-    test_file = self._GetTestFilePath([u'syslog_rsyslog'])
-    event_queue_consumer = self._ParseFile(
-        self._parser, test_file, knowledge_base_values=knowledge_base_values)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFile(
+        [u'syslog_rsyslog'], self._parser,
+        knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(len(event_objects), 8)
+    self.assertEqual(len(storage_writer.events), 8)
 
   def testParseOSX(self):
     """Tests the Parse function on an Ubuntu-style syslog file"""
     knowledge_base_values = {u'year': 2016}
-    test_file = self._GetTestFilePath([u'syslog_osx'])
-    event_queue_consumer = self._ParseFile(
-        self._parser, test_file, knowledge_base_values=knowledge_base_values)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFile(
+        [u'syslog_osx'], self._parser,
+        knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(len(event_objects), 2)
+    self.assertEqual(len(storage_writer.events), 2)
 
   def testParse(self):
     """Tests the Parse function."""
+    parser_object = syslog.SyslogParser()
     knowledge_base_values = {u'year': 2012}
-    test_file = self._GetTestFilePath([u'syslog'])
-    event_queue_consumer = self._ParseFile(
-        self._parser, test_file, knowledge_base_values=knowledge_base_values)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseFile(
+        [u'syslog'], parser_object,
+        knowledge_base_values=knowledge_base_values)
+
+    self.assertEqual(len(storage_writer.events), 13)
+
+    event_object = storage_writer.events[0]
     event_timestamp = timelib.Timestamp.CopyToIsoFormat(
-        event_objects[0].timestamp)
+        event_object.timestamp)
     self.assertEqual(event_timestamp, u'2012-01-22T07:52:33+00:00')
-    self.assertEqual(event_objects[0].hostname, u'myhostname.myhost.com')
+    self.assertEqual(event_object.hostname, u'myhostname.myhost.com')
 
     expected_string = (
         u'[client, pid: 30840] INFO No new content.')
     self._TestGetMessageStrings(
-        event_objects[0], expected_string, expected_string)
+        event_object, expected_string, expected_string)
 
+    event_object = storage_writer.events[6]
     event_timestamp = timelib.Timestamp.CopyToIsoFormat(
-        event_objects[6].timestamp)
+        event_object.timestamp)
     self.assertEqual(event_timestamp, u'2012-02-29T01:15:43+00:00')
 
     # Testing year increment.
+    event_object = storage_writer.events[8]
     event_timestamp = timelib.Timestamp.CopyToIsoFormat(
-        event_objects[8].timestamp)
+        event_object.timestamp)
     self.assertEqual(event_timestamp, u'2013-03-23T23:01:18+00:00')
 
+    event_object = storage_writer.events[11]
     expected_msg = (
         u'[aprocess, pid: 10100] This is a multi-line message that screws up'
         u'\tmany syslog parsers.')
@@ -79,9 +84,7 @@ class NewSyslogUnitTest(test_lib.ParserTestCase):
         u'[aprocess, pid: 10100] This is a multi-line message that screws up'
         u'\tmany syslo...')
     self._TestGetMessageStrings(
-        event_objects[11], expected_msg, expected_msg_short)
-
-    self.assertEqual(len(event_objects), 13)
+        event_object, expected_msg, expected_msg_short)
 
 
 if __name__ == '__main__':

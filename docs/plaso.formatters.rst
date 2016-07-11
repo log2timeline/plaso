@@ -28,6 +28,22 @@ plaso.formatters.android_sms module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.android_webview module
+---------------------------------------
+
+.. automodule:: plaso.formatters.android_webview
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.formatters.android_webviewcache module
+--------------------------------------------
+
+.. automodule:: plaso.formatters.android_webviewcache
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.appcompatcache module
 --------------------------------------
 
@@ -216,6 +232,14 @@ plaso.formatters.iis module
 ---------------------------
 
 .. automodule:: plaso.formatters.iis
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.formatters.imessage module
+--------------------------------
+
+.. automodule:: plaso.formatters.imessage
     :members:
     :undoc-members:
     :show-inheritance:
@@ -548,6 +572,14 @@ plaso.formatters.text module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.twitter_ios module
+-----------------------------------
+
+.. automodule:: plaso.formatters.twitter_ios
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.userassist module
 ----------------------------------
 
@@ -680,6 +712,14 @@ plaso.formatters.zeitgeist module
 ---------------------------------
 
 .. automodule:: plaso.formatters.zeitgeist
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.formatters.zsh_extended_history module
+--------------------------------------------
+
+.. automodule:: plaso.formatters.zsh_extended_history
     :members:
     :undoc-members:
     :show-inheritance:

@@ -16,36 +16,34 @@ import pytz  # pylint: disable=wrong-import-order
 class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
   """Tests for the Symantec AV Log parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = symantec.SymantecParser()
-
   def testConvertToTimestamp(self):
     """Tests the _ConvertToTimestamp function."""
+    parser_object = symantec.SymantecParser()
+
     # pylint: disable=protected-access
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2002-11-19 08:01:34')
-    timestamp = self._parser._ConvertToTimestamp(
+    timestamp = parser_object._ConvertToTimestamp(
         u'200A13080122', timezone=pytz.UTC)
     self.assertEqual(timestamp, expected_timestamp)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-11-30 10:47:29')
-    timestamp = self._parser._ConvertToTimestamp(
+    timestamp = parser_object._ConvertToTimestamp(
         u'2A0A1E0A2F1D', timezone=pytz.UTC)
     self.assertEqual(timestamp, expected_timestamp)
 
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath([u'Symantec.Log'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    parser_object = symantec.SymantecParser()
+    storage_writer = self._ParseFile(
+        [u'Symantec.Log'], parser_object)
 
     # The file contains 8 lines which should result in 8 event objects.
-    self.assertEqual(len(event_objects), 8)
+    self.assertEqual(len(storage_writer.events), 8)
 
     # Test the second entry:
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-11-30 10:47:29')

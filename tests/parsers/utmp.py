@@ -14,23 +14,22 @@ from tests.parsers import test_lib
 class UtmpParserTest(test_lib.ParserTestCase):
   """The unit test for UTMP parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = utmp.UtmpParser()
-
   def testParseUtmpFile(self):
     """Tests the Parse function for an UTMP file."""
-    test_file = self._GetTestFilePath([u'utmp'])
-    events = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjectsFromQueue(events)
-    self.assertEqual(len(event_objects), 14)
-    event_object = event_objects[0]
+    parser_object = utmp.UtmpParser()
+    storage_writer = self._ParseFile(
+        [u'utmp'], parser_object)
+
+    self.assertEqual(len(storage_writer.events), 14)
+
+    event_object = storage_writer.events[0]
     self.assertEqual(event_object.terminal, u'system boot')
     self.assertEqual(event_object.status, u'BOOT_TIME')
-    event_object = event_objects[1]
+
+    event_object = storage_writer.events[1]
     self.assertEqual(event_object.status, u'RUN_LVL')
 
-    event_object = event_objects[2]
+    event_object = storage_writer.events[2]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-13 14:45:09')
@@ -56,7 +55,7 @@ class UtmpParserTest(test_lib.ParserTestCase):
         u'User: LOGIN')
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    event_object = event_objects[12]
+    event_object = storage_writer.events[12]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-18 22:46:56.305504')
@@ -84,12 +83,13 @@ class UtmpParserTest(test_lib.ParserTestCase):
 
   def testParseWtmpFile(self):
     """Tests the Parse function for an WTMP file."""
-    test_file = self._GetTestFilePath([u'wtmp.1'])
-    events = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjectsFromQueue(events)
-    self.assertEqual(len(event_objects), 4)
+    parser_object = utmp.UtmpParser()
+    storage_writer = self._ParseFile(
+        [u'wtmp.1'], parser_object)
 
-    event_object = event_objects[0]
+    self.assertEqual(len(storage_writer.events), 4)
+
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-12-01 17:36:38.432935')

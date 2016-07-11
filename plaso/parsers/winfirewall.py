@@ -64,7 +64,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     """Initializes a parser object."""
     super(WinFirewallParser, self).__init__()
     self._software = None
-    self._use_local_zone = False
+    self._use_local_timezone = False
     self._version = None
 
   def _ParseCommentRecord(self, structure):
@@ -82,7 +82,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     elif comment.startswith(u'Time'):
       _, _, time_format = comment.partition(u':')
       if u'local' in time_format.lower():
-        self._use_local_zone = True
+        self._use_local_timezone = True
 
   def _ParseLogLine(self, parser_mediator, structure):
     """Parse a single log line and and produce an event object.
@@ -98,11 +98,11 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     time = log_dict.get(u'time', None)
 
     if not date and not time:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to extract timestamp from logline.')
       return
 
-    if self._use_local_zone:
+    if self._use_local_timezone:
       zone = parser_mediator.timezone
     else:
       zone = pytz.UTC
@@ -111,7 +111,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
       timestamp = timelib.Timestamp.FromTimeParts(
           date[0], date[1], date[2], time[0], time[1], time[2], timezone=zone)
     except errors.TimestampError as exception:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to determine timestamp with error: {0:s}'.format(
               exception))
       return

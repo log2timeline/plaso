@@ -82,7 +82,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
             date_time_string, timezone=parser_mediator.timezone)
       except errors.TimestampError:
         timestamp = None
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'unable to parse time string: {0:s}'.format(date_time_string))
 
       if timestamp is not None:

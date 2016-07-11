@@ -19,27 +19,42 @@ class BaseEngine(object):
   """Class that defines the processing engine base.
 
   Attributes:
-    event_object_queue: the event object queue (instance of Queue).
     knowledge_base: the knowledge base object (instance of KnowledgeBase).
   """
 
-  def __init__(self, path_spec_queue, event_object_queue, parse_error_queue):
-    """Initialize the engine object.
+  # The interval of status updates in number of seconds.
+  _STATUS_UPDATE_INTERVAL = 0.5
+
+  def __init__(
+      self, enable_profiling=False, profiling_directory=None,
+      profiling_sample_rate=1000, profiling_type=u'all'):
+    """Initializes an engine object.
 
     Args:
-      path_spec_queue: the path specification queue object (instance of Queue).
-      event_object_queue: the event object queue object (instance of Queue).
-      parse_error_queue: the parser error queue object (instance of Queue).
-    """
-    self._enable_debug_output = False
-    self._enable_profiling = False
-    self._path_spec_queue = path_spec_queue
-    self._parse_error_queue = parse_error_queue
-    self._processing_status = processing_status.ProcessingStatus()
-    self._profiling_sample_rate = 1000
-    self._profiling_type = u'all'
+      enable_profiling (Optional[bool]): True if profiling should be enabled.
+      profiling_directory (Optional[str]): path to the directory where
+          the profiling sample files should be stored.
+      profiling_sample_rate (Optional[int]): profiling sample rate.
+          Contains the number of event sources processed.
+      profiling_type (Optional[str]): type of profiling.
+          Supported types are:
 
-    self.event_object_queue = event_object_queue
+          * 'memory' to profile memory usage;
+          * 'parsers' to profile CPU time consumed by individual parsers;
+          * 'processing' to profile CPU time consumed by different parts of
+            the processing;
+          * 'serializers' to profile CPU time consumed by individual
+            serializers.
+    """
+    super(BaseEngine, self).__init__()
+    self._abort = False
+    self._enable_debug_output = False
+    self._enable_profiling = enable_profiling
+    self._processing_status = processing_status.ProcessingStatus()
+    self._profiling_directory = profiling_directory
+    self._profiling_sample_rate = profiling_sample_rate
+    self._profiling_type = profiling_type
+
     self.knowledge_base = knowledge_base.KnowledgeBase()
 
   def GetSourceFileSystem(self, source_path_spec, resolver_context=None):
@@ -122,22 +137,10 @@ class BaseEngine(object):
     """
     self._enable_debug_output = enable_debug_output
 
-  def SetEnableProfiling(
-      self, enable_profiling, profiling_sample_rate=1000,
-      profiling_type=u'all'):
-    """Enables or disables profiling.
-
-    Args:
-      enable_profiling: boolean value to indicate if the profiling should
-                        be enabled.
-      profiling_sample_rate: optional integer indicating the profiling sample
-                             rate. The value contains the number of files
-                             processed. The default value is 1000.
-      profiling_type: optional profiling type.
-    """
-    self._enable_profiling = enable_profiling
-    self._profiling_sample_rate = profiling_sample_rate
-    self._profiling_type = profiling_type
+  def SignalAbort(self):
+    """Signals the engine to abort."""
+    logging.warning(u'Aborted by user.')
+    self._abort = True
 
   @classmethod
   def SupportsMemoryProfiling(cls):

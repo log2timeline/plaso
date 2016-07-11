@@ -299,6 +299,14 @@ plaso.parsers.popcontest module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.presets module
+----------------------------
+
+.. automodule:: plaso.parsers.presets
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.recycler module
 -----------------------------
 
@@ -463,6 +471,14 @@ plaso.parsers.xchatscrollback module
 ------------------------------------
 
 .. automodule:: plaso.parsers.xchatscrollback
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.parsers.zsh_extended_history module
+-----------------------------------------
+
+.. automodule:: plaso.parsers.zsh_extended_history
     :members:
     :undoc-members:
     :show-inheritance:

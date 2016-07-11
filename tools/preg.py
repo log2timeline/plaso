@@ -20,9 +20,8 @@ import textwrap
 import IPython
 import pysmdev  # pylint: disable=wrong-import-order
 
-from dfvfs.helpers import source_scanner
 from dfvfs.helpers import windows_path_resolver
-from dfvfs.lib import definitions
+from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import resolver
 from dfvfs.volume import tsk_volume_system
 
@@ -62,7 +61,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     plugin_names: a list containing names of selected Windows Registry plugins
                   to be used, defaults to an empty list.
     registry_file: a string containing the path to a Windows Registry file or
-                   a Registry file type, eg: NTUSER, SOFTWARE, etc.
+                   a Registry file type, e.g. NTUSER, SOFTWARE, etc.
     run_mode: the run mode of the tool, determines if the tool should
               be running in a plugin mode, parsing an entire Registry file,
               being run in a console, etc.
@@ -608,7 +607,8 @@ class PregTool(storage_media_tool.StorageMediaTool):
       if not path_spec:
         continue
 
-      if path_spec.TYPE_INDICATOR != definitions.TYPE_INDICATOR_TSK_PARTITION:
+      type_indicator = path_spec.TYPE_INDICATOR
+      if type_indicator != dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION:
         continue
 
       location = getattr(path_spec, u'location', u'')
@@ -709,7 +709,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
         type=str, metavar=u'PLUGIN_NAME', help=(
             u'Substring match of the Registry plugin to be used, this '
             u'parameter can be repeated to create a list of plugins to be '
-            u'run against, eg: "-p userassist -p rdp" or "-p userassist".'))
+            u'run against, e.g. "-p userassist -p rdp" or "-p userassist".'))
 
     argument_parser.add_argument(
         u'registry_file', action=u'store', metavar=u'REGHIVE', nargs=u'?',
@@ -1298,8 +1298,6 @@ class PregConsole(object):
     self.preg_tool = preg_tool
     self.preg_front_end = getattr(preg_tool, u'_front_end', None)
 
-    self.parser_mediator = self.preg_front_end.CreateParserMediator()
-
   def _CommandGetCurrentKey(self):
     """Command function to retrieve the currently loaded Registry key.
 
@@ -1537,7 +1535,7 @@ class PregConsole(object):
   def Run(self):
     """Runs the interactive console."""
     source_type = self.preg_tool.source_type
-    if source_type == source_scanner.SourceScannerContext.SOURCE_TYPE_FILE:
+    if source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
       registry_file_types = []
     elif self.preg_tool.registry_file:
       registry_file_types = [self.preg_tool.registry_file]

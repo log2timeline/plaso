@@ -3,27 +3,23 @@
 
 import logging
 import os
-import pdb
-import traceback
 
-from dfvfs.helpers import source_scanner
+from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 
-import plaso
-from plaso import parsers   # pylint: disable=unused-import
 from plaso import hashers   # pylint: disable=unused-import
+from plaso import parsers   # pylint: disable=unused-import
+from plaso.containers import sessions
 from plaso.engine import single_process
 from plaso.engine import utils as engine_utils
 from plaso.frontend import frontend
-from plaso.frontend import presets
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import event
-from plaso.lib import timelib
-from plaso.multi_processing import multi_process
+from plaso.multi_processing import engine as multi_process_engine
 from plaso.hashers import manager as hashers_manager
 from plaso.parsers import manager as parsers_manager
-from plaso.storage import writer as storage_writer
+from plaso.parsers import presets as parsers_presets
 from plaso.storage import zip_file as storage_zip_file
 
 import pytz  # pylint: disable=wrong-import-order
@@ -34,13 +30,9 @@ class ExtractionFrontend(frontend.Frontend):
 
   _DEFAULT_PROFILING_SAMPLE_RATE = 1000
 
-  # Approximately 250 MB of queued items per worker.
-  _DEFAULT_QUEUE_SIZE = 125000
-
   def __init__(self):
     """Initializes the front-end object."""
     super(ExtractionFrontend, self).__init__()
-    self._buffer_size = 0
     self._collection_process = None
     self._debug_mode = False
     self._enable_preprocessing = False
@@ -51,16 +43,13 @@ class ExtractionFrontend(frontend.Frontend):
     self._hasher_names = []
     self._mount_path = None
     self._operating_system = None
-    self._output_module = None
     self._parser_names = None
-    self._process_archive_files = False
+    self._profiling_directory = None
     self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
     self._profiling_type = u'all'
     self._use_old_preprocess = False
     self._use_zeromq = False
-    self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._resolver_context = context.Context()
-    self._single_process_mode = False
     self._show_worker_memory_information = False
     self._storage_file_path = None
     self._text_prepend = None
@@ -69,7 +58,7 @@ class ExtractionFrontend(frontend.Frontend):
     """Checks if the storage file path is valid.
 
     Args:
-      storage_file_path: The path of the storage file.
+      storage_file_path (str): path of the storage file.
 
     Raises:
       BadConfigOption: if the storage file path is invalid.
@@ -83,7 +72,7 @@ class ExtractionFrontend(frontend.Frontend):
 
     dirname = os.path.dirname(storage_file_path)
     if not dirname:
-      dirname = '.'
+      dirname = u'.'
 
     # TODO: add a more thorough check to see if the storage file really is
     # a plaso storage file.
@@ -92,16 +81,57 @@ class ExtractionFrontend(frontend.Frontend):
       raise errors.BadConfigOption(
           u'Unable to write to storage file: {0:s}'.format(storage_file_path))
 
-  # Note that this function is not called by the normal termination.
-  def _CleanUpAfterAbort(self):
-    """Signals the tool to stop running nicely after an abort."""
-    if self._single_process_mode and self._debug_mode:
-      logging.warning(u'Running in debug mode, set up debugger.')
-      pdb.post_mortem()
-      return
+  def _CreateEngine(self, single_process_mode):
+    """Creates an engine based on the front end settings.
 
-    if self._engine:
-      self._engine.SignalAbort()
+    Args:
+      single_process_mode (bool): True if the front-end should run in single
+          process mode.
+
+    Returns:
+      BaseEngine: engine.
+    """
+    if single_process_mode:
+      engine = single_process.SingleProcessEngine(
+          enable_profiling=self._enable_profiling,
+          profiling_directory=self._profiling_directory,
+          profiling_sample_rate=self._profiling_sample_rate,
+          profiling_type=self._profiling_type)
+    else:
+      engine = multi_process_engine.MultiProcessEngine(
+          enable_profiling=self._enable_profiling,
+          profiling_directory=self._profiling_directory,
+          profiling_sample_rate=self._profiling_sample_rate,
+          profiling_type=self._profiling_type, use_zeromq=self._use_zeromq)
+
+    engine.SetEnableDebugOutput(self._debug_mode)
+
+    return engine
+
+  def _CreateSession(
+      self, command_line_arguments=None, filter_file=None,
+      parser_filter_expression=None, preferred_encoding=u'utf-8'):
+    """Creates the session start information.
+
+    Args:
+      command_line_arguments (Optional[str]): the command line arguments.
+      filter_file (Optional[str]): path to a file with find specifications.
+      parser_filter_expression (Optional[str]): parser filter expression.
+      preferred_encoding (Optional[str]): preferred encoding.
+
+    Returns:
+      Session: session attribute container.
+    """
+    session = sessions.Session()
+
+    session.command_line_arguments = command_line_arguments
+    session.filter_expression = self._filter_expression
+    session.filter_file = filter_file
+    session.debug_mode = self._debug_mode
+    session.parser_filter_expression = parser_filter_expression
+    session.preferred_encoding = preferred_encoding
+
+    return session
 
   def _GetParserFilterPreset(self, os_guess=u'', os_version=u''):
     """Determines the parser filter preset.
@@ -113,7 +143,8 @@ class ExtractionFrontend(frontend.Frontend):
                   determined by the preprocessing.
 
     Returns:
-      The parser filter string or None.
+      A string containing the parser filter preset, where None represents
+      all parsers and plugins.
     """
     # TODO: Make this more sane. Currently we are only checking against
     # one possible version of Windows, and then making the assumption if
@@ -123,46 +154,46 @@ class ExtractionFrontend(frontend.Frontend):
     # this behavior, need to add a parameter to the frontend that takes
     # care of overwriting this behavior.
 
-    parser_filter_string = None
+    parser_filter_preset = None
 
-    if not parser_filter_string and os_version:
+    if not parser_filter_preset and os_version:
       os_version = os_version.lower()
 
       # TODO: Improve this detection, this should be more 'intelligent', since
       # there are quite a lot of versions out there that would benefit from
       # loading up the set of 'winxp' parsers.
       if u'windows xp' in os_version:
-        parser_filter_string = u'winxp'
+        parser_filter_preset = u'winxp'
       elif u'windows server 2000' in os_version:
-        parser_filter_string = u'winxp'
+        parser_filter_preset = u'winxp'
       elif u'windows server 2003' in os_version:
-        parser_filter_string = u'winxp'
+        parser_filter_preset = u'winxp'
       elif u'windows' in os_version:
         # Fallback for other Windows versions.
-        parser_filter_string = u'win7'
+        parser_filter_preset = u'win7'
 
-    if not parser_filter_string and os_guess:
+    if not parser_filter_preset and os_guess:
       if os_guess == definitions.OS_LINUX:
-        parser_filter_string = u'linux'
+        parser_filter_preset = u'linux'
       elif os_guess == definitions.OS_MACOSX:
-        parser_filter_string = u'macosx'
+        parser_filter_preset = u'macosx'
       elif os_guess == definitions.OS_WINDOWS:
-        parser_filter_string = u'win7'
+        parser_filter_preset = u'win7'
 
-    return parser_filter_string
+    return parser_filter_preset
 
   def _PreprocessSources(self, source_path_specs, source_type):
     """Preprocesses the sources.
 
     Args:
-      source_path_specs: list of path specifications (instances of
-                         dfvfs.PathSpec) to process.
-      source_type: the dfVFS source type definition.
+      source_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the sources to process.
+      source_type (str): the dfVFS source type definition.
 
     Returns:
       The preprocessing object (instance of PreprocessObject).
     """
-    pre_obj = None
+    preprocess_object = None
 
     if self._use_old_preprocess and os.path.isfile(self._storage_file_path):
       # Check if the storage file contains a preprocessing object.
@@ -174,7 +205,7 @@ class ExtractionFrontend(frontend.Frontend):
         storage_information = storage_file.GetStorageInformation()
         if storage_information:
           logging.info(u'Using preprocessing information from a prior run.')
-          pre_obj = storage_information[-1]
+          preprocess_object = storage_information[-1]
           self._enable_preprocessing = False
 
       except IOError:
@@ -187,12 +218,10 @@ class ExtractionFrontend(frontend.Frontend):
 
     logging.debug(u'Starting preprocessing.')
 
-    # TODO: move source_scanner.SourceScannerContext.SOURCE_TYPE_
-    # to definitions.SOURCE_TYPE_.
     if (self._enable_preprocessing and source_type in [
-        source_scanner.SourceScannerContext.SOURCE_TYPE_DIRECTORY,
-        source_scanner.SourceScannerContext.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
-        source_scanner.SourceScannerContext.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]):
+        dfvfs_definitions.SOURCE_TYPE_DIRECTORY,
+        dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
+        dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]):
       try:
         self._engine.PreprocessSources(
             source_path_specs, resolver_context=self._resolver_context)
@@ -204,14 +233,14 @@ class ExtractionFrontend(frontend.Frontend):
 
     logging.debug(u'Preprocessing done.')
 
-    # TODO: Remove the need for direct access to the pre_obj in favor
+    # TODO: Remove the need for direct access to the preprocess_object in favor
     # of the knowledge base.
-    pre_obj = getattr(self._engine.knowledge_base, u'_pre_obj', None)
+    preprocess_object = getattr(self._engine.knowledge_base, u'_pre_obj', None)
 
-    if not pre_obj:
-      pre_obj = event.PreprocessObject()
+    if not preprocess_object:
+      preprocess_object = event.PreprocessObject()
 
-    return pre_obj
+    return preprocess_object
 
   # TODO: have the frontend fill collection information gradually
   # and set it as the last step of preprocessing?
@@ -224,115 +253,43 @@ class ExtractionFrontend(frontend.Frontend):
   #   * credentials (encryption)
   #   * mount point
 
-  def _PreprocessSetCollectionInformation(
-      self, pre_obj, source_type, unused_engine, command_line_arguments=None,
-      filter_file=None, parser_filter_string=None, preferred_encoding=u'utf-8'):
+  def _PreprocessSetCollectionInformation(self, preprocess_object):
     """Sets the collection information as part of the preprocessing.
 
     Args:
-      pre_obj: the preprocess object (instance of PreprocessObject).
-      source_type: the dfVFS source type definition.
+      preprocess_object: a preprocess object (instance of PreprocessObject).
       engine: the engine object (instance of BaseEngine).
-      command_line_arguments: optional string of the command line arguments or
-                              None if not set.
-      filter_file: optional path to a file that contains find specifications.
-      parser_filter_string: optional parser filter string.
-      preferred_encoding: optional preferred encoding.
     """
     collection_information = {}
 
-    # TODO: informational values.
-    collection_information[u'version'] = plaso.GetVersion()
-    collection_information[u'debug'] = self._debug_mode
-
-    # TODO: extraction preferences:
-    if not parser_filter_string:
-      parser_filter_string = u'(no list set)'
-    collection_information[u'parser_selection'] = parser_filter_string
-    collection_information[u'preferred_encoding'] = preferred_encoding
-
     # TODO: extraction info:
-    collection_information[u'configured_zone'] = pre_obj.zone
+    collection_information[u'configured_zone'] = preprocess_object.zone
     collection_information[u'parsers'] = self._parser_names
     collection_information[u'preprocess'] = self._enable_preprocessing
-
-    if self._filter_expression:
-      collection_information[u'filter'] = self._filter_expression
-
-    if filter_file and os.path.isfile(filter_file):
-      filters = []
-      with open(filter_file, 'rb') as file_object:
-        for line in file_object.readlines():
-          filters.append(line.rstrip())
-      collection_information[u'file_filter'] = u', '.join(filters)
 
     if self._operating_system:
       collection_information[u'os_detected'] = self._operating_system
     else:
       collection_information[u'os_detected'] = u'N/A'
 
-    # TODO: processing settings:
-    collection_information[u'serialized_buffer_size'] = self._buffer_size
-    collection_information[u'time_of_run'] = timelib.Timestamp.GetNow()
+    preprocess_object.collection_information = collection_information
 
-    if self._single_process_mode:
-      collection_information[u'runtime'] = u'single process mode'
-    else:
-      collection_information[u'runtime'] = u'multi process mode'
-      # TODO: retrieve this value from the multi-process engine.
-      # refactor engine to set number_of_extraction_workers
-      # before ProcessSources.
-      collection_information[u'workers'] = 0
-
-    # TODO: output/storage settings:
-    collection_information[u'output_file'] = self._storage_file_path
-
-    # TODO: source settings:
-
-    # TODO: move source_scanner.SourceScannerContext.SOURCE_TYPE_
-    # to definitions.SOURCE_TYPE_.
-    if source_type == source_scanner.SourceScannerContext.SOURCE_TYPE_DIRECTORY:
-      recursive = True
-    else:
-      recursive = False
-
-    # TODO: replace by scan node.
-    # collection_information[u'file_processed'] = self._source_path
-    collection_information[u'recursive'] = recursive
-    # TODO: replace by scan node.
-    # collection_information[u'vss parsing'] = bool(self.vss_stores)
-
-    # TODO: move source_scanner.SourceScannerContext.SOURCE_TYPE_
-    # to definitions.SOURCE_TYPE_.
-    if source_type in [
-        source_scanner.SourceScannerContext.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
-        source_scanner.SourceScannerContext.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]:
-      collection_information[u'method'] = u'imaged processed'
-      # TODO: replace by scan node.
-      # collection_information[u'image_offset'] = self.partition_offset
-    else:
-      collection_information[u'method'] = u'OS collection'
-
-    collection_information[u'cmd_line'] = command_line_arguments
-
-    pre_obj.collection_information = collection_information
-
-  def _PreprocessSetTimezone(self, pre_obj, timezone=pytz.UTC):
+  def _PreprocessSetTimezone(self, preprocess_object, timezone=pytz.UTC):
     """Sets the timezone as part of the preprocessing.
 
     Args:
-      pre_obj: the previously created preprocessing object (instance of
-               PreprocessObject) or None.
+      preprocess_object: a preprocess object (instance of PreprocessObject).
       timezone: optional preferred timezone.
     """
     if not timezone:
       timezone = pytz.UTC
 
-    if hasattr(pre_obj, u'time_zone_str'):
-      logging.info(u'Setting timezone to: {0:s}'.format(pre_obj.time_zone_str))
+    if hasattr(preprocess_object, u'time_zone_str'):
+      logging.info(u'Setting timezone to: {0:s}'.format(
+          preprocess_object.time_zone_str))
 
       try:
-        pre_obj.zone = pytz.timezone(pre_obj.time_zone_str)
+        preprocess_object.zone = pytz.timezone(preprocess_object.time_zone_str)
 
       except pytz.UnknownTimeZoneError:
         if not timezone:
@@ -342,15 +299,44 @@ class ExtractionFrontend(frontend.Frontend):
           logging.warning((
               u'Unable to automatically configure timezone falling back '
               u'to preferred timezone value: {0:s}').format(timezone))
-        pre_obj.zone = timezone
+        preprocess_object.zone = timezone
 
     else:
       # TODO: shouldn't the user to be able to always override the timezone
       # detection? Or do we need an input sanitization function.
-      pre_obj.zone = timezone
+      preprocess_object.zone = timezone
 
-    if not getattr(pre_obj, u'zone', None):
-      pre_obj.zone = timezone
+    if not getattr(preprocess_object, u'zone', None):
+      preprocess_object.zone = timezone
+
+  def DisableProfiling(self):
+    """Disabled profiling."""
+    self._enable_profiling = False
+
+  def EnableProfiling(
+      self, profiling_directory=None, profiling_sample_rate=1000,
+      profiling_type=u'all'):
+    """Enables profiling.
+
+    Args:
+      profiling_directory (Optional[str]): path to the directory where
+          the profiling sample files should be stored.
+      profiling_sample_rate (Optional[int]): the profiling sample rate.
+          Contains the number of event sources processed.
+      profiling_type (Optional[str]): type of profiling.
+          Supported types are:
+
+          * 'memory' to profile memory usage;
+          * 'parsers' to profile CPU time consumed by individual parsers;
+          * 'processing' to profile CPU time consumed by different parts of
+            the processing;
+          * 'serializers' to profile CPU time consumed by individual
+            serializers.
+    """
+    self._enable_profiling = True
+    self._profiling_directory = profiling_directory
+    self._profiling_sample_rate = profiling_sample_rate
+    self._profiling_type = profiling_type
 
   def GetHashersInformation(self):
     """Retrieves the hashers information.
@@ -360,18 +346,19 @@ class ExtractionFrontend(frontend.Frontend):
     """
     return hashers_manager.HashersManager.GetHashersInformation()
 
-  def GetParserPluginsInformation(self, parser_filter_string=None):
+  def GetParserPluginsInformation(self, parser_filter_expression=None):
     """Retrieves the parser plugins information.
 
     Args:
-      parser_filter_string: Optional parser filter string, where None
-                            represents all parsers and plugins.
+      parser_filter_expression: optional string containing the parser filter
+                                expression, where None represents all parsers
+                                and plugins.
 
     Returns:
       A list of tuples of parser plugin names and descriptions.
     """
     return parsers_manager.ParsersManager.GetParserPluginsInformation(
-        parser_filter_string=parser_filter_string)
+        parser_filter_expression=parser_filter_expression)
 
   def GetParserPresetsInformation(self):
     """Retrieves the parser presets information.
@@ -380,7 +367,7 @@ class ExtractionFrontend(frontend.Frontend):
       A list of tuples of parser preset names and related parsers names.
     """
     parser_presets_information = []
-    for preset_name, parser_names in sorted(presets.categories.items()):
+    for preset_name, parser_names in sorted(parsers_presets.CATEGORIES.items()):
       parser_presets_information.append((preset_name, u', '.join(parser_names)))
 
     return parser_presets_information
@@ -404,34 +391,36 @@ class ExtractionFrontend(frontend.Frontend):
   def ProcessSources(
       self, source_path_specs, source_type, command_line_arguments=None,
       enable_sigsegv_handler=False, filter_file=None, hasher_names_string=None,
-      number_of_extraction_workers=0, parser_filter_string=None,
-      preferred_encoding=u'utf-8', single_process_mode=False,
-      status_update_callback=None,
-      storage_serializer_format=definitions.SERIALIZER_FORMAT_JSON,
-      timezone=pytz.UTC):
+      number_of_extraction_workers=0, parser_filter_expression=None,
+      preferred_encoding=u'utf-8', process_archive_files=False,
+      single_process_mode=False, status_update_callback=None,
+      temporary_directory=None, timezone=pytz.UTC):
     """Processes the sources.
 
     Args:
-      source_path_specs: list of path specifications (instances of
-                         dfvfs.PathSpec) to process.
-      source_type: the dfVFS source type definition.
-      command_line_arguments: optional string of the command line arguments or
-                              None if not set.
-      enable_sigsegv_handler: optional boolean value to indicate the SIGSEGV
-                              handler should be enabled.
-      filter_file: optional path to a file that contains find specifications.
-      hasher_names_string: optional comma separated string of names of
-                           hashers to enable.
-      number_of_extraction_workers: the number of extraction workers to run. If
-                                    0, the number will be selected
-                                    automatically.
-      parser_filter_string: optional parser filter string.
-      preferred_encoding: optional preferred encoding.
-      single_process_mode: optional boolean value to indicate if the front-end
-                           should run in single process mode.
-      status_update_callback: optional callback function for status updates.
-      storage_serializer_format: optional storage serializer format.
-      timezone: optional preferred timezone.
+      source_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the sources to process.
+      source_type (str): the dfVFS source type definition.
+      command_line_arguments (Optional[str]): the command line arguments.
+      enable_sigsegv_handler (Optional[bool]): True if the SIGSEGV handler
+          should be enabled.
+      filter_file (Optional[str]): path to a file that contains find
+          specifications.
+      hasher_names_string (Optional[str]): comma separated string of names
+          of hashers to use during processing.
+      number_of_extraction_workers (Optional[int]): number of extraction
+          workers to run. If 0, the number will be selected automatically.
+      parser_filter_expression (Optional[str]): parser filter expression.
+      preferred_encoding (Optional[str]): preferred encoding.
+      process_archive_files (Optional[bool]): True if archive files should be
+          scanned for file entries.
+      single_process_mode (Optional[bool]): True if the front-end should
+          run in single process mode.
+      status_update_callback (Optional[function]): callback function for status
+          updates.
+      temporary_directory (Optional[str]): path of the directory for temporary
+          files.
+      timezone (Optional[datetime.tzinfo]): timezone.
 
     Returns:
       The processing status (instance of ProcessingStatus) or None.
@@ -443,61 +432,40 @@ class ExtractionFrontend(frontend.Frontend):
     """
     # If the source is a directory or a storage media image
     # run pre-processing.
-    # TODO: move source_scanner.SourceScannerContext.SOURCE_TYPE_
-    # to definitions.SOURCE_TYPE_.
     if source_type in [
-        source_scanner.SourceScannerContext.SOURCE_TYPE_DIRECTORY,
-        source_scanner.SourceScannerContext.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
-        source_scanner.SourceScannerContext.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]:
+        dfvfs_definitions.SOURCE_TYPE_DIRECTORY,
+        dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
+        dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]:
       self.SetEnablePreprocessing(True)
     else:
       self.SetEnablePreprocessing(False)
 
     self._CheckStorageFile(self._storage_file_path)
 
-    self._single_process_mode = single_process_mode
-    # TODO: move source_scanner.SourceScannerContext.SOURCE_TYPE_
-    # to definitions.SOURCE_TYPE_.
-    if source_type == source_scanner.SourceScannerContext.SOURCE_TYPE_FILE:
+    if source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
       # No need to multi process a single file source.
-      self._single_process_mode = True
+      single_process_mode = True
 
-    if self._single_process_mode:
-      self._engine = single_process.SingleProcessEngine(self._queue_size)
-    else:
-      self._engine = multi_process.MultiProcessEngine(
-          maximum_number_of_queued_items=self._queue_size,
-          use_zeromq=self._use_zeromq)
+    self._engine = self._CreateEngine(single_process_mode)
 
-    self._engine.SetEnableDebugOutput(self._debug_mode)
-    self._engine.SetEnableProfiling(
-        self._enable_profiling,
-        profiling_sample_rate=self._profiling_sample_rate,
-        profiling_type=self._profiling_type)
+    preprocess_object = self._PreprocessSources(source_path_specs, source_type)
 
-    pre_obj = self._PreprocessSources(source_path_specs, source_type)
+    self._operating_system = getattr(preprocess_object, u'guessed_os', None)
 
-    self._operating_system = getattr(pre_obj, u'guessed_os', None)
-
-    if not parser_filter_string:
+    if not parser_filter_expression:
       guessed_os = self._operating_system
-      os_version = getattr(pre_obj, u'osversion', u'')
-      parser_filter_string = self._GetParserFilterPreset(
+      os_version = getattr(preprocess_object, u'osversion', u'')
+      parser_filter_expression = self._GetParserFilterPreset(
           os_guess=guessed_os, os_version=os_version)
 
-      if parser_filter_string:
+      if parser_filter_expression:
         logging.info(u'Parser filter expression changed to: {0:s}'.format(
-            parser_filter_string))
+            parser_filter_expression))
 
     self._parser_names = []
     for _, parser_class in parsers_manager.ParsersManager.GetParsers(
-        parser_filter_string=parser_filter_string):
+        parser_filter_expression=parser_filter_expression):
       self._parser_names.append(parser_class.NAME)
-
-    if u'filestat' in self._parser_names:
-      include_directory_stat = True
-    else:
-      include_directory_stat = False
 
     self._hasher_names = []
     hasher_manager = hashers_manager.HashersManager
@@ -505,87 +473,61 @@ class ExtractionFrontend(frontend.Frontend):
         hasher_names_string=hasher_names_string):
       self._hasher_names.append(hasher_name)
 
-    self._PreprocessSetTimezone(pre_obj, timezone=timezone)
+    self._PreprocessSetTimezone(preprocess_object, timezone=timezone)
 
     if filter_file:
+      path_attributes = self._engine.knowledge_base.GetPathAttributes()
       filter_find_specs = engine_utils.BuildFindSpecsFromFile(
-          filter_file, pre_obj=pre_obj)
+          filter_file, path_attributes=path_attributes)
     else:
       filter_find_specs = None
 
-    self._PreprocessSetCollectionInformation(
-        pre_obj, source_type, self._engine,
+    # TODO: deprecate the need for this function.
+    self._PreprocessSetCollectionInformation(preprocess_object)
+
+    session = self._CreateSession(
         command_line_arguments=command_line_arguments, filter_file=filter_file,
-        parser_filter_string=parser_filter_string,
+        parser_filter_expression=parser_filter_expression,
         preferred_encoding=preferred_encoding)
 
-    if self._output_module:
-      storage_writer_object = storage_writer.BypassStorageWriter(
-          self._engine.event_object_queue, self._storage_file_path,
-          pre_obj, output_module_string=self._output_module)
-    else:
-      storage_writer_object = storage_zip_file.ZIPStorageFileWriter(
-          self._engine.event_object_queue, self._storage_file_path,
-          pre_obj, buffer_size=self._buffer_size,
-          serializer_format=storage_serializer_format)
-
-      storage_writer_object.SetEnableProfiling(
-          self._enable_profiling,
-          profiling_type=self._profiling_type)
+    # TODO: we are directly invoking ZIP file storage here. In storage rewrite
+    # come up with a more generic solution.
+    storage_writer = storage_zip_file.ZIPStorageFileWriter(
+        session, self._storage_file_path)
 
     processing_status = None
-    try:
-      if self._single_process_mode:
-        logging.debug(u'Starting extraction in single process mode.')
+    if single_process_mode:
+      logging.debug(u'Starting extraction in single process mode.')
 
-        processing_status = self._engine.ProcessSources(
-            source_path_specs, storage_writer_object,
-            filter_find_specs=filter_find_specs,
-            filter_object=self._filter_object,
-            hasher_names_string=hasher_names_string,
-            include_directory_stat=include_directory_stat,
-            mount_path=self._mount_path,
-            parser_filter_string=parser_filter_string,
-            process_archive_files=self._process_archive_files,
-            resolver_context=self._resolver_context,
-            status_update_callback=status_update_callback,
-            text_prepend=self._text_prepend)
+      processing_status = self._engine.ProcessSources(
+          source_path_specs, preprocess_object, storage_writer,
+          self._resolver_context, filter_find_specs=filter_find_specs,
+          filter_object=self._filter_object,
+          hasher_names_string=hasher_names_string,
+          mount_path=self._mount_path,
+          parser_filter_expression=parser_filter_expression,
+          process_archive_files=process_archive_files,
+          status_update_callback=status_update_callback,
+          temporary_directory=temporary_directory,
+          text_prepend=self._text_prepend)
 
-      else:
-        logging.debug(u'Starting extraction in multi process mode.')
+    else:
+      logging.debug(u'Starting extraction in multi process mode.')
 
-        # TODO: pass number_of_extraction_workers.
-        processing_status = self._engine.ProcessSources(
-            source_path_specs, storage_writer_object,
-            enable_sigsegv_handler=enable_sigsegv_handler,
-            filter_find_specs=filter_find_specs,
-            filter_object=self._filter_object,
-            hasher_names_string=hasher_names_string,
-            include_directory_stat=include_directory_stat,
-            mount_path=self._mount_path,
-            number_of_extraction_workers=number_of_extraction_workers,
-            parser_filter_string=parser_filter_string,
-            process_archive_files=self._process_archive_files,
-            status_update_callback=status_update_callback,
-            show_memory_usage=self._show_worker_memory_information,
-            text_prepend=self._text_prepend)
-
-    except KeyboardInterrupt:
-      self._CleanUpAfterAbort()
-      raise errors.UserAbort
-
-    # TODO: check if this still works and if still needed.
-    except Exception as exception:  # pylint: disable=broad-except
-      if not self._single_process_mode:
-        raise
-
-      # The tool should generally not be run in single process mode
-      # for other reasons than to debug. Hence the general error
-      # catching.
-      logging.error(u'An uncaught exception occurred: {0:s}.\n{1:s}'.format(
-          exception, traceback.format_exc()))
-      if self._debug_mode:
-        pdb.post_mortem()
+      processing_status = self._engine.ProcessSources(
+          session.identifier, source_path_specs, preprocess_object,
+          storage_writer, enable_sigsegv_handler=enable_sigsegv_handler,
+          filter_find_specs=filter_find_specs,
+          filter_object=self._filter_object,
+          hasher_names_string=hasher_names_string,
+          mount_path=self._mount_path,
+          number_of_worker_processes=number_of_extraction_workers,
+          parser_filter_expression=parser_filter_expression,
+          process_archive_files=process_archive_files,
+          status_update_callback=status_update_callback,
+          show_memory_usage=self._show_worker_memory_information,
+          temporary_directory=temporary_directory,
+          text_prepend=self._text_prepend)
 
     return processing_status
 
@@ -607,23 +549,6 @@ class ExtractionFrontend(frontend.Frontend):
                             should be performed.
     """
     self._enable_preprocessing = enable_preprocessing
-
-  def SetEnableProfiling(
-      self, enable_profiling, profiling_sample_rate=1000,
-      profiling_type=u'all'):
-    """Enables or disables profiling.
-
-    Args:
-      enable_profiling: boolean value to indicate if the profiling should
-                        be enabled.
-      profiling_sample_rate: optional integer indicating the profiling sample
-                             rate. The value contains the number of files
-                             processed. The default value is 1000.
-      profiling_type: optional profiling type.
-    """
-    self._enable_profiling = enable_profiling
-    self._profiling_sample_rate = profiling_sample_rate
-    self._profiling_type = profiling_type
 
   def SetShowMemoryInformation(self, show_memory=True):
     """Sets a flag telling the worker monitor to show memory information.

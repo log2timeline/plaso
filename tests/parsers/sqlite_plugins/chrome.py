@@ -16,23 +16,18 @@ from tests.parsers.sqlite_plugins import test_lib
 class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Google Chrome History database plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = chrome.ChromeHistoryPlugin()
-
   def testProcess(self):
     """Tests the Process function on a Chrome History database file."""
-    test_file = self._GetTestFilePath([u'History'])
+    plugin_object = chrome.ChromeHistoryPlugin()
     cache = sqlite.SQLiteCache()
-    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
-        self._plugin, test_file, cache)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'History'], plugin_object, cache=cache)
 
     # The History file contains 71 events (69 page visits, 1 file downloads).
-    self.assertEqual(len(event_objects), 71)
+    self.assertEqual(len(storage_writer.events), 71)
 
     # Check the first page visited entry.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.PAGE_VISITED)
@@ -57,7 +52,7 @@ class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
     self._TestGetMessageStrings(event_object, expected_msg, expected_short)
 
     # Check the first file downloaded entry.
-    event_object = event_objects[69]
+    event_object = storage_writer.events[69]
 
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.FILE_DOWNLOADED)

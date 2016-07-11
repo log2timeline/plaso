@@ -12,25 +12,20 @@ from plaso.parsers.sqlite_plugins import android_sms
 from tests.parsers.sqlite_plugins import test_lib
 
 
-class AndroidSmsTest(test_lib.SQLitePluginTestCase):
+class AndroidSMSTest(test_lib.SQLitePluginTestCase):
   """Tests for the Android SMS database plugin."""
-
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = android_sms.AndroidSmsPlugin()
 
   def testProcess(self):
     """Test the Process function on an Android SMS mmssms.db file."""
-    test_file = self._GetTestFilePath([u'mmssms.db'])
-    event_queue_consumer = self._ParseDatabaseFileWithPlugin(
-        self._plugin, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = android_sms.AndroidSMSPlugin()
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'mmssms.db'], plugin_object)
 
     # The SMS database file contains 9 events (5 SENT, 4 RECEIVED messages).
-    self.assertEqual(len(event_objects), 9)
+    self.assertEqual(len(storage_writer.events), 9)
 
     # Check the first SMS sent.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)

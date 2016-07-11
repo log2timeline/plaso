@@ -260,7 +260,7 @@ class PEParser(interface.FileObjectParser):
       pe_type = self._GetPEType(pefile_object)
     except PEFormatException as error:
       message = u'Unable to parse PE file: {0:s}'.format(error.message)
-      parser_mediator.ProduceParseError(message)
+      parser_mediator.ProduceExtractionError(message)
       return
     section_names = self._GetSectionNames(pefile_object)
     imphash = pefile_object.get_imphash()

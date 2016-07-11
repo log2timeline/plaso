@@ -18,7 +18,7 @@ class ArgumentHelperManager(object):
       argument_group: the argparse group (instance of argparse._ArgumentGroup or
                       or argparse.ArgumentParser).
       argument_category: optional category of helpers to apply to the group,
-                         eg: storage, output. Used to add arguments to a select
+                         e.g. storage, output. Used to add arguments to a select
                          group of registered helpers. Defaults to None, which
                          applies the added arguments to all helpers.
       module_list: a list of modules to apply the command line arguments to.

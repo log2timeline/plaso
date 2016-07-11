@@ -155,6 +155,20 @@ class TimeLibTest(unittest.TestCase):
         u'2012-02-29 15:25:28')
     self.assertEqual(timestamp, expected_timestamp)
 
+  def testSystemtime(self):
+    """Tests the SYSTEMTIME timestamp conversion."""
+    timestamp = timelib.Timestamp.FromSystemtime(
+        b'\xde\x07\x0c\x00\x02\x00\x10\x00\x08\x00\x04\x00\x27\x00\x6a\x00')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2014-12-16 08:04:39.106')
+    self.assertEqual(timestamp, expected_timestamp)
+
+    timestamp = timelib.Timestamp.FromSystemtime(
+        b'\xe0\x07\x05\x00\x05\x00\x06\x00\x09\x00\x1b\x00\x24\x00\x30\x01')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2016-05-06 09:27:36.304')
+    self.assertEqual(timestamp, expected_timestamp)
+
   def testTimestampIsLeapYear(self):
     """Tests the is leap year check."""
     self.assertEqual(timelib.Timestamp.IsLeapYear(2012), True)

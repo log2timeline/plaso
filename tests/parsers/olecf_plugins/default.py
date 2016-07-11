@@ -15,21 +15,16 @@ from tests.parsers.olecf_plugins import test_lib
 class TestDefaultPluginOleCf(test_lib.OleCfPluginTestCase):
   """Tests for the OLECF default plugin."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._plugin = default.DefaultOleCFPlugin()
-
   def testProcess(self):
     """Tests the Process function."""
-    test_file = self._GetTestFilePath([u'Document.doc'])
-    event_queue_consumer = self._ParseOleCfFileWithPlugin(
-        test_file, self._plugin)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    plugin_object = default.DefaultOleCFPlugin()
+    storage_writer = self._ParseOleCfFileWithPlugin(
+        [u'Document.doc'], plugin_object)
 
-    self.assertEqual(len(event_objects), 5)
+    self.assertEqual(len(storage_writer.events), 5)
 
     # Check the Root Entry event.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     self.assertEqual(event_object.name, u'Root Entry')
 
@@ -46,7 +41,7 @@ class TestDefaultPluginOleCf(test_lib.OleCfPluginTestCase):
     self._TestGetMessageStrings(event_object, expected_string, expected_string)
 
     # Check one other entry.
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     expected_string = u'Name: MsoDataStore'
     self._TestGetMessageStrings(event_object, expected_string, expected_string)

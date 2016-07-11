@@ -3,14 +3,17 @@
 
 from dfwinreg import registry as dfwinreg_registry
 
-from plaso.engine import single_process
+from plaso.containers import sessions
 from plaso.parsers import winreg
+from plaso.storage import fake_storage
 
 from tests.parsers import test_lib
 
 
 class RegistryPluginTestCase(test_lib.ParserTestCase):
   """The unit test case for a Windows Registry plugin."""
+
+  # pylint: disable=protected-access
 
   def _GetWinRegistryFromFileEntry(self, file_entry):
     """Retrieves a Windows Registry from a file entry.
@@ -39,13 +42,13 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     return win_registry
 
   def _ParseKeyWithPlugin(
-      self, plugin_object, registry_key, file_entry=None,
+      self, registry_key, plugin_object, file_entry=None,
       knowledge_base_values=None, parser_chain=None):
     """Parses a key within a Windows Registry file using the plugin object.
 
     Args:
+      registry_key: a Windows Registry Key.
       plugin_object: The plugin object.
-      registry_key: The Windows Registry Key.
       file_entry: Optional file entry object (instance of dfvfs.FileEntry).
       knowledge_base_values: Optional dict containing the knowledge base
                              values.
@@ -53,29 +56,25 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
                     point.
 
     Returns:
-      An event object queue consumer object (instance of
-      TestItemQueueConsumer).
+      A storage writer object (instance of FakeStorageWriter).
     """
     self.assertNotEqual(registry_key, None)
 
-    event_queue = single_process.SingleProcessQueue()
-    event_queue_consumer = test_lib.TestItemQueueConsumer(event_queue)
+    session = sessions.Session()
+    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer.Open()
 
-    parse_error_queue = single_process.SingleProcessQueue()
-
-    parser_mediator = self._GetParserMediator(
-        event_queue, parse_error_queue,
+    parser_mediator = self._CreateParserMediator(
+        storage_writer, file_entry=file_entry,
         knowledge_base_values=knowledge_base_values)
-
-    parser_mediator.SetFileEntry(file_entry)
 
     # Most tests aren't explicitly checking for parser chain values,
     # or setting them, so we'll just append the plugin name if no explicit
     # parser chain argument is supplied.
-    # pylint: disable=protected-access
     if parser_chain is None:
       # AppendToParserChain needs to be run after SetFileEntry.
       parser_mediator.AppendToParserChain(plugin_object)
+
     else:
       # In the rare case that a test is checking for a particular chain, we
       # provide a way set it directly. There's no public API for this,
@@ -84,7 +83,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
 
     plugin_object.Process(parser_mediator, registry_key)
 
-    return event_queue_consumer
+    return storage_writer
 
   # TODO: deprecate the usage of "event_object.regvalue".
   def _TestRegvalue(self, event_object, identifier, expected_value):

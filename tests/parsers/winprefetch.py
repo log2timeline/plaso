@@ -15,20 +15,16 @@ from tests.parsers import test_lib
 class WinPrefetchParserTest(test_lib.ParserTestCase):
   """Tests for the Windows prefetch parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = winprefetch.WinPrefetchParser()
-
   def testParse17(self):
     """Tests the Parse function on a version 17 Prefetch file."""
-    test_file = self._GetTestFilePath([u'CMD.EXE-087B4001.pf'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    parser_object = winprefetch.WinPrefetchParser()
+    storage_writer = self._ParseFile(
+        [u'CMD.EXE-087B4001.pf'], parser_object)
 
-    self.assertEqual(len(event_objects), 2)
+    self.assertEqual(len(storage_writer.events), 2)
 
     # The prefetch last run event.
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     self.assertEqual(event_object.version, 17)
     expected_timestamp = timelib.Timestamp.CopyFromString(
@@ -83,7 +79,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.mapped_files, expected_mapped_files)
 
     # The volume creation event.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-03-10 10:19:46.234375')
@@ -104,14 +100,14 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
   def testParse23(self):
     """Tests the Parse function on a version 23 Prefetch file."""
-    test_file = self._GetTestFilePath([u'PING.EXE-B29F6629.pf'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    parser_object = winprefetch.WinPrefetchParser()
+    storage_writer = self._ParseFile(
+        [u'PING.EXE-B29F6629.pf'], parser_object)
 
-    self.assertEqual(len(event_objects), 2)
+    self.assertEqual(len(storage_writer.events), 2)
 
     # The prefetch last run event.
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
     self.assertEqual(event_object.version, 23)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
@@ -141,7 +137,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
     # The volume creation event.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-11-10 17:37:26.484375')
@@ -151,14 +147,14 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
   def testParse23MultiVolume(self):
     """Tests the Parse function on a multi volume version 23 Prefetch file."""
-    test_file = self._GetTestFilePath([u'WUAUCLT.EXE-830BCC14.pf'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    parser_object = winprefetch.WinPrefetchParser()
+    storage_writer = self._ParseFile(
+        [u'WUAUCLT.EXE-830BCC14.pf'], parser_object)
 
-    self.assertEqual(len(event_objects), 6)
+    self.assertEqual(len(storage_writer.events), 6)
 
     # The prefetch last run event.
-    event_object = event_objects[5]
+    event_object = storage_writer.events[5]
     self.assertEqual(event_object.version, 23)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
@@ -196,7 +192,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
     # The volume creation event.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-11-10 17:37:26.484375')
@@ -217,14 +213,14 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
   def testParse26(self):
     """Tests the Parse function on a version 26 Prefetch file."""
-    test_file = self._GetTestFilePath([u'TASKHOST.EXE-3AE259FC.pf'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    parser_object = winprefetch.WinPrefetchParser()
+    storage_writer = self._ParseFile(
+        [u'TASKHOST.EXE-3AE259FC.pf'], parser_object)
 
-    self.assertEqual(len(event_objects), 5)
+    self.assertEqual(len(storage_writer.events), 5)
 
     # The prefetch last run event.
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
     self.assertEqual(event_object.version, 26)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
@@ -236,7 +232,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.prefetch_hash, 0x3ae259fc)
 
     # The prefetch previous last run event.
-    event_object = event_objects[2]
+    event_object = storage_writer.events[2]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-10-04 15:28:09.010356')
@@ -350,7 +346,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.mapped_files, expected_mapped_files)
 
     # The volume creation event.
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-10-04 15:57:26.146547')

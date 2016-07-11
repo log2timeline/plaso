@@ -18,19 +18,15 @@ __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 class PopularityContestUnitTest(test_lib.ParserTestCase):
   """Tests for the popcontest parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = popcontest.PopularityContestParser()
-
   def testParse(self):
     """Tests the Parse function."""
-    test_file = self._GetTestFilePath([u'popcontest1.log'])
-    event_queue_consumer = self._ParseFile(self._parser, test_file)
-    event_objects = self._GetEventObjectsFromQueue(event_queue_consumer)
+    parser_object = popcontest.PopularityContestParser()
+    storage_writer = self._ParseFile(
+        [u'popcontest1.log'], parser_object)
 
-    self.assertEqual(len(event_objects), 22)
+    self.assertEqual(len(storage_writer.events), 22)
 
-    event_object = event_objects[0]
+    event_object = storage_writer.events[0]
 
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ADDED_TIME)
@@ -45,7 +41,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_object, expected_string, expected_short_string)
 
-    event_object = event_objects[1]
+    event_object = storage_writer.events[1]
 
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
@@ -58,7 +54,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_object, expected_string, expected_short_string)
 
-    event_object = event_objects[3]
+    event_object = storage_writer.events[3]
 
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
@@ -73,7 +69,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_object, expected_string, expected_short_string)
 
-    event_object = event_objects[5]
+    event_object = storage_writer.events[5]
 
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
@@ -87,7 +83,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_object, expected_string, expected_short_string)
 
-    event_object = event_objects[6]
+    event_object = storage_writer.events[6]
 
     self.assertEqual(
         event_object.timestamp_desc,
@@ -102,7 +98,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_object, expected_string, expected_short_string)
 
-    event_object = event_objects[11]
+    event_object = storage_writer.events[11]
 
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
@@ -115,7 +111,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_object, expected_string, expected_short_string)
 
-    event_object = event_objects[13]
+    event_object = storage_writer.events[13]
 
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ADDED_TIME)
@@ -128,7 +124,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_object, expected_string, expected_short_string)
 
-    event_object = event_objects[14]
+    event_object = storage_writer.events[14]
 
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ADDED_TIME)
@@ -143,7 +139,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_object, expected_string, expected_short_string)
 
-    event_object = event_objects[15]
+    event_object = storage_writer.events[15]
 
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
@@ -156,7 +152,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_object, expected_string, expected_short_string)
 
-    event_object = event_objects[18]
+    event_object = storage_writer.events[18]
 
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
@@ -169,7 +165,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_object, expected_string, expected_short_string)
 
-    event_object = event_objects[19]
+    event_object = storage_writer.events[19]
 
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
@@ -182,7 +178,7 @@ class PopularityContestUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_object, expected_string, expected_short_string)
 
-    event_object = event_objects[21]
+    event_object = storage_writer.events[21]
 
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.ADDED_TIME)

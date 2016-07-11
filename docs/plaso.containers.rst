@@ -12,6 +12,14 @@ plaso.containers.errors module
     :undoc-members:
     :show-inheritance:
 
+plaso.containers.event_sources module
+-------------------------------------
+
+.. automodule:: plaso.containers.event_sources
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.containers.events module
 ------------------------------
 
@@ -52,10 +60,26 @@ plaso.containers.reports module
     :undoc-members:
     :show-inheritance:
 
+plaso.containers.sessions module
+--------------------------------
+
+.. automodule:: plaso.containers.sessions
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.containers.shell_item_events module
 -----------------------------------------
 
 .. automodule:: plaso.containers.shell_item_events
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.containers.tasks module
+-----------------------------
+
+.. automodule:: plaso.containers.tasks
     :members:
     :undoc-members:
     :show-inheritance:

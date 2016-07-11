@@ -1,22 +1,30 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for Bencode file parser."""
+"""Tests for the Bencode file parser."""
 
 import unittest
 
 from plaso.parsers import bencode_parser
+# Register all plugins.
+from plaso.parsers import bencode_plugins  # pylint: disable=unused-import
 
 from tests.parsers import test_lib
 
 
 class BencodeTest(test_lib.ParserTestCase):
-  """Tests for Bencode file parser."""
+  """Tests for the Bencode file parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = bencode_parser.BencodeParser()
+  # pylint: disable=protected-access
 
-  # TODO: add tests.
+  def testEnablePlugins(self):
+    """Tests the EnablePlugins function."""
+    parser_object = bencode_parser.BencodeParser()
+    parser_object.EnablePlugins([u'bencode_transmission'])
+
+    self.assertIsNotNone(parser_object)
+    self.assertIsNone(parser_object._default_plugin)
+    self.assertNotEqual(parser_object._plugin_objects, [])
+    self.assertEqual(len(parser_object._plugin_objects), 1)
 
 
 if __name__ == '__main__':

@@ -20,6 +20,22 @@ plaso.storage.factory module
     :undoc-members:
     :show-inheritance:
 
+plaso.storage.fake_storage module
+---------------------------------
+
+.. automodule:: plaso.storage.fake_storage
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.storage.interface module
+------------------------------
+
+.. automodule:: plaso.storage.interface
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.storage.reader module
 ---------------------------
 
@@ -32,14 +48,6 @@ plaso.storage.time_range module
 -------------------------------
 
 .. automodule:: plaso.storage.time_range
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.storage.writer module
----------------------------
-
-.. automodule:: plaso.storage.writer
     :members:
     :undoc-members:
     :show-inheritance:

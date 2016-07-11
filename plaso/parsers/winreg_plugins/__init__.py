@@ -10,6 +10,7 @@ from plaso.parsers.winreg_plugins import mountpoints
 from plaso.parsers.winreg_plugins import mrulist
 from plaso.parsers.winreg_plugins import mrulistex
 from plaso.parsers.winreg_plugins import msie_zones
+from plaso.parsers.winreg_plugins import network_drives
 from plaso.parsers.winreg_plugins import officemru
 from plaso.parsers.winreg_plugins import outlook
 from plaso.parsers.winreg_plugins import programscache
@@ -24,5 +25,6 @@ from plaso.parsers.winreg_plugins import timezone
 from plaso.parsers.winreg_plugins import userassist
 from plaso.parsers.winreg_plugins import usb
 from plaso.parsers.winreg_plugins import usbstor
+from plaso.parsers.winreg_plugins import winlogon
 from plaso.parsers.winreg_plugins import winrar
 from plaso.parsers.winreg_plugins import winver

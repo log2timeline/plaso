@@ -78,7 +78,7 @@ class BinaryCookieParser(interface.FileObjectParser):
   COOKIE_FLAG_HTTP_ONLY = 4
 
   def __init__(self):
-    """Initialize the parser."""
+    """Initializes a parser object."""
     super(BinaryCookieParser, self).__init__()
     self._cookie_plugins = (
         cookie_plugins_manager.CookiePluginsManager.GetPlugins())
@@ -94,7 +94,7 @@ class BinaryCookieParser(interface.FileObjectParser):
     try:
       page = self.PAGE_DATA.parse(page_data)
     except construct.FieldError:
-      parser_mediator.ProduceParseError(u'Unable to parse page')
+      parser_mediator.ProduceExtractionError(u'Unable to parse page')
       return
 
     for page_offset in page.offsets:
@@ -103,7 +103,7 @@ class BinaryCookieParser(interface.FileObjectParser):
       except construct.FieldError:
         message = u'Unable to parse cookie data from offset: {0:d}'.format(
             page_offset)
-        parser_mediator.ProduceParseError(message)
+        parser_mediator.ProduceExtractionError(message)
         continue
 
       # The offset is determine by the range between the start of the current
@@ -193,7 +193,7 @@ class BinaryCookieParser(interface.FileObjectParser):
     for page_size in header.page_sizes:
       page = file_object.read(page_size)
       if len(page) != page_size:
-        parser_mediator.ProduceParseError(
+        parser_mediator.ProduceExtractionError(
             u'Unable to continue parsing Binary Cookie file')
         break
 

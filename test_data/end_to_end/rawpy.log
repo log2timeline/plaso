@@ -6,29 +6,25 @@
   
 
 [Reserved attributes]:
-  {body} : INFO No change in [/etc/netgroup]. Done
+  {body} INFO No change in [/etc/netgroup]. Done
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} 0
-  {offset} 74
+  {offset} 0
   {parser} syslog
   {store_index} 0
   {store_number} 2
   {timestamp} 1453449153000000
   {timestamp_desc} Content Modification Time
   {username} -
-  {uuid} 30488c01f6a24ee5ba555a997b5982c0
+  {uuid} 4a9aa44cc3434ee4aa68e356431d3c58
 
 [Additional attributes]:
-  {iday} 22
-  {imonth} 1
-  {iyear} 2016
   {pid} 30840
   {reporter} client
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
-  {time} 07:52:33
+  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
   2016-01-22T07:52:33+00:00
@@ -37,7 +33,7 @@
   
 
 [Reserved attributes]:
-  {body} : INFO No new content.
+  {body} INFO No new content.
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
@@ -50,16 +46,12 @@
   {timestamp} 1453449153000000
   {timestamp_desc} Content Modification Time
   {username} -
-  {uuid} 08c23edfacf44949ab17696f6358a6ee
+  {uuid} 3b0eae5e8abf4c1389e004180e664834
 
 [Additional attributes]:
-  {iday} 22
-  {imonth} 1
-  {iyear} 2016
   {pid} 30840
   {reporter} client
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
-  {time} 07:52:33
+  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
   2016-01-22T07:53:01+00:00
@@ -68,29 +60,26 @@
   
 
 [Reserved attributes]:
-  {body} : (root) CMD (touch /var/run/crond.somecheck)
-  {data_type} syslog:line
+  {body} (root) CMD (touch /var/run/crond.somecheck)
+  {data_type} syslog:cron:task_run
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} 0
-  {offset} 167
+  {offset} 0
   {parser} syslog
   {store_index} 2
   {store_number} 2
   {timestamp} 1453449181000000
   {timestamp_desc} Content Modification Time
-  {username} -
-  {uuid} 275c7e31cfc84f25995fd3ad28b13009
+  {username} root
+  {uuid} 7fe7e0af3d45441b9bea0946434a9022
 
 [Additional attributes]:
-  {iday} 22
-  {imonth} 1
-  {iyear} 2016
+  {command} touch /var/run/crond.somecheck
   {pid} 31051
   {reporter} CRON
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
-  {time} 07:53:01
+  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
   2016-01-22T07:54:01+00:00
@@ -99,29 +88,26 @@
   
 
 [Reserved attributes]:
-  {body} : (root) CMD (/sbin/status.mycheck))
-  {data_type} syslog:line
+  {body} (root) CMD (/sbin/status.mycheck))
+  {data_type} syslog:cron:task_run
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} 0
-  {offset} 357
+  {offset} 0
   {parser} syslog
   {store_index} 3
   {store_number} 2
   {timestamp} 1453449241000000
   {timestamp_desc} Content Modification Time
-  {username} -
-  {uuid} 09ef8b50ce8d4243b853f5b3cee9d305
+  {username} root
+  {uuid} 6b598c741866404b8229de85634b70a0
 
 [Additional attributes]:
-  {iday} 22
-  {imonth} 1
-  {iyear} 2016
+  {command} /sbin/status.mycheck)
   {pid} 31067
   {reporter} CRON
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
-  {time} 07:54:01
+  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
   2016-01-22T07:54:01+00:00
@@ -130,29 +116,26 @@
   
 
 [Reserved attributes]:
-  {body} : (root) CMD (touch /var/run/crond.somecheck)
-  {data_type} syslog:line
+  {body} (root) CMD (touch /var/run/crond.somecheck)
+  {data_type} syslog:cron:task_run
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} 0
-  {offset} 262
+  {offset} 0
   {parser} syslog
   {store_index} 4
   {store_number} 2
   {timestamp} 1453449241000000
   {timestamp_desc} Content Modification Time
-  {username} -
-  {uuid} 4e2c7404129745f6b9c112f620c8969a
+  {username} root
+  {uuid} db89670c9d094dd1b148c540a4d3b045
 
 [Additional attributes]:
-  {iday} 22
-  {imonth} 1
-  {iyear} 2016
+  {command} touch /var/run/crond.somecheck
   {pid} 31068
   {reporter} CRON
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
-  {time} 07:54:01
+  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
   2016-01-22T07:54:32+00:00
@@ -161,27 +144,24 @@
   
 
 [Reserved attributes]:
+  {body} `cron.daily' terminated
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} 0
-  {offset} 443
+  {offset} 0
   {parser} syslog
   {store_index} 5
   {store_number} 2
   {timestamp} 1453449272000000
   {timestamp_desc} Content Modification Time
   {username} -
-  {uuid} a1225f8fb4c54537bb506c3e60cdeffc
+  {uuid} fa4940baf8f84249b215787fbf4af17f
 
 [Additional attributes]:
-  {iday} 22
-  {imonth} 1
-  {iyear} 2016
-  {reporter} Job `cron.daily' terminated
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
-  {time} 07:54:32
+  {reporter} Job
+  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
   2016-02-29T01:15:43+00:00
@@ -190,30 +170,79 @@
   
 
 [Reserved attributes]:
-  {body}  testing leap year in parsing, events take place in 2012 ---
-  {data_type} syslog:line
+  {body} testing leap year in parsing, events take place in 2012
+  {data_type} syslog:comment
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {hostname} -
   {inode} 0
-  {offset} 509
+  {offset} 0
   {parser} syslog
   {store_index} 6
   {store_number} 2
   {timestamp} 1456708543000000
   {timestamp_desc} Content Modification Time
   {username} -
-  {uuid} 2e7d0ca1bfa948ba998e220d8f58f4ba
+  {uuid} 44107cfc3f48489b99dbcc384a9f8232
 
 [Additional attributes]:
-  {iday} 29
-  {imonth} 2
-  {iyear} 2016
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
-  {time} 01:15:43:
+  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2016-04-30T06:41:49+00:00
+  2016-03-23T23:01:18+00:00
+[Pathspec]:
+  type: OS, location: /tmp/test/test_data/syslog
+  
+
+[Reserved attributes]:
+  {body} This syslog message has a fractional value for seconds.
+  {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {hostname} myhostname.myhost.com
+  {inode} 0
+  {offset} 0
+  {parser} syslog
+  {store_index} 7
+  {store_number} 2
+  {timestamp} 1458774078000000
+  {timestamp_desc} Content Modification Time
+  {username} -
+  {uuid} ff64ef25b7b7477e8ba3ee5cd1dc654d
+
+[Additional attributes]:
+  {pid} 19
+  {reporter} somrandomexe
+  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+[Timestamp]:
+  2016-03-23T23:01:18+00:00
+[Pathspec]:
+  type: OS, location: /tmp/test/test_data/syslog
+  
+
+[Reserved attributes]:
+  {body} This syslog message is brought to you by me (and not the other guy)
+  {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {hostname} myhostname.myhost.com
+  {inode} 0
+  {offset} 0
+  {parser} syslog
+  {store_index} 8
+  {store_number} 2
+  {timestamp} 1458774078000000
+  {timestamp_desc} Content Modification Time
+  {username} -
+  {uuid} eeaa9d53b6a541d68eedf3937320237b
+
+[Additional attributes]:
+  {pid} 1915
+  {reporter} somrandomexe
+  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+[Timestamp]:
+  2016-06-25T09:21:40+00:00
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
   
@@ -226,46 +255,20 @@
   {parser} filestat
   {store_index} 9
   {store_number} 1
-  {timestamp} 1461998509000000
-  {timestamp_desc} atime
-  {username} -
-  {uuid} bfdca8991ad84ad39efbfed890a75341
-
-[Additional attributes]:
-  {file_entry_type} 3
-  {file_size} [1328]
-  {file_system_type} OS
-  {is_allocated} True
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-[Timestamp]:
-  2016-04-30T06:41:49+00:00
-[Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
-  
-
-[Reserved attributes]:
-  {data_type} fs:stat
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
-  {offset} 0
-  {parser} filestat
-  {store_index} 7
-  {store_number} 1
-  {timestamp} 1461998509000000
+  {timestamp} 1466846500000000
   {timestamp_desc} ctime
   {username} -
-  {uuid} 1ab0fd1b35e64db9969cc7587a86b5f0
+  {uuid} 6df4c24aa5204165be3514959536ea99
 
 [Additional attributes]:
   {file_entry_type} 3
-  {file_size} [1328]
+  {file_size} (1270,)
   {file_system_type} OS
   {is_allocated} True
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
+  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2016-04-30T06:41:49+00:00
+  2016-06-25T09:21:40+00:00
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
   
@@ -276,22 +279,22 @@
   {filename} /tmp/test/test_data/syslog
   {offset} 0
   {parser} filestat
-  {store_index} 8
+  {store_index} 10
   {store_number} 2
-  {timestamp} 1461998509000000
+  {timestamp} 1466846500000000
   {timestamp_desc} ctime
   {username} -
-  {uuid} e106246cd41e490c86e537b6b65bc82e
+  {uuid} 90e6562c63a54514991202609d1894c8
 
 [Additional attributes]:
   {file_entry_type} 3
-  {file_size} [1328]
+  {file_size} (1270,)
   {file_system_type} OS
   {is_allocated} True
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
+  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2016-04-30T06:41:49+00:00
+  2016-06-25T09:21:40+00:00
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
   
@@ -302,48 +305,22 @@
   {filename} /tmp/test/test_data/syslog
   {offset} 0
   {parser} filestat
-  {store_index} 8
+  {store_index} 10
   {store_number} 1
-  {timestamp} 1461998509000000
+  {timestamp} 1466846500000000
   {timestamp_desc} mtime
   {username} -
-  {uuid} 58b49d978e4145f6a83cc8a0ee30ddc5
+  {uuid} ac20e9fe59e9421da7c3e1c9b2aeb167
 
 [Additional attributes]:
   {file_entry_type} 3
-  {file_size} [1328]
+  {file_size} (1270,)
   {file_system_type} OS
   {is_allocated} True
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
+  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2016-04-30T06:41:49+00:00
-[Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
-  
-
-[Reserved attributes]:
-  {data_type} fs:stat
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
-  {offset} 0
-  {parser} filestat
-  {store_index} 7
-  {store_number} 2
-  {timestamp} 1461998509000000
-  {timestamp_desc} mtime
-  {username} -
-  {uuid} 3f0f91c17c7949e19fbcf4b40f22173b
-
-[Additional attributes]:
-  {file_entry_type} 3
-  {file_size} [1328]
-  {file_system_type} OS
-  {is_allocated} True
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-[Timestamp]:
-  2016-04-30T06:41:50+00:00
+  2016-06-25T09:21:40+00:00
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
   
@@ -356,17 +333,121 @@
   {parser} filestat
   {store_index} 9
   {store_number} 2
-  {timestamp} 1461998510000000
-  {timestamp_desc} atime
+  {timestamp} 1466846500000000
+  {timestamp_desc} mtime
   {username} -
-  {uuid} f974a6b1fb7f422094ccbb08da54b69f
+  {uuid} 3242fb35b53d43328269ba8bce9a0b69
 
 [Additional attributes]:
   {file_entry_type} 3
-  {file_size} [1328]
+  {file_size} (1270,)
   {file_system_type} OS
   {is_allocated} True
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
+  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+[Timestamp]:
+  2016-06-25T09:21:41+00:00
+[Pathspec]:
+  type: OS, location: /tmp/test/test_data/syslog
+  
+
+[Reserved attributes]:
+  {data_type} fs:stat
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {offset} 0
+  {parser} filestat
+  {store_index} 11
+  {store_number} 1
+  {timestamp} 1466846501000000
+  {timestamp_desc} atime
+  {username} -
+  {uuid} cb35d34561424984934efa869693ffae
+
+[Additional attributes]:
+  {file_entry_type} 3
+  {file_size} (1270,)
+  {file_system_type} OS
+  {is_allocated} True
+  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+[Timestamp]:
+  2016-06-25T09:21:41+00:00
+[Pathspec]:
+  type: OS, location: /tmp/test/test_data/syslog
+  
+
+[Reserved attributes]:
+  {data_type} fs:stat
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {offset} 0
+  {parser} filestat
+  {store_index} 11
+  {store_number} 2
+  {timestamp} 1466846501000000
+  {timestamp_desc} atime
+  {username} -
+  {uuid} 3548b15cd1c54b5dbff9930b98f5dc77
+
+[Additional attributes]:
+  {file_entry_type} 3
+  {file_size} (1270,)
+  {file_system_type} OS
+  {is_allocated} True
+  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+[Timestamp]:
+  2016-11-18T01:15:20+00:00
+[Pathspec]:
+  type: OS, location: /tmp/test/test_data/syslog
+  
+
+[Reserved attributes]:
+  {body} This is a multi-line message that screws up
+	many syslog parsers.
+  {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {hostname} myhostname.myhost.com
+  {inode} 0
+  {offset} 0
+  {parser} syslog
+  {store_index} 12
+  {store_number} 2
+  {timestamp} 1479431720000000
+  {timestamp_desc} Content Modification Time
+  {username} -
+  {uuid} 3fc23f3573204a13a8ca92cddbd7b00c
+
+[Additional attributes]:
+  {pid} 10100
+  {reporter} aprocess
+  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+[Timestamp]:
+  2016-11-18T01:15:43+00:00
+[Pathspec]:
+  type: OS, location: /tmp/test/test_data/syslog
+  
+
+[Reserved attributes]:
+  {body} last message repeated 5 times
+  {data_type} syslog:comment
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {inode} 0
+  {offset} 0
+  {parser} syslog
+  {store_index} 13
+  {store_number} 2
+  {timestamp} 1479431743000000
+  {timestamp_desc} Content Modification Time
+  {username} -
+  {uuid} 83e6f9a0b8124aabad54adb0e72c959d
+
+[Additional attributes]:
+  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
   2016-12-18T17:54:32+00:00
@@ -375,179 +456,49 @@
   
 
 [Reserved attributes]:
-  {body} : No true exit can exist (124 job run)
+  {body} No true exit can exist (124 job run)
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} 0
-  {offset} 668
+  {offset} 0
   {parser} syslog
-  {store_index} 10
+  {store_index} 14
   {store_number} 2
   {timestamp} 1482083672000000
   {timestamp_desc} Content Modification Time
   {username} -
-  {uuid} f02f4cb0f9b443e0a3affc0a301bb6c9
+  {uuid} dc5c9ae040e045cf96441866783ee00f
 
 [Additional attributes]:
-  {iday} 18
-  {imonth} 12
-  {iyear} 2016
   {pid} 1234
   {reporter} anacron
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
-  {time} 17:54:32
+  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2017-03-23T23:01:18+00:00
+  2016-12-31T17:54:32+00:00
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
   
 
 [Reserved attributes]:
-  {body} : This syslog message is brought to you by me (and not the other guy)
+  {body} Another one just like this (124 job run)
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
   {inode} 0
-  {offset} 758
-  {parser} syslog
-  {store_index} 11
-  {store_number} 2
-  {timestamp} 1490310078000000
-  {timestamp_desc} Content Modification Time
-  {username} -
-  {uuid} 15348a0bd2b84e39b472e9003d0f6196
-
-[Additional attributes]:
-  {iday} 23
-  {imonth} 3
-  {iyear} 2017
-  {pid} 1915
-  {reporter} somrandomexe
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
-  {time} 23:01:18
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-[Timestamp]:
-  2017-03-23T23:01:18.000123+00:00
-[Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
-  
-
-[Reserved attributes]:
-  {body} : This syslog message has a fractional value for seconds.
-  {data_type} syslog:line
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
-  {hostname} myhostname.myhost.com
-  {inode} 0
-  {offset} 884
-  {parser} syslog
-  {store_index} 12
-  {store_number} 2
-  {timestamp} 1490310078000123
-  {timestamp_desc} Content Modification Time
-  {username} -
-  {uuid} 3ff4f0d042034c088dc4ac91452923bb
-
-[Additional attributes]:
-  {iday} 23
-  {imonth} 3
-  {iyear} 2017
-  {pid} 19
-  {reporter} somrandomexe
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
-  {time} 23:01:18.123
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-[Timestamp]:
-  2017-12-31T17:54:32+00:00
-[Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
-  
-
-[Reserved attributes]:
-  {body} : Another one just like this (124 job run)
-  {data_type} syslog:line
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
-  {hostname} myhostname.myhost.com
-  {inode} 0
-  {offset} 1057
-  {parser} syslog
-  {store_index} 13
-  {store_number} 2
-  {timestamp} 1514742872000000
-  {timestamp_desc} Content Modification Time
-  {username} -
-  {uuid} bc11fa2a7eef46cdba9e07bb12de7a82
-
-[Additional attributes]:
-  {iday} 31
-  {imonth} 12
-  {iyear} 2017
-  {pid} 1234
-  {reporter} anacron
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
-  {time} 17:54:32
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-[Timestamp]:
-  2018-11-18T01:15:20+00:00
-[Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
-  
-
-[Reserved attributes]:
-  {body} : This is a multi-line message that screws upmany syslog parsers.
-  {data_type} syslog:line
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
-  {hostname} myhostname.myhost.com
-  {inode} 0
-  {offset} 1151
-  {parser} syslog
-  {store_index} 14
-  {store_number} 2
-  {timestamp} 1542503720000000
-  {timestamp_desc} Content Modification Time
-  {username} -
-  {uuid} 732a21a5c2ce4047ac67d563339a19f0
-
-[Additional attributes]:
-  {iday} 18
-  {imonth} 11
-  {iyear} 2018
-  {pid} 101001
-  {reporter} aprocess
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
-  {time} 01:15:20
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-[Timestamp]:
-  2018-11-18T01:15:43+00:00
-[Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
-  
-
-[Reserved attributes]:
-  {body}  last message repeated 5 times ---
-  {data_type} syslog:line
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
-  {hostname} -
-  {inode} 0
-  {offset} 1273
+  {offset} 0
   {parser} syslog
   {store_index} 15
   {store_number} 2
-  {timestamp} 1542503743000000
+  {timestamp} 1483206872000000
   {timestamp_desc} Content Modification Time
   {username} -
-  {uuid} ca03764b7de24e23ac42c1d68973dd9b
+  {uuid} cb267494fe7448e985a68c65fdb5a6eb
 
 [Additional attributes]:
-  {iday} 18
-  {imonth} 11
-  {iyear} 2018
-  {sha256_hash} b9bee1add1b34d1e8200df89667d244914def9d260931c732dada15dfe172aec
-  {time} 01:15:43:
+  {pid} 1234
+  {reporter} anacron
+  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5

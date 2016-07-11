@@ -4,42 +4,26 @@
 
 import collections
 import json
-import os
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.path import fake_path_spec
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import reports
 from plaso.lib import event
 from plaso.serializer import json_serializer
 from plaso.storage import collection
 
+from tests import test_lib as shared_test_lib
+
 import pytz  # pylint: disable=wrong-import-order
 
 
-class JSONSerializerTestCase(unittest.TestCase):
+class JSONSerializerTestCase(shared_test_lib.BaseTestCase):
   """Tests for a JSON serializer object."""
-
-  _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
-
-  # Show full diff results, part of TestCase so does not follow our naming
-  # conventions.
-  maxDiff = None
-
-  def _GetTestFilePath(self, path_segments):
-    """Retrieves the path of a test file relative to the test data directory.
-
-    Args:
-      path_segments: the path segments inside the test data directory.
-
-    Returns:
-      A path of the test file.
-    """
-    # Note that we need to pass the individual path segments to os.path.join
-    # and not a list.
-    return os.path.join(self._TEST_DATA_PATH, *path_segments)
 
   def _TestReadSerialized(self, serializer_object, json_dict):
     """Tests the ReadSerialized function.
@@ -155,6 +139,8 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         sorted(analysis_report_dict.items()),
         sorted(expected_analysis_report_dict.items()))
 
+  # TODO: add ExtractionError tests.
+
   def testReadAndWriteSerializedEventObject(self):
     """Test ReadSerialized and WriteSerialized of EventObject."""
     test_file = self._GetTestFilePath([u'ímynd.dd'])
@@ -232,6 +218,39 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         sorted(event_object_dict.items()),
         sorted(expected_event_object_dict.items()))
 
+  def testReadAndWriteSerializedEventSource(self):
+    """Test ReadSerialized and WriteSerialized of EventSource."""
+    test_path_spec = fake_path_spec.FakePathSpec(location=u'/opt/plaso.txt')
+
+    expected_event_source = event_sources.EventSource(path_spec=test_path_spec)
+
+    json_string = (
+        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            expected_event_source))
+
+    self.assertIsNotNone(json_string)
+
+    event_source = (
+        json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
+            json_string))
+
+    self.assertIsNotNone(event_source)
+    self.assertIsInstance(event_source, event_sources.EventSource)
+
+    expected_event_source_dict = {
+        u'path_spec': test_path_spec.comparable,
+        u'storage_session': 0,
+    }
+
+    event_source_dict = event_source.CopyToDict()
+    path_spec = event_source_dict.get(u'path_spec', None)
+    if path_spec:
+      event_source_dict[u'path_spec'] = path_spec.comparable
+
+    self.assertEqual(
+        sorted(event_source_dict.items()),
+        sorted(expected_event_source_dict.items()))
+
   def testReadAndWriteSerializedEventTag(self):
     """Test ReadSerialized and WriteSerialized of EventTag."""
     expected_event_tag = events.EventTag(comment=u'My first comment.')
@@ -263,6 +282,9 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     self.assertEqual(
         sorted(event_tag_dict.items()),
         sorted(expected_event_tag_dict.items()))
+
+  # TODO: add SessionCompletion tests.
+  # TODO: add SessionStart tests.
 
 
 class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
@@ -341,10 +363,10 @@ class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
 
   def testReadSerialized(self):
     """Tests the ReadSerialized function."""
-    pre_obj = self._TestReadSerialized(self._serializer, self._json_dict)
-    counter = pre_obj.counter
+    preprocess_object = self._TestReadSerialized(
+        self._serializer, self._json_dict)
 
-    for key, value in iter(counter.items()):
+    for key, value in iter(preprocess_object.counter.items()):
       self.assertEquals(self._counter[key], value)
 
   def testWriteSerialized(self):
@@ -413,7 +435,7 @@ class JSONCollectionInformationSerializerTest(JSONSerializerTestCase):
     collection_object = self._TestReadSerialized(
         self._serializer, self._json_dict)
 
-    for key, value in collection_object.GetValueDict().iteritems():
+    for key, value in iter(collection_object.GetValueDict().items()):
       self.assertEqual(
           value, self._collection_information_object.GetValue(key))
 
@@ -421,7 +443,7 @@ class JSONCollectionInformationSerializerTest(JSONSerializerTestCase):
       compare_counter = self._collection_information_object.GetCounter(
           identifier)
 
-      for key, value in counter.iteritems():
+      for key, value in iter(counter.items()):
         self.assertEqual(value, compare_counter[key])
 
   def testWriteSerialized(self):

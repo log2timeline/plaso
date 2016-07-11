@@ -12,11 +12,12 @@ from plaso.frontend import extraction_frontend
 from plaso.storage import zip_file as storage_zip_file
 
 from tests import test_lib as shared_test_lib
-from tests.frontend import test_lib
 
 
-class ExtractionFrontendTests(test_lib.FrontendTestCase):
+class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
   """Tests for the extraction front-end object."""
+
+  # pylint: disable=protected-access
 
   def _GetTestScanNode(self, scan_context):
     """Retrieves the scan node for testing.
@@ -41,6 +42,18 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
   # TODO: add test for _PreprocessSource
   # TODO: add test for _PreprocessSetCollectionInformation
   # TODO: add test for _PreprocessSetTimezone
+
+  def testEnableAndDisableProfiling(self):
+    """Tests the EnableProfiling and DisableProfiling functions."""
+    test_front_end = extraction_frontend.ExtractionFrontend()
+
+    self.assertFalse(test_front_end._enable_profiling)
+
+    test_front_end.EnableProfiling()
+    self.assertTrue(test_front_end._enable_profiling)
+
+    test_front_end.DisableProfiling()
+    self.assertFalse(test_front_end._enable_profiling)
 
   def testGetHashersInformation(self):
     """Tests the GetHashersInformation function."""
@@ -108,7 +121,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     source_type = dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      storage_file_path = os.path.join(temp_directory, u'plaso.db')
+      storage_file_path = os.path.join(temp_directory, u'storage.plaso')
       test_front_end.SetStorageFile(storage_file_path)
 
       test_front_end.ProcessSources([path_spec], source_type)
@@ -120,8 +133,10 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
         self.fail(u'Unable to open storage file after processing.')
 
       # Make sure we can read events from the storage.
-      event_object = storage_file.GetSortedEntry()
-      self.assertIsNotNone(event_object)
+      event_objects = list(storage_file.GetEvents())
+      self.assertNotEqual(len(event_objects), 0)
+
+      event_object = event_objects[0]
 
       self.assertGreaterEqual(event_object.data_type, u'fs:stat')
       self.assertGreaterEqual(event_object.filename, u'/lost+found')
@@ -136,12 +151,6 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
     test_front_end = extraction_frontend.ExtractionFrontend()
     test_front_end.SetEnablePreprocessing(True)
 
-  def testSetEnableProfiling(self):
-    """Tests the SetEnableProfiling function."""
-    test_front_end = extraction_frontend.ExtractionFrontend()
-    test_front_end.SetEnableProfiling(
-        True, profiling_sample_rate=5000, profiling_type=u'all')
-
   def testSetShowMemoryInformation(self):
     """Tests the SetShowMemoryInformation function."""
     test_front_end = extraction_frontend.ExtractionFrontend()
@@ -150,7 +159,7 @@ class ExtractionFrontendTests(test_lib.FrontendTestCase):
   def testSetStorageFile(self):
     """Tests the SetStorageFile function."""
     test_front_end = extraction_frontend.ExtractionFrontend()
-    test_front_end.SetStorageFile(u'/tmp/test.plaso')
+    test_front_end.SetStorageFile(u'/tmp/storage.plaso')
 
   def testSetTextPrepend(self):
     """Tests the SetTextPrepend function."""

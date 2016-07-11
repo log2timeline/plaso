@@ -146,11 +146,6 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
       (u'header', SDF_HEADER)
   ]
 
-  def __init__(self):
-    """Initializes a parser object."""
-    super(SkyDriveLogParser, self).__init__()
-    self.use_local_zone = False
-
   def _GetTimestampFromHeader(self, structure):
     """Gets a timestamp from the structure.
 
@@ -385,7 +380,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
     try:
       timestamp = self._ConvertToTimestamp(structure.sdol_timestamp)
     except errors.TimestampError as exception:
-      parser_mediator.ProduceParseError(
+      parser_mediator.ProduceExtractionError(
           u'unable to determine timestamp with error: {0:s}'.format(
               exception))
       return

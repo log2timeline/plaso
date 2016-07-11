@@ -50,7 +50,15 @@ __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
 
 class XChatScrollbackEvent(time_events.PosixTimeEvent):
-  """Convenience class for a XChat Scrollback line event."""
+  """Convenience class for a XChat Scrollback line event.
+
+  Attributes:
+    nickname: a string containin the nickname.
+    offset: an integer containing the offset of the event.
+    text: a string containing the text sent by nickname or other text
+          (server, messages, etc.).
+  """
+
   DATA_TYPE = u'xchat:scrollback:line'
 
   def __init__(self, posix_time, offset, nickname, text):
@@ -59,14 +67,15 @@ class XChatScrollbackEvent(time_events.PosixTimeEvent):
     Args:
       posix_time: the POSIX time value, which contains the number of seconds
                   since January 1, 1970 00:00:00 UTC.
-      offset: The offset of the event.
-      nickname: The nickname used.
-      text: The text sent by nickname or other text (server, messages, etc.).
+      offset: an integer containing the offset of the event.
+      nickname: a string containin the nickname.
+      text: a string containing the text sent by nickname or other text
+            (server, messages, etc.).
     """
     super(XChatScrollbackEvent, self).__init__(
         posix_time, eventdata.EventTimestamp.ADDED_TIME)
-    self.offset = offset
     self.nickname = nickname
+    self.offset = offset
     self.text = text
 
 
@@ -107,8 +116,7 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
   def __init__(self):
     """Initializes a parser object."""
     super(XChatScrollbackParser, self).__init__()
-    self.use_local_zone = False
-    self.offset = 0
+    self._offset = 0
 
   def VerifyStructure(self, parser_mediator, line):
     """Verify that this file is a XChat scrollback log file.
@@ -166,10 +174,11 @@ class XChatScrollbackParser(text_parser.PyparsingSingleLineTextParser):
     try:
       nickname, text = self._StripThenGetNicknameAndText(structure.text)
     except pyparsing.ParseException:
-      logging.debug(u'Error parsing entry at offset {0:d}'.format(self.offset))
+      logging.debug(u'Error parsing entry at offset {0:d}'.format(self._offset))
       return
 
-    event_object = XChatScrollbackEvent(posix_time, self.offset, nickname, text)
+    event_object = XChatScrollbackEvent(
+        posix_time, self._offset, nickname, text)
     parser_mediator.ProduceEvent(event_object)
 
   def _StripThenGetNicknameAndText(self, text):
