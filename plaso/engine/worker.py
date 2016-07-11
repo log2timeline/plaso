@@ -11,9 +11,9 @@ from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.analyzers import manager as analyzers_manager
 from plaso.containers import event_sources
 from plaso.engine import extractors
-from plaso.hashers import manager as hashers_manager
 from plaso.lib import definitions
 from plaso.lib import errors
 
@@ -97,6 +97,7 @@ class EventExtractionWorker(object):
     """
     super(EventExtractionWorker, self).__init__()
     self._abort = False
+    self._analyzers = []
     self._current_display_name = u''
     self._event_extractor = extractors.EventExtractor(
         resolver_context, parser_filter_expression=parser_filter_expression)
@@ -222,61 +223,68 @@ class EventExtractionWorker(object):
 
     self.processing_status = definitions.PROCESSING_STATUS_RUNNING
 
-  def _HashDataStream(self, parser_mediator, file_entry, data_stream_name):
-    """Hashes the contents of a specific data stream of a file entry.
+  def _AnalyzeDataStream(self, parser_mediator, file_entry, data_stream_name):
+    """Analyzes the contents of a specific data stream of a file entry.
 
-    The resulting digest hashes are set in the parser mediator as attributes
+    The results of the analyzers are set in the parser mediator as attributes
     that are added to produced event objects. Note that some file systems
     allow directories to have data streams, e.g. NTFS.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
-      file_entry (dfvfs.FileEntry): file entry to be hashed.
-      data_stream_name (str): data stream name to be hashed.
+      parser_mediator (ParserMediator): provides access to Plaso's runtime
+          state.
+      file_entry (dfvfs.FileEntry): the file entry relating to the data being
+          processed.
+      data_stream_name (Optional[str]): data stream name. An empty string
+          represents the default data stream.
 
     Raises:
       RuntimeError: if the file-like object is missing.
     """
-    if not self._hasher_names:
+    if not self._analyzers:
       return
+
+    logging.debug(u'[AnalyzeDataStream] analyzing file: {0:s}'.format(
+        parser_mediator.GetDisplayName(file_entry)))
 
     self.processing_status = definitions.PROCESSING_STATUS_HASHING
 
     if self._processing_profiler:
-      self._processing_profiler.StartTiming(u'hashing')
-
-    logging.debug(u'[HashDataStream] hashing file: {0:s}'.format(
-        self._current_display_name))
+      self._processing_profiler.StartTiming(u'analyzing')
 
     file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
     if not file_object:
       raise RuntimeError(
-          u'Unable to retrieve file-like object from file entry.')
+          u'Unable to retrieve file-like object for file entry: {0:s}.'.format(
+              self._current_display_name))
 
     # Make sure frame.f_locals does not keep a reference to file_entry.
     file_entry = None
 
     try:
-      digest_hashes = hashers_manager.HashersManager.HashFileObject(
-          self._hasher_names, file_object,
-          buffer_size=self._DEFAULT_HASH_READ_SIZE)
+      analyzer_results = analyzers_manager.AnalyzersManager.AnalyzeFileObject(
+          file_object, parser_mediator, self._analyzers)
     finally:
       file_object.close()
 
-    for hash_name, digest_hash_string in iter(digest_hashes.items()):
-      attribute_name = u'{0:s}_hash'.format(hash_name)
-      parser_mediator.AddEventAttribute(attribute_name, digest_hash_string)
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'analyzing')
 
+    for result in analyzer_results:
       logging.debug(
-          u'[HashDataStream] digest {0:s} calculated for file: {1:s}.'.format(
-              digest_hash_string, self._current_display_name))
+          (u'[AnalyzeDataStream] attribute {0:s}:{1:s} calculated for '
+           u'file: {2:s}.').format(
+               result.attribute_name, result.attribute_value,
+               self._current_display_name))
+      parser_mediator.AddEventAttribute(
+          result.attribute_name, result.attribute_value)
 
     logging.debug(
-        u'[HashDataStream] completed hashing file: {0:s}'.format(
+        u'[AnalyzeDataStream] completed analyzing file: {0:s}'.format(
             self._current_display_name))
 
     if self._processing_profiler:
-      self._processing_profiler.StopTiming(u'hashing')
+      self._processing_profiler.StopTiming(u'analyzing')
 
     self.processing_status = definitions.PROCESSING_STATUS_RUNNING
 
@@ -539,7 +547,7 @@ class EventExtractionWorker(object):
     # extract the metadata only.
     has_data_stream = file_entry.HasDataStream(data_stream_name)
     if has_data_stream:
-      self._HashDataStream(parser_mediator, file_entry, data_stream_name)
+      self._AnalyzeDataStream(parser_mediator, file_entry, data_stream_name)
 
     # We always want to extract the file entry metadata but we only want
     # to parse it once per file entry, so we only use it if we are
@@ -605,6 +613,11 @@ class EventExtractionWorker(object):
     """str: current display name."""
     return self._current_display_name
 
+  @property
+  def analyzer_names(self):
+    """list(str): names of active analyzers."""
+    return [analyzer_instance.NAME for analyzer_instance in self._analyzers]
+
   def ProcessPathSpec(self, parser_mediator, path_spec):
     """Processes a path specification.
 
@@ -632,10 +645,10 @@ class EventExtractionWorker(object):
       hasher_names_string (str): comma separated names of the hashers
           to enable.
     """
-    names = hashers_manager.HashersManager.GetHasherNamesFromString(
-        hasher_names_string)
-    logging.debug(u'[SetHashers] Enabling hashers: {0:s}.'.format(names))
-    self._hasher_names = names
+    hashing_processor = analyzers_manager.AnalyzersManager.GetAnalyzerInstance(
+        u'hashing')
+    hashing_processor.SetHasherNames(hasher_names_string)
+    self._analyzers.append(hashing_processor)
 
   def SetParsersProfiler(self, parsers_profiler):
     """Sets the parsers profiler.
@@ -652,6 +665,17 @@ class EventExtractionWorker(object):
       processing_profiler (ProcessingProfiler): processing profile.
     """
     self._processing_profiler = processing_profiler
+
+  def SetYaraRules(self, yara_rules_string):
+    """Sets the Yara rules.
+
+    Args:
+      yara_rules_string(str): unparsed Yara rule definitions.
+    """
+    yara_processor = analyzers_manager.AnalyzersManager.GetAnalyzerInstance(
+        u'yara')
+    yara_processor.SetRules(yara_rules_string)
+    self._analyzers.append(yara_processor)
 
   def SignalAbort(self):
     """Signals the extraction worker to abort."""

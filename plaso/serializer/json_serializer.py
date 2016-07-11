@@ -324,11 +324,12 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     """
     if not isinstance(
         attribute_container, containers_interface.AttributeContainer):
-      raise TypeError(u'Not an attribute container type.')
+      raise TypeError(u'{0:s} is not an attribute container type.'.format(
+          attribute_container.__class__))
 
     container_type = getattr(attribute_container, u'CONTAINER_TYPE', None)
     if not container_type:
-      raise ValueError(u'Unuspported attribute container type: {0:s}.'.format(
+      raise ValueError(u'Unsupported attribute container type: {0:s}.'.format(
           type(attribute_container)))
 
     json_dict = {

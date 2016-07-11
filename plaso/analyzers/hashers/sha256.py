@@ -3,8 +3,8 @@
 
 import hashlib
 
-from plaso.hashers import interface
-from plaso.hashers import manager
+from plaso.analyzers.hashers import interface
+from plaso.analyzers.hashers import manager
 
 
 class SHA256Hasher(interface.BaseHasher):

@@ -1,22 +1,22 @@
 # -*- coding: utf-8 -*-
-"""The SHA-1 Hasher implementation"""
+"""The MD5 hasher implementation."""
 
 import hashlib
 
-from plaso.hashers import interface
-from plaso.hashers import manager
+from plaso.analyzers.hashers import interface
+from plaso.analyzers.hashers import manager
 
 
-class SHA1Hasher(interface.BaseHasher):
-  """This class provides SHA-1 hashing functionality."""
+class MD5Hasher(interface.BaseHasher):
+  """This class provides MD5 hashing functionality."""
 
-  NAME = u'sha1'
-  DESCRIPTION = u'Calculates a SHA-1 digest hash over input data.'
+  NAME = u'md5'
+  DESCRIPTION = u'Calculates an MD5 digest hash over input data.'
 
   def __init__(self):
-    """Initializes the SHA-1 hasher."""
-    super(SHA1Hasher, self).__init__()
-    self._sha1_context = hashlib.sha1()
+    """Initializes the MD5 hasher."""
+    super(MD5Hasher, self).__init__()
+    self._md5_context = hashlib.md5()
 
   def Update(self, data):
     """Updates the current state of the hasher with a new block of data.
@@ -27,7 +27,7 @@ class SHA1Hasher(interface.BaseHasher):
     Args:
       data: a string of data with which to update the context of the hasher.
     """
-    self._sha1_context.update(data)
+    self._md5_context.update(data)
 
   def GetStringDigest(self):
     """Returns the digest of the hash function expressed as a Unicode string.
@@ -36,7 +36,7 @@ class SHA1Hasher(interface.BaseHasher):
       A string hash digest calculated over the data blocks passed to
       Update(). The string will consist of printable Unicode characters.
     """
-    return u'{0:s}'.format(self._sha1_context.hexdigest())
+    return u'{0:s}'.format(self._md5_context.hexdigest())
 
   def GetBinaryDigest(self):
     """Returns the digest of the hash function as a binary string.
@@ -45,7 +45,7 @@ class SHA1Hasher(interface.BaseHasher):
       A binary string hash digest calculated over the data blocks passed to
       Update().
     """
-    return self._sha1_context.digest()
+    return self._md5_context.digest()
 
 
-manager.HashersManager.RegisterHasher(SHA1Hasher)
+manager.HashersManager.RegisterHasher(MD5Hasher)

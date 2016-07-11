@@ -3,9 +3,9 @@
 
 import unittest
 
-from plaso.hashers import md5
+from plaso.analyzers.hashers import md5
 
-from tests.hashers import test_lib
+from tests.analyzers.hashers import test_lib
 
 
 class MD5Test(test_lib.HasherTestCase):

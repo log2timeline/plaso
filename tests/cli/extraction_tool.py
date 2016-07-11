@@ -15,9 +15,10 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
   """Tests for the extraction tool object."""
 
   _EXPECTED_OUTPUT_EXTRACTION_OPTIONS = u'\n'.join([
-      (u'usage: extraction_tool_test.py [--hashers HASHER_LIST] '
-       u'[--parsers PARSER_LIST]'),
-      u'                               [-p] [--process_archives]',
+      u'usage: extraction_tool_test.py [--hashers HASHER_LIST]',
+      u'                               [--yara-rules-path YARA_RULES_PATH]',
+      u'                               [--parsers PARSER_LIST] [-p]',
+      u'                               [--process_archives]',
       u'                               [--temporary_directory DIRECTORY]',
       u'                               [--use_old_preprocess]',
       u'',
@@ -36,6 +37,9 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       (u'                        hashers. Use "--hashers list" or "--info" to '
        u'list the'),
       u'                        available hashers.',
+      u'  --yara-rules-path YARA_RULES_PATH',
+      (u'                        The path to a file containing Yara rules '
+       u'definitions.'),
       u'  --parsers PARSER_LIST',
       (u'                        Define a list of parsers to use by the tool. '
        u'This is a'),
@@ -91,7 +95,7 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       u'                        more than a single partition.',
       u''])
 
-  _EXPECTED_PERFOMANCE_OPTIONS = u'\n'.join([
+  _EXPECTED_PERFORMANCE_OPTIONS = u'\n'.join([
       u'usage: extraction_tool_test.py [--buffer_size BUFFER_SIZE]',
       u'                               [--queue_size QUEUE_SIZE]',
       u'',
@@ -158,7 +162,7 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
     test_tool.AddPerformanceOptions(argument_parser)
 
     output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_PERFOMANCE_OPTIONS)
+    self.assertEqual(output, self._EXPECTED_PERFORMANCE_OPTIONS)
 
   def testAddProfilingOptions(self):
     """Tests the AddProfilingOptions function."""

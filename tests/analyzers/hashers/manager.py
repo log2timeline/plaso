@@ -3,8 +3,8 @@
 
 import unittest
 
-from plaso.hashers import interface
-from plaso.hashers import manager
+from plaso.analyzers.hashers import interface
+from plaso.analyzers.hashers import manager
 
 
 class TestHasher(interface.BaseHasher):

@@ -43,6 +43,7 @@ PLASO_DEPENDENCIES="ipython
                    python-xlsxwriter
                    python-yaml
                    python-tz
+                   python-yara
                    python-zmq"
 
 # Additional dependencies for running Plaso tests, alphabetized,
