@@ -410,7 +410,7 @@ class ExtractionFrontend(frontend.Frontend):
           should be enabled.
       filter_file (Optional[str]): path to a file that contains find
           specifications.
-      force_preprocessing (Optional[bool]): True is preprocessiong should be
+      force_preprocessing (Optional[bool]): True is preprocessing should be
           forced.
       hasher_names_string (Optional[str]): comma separated string of names
           of hashers to use during processing.

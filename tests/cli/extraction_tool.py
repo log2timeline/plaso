@@ -63,10 +63,11 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
        u'"--info" to'),
       u'                        list the available parsers.',
       u'  --preferred_year YEAR, --preferred-year YEAR',
-      (u'                        When a format does not describe a year e.g. '
-       u'syslog'),
-      u'                        apply the preferred year instead of trying to',
-      u'                        determine the earliest year.',
+      (u'                        When a format\'s timestamp does not include '
+       u'a year,'),
+      (u'                        e.g. syslog, use this as the initial year '
+       u'instead of'),
+      u'                        attempting auto-detection.',
       (u'  -p, --preprocess      Turn on preprocessing. Preprocessing is '
        u'turned on by'),
       (u'                        default when parsing image files, however if '

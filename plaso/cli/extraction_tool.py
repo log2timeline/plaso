@@ -222,9 +222,9 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     argument_group.add_argument(
         u'--preferred_year', u'--preferred-year', dest=u'preferred_year',
         action=u'store', default=None, metavar=u'YEAR', help=(
-            u'When a format does not describe a year e.g. syslog apply the '
-            u'preferred year instead of trying to determine the earliest '
-            u'year.'))
+            u'When a format\'s timestamp does not include a year, e.g. '
+            u'syslog, use this as the initial year instead of attempting '
+            u'auto-detection.'))
 
     argument_group.add_argument(
         u'-p', u'--preprocess', dest=u'preprocess', action=u'store_true',

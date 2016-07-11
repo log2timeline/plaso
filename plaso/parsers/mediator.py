@@ -326,8 +326,7 @@ class ParserMediator(object):
     * default to the current year;
 
     Returns:
-      int: user provided preferred year, year of the file entry or
-          the current year.
+      int: estimated year.
     """
     # TODO: improve this method to get a more reliable estimate.
     # Preserve the year-less date and sort this out in the psort phase.
