@@ -114,7 +114,7 @@ class HashersManager(object):
     """Retrieves instances for all the specified hashers.
 
     Args:
-      hasher_names (list[str]): the names of the hashers to retrieve.
+      hasher_names (list[str]): names of the hashers to retrieve.
 
     Returns:
       list[BaseHasher]: hashers.
@@ -137,7 +137,7 @@ class HashersManager(object):
         tuple: containing:
 
          str: parser name
-         Class: next hasher class.
+         type: next hasher class.
     """
     for hasher_name, hasher_class in iter(cls._hasher_classes.items()):
       if not hasher_names or hasher_name in hasher_names:

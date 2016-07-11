@@ -83,7 +83,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     yara_rules_path = getattr(options, u'yara_rules_path', None)
     if yara_rules_path:
       try:
-        with open(yara_rules_path, 'r') as rules_file:
+        with open(yara_rules_path, 'rb') as rules_file:
           yara_rules_string = rules_file.read()
         # We try to parse the rules here, to check that the definitions are
         # valid. We then pass the string definitions along to the workers, so
@@ -216,9 +216,9 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
             u'hashers.'))
 
     argument_group.add_argument(
-        u'--yara-rules-path', dest=u'yara_rules_path', type=str,
-        action=u'store', help=(
-            u'The path to a file containing Yara rules definitions.'))
+        u'--yara-rules-path', u'--yara_rules_path', dest=u'yara_rules_path',
+        type=str, metavar=u'PATH', action=u'store', help=(
+            u'Path to a file containing Yara rules definitions.'))
 
     # TODO: rename option name to parser_filter_expression.
     argument_group.add_argument(

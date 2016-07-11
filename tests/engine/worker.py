@@ -186,7 +186,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
       self.assertEqual(getattr(event, u'md5_hash', None), empty_file_md5)
 
   def testExtractionWorkerYara(self):
-    """Test that the worker sets up and runs hashing code correctly."""
+    """Test that the worker applies Yara matching code correctly."""
     resolver_context = context.Context()
     extraction_worker = worker.EventExtractionWorker(resolver_context)
 

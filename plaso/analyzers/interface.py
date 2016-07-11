@@ -21,7 +21,7 @@ class BaseAnalyzer(object):
       data(bytes): block of data to process.
     """
 
-  def Update(self, data):
+  def Update(self, unused_data):
     """Updates the current state of the analyzer with a new block of data.
 
     Repeated calls to update are equivalent to one single call with the
@@ -35,8 +35,7 @@ class BaseAnalyzer(object):
           updates.
     """
     if not self.SUPPORTS_INCREMENTAL_UPDATE:
-      _ = data
-      raise NotImplementedError
+      raise NotImplementedError()
 
   @abc.abstractmethod
   def GetResults(self):

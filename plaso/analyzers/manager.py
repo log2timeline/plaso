@@ -15,14 +15,14 @@ class AnalyzersManager(object):
   def AnalyzeFileObject(cls, mediator, file_object, analyzers):
     """Processes a file object with the provided analyzers.
 
-      Args:
-        mediator (ParserMediator): provides access to Plaso's runtime
-            state.
-        file_object (dfvfs.file_object): file object to process.
-        analyzers (list[analyzer]): analyzers to use on the file object.
+    Args:
+      mediator (ParserMediator): provides access to Plaso's runtime
+          state.
+      file_object (dfvfs.FileIO): file object to process.
+      analyzers (list[analyzer]): analyzers to use on the file object.
 
     Returns:
-      list(AnalyzerResult): results of the processing.
+      list(AnalyzerResult): results of the analyzers.
     """
     if not analyzers:
       return None
@@ -135,7 +135,7 @@ class AnalyzersManager(object):
       list[BaseAnalyzer]: analyzer instances.
     """
     analyzer_instances = []
-    for analyzer_name, analyzer_class in iter(cls._analyzer_classes.items()):
+    for analyzer_name, analyzer_class in iter(cls.GetAnalyzers()):
       if analyzer_name in analyzer_names:
         analyzer_instances.append(analyzer_class())
 
@@ -149,7 +149,7 @@ class AnalyzersManager(object):
       tuple: containing:
 
         str: the uniquely identifying name of the analyzer
-        Class: the analyzer class.
+        type: the analyzer class.
     """
     for analyzer_name, analyzer_class in iter(cls._analyzer_classes.items()):
       yield analyzer_name, analyzer_class

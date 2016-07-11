@@ -231,8 +231,8 @@ class EventExtractionWorker(object):
     allow directories to have data streams, e.g. NTFS.
 
     Args:
-      parser_mediator (ParserMediator): provides access to Plaso's runtime
-          state.
+      parser_mediator (ParserMediator): encapsulates interactions between
+          parsers and other Plaso components (storage, process control, etc.).
       file_entry (dfvfs.FileEntry): file entry relating to the data being
           analyzed.
       data_stream_name (str): name of the data stream.
@@ -244,7 +244,7 @@ class EventExtractionWorker(object):
       return
 
     logging.debug(u'[AnalyzeDataStream] analyzing file: {0:s}'.format(
-        parser_mediator.GetDisplayName(file_entry)))
+        self._current_display_name))
 
     self.processing_status = definitions.PROCESSING_STATUS_HASHING
 
@@ -612,9 +612,12 @@ class EventExtractionWorker(object):
     """str: current display name."""
     return self._current_display_name
 
-  @property
-  def analyzer_names(self):
-    """list(str): names of active analyzers."""
+  def GetAnalyzerNames(self):
+    """Gets the names of the active analyzers.
+
+    Returns:
+      list(str): names of active analyzers.
+    """
     return [analyzer_instance.NAME for analyzer_instance in self._analyzers]
 
   def ProcessPathSpec(self, parser_mediator, path_spec):

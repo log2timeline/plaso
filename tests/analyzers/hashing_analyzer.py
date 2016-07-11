@@ -16,12 +16,14 @@ class HashingAnalyzerTest(test_lib.AnalyzerTestCase):
 
   # pylint: disable=protected-access
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
+  @classmethod
+  def setUpClass(cls):
+    """Makes preparations before running any of the tests."""
     manager.HashersManager.RegisterHasher(manager_test.TestHasher)
 
-  def tearDown(self):
-    """Cleans up after running an individual test."""
+  @classmethod
+  def tearDownClass(cls):
+    """Cleans up after running all tests."""
     manager.HashersManager.DeregisterHasher(manager_test.TestHasher)
 
   def testHasherInitialization(self):

@@ -32,7 +32,11 @@ class AnalyzerTestCase(shared_test_lib.BaseTestCase):
     return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
   def _CreateMediator(self):
-    """Creates a parser mediator."""
+    """Creates a parser mediator.
+
+    Returns
+      ParserMediator: test parser mediator.
+    """
     session = sessions.Session()
     storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()

@@ -17,6 +17,8 @@ class AnalyzerResult(interface.AttributeContainer):
     attribute_value (str): value of the attribute produced.
   """
 
+  CONTAINER_TYPE = u'analyzer_result'
+
   def __init__(self):
     """Initializes an analyzer result."""
     super(AnalyzerResult, self).__init__()

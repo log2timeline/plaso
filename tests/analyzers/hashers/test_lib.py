@@ -15,14 +15,15 @@ class HasherTestCase(shared_test_lib.BaseTestCase):
 
   _DEFAULT_READ_SIZE = 512
 
-  def _AssertFileEntryBinaryDigestMatch(self, hasher, file_entry, digest):
+  def _AssertFileEntryBinaryDigestMatch(
+      self, hasher, file_entry, expected_digest):
     """Test that a hasher returns a given result when it hashes a file.
 
     Args:
       hasher (BaseHasher): hasher to test.
       file_entry (dfvfs.file_entry): file entry whose default data stream will
           be hashed.
-      digest (bytes): digest the hasher should return.
+      expected_digest (bytes): digest expected to be returned by hasher.
     """
     file_object = file_entry.GetFileObject()
     # Make sure we are starting from the beginning of the file.
@@ -33,16 +34,17 @@ class HasherTestCase(shared_test_lib.BaseTestCase):
       hasher.Update(data)
       data = file_object.read(self._DEFAULT_READ_SIZE)
     file_object.close()
-    self.assertEqual(hasher.GetBinaryDigest(), digest)
+    self.assertEqual(hasher.GetBinaryDigest(), expected_digest)
 
-  def _AssertFileEntryStringDigestMatch(self, hasher, file_entry, digest):
+  def _AssertFileEntryStringDigestMatch(
+      self, hasher, file_entry, expected_digest):
     """Test that a hasher returns a given result when it hashes a file.
 
     Args:
       hasher (BaseHasher): hasher to test.
       file_entry (dfvfs.file_entry): file entry whose default data stream will
           be hashed.
-      digest (str): digest the hasher should return.
+      expected_digest (bytes): digest expected to be returned by hasher.
     """
     file_object = file_entry.GetFileObject()
 
@@ -54,7 +56,7 @@ class HasherTestCase(shared_test_lib.BaseTestCase):
       hasher.Update(data)
       data = file_object.read(self._DEFAULT_READ_SIZE)
     file_object.close()
-    self.assertEqual(hasher.GetStringDigest(), digest)
+    self.assertEqual(hasher.GetStringDigest(), expected_digest)
 
   def _AssertTestPathBinaryDigestMatch(self, hasher, path_segments, digest):
     """Check if a hasher returns a given result when it hashes a test file.

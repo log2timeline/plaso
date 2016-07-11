@@ -16,8 +16,8 @@ class TestHasher(interface.BaseHasher):
     """Retrieves the digest of the hash function as a binary string.
 
     Returns:
-      A binary string hash digest calculated over the data blocks passed to
-      Update().
+      bytes: binary string hash digest calculated over the data blocks passed to
+          Update().
     """
     # Chosen by fair dice roll. Guaranteed to be random.
     # Compliant with RFC 1149.4. See http://xkcd.com/221/.
@@ -27,8 +27,8 @@ class TestHasher(interface.BaseHasher):
     """Retrieves the digest of the hash function expressed as a Unicode string.
 
     Returns:
-      A string hash digest calculated over the data blocks passed to
-      Update(). The string will consist of printable Unicode characters.
+      str: string hash digest calculated over the data blocks passed to
+          Update(). The string will consist of printable Unicode characters.
     """
     # Chosen by fair dice roll. Guaranteed to be random.
     # Compliant with RFC 1149.4. See http://xkcd.com/221/.
@@ -78,7 +78,7 @@ class HashersManagerTest(unittest.TestCase):
     names = manager.HashersManager.GetHasherNamesFromString(u'all')
     self.assertEqual(len(names), len(manager.HashersManager._hasher_classes))
 
-  def testGetHasherObject(self):
+  def testGetHasher(self):
     """Tests the GetHasher function."""
     hasher_object = manager.HashersManager.GetHasher(u'md5')
     self.assertIsNotNone(hasher_object)
@@ -91,8 +91,8 @@ class HashersManagerTest(unittest.TestCase):
     with self.assertRaises(KeyError):
       manager.HashersManager.GetHasher(u'bogus')
 
-  def testGetHasherObjects(self):
-    """Tests getting hasher objects by name."""
+  def testGetHashers(self):
+    """Tests the GetHashers and GetHasherNames functions."""
     hasher_names = manager.HashersManager.GetHasherNames()
     hashers = manager.HashersManager.GetHashers(hasher_names)
     self.assertEqual(len(hasher_names), len(hashers))

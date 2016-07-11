@@ -10,14 +10,14 @@ from tests.analyzers import test_lib
 
 class YaraAnalyzerTest(test_lib.AnalyzerTestCase):
   """Test the Yara analyzer."""
-  RULE_FILE = [u'yara.rules']
+  _RULE_FILE = [u'yara.rules']
 
   # pylint: disable=protected-access
 
   def testFileRuleParse(self):
     """Tests that the Yara analyzer can read rules."""
     analyzer = yara_analyzer.YaraAnalyzer()
-    rule_path = self._GetTestFilePath(self.RULE_FILE)
+    rule_path = self._GetTestFilePath(self._RULE_FILE)
     with open(rule_path, 'r') as rules_file:
       rules = rules_file.read()
     analyzer.SetRules(rules)
@@ -26,7 +26,7 @@ class YaraAnalyzerTest(test_lib.AnalyzerTestCase):
   def testMatchFile(self):
     """Tests that the Yara analyzer correctly matches a file."""
     analyzer = yara_analyzer.YaraAnalyzer()
-    rule_path = self._GetTestFilePath(self.RULE_FILE)
+    rule_path = self._GetTestFilePath(self._RULE_FILE)
     with open(rule_path, 'r') as rule_file:
       rule_string = rule_file.read()
     analyzer.SetRules(rule_string)

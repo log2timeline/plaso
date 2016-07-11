@@ -35,7 +35,6 @@ class HashingAnalyzer(interface.BaseAnalyzer):
     logging.debug(u'Got hasher names {0:s}'.format(hasher_names))
     self._hashers = hashers_manager.HashersManager.GetHashers(
         hasher_names)
-    logging.debug(u'Got hashers {0:s}'.format(self._hashers))
 
   def Update(self, data):
     """Updates the internal state of the analyzer.
@@ -43,9 +42,6 @@ class HashingAnalyzer(interface.BaseAnalyzer):
     Args:
       data(str): data from the data stream.
     """
-    if not self._hashers:
-      return
-
     for hasher in self._hashers:
       hasher.Update(data)
 

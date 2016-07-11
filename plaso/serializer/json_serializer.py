@@ -325,7 +325,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     if not isinstance(
         attribute_container, containers_interface.AttributeContainer):
       raise TypeError(u'{0:s} is not an attribute container type.'.format(
-          attribute_container.__class__))
+          type(attribute_container)))
 
     container_type = getattr(attribute_container, u'CONTAINER_TYPE', None)
     if not container_type:
