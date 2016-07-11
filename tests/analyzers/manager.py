@@ -67,7 +67,7 @@ class AnalyzersManagerTest(test_lib.AnalyzerTestCase):
   # pylint: disable=protected-access
 
   def tearDown(self):
-    """Called after each test."""
+    """Cleans up after running an individual test."""
     try:
       manager.AnalyzersManager.DeregisterAnalyzer(TestAnalyzer)
     except KeyError:

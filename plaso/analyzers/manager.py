@@ -12,13 +12,60 @@ class AnalyzersManager(object):
   _READ_BUFFER_SIZE = 4096
 
   @classmethod
+  def AnalyzeFileObject(cls, mediator, file_object, analyzers):
+    """Processes a file object with the provided analyzers.
+
+      Args:
+        mediator (ParserMediator): provides access to Plaso's runtime
+            state.
+        file_object (dfvfs.file_object): file object to process.
+        analyzers (list[analyzer]): analyzers to use on the file object.
+
+    Returns:
+      list(AnalyzerResult): results of the processing.
+    """
+    if not analyzers:
+      return None
+
+    file_object.seek(0, os.SEEK_SET)
+
+    maximum_file_size = max([analyzer.SIZE_LIMIT for analyzer in analyzers])
+
+    results = []
+    if file_object.get_size() <= maximum_file_size:
+      data = file_object.read()
+      for analyzer in analyzers:
+        if mediator.abort:
+          break
+        if len(data) <= analyzer.SIZE_LIMIT:
+          analyzer.Analyze(data)
+    else:
+      data = file_object.read(cls._READ_BUFFER_SIZE)
+      while data:
+        for analyzer in analyzers:
+          if mediator.abort:
+            break
+          if analyzer.INCREMENTAL:
+            analyzer.Update(data)
+        if mediator.abort:
+          break
+        data = file_object.read(cls._READ_BUFFER_SIZE)
+
+    for analyzer in analyzers:
+      if mediator.abort:
+        break
+      results.extend(analyzer.GetResults())
+      analyzer.Reset()
+    return results
+
+  @classmethod
   def DeregisterAnalyzer(cls, analyzer_class):
     """Deregisters a analyzer class.
 
     The analyzer classes are identified based on their lower case name.
 
     Args:
-      analyzer_class: the class object of the analyzer.
+      analyzer_class (type): class object of the analyzer.
 
     Raises:
       KeyError: if analyzer class is not set for the corresponding name.
@@ -108,60 +155,13 @@ class AnalyzersManager(object):
       yield analyzer_name, analyzer_class
 
   @classmethod
-  def AnalyzeFileObject(cls, mediator, file_object, analyzers):
-    """Processes a file object with the provided analyzers.
-
-      Args:
-        mediator (ParserMediator): provides access to Plaso's runtime
-            state.
-        file_object (dfvfs.file_object): file object to process.
-        analyzers (list[analyzer]): analyzers to use on the file object.
-
-    Returns:
-      list(AnalyzerResult): results of the processing.
-    """
-    if not analyzers:
-      return None
-
-    file_object.seek(0, os.SEEK_SET)
-
-    maximum_file_size = max([analyzer.SIZE_LIMIT for analyzer in analyzers])
-
-    results = []
-    if file_object.get_size() <= maximum_file_size:
-      data = file_object.read()
-      for analyzer in analyzers:
-        if mediator.abort:
-          break
-        if len(data) <= analyzer.SIZE_LIMIT:
-          analyzer.Analyze(data)
-    else:
-      data = file_object.read(cls._READ_BUFFER_SIZE)
-      while data:
-        for analyzer in analyzers:
-          if mediator.abort:
-            break
-          if analyzer.INCREMENTAL:
-            analyzer.Update(data)
-        if mediator.abort:
-          break
-        data = file_object.read(cls._READ_BUFFER_SIZE)
-
-    for analyzer in analyzers:
-      if mediator.abort:
-        break
-      results.extend(analyzer.GetResults())
-      analyzer.Reset()
-    return results
-
-  @classmethod
   def RegisterAnalyzer(cls, analyzer_class):
     """Registers a analyzer class.
 
     The analyzer classes are identified by their lower case name.
 
     Args:
-      analyzer_class (Class): the analyzer class to register.
+      analyzer_class (type): the analyzer class to register.
 
     Raises:
       KeyError: if analyzer class is already set for the corresponding name.

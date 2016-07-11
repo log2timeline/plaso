@@ -20,8 +20,8 @@ class AnalyzerTestCase(shared_test_lib.BaseTestCase):
     """Creates a file_entry that references a file in the test dir.
 
     Args:
-      path_segments (list[str]): the path segments inside the test data
-          directory.
+      path_segments (list[str]): components of a path to a test file, relative
+          to the test_data directory.
 
     Returns:
       dfvfs.FileEntry: file_entry object.

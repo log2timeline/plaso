@@ -14,7 +14,7 @@ class HashersManager(object):
     The hasher classes are identified based on their lower case name.
 
     Args:
-      hasher_class (Class): class object of the hasher.
+      hasher_class (type): class object of the hasher.
 
     Raises:
       KeyError: if hasher class is not set for the corresponding name.
@@ -40,8 +40,8 @@ class HashersManager(object):
           hashers.
 
     Returns:
-      list[str]: A list of names of valid hashers from the string, or an empty
-          list if no valid names are found.
+      list[str]: names of valid hashers from the string, or an empty list if no
+          valid names are found.
     """
     hasher_names = []
 
@@ -76,7 +76,10 @@ class HashersManager(object):
     """Retrieves the hashers information.
 
     Returns:
-      list[tuple[str, str]]: A list of tuples of hasher names and descriptions.
+      list[tuple]: containing:
+
+          str: hasher name.
+          str: hasher description.
     """
     hashers_information = []
     for _, hasher_class in cls.GetHasherClasses():
@@ -86,14 +89,14 @@ class HashersManager(object):
     return hashers_information
 
   @classmethod
-  def GetHasherObject(cls, hasher_name):
+  def GetHasher(cls, hasher_name):
     """Retrieves an instance of a specific hasher.
 
     Args:
       hasher_name: the name of the hasher to retrieve.
 
     Returns:
-      BaseHasher: hasher instance.
+      BaseHasher: hasher.
 
     Raises:
       KeyError: if hasher class is not set for the corresponding name.
@@ -107,21 +110,21 @@ class HashersManager(object):
     return hasher_class()
 
   @classmethod
-  def GetHasherObjects(cls, hasher_names):
+  def GetHashers(cls, hasher_names):
     """Retrieves instances for all the specified hashers.
 
     Args:
-      hasher_names(list[str]): list of the names of the hashers to retrieve.
+      hasher_names (list[str]): the names of the hashers to retrieve.
 
     Returns:
-      A list of hasher objects (instances of BaseHasher).
+      list[BaseHasher]: hashers.
     """
-    hasher_objects = []
+    hashers = []
     for hasher_name, hasher_class in iter(cls._hasher_classes.items()):
       if hasher_name in hasher_names:
-        hasher_objects.append(hasher_class())
+        hashers.append(hasher_class())
 
-    return hasher_objects
+    return hashers
 
   @classmethod
   def GetHasherClasses(cls, hasher_names=None):
@@ -147,7 +150,7 @@ class HashersManager(object):
     The hasher classes are identified based on their lower case name.
 
     Args:
-      hasher_class: the class object of the hasher.
+      hasher_class (type): class object of the hasher.
 
     Raises:
       KeyError: if hasher class is already set for the corresponding name.

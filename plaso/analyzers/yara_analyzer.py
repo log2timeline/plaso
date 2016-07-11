@@ -15,47 +15,40 @@ class YaraAnalyzer(interface.BaseAnalyzer):
 
   NAME = u'yara'
 
-  INCREMENTAL = False
+  SUPPORTS_INCREMENTAL_UPDATE = False
 
   DESCRIPTION = u'Matches Yara rules over input data.'
+
+  _MATCH_TIMEOUT = 60
 
   def __init__(self):
     """Initializes the Yara analyzer."""
     super(YaraAnalyzer, self).__init__()
-    self._rules = None
     self._matches = []
-
-  def SetRules(self, rules_string):
-    """Sets the rules that the Yara analyzer will use.
-
-    Args:
-      rules_string(str): Yara rule definitions
-    """
-    self._rules = yara.compile(source=rules_string)
+    self._rules = None
 
   def Analyze(self, data):
-    """Analyzes data, attempting to match Yara rules to it.
+    """Analyzes a block of data, attempting to match Yara rules to it.
 
     Args:
-      data(str): a string of data.
+      data(bytes): a block of data.
     """
     if not self._rules:
       return
     try:
-      self._matches = self._rules.match(data=data, timeout=60)
+      self._matches = self._rules.match(data=data, timeout=self._MATCH_TIMEOUT)
     except yara.YaraTimeoutError:
-      logging.error(u'Could not process file in time.')
-    except yara.YaraError:
-      logging.error(u'Error processing file with Yara.')
-
-  def Update(self, data):
-    """Anal"""
+      logging.error(u'Could not process file within timeout: {0:d}'.format(
+          self._MATCH_TIMEOUT))
+    except yara.YaraError as exception:
+      logging.error(u'Error processing file with Yara: {0!s}.'.format(
+          exception))
 
   def GetResults(self):
-    """Retrieves the results of the processing of all data.
+    """Retrieves results of the most recent analysis.
 
     Returns:
-      list[AnalyzerResult): results.
+      list[AnalyzerResult]: results.
     """
     results = []
     for match in self._matches:
@@ -69,6 +62,14 @@ class YaraAnalyzer(interface.BaseAnalyzer):
   def Reset(self):
     """Resets the internal state of the analyzer."""
     self._matches = []
+
+  def SetRules(self, rules_string):
+    """Sets the rules that the Yara analyzer will use.
+
+    Args:
+      rules_string(str): Yara rule definitions
+    """
+    self._rules = yara.compile(source=rules_string)
 
 
 manager.AnalyzersManager.RegisterAnalyzer(YaraAnalyzer)

@@ -79,22 +79,22 @@ class HashersManagerTest(unittest.TestCase):
     self.assertEqual(len(names), len(manager.HashersManager._hasher_classes))
 
   def testGetHasherObject(self):
-    """Tests the GetHasherObject function."""
-    hasher_object = manager.HashersManager.GetHasherObject(u'md5')
+    """Tests the GetHasher function."""
+    hasher_object = manager.HashersManager.GetHasher(u'md5')
     self.assertIsNotNone(hasher_object)
     self.assertEqual(hasher_object.NAME, u'md5')
 
-    hasher_object = manager.HashersManager.GetHasherObject(u'sha1')
+    hasher_object = manager.HashersManager.GetHasher(u'sha1')
     self.assertIsNotNone(hasher_object)
     self.assertEqual(hasher_object.NAME, u'sha1')
 
     with self.assertRaises(KeyError):
-      manager.HashersManager.GetHasherObject(u'bogus')
+      manager.HashersManager.GetHasher(u'bogus')
 
   def testGetHasherObjects(self):
     """Tests getting hasher objects by name."""
     hasher_names = manager.HashersManager.GetHasherNames()
-    hashers = manager.HashersManager.GetHasherObjects(hasher_names)
+    hashers = manager.HashersManager.GetHashers(hasher_names)
     self.assertEqual(len(hasher_names), len(hashers))
     for hasher in hashers:
       self.assertIsInstance(hasher, interface.BaseHasher)

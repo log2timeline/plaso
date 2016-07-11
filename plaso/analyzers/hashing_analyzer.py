@@ -13,15 +13,15 @@ class HashingAnalyzer(interface.BaseAnalyzer):
   """This class contains code for calculating file hashes of input files."""
   NAME = u'hashing'
 
-  INCREMENTAL = True
+  SUPPORTS_INCREMENTAL_UPDATE = True
 
   DESCRIPTION = u'Calculates hashes of file content.'
 
   def __init__(self):
     """Initializes a hashing analyzer."""
     super(HashingAnalyzer, self).__init__()
-    self._hashers = []
     self._hasher_names_string = u''
+    self._hashers = []
 
   def SetHasherNames(self, hasher_names_string):
     """Sets the hashers that should be enabled.
@@ -33,7 +33,7 @@ class HashingAnalyzer(interface.BaseAnalyzer):
         hasher_names_string)
     self._hasher_names_string = hasher_names_string
     logging.debug(u'Got hasher names {0:s}'.format(hasher_names))
-    self._hashers = hashers_manager.HashersManager.GetHasherObjects(
+    self._hashers = hashers_manager.HashersManager.GetHashers(
         hasher_names)
     logging.debug(u'Got hashers {0:s}'.format(self._hashers))
 
@@ -44,7 +44,7 @@ class HashingAnalyzer(interface.BaseAnalyzer):
       data(str): data from the data stream.
     """
     if not self._hashers:
-      return {}
+      return
 
     for hasher in self._hashers:
       hasher.Update(data)
@@ -61,7 +61,7 @@ class HashingAnalyzer(interface.BaseAnalyzer):
     """Retrieves the results of the processing of all data.
 
     Returns:
-      list(AnalyzerResult): results.
+      list[AnalyzerResult]: results.
     """
     results = []
     for hasher in self._hashers:
@@ -77,7 +77,7 @@ class HashingAnalyzer(interface.BaseAnalyzer):
     """Resets the internal state of the analyzer."""
     hasher_names = hashers_manager.HashersManager.GetHasherNamesFromString(
         self._hasher_names_string)
-    self._hashers = hashers_manager.HashersManager.GetHasherObjects(
+    self._hashers = hashers_manager.HashersManager.GetHashers(
         hasher_names)
 
 

@@ -446,7 +446,7 @@ class FileSaver(object):
     Returns:
       A hexadecimal string of the MD5 hash.
     """
-    hasher_object = hashers_manager.HashersManager.GetHasherObject(u'sha256')
+    hasher_object = hashers_manager.HashersManager.GetHasher(u'sha256')
     file_object.seek(0, os.SEEK_SET)
 
     data = file_object.read(self._READ_BUFFER_SIZE)

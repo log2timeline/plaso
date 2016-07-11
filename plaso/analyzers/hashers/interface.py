@@ -9,13 +9,23 @@ class BaseHasher(object):
   NAME = u'base_hasher'
   DESCRIPTION = u'Calculates a digest hash over input data.'
 
-  def Process(self, data):
-    """Analyze the block of data, updating the state of the analyzer
+  @abc.abstractmethod
+  def GetBinaryDigest(self):
+    """Retrieves the digest of the hash function as a binary string.
 
-    Args:
-      data: a string of data with which to update the context of the hasher.
+    Returns:
+      bytes: binary hash digest calculated over the data blocks passed to
+          Update().
     """
-    self.Update(data)
+
+  @abc.abstractmethod
+  def GetStringDigest(self):
+    """Retrieves the digest of the hash function expressed as a Unicode string.
+
+    Returns:
+      str: string hash digest calculated over the data blocks passed to
+          Update(). The string consists of printable Unicode characters.
+    """
 
   @abc.abstractmethod
   def Update(self, data):
@@ -25,26 +35,5 @@ class BaseHasher(object):
     concatenation of the arguments.
 
     Args:
-      data(str): data with which to update the context of the hasher.
+      data(bytes): data with which to update the context of the hasher.
     """
-    pass
-
-  @abc.abstractmethod
-  def GetBinaryDigest(self):
-    """Retrieves the digest of the hash function as a binary string.
-
-    Returns:
-      A binary string hash digest calculated over the data blocks passed to
-      Update().
-    """
-    raise NotImplementedError
-
-  @abc.abstractmethod
-  def GetStringDigest(self):
-    """Retrieves the digest of the hash function expressed as a Unicode string.
-
-    Returns:
-      A string hash digest calculated over the data blocks passed to
-      Update(). The string will consist of printable Unicode characters.
-    """
-    raise NotImplementedError

@@ -18,6 +18,24 @@ class SHA1Hasher(interface.BaseHasher):
     super(SHA1Hasher, self).__init__()
     self._sha1_context = hashlib.sha1()
 
+  def GetBinaryDigest(self):
+    """Returns the digest of the hash function as a binary string.
+
+    Returns:
+      bytes: binary string hash digest calculated over the data blocks passed to
+          Update().
+    """
+    return self._sha1_context.digest()
+
+  def GetStringDigest(self):
+    """Returns the digest of the hash function expressed as a Unicode string.
+
+    Returns:
+      str: string hash digest calculated over the data blocks passed to
+          Update(). The string consists of printable Unicode characters.
+    """
+    return u'{0:s}'.format(self._sha1_context.hexdigest())
+
   def Update(self, data):
     """Updates the current state of the hasher with a new block of data.
 
@@ -25,27 +43,9 @@ class SHA1Hasher(interface.BaseHasher):
     concatenation of the arguments.
 
     Args:
-      data: a string of data with which to update the context of the hasher.
+      data(bytes): block of data with which to update the context of the hasher.
     """
     self._sha1_context.update(data)
-
-  def GetStringDigest(self):
-    """Returns the digest of the hash function expressed as a Unicode string.
-
-    Returns:
-      A string hash digest calculated over the data blocks passed to
-      Update(). The string will consist of printable Unicode characters.
-    """
-    return u'{0:s}'.format(self._sha1_context.hexdigest())
-
-  def GetBinaryDigest(self):
-    """Returns the digest of the hash function as a binary string.
-
-    Returns:
-      A binary string hash digest calculated over the data blocks passed to
-      Update().
-    """
-    return self._sha1_context.digest()
 
 
 manager.HashersManager.RegisterHasher(SHA1Hasher)

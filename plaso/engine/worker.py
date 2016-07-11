@@ -233,10 +233,9 @@ class EventExtractionWorker(object):
     Args:
       parser_mediator (ParserMediator): provides access to Plaso's runtime
           state.
-      file_entry (dfvfs.FileEntry): the file entry relating to the data being
-          processed.
-      data_stream_name (Optional[str]): data stream name. An empty string
-          represents the default data stream.
+      file_entry (dfvfs.FileEntry): file entry relating to the data being
+          analyzed.
+      data_stream_name (str): name of the data stream.
 
     Raises:
       RuntimeError: if the file-like object is missing.

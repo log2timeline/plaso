@@ -10,7 +10,7 @@ class BaseAnalyzer(object):
   NAME = u'base_analyzer'
   DESCRIPTION = u''
 
-  INCREMENTAL = False
+  SUPPORTS_INCREMENTAL_UPDATE = False
   SIZE_LIMIT = 32 * 1024 * 1024
 
   @abc.abstractmethod
@@ -18,7 +18,7 @@ class BaseAnalyzer(object):
     """Analyzes a block of data, updating the state of the analyzer
 
     Args:
-      data(str): a string of data to process.
+      data(bytes): block of data to process.
     """
 
   def Update(self, data):
@@ -28,22 +28,23 @@ class BaseAnalyzer(object):
     concatenation of the arguments.
 
     Args:
-      data(str): data with which to update the context of the analyzer.
+      data(bytes): data with which to update the context of the analyzer.
 
     Raises:
       NotImplementedError: if the Analyzer does not support incremental
           updates.
     """
-    raise NotImplementedError
+    if not self.SUPPORTS_INCREMENTAL_UPDATE:
+      _ = data
+      raise NotImplementedError
 
   @abc.abstractmethod
   def GetResults(self):
     """Retrieves the results of the analysis of all data.
 
     Returns:
-      list(AnalyzerResult): results.
+      list[AnalyzerResult]: results.
     """
-    raise NotImplementedError
 
   @abc.abstractmethod
   def Reset(self):

@@ -26,8 +26,8 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     """Retrieves a path specification of a test file in the test data directory.
 
     Args:
-      path_segments: a list of strings containing the path segments inside
-                     the test data directory.
+      path_segments (list[str]): components of a path to a test file, relative
+          to the test_data directory.
 
     Returns:
       A path specification (instance of dfvfs.PathSpec).
@@ -44,10 +44,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     Args:
       storage_writer (StorageWriter): storage writer.
       path_spec (dfvfs.PathSpec): path specification.
-      extraction_worker (Optional[EventExtractorWorker]: worker to process the
-        pathspec. If None, a new worker will be created.
-      process_archive_files: optional boolean value to indicate if archive
-                             files should be processed.
+      extraction_worker (Optional[EventExtractorWorker]): worker to process the
+          pathspec. If None, a new worker will be created.
+      process_archive_files (Optional[bool]): whether archive files should be
+          processed.
     """
     knowledge_base_object = knowledge_base.KnowledgeBase()
     parser_mediator = parsers_mediator.ParserMediator(
