@@ -620,9 +620,9 @@ class MultiProcessEngine(engine.BaseEngine):
 
   def _StartStatusUpdateThread(self):
     """Starts the status update thread."""
+    self._status_update_active = True
     self._status_update_thread = threading.Thread(
         name=u'Status update', target=self._StatusUpdateThreadMain)
-    self._status_update_active = True
     self._status_update_thread.start()
 
   def _StatusUpdateThreadMain(self):
