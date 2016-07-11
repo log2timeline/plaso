@@ -45,7 +45,7 @@ class AnalyzersManager(object):
         for analyzer in analyzers:
           if mediator.abort:
             break
-          if analyzer.INCREMENTAL:
+          if analyzer.SUPPORTS_INCREMENTAL_UPDATE:
             analyzer.Update(data)
         if mediator.abort:
           break
