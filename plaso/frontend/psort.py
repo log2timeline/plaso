@@ -54,7 +54,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     self._preferred_language = u'en-US'
     self._quiet_mode = False
     self._storage_file_path = None
-    self._use_zeromq = False
+    self._use_zeromq = True
 
   def _AppendEvent(self, event_object, output_buffer, event_queues):
     """Appends an event object to an output buffer and queues.
@@ -654,7 +654,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     """
     self._storage_file_path = storage_file_path
 
-  def SetUseZeroMQ(self, use_zeromq=False):
+  def SetUseZeroMQ(self, use_zeromq=True):
     """Sets whether the tool is using ZeroMQ for queueing or not.
 
     Args:
