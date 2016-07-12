@@ -48,7 +48,7 @@ class ExtractionFrontend(frontend.Frontend):
     self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
     self._profiling_type = u'all'
     self._use_old_preprocess = False
-    self._use_zeromq = False
+    self._use_zeromq = True
     self._resolver_context = context.Context()
     self._show_worker_memory_information = False
     self._storage_file_path = None
@@ -586,7 +586,7 @@ class ExtractionFrontend(frontend.Frontend):
     """
     self._use_old_preprocess = use_old_preprocess
 
-  def SetUseZeroMQ(self, use_zeromq=False):
+  def SetUseZeroMQ(self, use_zeromq=True):
     """Sets whether the frontend is using ZeroMQ for queueing or not.
 
     Args:
