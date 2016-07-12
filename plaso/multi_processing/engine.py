@@ -137,7 +137,7 @@ class MultiProcessEngine(engine.BaseEngine):
     """Aborts all registered processes by joining with the parent process.
 
     Args:
-      timeout: the process join timeout. The default is None meaning no timeout.
+      timeout (int): the process join timeout, where None represents no timeout.
     """
     for pid, process in iter(self._processes_per_pid.items()):
       logging.debug(u'Waiting for process: {0:s} (PID: {1:d}).'.format(
@@ -168,7 +168,7 @@ class MultiProcessEngine(engine.BaseEngine):
       process.terminate()
 
   def _CheckStatusWorkerProcess(self, pid):
-    """Check status of a worker process.
+    """Checks the status of a worker process.
 
     If a worker process is not responding the process is terminated and
     a replacement process is started.
@@ -253,11 +253,10 @@ class MultiProcessEngine(engine.BaseEngine):
     """Queries a process to determine its status.
 
     Args:
-      process: The handle to the process to query (instance of
-               MultiProcessBaseProcess).
+      process (MultiProcessBaseProcess): process to query for its status.
 
     Returns:
-      A dictionary containing the process status.
+      dict[str, str]: status values received from the worker process.
     """
     process_is_alive = process.is_alive()
     if process_is_alive:
@@ -271,7 +270,7 @@ class MultiProcessEngine(engine.BaseEngine):
     """Issues a SIGKILL or equivalent to the process.
 
     Args:
-      pid: The process identifier.
+      pid (int): process identifier (PID).
     """
     if sys.platform.startswith(u'win'):
       process_terminate = 1
@@ -291,7 +290,7 @@ class MultiProcessEngine(engine.BaseEngine):
     """Logs memory information gathered from a process.
 
     Args:
-      pid: The process ID (PID).
+      pid (int): process identifier (PID).
 
     Raises:
       KeyError: if the process is not registered with the engine.
@@ -314,11 +313,11 @@ class MultiProcessEngine(engine.BaseEngine):
     """Processes the sources.
 
     Args:
-      source_path_specs: a list of path specifications (instances of
-                         dfvfs.PathSpec) of the sources to process.
-      storage_writer: a storage writer object (instance of StorageWriter).
-      filter_find_specs: optional list of filter find specifications (instances
-                         of dfvfs.FindSpec).
+      source_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the sources to process.
+      storage_writer (StorageWriter): storage writer for a session storage.
+      filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
+          used in path specification extraction.
     """
     self._status = definitions.PROCESSING_STATUS_COLLECTING
     self._number_of_consumed_errors = 0
@@ -355,7 +354,7 @@ class MultiProcessEngine(engine.BaseEngine):
     self._number_of_produced_sources = storage_writer.number_of_event_sources
 
   def _ProfilingSampleMemory(self):
-    """Create a memory profiling sample."""
+    """Creates a memory profiling sample."""
     if self._memory_profiler:
       self._memory_profiler.Sample()
 
@@ -363,7 +362,7 @@ class MultiProcessEngine(engine.BaseEngine):
     """Raises if the process is not monitored by the engine.
 
     Args:
-      pid: The process identifier.
+      pid (int): process identifier (PID).
 
     Raises:
       KeyError: if the process is not monitored by the engine.
@@ -376,7 +375,7 @@ class MultiProcessEngine(engine.BaseEngine):
     """Raises if the process is not registered with the engine.
 
     Args:
-      pid: The process identifier.
+      pid (int): process identifier (PID).
 
     Raises:
       KeyError: if the process is not registered with the engine.
@@ -389,7 +388,7 @@ class MultiProcessEngine(engine.BaseEngine):
     """Registers a process with the engine.
 
     Args:
-      process: The process object (instance of MultiProcessBaseProcess).
+      process (MultiProcessBaseProcess): process.
 
     Raises:
       KeyError: if the process is already registered with the engine.
@@ -409,7 +408,8 @@ class MultiProcessEngine(engine.BaseEngine):
     """Schedule tasks.
 
     Args:
-      storage_writer: a storage writer object (instance of StorageWriter).
+      storage_writer (StorageWriter): storage writer for a session storage used
+          to merge task storage.
     """
     logging.debug(u'Task scheduler started')
 
@@ -508,10 +508,11 @@ class MultiProcessEngine(engine.BaseEngine):
     """Creates, starts and registers an extraction worker process.
 
     Args:
-      storage_writer: a storage writer object (instance of StorageWriter).
+      storage_writer (StorageWriter): storage writer for a session storage used
+          to create task storage.
 
     Returns:
-      An extraction worker process (instance of MultiProcessWorkerProcess).
+      MultiProcessWorkerProcess: extraction worker process.
     """
     process_name = u'Worker_{0:02d}'.format(self._last_worker_number)
 
@@ -552,7 +553,7 @@ class MultiProcessEngine(engine.BaseEngine):
     """Starts monitoring a process.
 
     Args:
-      pid: The process identifier.
+      pid (int): process identifier (PID).
 
     Raises:
       KeyError: if the process is not registered with the engine or
@@ -693,7 +694,7 @@ class MultiProcessEngine(engine.BaseEngine):
     """Stops monitoring a process.
 
     Args:
-      pid: The process identifier.
+      pid (int): process identifier (PID).
 
     Raises:
       KeyError: if the process is not registered with the engine or
@@ -750,7 +751,7 @@ class MultiProcessEngine(engine.BaseEngine):
     """Terminate a process.
 
     Args:
-      pid: The process identifier.
+      pid (int): process identifier (PID).
 
     Raises:
       KeyError: if the process is not registered with the engine.
@@ -773,7 +774,8 @@ class MultiProcessEngine(engine.BaseEngine):
 
     Args:
       pid (int): process identifier (PID) of the worker process.
-      process_status (dict): status values received from the worker process.
+      process_status (dict[str, str]): status values received from
+          the worker process.
 
     Raises:
       KeyError: if the process is not registered with the engine.
