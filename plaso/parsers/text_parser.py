@@ -10,8 +10,9 @@ import abc
 import csv
 import logging
 
-from dfvfs.helpers import text_file
 import pyparsing
+
+from dfvfs.helpers import text_file
 
 from plaso.containers import events
 from plaso.lib import errors
