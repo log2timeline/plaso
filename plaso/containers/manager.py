@@ -15,7 +15,7 @@ class AttributeContainersManager(object):
     containter type.
 
     Args:
-      attribute_container_class (classobj): attribute container class.
+      attribute_container_class (type): attribute container class.
 
     Raises:
       KeyError: if attribute container class is not set for
@@ -49,7 +49,7 @@ class AttributeContainersManager(object):
     container type.
 
     Args:
-      attribute_container_class (classobj): attribute container class.
+      attribute_container_class (type): attribute container class.
 
     Raises:
       KeyError: if attribute container class is already set for
@@ -71,7 +71,7 @@ class AttributeContainersManager(object):
     container type.
 
     Args:
-      attribute_container_classes (list[classobj[): attribute container classes.
+      attribute_container_classes (list[type]): attribute container classes.
 
     Raises:
       KeyError: if attribute container class is already set for
