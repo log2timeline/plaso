@@ -7,6 +7,7 @@ import uuid
 
 import plaso
 from plaso.containers import interface
+from plaso.containers import manager
 
 
 class Session(interface.AttributeContainer):
@@ -201,3 +202,7 @@ class SessionStart(interface.AttributeContainer):
     self.product_name = None
     self.product_version = None
     self.timestamp = None
+
+
+manager.AttributeContainersManager.RegisterAttributeContainers([
+    Session, SessionCompletion, SessionStart])

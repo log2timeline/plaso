@@ -5,6 +5,7 @@ import time
 import uuid
 
 from plaso.containers import interface
+from plaso.containers import manager
 
 
 class Task(interface.AttributeContainer):
@@ -15,14 +16,13 @@ class Task(interface.AttributeContainer):
 
   Attributes:
     completion_time (int): time that the task was completed. Contains the
-                           number of micro seconds since January 1, 1970,
-                           00:00:00 UTC.
+        number of micro seconds since January 1, 1970, 00:00:00 UTC.
     identifier (str): unique identifier of the task.
     path_spec (dfvfs.PathSpec): path specification.
     session_identifier (str): the identifier of the session the task
-                              is part of.
+        is part of.
     start_time (int): time that the task was started. Contains the number
-                      of micro seconds since January 1, 1970, 00:00:00 UTC.
+        of micro seconds since January 1, 1970, 00:00:00 UTC.
   """
   CONTAINER_TYPE = u'task'
 
@@ -31,7 +31,7 @@ class Task(interface.AttributeContainer):
 
     Args:
       session_identifier (Optional[str]): identifier of the session the task
-                                          is part of.
+          is part of.
     """
     super(Task, self).__init__()
     self.completion_time = None
@@ -73,9 +73,9 @@ class TaskCompletion(interface.AttributeContainer):
   Attributes:
     identifier (str): unique identifier of the task.
     session_identifier (str): the identifier of the session the task
-                              is part of.
+        is part of.
     timestamp (int): time that the task was completed. Contains the number
-                     of micro seconds since January 1, 1970, 00:00:00 UTC.
+        of micro seconds since January 1, 1970, 00:00:00 UTC.
   """
   CONTAINER_TYPE = u'task_completion'
 
@@ -87,7 +87,7 @@ class TaskCompletion(interface.AttributeContainer):
           The identifier should match that of the corresponding
           task start information.
       session_identifier (Optional[str]): identifier of the session the task
-                                          is part of.
+          is part of.
     """
     super(TaskCompletion, self).__init__()
     self.identifier = identifier
@@ -101,9 +101,9 @@ class TaskStart(interface.AttributeContainer):
   Attributes:
     identifier (str): unique identifier of the task.
     session_identifier (str): the identifier of the session the task
-                              is part of.
+        is part of.
     timestamp (int): time that the task was started. Contains the number
-                     of micro seconds since January 1, 1970, 00:00:00 UTC.
+        of micro seconds since January 1, 1970, 00:00:00 UTC.
   """
   CONTAINER_TYPE = u'task_start'
 
@@ -115,9 +115,13 @@ class TaskStart(interface.AttributeContainer):
           The identifier should match that of the corresponding
           task completion information.
       session_identifier (Optional[str]): identifier of the session the task
-                                          is part of.
+          is part of.
     """
     super(TaskStart, self).__init__()
     self.identifier = identifier
     self.session_identifier = session_identifier
     self.timestamp = None
+
+
+manager.AttributeContainersManager.RegisterAttributeContainers([
+    Task, TaskCompletion, TaskStart])

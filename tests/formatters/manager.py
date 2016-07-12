@@ -43,7 +43,7 @@ class FormattersManagerTest(unittest.TestCase):
     text_message = None
     text_message_short = None
 
-    test_events = containers_test_lib.GetEventObjects()
+    test_events = containers_test_lib.CreateTestEventObjects()
     for event_object in test_events:
       message, message_short = manager.FormattersManager.GetMessageStrings(
           formatter_mediator, event_object)

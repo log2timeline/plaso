@@ -5,6 +5,7 @@ import re
 import uuid
 
 from plaso.containers import interface
+from plaso.containers import manager
 from plaso.lib import py2to3
 # TODO: deprecate usage of utils.GetUnicodeString()
 from plaso.lib import utils
@@ -379,3 +380,7 @@ class EventTag(interface.AttributeContainer):
       return True
 
     return False
+
+
+manager.AttributeContainersManager.RegisterAttributeContainers([
+    EventObject, EventTag])

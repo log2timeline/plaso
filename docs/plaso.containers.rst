@@ -44,6 +44,14 @@ plaso.containers.interface module
     :undoc-members:
     :show-inheritance:
 
+plaso.containers.manager module
+-------------------------------
+
+.. automodule:: plaso.containers.manager
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.containers.plist_event module
 -----------------------------------
 
