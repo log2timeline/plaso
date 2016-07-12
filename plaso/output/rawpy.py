@@ -31,6 +31,8 @@ class NativePythonFormatterHelper(object):
       attribute_string = u'  {0:s}\n'.format(attribute_string)
       lines_of_text.append(attribute_string)
 
+    # TODO: add support for event tag after event object clean up.
+
     lines_of_text.append(u'[Reserved attributes]:')
     out_additional = [u'[Additional attributes]:']
 
@@ -40,7 +42,7 @@ class NativePythonFormatterHelper(object):
             attribute_name, attribute_value)
         out_additional.append(attribute_string)
 
-      elif attribute_name != u'pathspec':
+      elif attribute_name not in (u'pathspec', u'tag'):
         attribute_string = u'  {{{0!s}}} {1!s}'.format(
             attribute_name, attribute_value)
         lines_of_text.append(attribute_string)

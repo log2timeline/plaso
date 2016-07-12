@@ -4,15 +4,20 @@
 
 import collections
 import json
+import time
 import unittest
+import uuid
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import fake_path_spec
 from dfvfs.path import factory as path_spec_factory
 
+import plaso
 from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import reports
+from plaso.containers import sessions
+from plaso.containers import tasks
 from plaso.lib import event
 from plaso.serializer import json_serializer
 from plaso.storage import collection
@@ -283,8 +288,153 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         sorted(event_tag_dict.items()),
         sorted(expected_event_tag_dict.items()))
 
-  # TODO: add SessionCompletion tests.
-  # TODO: add SessionStart tests.
+  def testReadAndWriteSerializedSessionCompletion(self):
+    """Test ReadSerialized and WriteSerialized of SessionCompletion."""
+    timestamp = int(time.time() * 1000000)
+    session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
+
+    parsers_counter = collections.Counter()
+    parsers_counter[u'filestat'] = 3
+    parsers_counter[u'total'] = 3
+
+    expected_session_completion = sessions.SessionCompletion(
+        identifier=session_identifier)
+    expected_session_completion.timestamp = timestamp
+    expected_session_completion.parsers_counter = parsers_counter
+
+    json_string = (
+        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            expected_session_completion))
+
+    self.assertIsNotNone(json_string)
+
+    session_completion = (
+        json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
+            json_string))
+
+    self.assertIsNotNone(session_completion)
+    self.assertIsInstance(session_completion, sessions.SessionCompletion)
+
+    expected_session_completion_dict = {
+        u'identifier': session_identifier,
+        u'parsers_counter': parsers_counter,
+        u'timestamp': timestamp
+    }
+
+    session_completion_dict = session_completion.CopyToDict()
+    self.assertEqual(
+        sorted(session_completion_dict.items()),
+        sorted(expected_session_completion_dict.items()))
+
+  def testReadAndWriteSerializedSessionStart(self):
+    """Test ReadSerialized and WriteSerialized of SessionStart."""
+    timestamp = int(time.time() * 1000000)
+    session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
+
+    expected_session_start = sessions.SessionStart(
+        identifier=session_identifier)
+    expected_session_start.timestamp = timestamp
+    expected_session_start.product_name = u'plaso'
+    expected_session_start.product_version = plaso.GetVersion()
+
+    json_string = (
+        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            expected_session_start))
+
+    self.assertIsNotNone(json_string)
+
+    session_start = (
+        json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
+            json_string))
+
+    self.assertIsNotNone(session_start)
+    self.assertIsInstance(session_start, sessions.SessionStart)
+
+    expected_session_start_dict = {
+        u'command_line_arguments': u'',
+        u'debug_mode': False,
+        u'filter_expression': u'',
+        u'filter_file': u'',
+        u'identifier': session_identifier,
+        u'parser_filter_expression': u'',
+        u'preferred_encoding': u'utf-8',
+        u'product_name': u'plaso',
+        u'product_version': plaso.GetVersion(),
+        u'timestamp': timestamp
+    }
+
+    session_start_dict = session_start.CopyToDict()
+    self.assertEqual(
+        sorted(session_start_dict.items()),
+        sorted(expected_session_start_dict.items()))
+
+  def testReadAndWriteSerializedTaskCompletion(self):
+    """Test ReadSerialized and WriteSerialized of TaskCompletion."""
+    timestamp = int(time.time() * 1000000)
+    session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
+    task_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
+
+    expected_task_completion = tasks.TaskCompletion(
+        identifier=task_identifier, session_identifier=session_identifier)
+    expected_task_completion.timestamp = timestamp
+
+    json_string = (
+        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            expected_task_completion))
+
+    self.assertIsNotNone(json_string)
+
+    task_completion = (
+        json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
+            json_string))
+
+    self.assertIsNotNone(task_completion)
+    self.assertIsInstance(task_completion, tasks.TaskCompletion)
+
+    expected_task_completion_dict = {
+        u'identifier': task_identifier,
+        u'session_identifier': session_identifier,
+        u'timestamp': timestamp
+    }
+
+    task_completion_dict = task_completion.CopyToDict()
+    self.assertEqual(
+        sorted(task_completion_dict.items()),
+        sorted(expected_task_completion_dict.items()))
+
+  def testReadAndWriteSerializedTaskStart(self):
+    """Test ReadSerialized and WriteSerialized of TaskStart."""
+    timestamp = int(time.time() * 1000000)
+    session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
+    task_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
+
+    expected_task_start = tasks.TaskStart(
+        identifier=task_identifier, session_identifier=session_identifier)
+    expected_task_start.timestamp = timestamp
+
+    json_string = (
+        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            expected_task_start))
+
+    self.assertIsNotNone(json_string)
+
+    task_start = (
+        json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
+            json_string))
+
+    self.assertIsNotNone(task_start)
+    self.assertIsInstance(task_start, tasks.TaskStart)
+
+    expected_task_start_dict = {
+        u'identifier': task_identifier,
+        u'session_identifier': session_identifier,
+        u'timestamp': timestamp
+    }
+
+    task_start_dict = task_start.CopyToDict()
+    self.assertEqual(
+        sorted(task_start_dict.items()),
+        sorted(expected_task_start_dict.items()))
 
 
 class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):

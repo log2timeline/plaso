@@ -87,7 +87,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     # TODO: implement clean up logic.
     return
 
-  def _CreateSessionStart(
+  def _CreateSession(
       self, command_line_arguments=None, preferred_encoding=u'utf-8'):
     """Creates the session start information.
 
@@ -96,27 +96,27 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       preferred_encoding (Optional[str]): preferred encoding.
 
     Returns:
-      SessionStart: session start attribute container.
+      Session: session attribute container.
     """
-    session_start = sessions.SessionStart()
+    session = sessions.Session()
 
-    session_start.command_line_arguments = command_line_arguments
-    session_start.preferred_encoding = preferred_encoding
+    session.command_line_arguments = command_line_arguments
+    session.preferred_encoding = preferred_encoding
 
-    return session_start
+    return session
 
   def _ProcessAnalysisPlugins(
-      self, analysis_plugins, analysis_report_incoming_queue, storage_file,
-      counter, preferred_encoding=u'utf-8'):
+      self, analysis_plugins, analysis_report_incoming_queue, session,
+      storage_file, counter, preferred_encoding=u'utf-8'):
     """Runs the analysis plugins.
 
     Args:
-      analysis_plugins: the analysis plugins.
-      analysis_report_incoming_queue: the analysis output queue (instance of
-                                      Queue).
-      storage_file: a storage file object (instance of StorageFile).
-      counter: a counter object (instance of collections.Counter).
-      preferred_encoding: optional preferred encoding.
+      analysis_plugins (list[AnalysisPlugin]): analysis plugins.
+      analysis_report_incoming_queue (Queue): analysis output queue.
+      session (Session): session the storage changes are part of.
+      storage_file (BaseStorage): session-based storage file.
+      counter (collections.Counter): counter.
+      preferred_encoding (Optional[str]): preferred encoding.
     """
     if not analysis_plugins:
       return
@@ -149,7 +149,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     logging.info(u'All analysis plugins are now completed.')
 
     analysis_report_consumer = PsortAnalysisReportQueueConsumer(
-        analysis_report_incoming_queue, storage_file,
+        analysis_report_incoming_queue, session, storage_file,
         self._filter_expression, preferred_encoding=preferred_encoding)
 
     analysis_report_consumer.ConsumeItems()
@@ -206,6 +206,10 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     self._knowledge_base.InitializeLookupDictionaries(storage_file)
 
+    session = self._CreateSession(
+        command_line_arguments=command_line_arguments,
+        preferred_encoding=preferred_encoding)
+
     if not analysis_plugins:
       event_queue_producers = []
     else:
@@ -213,11 +217,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
           analysis_plugins, analysis_queue_port=analysis_queue_port,
           analysis_report_incoming_queue=analysis_report_incoming_queue)
 
-      session_start = self._CreateSessionStart(
-          command_line_arguments=command_line_arguments,
-          preferred_encoding=preferred_encoding)
-
       # TODO: refactor to use storage writer.
+      session_start = session.CreateSessionStart()
       storage_file.WriteSessionStart(session_start)
 
     # TODO: refactor to first apply the analysis plugins
@@ -233,13 +234,11 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     # Get all reports and tags from analysis plugins.
     self._ProcessAnalysisPlugins(
-        analysis_plugins, analysis_report_incoming_queue, storage_file,
-        counter, preferred_encoding=preferred_encoding)
+        analysis_plugins, analysis_report_incoming_queue, session,
+        storage_file, counter, preferred_encoding=preferred_encoding)
 
     if analysis_plugins:
-      session_completion = sessions.SessionCompletion(
-          identifier=session_start.identifier)
-
+      session_completion = session.CreateSessionCompletion()
       storage_file.WriteSessionCompletion(session_completion)
 
     for information in storage_file.GetStorageInformation():
@@ -676,18 +675,21 @@ class PsortAnalysisReportQueueConsumer(plaso_queue.ItemQueueConsumer):
   """
 
   def __init__(
-      self, queue, storage_file, filter_string, preferred_encoding=u'utf-8'):
+      self, queue, session, storage_file, filter_string,
+      preferred_encoding=u'utf-8'):
     """Initializes the item queue consumer.
 
     Args:
-      queue_object: a queue object (instance of Queue).
-      storage_file: a session-based storage file (instance of BaseStorage).
-      filter_string: a string containing the filter expression.
-      preferred_encoding: optional string containing the preferred encoding.
+      queue_object (Queue): queue.
+      session (Session): session the storage changes are part of.
+      storage_file (BaseStorage): session-based storage file.
+      filter_string (str): string containing the filter expression.
+      preferred_encoding (Optional[str]): preferred encoding.
     """
     super(PsortAnalysisReportQueueConsumer, self).__init__(queue)
     self._filter_string = filter_string
     self._preferred_encoding = preferred_encoding
+    self._session = session
     self._storage_file = storage_file
     self._tags = []
 
@@ -708,6 +710,19 @@ class PsortAnalysisReportQueueConsumer(plaso_queue.ItemQueueConsumer):
     # do something more here, for instance saving into a HTML
     # file, or something else (including potential images).
     self._storage_file.AddAnalysisReport(analysis_report)
+
+    report_identifier = analysis_report.plugin_name
+    self._session.analysis_reports_counter[u'total'] += 1
+    self._session.analysis_reports_counter[report_identifier] += 1
+
+    # TODO: refactor this as part of psort rewrite.
+    event_tags = getattr(analysis_report, u'_event_tags', [])
+    for event_tag in event_tags:
+      self._storage_file.AddEventTag(event_tag)
+
+      self._session.event_labels_counter[u'total'] += 1
+      for label in event_tag.labels:
+        self._session.event_labels_counter[label] += 1
 
     report_string = analysis_report.GetString()
     try:

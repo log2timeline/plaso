@@ -14,6 +14,7 @@ from plaso.containers import events
 from plaso.containers import interface as containers_interface
 from plaso.containers import reports
 from plaso.containers import sessions
+from plaso.containers import tasks
 from plaso.lib import event
 from plaso.lib import py2to3
 from plaso.serializer import interface
@@ -35,7 +36,7 @@ class _PreprocessObjectJSONDecoder(json.JSONDecoder):
         *args, object_hook=self._ConvertDictToObject, **kargs)
 
   def _ConvertDictToCollectionsCounter(self, json_dict):
-    """Converts a JSON dict into a collections counter object.
+    """Converts a JSON dict into a collections.Counter object.
 
     The dictionary of the JSON serialized objects consists of:
     {
@@ -48,10 +49,10 @@ class _PreprocessObjectJSONDecoder(json.JSONDecoder):
     the preprocessing object properties.
 
     Args:
-      json_dict: a dictionary of the JSON serialized objects.
+      json_dict (dict[str, object]): JSON serialized objects.
 
     Returns:
-      A collections counter object (instance of collections.Counter).
+      collections.Counter: counter.
     """
     collections_counter = collections.Counter()
 
@@ -80,7 +81,7 @@ class _PreprocessObjectJSONDecoder(json.JSONDecoder):
     the preprocessing object properties.
 
     Args:
-      json_dict: a dictionary of the JSON serialized objects.
+      json_dict (dict[str, object]): JSON serialized objects.
 
     Returns:
       A preprocessing object (instance of PreprocessObject).
@@ -100,11 +101,11 @@ class _PreprocessObjectJSONDecoder(json.JSONDecoder):
     objects are created.
 
     Args:
-      json_dict: a dictionary of the JSON serialized objects.
+      json_dict (dict[str, object]): JSON serialized objects.
 
     Returns:
       A deserialized object which can be:
-        * a collections counter (instance of collections.Counter);
+        * a counter (instance of collections.Counter);
         * a dictionary;
         * a preprocessing object (instance of PreprocessObject);
         * a pytz timezone object.
@@ -144,7 +145,7 @@ class _PreprocessObjectJSONEncoder(json.JSONEncoder):
       collection_information: a collection information dictionary.
 
     Returns:
-      A dictionary of the JSON serialized objects.
+      dict[str, object]: JSON serialized objects.
     """
     json_dict = {}
     for attribute_name, attribute_value in iter(collection_information.items()):
@@ -168,7 +169,7 @@ class _PreprocessObjectJSONEncoder(json.JSONEncoder):
     return json_dict
 
   def _ConvertCollectionsCounterToDict(self, collections_counter):
-    """Converts a collections counter object into a JSON dictionary.
+    """Converts a collections.Counter object into a JSON dictionary.
 
     The resulting dictionary of the JSON serialized objects consists of:
     {
@@ -178,14 +179,13 @@ class _PreprocessObjectJSONEncoder(json.JSONEncoder):
 
     Here '__type__' indicates the object base type. In this case
     'collections.Counter'. The rest of the elements of the dictionary make up
-    the collections counter object attributes.
+    the collections.Counter object attributes.
 
     Args:
-      collections_counter: a collections counter object (instance of
-                           collections.Counter).
+      collections_counter (collections.Counter): counter.
 
     Returns:
-      A dictionary of the JSON serialized objects.
+      dict[str, object]: JSON serialized objects.
 
     Raises:
       TypeError: if not an instance of collections.Counter.
@@ -236,7 +236,7 @@ class _PreprocessObjectJSONEncoder(json.JSONEncoder):
                             PreprocessObject).
 
     Returns:
-      A dictionary of the JSON serialized objects.
+      dict[str, object]: JSON serialized objects.
 
     Raises:
       TypeError: if not an instance of PreprocessObject.
@@ -292,6 +292,8 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       u'extraction_error': errors.ExtractionError,
       u'session_completion': sessions.SessionCompletion,
       u'session_start': sessions.SessionStart,
+      u'task_completion': tasks.TaskCompletion,
+      u'task_start': tasks.TaskStart,
   }
 
   @classmethod
@@ -312,11 +314,10 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     of the dictionary make up the attributes of the container.
 
     Args:
-      attribute_container: an attribute container (instance of
-                           AttributeContainer).
+      attribute_container (AttributeContainer): attribute container.
 
     Returns:
-      A dictionary of the JSON serialized objects.
+      dict[str, object]: JSON serialized objects.
 
     Raises:
       TypeError: if not an instance of AttributeContainer.
@@ -377,6 +378,9 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
             u'values': json_list
         }
 
+    elif isinstance(attribute_value, collections.Counter):
+      attribute_value = cls._ConvertCollectionsCounterToDict(attribute_value)
+
     elif isinstance(attribute_value, dfvfs_path_spec.PathSpec):
       attribute_value = cls._ConvertPathSpecToDict(attribute_value)
 
@@ -384,6 +388,47 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       attribute_value = cls._ConvertAttributeContainerToDict(attribute_value)
 
     return attribute_value
+
+  @classmethod
+  def _ConvertCollectionsCounterToDict(cls, collections_counter):
+    """Converts a collections.Counter object into a JSON dictionary.
+
+    The resulting dictionary of the JSON serialized objects consists of:
+    {
+        '__type__': 'collections.Counter'
+        ...
+    }
+
+    Here '__type__' indicates the object base type. In this case
+    'collections.Counter'. The rest of the elements of the dictionary make up
+    the collections.Counter object attributes.
+
+    Args:
+      collections_counter (collections.Counter): counter.
+
+    Returns:
+      dict[str, object]: JSON serialized objects.
+
+    Raises:
+      TypeError: if not an instance of collections.Counter.
+    """
+    if not isinstance(collections_counter, collections.Counter):
+      raise TypeError
+
+    json_dict = {u'__type__': u'collections.Counter'}
+    for attribute_name, attribute_value in iter(collections_counter.items()):
+      if attribute_value is None:
+        continue
+
+      if isinstance(attribute_value, py2to3.BYTES_TYPE):
+        attribute_value = {
+            u'__type__': u'bytes',
+            u'stream': u'{0:s}'.format(binascii.b2a_qp(attribute_value))
+        }
+
+      json_dict[attribute_name] = attribute_value
+
+    return json_dict
 
   @classmethod
   def _ConvertDictToObject(cls, json_dict):
@@ -404,7 +449,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     The rest of the elements of the dictionary make up the attributes.
 
     Args:
-      json_dict: a dictionary of the JSON serialized objects.
+      json_dict (dict[str, object]): JSON serialized objects.
 
     Returns:
       A deserialized object which can be:
@@ -427,6 +472,9 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
 
     elif class_type == u'tuple':
       return tuple(cls._ConvertListToObject(json_dict[u'values']))
+
+    elif class_type == u'collections.Counter':
+      return cls._ConvertDictToCollectionsCounter(json_dict)
 
     elif class_type == u'AttributeContainer':
       # Use __container_type__ to indicate the attribute container type.
@@ -481,6 +529,35 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     return container_object
 
   @classmethod
+  def _ConvertDictToCollectionsCounter(cls, json_dict):
+    """Converts a JSON dict into a collections.Counter.
+
+    The dictionary of the JSON serialized objects consists of:
+    {
+        '__type__': 'collections.Counter'
+        ...
+    }
+
+    Here '__type__' indicates the object base type. In this case this should
+    be 'collections.Counter'. The rest of the elements of the dictionary make up
+    the preprocessing object properties.
+
+    Args:
+      json_dict (dict[str, object]): JSON serialized objects.
+
+    Returns:
+      collections.Counter: counter.
+    """
+    collections_counter = collections.Counter()
+
+    for key, value in iter(json_dict.items()):
+      if key == u'__type__':
+        continue
+      collections_counter[key] = value
+
+    return collections_counter
+
+  @classmethod
   def _ConvertListToObject(cls, json_list):
     """Converts a JSON list into an object.
 
@@ -520,10 +597,10 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     path specification object properties.
 
     Args:
-      json_dict: a dictionary of the JSON serialized objects.
+      json_dict (dict[str, object]): JSON serialized objects.
 
     Returns:
-      A path specification (instance of path.PathSpec).
+      path.PathSpec: path specification.
     """
     type_indicator = json_dict.get(u'type_indicator', None)
     if type_indicator:
@@ -558,10 +635,10 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     dicts in the process.
 
     Args:
-      path_spec_object: a path specification (instance of dfvfs.PathSpec).
+      path_spec_object (dfvfs.PathSpec): path specification.
 
     Returns:
-      A dictionary of the JSON serialized objects.
+      dict[str, object]: JSON serialized objects.
 
     Raises:
       TypeError: if not an instance of dfvfs.PathSpec.
@@ -593,7 +670,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       json_string: a JSON string containing the serialized form.
 
     Returns:
-      An attribute container (instance of AttributeContainer) or None.
+      AttributeContainer: attribute container or None.
     """
     if not json_string:
       return
@@ -606,10 +683,10 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     """Reads an attribute container from serialized dictionary form.
 
     Args:
-      json_dict: a dictionary of the JSON serialized objects.
+      json_dict (dict[str, object]): JSON serialized objects.
 
     Returns:
-      An attribute container (instance of AttributeContainer) or None.
+      AttributeContainer: attribute container or None.
     """
     if not json_dict:
       return
@@ -621,8 +698,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     """Writes an attribute container to serialized form.
 
     Args:
-      attribute_container: an attribute container (instance of
-                           AttributeContainer).
+      attribute_container (AttributeContainer): attribute container.
 
     Returns:
       A JSON string containing the serialized form.
@@ -635,11 +711,10 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     """Writes an attribute container to serialized form.
 
     Args:
-      attribute_container: an attribute container (instance of
-                           AttributeContainer).
+      attribute_container (AttributeContainer): attribute container.
 
     Returns:
-      A dictionary of the JSON serialized objects.
+      dict[str, object]: JSON serialized objects.
     """
     return cls._ConvertAttributeContainerToDict(attribute_container)
 
