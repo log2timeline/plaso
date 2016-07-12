@@ -63,6 +63,8 @@ class SQLitePlugin(plugins.BasePlugin):
                       file (instance of dfvfs.FileEntry).
     """
     for query, callback_method in self.QUERIES:
+      if parser_mediator.abort:
+        break
       try:
         callback = getattr(self, callback_method, None)
         if callback is None:
@@ -81,6 +83,8 @@ class SQLitePlugin(plugins.BasePlugin):
         if database_wal and wal_sql_results:
           row_cache = set()
           for row in sql_results:
+            if parser_mediator.abort:
+              break
             callback(
                 parser_mediator, row, query=query, cache=cache,
                 database=database)
@@ -99,6 +103,8 @@ class SQLitePlugin(plugins.BasePlugin):
         # Process database without WAL file.
         else:
           for row in sql_results:
+            if parser_mediator.abort:
+              break
             callback(
                 parser_mediator, row, query=query, cache=cache,
                 database=database)
