@@ -37,24 +37,27 @@ class HashingAnalyzer(interface.BaseAnalyzer):
         hasher_names)
 
   def Update(self, data):
-    """Updates the internal state of the analyzer.
+    """Updates the internal state of the analyzer with a block of data.
+
+    Repeated calls are equivalent to a single call with the concatenation of
+    all the arguments.
 
     Args:
-      data(str): data from the data stream.
+      data(bytes): block of data from the data stream.
     """
     for hasher in self._hashers:
       hasher.Update(data)
 
   def Analyze(self, data):
-    """Processes the contents of a data stream.
+    """Hashes the contents of a block of data.
 
     Args:
-      data(str): the content of the data stream.
+      data(bytes): the content of the data block.
     """
     self.Update(data)
 
   def GetResults(self):
-    """Retrieves the results of the processing of all data.
+    """Retrieves the results of the hashing of blocks of data.
 
     Returns:
       list[AnalyzerResult]: results.

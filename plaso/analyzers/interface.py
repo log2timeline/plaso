@@ -15,14 +15,14 @@ class BaseAnalyzer(object):
 
   @abc.abstractmethod
   def Analyze(self, data):
-    """Analyzes a block of data, updating the state of the analyzer
+    """Analyzes a block of data, overwriting the state of the analyzer.
 
     Args:
       data(bytes): block of data to process.
     """
 
   def Update(self, unused_data):
-    """Updates the current state of the analyzer with a new block of data.
+    """Updates the current state of the analyzer, with a new block of data.
 
     Repeated calls to update are equivalent to one single call with the
     concatenation of the arguments.
@@ -31,7 +31,7 @@ class BaseAnalyzer(object):
       data(bytes): data with which to update the context of the analyzer.
 
     Raises:
-      NotImplementedError: if the Analyzer does not support incremental
+      NotImplementedError: if the analyzer does not support incremental
           updates.
     """
     if not self.SUPPORTS_INCREMENTAL_UPDATE:
@@ -39,7 +39,7 @@ class BaseAnalyzer(object):
 
   @abc.abstractmethod
   def GetResults(self):
-    """Retrieves the results of the analysis of all data.
+    """Retrieves the results of the analysis.
 
     Returns:
       list[AnalyzerResult]: results.

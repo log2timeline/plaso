@@ -232,7 +232,7 @@ class EventExtractionWorker(object):
 
     Args:
       parser_mediator (ParserMediator): encapsulates interactions between
-          parsers and other Plaso components (storage, process control, etc.).
+          parsers and other components (storage, abort signalling, etc.).
       file_entry (dfvfs.FileEntry): file entry relating to the data being
           analyzed.
       data_stream_name (str): name of the data stream.

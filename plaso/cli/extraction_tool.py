@@ -216,7 +216,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
             u'hashers.'))
 
     argument_group.add_argument(
-        u'--yara-rules-path', u'--yara_rules_path', dest=u'yara_rules_path',
+        u'--yara_rules_path', u'--yara-rules-path', dest=u'yara_rules_path',
         type=str, metavar=u'PATH', action=u'store', help=(
             u'Path to a file containing Yara rules definitions.'))
 

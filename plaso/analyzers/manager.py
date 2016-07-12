@@ -9,23 +9,22 @@ class AnalyzersManager(object):
 
   _analyzer_classes = {}
 
-  _READ_BUFFER_SIZE = 4096
 
   @classmethod
   def AnalyzeFileObject(cls, mediator, file_object, analyzers):
-    """Processes a file object with the provided analyzers.
+    """Processes a file-like object with the provided analyzers.
 
     Args:
-      mediator (ParserMediator): provides access to Plaso's runtime
-          state.
-      file_object (dfvfs.FileIO): file object to process.
+      mediator (ParserMediator): encapsulates interactions between
+          parsers and other components (storage, abort signalling, etc.).
+      file_object (dfvfs.FileIO): file-like object to process.
       analyzers (list[analyzer]): analyzers to use on the file object.
 
     Returns:
       list(AnalyzerResult): results of the analyzers.
     """
     if not analyzers:
-      return None
+      return
 
     file_object.seek(0, os.SEEK_SET)
 
@@ -40,7 +39,7 @@ class AnalyzersManager(object):
         if len(data) <= analyzer.SIZE_LIMIT:
           analyzer.Analyze(data)
     else:
-      data = file_object.read(cls._READ_BUFFER_SIZE)
+      data = file_object.read(maximum_file_size)
       while data:
         for analyzer in analyzers:
           if mediator.abort:
@@ -49,7 +48,7 @@ class AnalyzersManager(object):
             analyzer.Update(data)
         if mediator.abort:
           break
-        data = file_object.read(cls._READ_BUFFER_SIZE)
+        data = file_object.read(maximum_file_size)
 
     for analyzer in analyzers:
       if mediator.abort:
