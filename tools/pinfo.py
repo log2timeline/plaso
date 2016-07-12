@@ -580,6 +580,31 @@ class PinfoTool(analysis_tool.AnalysisTool):
       else:
         completion_time = u'N/A'
 
+      if session.command_line_arguments:
+        command_line_arguments = session.command_line_arguments
+      else:
+        command_line_arguments = u'N/A'
+
+      if session.parser_filter_expression:
+        parser_filter_expression = session.parser_filter_expression
+      else:
+        parser_filter_expression = u'N/A'
+
+      if session.preferred_encoding:
+        preferred_encoding = session.preferred_encoding
+      else:
+        preferred_encoding = u'N/A'
+
+      if session.filter_file:
+        filter_file = session.filter_file
+      else:
+        filter_file = u'N/A'
+
+      if session.filter_expression:
+        filter_expression = session.filter_expression
+      else:
+        filter_expression = u'N/A'
+
       title = u'Session: {0!s}'.format(session_identifier)
       table_view = cli_views.ViewsFactory.GetTableView(
           self._views_format_type, title=title)
@@ -588,14 +613,12 @@ class PinfoTool(analysis_tool.AnalysisTool):
       table_view.AddRow([u'Completion time', completion_time])
       table_view.AddRow([u'Product name', session.product_name])
       table_view.AddRow([u'Product version', session.product_version])
-      table_view.AddRow([
-          u'Command line arguments', session.command_line_arguments])
-      table_view.AddRow([
-          u'Parser filter expression', session.parser_filter_expression])
-      table_view.AddRow([u'Preferred encoding', session.preferred_encoding])
+      table_view.AddRow([u'Command line arguments', command_line_arguments])
+      table_view.AddRow([u'Parser filter expression', parser_filter_expression])
+      table_view.AddRow([u'Preferred encoding', preferred_encoding])
       table_view.AddRow([u'Debug mode', session.debug_mode])
-      table_view.AddRow([u'Filter file', session.filter_file])
-      table_view.AddRow([u'Filter expression', session.filter_expression])
+      table_view.AddRow([u'Filter file', filter_file])
+      table_view.AddRow([u'Filter expression', filter_expression])
 
       table_view.Write(self._output_writer)
 
