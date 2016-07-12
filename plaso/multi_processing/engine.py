@@ -59,7 +59,7 @@ class MultiProcessEngine(engine.BaseEngine):
       self, enable_profiling=False,
       maximum_number_of_tasks=_MAXIMUM_NUMBER_OF_TASKS,
       profiling_directory=None, profiling_sample_rate=1000,
-      profiling_type=u'all', use_zeromq=False):
+      profiling_type=u'all', use_zeromq=True):
     """Initializes an engine object.
 
     Args:
