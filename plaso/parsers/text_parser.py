@@ -161,6 +161,8 @@ class TextCSVParser(interface.FileObjectParser):
     self.ParseRow(parser_mediator, text_file_object.tell(), row)
 
     for row in reader:
+      if parser_mediator.abort:
+        break
       row = self._ConvertRowToUnicode(parser_mediator, row)
       self.ParseRow(parser_mediator, text_file_object.tell(), row)
 
@@ -455,6 +457,8 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     self._current_offset = 0
     # Read every line in the text file.
     while line:
+      if parser_mediator.abort:
+        break
       parsed_structure = None
       use_key = None
       # Try to parse the line using all the line structures.
@@ -691,6 +695,8 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
 
     # Read every line in the text file.
     while self._text_reader.lines:
+      if parser_mediator.abort:
+        break
       # Initialize pyparsing objects.
       tokens = None
       start = 0
