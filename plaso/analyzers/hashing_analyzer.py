@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The hashing analyzer implementation"""
+"""The hashing analyzer implementation."""
 
 import logging
 
@@ -37,7 +37,7 @@ class HashingAnalyzer(interface.BaseAnalyzer):
         hasher_names)
 
   def Update(self, data):
-    """Updates the internal state of the analyzer with a block of data.
+    """Updates the internal state of the analyzer, processing a block of data.
 
     Repeated calls are equivalent to a single call with the concatenation of
     all the arguments.
@@ -57,7 +57,7 @@ class HashingAnalyzer(interface.BaseAnalyzer):
     self.Update(data)
 
   def GetResults(self):
-    """Retrieves the results of the hashing of blocks of data.
+    """Retrieves the hashing results.
 
     Returns:
       list[AnalyzerResult]: results.
