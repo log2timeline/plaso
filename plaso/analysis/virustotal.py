@@ -31,7 +31,7 @@ class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
     """Sets the VirusTotal API key to use in queries.
 
     Args:
-      _api_key: The VirusTotal API key
+      api_key: The VirusTotal API key
     """
     self._api_key = api_key
 
@@ -111,7 +111,7 @@ class VirusTotalAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     """Sets the VirusTotal API key to use in queries.
 
     Args:
-      _api_key: The VirusTotal API key
+      api_key: The VirusTotal API key
     """
     self._analyzer.SetAPIKey(api_key)
 
