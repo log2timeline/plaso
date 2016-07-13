@@ -31,7 +31,7 @@ class EventExtractionWorker(object):
 
   Attributes:
     processing_status (str): human readable status indication e.g. 'Hashing',
-                             'Extracting'.
+        'Extracting'.
   """
 
   _DEFAULT_HASH_READ_SIZE = 4096
@@ -97,7 +97,6 @@ class EventExtractionWorker(object):
     """
     super(EventExtractionWorker, self).__init__()
     self._abort = False
-    self._current_display_name = u''
     self._event_extractor = extractors.EventExtractor(
         resolver_context, parser_filter_expression=parser_filter_expression)
     self._hasher_names = None
@@ -242,11 +241,11 @@ class EventExtractionWorker(object):
 
     self.processing_status = definitions.PROCESSING_STATUS_HASHING
 
+    display_name = parser_mediator.GetDisplayName()
+    logging.debug(u'[HashDataStream] hashing file: {0:s}'.format(display_name))
+
     if self._processing_profiler:
       self._processing_profiler.StartTiming(u'hashing')
-
-    logging.debug(u'[HashDataStream] hashing file: {0:s}'.format(
-        self._current_display_name))
 
     file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
     if not file_object:
@@ -269,14 +268,13 @@ class EventExtractionWorker(object):
 
       logging.debug(
           u'[HashDataStream] digest {0:s} calculated for file: {1:s}.'.format(
-              digest_hash_string, self._current_display_name))
-
-    logging.debug(
-        u'[HashDataStream] completed hashing file: {0:s}'.format(
-            self._current_display_name))
+              digest_hash_string, display_name))
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming(u'hashing')
+
+    logging.debug(
+        u'[HashDataStream] completed hashing file: {0:s}'.format(display_name))
 
     self.processing_status = definitions.PROCESSING_STATUS_RUNNING
 
@@ -309,22 +307,22 @@ class EventExtractionWorker(object):
       type_indicators = analyzer.Analyzer.GetArchiveTypeIndicators(
           path_spec, resolver_context=self._resolver_context)
     except IOError as exception:
-      logging.warning((
-          u'Analyzer failed to determine archive type indicators '
-          u'for file: {0:s} with error: {1:s}').format(
-              self._current_display_name, exception))
-
+      error_message = (
+          u'analyzer failed to determine archive type indicators '
+          u'with error: {0:s}').format(exception)
+      parser_mediator.ProduceExtractionError(error_message, path_spec=path_spec)
       return False
 
     number_of_type_indicators = len(type_indicators)
     if number_of_type_indicators == 0:
       return False
 
+    display_name = parser_mediator.GetDisplayName()
     if number_of_type_indicators > 1:
       logging.debug((
           u'Found multiple format type indicators: {0:s} for '
           u'archive file: {1:s}').format(
-              type_indicators, self._current_display_name))
+              type_indicators, display_name))
 
     for type_indicator in type_indicators:
       if type_indicator == dfvfs_definitions.TYPE_INDICATOR_TAR:
@@ -341,7 +339,7 @@ class EventExtractionWorker(object):
         logging.debug((
             u'Unsupported archive format type indicator: {0:s} for '
             u'archive file: {1:s}').format(
-                type_indicator, self._current_display_name))
+                type_indicator, display_name))
 
         archive_path_spec = None
 
@@ -382,22 +380,22 @@ class EventExtractionWorker(object):
       type_indicators = analyzer.Analyzer.GetCompressedStreamTypeIndicators(
           path_spec, resolver_context=self._resolver_context)
     except IOError as exception:
-      logging.warning((
-          u'Analyzer failed to determine compressed stream type indicators '
-          u'for file: {0:s} with error: {1:s}').format(
-              self._current_display_name, exception))
-
+      error_message = (
+          u'analyzer failed to determine compressed stream type indicators '
+          u'with error: {0:s}').format(exception)
+      parser_mediator.ProduceExtractionError(error_message, path_spec=path_spec)
       return False
 
     number_of_type_indicators = len(type_indicators)
     if number_of_type_indicators == 0:
       return False
 
+    display_name = parser_mediator.GetDisplayName()
     if number_of_type_indicators > 1:
       logging.debug((
           u'Found multiple format type indicators: {0:s} for '
           u'compressed stream file: {1:s}').format(
-              type_indicators, self._current_display_name))
+              type_indicators, display_name))
 
     for type_indicator in type_indicators:
       if type_indicator == dfvfs_definitions.TYPE_INDICATOR_BZIP2:
@@ -414,7 +412,7 @@ class EventExtractionWorker(object):
         logging.debug((
             u'Unsupported compressed stream format type indicators: {0:s} for '
             u'compressed stream file: {1:s}').format(
-                type_indicator, self._current_display_name))
+                type_indicator, display_name))
 
         compressed_stream_path_spec = None
 
@@ -446,9 +444,11 @@ class EventExtractionWorker(object):
           continue
 
       except dfvfs_errors.BackEndError as exception:
-        logging.warning((
-            u'Unable to process directory entry: {0:s} with error: '
-            u'{1:s}').format(self._current_display_name, exception))
+        error_message = (
+            u'unable to process directory entry: {0:s} with error: '
+            u'{1:s}').format(sub_file_entry.name, exception)
+        parser_mediator.ProduceExtractionError(
+            error_message, path_spec=file_entry.path_spec)
         continue
 
       # For TSK-based file entries only, ignore the virtual /$OrphanFiles
@@ -473,15 +473,14 @@ class EventExtractionWorker(object):
       parser_mediator (ParserMediator): parser mediator.
       file_entry (dfvfs.FileEntry): file entry.
     """
-    self._current_display_name = parser_mediator.GetDisplayName(file_entry)
-
     reference_count = self._resolver_context.GetFileObjectReferenceCount(
         file_entry.path_spec)
 
     parser_mediator.SetFileEntry(file_entry)
 
-    logging.debug(u'[ProcessFileEntry] processing file entry: {0:s}'.format(
-        self._current_display_name))
+    display_name = parser_mediator.GetDisplayName()
+    logging.debug(
+        u'[ProcessFileEntry] processing file entry: {0:s}'.format(display_name))
 
     try:
       self.processing_status = definitions.PROCESSING_STATUS_RUNNING
@@ -512,7 +511,7 @@ class EventExtractionWorker(object):
         if self._resolver_context.ForceRemoveFileObject(file_entry.path_spec):
           logging.warning(
               u'File-object not explicitly closed for file: {0:s}'.format(
-                  self._current_display_name))
+                  display_name))
 
       parser_mediator.ResetFileEntry()
 
@@ -521,10 +520,7 @@ class EventExtractionWorker(object):
 
     logging.debug(
         u'[ProcessFileEntry] done processing file entry: {0:s}'.format(
-            self._current_display_name))
-
-    # We do not clear self._current_display_name
-    # here to allow the foreman to see which file was previously processed.
+            display_name))
 
   def _ProcessFileEntryDataStream(
       self, parser_mediator, file_entry, data_stream_name):
@@ -552,8 +548,9 @@ class EventExtractionWorker(object):
     # Determine if the content of the file entry should not be extracted.
     skip_content_extraction = self._CanSkipContentExtraction(file_entry)
     if skip_content_extraction:
-      logging.info(u'Skipping content extraction of: {0:s}'.format(
-          self._current_display_name))
+      display_name = parser_mediator.GetDisplayName()
+      logging.info(
+          u'Skipping content extraction of: {0:s}'.format(display_name))
       self.processing_status = definitions.PROCESSING_STATUS_IDLE
       return
 
@@ -600,11 +597,6 @@ class EventExtractionWorker(object):
 
     self.processing_status = definitions.PROCESSING_STATUS_IDLE
 
-  @property
-  def current_display_name(self):
-    """str: current display name."""
-    return self._current_display_name
-
   def ProcessPathSpec(self, parser_mediator, path_spec):
     """Processes a path specification.
 
@@ -618,9 +610,10 @@ class EventExtractionWorker(object):
         path_spec, resolver_context=self._resolver_context)
 
     if file_entry is None:
+      display_name = parser_mediator.GetDisplayName()
       logging.warning(
           u'Unable to open file entry with path spec: {0:s}'.format(
-              self._current_display_name))
+              display_name))
       return
 
     self._ProcessFileEntry(parser_mediator, file_entry)
