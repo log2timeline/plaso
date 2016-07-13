@@ -319,6 +319,9 @@ class MultiProcessEngine(engine.BaseEngine):
       filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
           used in path specification extraction.
     """
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'process_sources')
+
     self._status = definitions.PROCESSING_STATUS_COLLECTING
     self._number_of_consumed_errors = 0
     self._number_of_consumed_events = 0
@@ -352,6 +355,9 @@ class MultiProcessEngine(engine.BaseEngine):
     self._number_of_produced_errors = storage_writer.number_of_errors
     self._number_of_produced_events = storage_writer.number_of_events
     self._number_of_produced_sources = storage_writer.number_of_event_sources
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'process_sources')
 
   def _ProfilingSampleMemory(self):
     """Creates a memory profiling sample."""

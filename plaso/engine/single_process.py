@@ -113,6 +113,9 @@ class SingleProcessEngine(engine.BaseEngine):
       filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
           used in path specification extraction.
     """
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'process_sources')
+
     number_of_consumed_sources = 0
 
     self._UpdateStatus(
@@ -179,6 +182,9 @@ class SingleProcessEngine(engine.BaseEngine):
     # on exit.
     self._UpdateStatus(
         status, u'', number_of_consumed_sources, storage_writer, force=True)
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'process_sources')
 
   def _StartProfiling(self):
     """Starts profiling."""
