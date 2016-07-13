@@ -56,7 +56,7 @@ class TestCase(object):
   case so it can be easily run on different input files.
 
   Attributes:
-    name (satr): name of the test case.
+    name (str): name of the test case.
   """
 
   NAME = None
