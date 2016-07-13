@@ -428,7 +428,15 @@ class MultiProcessEngine(engine.BaseEngine):
         return
 
       new_event_sources = False
+
+      if self._processing_profiler:
+        self._processing_profiler.StartTiming(u'get_event_source')
+
       event_source = storage_writer.GetNextEventSource()
+
+      if self._processing_profiler:
+        self._processing_profiler.StopTiming(u'get_event_source')
+
       while event_source or self._task_manager.HasScheduledTasks():
         new_event_sources = True
         if self._abort:
@@ -445,6 +453,9 @@ class MultiProcessEngine(engine.BaseEngine):
             self._memory_profiler.Sample()
 
         if task:
+          if self._processing_profiler:
+            self._processing_profiler.StartTiming(u'push_task')
+
           try:
             self._task_queue.PushItem(task, block=False)
             self._task_manager.ScheduleTask(task.identifier)
@@ -452,6 +463,12 @@ class MultiProcessEngine(engine.BaseEngine):
 
           except Queue.Full:
             pass
+
+          if self._processing_profiler:
+            self._processing_profiler.StopTiming(u'push_task')
+
+        if self._processing_profiler:
+          self._processing_profiler.StartTiming(u'merge_check')
 
         # GetScheduledTaskIdentifiers makes a copy of the keys since we are
         # changing the dictionary inside the loop.
@@ -491,8 +508,17 @@ class MultiProcessEngine(engine.BaseEngine):
           self._number_of_produced_sources = (
               storage_writer.number_of_event_sources)
 
+        if self._processing_profiler:
+          self._processing_profiler.StopTiming(u'merge_check')
+
         if not event_source and not task:
+          if self._processing_profiler:
+            self._processing_profiler.StartTiming(u'get_event_source')
+
           event_source = storage_writer.GetNextEventSource()
+
+          if self._processing_profiler:
+            self._processing_profiler.StopTiming(u'get_event_source')
 
       for task in self._task_manager.GetAbandonedTasks():
         self._processing_status.error_path_specs.append(task.path_spec)
