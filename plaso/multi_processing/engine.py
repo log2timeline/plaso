@@ -137,7 +137,8 @@ class MultiProcessEngine(engine.BaseEngine):
     """Aborts all registered processes by joining with the parent process.
 
     Args:
-      timeout (int): the process join timeout, where None represents no timeout.
+      timeout (int): number of seconds to wait for processes to join, where
+          None represents no timeout.
     """
     for pid, process in iter(self._processes_per_pid.items()):
       logging.debug(u'Waiting for process: {0:s} (PID: {1:d}).'.format(
@@ -317,7 +318,8 @@ class MultiProcessEngine(engine.BaseEngine):
           the sources to process.
       storage_writer (StorageWriter): storage writer for a session storage.
       filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
-          used in path specification extraction.
+          used in path specification extraction. If set, path specs that match
+          the find specification will be processed.
     """
     if self._processing_profiler:
       self._processing_profiler.StartTiming(u'process_sources')
@@ -661,7 +663,7 @@ class MultiProcessEngine(engine.BaseEngine):
   def _StatusUpdateThreadMain(self):
     """Main function of the status update thread."""
     while self._status_update_active:
-      # Make a local copy of the PIDs in case the dict changes by
+      # Make a local copy of the PIDs in case the dict is changed by
       # the main thread.
       for pid in list(self._process_information_per_pid.keys()):
         self._CheckStatusWorkerProcess(pid)
@@ -806,7 +808,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     Args:
       pid (int): process identifier (PID) of the worker process.
-      process_status (dict[str, str]): status values received from
+      process_status (dict[str, object]): status values received from
           the worker process.
 
     Raises:
