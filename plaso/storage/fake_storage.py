@@ -15,8 +15,10 @@ class FakeStorageWriter(interface.StorageWriter):
     event_tags (list[EventTag]): event tags.
     events (list[EventObject]): event.
     session_completion (SessionCompletion): session completion attribute
-                                            container.
+        container.
     session_start (SessionStart): session start attribute container.
+    task_completion (TaskCompletion): task completion attribute container.
+    task_start (TaskStart): task start attribute container.
   """
 
   # pylint: disable=abstract-method

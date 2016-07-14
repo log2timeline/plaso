@@ -4,15 +4,19 @@
 import abc
 
 from plaso.lib import definitions
+from plaso.serializer import json_serializer
 
 
 class BaseStorage(object):
   """Class that defines the storage interface."""
 
-  def __init__(self):
-    """Initializes a storage object."""
-    super(BaseStorage, self).__init__()
-    self._serializers_profiler = None
+  @abc.abstractmethod
+  def AddAnalysisReport(self, analysis_report):
+    """Adds an analysis report.
+
+    Args:
+      analysis_report (AnalysisReport): analysis report.
+    """
 
   @abc.abstractmethod
   def AddError(self, error):
@@ -36,6 +40,14 @@ class BaseStorage(object):
 
     Args:
       event_source (EventSource): event source.
+    """
+
+  @abc.abstractmethod
+  def AddEventTag(self, event_tag):
+    """Adds an event tag.
+
+    Args:
+      event_tag (EventTag): event tag.
     """
 
   @abc.abstractmethod
@@ -106,6 +118,106 @@ class BaseStorage(object):
   def Open(self, **kwargs):
     """Opens the storage."""
 
+  @abc.abstractmethod
+  def WriteSessionCompletion(self, session_completion):
+    """Writes session completion information.
+
+    Args:
+      session_completion (SessionCompletion): session completion information.
+    """
+
+  @abc.abstractmethod
+  def WriteSessionStart(self, session_start):
+    """Writes session start information.
+
+    Args:
+      session_start (SessionStart): session start information.
+    """
+
+  @abc.abstractmethod
+  def WriteTaskCompletion(self, task_completion):
+    """Writes task completion information.
+
+    Args:
+      task_completion (TaskCompletion): task completion information.
+    """
+
+  @abc.abstractmethod
+  def WriteTaskStart(self, task_start):
+    """Writes task start information.
+
+    Args:
+      task_start (TaskStart): task start information.
+    """
+
+
+class BaseFileStorage(BaseStorage):
+  """Class that defines a file-based storage."""
+
+  # pylint: disable=abstract-method
+
+  def __init__(self):
+    """Initializes a storage object."""
+    super(BaseFileStorage, self).__init__()
+    self._is_open = False
+    self._read_only = True
+    self._serializer = json_serializer.JSONAttributeContainerSerializer
+    self._serializers_profiler = None
+
+  def _DeserializeAttributeContainer(self, container_data, container_type):
+    """Deserializes an attribute container.
+
+    Args:
+      container_data (bytes): serialized attribute container data.
+      container_type (str): attribute container type.
+
+    Returns:
+      AttributeContainer: attribute container or None.
+    """
+    if not container_data:
+      return
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(container_type)
+
+    attribute_container = self._serializer.ReadSerialized(container_data)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StopTiming(container_type)
+
+    return attribute_container
+
+  def _SerializeAttributeContainer(self, attribute_container):
+    """Serializes an attribute container.
+
+    Args:
+      attribute_container (AttributeContainer): attribute container.
+
+    Returns:
+      bytes: serialized attribute container.
+
+    Raises:
+      IOError: if the attribute container cannot be serialized.
+    """
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(
+          attribute_container.CONTAINER_TYPE)
+
+    try:
+      attribute_container_data = self._serializer.WriteSerialized(
+          attribute_container)
+      if not attribute_container_data:
+        raise IOError(
+            u'Unable to serialize attribute container: {0:s}.'.format(
+                attribute_container.CONTAINER_TYPE))
+
+    finally:
+      if self._serializers_profiler:
+        self._serializers_profiler.StopTiming(
+            attribute_container.CONTAINER_TYPE)
+
+    return attribute_container_data
+
   def SetSerializersProfiler(self, serializers_profiler):
     """Sets the serializers profiler.
 
@@ -154,7 +266,7 @@ class StorageReader(object):
       time_range (Optional[TimeRange]): time range used to filter events
           that fall in a specific period.
 
-    Returns:
+    Yields:
       EventObject: event.
     """
 
@@ -163,7 +275,7 @@ class StorageReader(object):
     """Retrieves event sources.
 
     Yields:
-      Event source objects (instance of EventSourceObject).
+      EventSourceObject: event source.
     """
 
   @abc.abstractmethod
@@ -171,7 +283,7 @@ class StorageReader(object):
     """Retrieves the event tags.
 
     Yields:
-      An event tag object (instance of EventTag).
+      EventTag: event tag.
     """
 
 
