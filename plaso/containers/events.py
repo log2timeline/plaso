@@ -294,7 +294,7 @@ class EventTag(interface.AttributeContainer):
     """
     if not isinstance(label, py2to3.STRING_TYPES):
       raise TypeError(u'label is not a string type, type is {0:s}'.format(
-        type(label)))
+          type(label)))
     if not self._VALID_LABEL_REGEX.match(label):
       raise ValueError((
           u'Unsupported label: "{0:s}". A label must only consist of '

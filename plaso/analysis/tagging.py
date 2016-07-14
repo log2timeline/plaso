@@ -174,8 +174,8 @@ class TaggingPlugin(interface.AnalysisPlugin):
             stripped_rule = rule.rstrip()
             logging.warning(
                 u'Invalid tag rule definition "{0:s}". '
-                u'Parsing error was: {1:s}'.format(stripped_rule,
-                    exception.message))
+                u'Parsing error was: {1:s}'.format(
+                    stripped_rule, exception.message))
             raise
           if query:
             queries.append(query)
