@@ -139,9 +139,10 @@ class TaggingPlugin(interface.AnalysisPlugin):
     try:
       return efilter_query.Query(rule, syntax=syntax)
     except efilter_errors.EfilterParseError as exception:
+      stripped_rule = rule.rstrip()
       logging.warning(
           u'Invalid tag rule definition "{0:s}". '
-          u'Parsing error was: {1:s}'.format(rule.rstrip(), exception.message))
+          u'Parsing error was: {1:s}'.format(stripped_rule), exception.message)
 
   def _ParseDefinitions(self, tag_file_path):
     """Parses the tag file and yields tuples of label name, list of rule ASTs.
@@ -168,15 +169,7 @@ class TaggingPlugin(interface.AnalysisPlugin):
         rule_match = self._TAG_RULE_LINE.match(line)
         if rule_match:
           rule = rule_match.group(1)
-          try:
-            query = self._ParseRule(rule)
-          except efilter_errors.EfilterParseError as exception:
-            stripped_rule = rule.rstrip()
-            logging.warning(
-                u'Invalid tag rule definition "{0:s}". '
-                u'Parsing error was: {1:s}'.format(
-                    stripped_rule, exception.message))
-            raise
+          query = self._ParseRule(rule)
           if query:
             queries.append(query)
 
