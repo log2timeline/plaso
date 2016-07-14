@@ -680,7 +680,7 @@ class PsortAnalysisReportQueueConsumer(plaso_queue.ItemQueueConsumer):
     """Initializes the item queue consumer.
 
     Args:
-      queue_object (Queue): queue.
+      queue (Queue): queue.
       session (Session): session the storage changes are part of.
       storage_file (BaseStorage): session-based storage file.
       filter_string (str): string containing the filter expression.
