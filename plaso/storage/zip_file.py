@@ -381,7 +381,7 @@ class _SerializedDataStream(object):
   _MAXIMUM_DATA_SIZE = 40 * 1024 * 1024
 
   def __init__(self, zip_file, storage_file_path, stream_name):
-    """Initializes a serialized data stream object.
+    """Initializes a serialized data stream.
 
     Args:
       zip_file (zipfile.ZipFile): ZIP file that contains the stream.
@@ -566,7 +566,7 @@ class _SerializedDataOffsetTable(object):
   _TABLE_ENTRY_SIZE = _TABLE_ENTRY.sizeof()
 
   def __init__(self, zip_file, stream_name):
-    """Initializes a serialized data offset table object.
+    """Initializes a serialized data offset table.
 
     Args:
       zip_file (zipfile.ZipFile): ZIP file that contains the stream.
@@ -653,7 +653,7 @@ class _SerializedDataTimestampTable(object):
   _TABLE_ENTRY_SIZE = _TABLE_ENTRY.sizeof()
 
   def __init__(self, zip_file, stream_name):
-    """Initializes a serialized data timestamp table object.
+    """Initializes a serialized data timestamp table.
 
     Args:
       zip_file (zipfile.ZipFile): ZIP file that contains the stream.
@@ -753,7 +753,7 @@ class _SerializedEventTagIndexTable(object):
           _TAG_UUID_STRUCT))
 
   def __init__(self, zip_file, stream_name):
-    """Initializes a serialized event tag index table object.
+    """Initializes a serialized event tag index table.
 
     Args:
       zip_file (zipfile.ZipFile): ZIP file that contains the stream.
@@ -973,7 +973,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
   def __init__(
       self, maximum_buffer_size=0,
       storage_type=definitions.STORAGE_TYPE_SESSION):
-    """Initializes a ZIP-based storage file object.
+    """Initializes a ZIP-based storage file.
 
     Args:
       maximum_buffer_size (Optional[int]):
@@ -2972,69 +2972,18 @@ class StorageFile(ZIPStorageFile):
     self._WriteStream(stream_name, stream_data)
 
 
-class ZIPStorageFileReader(interface.StorageReader):
+class ZIPStorageFileReader(interface.FileStorageReader):
   """Class that implements the ZIP-based storage file reader."""
 
-  def __init__(self, input_file):
-    """Initializes a storage reader object.
+  def __init__(self, path):
+    """Initializes a storage reader.
 
     Args:
-      input_file: a string containing the path to the output file.
+      path (str): path to the input file.
     """
-    super(ZIPStorageFileReader, self).__init__()
+    super(ZIPStorageFileReader, self).__init__(path)
     self._storage_file = ZIPStorageFile()
-    self._storage_file.Open(path=input_file)
-
-  def Close(self):
-    """Closes the storage reader."""
-    if self._storage_file:
-      self._storage_file.Close()
-      self._storage_file = None
-
-  def GetAnalysisReports(self):
-    """Retrieves the analysis reports.
-
-    Returns:
-      A generator of analysis report objects (instances of AnalysisReport).
-    """
-    return self._storage_file.GetAnalysisReports()
-
-  def GetErrors(self):
-    """Retrieves the errors.
-
-    Returns:
-      A generator of error objects (instances of AnalysisError or
-      ExtractionError).
-    """
-    return self._storage_file.GetErrors()
-
-  def GetEvents(self, time_range=None):
-    """Retrieves the events in increasing chronological order.
-
-    Args:
-      time_range (Optional[TimeRange]): time range used to filter events
-          that fall in a specific period.
-
-    Returns:
-      A generator of events (instances of EventObject).
-    """
-    return self._storage_file.GetEvents(time_range=time_range)
-
-  def GetEventSources(self):
-    """Retrieves the event sources.
-
-    Returns:
-      A generator of event source objects (instances of EventSourceObject).
-    """
-    return self._storage_file.GetEventSources()
-
-  def GetEventTags(self):
-    """Retrieves the event tags.
-
-    Returns:
-      A generator of event tag objects (instances of EventTagObject).
-    """
-    return self._storage_file.GetEventTags()
+    self._storage_file.Open(path=path)
 
 
 class ZIPStorageFileWriter(interface.StorageWriter):
@@ -3043,7 +2992,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
   def __init__(
       self, session, output_file, buffer_size=0,
       storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
-    """Initializes a storage writer object.
+    """Initializes a storage writer.
 
     Args:
       session (Session): session the storage changes are part of.
@@ -3271,7 +3220,8 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     try:
       # In Windows the file could not be accessible while it is being moved.
-      storage_reader = ZIPStorageFileReader(storage_file_path)
+      # storage_reader = ZIPStorageFileReader(storage_file_path)
+      storage_reader = gzip_file.GZIPStorageFileReader(storage_file_path)
     except IOError:
       return False
 
@@ -3293,9 +3243,14 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     if self._storage_file:
       raise IOError(u'Storage writer already opened.')
 
-    self._storage_file = StorageFile(
-        self._output_file, buffer_size=self._buffer_size,
-        storage_type=self._storage_type)
+    if self._storage_type == definitions.STORAGE_TYPE_TASK:
+      self._storage_file = gzip_file.GZIPStorageFile(
+          storage_type=self._storage_type)
+      self._storage_file.Open(path=self._output_file, read_only=False)
+    else:
+      self._storage_file = StorageFile(
+          self._output_file, buffer_size=self._buffer_size,
+          storage_type=self._storage_type)
 
     self._event_source_index = self._storage_file.GetNumberOfEventSources()
 

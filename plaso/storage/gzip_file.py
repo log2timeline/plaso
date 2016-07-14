@@ -18,7 +18,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
   _COMPRESSION_LEVEL = 9
 
   def __init__(self, storage_type=definitions.STORAGE_TYPE_TASK):
-    """Initializes a storage object.
+    """Initializes a storage.
 
     Args:
       storage_type (Optional[str]): storage type.
@@ -349,3 +349,17 @@ class GZIPStorageFile(interface.BaseFileStorage):
     task_start_data = self._SerializeAttributeContainer(task_start)
     self._gzip_file.write(task_start_data)
     self._gzip_file.write(b'\n')
+
+
+class GZIPStorageFileReader(interface.FileStorageReader):
+  """Class that implements a gzip-based storage file reader."""
+
+  def __init__(self, path):
+    """Initializes a storage reader.
+
+    Args:
+      path (str): path to the input file.
+    """
+    super(GZIPStorageFileReader, self).__init__(path)
+    self._storage_file = GZIPStorageFile()
+    self._storage_file.Open(path=path)

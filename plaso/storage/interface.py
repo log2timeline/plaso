@@ -91,6 +91,14 @@ class BaseStorage(object):
     """
 
   @abc.abstractmethod
+  def GetNumberOfEventSources(self):
+    """Retrieves the number event sources.
+
+    Returns:
+      int: number of event sources.
+    """
+
+  @abc.abstractmethod
   def HasAnalysisReports(self):
     """Determines if a storage contains analysis reports.
 
@@ -157,7 +165,7 @@ class BaseFileStorage(BaseStorage):
   # pylint: disable=abstract-method
 
   def __init__(self):
-    """Initializes a storage object."""
+    """Initializes a storage."""
     super(BaseFileStorage, self).__init__()
     self._is_open = False
     self._read_only = True
@@ -287,6 +295,70 @@ class StorageReader(object):
     """
 
 
+class FileStorageReader(StorageReader):
+  """Class that implements file-based storage reader."""
+
+  def __init__(self, path):
+    """Initializes a storage reader.
+
+    Args:
+      path (str): path to the input file.
+    """
+    super(FileStorageReader, self).__init__()
+    self._path = path
+    self._storage_file = None
+
+  def Close(self):
+    """Closes the storage reader."""
+    if self._storage_file:
+      self._storage_file.Close()
+      self._storage_file = None
+
+  def GetAnalysisReports(self):
+    """Retrieves the analysis reports.
+
+    Returns:
+      generator(AnalysisReport): analysis report generator.
+    """
+    return self._storage_file.GetAnalysisReports()
+
+  def GetErrors(self):
+    """Retrieves the errors.
+
+    Returns:
+      generator(ExtractionError): error generator.
+    """
+    return self._storage_file.GetErrors()
+
+  def GetEvents(self, time_range=None):
+    """Retrieves the events in increasing chronological order.
+
+    Args:
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
+
+    Returns:
+      generator(EventObject): event generator.
+    """
+    return self._storage_file.GetEvents(time_range=time_range)
+
+  def GetEventSources(self):
+    """Retrieves the event sources.
+
+    Returns:
+      generator(EventSource): event source generator.
+    """
+    return self._storage_file.GetEventSources()
+
+  def GetEventTags(self):
+    """Retrieves the event tags.
+
+    Returns:
+      generator(EventTag): event tag generator.
+    """
+    return self._storage_file.GetEventTags()
+
+
 class StorageWriter(object):
   """Class that defines the storage writer interface.
 
@@ -299,7 +371,7 @@ class StorageWriter(object):
 
   def __init__(
       self, session, storage_type=definitions.STORAGE_TYPE_SESSION, task=None):
-    """Initializes a storage writer object.
+    """Initializes a storage writer.
 
     Args:
       session (Session): session the storage changes are part of.
@@ -332,11 +404,11 @@ class StorageWriter(object):
     """
 
   @abc.abstractmethod
-  def AddEvent(self, event_object):
+  def AddEvent(self, event):
     """Adds an event.
 
     Args:
-      event_object (EventObject): an event.
+      event(EventObject): an event.
     """
 
   @abc.abstractmethod
