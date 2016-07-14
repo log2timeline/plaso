@@ -184,7 +184,8 @@ class TaggingPlugin(interface.AnalysisPlugin):
       tag_file_path (str): path to the tag file.
 
     Returns:
-      efilter.ast.Expression: An efilter AST containing the tagging rules.
+      efilter.ast.Expression: efilter abstract syntax tree (AST), containing the
+          tagging rules.
     """
     tags = []
     for label_name, rules in self._ParseDefinitions(tag_file_path):

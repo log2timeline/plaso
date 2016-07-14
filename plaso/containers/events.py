@@ -293,7 +293,7 @@ class EventTag(interface.AttributeContainer):
       ValueError: if a label is malformed.
     """
     if not isinstance(label, py2to3.STRING_TYPES):
-      raise TypeError(u'label is not a string type, type is {0:s}'.format(
+      raise TypeError(u'label is not a string type. Is {0:s}'.format(
           type(label)))
     if not self._VALID_LABEL_REGEX.match(label):
       raise ValueError((
