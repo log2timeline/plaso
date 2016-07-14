@@ -320,8 +320,8 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
           identifier, path=self._profiling_directory)
       self._extraction_worker.SetParsersProfiler(self._parsers_profiler)
 
-    if self._profiling_type in (u'all', u'processsing'):
-      identifier = u'{0:s}-processsing'.format(self._name)
+    if self._profiling_type in (u'all', u'processing'):
+      identifier = u'{0:s}-processing'.format(self._name)
       self._processing_profiler = profiler.ProcessingProfiler(
           identifier, path=self._profiling_directory)
       self._extraction_worker.SetProcessingProfiler(self._processing_profiler)
