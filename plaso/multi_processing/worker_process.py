@@ -73,6 +73,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     super(WorkerProcess, self).__init__(**kwargs)
     self._abort = False
     self._buffer_size = 0
+    self._current_display_name = u''
     self._enable_debug_output = enable_debug_output
     self._enable_profiling = enable_profiling
     self._extraction_worker = None
@@ -121,14 +122,12 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       number_of_produced_sources = 0
 
     if self._extraction_worker:
-      current_display_name = self._extraction_worker.current_display_name
       processing_status = self._extraction_worker.processing_status
     else:
-      current_display_name = u''
       processing_status = self._status
 
     status = {
-        u'display_name': current_display_name,
+        u'display_name': self._current_display_name,
         u'identifier': self._name,
         u'number_of_consumed_errors': 0,
         u'number_of_consumed_events': self._number_of_consumed_events,
@@ -235,13 +234,16 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       parser_mediator (ParserMediator): parser mediator.
       path_spec (dfvfs.PathSpec): path specification.
     """
+    self._current_display_name = parser_mediator.GetDisplayNameFromPathSpec(
+        path_spec)
+
     try:
       extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
 
     except IOError as exception:
       logging.warning((
           u'Unable to process path specification: {0:s} with error: '
-          u'{1:s}').format(extraction_worker.current_display_name, exception))
+          u'{1:s}').format(self._current_display_name, exception))
 
     except dfvfs_errors.CacheFullError:
       # TODO: signal engine of failure.
@@ -249,14 +251,14 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       logging.error((
           u'ABORT: detected cache full error while processing '
           u'path spec: {0:s}').format(
-              extraction_worker.current_display_name))
+              self._current_display_name))
 
     # All exceptions need to be caught here to prevent the worker
     # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
       logging.warning(
           u'Unhandled exception while processing path spec: {0:s}.'.format(
-              extraction_worker.current_display_name))
+              self._current_display_name))
       logging.exception(exception)
 
   def _ProcessTask(self, task):
