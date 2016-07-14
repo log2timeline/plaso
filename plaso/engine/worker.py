@@ -402,13 +402,6 @@ class EventExtractionWorker(object):
           parser_mediator.ProduceExtractionError(
               error_message, path_spec=path_spec)
 
-      if dfvfs_definitions.TYPE_INDICATOR_ZIP in archive_types:
-        self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
-
-        # ZIP files are the base of certain file formats like docx.
-        self._event_extractor.ParseDataStream(
-            parser_mediator, file_entry, data_stream_name)
-
   def _ProcessCompressedStreamTypes(
       self, parser_mediator, path_spec, type_indicators):
     """Processes a data stream containing compressed stream types e.g. bz2.
@@ -599,6 +592,13 @@ class EventExtractionWorker(object):
       if archive_types:
         if self._process_archive_files:
           self._ProcessArchiveTypes(parser_mediator, path_spec, archive_types)
+
+        if dfvfs_definitions.TYPE_INDICATOR_ZIP in archive_types:
+          self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
+
+          # ZIP files are the base of certain file formats like docx.
+          self._event_extractor.ParseDataStream(
+              parser_mediator, file_entry, data_stream_name)
 
       elif compressed_stream_types:
         self._ProcessCompressedStreamTypes(
