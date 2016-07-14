@@ -141,7 +141,7 @@ class TaggingPlugin(interface.AnalysisPlugin):
     except efilter_errors.EfilterParseError as exception:
       logging.warning(
           u'Invalid tag rule definition "{0:s}". '
-          u'Parsing error was: {1:s}'.format(rule, exception.message))
+          u'Parsing error was: {1:s}'.format(rule.rstrip(), exception.message))
 
   def _ParseDefinitions(self, tag_file_path):
     """Parses the tag file and yields tuples of label name, list of rule ASTs.
