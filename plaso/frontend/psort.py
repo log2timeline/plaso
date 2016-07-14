@@ -369,7 +369,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     for _ in range(0, len(analysis_plugins_list)):
       if self._use_zeromq:
-        output_queue = zeromq_queue.ZeroMQPushBindQueue()
+        output_queue = zeromq_queue.ZeroMQPushBindQueue(maximum_items=1)
         # Open the queue so it can bind to a random port, and we can get the
         # port number to use in the input queue.
         output_queue.Open()
