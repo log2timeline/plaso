@@ -8,5 +8,5 @@ file_downloaded
 login_attempt
   data_type == 'windows:evt:record' and source_name == 'Security' and event_identifier == 538
 
-document_open
-  data_type is 'windows:registry:key_value' AND plugin contains 'mru' AND regvalue.__all__ notcontains '.exe' AND timestamp > 0
+security_event
+  data_type == 'windows:evt:record' and source_name == 'Security'
