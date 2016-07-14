@@ -112,6 +112,10 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
     report = analysis_reports[0]
     tags = report.GetTags()
     self.assertEqual(len(tags), 3)
+    labels = []
+    for tag in tags:
+      labels.extend(tag.labels)
+    self.assertEqual(len(labels), 4)
 
     labels = []
     for tag in tags:
