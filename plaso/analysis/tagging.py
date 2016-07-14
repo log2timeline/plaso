@@ -142,7 +142,7 @@ class TaggingPlugin(interface.AnalysisPlugin):
       stripped_rule = rule.rstrip()
       logging.warning(
           u'Invalid tag rule definition "{0:s}". '
-          u'Parsing error was: {1:s}'.format(stripped_rule), exception.message)
+          u'Parsing error was: {1:s}'.format(stripped_rule, exception.message))
 
   def _ParseDefinitions(self, tag_file_path):
     """Parses the tag file and yields tuples of label name, list of rule ASTs.
