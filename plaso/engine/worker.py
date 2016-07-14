@@ -610,7 +610,7 @@ class EventExtractionWorker(object):
         path_spec, resolver_context=self._resolver_context)
 
     if file_entry is None:
-      display_name = parser_mediator.GetDisplayName()
+      display_name = parser_mediator.GetDisplayNameFromPathSpec(path_spec)
       logging.warning(
           u'Unable to open file entry with path spec: {0:s}'.format(
               display_name))
