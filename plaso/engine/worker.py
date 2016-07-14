@@ -602,7 +602,7 @@ class EventExtractionWorker(object):
 
       elif compressed_stream_types:
         self._ProcessCompressedStreamTypes(
-            parser_mediator, path_spec, archive_types)
+            parser_mediator, path_spec, compressed_stream_types)
 
       else:
         self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
