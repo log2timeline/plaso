@@ -52,19 +52,8 @@ class OLECFParserTest(test_lib.ParserTestCase):
     error = storage_writer.errors[0]
     self.assertIsNotNone(error)
 
-    expected_message = (
-        u'unable to open file with error: '
-        u'pyolecf_file_open_file_object: unable to open file. '
-        u'pyolecf_file_object_seek_offset: unable to seek in file object with '
-        u'error: "\'NoneType\' object has no attribute \'seek\'". '
-        u'pyolecf_file_object_io_handle_seek_offset: unable to seek in file '
-        u'object. '
-        u'libbfio_handle_seek_offset: unable to find offset: -1 in handle. '
-        u'libolecf_io_handle_read_file_header: unable to seek file header '
-        u'offset: 0. '
-        u'libolecf_file_open_read: unable to read file header. '
-        u'libolecf_file_open_file_io_handle: unable to read from file handle.')
-    self.assertEqual(error.message, expected_message)
+    self.assertTrue(error.message.startwith(
+        u'unable to open file with error: pyolecf_file_open_file_object: '))
 
 
 if __name__ == '__main__':

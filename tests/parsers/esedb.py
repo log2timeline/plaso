@@ -38,24 +38,8 @@ class ESEDBParserTest(test_lib.ParserTestCase):
     error = storage_writer.errors[0]
     self.assertIsNotNone(error)
 
-    expected_message = (
-        u'unable to open file with error: '
-        u'pyesedb_file_open_file_object: unable to open file. '
-        u'pyesedb_file_object_get_offset: unable to retrieve current offset '
-        u'in file object with error: "\'NoneType\' object has no attribute '
-        u'\'tell\'". '
-        u'pyesedb_file_object_io_handle_get_size: unable to retrieve current '
-        u'offset in file object. '
-        u'pyesedb_file_object_seek_offset: unable to seek in file object with '
-        u'error: "\'NoneType\' object has no attribute \'seek\'". '
-        u'pyesedb_file_object_io_handle_seek_offset: unable to seek in file '
-        u'object. '
-        u'libbfio_handle_seek_offset: unable to find offset: -1 in handle. '
-        u'libesedb_io_handle_read_file_header: unable to seek file header '
-        u'offset: 0. '
-        u'libesedb_file_open_read: unable to read (database) file header. '
-        u'libesedb_file_open_file_io_handle: unable to read from file handle.')
-    self.assertEqual(error.message, expected_message)
+    self.assertTrue(error.message.startwith(
+        u'unable to open file with error: pyesedb_file_open_file_object: '))
 
 
 if __name__ == '__main__':
