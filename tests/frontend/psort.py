@@ -6,7 +6,6 @@ import os
 import unittest
 
 from plaso.containers import events
-from plaso.containers import preprocess
 from plaso.engine import knowledge_base
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
