@@ -351,13 +351,8 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     self.assertIsInstance(session_start, sessions.SessionStart)
 
     expected_session_start_dict = {
-        u'command_line_arguments': u'',
         u'debug_mode': False,
-        u'filter_expression': u'',
-        u'filter_file': u'',
         u'identifier': session_identifier,
-        u'parser_filter_expression': u'',
-        u'preferred_encoding': u'utf-8',
         u'product_name': u'plaso',
         u'product_version': plaso.GetVersion(),
         u'timestamp': timestamp

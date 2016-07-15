@@ -13,7 +13,7 @@ class HashingAnalyzer(interface.BaseAnalyzer):
   """This class contains code for calculating file hashes of input files."""
   NAME = u'hashing'
 
-  SUPPORTS_INCREMENTAL_UPDATE = True
+  INCREMENTAL_ANALYZER = True
 
   DESCRIPTION = u'Calculates hashes of file content.'
 
@@ -36,7 +36,7 @@ class HashingAnalyzer(interface.BaseAnalyzer):
     self._hashers = hashers_manager.HashersManager.GetHashers(
         hasher_names)
 
-  def Update(self, data):
+  def Analyze(self, data):
     """Updates the internal state of the analyzer, processing a block of data.
 
     Repeated calls are equivalent to a single call with the concatenation of
@@ -47,14 +47,6 @@ class HashingAnalyzer(interface.BaseAnalyzer):
     """
     for hasher in self._hashers:
       hasher.Update(data)
-
-  def Analyze(self, data):
-    """Hashes the contents of a block of data.
-
-    Args:
-      data(bytes): the content of the data block.
-    """
-    self.Update(data)
 
   def GetResults(self):
     """Retrieves the hashing results.

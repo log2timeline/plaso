@@ -8,13 +8,8 @@ import json
 from dfvfs.path import path_spec as dfvfs_path_spec
 from dfvfs.path import factory as dfvfs_path_spec_factory
 
-from plaso.containers import errors
-from plaso.containers import event_sources
-from plaso.containers import events
 from plaso.containers import interface as containers_interface
-from plaso.containers import reports
-from plaso.containers import sessions
-from plaso.containers import tasks
+from plaso.containers import manager as containers_manager
 from plaso.lib import event
 from plaso.lib import py2to3
 from plaso.serializer import interface
@@ -284,18 +279,6 @@ class _PreprocessObjectJSONEncoder(json.JSONEncoder):
 class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
   """Class that implements the json attribute container serializer."""
 
-  _CONTAINER_CLASS_PER_TYPE = {
-      u'analysis_report': reports.AnalysisReport,
-      u'event': events.EventObject,
-      u'event_source': event_sources.EventSource,
-      u'event_tag': events.EventTag,
-      u'extraction_error': errors.ExtractionError,
-      u'session_completion': sessions.SessionCompletion,
-      u'session_start': sessions.SessionStart,
-      u'task_completion': tasks.TaskCompletion,
-      u'task_start': tasks.TaskStart,
-  }
-
   @classmethod
   def _ConvertAttributeContainerToDict(cls, attribute_container):
     """Converts an attribute container object into a JSON dictionary.
@@ -499,7 +482,9 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     else:
       raise ValueError(u'Unsupported class type: {0:s}'.format(class_type))
 
-    container_class = cls._CONTAINER_CLASS_PER_TYPE.get(container_type, None)
+    container_class = (
+        containers_manager.AttributeContainersManager.GetAttributeContainer(
+            container_type))
     if not container_class:
       raise ValueError(u'Unsupported container type: {0:s}'.format(
           container_type))

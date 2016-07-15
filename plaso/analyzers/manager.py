@@ -9,7 +9,6 @@ class AnalyzersManager(object):
 
   _analyzer_classes = {}
 
-
   @classmethod
   def AnalyzeFileObject(cls, mediator, file_object, analyzers):
     """Processes a file-like object with the provided analyzers.
@@ -31,23 +30,14 @@ class AnalyzersManager(object):
     maximum_file_size = max([analyzer.SIZE_LIMIT for analyzer in analyzers])
 
     results = []
-    if file_object.get_size() <= maximum_file_size:
-      data = file_object.read()
+    file_size = file_object.get_size()
+    data = file_object.read(maximum_file_size)
+    while data:
       for analyzer in analyzers:
         if mediator.abort:
           break
-        if len(data) <= analyzer.SIZE_LIMIT:
+        if analyzer.INCREMENTAL_ANALYZER or analyzer.SIZE_LIMIT < file_size:
           analyzer.Analyze(data)
-    else:
-      data = file_object.read(maximum_file_size)
-      while data:
-        for analyzer in analyzers:
-          if mediator.abort:
-            break
-          if analyzer.SUPPORTS_INCREMENTAL_UPDATE:
-            analyzer.Update(data)
-        if mediator.abort:
-          break
         data = file_object.read(maximum_file_size)
 
     for analyzer in analyzers:

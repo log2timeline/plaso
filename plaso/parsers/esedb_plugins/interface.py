@@ -230,7 +230,9 @@ class EseDbPlugin(plugins.BasePlugin):
     if database is None:
       raise ValueError(u'Invalid database.')
 
-    for table_name, callback_method in self._tables.iteritems():
+    for table_name, callback_method in iter(self._tables.items()):
+      if parser_mediator.abort:
+        break
       if not callback_method:
         # Table names without a callback method are allowed to improve
         # the detection of a database based on its table names.

@@ -100,15 +100,15 @@ class TaggingPlugin(interface.AnalysisPlugin):
             u'autoselect a tagging file. As no definitions were specified, '
             u'no events will be tagged.')
         return
-    matched_tags = efilter_api.apply(self._tag_rules, vars=event_object)
-    if not matched_tags:
+    matched_labels = efilter_api.apply(self._tag_rules, vars=event_object)
+    if not matched_labels:
       return
-
     event_uuid = getattr(event_object, u'uuid')
     event_tag = events.EventTag(
         comment=u'Tag applied by tagging analysis plugin.',
         event_uuid=event_uuid)
-    event_tag.AddLabel(matched_tags)
+    for label in efilter_api.getvalues(matched_labels):
+      event_tag.AddLabel(label)
 
     logging.debug(u'Tagging event: {0!s}'.format(event_uuid))
     self._tags.append(event_tag)
@@ -139,9 +139,10 @@ class TaggingPlugin(interface.AnalysisPlugin):
     try:
       return efilter_query.Query(rule, syntax=syntax)
     except efilter_errors.EfilterParseError as exception:
+      stripped_rule = rule.rstrip()
       logging.warning(
           u'Invalid tag rule definition "{0:s}". '
-          u'Parsing error was: {1:s}'.format(rule, exception.message))
+          u'Parsing error was: {1:s}'.format(stripped_rule, exception.message))
 
   def _ParseDefinitions(self, tag_file_path):
     """Parses the tag file and yields tuples of label name, list of rule ASTs.
@@ -180,11 +181,11 @@ class TaggingPlugin(interface.AnalysisPlugin):
     """Parses tag definitions from the source.
 
     Args:
-      tag_file_path: string containing the path to the tag file.
+      tag_file_path (str): path to the tag file.
 
     Returns:
-      An EFILTER AST containing the tagging rules(instance of
-      efilter.ast.Expression).
+      efilter.ast.Expression: efilter abstract syntax tree (AST), containing the
+          tagging rules.
     """
     tags = []
     for label_name, rules in self._ParseDefinitions(tag_file_path):

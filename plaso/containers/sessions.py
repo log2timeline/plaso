@@ -7,6 +7,7 @@ import uuid
 
 import plaso
 from plaso.containers import interface
+from plaso.containers import manager
 
 
 class Session(interface.AttributeContainer):
@@ -27,6 +28,7 @@ class Session(interface.AttributeContainer):
     parsers_counter (collections.Counter): number of events per parser or
         parser plugin.
     preferred_encoding (str): preferred encoding.
+    preferred_year (int): preferred year.
     product_name (str): name of the product that created the session
         e.g. 'log2timeline'.
     product_version (str): version of the product that created the session.
@@ -39,16 +41,17 @@ class Session(interface.AttributeContainer):
     """Initializes a session attribute container."""
     super(Session, self).__init__()
     self.analysis_reports_counter = collections.Counter()
-    self.command_line_arguments = u''
+    self.command_line_arguments = None
     self.completion_time = None
     self.debug_mode = False
     self.event_labels_counter = collections.Counter()
-    self.filter_expression = u''
-    self.filter_file = u''
+    self.filter_expression = None
+    self.filter_file = None
     self.identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
-    self.parser_filter_expression = u''
+    self.parser_filter_expression = None
     self.parsers_counter = collections.Counter()
     self.preferred_encoding = u'utf-8'
+    self.preferred_year = None
     self.product_name = u'plaso'
     self.product_version = plaso.GetVersion()
     self.start_time = int(time.time() * 1000000)
@@ -174,6 +177,7 @@ class SessionStart(interface.AttributeContainer):
     identifier (str): unique identifier of the session.
     parser_filter_expression (str): parser filter expression.
     preferred_encoding (str): preferred encoding.
+    preferred_year (int): preferred year.
     product_name (str): name of the product that created the session
         e.g. 'log2timeline'.
     product_version (str): version of the product that created the session.
@@ -191,13 +195,18 @@ class SessionStart(interface.AttributeContainer):
           session completion information.
     """
     super(SessionStart, self).__init__()
-    self.command_line_arguments = u''
+    self.command_line_arguments = None
     self.debug_mode = False
-    self.filter_expression = u''
-    self.filter_file = u''
+    self.filter_expression = None
+    self.filter_file = None
     self.identifier = identifier
-    self.parser_filter_expression = u''
-    self.preferred_encoding = u'utf-8'
+    self.parser_filter_expression = None
+    self.preferred_encoding = None
+    self.preferred_year = None
     self.product_name = None
     self.product_version = None
     self.timestamp = None
+
+
+manager.AttributeContainersManager.RegisterAttributeContainers([
+    Session, SessionCompletion, SessionStart])

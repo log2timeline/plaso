@@ -49,6 +49,7 @@ class SingleProcessEngine(engine.BaseEngine):
         profiling_directory=profiling_directory,
         profiling_sample_rate=profiling_sample_rate,
         profiling_type=profiling_type)
+    self._current_display_name = u''
     self._last_status_update_timestamp = 0.0
     self._memory_profiler = None
     self._name = u'Main'
@@ -67,6 +68,9 @@ class SingleProcessEngine(engine.BaseEngine):
       parser_mediator (ParserMediator): parser mediator.
       path_spec (dfvfs.PathSpec): path specification.
     """
+    self._current_display_name = parser_mediator.GetDisplayNameFromPathSpec(
+        path_spec)
+
     try:
       extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
 
@@ -76,7 +80,7 @@ class SingleProcessEngine(engine.BaseEngine):
     except IOError as exception:
       logging.warning((
           u'Unable to process path specification: {0:s} with error: '
-          u'{1:s}').format(extraction_worker.current_display_name, exception))
+          u'{1:s}').format(self._current_display_name, exception))
 
     # We cannot recover from a CacheFullError and abort processing when
     # it is raised.
@@ -85,15 +89,14 @@ class SingleProcessEngine(engine.BaseEngine):
       self._abort = True
       logging.error((
           u'ABORT: detected cache full error while processing '
-          u'path spec: {0:s}').format(
-              extraction_worker.current_display_name))
+          u'path spec: {0:s}').format(self._current_display_name))
 
     # All exceptions need to be caught here to prevent the worker
     # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
       logging.warning(
           u'Unhandled exception while processing path spec: {0:s}.'.format(
-              extraction_worker.current_display_name))
+              self._current_display_name))
       logging.exception(exception)
 
       if self._enable_debug_output:
@@ -114,6 +117,9 @@ class SingleProcessEngine(engine.BaseEngine):
       filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
           used in path specification extraction.
     """
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'process_sources')
+
     number_of_consumed_sources = 0
 
     self._UpdateStatus(
@@ -167,8 +173,7 @@ class SingleProcessEngine(engine.BaseEngine):
         event_source = storage_writer.GetNextEventSource()
 
         self._UpdateStatus(
-            extraction_worker.processing_status,
-            extraction_worker.current_display_name,
+            extraction_worker.processing_status, self._current_display_name,
             number_of_consumed_sources, storage_writer)
 
     if self._abort:
@@ -180,6 +185,9 @@ class SingleProcessEngine(engine.BaseEngine):
     # on exit.
     self._UpdateStatus(
         status, u'', number_of_consumed_sources, storage_writer, force=True)
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'process_sources')
 
   def _StartProfiling(self):
     """Starts profiling."""
@@ -270,8 +278,9 @@ class SingleProcessEngine(engine.BaseEngine):
       self, source_path_specs, preprocess_object, storage_writer,
       resolver_context, filter_find_specs=None, filter_object=None,
       hasher_names_string=None, mount_path=None, parser_filter_expression=None,
-      process_archive_files=False, status_update_callback=None,
-      temporary_directory=None, text_prepend=None, yara_rules_string=None):
+      preferred_year=None, process_archive_files=False,
+      status_update_callback=None, temporary_directory=None,
+      text_prepend=None, yara_rules_string=None):
     """Processes the sources.
 
     Args:
@@ -287,6 +296,7 @@ class SingleProcessEngine(engine.BaseEngine):
           of hashers to use during processing.
       mount_path (Optional[str]): mount path.
       parser_filter_expression (Optional[str]): parser filter expression.
+      preferred_year (Optional[int]): preferred year.
       process_archive_files (Optional[bool]): True if archive files should be
           scanned for file entries.
       status_update_callback (Optional[function]): callback function for status
@@ -300,7 +310,7 @@ class SingleProcessEngine(engine.BaseEngine):
       ProcessingStatus: processing status.
     """
     parser_mediator = parsers_mediator.ParserMediator(
-        storage_writer, self.knowledge_base,
+        storage_writer, self.knowledge_base, preferred_year=preferred_year,
         temporary_directory=temporary_directory)
 
     if filter_object:

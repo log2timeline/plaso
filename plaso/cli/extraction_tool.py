@@ -45,12 +45,13 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     self._buffer_size = 0
     self._enable_profiling = False
     self._filter_object = None
+    self._force_preprocessing = False
     self._hasher_names_string = None
     self._mount_path = None
-    self._old_preprocess = False
     self._operating_system = None
     self._output_module = None
     self._parser_filter_expression = None
+    self._preferred_year = None
     self._process_archive_files = False
     self._profiling_directory = None
     self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
@@ -60,6 +61,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
     self._temporary_directory = None
     self._text_prepend = None
+    self._use_old_preprocess = False
     self._yara_rules_string = None
 
     self.list_hashers = False
@@ -108,7 +110,17 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
         self._parser_filter_expression.lower() == u'list'):
       self.list_parsers_and_plugins = True
 
-    # TODO: preprocess.
+    self._force_preprocessing = getattr(options, u'preprocess', False)
+
+    self._preferred_year = getattr(options, u'preferred_year', None)
+    if self._preferred_year:
+      try:
+        self._preferred_year = int(self._preferred_year, 10)
+      except ValueError:
+        raise errors.BadConfigOption(
+            u'Invalid preferred year: {0:s}.'.format(self._preferred_year))
+
+    self._process_archive_files = getattr(options, u'process_archives', False)
 
     self._temporary_directory = getattr(options, u'temporary_directory', None)
     if (self._temporary_directory and
@@ -117,9 +129,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
           u'No such temporary directory: {0:s}'.format(
               self._temporary_directory))
 
-    self._old_preprocess = getattr(options, u'old_preprocess', False)
-
-    self._process_archive_files = getattr(options, u'process_archives', False)
+    self._use_old_preprocess = getattr(options, u'use_old_preprocess', False)
 
   def _ParsePerformanceOptions(self, options):
     """Parses the performance options.
@@ -237,6 +247,13 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
             u'"--info" to list the available parsers.'))
 
     argument_group.add_argument(
+        u'--preferred_year', u'--preferred-year', dest=u'preferred_year',
+        action=u'store', default=None, metavar=u'YEAR', help=(
+            u'When a format\'s timestamp does not include a year, e.g. '
+            u'syslog, use this as the initial year instead of attempting '
+            u'auto-detection.'))
+
+    argument_group.add_argument(
         u'-p', u'--preprocess', dest=u'preprocess', action=u'store_true',
         default=False, help=(
             u'Turn on preprocessing. Preprocessing is turned on by default '
@@ -258,7 +275,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
 
     argument_group.add_argument(
         u'--use_old_preprocess', u'--use-old-preprocess',
-        dest=u'old_preprocess', action=u'store_true', default=False, help=(
+        dest='use_old_preprocess', action='store_true', default=False, help=(
             u'Only used in conjunction when appending to a previous storage '
             u'file. When this option is used then a new preprocessing object '
             u'is not calculated and instead the last one that got added to '
@@ -273,8 +290,8 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     """
     argument_group.add_argument(
         u'--buffer_size', u'--buffer-size', u'--bs', dest=u'buffer_size',
-        action=u'store', default=0,
-        help=u'The buffer size for the output (defaults to 196MiB).')
+        action=u'store', default=0, help=(
+            u'The buffer size for the output (defaults to 196MiB).'))
 
     argument_group.add_argument(
         u'--queue_size', u'--queue-size', dest=u'queue_size', action=u'store',

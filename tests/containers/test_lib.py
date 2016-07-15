@@ -7,13 +7,18 @@ import unittest
 from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
+from plaso.containers import interface
 from plaso.containers import text_events
 from plaso.containers import windows_events
 from plaso.lib import timelib
 
 
-def GetEventObjects():
-  """Returns a list of test event objects."""
+def CreateTestEventObjects():
+  """Creates event objects for testing.
+
+  Returns:
+    list[EventObject]: events.
+  """
   test_events = []
   hostname = u'MYHOSTNAME'
   data_type = 'test:event'
@@ -100,12 +105,17 @@ def GetEventObjects():
   return test_events
 
 
+class TestAttributeContainer(interface.AttributeContainer):
+  """Class to define a test attribute container."""
+  CONTAINER_TYPE = u'test_attribute_container'
+
+
 class TestEvent(events.EventObject):
-  """A test event object."""
+  """Class to define a test event."""
   DATA_TYPE = 'test:event'
 
   def __init__(self, timestamp, attributes):
-    """Initializes the test event object."""
+    """Initializes an event object."""
     super(TestEvent, self).__init__()
     self.timestamp = timestamp
     self.timestamp_desc = u'Some time in the future'

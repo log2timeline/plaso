@@ -5,6 +5,7 @@ import re
 import uuid
 
 from plaso.containers import interface
+from plaso.containers import manager
 from plaso.lib import py2to3
 # TODO: deprecate usage of utils.GetUnicodeString()
 from plaso.lib import utils
@@ -291,12 +292,15 @@ class EventTag(interface.AttributeContainer):
     Raises:
       ValueError: if a label is malformed.
     """
+    if not isinstance(label, py2to3.STRING_TYPES):
+      raise TypeError(u'label is not a string type. Is {0:s}'.format(
+          type(label)))
     if not self._VALID_LABEL_REGEX.match(label):
       raise ValueError((
-          u'Unusupported label: "{0:s}". A label must only consist of '
+          u'Unsupported label: "{0:s}". A label must only consist of '
           u'alphanumeric characters or underscores.').format(label))
 
-    if not label in self.labels:
+    if label not in self.labels:
       self.labels.append(label)
 
   def AddLabels(self, labels):
@@ -311,11 +315,11 @@ class EventTag(interface.AttributeContainer):
     for label in labels:
       if not self._VALID_LABEL_REGEX.match(label):
         raise ValueError((
-            u'Unusupported label: "{0:s}". A label must only consist of '
+            u'Unsupported label: "{0:s}". A label must only consist of '
             u'alphanumeric characters or underscores.').format(label))
 
     for label in labels:
-      if not label in self.labels:
+      if label not in self.labels:
         self.labels.append(label)
 
   def CopyToDict(self):
@@ -379,3 +383,7 @@ class EventTag(interface.AttributeContainer):
       return True
 
     return False
+
+
+manager.AttributeContainersManager.RegisterAttributeContainers([
+    EventObject, EventTag])

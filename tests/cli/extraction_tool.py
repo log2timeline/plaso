@@ -19,6 +19,8 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       u'                               [--yara_rules_path PATH]',
       u'                               [--parsers PARSER_LIST] [-p]',
       u'                               [--process_archives]',
+      u'                               [--preferred_year YEAR] [-p]',
+      u'                               [--process_archives]',
       u'                               [--temporary_directory DIRECTORY]',
       u'                               [--use_old_preprocess]',
       u'',
@@ -65,6 +67,12 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       (u'                        case insensitive. Use "--parsers list" or '
        u'"--info" to'),
       u'                        list the available parsers.',
+      u'  --preferred_year YEAR, --preferred-year YEAR',
+      (u'                        When a format\'s timestamp does not include '
+       u'a year,'),
+      (u'                        e.g. syslog, use this as the initial year '
+       u'instead of'),
+      u'                        attempting auto-detection.',
       (u'  -p, --preprocess      Turn on preprocessing. Preprocessing is '
        u'turned on by'),
       (u'                        default when parsing image files, however if '

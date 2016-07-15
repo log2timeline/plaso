@@ -15,7 +15,7 @@ class YaraAnalyzer(interface.BaseAnalyzer):
 
   NAME = u'yara'
 
-  SUPPORTS_INCREMENTAL_UPDATE = False
+  INCREMENTAL_ANALYZER = False
 
   DESCRIPTION = u'Matches Yara rules over input data.'
 
