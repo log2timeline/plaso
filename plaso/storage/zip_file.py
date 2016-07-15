@@ -3203,6 +3203,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     event_source = self._storage_file.GetEventSourceByIndex(
         self._first_event_source_index)
+
     if event_source:
       self._event_source_index = self._first_event_source_index + 1
     return event_source

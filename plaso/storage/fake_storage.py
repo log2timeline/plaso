@@ -130,6 +130,25 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._is_open = False
 
+  def GetFirstEventSource(self):
+    """Retrieves the first event source.
+
+    Returns:
+      EventSource: event source.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._is_open:
+      raise IOError(u'Unable to read from closed storage writer.')
+
+    if self._event_source_index >= len(self.event_sources):
+      return
+
+    event_source = self.event_sources[self._first_event_source_index]
+    self._event_source_index = self._first_event_source_index + 1
+    return event_source
+
   def GetNextEventSource(self):
     """Retrieves the next event source.
 
@@ -160,7 +179,8 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._is_open = True
 
-    self._event_source_index = len(self.event_sources)
+    self._first_event_source_index = len(self.event_sources)
+    self._event_source_index = self._first_event_source_index
 
   # TODO: remove during phased processing refactor.
   def WritePreprocessObject(self, unused_preprocess_object):
