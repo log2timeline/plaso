@@ -35,4 +35,4 @@ class SyslogCommentFormatter(interface.ConditionalEventFormatter):
 
 
 manager.FormattersManager.RegisterFormatters(
-    (SyslogLineFormatter, SyslogCommentFormatter))
+    [SyslogLineFormatter, SyslogCommentFormatter])
