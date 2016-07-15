@@ -236,8 +236,7 @@ class EventExtractor(object):
               u'Parser object missing for parser: {0:s}'.format(parser_name))
 
         if parser.FILTERS:
-          if not self._CheckParserCanProcessFileEntry(
-              parser, file_entry):
+          if not self._CheckParserCanProcessFileEntry(parser, file_entry):
             continue
 
         display_name = parser_mediator.GetDisplayName(file_entry)
