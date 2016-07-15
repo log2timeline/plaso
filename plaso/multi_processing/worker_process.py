@@ -271,10 +271,10 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
     storage_writer = self._storage_writer.CreateTaskStorage(task)
 
+    storage_writer.Open()
+
     if self._serializers_profiler:
       storage_writer.SetSerializersProfiler(self._serializers_profiler)
-
-    storage_writer.Open()
 
     try:
       self._parser_mediator.SetStorageWriter(storage_writer)
@@ -293,12 +293,12 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       storage_writer.WriteTaskCompletion()
 
     finally:
+      if self._serializers_profiler:
+        storage_writer.SetSerializersProfiler(None)
+
       self._parser_mediator.SetStorageWriter(None)
 
       storage_writer.Close()
-
-      if self._serializers_profiler:
-        storage_writer.SetSerializersProfiler(None)
 
     self._storage_writer.PrepareMergeTaskStorage(task.identifier)
 

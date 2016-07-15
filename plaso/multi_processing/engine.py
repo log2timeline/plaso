@@ -954,10 +954,10 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._StartProfiling()
 
+    storage_writer.Open()
+
     if self._serializers_profiler:
       storage_writer.SetSerializersProfiler(self._serializers_profiler)
-
-    storage_writer.Open()
 
     # Start the status update thread after open of the storage writer
     # so we don't have to clean up the thread if the open fails.

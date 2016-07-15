@@ -60,7 +60,7 @@ class Session(interface.AttributeContainer):
     """Copies attributes from a session completion.
 
     Args:
-      sesssion_completion (SessionCompletion): session completion attribute
+      session_completion (SessionCompletion): session completion attribute
           container.
 
     Raises:
@@ -86,7 +86,7 @@ class Session(interface.AttributeContainer):
     """Copies attributes from a session start.
 
     Args:
-      sesssion_start (SessionStart): session start attribute container.
+      session_start (SessionStart): session start attribute container.
     """
     self.command_line_arguments = session_start.command_line_arguments
     self.debug_mode = session_start.debug_mode

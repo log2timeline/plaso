@@ -2446,7 +2446,7 @@ class ZIPStorageFile(interface.BaseStorage):
     """Adds event tags.
 
     Args:
-      event_tag (list[EventTag]): event tags.
+      event_tags (list[EventTag]): event tags.
 
     Raises:
       IOError: when the storage file is closed or read-only or
@@ -3467,7 +3467,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       self._storage_file.AddEventTags(self._event_tags)
       # TODO: move the counters out of preprocessing object.
       # Kept for backwards compatibility for now.
-      preprocess_object.counter = self._tags_counter
+      preprocess_object.counter = self._session.event_labels_counter[u'total']
 
     # TODO: refactor this currently create a preprocessing object
     # for every sync in single processing.
