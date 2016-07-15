@@ -70,10 +70,6 @@ class EventExtractionWorker(object):
   _FIREFOX_CACHE2_DATA_FILE_RE = re.compile(r'^[0-9a-fA-F]{40}$')
   _FSEVENTSD_FILE_RE = re.compile(r'^[0-9a-fA-F]{16}$')
 
-  _TYPES_WITH_DATA_STREAM = frozenset([
-      dfvfs_definitions.TYPE_INDICATOR_NTFS,
-      dfvfs_definitions.TYPE_INDICATOR_TSK])
-
   _TYPES_WITH_ROOT_METADATA = frozenset([
       dfvfs_definitions.TYPE_INDICATOR_GZIP])
 
@@ -582,7 +578,7 @@ class EventExtractionWorker(object):
 
     else:
       path_spec = copy.deepcopy(file_entry.path_spec)
-      if path_spec.type_indicator in self._TYPES_WITH_DATA_STREAM:
+      if data_stream_name:
         path_spec.data_stream = data_stream_name
 
       archive_types = []
