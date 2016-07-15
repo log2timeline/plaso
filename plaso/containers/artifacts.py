@@ -8,14 +8,14 @@ from plaso.containers import manager
 class EnvironmentVariableArtifact(interface.AttributeContainer):
   """Class to represent an environment variable artifact attribute container.
 
+  Also see:
+    https://en.wikipedia.org/wiki/Environment_variable
+
   Attributes:
     case_sensitive (bool): True if environment variable name is case sensitive.
     name (str): environment variable name e.g. 'SystemRoot' as in
                 '%SystemRoot%' or 'HOME' in '$HOME'.
     value (str): environment variable value e.g. 'C:\\Windows' or '/home/user'.
-
-  Also see:
-    https://en.wikipedia.org/wiki/Environment_variable
   """
   CONTAINER_TYPE = u'environment_variable_artifact'
 
@@ -37,14 +37,14 @@ class EnvironmentVariableArtifact(interface.AttributeContainer):
 class HostnameArtifact(interface.AttributeContainer):
   """Class to represent a hostname artifact attribute container.
 
-  Attributes:
-    name (str): name of the host according to the naming schema.
-    schema (str): naming schema e.g. DNS, NIS, SMB/NetBIOS.
-
   Also see:
     https://en.wikipedia.org/wiki/Hostname
     http://cybox.mitre.org/language/version2.1/xsddocs/objects/
     Hostname_Object.html
+
+  Attributes:
+    name (str): name of the host according to the naming schema.
+    schema (str): naming schema e.g. DNS, NIS, SMB/NetBIOS.
   """
   CONTAINER_TYPE = u'hostname_artifact'
 
@@ -86,15 +86,15 @@ class SystemConfigurationArtifact(interface.AttributeContainer):
 class UserAccountArtifact(interface.AttributeContainer):
   """Class to represent an user account artifact attribute container.
 
+  Also see:
+    http://cybox.mitre.org/language/version2.1/xsddocs/objects/
+    User_Account_Object.html
+
   Attributes:
     full_name (str): name describing the user e.g. full name.
     identifier (str): user identifier.
     user_directory (str): path of the user (or home or profile) directory.
     username (str): name uniquely identifying the user.
-
-  Also see:
-    http://cybox.mitre.org/language/version2.1/xsddocs/objects/
-    User_Account_Object.html
   """
   CONTAINER_TYPE = u'user_account_artifact'
 
