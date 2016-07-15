@@ -29,7 +29,8 @@ class SyslogLineFormatterTest(test_lib.EventFormatterTestCase):
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
 
-  # TODO: add test for GetMessages.
+    # TODO: add test for GetMessages.
+
 
 class SyslogCommentFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the syslog comment formatter."""
@@ -48,7 +49,7 @@ class SyslogCommentFormatterTest(test_lib.EventFormatterTestCase):
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
 
-  # TODO: add test for GetMessages.
+    # TODO: add test for GetMessages.
 
 
 if __name__ == '__main__':

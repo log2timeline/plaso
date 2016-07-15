@@ -21,6 +21,7 @@ class SyslogLineFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = u'Log File'
   SOURCE_SHORT = u'LOG'
 
+
 class SyslogCommentFormatter(interface.ConditionalEventFormatter):
   """Formatter for a syslog comment"""
   DATA_TYPE = u'syslog:comment'
@@ -31,6 +32,7 @@ class SyslogCommentFormatter(interface.ConditionalEventFormatter):
 
   SOURCE_LONG = u'Log File'
   SOURCE_SHORT = u'LOG'
+
 
 manager.FormattersManager.RegisterFormatters(
     (SyslogLineFormatter, SyslogCommentFormatter))
