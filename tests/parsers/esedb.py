@@ -38,7 +38,7 @@ class ESEDBParserTest(test_lib.ParserTestCase):
     error = storage_writer.errors[0]
     self.assertIsNotNone(error)
 
-    self.assertTrue(error.message.startwith(
+    self.assertTrue(error.message.startswith(
         u'unable to open file with error: pyesedb_file_open_file_object: '))
 
 
