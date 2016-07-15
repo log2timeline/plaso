@@ -10,7 +10,7 @@ from plaso.lib import errors
 from plaso.parsers import plugins
 
 
-class EseDbPlugin(plugins.BasePlugin):
+class ESEDBPlugin(plugins.BasePlugin):
   """The ESE database plugin interface."""
 
   NAME = u'esedb'
@@ -47,7 +47,7 @@ class EseDbPlugin(plugins.BasePlugin):
 
   def __init__(self):
     """Initializes the ESE database plugin."""
-    super(EseDbPlugin, self).__init__()
+    super(ESEDBPlugin, self).__init__()
     self._required_tables = frozenset(self.REQUIRED_TABLES.keys())
     self._tables = {}
     self._tables.update(self.REQUIRED_TABLES)
@@ -222,7 +222,7 @@ class EseDbPlugin(plugins.BasePlugin):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       database: Optional ESE database object (instance of pyesedb.file).
-      cache: Optional cache object (instance of EseDbCache).
+      cache: Optional cache object (instance of ESEDBCache).
 
     Raises:
       ValueError: If the database attribute is not valid.
@@ -264,7 +264,7 @@ class EseDbPlugin(plugins.BasePlugin):
     Args:
       parser_mediator: A parser mediator object (instance of ParserMediator).
       database: Optional ESE database object (instance of pyesedb.file).
-      cache: Optional cache object (instance of EseDbCache).
+      cache: Optional cache object (instance of ESEDBCache).
 
     Raises:
       errors.WrongPlugin: If the database does not contain all the tables
@@ -280,7 +280,7 @@ class EseDbPlugin(plugins.BasePlugin):
           u'[{0:s}] required tables not found.'.format(self.NAME))
 
     # This will raise if unhandled keyword arguments are passed.
-    super(EseDbPlugin, self).Process(parser_mediator)
+    super(ESEDBPlugin, self).Process(parser_mediator)
 
     self.GetEntries(
         parser_mediator, database=database, cache=cache, **kwargs)

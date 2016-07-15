@@ -49,6 +49,17 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
 
     return parser_mediator
 
+  def _CreateStorageWriter(self):
+    """Creates a storage writer object.
+
+    Returns:
+      FakeStorageWriter: storage writer.
+    """
+    session = sessions.Session()
+    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer.Open()
+    return storage_writer
+
   def _GetShortMessage(self, message_string):
     """Shortens a message string to a maximum of 80 character width.
 
@@ -107,10 +118,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     Returns:
       FakeStorageWriter: storage writer.
     """
-    session = sessions.Session()
-    storage_writer = fake_storage.FakeStorageWriter(session)
-    storage_writer.Open()
-
+    storage_writer = self._CreateStorageWriter()
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     parser_mediator = self._CreateParserMediator(
         storage_writer, file_entry=file_entry,

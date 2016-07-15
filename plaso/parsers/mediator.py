@@ -527,7 +527,7 @@ class ParserMediator(object):
     if not self._storage_writer:
       raise RuntimeError(u'Storage writer not set.')
 
-    if not path_spec:
+    if not path_spec and self._file_entry:
       path_spec = self._file_entry.path_spec
 
     parser_chain = self.GetParserChain()
