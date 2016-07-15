@@ -281,21 +281,6 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
     # preprocessor_object.zone does not contain a string.
     self.assertEqual(preprocessor_object.zone, pytz.UTC)
 
-  def testSetAnalysisPluginProcessInformation(self):
-    """Test the _SetAnalysisPluginProcessInformation method."""
-    test_front_end = psort.PsortFrontend()
-    analysis_plugins = [test_lib.TestAnalysisPlugin(None)]
-
-    preprocess_object = preprocess.PreprocessObject()
-    test_front_end._SetAnalysisPluginProcessInformation(
-        analysis_plugins, preprocess_object)
-    self.assertIsNotNone(preprocess_object)
-
-    for analysis_plugin in analysis_plugins:
-      self.assertIn(analysis_plugin.NAME, plugin_names)
-    self.assertAlmostEqual(timelib.Timestamp.GetNow(), time_of_run, 2000000)
-    self.assertIsNotNone(method)
-
   # TODO: add bogus data location test.
 
 

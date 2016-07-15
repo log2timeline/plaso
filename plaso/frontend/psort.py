@@ -20,7 +20,6 @@ from plaso.frontend import analysis_frontend
 from plaso.lib import bufferlib
 from plaso.lib import errors
 from plaso.lib import py2to3
-from plaso.lib import timelib
 from plaso.multi_processing import multi_process_queue
 from plaso.output import event_buffer as output_event_buffer
 from plaso.output import manager as output_manager
