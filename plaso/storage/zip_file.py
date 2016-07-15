@@ -2574,8 +2574,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
     Raises:
       IOError: if a stream is missing.
     """
-    stream_number = 0
-    for stream_number in range(1, self._event_source_stream_number):
+    stream_number = 1
+    while stream_number < self._event_source_stream_number:
       if stream_number <= len(self._event_sources_in_stream):
         number_of_event_sources = self._event_sources_in_stream[
             stream_number - 1]
@@ -2589,8 +2589,9 @@ class ZIPStorageFile(interface.BaseFileStorage):
         break
 
       index -= number_of_event_sources
+      stream_number += 1
 
-    if stream_number > 0 and stream_number < self._event_source_stream_number:
+    if stream_number < self._event_source_stream_number:
       stream_name = u'event_source_data.{0:06}'.format(stream_number)
       if not self._HasStream(stream_name):
         raise IOError(u'No such stream: {0:s}'.format(stream_name))
