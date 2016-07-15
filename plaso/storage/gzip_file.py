@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The gzip-based storage.
+"""gzip-based storage.
 
 Only supports task storage at the moment.
 """

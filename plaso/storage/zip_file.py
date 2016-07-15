@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The ZIP-based storage.
+"""ZIP-based storage.
 
 The ZIP-based storage can be described as a collection of storage files
 (named streams) bundled in a single ZIP archive file.
@@ -2442,7 +2442,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     Buffered attribute containers are written to file.
 
     Raises:
-      IOError: if the storage file is already close or
+      IOError: if the storage file is already closed or
                if the event source cannot be serialized.
     """
     if not self._is_open:
@@ -3219,7 +3219,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       return False
 
     try:
-      # In Windows the file could not be accessible while it is being moved.
+      # In Windows the file could be inaccessible while it is being moved.
       # storage_reader = ZIPStorageFileReader(storage_file_path)
       storage_reader = gzip_file.GZIPStorageFileReader(storage_file_path)
     except IOError:
