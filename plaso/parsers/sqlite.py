@@ -119,6 +119,7 @@ class SQLiteDatabase(object):
     self._temp_wal_file_path = u'{0:s}-wal'.format(self._temp_db_file_path)
     with open(self._temp_wal_file_path, u'wb') as wal_file:
       try:
+        file_object.seek(0, os.SEEK_SET)
         data = wal_file_object.read(self._READ_BUFFER_SIZE)
         while data:
           wal_file.write(data)
@@ -349,10 +350,6 @@ class SQLiteParser(interface.FileEntryParser):
         filename, temporary_directory=parser_mediator.temporary_directory)
     try:
       database.Open(file_object)
-
-      # Reset file_object offset to 0 so we can re-open the database with the
-      # WAL file.
-      file_object.seek(0, os.SEEK_SET)
 
       # Open second database with WAL file if available.
       database_wal, wal_file_entry = self._GetDatabaseWithWAL(
