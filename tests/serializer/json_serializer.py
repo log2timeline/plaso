@@ -446,7 +446,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     self.assertIsInstance(preprocess_object, preprocess.PreprocessObject)
 
     expected_preprocess_object_dict = {
-        u'collection_information': {},
+        u'time_zone_str': u'UTC'
         u'zone': u'UTC'
     }
 
