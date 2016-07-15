@@ -119,7 +119,7 @@ class SQLiteDatabase(object):
     self._temp_wal_file_path = u'{0:s}-wal'.format(self._temp_db_file_path)
     with open(self._temp_wal_file_path, u'wb') as wal_file:
       try:
-        file_object.seek(0, os.SEEK_SET)
+        wal_file_object.seek(0, os.SEEK_SET)
         data = wal_file_object.read(self._READ_BUFFER_SIZE)
         while data:
           wal_file.write(data)
