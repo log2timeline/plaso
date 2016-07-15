@@ -118,7 +118,7 @@ class MsieWebCachePartitionsEventObject(time_events.FiletimeEvent):
     self.table_identifier = record_values.get(u'TableId', 0)
 
 
-class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
+class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
   """Parses a MSIE WebCache ESE database file."""
 
   NAME = u'msie_webcache'
@@ -307,4 +307,4 @@ class MsieWebCacheEseDbPlugin(interface.EseDbPlugin):
         parser_mediator.ProduceEvent(event_object)
 
 
-esedb.EseDbParser.RegisterPlugin(MsieWebCacheEseDbPlugin)
+esedb.ESEDBParser.RegisterPlugin(MsieWebCacheESEDBPlugin)
