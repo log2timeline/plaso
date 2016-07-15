@@ -6,12 +6,12 @@ import os
 import unittest
 
 from plaso.containers import events
+from plaso.containers import preprocess
 from plaso.engine import knowledge_base
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 from plaso.frontend import psort
-from plaso.lib import event
 from plaso.lib import timelib
 from plaso.output import event_buffer as output_event_buffer
 from plaso.output import interface as output_interface
@@ -23,6 +23,8 @@ from plaso.storage import zip_file as storage_zip_file
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 from tests.frontend import test_lib
+
+import pytz  # pylint: disable=wrong-import-order
 
 
 class PsortTestEvent(events.EventObject):
@@ -275,16 +277,14 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
         storage_file_path, read_only=True)
     preprocessor_object = test_front_end._GetLastGoodPreprocess(storage_file)
     self.assertIsNotNone(preprocessor_object)
-    timezone = getattr(preprocessor_object, u'zone')
-    self.assertEqual(timezone.zone, u'UTC')
+    self.assertEqual(preprocessor_object.zone, pytz.UTC)
 
   def testSetAnalysisPluginProcessInformation(self):
     """Test the _SetAnalysisPluginProcessInformation method."""
     test_front_end = psort.PsortFrontend()
     analysis_plugins = [test_lib.TestAnalysisPlugin(None)]
 
-    preprocess_object = event.PreprocessObject()
-    preprocess_object.SetCollectionInformationValues({})
+    preprocess_object = preprocess.PreprocessObject()
     test_front_end._SetAnalysisPluginProcessInformation(
         analysis_plugins, preprocess_object)
     self.assertIsNotNone(preprocess_object)

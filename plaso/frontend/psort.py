@@ -167,11 +167,11 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       output_module (OutputModule): output module.
       storage_file (StorageFile): storage file.
       analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
-                                               be run.
+          be run.
       event_queue_producers (list[ItemQueueProducer]): event queue producers.
       command_line_arguments (Optional[str]): command line arguments.
       deduplicate_events (Optional[bool]): True if events should be
-                                           deduplicated.
+          deduplicated.
       preferred_encoding (Optional[str]): preferred encoding.
       time_slice (Optional[TimeSlice]): slice of time to output.
       use_time_slicer (Optional[bool]): True if the 'time slicer' should be
@@ -241,17 +241,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       session_completion = session.CreateSessionCompletion()
       storage_file.WriteSessionCompletion(session_completion)
 
-    for information in storage_file.GetStorageInformation():
-      if getattr(information, u'counter', None):
-        total = information.counter.get(u'total')
-        if total:
-          counter[u'Stored Events'] += total
-
-    if self._filter_object and not counter[u'Limited By']:
-      counter[u'Filter By Date'] = (
-          counter[u'Stored Events'] - counter[u'Events Included'] -
-          counter[u'Events Filtered Out'])
-
     return counter
 
   def _SetAnalysisPluginProcessInformation(
@@ -273,7 +262,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     pre_obj.collection_information[u'method'] = u'Running Analysis Plugins'
     pre_obj.collection_information[u'plugins'] = analysis_plugin_names
     pre_obj.collection_information[u'time_of_run'] = time_of_run
-    pre_obj.counter = collections.Counter()
 
   # TODO: fix docstring, function does not create the pre_obj the call to
   # storage does. Likely refactor this functionality into the storage API.

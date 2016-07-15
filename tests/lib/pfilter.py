@@ -11,12 +11,6 @@ from plaso.lib import errors
 from plaso.lib import pfilter
 from plaso.lib import timelib
 
-import pytz  # pylint: disable=wrong-import-order
-
-
-class Empty(object):
-  """An empty object."""
-
 
 class PfilterFakeFormatter(formatters_interface.EventFormatter):
   """A formatter for this fake class."""
@@ -42,11 +36,6 @@ class PFilterTest(unittest.TestCase):
         pfilter.PlasoAttributeFilterImplementation)
 
     self.assertEqual(result, matcher.Matches(event_object))
-
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._pre = Empty()
-    self._pre.zone = pytz.UTC
 
   def testPlasoEvents(self):
     """Test plaso EventObjects, both Python and Protobuf version.
