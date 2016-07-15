@@ -28,18 +28,6 @@ class TestAnalyzer(interface.BaseAnalyzer):
       result.attribute_value = u'is_vegetable'
       self._results.append(result)
 
-  def Update(self, unused_data):
-    """Updates the current state of the analyzer with a new block of data.
-
-    Repeated calls to update are equivalent to one single call with the
-    concatenation of the arguments.
-
-    Args:
-      data(str): a string of data with which to update the context of the
-          analyzer.
-    """
-    self._AddResult()
-
   def Analyze(self, data):
     """Processes a block of data, updating the state of the analyzer
 

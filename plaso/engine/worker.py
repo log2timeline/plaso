@@ -231,7 +231,7 @@ class EventExtractionWorker(object):
 
     Args:
       parser_mediator (ParserMediator): encapsulates interactions between
-          parsers and other components (storage, abort signalling, etc.).
+          parsers and other components, such as storage and abort signals.
       file_entry (dfvfs.FileEntry): file entry relating to the data being
           analyzed.
       data_stream_name (str): name of the data stream.
@@ -242,13 +242,11 @@ class EventExtractionWorker(object):
     if not self._analyzers:
       return
 
-    logging.debug(u'[AnalyzeDataStream] analyzing file: {0:s}'.format(
-        self._current_display_name))
-
-    self.processing_status = definitions.PROCESSING_STATUS_HASHING
+    self.processing_status = definitions.PROCESSING_STATUS_ANALYZING
 
     display_name = parser_mediator.GetDisplayName()
-    logging.debug(u'[HashDataStream] hashing file: {0:s}'.format(display_name))
+    logging.debug(u'[AnalyzeDataStream] hashing file: {0:s}'.format(
+        display_name))
 
     if self._processing_profiler:
       self._processing_profiler.StartTiming(u'analyzing')
@@ -280,15 +278,12 @@ class EventExtractionWorker(object):
       parser_mediator.AddEventAttribute(
           result.attribute_name, result.attribute_value)
 
-    logging.debug(
-        u'[AnalyzeDataStream] completed analyzing file: {0:s}'.format(
-            display_name))
-
     if self._processing_profiler:
       self._processing_profiler.StopTiming(u'analyzing')
 
     logging.debug(
-        u'[HashDataStream] completed hashing file: {0:s}'.format(display_name))
+        u'[AnalyzeDataStream] completed hashing file: {0:s}'.format(
+            display_name))
 
     self.processing_status = definitions.PROCESSING_STATUS_RUNNING
 

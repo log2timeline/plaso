@@ -90,7 +90,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
         # We try to parse the rules here, to check that the definitions are
         # valid. We then pass the string definitions along to the workers, so
         # that they don't need read access to the rules file.
-        yara.compile(yara_rules_string)
+        yara.compile(source=yara_rules_string)
         self._yara_rules_string = yara_rules_string
       except IOError as exception:
         raise errors.BadConfigObject(
@@ -226,7 +226,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
             u'hashers.'))
 
     argument_group.add_argument(
-        u'--yara_rules_path', u'--yara-rules-path', dest=u'yara_rules_path',
+        u'--yara_rules', u'--yara-rules', dest=u'yara_rules_path',
         type=str, metavar=u'PATH', action=u'store', help=(
             u'Path to a file containing Yara rules definitions.'))
 

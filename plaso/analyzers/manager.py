@@ -15,7 +15,7 @@ class AnalyzersManager(object):
 
     Args:
       mediator (ParserMediator): encapsulates interactions between
-          parsers and other components (storage, abort signalling, etc.).
+          parsers and other components, such as storage and abort signals.
       file_object (dfvfs.FileIO): file-like object to process.
       analyzers (list[analyzer]): analyzers to use on the file object.
 
@@ -36,7 +36,7 @@ class AnalyzersManager(object):
       for analyzer in analyzers:
         if mediator.abort:
           break
-        if analyzer.INCREMENTAL_ANALYZER or analyzer.SIZE_LIMIT < file_size:
+        if analyzer.INCREMENTAL_ANALYZER or analyzer.SIZE_LIMIT > file_size:
           analyzer.Analyze(data)
         data = file_object.read(maximum_file_size)
 

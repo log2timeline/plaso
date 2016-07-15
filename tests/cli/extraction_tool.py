@@ -15,12 +15,11 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
   """Tests for the extraction tool object."""
 
   _EXPECTED_OUTPUT_EXTRACTION_OPTIONS = u'\n'.join([
-      u'usage: extraction_tool_test.py [--hashers HASHER_LIST]',
-      u'                               [--yara_rules_path PATH]',
-      u'                               [--parsers PARSER_LIST] [-p]',
-      u'                               [--process_archives]',
-      u'                               [--preferred_year YEAR] [-p]',
-      u'                               [--process_archives]',
+      (u'usage: extraction_tool_test.py [--hashers HASHER_LIST]'
+       u' [--yara_rules PATH]'),
+      (u'                               [--parsers PARSER_LIST]'
+       u' [--preferred_year YEAR]'),
+      u'                               [-p] [--process_archives]',
       u'                               [--temporary_directory DIRECTORY]',
       u'                               [--use_old_preprocess]',
       u'',
@@ -39,7 +38,7 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       (u'                        hashers. Use "--hashers list" or "--info" to '
        u'list the'),
       u'                        available hashers.',
-      u'  --yara_rules_path PATH, --yara-rules-path PATH',
+      u'  --yara_rules PATH, --yara-rules PATH',
       (u'                        Path to a file containing Yara rules '
        u'definitions.'),
       u'  --parsers PARSER_LIST',
