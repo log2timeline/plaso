@@ -12,13 +12,13 @@ from plaso.parsers.esedb_plugins import msie_webcache
 from tests.parsers.esedb_plugins import test_lib
 
 
-class MsieWebCacheEseDbPluginTest(test_lib.EseDbPluginTestCase):
+class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
   """Tests for the MSIE WebCache ESE database plugin."""
 
   def testProcess(self):
     """Tests the Process function."""
-    plugin_object = msie_webcache.MsieWebCacheEseDbPlugin()
-    storage_writer = self._ParseEseDbFileWithPlugin(
+    plugin_object = msie_webcache.MsieWebCacheESEDBPlugin()
+    storage_writer = self._ParseESEDBFileWithPlugin(
         [u'WebCacheV01.dat'], plugin_object)
 
     self.assertEqual(len(storage_writer.events), 1354)
