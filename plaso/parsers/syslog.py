@@ -165,11 +165,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
         seconds=structure.second, timezone=parser_mediator.timezone)
 
     if key == u'syslog_comment':
-      comment_attributes = {
-          u'hostname': u'',
-          u'reporter': u'',
-          u'pid': u'',
-          u'body': structure.body}
+      comment_attributes = {u'body': structure.body}
       event = SyslogCommentEvent(timestamp, 0, comment_attributes)
       parser_mediator.ProduceEvent(event)
       return

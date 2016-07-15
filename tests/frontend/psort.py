@@ -194,7 +194,7 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
       lines.append(line)
       line = output_writer.GetLine()
 
-    self.assertEqual(len(lines), 18)
+    self.assertEqual(len(lines), 20)
 
     expected_line = (
         u'2016-07-10T19:10:47+00:00,'
@@ -204,7 +204,7 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
         u'OS:/tmp/test/test_data/syslog Type: file,'
         u'filestat,'
         u'OS:/tmp/test/test_data/syslog,-\n')
-    self.assertEquals(lines[13], expected_line)
+    self.assertEquals(lines[14], expected_line)
 
   def testOutput(self):
     """Testing if psort can output data."""
