@@ -961,14 +961,14 @@ class ZIPStorageFile(interface.BaseFileStorage):
   _LEGACY_FORMAT_VERSION = 20160431
 
   # The maximum buffer size of serialized data before triggering
-  # a flush to disk (196 MiB).
-  _MAXIMUM_BUFFER_SIZE = 196 * 1024 * 1024
+  # a flush to disk (64 MiB).
+  _MAXIMUM_BUFFER_SIZE = 64 * 1024 * 1024
 
   # The maximum number of cached tables.
   _MAXIMUM_NUMBER_OF_CACHED_TABLES = 5
 
-  # The maximum serialized report size (24 MiB).
-  _MAXIMUM_SERIALIZED_REPORT_SIZE = 24 * 1024 * 1024
+  # The maximum serialized report size (32 MiB).
+  _MAXIMUM_SERIALIZED_REPORT_SIZE = 32 * 1024 * 1024
 
   def __init__(
       self, maximum_buffer_size=0,
@@ -1002,6 +1002,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     self._event_source_offset_tables_lfu = []
     self._event_source_stream_number = 1
     self._event_source_streams = {}
+    self._event_sources_in_stream = []
     self._event_sources_list = _AttributeContainersList()
     self._event_tag_index = None
     self._event_tag_stream_number = 1
@@ -2573,20 +2574,32 @@ class ZIPStorageFile(interface.BaseFileStorage):
     Raises:
       IOError: if a stream is missing.
     """
+    stream_number = 0
     for stream_number in range(1, self._event_source_stream_number):
-      offset_table = self._GetSerializedEventSourceOffsetTable(stream_number)
-      if index >= offset_table.number_of_offsets:
-        index -= offset_table.number_of_offsets
-        continue
+      if stream_number <= len(self._event_sources_in_stream):
+        number_of_event_sources = self._event_sources_in_stream[
+            stream_number - 1]
 
+      else:
+        offset_table = self._GetSerializedEventSourceOffsetTable(stream_number)
+        number_of_event_sources = offset_table.number_of_offsets
+        self._event_sources_in_stream.append(number_of_event_sources)
+
+      if index < number_of_event_sources:
+        break
+
+      index -= number_of_event_sources
+
+    if stream_number > 0 and stream_number < self._event_source_stream_number:
       stream_name = u'event_source_data.{0:06}'.format(stream_number)
       if not self._HasStream(stream_name):
         raise IOError(u'No such stream: {0:s}'.format(stream_name))
 
+      offset_table = self._GetSerializedEventSourceOffsetTable(stream_number)
+      stream_offset = offset_table.GetOffset(index)
+
       data_stream = _SerializedDataStream(
           self._zipfile, self._zipfile_path, stream_name)
-
-      stream_offset = offset_table.GetOffset(index)
       data_stream.SeekEntryAtOffset(index, stream_offset)
 
       return self._ReadAttributeContainerFromStreamEntry(
@@ -3175,6 +3188,24 @@ class ZIPStorageFileWriter(interface.StorageWriter):
         self._session, storage_file_path, buffer_size=self._buffer_size,
         storage_type=definitions.STORAGE_TYPE_TASK, task=task)
 
+  def GetFirstEventSource(self):
+    """Retrieves the first event source.
+
+    Returns:
+      EventSource: event source.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to read from closed storage writer.')
+
+    event_source = self._storage_file.GetEventSourceByIndex(
+        self._first_event_source_index)
+    if event_source:
+      self._event_source_index = self._first_event_source_index + 1
+    return event_source
+
   def GetNextEventSource(self):
     """Retrieves the next event source.
 
@@ -3252,7 +3283,9 @@ class ZIPStorageFileWriter(interface.StorageWriter):
           self._output_file, buffer_size=self._buffer_size,
           storage_type=self._storage_type)
 
-    self._event_source_index = self._storage_file.GetNumberOfEventSources()
+    self._first_event_source_index = (
+        self._storage_file.GetNumberOfEventSources())
+    self._event_source_index = self._first_event_source_index
 
   def PrepareMergeTaskStorage(self, task_name):
     """Prepares a task storage for merging.

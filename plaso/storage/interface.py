@@ -380,6 +380,7 @@ class StorageWriter(object):
     """
     super(StorageWriter, self).__init__()
     self._event_source_index = 0
+    self._first_event_source_index = 0
     self._session = session
     self._storage_type = storage_type
     self._task = task
@@ -444,6 +445,14 @@ class StorageWriter(object):
       NotImplementedError: since there is no implementation.
     """
     raise NotImplementedError()
+
+  @abc.abstractmethod
+  def GetFirstEventSource(self):
+    """Retrieves the first event source.
+
+    Returns:
+      EventSource: event source.
+    """
 
   @abc.abstractmethod
   def GetNextEventSource(self):
