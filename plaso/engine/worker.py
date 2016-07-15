@@ -110,7 +110,8 @@ class EventExtractionWorker(object):
     """Determines if content extraction of a file entry can be skipped.
 
     Args:
-      file_entry (dfvfs.FileEntry): file entry to extract its content.
+      file_entry (dfvfs.FileEntry): file entry of which to determine content
+          extraction can be skipped.
 
     Returns:
       bool: True if content extraction can be skipped.
@@ -263,7 +264,7 @@ class EventExtractionWorker(object):
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
-      file_entry (dfvfs.FileEntry): file entry to extract its metadata.
+      file_entry (dfvfs.FileEntry): file entry to extract metadata from.
     """
     self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
 

@@ -134,7 +134,7 @@ class FakeStorageWriter(interface.StorageWriter):
     """Retrieves the first event source.
 
     Returns:
-      EventSource: event source.
+      EventSource: event source or None.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -153,7 +153,7 @@ class FakeStorageWriter(interface.StorageWriter):
     """Retrieves the next event source.
 
     Returns:
-      EventSource: event source.
+      EventSource: event source or None.
 
     Raises:
       IOError: when the storage writer is closed.

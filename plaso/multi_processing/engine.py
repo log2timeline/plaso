@@ -312,7 +312,7 @@ class MultiProcessEngine(engine.BaseEngine):
   def _MergeTaskStorage(self, storage_writer):
     """Merges a task storage with the session storage.
 
-    This function checks all task storage ready to merge and updates
+    This function checks all task storages that are ready to merge and updates
     the scheduled tasks. Note that to prevent this function holding up
     the task scheduling loop only the first available task storage is merged.
 
@@ -336,7 +336,7 @@ class MultiProcessEngine(engine.BaseEngine):
         # yet merged.
         self._task_manager.UpdateTask(task_identifier)
 
-      # Merge one task-based storage file per loop to keep tasks flowing.
+      # Merge only one task-based storage file per loop to keep tasks flowing.
       if task_storage_merged:
         continue
 
@@ -474,7 +474,7 @@ class MultiProcessEngine(engine.BaseEngine):
       task (Task): task.
 
     Returns:
-      bool: True if task was scheduled.
+      bool: True if the task was scheduled.
     """
     if self._processing_profiler:
       self._processing_profiler.StartTiming(u'schedule_task')
@@ -496,8 +496,7 @@ class MultiProcessEngine(engine.BaseEngine):
     """Schedules tasks.
 
     Args:
-      storage_writer (StorageWriter): storage writer for a session storage used
-          to merge task storage.
+      storage_writer (StorageWriter): storage writer for a session storage.
     """
     logging.debug(u'Task scheduler started')
 
