@@ -277,6 +277,8 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
         storage_file_path, read_only=True)
     preprocessor_object = test_front_end._GetLastGoodPreprocess(storage_file)
     self.assertIsNotNone(preprocessor_object)
+    # TODO: fix the following test, because the plaso file is in an old format
+    # preprocessor_object.zone does not contain a string.
     self.assertEqual(preprocessor_object.zone, pytz.UTC)
 
   def testSetAnalysisPluginProcessInformation(self):
@@ -288,9 +290,6 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
     test_front_end._SetAnalysisPluginProcessInformation(
         analysis_plugins, preprocess_object)
     self.assertIsNotNone(preprocess_object)
-    plugin_names = preprocess_object.collection_information[u'plugins']
-    time_of_run = preprocess_object.collection_information[u'time_of_run']
-    method = preprocess_object.collection_information[u'method']
 
     for analysis_plugin in analysis_plugins:
       self.assertIn(analysis_plugin.NAME, plugin_names)

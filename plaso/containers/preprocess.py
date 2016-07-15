@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The attribute container object definitions."""
+"""Preprocess related attribute container object definitions."""
 
 from plaso.containers import interface
 from plaso.containers import manager
@@ -9,20 +9,21 @@ class PreprocessObject(interface.AttributeContainer):
   """Object used to store all information gained from preprocessing.
 
   Attributes:
-    collection_information (dict[str, object]): collection information.
-    zone (str): time zone.
+    time_zone_str (str): time zone, formatted as a string supported by
+        pytz.timezone().
+    zone (str): time zone, formatted as a string supported by pytz.timezone().
   """
   CONTAINER_TYPE = u'preprocess'
 
   def __init__(self):
-    """Initializes the preprocess object."""
+    """Initializes a preprocess object."""
     super(PreprocessObject, self).__init__()
     self._user_mappings = None
-    self.collection_information = {}
+    self.time_zone_str = u'UTC'
     self.zone = u'UTC'
 
   def GetPathAttributes(self):
-    """Retrieves the path attributes.
+    """Retrieves path attributes.
 
     Returns:
       dict[str, str]]: path attributes e.g. {'SystemRoot': 'C:\\Windows'}

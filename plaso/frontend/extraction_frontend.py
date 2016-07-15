@@ -256,27 +256,6 @@ class ExtractionFrontend(frontend.Frontend):
   #   * credentials (encryption)
   #   * mount point
 
-  def _PreprocessSetCollectionInformation(self, preprocess_object):
-    """Sets the collection information as part of the preprocessing.
-
-    Args:
-      preprocess_object: a preprocess object (instance of PreprocessObject).
-      engine: the engine object (instance of BaseEngine).
-    """
-    collection_information = {}
-
-    # TODO: extraction info:
-    collection_information[u'configured_zone'] = preprocess_object.zone
-    collection_information[u'parsers'] = self._parser_names
-    collection_information[u'preprocess'] = self._enable_preprocessing
-
-    if self._operating_system:
-      collection_information[u'os_detected'] = self._operating_system
-    else:
-      collection_information[u'os_detected'] = u'N/A'
-
-    preprocess_object.collection_information = collection_information
-
   def _SetDefaultTimezone(self, preprocess_object, timezone=pytz.UTC):
     """Sets the default timezone.
 
@@ -478,9 +457,6 @@ class ExtractionFrontend(frontend.Frontend):
           filter_file, path_attributes=path_attributes)
     else:
       filter_find_specs = None
-
-    # TODO: deprecate the need for this function.
-    self._PreprocessSetCollectionInformation(preprocess_object)
 
     session = self._CreateSession(
         command_line_arguments=command_line_arguments, filter_file=filter_file,

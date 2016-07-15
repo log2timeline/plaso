@@ -243,26 +243,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     return counter
 
-  def _SetAnalysisPluginProcessInformation(
-      self, analysis_plugins, pre_obj, command_line_arguments=None):
-    """Sets analysis plugin options in a preprocessor object.
-
-    Args:
-      analysis_plugins: the list of analysis plugins to add.
-      pre_obj: the preprocessor object (instance of PreprocessObject).
-      command_line_arguments: optional string of the command line arguments or
-                              None if not set.
-    """
-    analysis_plugin_names = [plugin.NAME for plugin in analysis_plugins]
-    time_of_run = timelib.Timestamp.GetNow()
-
-    pre_obj.collection_information[u'Action'] = u'Adding tags to storage.'
-    pre_obj.collection_information[u'cmd_line'] = command_line_arguments
-    pre_obj.collection_information[u'file_processed'] = self._storage_file_path
-    pre_obj.collection_information[u'method'] = u'Running Analysis Plugins'
-    pre_obj.collection_information[u'plugins'] = analysis_plugin_names
-    pre_obj.collection_information[u'time_of_run'] = time_of_run
-
   # TODO: fix docstring, function does not create the pre_obj the call to
   # storage does. Likely refactor this functionality into the storage API.
   def _GetLastGoodPreprocess(self, storage_file):
@@ -560,9 +540,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     pre_obj = None
     if analysis_plugins:
       pre_obj = getattr(self._knowledge_base, u'_pre_obj', None)
-      self._SetAnalysisPluginProcessInformation(
-          analysis_plugins, pre_obj,
-          command_line_arguments=command_line_arguments)
 
     if analysis_plugins:
       read_only = False
