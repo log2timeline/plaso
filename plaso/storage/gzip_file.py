@@ -193,6 +193,8 @@ class GZIPStorageFile(interface.BaseFileStorage):
     """
     return iter(self._errors)
 
+  # TODO: time_range is currently not operational, nor that events are
+  # returned in chronological order. Fix this.
   def GetEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
 
