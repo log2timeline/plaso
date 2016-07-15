@@ -106,53 +106,6 @@ class EventExtractionWorker(object):
 
     self.processing_status = definitions.PROCESSING_STATUS_IDLE
 
-  def _AnalyzeArchiveTypes(self, parser_mediator, path_spec):
-    """Analyzes if a data stream contains an archive e.g. TAR or ZIP.
-
-    Args:
-      parser_mediator (ParserMediator): parser mediator.
-      path_spec (dfvfs.PathSpec): path specification of the data stream.
-
-    Returns:
-      list[str]: dfVFS archive type indicators found in the data stream.
-    """
-    try:
-      type_indicators = analyzer.Analyzer.GetArchiveTypeIndicators(
-          path_spec, resolver_context=self._resolver_context)
-    except IOError as exception:
-      type_indicators = []
-
-      error_message = (
-          u'analyzer failed to determine archive type indicators '
-          u'with error: {0:s}').format(exception)
-      parser_mediator.ProduceExtractionError(error_message, path_spec=path_spec)
-
-    return type_indicators
-
-  def _AnalyzeCompressedStreamTypes(self, parser_mediator, path_spec):
-    """Analyzes if a data stream contains a compressed stream e.g. bz2 or gzip.
-
-    Args:
-      parser_mediator (ParserMediator): parser mediator.
-      path_spec (dfvfs.PathSpec): path specification of the data stream.
-
-    Returns:
-      list[str]: dfVFS compressed stream type indicators found in
-          the data stream.
-    """
-    try:
-      type_indicators = analyzer.Analyzer.GetCompressedStreamTypeIndicators(
-          path_spec, resolver_context=self._resolver_context)
-    except IOError as exception:
-      type_indicators = []
-
-      error_message = (
-          u'analyzer failed to determine compressed stream type indicators '
-          u'with error: {0:s}').format(exception)
-      parser_mediator.ProduceExtractionError(error_message, path_spec=path_spec)
-
-    return type_indicators
-
   def _CanSkipContentExtraction(self, file_entry):
     """Determines if content extraction of a file entry can be skipped.
 
@@ -324,6 +277,53 @@ class EventExtractionWorker(object):
         u'[HashDataStream] completed hashing file: {0:s}'.format(display_name))
 
     self.processing_status = definitions.PROCESSING_STATUS_RUNNING
+
+  def _GetArchiveTypes(self, parser_mediator, path_spec):
+    """Determines if a data stream contains an archive e.g. TAR or ZIP.
+
+    Args:
+      parser_mediator (ParserMediator): parser mediator.
+      path_spec (dfvfs.PathSpec): path specification of the data stream.
+
+    Returns:
+      list[str]: dfVFS archive type indicators found in the data stream.
+    """
+    try:
+      type_indicators = analyzer.Analyzer.GetArchiveTypeIndicators(
+          path_spec, resolver_context=self._resolver_context)
+    except IOError as exception:
+      type_indicators = []
+
+      error_message = (
+          u'analyzer failed to determine archive type indicators '
+          u'with error: {0:s}').format(exception)
+      parser_mediator.ProduceExtractionError(error_message, path_spec=path_spec)
+
+    return type_indicators
+
+  def _GetCompressedStreamTypes(self, parser_mediator, path_spec):
+    """Determines if a data stream contains a compressed stream e.g. gzip.
+
+    Args:
+      parser_mediator (ParserMediator): parser mediator.
+      path_spec (dfvfs.PathSpec): path specification of the data stream.
+
+    Returns:
+      list[str]: dfVFS compressed stream type indicators found in
+          the data stream.
+    """
+    try:
+      type_indicators = analyzer.Analyzer.GetCompressedStreamTypeIndicators(
+          path_spec, resolver_context=self._resolver_context)
+    except IOError as exception:
+      type_indicators = []
+
+      error_message = (
+          u'analyzer failed to determine compressed stream type indicators '
+          u'with error: {0:s}').format(exception)
+      parser_mediator.ProduceExtractionError(error_message, path_spec=path_spec)
+
+    return type_indicators
 
   def _IsMetadataFile(self, file_entry):
     """Determines if the file entry is a metadata file.
@@ -583,11 +583,11 @@ class EventExtractionWorker(object):
       archive_types = []
       compressed_stream_types = []
 
-      compressed_stream_types = self._AnalyzeCompressedStreamTypes(
+      compressed_stream_types = self._GetCompressedStreamTypes(
           parser_mediator, path_spec)
 
       if not compressed_stream_types:
-        archive_types = self._AnalyzeArchiveTypes(parser_mediator, path_spec)
+        archive_types = self._GetArchiveTypes(parser_mediator, path_spec)
 
       if archive_types:
         if self._process_archive_files:
