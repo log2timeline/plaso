@@ -31,16 +31,31 @@ class GZIPStorageFile(interface.BaseFileStorage):
           storage_type))
 
     super(GZIPStorageFile, self).__init__()
-    self._analysis_reports = []
-    self._errors = []
-    self._event_sources = []
-    self._event_tags = []
-    self._events = []
+    self._attribute_containers = {}
     self._gzip_file = None
-    self._session_completion = None
-    self._session_start = None
-    self._task_completion = None
-    self._task_start = None
+
+  def _AddAttributeContainer(self, attribute_container):
+    """Adds an attribute container.
+
+    Args:
+      attribute_container (AttributeContainer): attribute container.
+    """
+    container_type = attribute_container.CONTAINER_TYPE
+    if container_type not in self._attribute_containers:
+      self._attribute_containers[container_type] = []
+
+    self._attribute_containers[container_type].append(attribute_container)
+
+  def _GetAttributeContainerList(self, container_type):
+    """Retrieves an attribute container list.
+
+    Args:
+      container_type (str): attribute container type.
+
+    Returns:
+      list[AttributeContainer]: attribute container list.
+    """
+    return self._attribute_containers.get(container_type, [])
 
   def _OpenRead(self):
     """Opens the storage file for reading."""
@@ -48,121 +63,67 @@ class GZIPStorageFile(interface.BaseFileStorage):
       attribute_container = self._DeserializeAttributeContainer(
           line, u'attribute_container')
 
-      if attribute_container.CONTAINER_TYPE == u'analysis_report':
-        self._analysis_reports.append(attribute_container)
+      self._AddAttributeContainer(attribute_container)
 
-      elif attribute_container.CONTAINER_TYPE == u'event':
-        self._events.append(attribute_container)
+  def _WriteAttributeContainer(self, attribute_container):
+    """Writes an attribute container.
 
-      elif attribute_container.CONTAINER_TYPE == u'event_source':
-        self._event_sources.append(attribute_container)
+    Args:
+      attribute_container (AttributeContainer): attribute container.
 
-      elif attribute_container.CONTAINER_TYPE == u'event_tag':
-        self._event_tags.append(attribute_container)
+    Raises:
+      IOError: when the storage file is closed or read-only.
+    """
+    if not self._is_open:
+      raise IOError(u'Unable to write to closed storage file.')
 
-      elif attribute_container.CONTAINER_TYPE == u'extraction_error':
-        self._errors.append(attribute_container)
+    if self._read_only:
+      raise IOError(u'Unable to write to read-only storage file.')
 
-      elif attribute_container.CONTAINER_TYPE == u'task_start':
-        self._task_start = attribute_container
-
-      elif attribute_container.CONTAINER_TYPE == u'task_start':
-        self._task_start = attribute_container
+    attribute_container_data = self._SerializeAttributeContainer(
+        attribute_container)
+    self._gzip_file.write(attribute_container_data)
+    self._gzip_file.write(b'\n')
 
   def AddAnalysisReport(self, analysis_report):
     """Adds an analysis report.
 
     Args:
       analysis_report (AnalysisReport): analysis report.
-
-    Raises:
-      IOError: when the storage file is closed or read-only.
     """
-    if not self._is_open:
-      raise IOError(u'Unable to write to closed storage file.')
-
-    if self._read_only:
-      raise IOError(u'Unable to write to read-only storage file.')
-
-    report_data = self._SerializeAttributeContainer(analysis_report)
-    self._gzip_file.write(report_data)
-    self._gzip_file.write(b'\n')
+    self._WriteAttributeContainer(analysis_report)
 
   def AddError(self, error):
     """Adds an error.
 
     Args:
       error (ExtractionError): error.
-
-    Raises:
-      IOError: when the storage file is closed or read-only.
     """
-    if not self._is_open:
-      raise IOError(u'Unable to write to closed storage file.')
-
-    if self._read_only:
-      raise IOError(u'Unable to write to read-only storage file.')
-
-    error_data = self._SerializeAttributeContainer(error)
-    self._gzip_file.write(error_data)
-    self._gzip_file.write(b'\n')
+    self._WriteAttributeContainer(error)
 
   def AddEvent(self, event):
     """Adds an event.
 
     Args:
       event (EventObject): event.
-
-    Raises:
-      IOError: when the storage file is closed or read-only.
     """
-    if not self._is_open:
-      raise IOError(u'Unable to write to closed storage file.')
-
-    if self._read_only:
-      raise IOError(u'Unable to write to read-only storage file.')
-
-    event_data = self._SerializeAttributeContainer(event)
-    self._gzip_file.write(event_data)
-    self._gzip_file.write(b'\n')
+    self._WriteAttributeContainer(event)
 
   def AddEventSource(self, event_source):
     """Adds an event source.
 
     Args:
       event_source (EventSource): event source.
-
-    Raises:
-      IOError: when the storage file is closed or read-only.
     """
-    if not self._is_open:
-      raise IOError(u'Unable to write to closed storage file.')
-
-    if self._read_only:
-      raise IOError(u'Unable to write to read-only storage file.')
-
-    event_source_data = self._SerializeAttributeContainer(event_source)
-    self._gzip_file.write(event_source_data)
-    self._gzip_file.write(b'\n')
+    self._WriteAttributeContainer(event_source)
 
   def AddEventTag(self, event_tag):
     """Adds an event tag.
 
     Args:
       event_tag (EventTag): event tag.
-
-    Raises:
-      IOError: when the storage file is closed or read-only.
     """
-    if not self._is_open:
-      raise IOError(u'Unable to write to closed storage file.')
-
-    if self._read_only:
-      raise IOError(u'Unable to write to read-only storage file.')
-
-    event_tag_data = self._SerializeAttributeContainer(event_tag)
-    self._gzip_file.write(event_tag_data)
-    self._gzip_file.write(b'\n')
+    self._WriteAttributeContainer(event_tag)
 
   def Close(self):
     """Closes the storage.
@@ -180,18 +141,18 @@ class GZIPStorageFile(interface.BaseFileStorage):
   def GetAnalysisReports(self):
     """Retrieves the analysis reports.
 
-    Yields:
-      AnalysisReport: analysis report.
+    Returns:
+      generator(AnalysisReport): analysis report generator.
     """
-    return iter(self._analysis_reports)
+    return iter(self._GetAttributeContainerList(u'analysis_report'))
 
   def GetErrors(self):
     """Retrieves the errors.
 
-    Yields:
-      ExtractionError: error.
+    Returns:
+      generator(ExtractionError): error generator.
     """
-    return iter(self._errors)
+    return iter(self._GetAttributeContainerList(u'extraction_error'))
 
   # TODO: time_range is currently not operational, nor that events are
   # returned in chronological order. Fix this.
@@ -203,25 +164,25 @@ class GZIPStorageFile(interface.BaseFileStorage):
           that fall in a specific period.
 
     Returns:
-      EventObject: event.
+      generator(EventObject): event generator.
     """
-    return iter(self._events)
+    return iter(self._GetAttributeContainerList(u'event'))
 
   def GetEventSources(self):
     """Retrieves the event sources.
 
-    Yields:
-      EventSource: event source.
+    Returns:
+      generator(EventSource): event source generator.
     """
-    return iter(self._event_sources)
+    return iter(self._GetAttributeContainerList(u'event_source'))
 
   def GetEventTags(self):
     """Retrieves the event tags.
 
-    Yields:
-      EventTag: event tag.
+    Returns:
+      generator(EventTag): event tag generator.
     """
-    return iter(self._event_tags)
+    return iter(self._GetAttributeContainerList(u'event_tag'))
 
   def HasAnalysisReports(self):
     """Determines if a storage contains analysis reports.
@@ -229,7 +190,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     Returns:
       bool: True if the storage contains analysis reports.
     """
-    return len(self._analysis_reports) > 0
+    return len(self._GetAttributeContainerList(u'analysis_report')) > 0
 
   def HasErrors(self):
     """Determines if a storage contains extraction errors.
@@ -237,7 +198,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     Returns:
       bool: True if the storage contains extraction errors.
     """
-    return len(self._errors) > 0
+    return len(self._GetAttributeContainerList(u'extraction_error')) > 0
 
   def HasEventTags(self):
     """Determines if a storage contains event tags.
@@ -245,7 +206,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     Returns:
       bool: True if the storage contains event tags.
     """
-    return len(self._event_tags) > 0
+    return len(self._GetAttributeContainerList(u'event_tags')) > 0
 
   def Open(self, path=None, read_only=True, **unused_kwargs):
     """Opens the storage.
@@ -283,17 +244,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
 
     Args:
       session_completion (SessionCompletion): session completion information.
-
-    Raises:
-      IOError: when the storage file is closed or read-only.
-      NotImplementedError: since there is no implementation.
     """
-    if not self._is_open:
-      raise IOError(u'Unable to write to closed storage file.')
-
-    if self._read_only:
-      raise IOError(u'Unable to write to read-only storage file.')
-
     raise NotImplementedError()
 
   def WriteSessionStart(self, session_start):
@@ -301,17 +252,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
 
     Args:
       session_start (SessionStart): session start information.
-
-    Raises:
-      IOError: when the storage file is closed or read-only.
-      NotImplementedError: since there is no implementation.
     """
-    if not self._is_open:
-      raise IOError(u'Unable to write to closed storage file.')
-
-    if self._read_only:
-      raise IOError(u'Unable to write to read-only storage file.')
-
     raise NotImplementedError()
 
   def WriteTaskCompletion(self, task_completion):
@@ -319,38 +260,16 @@ class GZIPStorageFile(interface.BaseFileStorage):
 
     Args:
       task_completion (TaskCompletion): task completion information.
-
-    Raises:
-      IOError: when the storage file is closed or read-only.
     """
-    if not self._is_open:
-      raise IOError(u'Unable to write to closed storage file.')
-
-    if self._read_only:
-      raise IOError(u'Unable to write to read-only storage file.')
-
-    task_completion_data = self._SerializeAttributeContainer(task_completion)
-    self._gzip_file.write(task_completion_data)
-    self._gzip_file.write(b'\n')
+    self._WriteAttributeContainer(task_completion)
 
   def WriteTaskStart(self, task_start):
     """Writes task start information.
 
     Args:
       task_start (TaskStart): task start information.
-
-    Raises:
-      IOError: when the storage file is closed or read-only.
     """
-    if not self._is_open:
-      raise IOError(u'Unable to write to closed storage file.')
-
-    if self._read_only:
-      raise IOError(u'Unable to write to read-only storage file.')
-
-    task_start_data = self._SerializeAttributeContainer(task_start)
-    self._gzip_file.write(task_start_data)
-    self._gzip_file.write(b'\n')
+    self._WriteAttributeContainer(task_start)
 
 
 class GZIPStorageFileReader(interface.FileStorageReader):
