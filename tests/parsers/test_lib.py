@@ -15,17 +15,20 @@ from plaso.storage import fake_storage
 
 from tests import test_lib as shared_test_lib
 
+import pytz  # pylint: disable=wrong-import-order
+
 
 class ParserTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for a parser."""
 
   def _CreateParserMediator(
-      self, storage_writer, file_entry=None, knowledge_base_values=None,
-      parser_chain=None):
+      self, storage_writer, default_timezone=pytz.UTC, file_entry=None,
+      knowledge_base_values=None, parser_chain=None):
     """Creates a parser mediator object.
 
     Args:
       storage_writer (StorageWriter): storage writer.
+      default_timezone (datetime.tzinfo): default timezone.
       file_entry (Optional[dfvfs.FileEntry]): file entry object being parsed.
       knowledge_base_values (Optional[dict]): knowledge base values.
       parser_chain (Optional[str]): parsing chain up to this point.
@@ -37,6 +40,8 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     if knowledge_base_values:
       for identifier, value in iter(knowledge_base_values.items()):
         knowledge_base_object.SetValue(identifier, value)
+
+    knowledge_base_object.SetDefaultTimezone(default_timezone)
 
     parser_mediator = mediator.ParserMediator(
         storage_writer, knowledge_base_object)
@@ -89,12 +94,15 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
     return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
-  def _ParseFile(self, path_segments, parser, knowledge_base_values=None):
+  def _ParseFile(
+      self, path_segments, parser, default_timezone=pytz.UTC,
+      knowledge_base_values=None):
     """Parses a file with a parser and writes results to a storage writer.
 
     Args:
       path_segments (list[str]): path segments inside the test data directory.
       parser (BaseParser): parser.
+      default_timezone (datetime.tzinfo): default timezone.
       knowledge_base_values (Optional[dict]): knowledge base values.
 
     Returns:
@@ -104,15 +112,18 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
     return self._ParseFileByPathSpec(
-        path_spec, parser, knowledge_base_values=knowledge_base_values)
+        path_spec, parser, default_timezone=default_timezone,
+        knowledge_base_values=knowledge_base_values)
 
   def _ParseFileByPathSpec(
-      self, path_spec, parser, knowledge_base_values=None):
+      self, path_spec, parser, default_timezone=pytz.UTC,
+      knowledge_base_values=None):
     """Parses a file with a parser and writes results to a storage writer.
 
     Args:
       path_spec (dfvfs.PathSpec): path specification.
       parser (BaseParser): parser.
+      default_timezone (datetime.tzinfo): default timezone.
       knowledge_base_values (Optional[dict]): knowledge base values.
 
     Returns:
@@ -122,6 +133,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     parser_mediator = self._CreateParserMediator(
         storage_writer, file_entry=file_entry,
+        default_timezone=default_timezone,
         knowledge_base_values=knowledge_base_values)
 
     if isinstance(parser, interface.FileEntryParser):
