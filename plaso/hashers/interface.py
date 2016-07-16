@@ -21,7 +21,6 @@ class BaseHasher(object):
       A binary string hash digest calculated over the data blocks passed to
       Update().
     """
-    raise NotImplementedError
 
   @abc.abstractmethod
   def GetStringDigest(self):
@@ -31,7 +30,6 @@ class BaseHasher(object):
       A string hash digest calculated over the data blocks passed to
       Update(). The string will consist of printable Unicode characters.
     """
-    raise NotImplementedError
 
   @abc.abstractmethod
   def Update(self, data):
@@ -43,4 +41,3 @@ class BaseHasher(object):
     Args:
       data: a string of data with which to update the context of the hasher.
     """
-    raise NotImplementedError

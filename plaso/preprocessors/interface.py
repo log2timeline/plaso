@@ -114,7 +114,6 @@ class PreprocessPlugin(object):
     Returns:
       The attribute value.
     """
-    raise NotImplementedError
 
   def Run(self, searcher, knowledge_base):
     """Runs the plugins to determine the value of the preprocessing attribute.
