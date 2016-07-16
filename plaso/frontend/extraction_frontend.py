@@ -10,6 +10,7 @@ from dfvfs.resolver import context
 from plaso import parsers   # pylint: disable=unused-import
 from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.containers import sessions
+from plaso.containers import preprocess
 from plaso.engine import single_process
 from plaso.engine import utils as engine_utils
 from plaso.frontend import frontend
