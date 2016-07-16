@@ -454,7 +454,7 @@ class StorageWriter(object):
     added event sources can be retrieved in order of addition.
 
     Returns:
-      EventSource: event source.
+      EventSource: event source or None if there are no newly written ones.
     """
 
   @abc.abstractmethod
@@ -462,7 +462,7 @@ class StorageWriter(object):
     """Retrieves the next event source that was written after open.
 
     Returns:
-      EventSource: event source.
+      EventSource: event source or None if there are no newly written ones.
     """
 
   def MergeFromStorage(self, storage_reader):

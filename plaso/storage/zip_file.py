@@ -3196,7 +3196,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     added event sources can be retrieved in order of addition.
 
     Returns:
-      EventSource: event source.
+      EventSource: event source or None if there are no newly written ones.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -3216,7 +3216,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     """Retrieves the next event source that was written after open.
 
     Returns:
-      EventSource: event source.
+      EventSource: event source or None if there are no newly written ones.
 
     Raises:
       IOError: when the storage writer is closed.
