@@ -8,13 +8,13 @@ import zipfile
 
 from plaso.containers import errors
 from plaso.containers import event_sources
+from plaso.containers import preprocess
 from plaso.containers import reports
 from plaso.containers import sessions
 from plaso.containers import tasks
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 from plaso.lib import definitions
-from plaso.lib import event
 from plaso.lib import timelib
 from plaso.formatters import winreg   # pylint: disable=unused-import
 from plaso.storage import time_range
@@ -1269,7 +1269,7 @@ class StorageFileTest(test_lib.StorageTestCase):
 
   def testWritePreprocessObject(self):
     """Tests the WritePreprocessObject function."""
-    preprocess_object = event.PreprocessObject()
+    preprocess_object = preprocess.PreprocessObject()
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'storage.plaso')

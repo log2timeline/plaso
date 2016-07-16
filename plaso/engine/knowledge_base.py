@@ -7,7 +7,7 @@ analysis phases, with essential information like e.g. the timezone and
 codepage of the source data.
 """
 
-from plaso.lib import event
+from plaso.containers import preprocess
 from plaso.lib import py2to3
 
 import pytz  # pylint: disable=wrong-import-order
@@ -32,7 +32,7 @@ class KnowledgeBase(object):
     if pre_obj:
       self._pre_obj = pre_obj
     else:
-      self._pre_obj = event.PreprocessObject()
+      self._pre_obj = preprocess.PreprocessObject()
 
     self._default_codepage = u'cp1252'
     self._default_timezone = pytz.timezone(u'UTC')
@@ -66,8 +66,8 @@ class KnowledgeBase(object):
 
   @property
   def timezone(self):
-    """The timezone object."""
-    return getattr(self._pre_obj, u'zone', self._default_timezone)
+    """datetime.tzinfo: timezone."""
+    return self._default_timezone
 
   @property
   def users(self):
@@ -228,7 +228,7 @@ class KnowledgeBase(object):
     """Sets the default timezone.
 
     Args:
-      timezone: the default timezone.
+      timezone (datetime.tzinfo): default timezone.
     """
     # TODO: check if value is sane.
     self._default_timezone = timezone

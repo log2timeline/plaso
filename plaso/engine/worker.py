@@ -587,7 +587,8 @@ class EventExtractionWorker(object):
 
     else:
       path_spec = copy.deepcopy(file_entry.path_spec)
-      path_spec.data_stream = data_stream_name
+      if data_stream_name:
+        path_spec.data_stream = data_stream_name
 
       archive_types = []
       compressed_stream_types = []

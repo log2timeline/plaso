@@ -20,7 +20,6 @@ from plaso.frontend import analysis_frontend
 from plaso.lib import bufferlib
 from plaso.lib import errors
 from plaso.lib import py2to3
-from plaso.lib import timelib
 from plaso.multi_processing import multi_process_queue
 from plaso.output import event_buffer as output_event_buffer
 from plaso.output import manager as output_manager
@@ -167,11 +166,11 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       output_module (OutputModule): output module.
       storage_file (StorageFile): storage file.
       analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
-                                               be run.
+          be run.
       event_queue_producers (list[ItemQueueProducer]): event queue producers.
       command_line_arguments (Optional[str]): command line arguments.
       deduplicate_events (Optional[bool]): True if events should be
-                                           deduplicated.
+          deduplicated.
       preferred_encoding (Optional[str]): preferred encoding.
       time_slice (Optional[TimeSlice]): slice of time to output.
       use_time_slicer (Optional[bool]): True if the 'time slicer' should be
@@ -241,39 +240,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       session_completion = session.CreateSessionCompletion()
       storage_file.WriteSessionCompletion(session_completion)
 
-    for information in storage_file.GetStorageInformation():
-      if getattr(information, u'counter', None):
-        total = information.counter.get(u'total')
-        if total:
-          counter[u'Stored Events'] += total
-
-    if self._filter_object and not counter[u'Limited By']:
-      counter[u'Filter By Date'] = (
-          counter[u'Stored Events'] - counter[u'Events Included'] -
-          counter[u'Events Filtered Out'])
-
     return counter
-
-  def _SetAnalysisPluginProcessInformation(
-      self, analysis_plugins, pre_obj, command_line_arguments=None):
-    """Sets analysis plugin options in a preprocessor object.
-
-    Args:
-      analysis_plugins: the list of analysis plugins to add.
-      pre_obj: the preprocessor object (instance of PreprocessObject).
-      command_line_arguments: optional string of the command line arguments or
-                              None if not set.
-    """
-    analysis_plugin_names = [plugin.NAME for plugin in analysis_plugins]
-    time_of_run = timelib.Timestamp.GetNow()
-
-    pre_obj.collection_information[u'Action'] = u'Adding tags to storage.'
-    pre_obj.collection_information[u'cmd_line'] = command_line_arguments
-    pre_obj.collection_information[u'file_processed'] = self._storage_file_path
-    pre_obj.collection_information[u'method'] = u'Running Analysis Plugins'
-    pre_obj.collection_information[u'plugins'] = analysis_plugin_names
-    pre_obj.collection_information[u'time_of_run'] = time_of_run
-    pre_obj.counter = collections.Counter()
 
   # TODO: fix docstring, function does not create the pre_obj the call to
   # storage does. Likely refactor this functionality into the storage API.
@@ -572,9 +539,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     pre_obj = None
     if analysis_plugins:
       pre_obj = getattr(self._knowledge_base, u'_pre_obj', None)
-      self._SetAnalysisPluginProcessInformation(
-          analysis_plugins, pre_obj,
-          command_line_arguments=command_line_arguments)
 
     if analysis_plugins:
       read_only = False

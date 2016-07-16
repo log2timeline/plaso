@@ -41,7 +41,7 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
   # TODO: add test for _GetParserFilterPreset
   # TODO: add test for _PreprocessSource
   # TODO: add test for _PreprocessSetCollectionInformation
-  # TODO: add test for _PreprocessSetTimezone
+  # TODO: add test for _SetDefaultTimezone
 
   def testEnableAndDisableProfiling(self):
     """Tests the EnableProfiling and DisableProfiling functions."""

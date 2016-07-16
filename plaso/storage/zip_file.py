@@ -138,7 +138,6 @@ import construct
 
 from plaso.containers import sessions
 from plaso.lib import definitions
-from plaso.lib import errors
 from plaso.serializer import json_serializer
 from plaso.storage import interface
 
@@ -2946,9 +2945,6 @@ class StorageFile(ZIPStorageFile):
     """
     super(StorageFile, self).__init__(
         maximum_buffer_size=buffer_size, storage_type=storage_type)
-    self._preprocess_object_serializer = (
-        json_serializer.JSONPreprocessObjectSerializer)
-
     self.Open(path=output_file, read_only=read_only)
 
   def _ReadPreprocessObject(self, data_stream):
@@ -2968,12 +2964,7 @@ class StorageFile(ZIPStorageFile):
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(u'preprocess_object')
 
-    try:
-      preprocess_object = self._preprocess_object_serializer.ReadSerialized(
-          preprocess_data)
-    except errors.SerializationError as exception:
-      logging.error(exception)
-      preprocess_object = None
+    preprocess_object = self._serializer.ReadSerialized(preprocess_data)
 
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming(u'preprocess_object')
@@ -3027,8 +3018,8 @@ class StorageFile(ZIPStorageFile):
     if self._serializers_profiler:
       self._serializers_profiler.StartTiming(u'preprocess_object')
 
-    preprocess_object_data = (
-        self._preprocess_object_serializer.WriteSerialized(preprocess_object))
+    preprocess_object_data = self._serializer.WriteSerialized(
+        preprocess_object)
 
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming(u'preprocess_object')
@@ -3465,9 +3456,6 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     # into a list.
     if self._event_tags:
       self._storage_file.AddEventTags(self._event_tags)
-      # TODO: move the counters out of preprocessing object.
-      # Kept for backwards compatibility for now.
-      preprocess_object.counter = self._session.event_labels_counter[u'total']
 
     # TODO: refactor this currently create a preprocessing object
     # for every sync in single processing.

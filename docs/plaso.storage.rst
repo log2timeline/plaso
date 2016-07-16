@@ -4,14 +4,6 @@ plaso.storage package
 Submodules
 ----------
 
-plaso.storage.collection module
--------------------------------
-
-.. automodule:: plaso.storage.collection
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.storage.factory module
 ----------------------------
 
