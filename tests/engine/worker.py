@@ -59,17 +59,10 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     storage_writer.WriteSessionStart()
 
     extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
-
-    new_event_sources = True
-    while new_event_sources:
-      new_event_sources = False
-      event_source = storage_writer.GetNextEventSource()
-      while event_source:
-        new_event_sources = True
-
-        extraction_worker.ProcessPathSpec(
-            parser_mediator, event_source.path_spec)
-        event_source = storage_writer.GetNextEventSource()
+    event_source = storage_writer.GetFirstWrittenEventSource()
+    while event_source:
+      extraction_worker.ProcessPathSpec(parser_mediator, event_source.path_spec)
+      event_source = storage_writer.GetNextWrittenEventSource()
 
     storage_writer.WriteSessionCompletion()
     storage_writer.Close()

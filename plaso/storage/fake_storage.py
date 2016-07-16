@@ -152,7 +152,7 @@ class FakeStorageWriter(interface.StorageWriter):
         self._first_written_event_source_index + 1)
     return event_source
 
-  def GetNextWrittemEventSource(self):
+  def GetNextWrittenEventSource(self):
     """Retrieves the next event source that was written after open.
 
     Returns:
