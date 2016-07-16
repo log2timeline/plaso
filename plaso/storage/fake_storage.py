@@ -34,7 +34,6 @@ class FakeStorageWriter(interface.StorageWriter):
     """
     super(FakeStorageWriter, self).__init__(
         session, storage_type=storage_type, task=task)
-    self._event_source_index = 0
     self._is_open = False
     self.analysis_reports = []
     self.errors = []
@@ -130,8 +129,11 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._is_open = False
 
-  def GetFirstEventSource(self):
-    """Retrieves the first event source.
+  def GetFirstWrittenEventSource(self):
+    """Retrieves the first event source that was written after open.
+
+    Using GetFirstWrittenEventSource and GetNextWrittenEventSource newly
+    added event sources can be retrieved in order of addition.
 
     Returns:
       EventSource: event source or None.
@@ -142,15 +144,16 @@ class FakeStorageWriter(interface.StorageWriter):
     if not self._is_open:
       raise IOError(u'Unable to read from closed storage writer.')
 
-    if self._event_source_index >= len(self.event_sources):
+    if self._written_event_source_index >= len(self.event_sources):
       return
 
-    event_source = self.event_sources[self._first_event_source_index]
-    self._event_source_index = self._first_event_source_index + 1
+    event_source = self.event_sources[self._first_written_event_source_index]
+    self._written_event_source_index = (
+        self._first_written_event_source_index + 1)
     return event_source
 
-  def GetNextEventSource(self):
-    """Retrieves the next event source.
+  def GetNextWrittemEventSource(self):
+    """Retrieves the next event source that was written after open.
 
     Returns:
       EventSource: event source or None.
@@ -161,11 +164,11 @@ class FakeStorageWriter(interface.StorageWriter):
     if not self._is_open:
       raise IOError(u'Unable to read from closed storage writer.')
 
-    if self._event_source_index >= len(self.event_sources):
+    if self._written_event_source_index >= len(self.event_sources):
       return
 
-    event_source = self.event_sources[self._event_source_index]
-    self._event_source_index += 1
+    event_source = self.event_sources[self._written_event_source_index]
+    self._written_event_source_index += 1
     return event_source
 
   def Open(self):
@@ -179,8 +182,8 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._is_open = True
 
-    self._first_event_source_index = len(self.event_sources)
-    self._event_source_index = self._first_event_source_index
+    self._first_written_event_source_index = len(self.event_sources)
+    self._written_event_source_index = self._first_written_event_source_index
 
   # TODO: remove during phased processing refactor.
   def WritePreprocessObject(self, unused_preprocess_object):

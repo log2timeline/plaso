@@ -153,7 +153,7 @@ class SingleProcessEngine(engine.BaseEngine):
     if self._processing_profiler:
       self._processing_profiler.StartTiming(u'get_event_source')
 
-    event_source = storage_writer.GetFirstEventSource()
+    event_source = storage_writer.GetFirstWrittenEventSource()
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming(u'get_event_source')
@@ -176,7 +176,7 @@ class SingleProcessEngine(engine.BaseEngine):
       if self._processing_profiler:
         self._processing_profiler.StartTiming(u'get_event_source')
 
-      event_source = storage_writer.GetNextEventSource()
+      event_source = storage_writer.GetNextWrittenEventSource()
 
       if self._processing_profiler:
         self._processing_profiler.StopTiming(u'get_event_source')

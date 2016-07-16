@@ -3189,8 +3189,11 @@ class ZIPStorageFileWriter(interface.StorageWriter):
         self._session, storage_file_path, buffer_size=self._buffer_size,
         storage_type=definitions.STORAGE_TYPE_TASK, task=task)
 
-  def GetFirstEventSource(self):
-    """Retrieves the first event source.
+  def GetFirstWrittenEventSource(self):
+    """Retrieves the first event source that was written after open.
+
+    Using GetFirstWrittenEventSource and GetNextWrittenEventSource newly
+    added event sources can be retrieved in order of addition.
 
     Returns:
       EventSource: event source.
@@ -3202,14 +3205,15 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       raise IOError(u'Unable to read from closed storage writer.')
 
     event_source = self._storage_file.GetEventSourceByIndex(
-        self._first_event_source_index)
+        self._first_written_event_source_index)
 
     if event_source:
-      self._event_source_index = self._first_event_source_index + 1
+      self._written_event_source_index = (
+          self._first_written_event_source_index + 1)
     return event_source
 
-  def GetNextEventSource(self):
-    """Retrieves the next event source.
+  def GetNextWrittenEventSource(self):
+    """Retrieves the next event source that was written after open.
 
     Returns:
       EventSource: event source.
@@ -3221,9 +3225,9 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       raise IOError(u'Unable to read from closed storage writer.')
 
     event_source = self._storage_file.GetEventSourceByIndex(
-        self._event_source_index)
+        self._written_event_source_index)
     if event_source:
-      self._event_source_index += 1
+      self._written_event_source_index += 1
     return event_source
 
   def MergeTaskStorage(self, task_name):
@@ -3285,9 +3289,9 @@ class ZIPStorageFileWriter(interface.StorageWriter):
           self._output_file, buffer_size=self._buffer_size,
           storage_type=self._storage_type)
 
-    self._first_event_source_index = (
+    self._first_written_event_source_index = (
         self._storage_file.GetNumberOfEventSources())
-    self._event_source_index = self._first_event_source_index
+    self._written_event_source_index = self._first_written_event_source_index
 
   def PrepareMergeTaskStorage(self, task_name):
     """Prepares a task storage for merging.

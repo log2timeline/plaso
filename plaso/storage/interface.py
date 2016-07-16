@@ -379,11 +379,11 @@ class StorageWriter(object):
       task(Optional[Task]): task.
     """
     super(StorageWriter, self).__init__()
-    self._event_source_index = 0
-    self._first_event_source_index = 0
+    self._first_written_event_source_index = 0
     self._session = session
     self._storage_type = storage_type
     self._task = task
+    self._written_event_source_index = 0
     self.number_of_errors = 0
     self.number_of_event_sources = 0
     self.number_of_events = 0
@@ -447,16 +447,19 @@ class StorageWriter(object):
     raise NotImplementedError()
 
   @abc.abstractmethod
-  def GetFirstEventSource(self):
-    """Retrieves the first event source.
+  def GetFirstWrittenEventSource(self):
+    """Retrieves the first event source that was written after open.
+
+    Using GetFirstWrittenEventSource and GetNextWrittenEventSource newly
+    added event sources can be retrieved in order of addition.
 
     Returns:
       EventSource: event source.
     """
 
   @abc.abstractmethod
-  def GetNextEventSource(self):
-    """Retrieves the next event source.
+  def GetNextWrittenEventSource(self):
+    """Retrieves the next event source that was written after open.
 
     Returns:
       EventSource: event source.
