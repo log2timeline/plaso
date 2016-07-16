@@ -9,8 +9,8 @@ from dfvfs.resolver import context
 
 from plaso import parsers   # pylint: disable=unused-import
 from plaso.analyzers.hashers import manager as hashers_manager
-from plaso.containers import sessions
 from plaso.containers import preprocess
+from plaso.containers import sessions
 from plaso.engine import single_process
 from plaso.engine import utils as engine_utils
 from plaso.frontend import frontend
@@ -39,6 +39,7 @@ class ExtractionFrontend(frontend.Frontend):
     self._engine = None
     self._filter_expression = None
     self._filter_object = None
+    self._hasher_names = []
     self._mount_path = None
     self._operating_system = None
     self._parser_names = None
@@ -396,6 +397,7 @@ class ExtractionFrontend(frontend.Frontend):
       temporary_directory (Optional[str]): path of the directory for temporary
           files.
       timezone (Optional[datetime.tzinfo]): timezone.
+      yara_rules_string (Optional[str]): unparsed yara rule definitions.
 
     Returns:
       The processing status (instance of ProcessingStatus) or None.
@@ -442,7 +444,13 @@ class ExtractionFrontend(frontend.Frontend):
         parser_filter_expression=parser_filter_expression):
       self._parser_names.append(parser_class.NAME)
 
-    self._PreprocessSetTimezone(preprocess_object, timezone=timezone)
+    self._hasher_names = []
+    hasher_manager = hashers_manager.HashersManager
+    for hasher_name in hasher_manager.GetHasherNamesFromString(
+        hasher_names_string=hasher_names_string):
+      self._hasher_names.append(hasher_name)
+
+    self._SetDefaultTimezone(preprocess_object, timezone=timezone)
 
     if filter_file:
       path_attributes = self._engine.knowledge_base.GetPathAttributes()
