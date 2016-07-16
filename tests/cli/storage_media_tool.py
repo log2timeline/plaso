@@ -99,17 +99,21 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
       u''])
 
   _EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS = u'\n'.join([
-      (u'usage: storage_media_tool_test.py [--no_vss] '
-       u'[--vss_stores VSS_STORES]'),
+      u'usage: storage_media_tool_test.py [--no_vss] [--vss_only]',
+      u'                                  [--vss_stores VSS_STORES]',
       u'',
       u'Test argument parser.',
       u'',
       u'optional arguments:',
       (u'  --no_vss, --no-vss    Do not scan for Volume Shadow Snapshots '
        u'(VSS). This'),
-      (u'                        means that VSS information will not be '
-       u'included in the'),
-      u'                        extraction phase.',
+      (u'                        means that Volume Shadow Snapshots (VSS) '
+       u'are not'),
+      u'                        processed.',
+      u'  --vss_only, --vss-only',
+      (u'                        Do not process the current volume if '
+       u'Volume Shadow'),
+      u'                        Snapshots (VSS) have been selected.',
       u'  --vss_stores VSS_STORES, --vss-stores VSS_STORES',
       (u'                        Define Volume Shadow Snapshots (VSS) (or '
        u'stores that'),
