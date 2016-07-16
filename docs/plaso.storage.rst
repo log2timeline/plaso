@@ -20,6 +20,14 @@ plaso.storage.fake_storage module
     :undoc-members:
     :show-inheritance:
 
+plaso.storage.gzip_file module
+------------------------------
+
+.. automodule:: plaso.storage.gzip_file
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.storage.interface module
 ------------------------------
 

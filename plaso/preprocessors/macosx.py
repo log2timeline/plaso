@@ -55,7 +55,6 @@ class PlistPreprocessPlugin(interface.PreprocessPlugin):
                       which contains information from the source data needed
                       for parsing.
     """
-    raise NotImplementedError
 
 
 class PlistKeyPreprocessPlugin(PlistPreprocessPlugin):
