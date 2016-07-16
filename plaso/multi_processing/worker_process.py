@@ -359,5 +359,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
   def SignalAbort(self):
     """Signals the process to abort."""
     self._abort = True
-    self._extraction_worker.SignalAbort()
-    self._parser_mediator.SignalAbort()
+    if self._extraction_worker:
+      self._extraction_worker.SignalAbort()
+    if self._parser_mediator:
+      self._parser_mediator.SignalAbort()

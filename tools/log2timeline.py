@@ -570,8 +570,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     # Check the list options first otherwise required options will raise.
     self._ParseExtractionOptions(options)
     self._ParseOutputOptions(options)
-    # TODO: refactor usage of self._use_old_preprocess.
-    self._front_end.SetUseOldPreprocess(self._use_old_preprocess)
     self._ParseTimezoneOption(options)
     self._ParseExperimentalOptions(options)
 
