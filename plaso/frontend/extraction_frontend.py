@@ -9,13 +9,13 @@ from dfvfs.resolver import context
 
 from plaso import hashers   # pylint: disable=unused-import
 from plaso import parsers   # pylint: disable=unused-import
+from plaso.containers import preprocess
 from plaso.containers import sessions
 from plaso.engine import single_process
 from plaso.engine import utils as engine_utils
 from plaso.frontend import frontend
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.multi_processing import engine as multi_process_engine
 from plaso.hashers import manager as hashers_manager
 from plaso.parsers import manager as parsers_manager
@@ -232,7 +232,7 @@ class ExtractionFrontend(frontend.Frontend):
       except IOError as exception:
         logging.error(u'Unable to preprocess with error: {0:s}'.format(
             exception))
-        return event.PreprocessObject()
+        return preprocess.PreprocessObject()
 
     logging.debug(u'Preprocessing done.')
 
@@ -241,7 +241,7 @@ class ExtractionFrontend(frontend.Frontend):
     preprocess_object = getattr(self._engine.knowledge_base, u'_pre_obj', None)
 
     if not preprocess_object:
-      preprocess_object = event.PreprocessObject()
+      preprocess_object = preprocess.PreprocessObject()
 
     return preprocess_object
 
@@ -256,61 +256,30 @@ class ExtractionFrontend(frontend.Frontend):
   #   * credentials (encryption)
   #   * mount point
 
-  def _PreprocessSetCollectionInformation(self, preprocess_object):
-    """Sets the collection information as part of the preprocessing.
+  def _SetDefaultTimezone(self, preprocess_object, timezone=pytz.UTC):
+    """Sets the default timezone.
 
     Args:
-      preprocess_object: a preprocess object (instance of PreprocessObject).
-      engine: the engine object (instance of BaseEngine).
-    """
-    collection_information = {}
-
-    # TODO: extraction info:
-    collection_information[u'configured_zone'] = preprocess_object.zone
-    collection_information[u'parsers'] = self._parser_names
-    collection_information[u'preprocess'] = self._enable_preprocessing
-
-    if self._operating_system:
-      collection_information[u'os_detected'] = self._operating_system
-    else:
-      collection_information[u'os_detected'] = u'N/A'
-
-    preprocess_object.collection_information = collection_information
-
-  def _PreprocessSetTimezone(self, preprocess_object, timezone=pytz.UTC):
-    """Sets the timezone as part of the preprocessing.
-
-    Args:
-      preprocess_object: a preprocess object (instance of PreprocessObject).
-      timezone: optional preferred timezone.
+      preprocess_object (PreprocessObject): preprocess object.
+      timezone (Optional[datetime.tzinfo]): timezone.
     """
     if not timezone:
       timezone = pytz.UTC
 
+    default_timezone = timezone
     if hasattr(preprocess_object, u'time_zone_str'):
       logging.info(u'Setting timezone to: {0:s}'.format(
           preprocess_object.time_zone_str))
 
       try:
-        preprocess_object.zone = pytz.timezone(preprocess_object.time_zone_str)
+        default_timezone = pytz.timezone(preprocess_object.time_zone_str)
 
       except pytz.UnknownTimeZoneError:
-        if not timezone:
-          logging.warning(u'timezone was not properly set, defaulting to UTC')
-          timezone = pytz.UTC
-        else:
-          logging.warning((
-              u'Unable to automatically configure timezone falling back '
-              u'to preferred timezone value: {0:s}').format(timezone))
-        preprocess_object.zone = timezone
+        logging.warning(
+            u'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
+                preprocess_object.time_zone_str, timezone.zone))
 
-    else:
-      # TODO: shouldn't the user to be able to always override the timezone
-      # detection? Or do we need an input sanitization function.
-      preprocess_object.zone = timezone
-
-    if not getattr(preprocess_object, u'zone', None):
-      preprocess_object.zone = timezone
+    self._engine.knowledge_base.SetDefaultTimezone(default_timezone)
 
   def DisableProfiling(self):
     """Disabled profiling."""
@@ -480,7 +449,7 @@ class ExtractionFrontend(frontend.Frontend):
         hasher_names_string=hasher_names_string):
       self._hasher_names.append(hasher_name)
 
-    self._PreprocessSetTimezone(preprocess_object, timezone=timezone)
+    self._SetDefaultTimezone(preprocess_object, timezone=timezone)
 
     if filter_file:
       path_attributes = self._engine.knowledge_base.GetPathAttributes()
@@ -488,9 +457,6 @@ class ExtractionFrontend(frontend.Frontend):
           filter_file, path_attributes=path_attributes)
     else:
       filter_find_specs = None
-
-    # TODO: deprecate the need for this function.
-    self._PreprocessSetCollectionInformation(preprocess_object)
 
     session = self._CreateSession(
         command_line_arguments=command_line_arguments, filter_file=filter_file,

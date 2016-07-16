@@ -11,7 +11,6 @@ from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 from plaso.frontend import psort
-from plaso.lib import event
 from plaso.lib import timelib
 from plaso.output import event_buffer as output_event_buffer
 from plaso.output import interface as output_interface
@@ -23,6 +22,8 @@ from plaso.storage import zip_file as storage_zip_file
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 from tests.frontend import test_lib
+
+import pytz  # pylint: disable=wrong-import-order
 
 
 class PsortTestEvent(events.EventObject):
@@ -275,27 +276,9 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
         storage_file_path, read_only=True)
     preprocessor_object = test_front_end._GetLastGoodPreprocess(storage_file)
     self.assertIsNotNone(preprocessor_object)
-    timezone = getattr(preprocessor_object, u'zone')
-    self.assertEqual(timezone.zone, u'UTC')
-
-  def testSetAnalysisPluginProcessInformation(self):
-    """Test the _SetAnalysisPluginProcessInformation method."""
-    test_front_end = psort.PsortFrontend()
-    analysis_plugins = [test_lib.TestAnalysisPlugin(None)]
-
-    preprocess_object = event.PreprocessObject()
-    preprocess_object.SetCollectionInformationValues({})
-    test_front_end._SetAnalysisPluginProcessInformation(
-        analysis_plugins, preprocess_object)
-    self.assertIsNotNone(preprocess_object)
-    plugin_names = preprocess_object.collection_information[u'plugins']
-    time_of_run = preprocess_object.collection_information[u'time_of_run']
-    method = preprocess_object.collection_information[u'method']
-
-    for analysis_plugin in analysis_plugins:
-      self.assertIn(analysis_plugin.NAME, plugin_names)
-    self.assertAlmostEqual(timelib.Timestamp.GetNow(), time_of_run, 2000000)
-    self.assertIsNotNone(method)
+    # TODO: fix the following test, because the plaso file is in an old format
+    # preprocessor_object.zone does not contain a string.
+    self.assertEqual(preprocessor_object.zone, pytz.UTC)
 
   # TODO: add bogus data location test.
 

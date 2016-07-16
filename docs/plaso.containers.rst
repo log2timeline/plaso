@@ -60,6 +60,14 @@ plaso.containers.plist_event module
     :undoc-members:
     :show-inheritance:
 
+plaso.containers.preprocess module
+----------------------------------
+
+.. automodule:: plaso.containers.preprocess
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.containers.reports module
 -------------------------------
 
