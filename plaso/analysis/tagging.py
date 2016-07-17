@@ -100,13 +100,22 @@ class TaggingPlugin(interface.AnalysisPlugin):
             u'autoselect a tagging file. As no definitions were specified, '
             u'no events will be tagged.')
         return
-    matched_labels = efilter_api.apply(self._tag_rules, vars=event_object)
+
+    try:
+      matched_labels = efilter_api.apply(self._tag_rules, vars=event_object)
+    except efilter_errors.EfilterTypeError as exception:
+      logging.warning(u'Unable to apply efilter query with error: {0:s}'.format(
+          exception))
+      matched_labels = None
+
     if not matched_labels:
       return
+
     event_uuid = getattr(event_object, u'uuid')
     event_tag = events.EventTag(
         comment=u'Tag applied by tagging analysis plugin.',
         event_uuid=event_uuid)
+
     for label in efilter_api.getvalues(matched_labels):
       event_tag.AddLabel(label)
 
@@ -193,6 +202,7 @@ class TaggingPlugin(interface.AnalysisPlugin):
         logging.warning(u'All rules for label "{0:s}" are invalid.'.format(
             label_name))
         continue
+
       tag = efilter_ast.IfElse(
           # Union will be true if any of the 'rules' match.
           efilter_ast.Union(*[rule.root for rule in rules]),
@@ -209,11 +219,10 @@ class TaggingPlugin(interface.AnalysisPlugin):
     """Compiles an analysis report.
 
     Args:
-      analysis_mediator: The analysis mediator object (instance of
-                         AnalysisMediator).
+      analysis_mediator (AnalysisMediator): analysis mediator.
 
     Returns:
-      The analysis report (instance of AnalysisReport).
+      AnalysisReport: analysis report.
     """
     report_text = u'Tagging plugin produced {0:d} tags.\n'.format(
         len(self._tags))
