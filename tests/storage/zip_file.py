@@ -1036,8 +1036,8 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    test_event_sources = list(storage_file.GetEvents())
-    self.assertEqual(len(test_event_sources), 32)
+    test_events = list(storage_file.GetEvents())
+    self.assertEqual(len(test_events), 32)
 
     storage_file.Close()
 
@@ -1045,8 +1045,8 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    test_event_sources = list(storage_file.GetEvents())
-    self.assertEqual(len(test_event_sources), 3)
+    test_events = list(storage_file.GetEvents())
+    self.assertEqual(len(test_events), 3)
 
     storage_file.Close()
 
