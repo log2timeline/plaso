@@ -59,7 +59,7 @@ class StorageMediaTool(tools.CLITool):
     self._vss_stores = None
 
   def _FormatHumanReadableSize(self, size):
-    """Formats the size as a human readable string.
+    """Represents a number of bytes as as human readable string.
 
     Args:
       size (int): size in bytes.
@@ -316,13 +316,17 @@ class StorageMediaTool(tools.CLITool):
     """Parses the user specified partitions string.
 
     Args:
-      partitions [str]: partitions, where 1 represents the first partition.
+      partitions (str): partitions. A range of partitions can be defined
+           as: "3..5". Multiple partitions can be defined as: "1,3,5" (a list
+           of comma separated values). Ranges and lists can also be combined
+           as: "1,3..5". The first partition is 1. All partition can be
+           defined as: "all".
 
     Returns:
       list[str]: partitions.
 
     Raises:
-      BadConfigOption: if the partisions option is invalid.
+      BadConfigOption: if the partitions option is invalid.
     """
     if not partitions:
       return []
@@ -455,7 +459,11 @@ class StorageMediaTool(tools.CLITool):
     """Parses the user specified VSS stores string.
 
     Args:
-      vss_stores [str]: VSS stores, where 1 represents the first store.
+      vss_stores (str): VSS stores. A range of stores can be defined
+          as: "3..5". Multiple stores can be defined as: "1,3,5" (a list
+          of comma separated values). Ranges and lists can also be
+          combined as: "1,3..5". The first store is 1. All stores can be
+          defined as: "all".
 
     Returns:
       list[str]: VSS stores.
