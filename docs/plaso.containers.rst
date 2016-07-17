@@ -4,6 +4,14 @@ plaso.containers package
 Submodules
 ----------
 
+plaso.containers.artifacts module
+---------------------------------
+
+.. automodule:: plaso.containers.artifacts
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.containers.errors module
 ------------------------------
 
