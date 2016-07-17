@@ -86,7 +86,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     """Tests the ProcessSources function on a multi partition image."""
     options = cli_test_lib.TestOptions()
     # TODO: refactor to partitions.
-    options.partition_number = u'all'
+    options.partitions = u'all'
     options.quiet = True
     options.single_process = True
     options.status_view_mode = u'none'
