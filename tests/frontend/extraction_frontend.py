@@ -41,7 +41,7 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
   # TODO: add test for _GetParserFilterPreset
   # TODO: add test for _PreprocessSource
   # TODO: add test for _PreprocessSetCollectionInformation
-  # TODO: add test for _SetDefaultTimezone
+  # TODO: add test for _SetTimezone
 
   def testEnableAndDisableProfiling(self):
     """Tests the EnableProfiling and DisableProfiling functions."""
@@ -145,11 +145,6 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
     """Tests the SetDebugMode function."""
     test_front_end = extraction_frontend.ExtractionFrontend()
     test_front_end.SetDebugMode(enable_debug=True)
-
-  def testSetEnablePreprocessing(self):
-    """Tests the SetEnablePreprocessing function."""
-    test_front_end = extraction_frontend.ExtractionFrontend()
-    test_front_end.SetEnablePreprocessing(True)
 
   def testSetShowMemoryInformation(self):
     """Tests the SetShowMemoryInformation function."""

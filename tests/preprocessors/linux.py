@@ -66,6 +66,8 @@ class LinuxTimezoneTest(shared_test_lib.BaseTestCase):
 class LinuxUsernamesTest(shared_test_lib.BaseTestCase):
   """Tests for the Linux usernames preprocess plug-in object."""
 
+  # pylint: disable=protected-access
+
   _FILE_DATA = (
       'root:x:0:0:root:/root:/bin/bash\n'
       'bin:x:1:1:bin:/bin:/sbin/nologin\n'
@@ -97,14 +99,18 @@ class LinuxUsernamesTest(shared_test_lib.BaseTestCase):
     plugin = linux.LinuxUsernames()
     plugin.Run(self._searcher, knowledge_base_object)
 
-    users = knowledge_base_object.GetValue(u'users')
+    users = sorted(
+        knowledge_base_object._user_accounts[0].values(),
+        key=lambda user_account: user_account.identifier)
     self.assertEqual(len(users), 13)
 
-    self.assertEqual(users[11].get(u'uid', None), u'14')
-    self.assertEqual(users[11].get(u'gid', None), u'50')
-    self.assertEqual(users[11].get(u'name', None), u'ftp')
-    self.assertEqual(users[11].get(u'path', None), u'/var/ftp')
-    self.assertEqual(users[11].get(u'shell', None), u'/sbin/nologin')
+    user_account = users[4]
+
+    self.assertEqual(user_account.identifier, u'14')
+    self.assertEqual(user_account.group_identifier, u'50')
+    self.assertEqual(user_account.user_directory, u'/var/ftp')
+    self.assertEqual(user_account.username, u'ftp')
+    self.assertEqual(user_account.shell, u'/sbin/nologin')
 
 
 if __name__ == '__main__':

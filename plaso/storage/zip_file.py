@@ -141,6 +141,8 @@ except ImportError:
 
 import construct
 
+from plaso.containers import artifacts
+from plaso.containers import preprocess
 from plaso.containers import sessions
 from plaso.lib import definitions
 from plaso.serializer import json_serializer
@@ -1317,6 +1319,25 @@ class ZIPStorageFile(interface.BaseFileStorage):
           self._event_heap.PushEvent(
               event, stream_number, event.store_number)
 
+  # TODO: remove after preprocess deprecation.
+  def _GetPreprocessObjectsLegacyFormat(self):
+    """Retrieves the preprocess objects in the legacy format.
+
+    Yields:
+      PreprocessObject: preprocess object.
+
+    Raises:
+      IOError: if a stream is missing.
+    """
+    stream_name = u'information.dump'
+    if self._HasStream(stream_name):
+      data_stream = _SerializedDataStream(
+          self._zipfile, self._zipfile_path, stream_name)
+
+      for preprocess_object in self._ReadAttributeContainersFromStream(
+          data_stream, u'preprocess'):
+        yield preprocess_object
+
   def _GetSerializedDataStream(
       self, streams_cache, stream_name_prefix, stream_number):
     """Retrieves the serialized data stream.
@@ -1806,6 +1827,48 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     return self._ReadAttributeContainerFromStreamEntry(data_stream, u'event')
 
+  # TODO: remove after preprocess deprecation.
+  def _ReadPreprocessingInformationLegacyFormat(self, knowledge_base):
+    """Reads preprocessing information in the legacy format.
+
+    Args:
+      knowledge_base (KnowledgeBase): knowledge base, where
+          the preprocessing information is stored.
+    """
+    for preprocess_object in self._GetPreprocessObjectsLegacyFormat():
+      store_range = getattr(preprocess_object, u'store_range', None)
+      if not store_range:
+        continue
+
+      # TODO: should this be store_range[1] + 1 with or without + 1?
+      # This is inconsistent in the current version of the codebase.
+      for store_number in range(store_range[0], store_range[1]):
+        hostname = getattr(preprocess_object, u'hostname', None)
+        if hostname:
+          # TODO: A bit wasteful, if the range of store numbers is large
+          # we are wasting keys. Rewrite this logic into a more optimal one.
+          hostname_artifact = artifacts.HostnameArtifact(name=hostname)
+          # TODO: refactor the use of store number.
+          hostname_artifact.store_number = store_number
+          knowledge_base.SetHostname(hostname_artifact)
+
+        users = getattr(preprocess_object, u'users', [])
+        for user in users:
+          if u'sid' in user:
+            user_identifier = user.get(u'sid', None)
+          elif u'uid' in user:
+            user_identifier = user.get(u'uid', None)
+          else:
+            user_identifier = None
+
+          username = user.get(u'name', None)
+
+          user_account_artifact = artifacts.UserAccountArtifact(
+              identifier=user_identifier, username=username)
+          # TODO: refactor the use of store number.
+          user_account_artifact.store_number = store_number
+          knowledge_base.SetUserAccount(user_account_artifact)
+
   def _ReadSerializerStream(self):
     """Reads the serializer stream.
 
@@ -1940,6 +2003,64 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming(u'write')
+
+  # TODO: remove after preprocess deprecation.
+  def _WritePreprocessingInformationLegacyFormat(self, knowledge_base):
+    """Writes preprocessing information in legacy format.
+
+    Args:
+      knowledge_base (KnowledgeBase): contains the preprocessing information.
+    """
+    preprocess_object = preprocess.PreprocessObject()
+
+    for name, value in knowledge_base.GetPathAttributes():
+      setattr(preprocess_object, name, value)
+
+    for name, value in knowledge_base.GetValues():
+      setattr(preprocess_object, name, value)
+
+    setattr(preprocess_object, u'hostname', knowledge_base.hostname)
+
+    users = knowledge_base.GetUsersPreprocessObject()
+    setattr(preprocess_object, u'users', users)
+
+    self._WritePreprocessObjectLegacyFormat(preprocess_object)
+
+  # TODO: remove after preprocess deprecation.
+  def _WritePreprocessObjectLegacyFormat(self, preprocess_object):
+    """Writes a preprocess object in the legacy format.
+
+    Args:
+      preprocess_object (PreprocessObject): preprocess object.
+
+    Raises:
+      IOError: when the storage file is closed or read-only or
+               if the stream cannot be opened.
+    """
+    if not self._is_open:
+      raise IOError(u'Unable to write to closed storage file.')
+
+    if self._read_only:
+      raise IOError(u'Unable to write to read-only storage file.')
+
+    stream_name = u'information.dump'
+
+    existing_stream_data = self._ReadStream(stream_name)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(u'preprocess')
+
+    preproces_data = self._serializer.WriteSerialized(preprocess_object)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StopTiming(u'preprocess')
+
+    preproces_data_size = construct.ULInt32(u'size').build(
+        len(preproces_data))
+    stream_data = b''.join([
+        existing_stream_data, preproces_data_size, preproces_data])
+
+    self._WriteStream(stream_name, stream_data)
 
   def _WriteSerializedErrors(self):
     """Writes the buffered serialized errors."""
@@ -2675,38 +2796,6 @@ class ZIPStorageFile(interface.BaseFileStorage):
         self._event_sources_list.number_of_attribute_containers)
     return number_of_event_sources
 
-  def GetPreprocessObjects(self):
-    """Retrieves the preprocess objects.
-
-    Yields:
-      PreprocessObject: preprocess object.
-
-    Raises:
-      IOError: if a stream is missing.
-    """
-    if self.format_version < 20160715:
-      stream_name = u'information.dump'
-      if self._HasStream(stream_name):
-        data_stream = _SerializedDataStream(
-            self._zipfile, self._zipfile_path, stream_name)
-
-        for preprocess_object in self._ReadAttributeContainersFromStream(
-            data_stream, u'preprocess'):
-          yield preprocess_object
-
-    else:
-      for stream_number in range(1, self._last_preprocess):
-        stream_name = u'preprocess.{0:06}'.format(stream_number)
-        if not self._HasStream(stream_name):
-          raise IOError(u'No such stream: {0:s}'.format(stream_name))
-
-        data_stream = _SerializedDataStream(
-            self._zipfile, self._zipfile_path, stream_name)
-
-        for preprocess_object in self._ReadAttributeContainersFromStream(
-            data_stream, u'preprocess'):
-          yield preprocess_object
-
   def GetSessions(self):
     """Retrieves the sessions.
 
@@ -2823,15 +2912,46 @@ class ZIPStorageFile(interface.BaseFileStorage):
     if not read_only:
       self._OpenWrite()
 
-  def WritePreprocessObject(self, preprocess_object):
-    """Writes a preprocess object.
+  def ReadPreprocessingInformation(self, knowledge_base):
+    """Reads preprocessing information.
+
+    The preprocessing information contains the system configuration which
+    contains information about various system specific configuration data,
+    for example the user accounts.
 
     Args:
-      preprocess_object (PreprocessObject): preprocess object.
+      knowledge_base (KnowledgeBase): is used to store the preprocessing
+          information.
+    """
+    # TODO: remove after preprocess deprecation.
+    if self.format_version < 20160715:
+      self._ReadPreprocessingInformationLegacyFormat(knowledge_base)
+      return
+
+    for stream_number in range(1, self._last_preprocess):
+      stream_name = u'preprocess.{0:06d}'.format(stream_number)
+      if not self._HasStream(stream_name):
+        raise IOError(u'No such stream: {0:s}'.format(stream_name))
+
+      data_stream = _SerializedDataStream(
+          self._zipfile, self._zipfile_path, stream_name)
+
+      system_configuration = self._ReadAttributeContainerFromStreamEntry(
+          data_stream, u'preprocess')
+
+      knowledge_base.ReadSystemConfigurationArtifact(
+          stream_number, system_configuration)
+
+  def WritePreprocessingInformation(self, knowledge_base):
+    """Writes preprocessing information.
+
+    Args:
+      knowledge_base (KnowledgeBase): contains the preprocessing information.
 
     Raises:
-      IOError: when the storage file is closed or read-only or
-               if the stream cannot be opened.
+      IOError: if the storage type does not support writing preprocess
+               information or the storage file is closed or read-only or
+               if the preprocess information stream already exists.
     """
     if not self._is_open:
       raise IOError(u'Unable to write to closed storage file.')
@@ -2839,38 +2959,28 @@ class ZIPStorageFile(interface.BaseFileStorage):
     if self._read_only:
       raise IOError(u'Unable to write to read-only storage file.')
 
+    if self.storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Preprocess information not supported by storage type.')
+
+    # TODO: remove after preprocess deprecation.
     if self.format_version < 20160715:
-      stream_name = u'information.dump'
+      self._WritePreprocessingInformationLegacyFormat(knowledge_base)
+      return
 
-      existing_stream_data = self._ReadStream(stream_name)
-    else:
-      stream_name = u'preprocess.{0:06d}'.format(self._last_preprocess)
-      if self._HasStream(stream_name):
-        raise IOError(u'Preprocess: {0:06d} already exists.'.format(
-            self._last_preprocess))
+    stream_name = u'preprocess.{0:06d}'.format(self._last_preprocess)
+    if self._HasStream(stream_name):
+      raise IOError(u'preprocess information: {0:06d} already exists.'.format(
+          self._last_preprocess))
 
-    if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(u'preprocess')
+    system_configuration = knowledge_base.GetSystemConfigurationArtifact()
 
-    preproces_data = self._serializer.WriteSerialized(preprocess_object)
+    preprocess_data = self._SerializeAttributeContainer(system_configuration)
 
-    if self._serializers_profiler:
-      self._serializers_profiler.StopTiming(u'preprocess')
-
-    if self.format_version < 20160715:
-      preproces_data_size = construct.ULInt32(u'size').build(
-          len(preproces_data))
-      stream_data = b''.join([
-          existing_stream_data, preproces_data_size, preproces_data])
-
-      self._WriteStream(stream_name, stream_data)
-
-    else:
-      data_stream = _SerializedDataStream(
-          self._zipfile, self._zipfile_path, stream_name)
-      data_stream.WriteInitialize()
-      data_stream.WriteEntry(preproces_data)
-      data_stream.WriteFinalize()
+    data_stream = _SerializedDataStream(
+        self._zipfile, self._zipfile_path, stream_name)
+    data_stream.WriteInitialize()
+    data_stream.WriteEntry(preprocess_data)
+    data_stream.WriteFinalize()
 
   def WriteSessionCompletion(self, session_completion):
     """Writes session completion information.
@@ -3349,27 +3459,23 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self._merge_task_storage_path = None
     self._task_storage_path = None
 
-  # TODO: remove during phased processing refactor.
-  def WritePreprocessObject(self, preprocess_object):
-    """Writes a preprocessing object.
+  def WritePreprocessingInformation(self, knowledge_base):
+    """Writes preprocessing information.
 
     Args:
-      preprocess_object: a preprocess object (instance of PreprocessObject).
+      knowledge_base (KnowledgeBase): contains the preprocessing information.
 
     Raises:
-      IOError: when the storage writer is closed.
+      IOError: if the storage type does not support writing preprocessing
+               information or when the storage writer is closed.
     """
     if not self._storage_file:
       raise IOError(u'Unable to write to closed storage writer.')
 
-    # TODO: write the tags incrementally instead of buffering them
-    # into a list.
-    if self._event_tags:
-      self._storage_file.AddEventTags(self._event_tags)
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Preprocessing information not supported by storage type.')
 
-    # TODO: refactor this currently create a preprocessing object
-    # for every sync in single processing.
-    self._storage_file.WritePreprocessObject(preprocess_object)
+    self._storage_file.WritePreprocessingInformation(knowledge_base)
 
   def WriteSessionCompletion(self):
     """Writes session completion information.
@@ -3378,11 +3484,16 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       IOError: if the storage type is not supported or
                when the storage writer is closed.
     """
+    if not self._storage_file:
+      raise IOError(u'Unable to write to closed storage writer.')
+
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError(u'Unsupported storage type.')
 
-    if not self._storage_file:
-      raise IOError(u'Unable to write to closed storage writer.')
+    # TODO: write the tags incrementally instead of buffering them
+    # into a list.
+    if self._event_tags:
+      self._storage_file.AddEventTags(self._event_tags)
 
     session_completion = self._session.CreateSessionCompletion()
     self._storage_file.WriteSessionCompletion(session_completion)
@@ -3394,11 +3505,11 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       IOError: if the storage type is not supported or
                when the storage writer is closed.
     """
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError(u'Unsupported storage type.')
-
     if not self._storage_file:
       raise IOError(u'Unable to write to closed storage writer.')
+
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
 
     session_start = self._session.CreateSessionStart()
     self._storage_file.WriteSessionStart(session_start)
@@ -3410,11 +3521,11 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       IOError: if the storage type is not supported or
                when the storage writer is closed.
     """
-    if self._storage_type != definitions.STORAGE_TYPE_TASK:
-      raise IOError(u'Unsupported storage type.')
-
     if not self._storage_file:
       raise IOError(u'Unable to write to closed storage writer.')
+
+    if self._storage_type != definitions.STORAGE_TYPE_TASK:
+      raise IOError(u'Unsupported storage type.')
 
     task_completion = self._task.CreateTaskCompletion()
     self._storage_file.WriteTaskCompletion(task_completion)
@@ -3426,11 +3537,11 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       IOError: if the storage type is not supported or
                when the storage writer is closed.
     """
-    if self._storage_type != definitions.STORAGE_TYPE_TASK:
-      raise IOError(u'Unsupported storage type.')
-
     if not self._storage_file:
       raise IOError(u'Unable to write to closed storage writer.')
+
+    if self._storage_type != definitions.STORAGE_TYPE_TASK:
+      raise IOError(u'Unsupported storage type.')
 
     task_start = self._task.CreateTaskStart()
     self._storage_file.WriteTaskStart(task_start)

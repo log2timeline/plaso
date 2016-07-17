@@ -107,7 +107,7 @@ class OutputModuleTestCase(unittest.TestCase):
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
     if storage_file:
-      knowledge_base_object.InitializeLookupDictionaries(storage_file)
+      storage_file.ReadPreprocessingInformation(knowledge_base_object)
 
     formatter_mediator = formatters_mediator.FormatterMediator()
     output_mediator = mediator.OutputMediator(

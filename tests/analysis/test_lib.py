@@ -6,6 +6,7 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.analysis import mediator
+from plaso.containers import artifacts
 from plaso.containers import reports
 from plaso.containers import sessions
 from plaso.engine import knowledge_base
@@ -25,7 +26,7 @@ class TestAnalysisReportQueueConsumer(plaso_queue.ItemQueueConsumer):
     """Initializes the queue consumer.
 
     Args:
-      queue_object: the queue object (instance of Queue).
+      queue_object (Queue): queue object.
     """
     super(TestAnalysisReportQueueConsumer, self).__init__(queue_object)
     self.analysis_reports = []
@@ -34,7 +35,7 @@ class TestAnalysisReportQueueConsumer(plaso_queue.ItemQueueConsumer):
     """Consumes an item callback for ConsumeItems.
 
     Args:
-      analysis_report: the analysis report (instance of AnalysisReport).
+      analysis_report (AnalysisReport): analysis report.
     """
     self.analysis_reports.append(analysis_report)
 
@@ -51,8 +52,8 @@ class TestEventObjectProducer(plaso_queue.ItemQueueProducer):
     """Initializes the queue producer object.
 
     Args:
-      queue_object: a queue object (instance of Queue).
-      storage_writer: a strorage writer (instance of FakeStorageWriter).
+      queue_object (Queue): queue.
+      storage_writer (FakeStorageWriter): storage writer.
     """
     super(TestEventObjectProducer, self).__init__(queue_object)
     self._storage_writer = storage_writer
@@ -70,12 +71,11 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     """Retrieves the analysis reports from the queue consumer.
 
     Args:
-      analysis_report_queue_consumer: the analysis report queue consumer
-                                      object (instance of
-                                      TestAnalysisReportQueueConsumer).
+      analysis_report_queue_consumer (TestAnalysisReportQueueConsumer):
+          analysis report queue consumer.
 
     Returns:
-      A list of analysis reports (instances of AnalysisReport).
+      list[AnalysisReport]: analysis reports.
     """
     analysis_report_queue_consumer.ConsumeItems()
 
@@ -90,14 +90,12 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     """Parses a file using the parser object.
 
     Args:
-      path_segments: a list of strings containing the path segments inside
-                     the test data directory.
-      parser: a parser object (instance of BaseParser).
-      knowledge_base_object: the knowledge base object (instance of
-                             KnowledgeBase).
+      path_segments (list[str]): path segments inside the test data directory.
+      parser (BaseParser): parser.
+      knowledge_base_object (KnowledgeBase): knowledge base.
 
     Returns:
-      A storage writer object (instance of FakeStorageWriter).
+      FakeStorageWriter: storage writer.
     """
     session = sessions.Session()
     storage_writer = fake_storage.FakeStorageWriter(session)
@@ -133,12 +131,11 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     """Analyzes an event object queue using the plugin object.
 
     Args:
-      analysis_plugin: the analysis plugin object (instance of AnalysisPlugin).
-      knowledge_base_object: the knowledge base object (instance of
-                             KnowledgeBase).
+      analysis_plugin (AnalysisPlugin): analysis plugin.
+      knowledge_base_object (KnowledgeBase): knowledge base.
 
     Returns:
-      An event object queue object (instance of Queue).
+      TestAnalysisReportQueueConsumer: analysis report queue consumer.
     """
     analysis_report_queue = single_process.SingleProcessQueue()
     analysis_report_queue_consumer = TestAnalysisReportQueueConsumer(
@@ -157,15 +154,38 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     """Sets up a knowledge base.
 
     Args:
-      knowledge_base_values: optional dict containing the knowledge base
-                             values.
+      knowledge_base_values (Optional[dict[str,str]]): knowledge base values.
 
     Returns:
-      An knowledge base object (instance of KnowledgeBase).
+      KnowledgeBase: knowledge base.
     """
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
       for identifier, value in iter(knowledge_base_values.items()):
-        knowledge_base_object.SetValue(identifier, value)
+        if identifier == u'users':
+          self._SetUserAccounts(knowledge_base_object, value)
+        else:
+          knowledge_base_object.SetValue(identifier, value)
 
     return knowledge_base_object
+
+  def _SetUserAccounts(self, knowledge_base_object, users):
+    """Sets the user accounts in the knowledge base.
+
+    Args:
+      knowledge_base (KnowledgeBase): is used to store information about users.
+      users (list[dict[str,str])): users, for example [{'name': 'me',
+        'sid': 'S-1', 'uid': '1'}]
+    """
+    for user in users:
+      identifier = user.get(u'sid', user.get(u'uid', None))
+      if not identifier:
+        continue
+
+      user_account_artifact = artifacts.UserAccountArtifact(
+          identifier=identifier, user_directory=user.get(u'path', None),
+          username=user.get(u'name', None))
+
+      # TODO: refactor the use of store number.
+      user_account_artifact.store_number = 0
+      knowledge_base_object.SetUserAccount(user_account_artifact)

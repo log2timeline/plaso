@@ -56,13 +56,14 @@ class MultiProcessEngine(engine.BaseEngine):
   _WORKER_PROCESSES_MAXIMUM = 15
 
   def __init__(
-      self, enable_profiling=False,
+      self, debug_output=False, enable_profiling=False,
       maximum_number_of_tasks=_MAXIMUM_NUMBER_OF_TASKS,
       profiling_directory=None, profiling_sample_rate=1000,
       profiling_type=u'all', use_zeromq=True):
     """Initializes an engine object.
 
     Args:
+      debug_output (Optional[bool]): True if debug output should be enabled.
       enable_profiling (Optional[bool]): True if profiling should be enabled.
       maximum_number_of_tasks (Optional[int]): maximum number of concurrent
           tasks, where 0 represents no limit.
@@ -83,7 +84,7 @@ class MultiProcessEngine(engine.BaseEngine):
           instead of Python's multiprocessing queue.
     """
     super(MultiProcessEngine, self).__init__(
-        enable_profiling=enable_profiling,
+        debug_output=debug_output, enable_profiling=enable_profiling,
         profiling_directory=profiling_directory,
         profiling_sample_rate=profiling_sample_rate,
         profiling_type=profiling_type)
@@ -579,7 +580,7 @@ class MultiProcessEngine(engine.BaseEngine):
     process = worker_process.WorkerProcess(
         task_queue, storage_writer, self.knowledge_base,
         self._session_identifier, self._last_worker_number,
-        enable_debug_output=self._enable_debug_output,
+        debug_output=self._debug_output,
         enable_profiling=self._enable_profiling,
         enable_sigsegv_handler=self._enable_sigsegv_handler,
         filter_object=self._filter_object,
@@ -871,8 +872,8 @@ class MultiProcessEngine(engine.BaseEngine):
         logging.error(u'Worker processing untracked task.')
 
   def ProcessSources(
-      self, session_identifier, source_path_specs, preprocess_object,
-      storage_writer, enable_sigsegv_handler=False, filter_find_specs=None,
+      self, session_identifier, source_path_specs, storage_writer,
+      enable_sigsegv_handler=False, filter_find_specs=None,
       filter_object=None, hasher_names_string=None, mount_path=None,
       number_of_worker_processes=0, parser_filter_expression=None,
       preferred_year=None, process_archive_files=False,
@@ -884,7 +885,6 @@ class MultiProcessEngine(engine.BaseEngine):
       session_identifier (str): identifier of the session.
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
-      preprocess_object (PreprocessObject): preprocess object.
       storage_writer (StorageWriter): storage writer for a session storage.
       enable_sigsegv_handler (Optional[bool]): True if the SIGSEGV handler
           should be enabled.
@@ -983,13 +983,11 @@ class MultiProcessEngine(engine.BaseEngine):
 
     try:
       storage_writer.WriteSessionStart()
+      storage_writer.WritePreprocessingInformation(self.knowledge_base)
 
       self._ProcessSources(
           source_path_specs, storage_writer,
           filter_find_specs=filter_find_specs)
-
-      # TODO: refactor the use of preprocess_object.
-      storage_writer.WritePreprocessObject(preprocess_object)
 
       # TODO: on abort use WriteSessionAborted instead of completion?
       storage_writer.WriteSessionCompletion()

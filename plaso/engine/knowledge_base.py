@@ -7,7 +7,7 @@ analysis phases, with essential information like e.g. the timezone and
 codepage of the source data.
 """
 
-from plaso.containers import preprocess
+from plaso.containers import artifacts
 from plaso.lib import py2to3
 
 import pytz  # pylint: disable=wrong-import-order
@@ -16,92 +16,217 @@ import pytz  # pylint: disable=wrong-import-order
 class KnowledgeBase(object):
   """Class that implements the artifact knowledge base."""
 
-  def __init__(self, pre_obj=None):
-    """Initialize the knowledge base object.
-
-    Args:
-        pre_obj: Optional preprocess object (instance of PreprocessObject.).
-                 The default is None, which indicates the KnowledgeBase should
-                 create a new PreprocessObject.
-    """
+  def __init__(self):
+    """Initializes a knowledge base object."""
     super(KnowledgeBase, self).__init__()
-
-    # TODO: the first versions of the knowledge base will wrap the pre-process
-    # object, but this should be replaced by an artifact style knowledge base
-    # or artifact cache.
-    if pre_obj:
-      self._pre_obj = pre_obj
-    else:
-      self._pre_obj = preprocess.PreprocessObject()
-
     self._default_codepage = u'cp1252'
-    self._default_timezone = pytz.timezone(u'UTC')
+    self._environment_variables = {}
     self._hostnames = {}
-    self._preprocess_objects = {}
-
-  @property
-  def pre_obj(self):
-    """The pre-process object."""
-    return self._pre_obj
+    self._timezone = pytz.UTC
+    self._user_accounts = {}
+    self._values = {}
 
   @property
   def codepage(self):
-    """The codepage."""
-    return getattr(self._pre_obj, u'codepage', self._default_codepage)
+    """str: codepage."""
+    return self._values.get(u'codepage', self._default_codepage)
 
   @property
   def hostname(self):
-    """The hostname."""
-    return getattr(self._pre_obj, u'hostname', u'')
+    """str: hostname."""
+    # TODO: refactor the use of store number.
+    hostname_artifact = self._hostnames.get(0, None)
+    if not hostname_artifact:
+      return u''
+
+    return hostname_artifact.name or u''
 
   @property
   def platform(self):
-    """The platform."""
-    return getattr(self._pre_obj, u'guessed_os', u'')
+    """str: platform."""
+    return self._values.get(u'guessed_os', u'')
 
   @platform.setter
   def platform(self, value):
-    """The platform."""
-    setattr(self._pre_obj, u'guessed_os', value)
+    """str: platform."""
+    self._values[u'guessed_os'] = value
 
   @property
   def timezone(self):
     """datetime.tzinfo: timezone."""
-    return self._default_timezone
-
-  @property
-  def users(self):
-    """The list of users."""
-    return getattr(self._pre_obj, u'users', [])
+    return self._timezone
 
   @property
   def year(self):
-    """The year."""
-    return getattr(self._pre_obj, u'year', 0)
+    """int: year."""
+    return self._values.get(u'year', 0)
+
+  def GetEnvironmentVariable(self, name):
+    """Retrieves an environment variable.
+
+    Args:
+      name (str): name of the environment variable.
+
+    Returns:
+      EnvironmentVariableArtifact: environment variable artifact or None
+          if there was no value set for the given name.
+    """
+    name = name.upper()
+    return self._environment_variables.get(name, None)
+
+  # TODO: refactor.
+  def GetHostname(self, store_number, default_hostname=u'-'):
+    """Retrieves the hostname related to the event.
+
+    If the hostname is not stored in the event it is determined based
+    on the preprocessing information that is stored inside the storage file.
+
+    Args:
+      store_number (int): store number.
+      default_hostname (Optional[str]): default hostname.
+
+    Returns:
+      str: hostname.
+    """
+    return self._hostnames.get(store_number, default_hostname)
 
   def GetPathAttributes(self):
     """Retrieves the path attributes.
 
     Returns:
       dict[str, str]: path attributes, typically environment variables
-                      that are expanded e.g. $HOME or %SystemRoot%.
+          that are expanded e.g. $HOME or %SystemRoot%.
     """
-    # TODO: improve this only return known enviroment variables.
-    return self.pre_obj.__dict__
+    return {
+        environment_variable.name: environment_variable.value
+        for environment_variable in iter(self._environment_variables.values())}
+
+  # TODO: remove this function it is incorrect.
+  def GetStoredHostname(self):
+    """Retrieves the stored hostname.
+
+    The hostname is determined based on the preprocessing information
+    that is stored inside the storage file.
+
+    Returns:
+      str: hostname.
+    """
+    store_number = len(self._hostnames)
+    return self._hostnames.get(store_number, None)
+
+  def GetSystemConfigurationArtifact(self):
+    """Retrieves the knowledge base as a system configuration artifact.
+
+    Returns:
+      SystemConfigurationArtifact: system configuration artifact.
+    """
+    system_configuration = artifacts.SystemConfigurationArtifact()
+
+    system_configuration.code_page = self._values.get(
+        u'codepage', self._default_codepage)
+
+    # TODO: refactor the use of store number.
+    system_configuration.hostname = self._hostnames.get(0, None)
+
+    system_configuration.time_zone = self._values.get(u'timezone', u'UTC')
+
+    # TODO: refactor the use of store number.
+    user_accounts = self._user_accounts.get(0, {})
+    system_configuration.user_accounts = user_accounts.values()
+
+    return system_configuration
+
+  # TODO: remove after preprocess deprecation.
+  def GetUsersPreprocessObject(self):
+    """Retrieves a list of users for the preprocess object.
+
+    Returns:
+      list[dict[str,str]]: users, for example [{'name': 'me', 'sid': 'S-1',
+        'uid': '1'}]
+    """
+    users = []
+
+    # TODO: refactor the use of store number.
+    user_accounts = self._user_accounts.get(0, [])
+    for user_account in iter(user_accounts.values()):
+      user_dict = {}
+      if user_account.username:
+        user_dict[u'name'] = user_account.username
+
+      if user_account.identifier:
+        if user_account.identifier.startswith(u'S-'):
+          user_dict[u'sid'] = user_account.identifier
+        else:
+          user_dict[u'uid'] = user_account.identifier
+
+      if user_account.group_identifier:
+        user_dict[u'gid'] = user_account.group_identifier
+
+      if user_account.user_directory:
+        user_dict[u'path'] = user_account.user_directory
+
+      users.append(user_dict)
+
+    return users
+
+  # TODO: refactor.
+  def GetUsername(self, user_identifier, store_number, default_username=u'-'):
+    """Retrieves the username related to the event.
+
+    Args:
+      user_identifier (str): user identifier.
+      store_number (int): store number.
+      default_username (Optional[str]): default username.
+
+    Returns:
+      str: username.
+    """
+    # TODO: refactor the use of store number.
+    if store_number not in self._user_accounts or not user_identifier:
+      return default_username
+
+    user_accounts = self._user_accounts[store_number]
+    user_account = user_accounts.get(user_identifier, None)
+    if not user_account or not user_account.username:
+      return default_username
+
+    return user_account.username
 
   def GetUsernameByIdentifier(self, identifier):
     """Retrieves the username based on an identifier.
 
     Args:
-      identifier: the identifier, either a UID or SID.
+      identifier (str): user identifier, either a UID or SID.
 
     Returns:
-      The username or - if not available.
+      str: username or '-' if not available.
     """
-    if not identifier:
-      return u'-'
+    return self.GetUsername(identifier, 0)
 
-    return self._pre_obj.GetUsernameById(identifier)
+  def GetUsernameForPath(self, path):
+    """Retrieves a username for a specific path.
+
+    This is determining if a specific path is within a user's directory and
+    returning the username of the user if so.
+
+    Args:
+      path (str): path.
+
+    Returns:
+      str: username or None if the path does not appear to be within a user's
+          directory.
+    """
+    path = path.lower()
+
+    # TODO: refactor the use of store number.
+    user_accounts = self._user_accounts.get(0, {})
+    for user_account in iter(user_accounts.values()):
+      if not user_account.user_directory:
+        continue
+
+      user_directory = user_account.user_directory.lower()
+      if path.startswith(user_directory):
+        return user_account.username
 
   def GetValue(self, identifier, default_value=None):
     """Retrieves a value by identifier.
@@ -120,115 +245,80 @@ class KnowledgeBase(object):
       raise TypeError(u'Identifier not a string type.')
 
     identifier = identifier.lower()
-    return getattr(self._pre_obj, identifier, default_value)
+    return self._values.get(identifier, default_value)
 
-  # TODO: refactor.
-  def GetHostname(self, store_number, default_hostname=u'-'):
-    """Retrieves the hostname related to the event.
+  def ReadSystemConfigurationArtifact(self, store_number, system_configuration):
+    """Reads the knowledge base values from a system configuration artifact.
 
-    If the hostname is not stored in the event it is determined based
-    on the preprocessing information that is stored inside the storage file.
+    Note that this overwrites existing values in the knowledge base.
 
     Args:
       store_number (int): store number.
-      default_hostname (Optional[str]): default hostname.
-
-    Returns:
-      str: hostname.
+      system_configuration (SystemConfigurationArtifact): system configuration
+          artifact.
     """
-    return self._hostnames.get(store_number, default_hostname)
+    # TODO: refactor the use of store number.
+    self._hostnames[store_number] = system_configuration.hostname
 
-  # TODO: remove this function it is incorrect.
-  def GetStoredHostname(self):
-    """Retrieves the stored hostname.
-
-    The hostname is determined based on the preprocessing information
-    that is stored inside the storage file.
-
-    Returns:
-      str: hostname.
-    """
-    store_number = len(self._hostnames)
-    return self._hostnames.get(store_number, None)
-
-  # TODO: refactor.
-  def GetUsername(self, user_identifier, store_number, default_username=u'-'):
-    """Retrieves the username related to the event.
-
-    Args:
-      user_identifier (str): user identifier.
-      store_number (int): store number.
-      default_username (Optional[str]): default username.
-
-    Returns:
-      str: username.
-    """
-    if not store_number:
-      return default_username
-
-    pre_obj = self._preprocess_objects.get(store_number, None)
-    if not pre_obj:
-      return default_username
-
-    preprocess_username = pre_obj.GetUsernameById(user_identifier)
-    if preprocess_username and preprocess_username != u'-':
-      return preprocess_username
-
-    if not user_identifier:
-      return default_username
-
-    preprocess_username = pre_obj.GetUsernameById(user_identifier)
-    if preprocess_username and preprocess_username != u'-':
-      return preprocess_username
-
-    return default_username
-
-  # TODO: refactor.
-  def InitializeLookupDictionaries(self, storage_file):
-    """Initializes the lookup dictionaries.
-
-    Args:
-      storage_file (BaseStorage): storage file.
-
-    Builds a dictionary of hostnames and usernames from the preprocess
-    objects stored inside the storage file.
-    """
-    self._hostnames = {}
-    self._preprocess_objects = {}
-
-    for preprocess_object in storage_file.GetPreprocessObjects():
-      store_range = getattr(preprocess_object, u'store_range', None)
-      if not store_range:
-        continue
-
-      # TODO: should this be store_range[1] + 1 with or without + 1?
-      # This is inconsistent in the current version of the codebase.
-      for store_number in range(store_range[0], store_range[1]):
-        self._preprocess_objects[store_number] = preprocess_object
-
-        hostname = getattr(preprocess_object, u'hostname', None)
-        if hostname:
-          # TODO: A bit wasteful, if the range is large we are wasting keys.
-          # Rewrite this logic into a more optimal one.
-          self._hostnames[store_number] = hostname
+    # TODO: refactor the use of store number.
+    self._user_accounts[store_number] = {
+        user_account.name: user_account
+        for user_account in system_configuration.user_accounts}
 
   def SetDefaultCodepage(self, codepage):
     """Sets the default codepage.
 
     Args:
-      codepage: the default codepage.
+      codepage (str): default codepage.
     """
     # TODO: check if value is sane.
     self._default_codepage = codepage
 
-  def SetDefaultTimezone(self, timezone):
-    """Sets the default timezone.
+  def SetTimezone(self, timezone):
+    """Sets the timezone.
 
     Args:
-      timezone (datetime.tzinfo): default timezone.
+      timezone (str): timezone.
+
+    Raises:
+      ValueError: if the timezone is not supported.
     """
-    # TODO: check if value is sane.
-    self._default_timezone = timezone
+    try:
+      self._timezone = pytz.timezone(timezone)
+    except pytz.UnknownTimeZoneError:
+      raise ValueError(u'Unsupported timezone: {0:s}'.format(timezone))
+
+  def SetEnvironmentVariable(self, enviroment_variable):
+    """Sets an environment variable.
+
+    Args:
+      enviroment_variable (EnvironmentVariableArtifact): environment variable
+          artifact.
+    """
+    name = enviroment_variable.name.upper()
+    self._environment_variables[name] = enviroment_variable
+
+  def SetHostname(self, hostname):
+    """Sets a hostname.
+
+    Args:
+      hostname (HostnameArtifact): hostname artifact.
+    """
+    # TODO: refactor the use of store number.
+    self._hostnames[hostname.store_number] = hostname
+
+  def SetUserAccount(self, user_account):
+    """Sets an user account.
+
+    Args:
+      user_account (UserAccountArtifact): user account artifact.
+    """
+    if user_account.store_number not in self._user_accounts:
+      # TODO: refactor the use of store number.
+      self._user_accounts[user_account.store_number] = {}
+
+    user_accounts = self._user_accounts[user_account.store_number]
+    user_accounts[user_account.identifier] = user_account
 
   def SetValue(self, identifier, value):
     """Sets a value by identifier.
@@ -244,4 +334,4 @@ class KnowledgeBase(object):
       raise TypeError(u'Identifier not a string type.')
 
     identifier = identifier.lower()
-    setattr(self._pre_obj, identifier, value)
+    self._values[identifier] = value
