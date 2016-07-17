@@ -127,7 +127,7 @@ class LinuxUsernames(interface.PreprocessPlugin):
 
     users = []
     for row in reader:
-      if not row[0] or not row[2]:
+      if len(row) < 6 or not row[0] or not row[2]:
         # TODO: add and store preprocessing errors.
         continue
 
