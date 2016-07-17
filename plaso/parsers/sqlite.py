@@ -365,7 +365,7 @@ class SQLiteParser(interface.FileEntryParser):
     cache = SQLiteCache()
     try:
       for plugin in self._plugin_objects:
-        if database_tables.difference(plugin.REQUIRED_TABLES):
+        if database_tables < plugin.REQUIRED_TABLES:
           continue
 
         try:
