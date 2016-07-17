@@ -10,7 +10,6 @@ try:
 except ImportError:
   import sqlite3
 
-from plaso.lib import errors
 from plaso.parsers import plugins
 
 
@@ -29,14 +28,14 @@ class SQLitePlugin(plugins.BasePlugin):
   REQUIRED_TABLES = frozenset([])
 
   @classmethod
-  def _HashSQLiteRow(cls, row):
-    """Hashes the given SQLite row.
+  def _HashRow(cls, row):
+    """Hashes the given row.
 
     Args:
-      row: A SQLite Row object (instance of sqlite3.Row)
+      row (sqlite3.Row): row.
 
     Returns:
-      The hash value of the given row.
+      int: hash value of the given row.
     """
     hash_value = 0
     for column_value in row:
@@ -88,13 +87,13 @@ class SQLitePlugin(plugins.BasePlugin):
             callback(
                 parser_mediator, row, query=query, cache=cache,
                 database=database)
-            row_cache.add(self._HashSQLiteRow(row))
+            row_cache.add(self._HashRow(row))
 
           # Process unique rows in WAL file.
           file_entry = parser_mediator.GetFileEntry()
           parser_mediator.SetFileEntry(wal_file_entry)
           for row in wal_sql_results:
-            if self._HashSQLiteRow(row) not in row_cache:
+            if self._HashRow(row) not in row_cache:
               callback(
                   parser_mediator, row, query=query, cache=cache,
                   database=database_wal)
@@ -126,25 +125,19 @@ class SQLitePlugin(plugins.BasePlugin):
     objects.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      cache: A SQLiteCache object.
-      database: A database object (instance of SQLiteDatabase).
-      database_wal: Optional database object with WAL file committed
-                    (instance of SQLiteDatabase).
-      wal_file_entry: Optional file entry for the database with committed WAL
-                      file (instance of dfvfs.FileEntry).
+      parser_mediator (ParserMediator): parser mediator.
+      cache (SQLiteCache): cache.
+      database (SQLiteDatabase): database.
+      database_wal (Optional[SQLiteDatabase]): database with its
+          Write-Ahead Log (WAL) committed.
+      wal_file_entry (Optional[dfvfs.FileEntry]): file entry of the database
+          with is Write-Ahead Log (WAL) committed.
 
     Raises:
-      errors.WrongPlugin: If the database does not contain all the tables
-      defined in the REQUIRED_TABLES set.
       ValueError: If the database attribute is not passed in.
     """
     if database is None:
       raise ValueError(u'Database is not set.')
-
-    if frozenset(database.tables) < self.REQUIRED_TABLES:
-      raise errors.WrongPlugin(
-          u'Not the correct database tables for: {0:s}'.format(self.NAME))
 
     # This will raise if unhandled keyword arguments are passed.
     super(SQLitePlugin, self).Process(parser_mediator)

@@ -13,7 +13,6 @@ except ImportError:
 
 from dfvfs.path import factory as dfvfs_factory
 
-from plaso.lib import errors
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -50,18 +49,16 @@ class SQLiteCache(plugins.BasePluginCache):
           'second': ['another_stuff', 'another_thing']}
 
     Args:
-      sql_results: The SQL result object (sqlite.Cursor) after executing
-                   a SQL command on the database.
-      attribute_name: The attribute name in the cache to store
-                      results to. This will be the name of the
-                      dictionary attribute.
-      key_name: The name of the result field that should be used
-                as a key in the resulting dictionary that is created.
-      column_names: A list of column names that are stored as values
-                    to the dictionary. If this list has only one value in it
-                    the value will be stored directly, otherwise the value
-                    will be a list containing the extracted results based
-                    on the names provided in this list.
+      sql_results (sqlite.Cursor): result after executing a SQL command
+          on a database.
+      attribute_name (str): attribute name in the cache to store results to.
+          This will be the name of the dictionary attribute.
+      key_name (str): name of the result field that should be used as a key
+          in the resulting dictionary that is created.
+      column_names (list[str]): of column names that are stored as values to
+          the dictionary. If this list has only one value in it the value will
+          be stored directly, otherwise the value will be a list containing
+          the extracted results based on the names provided in this list.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
@@ -109,7 +106,8 @@ class SQLiteDatabase(object):
     """Opens the Write-Ahead Log (WAL) file object.
 
     Args:
-      wal_file_object: file-like object for the Write-Ahead Log (WAL) file.
+      wal_file_object (dfvfs.FileIO): file-like object for the Write-Ahead
+          Log (WAL) file.
 
     Raises:
       IOError: if the file-like object cannot be read.
@@ -130,11 +128,11 @@ class SQLiteDatabase(object):
 
   @property
   def tables(self):
-    """Returns a list of the names of all the tables."""
+    """list[str]: names of all the tables."""
     return self._table_names
 
   def Close(self):
-    """Close the database connection and clean up the temporary file."""
+    """Closes the database connection and clean up the temporary file."""
     self._table_names = []
 
     if self._is_open:
@@ -174,9 +172,9 @@ class SQLiteDatabase(object):
     of the tables.
 
     Args:
-      file_object: the file-like object.
-      wal_file_object: optional file-like object for the Write-Ahead Log (WAL)
-                       file.
+      file_object (dfvfs.FileIO): file-like object.
+      wal_file_object (Optional[dfvfs.FileIO]): file-like object for the
+          Write-Ahead Log (WAL) file.
 
     Raises:
       IOError: if the file-like object cannot be read.
@@ -256,10 +254,10 @@ class SQLiteDatabase(object):
     """Queries the database.
 
     Args:
-      query: string containing an SQL query.
+      query (str): SQL query.
 
     Returns:
-      A results iterator (instance of sqlite3.Cursor).
+      sqlite3.Cursor: results.
     """
     cursor = self._database.cursor()
     cursor.execute(query)
@@ -274,62 +272,62 @@ class SQLiteParser(interface.FileEntryParser):
 
   _plugin_classes = {}
 
-  @staticmethod
-  def _GetDatabaseWithWAL(database_file_entry, database_file_object, filename):
-    """Gets the database object with Write-Ahead Log (WAL) file committed.
+  def _OpenDatabaseWithWAL(
+      self, parser_mediator, database_file_entry, database_file_object,
+      filename):
+    """Opens a database with its Write-Ahead Log (WAL) committed.
 
     Args:
-      database_file_entry: a file entry object for the database
-                           (instance of dfvfs.FileEntry)
-      database_file_object: a file-like object for the database.
-      filename: string containing the name of the database file entry.
+      parser_mediator (ParserMediator): parser mediator.
+      database_file_entry (dfvfs.FileEntry): file entry of the database.
+      database_file_object (dfvfs.FileIO): file-like object of the database.
+      filename (str): name of the database file entry.
 
     Returns:
-      tuple containing:
-        - a database object with WAL file committed (instance of SQLiteDatabase)
-        - a file entry object of WAL file (instance of dfvfs.FileEntry)
-      or (None, None) if WAL file doesn't exist.
+      tuple[SQLiteDatabase,dfvfs.FileEntry]:
+      * a database object with WAL file committed or None;
+      * a file entry object of WAL file or None.
     """
-    database_wal = None
-    wal_file_entry = None
     path_spec = database_file_entry.path_spec
-    if path_spec and hasattr(path_spec, u'location'):
-      file_system = database_file_entry.GetFileSystem()
-      wal_path_spec = dfvfs_factory.Factory.NewPathSpec(
-          file_system.type_indicator, parent=path_spec.parent,
-          location=path_spec.location + u'-wal')
-      wal_file_entry = file_system.GetFileEntryByPathSpec(wal_path_spec)
+    location = getattr(path_spec, u'location', None)
+    if not path_spec or not location:
+      return None, None
 
-      if wal_file_entry:
-        wal_file_object = wal_file_entry.GetFileObject()
-        if wal_file_object:
-          try:
-            database_wal = SQLiteDatabase(filename)
-            database_wal.Open(
-                database_file_object, wal_file_object=wal_file_object)
+    location_wal = u'{0:s}-wal'.format(location)
+    file_system = database_file_entry.GetFileSystem()
+    wal_path_spec = dfvfs_factory.Factory.NewPathSpec(
+        file_system.type_indicator, parent=path_spec.parent,
+        location=location_wal)
 
-          except (IOError, ValueError) as exception:
-            logging.warning(
-                u'Unable to open database with WAL file with error: '
-                u'{0:s}'.format(exception))
-            database_wal = None
-            wal_file_entry = None
+    wal_file_entry = file_system.GetFileEntryByPathSpec(wal_path_spec)
+    if not wal_file_entry:
+      return None, None
 
-          except sqlite3.DatabaseError as exception:
-            logging.warning(
-                u'Unable to parse SQLite database with WAL file with error: '
-                u'{0:s}.'.format(exception))
-            database_wal = None
-            wal_file_entry = None
+    wal_file_object = wal_file_entry.GetFileObject()
+    if not wal_file_object:
+      return None, None
 
-          finally:
-            wal_file_object.close()
+    database_wal = SQLiteDatabase(
+        filename, temporary_directory=parser_mediator.temporary_directory)
+
+    try:
+      database_wal.Open(database_file_object, wal_file_object=wal_file_object)
+
+    except (IOError, ValueError, sqlite3.DatabaseError) as exception:
+      parser_mediator.ProduceExtractionError((
+          u'unable to open SQLite database and WAL with error: '
+          u'{0:s}').format(exception))
+
+      return None, None
+
+    finally:
+      wal_file_object.close()
 
     return database_wal, wal_file_entry
 
   @classmethod
   def GetFormatSpecification(cls):
-    """Retrieves the format specification."""
+    """FormatSpecification: format specification."""
     format_specification = specification.FormatSpecification(cls.NAME)
     format_specification.AddNewSignature(b'SQLite format 3', offset=0)
     return format_specification
@@ -338,8 +336,8 @@ class SQLiteParser(interface.FileEntryParser):
     """Parses a SQLite database file-like object.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      file_entry: a file entry object (instance of dfvfs.FileEntry).
+      parser_mediator (ParserMediator): parser mediator.
+      file_entry (dfvfs.FileEntry): file entry to be parsed.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -348,40 +346,37 @@ class SQLiteParser(interface.FileEntryParser):
     filename = parser_mediator.GetFilename()
     database = SQLiteDatabase(
         filename, temporary_directory=parser_mediator.temporary_directory)
+
     try:
       database.Open(file_object)
 
-      # Open second database with WAL file if available.
-      database_wal, wal_file_entry = self._GetDatabaseWithWAL(
-          file_entry, file_object, filename)
-
-    except (IOError, ValueError) as exception:
-      raise errors.UnableToParseFile(
-          u'Unable to open database with error: {0:s}'.format(
-              exception))
-
-    except sqlite3.DatabaseError as exception:
-      raise errors.UnableToParseFile(
-          u'Unable to parse SQLite database with error: {0:s}.'.format(
-              exception))
-
-    finally:
+    except (IOError, ValueError, sqlite3.DatabaseError) as exception:
+      parser_mediator.ProduceExtractionError(
+          u'unable to open SQLite database with error: {0:s}'.format(exception))
       file_object.close()
+      return
+
+    database_wal, wal_file_entry = self._OpenDatabaseWithWAL(
+        parser_mediator, file_entry, file_object, filename)
+
+    database_tables = frozenset(database.tables)
 
     # Create a cache in which the resulting tables are cached.
     cache = SQLiteCache()
     try:
-      # TODO: add a table name filter here.
-      for plugin_object in self._plugin_objects:
+      for plugin in self._plugin_objects:
+        if database_tables.difference(plugin.REQUIRED_TABLES):
+          continue
+
         try:
-          plugin_object.UpdateChainAndProcess(
+          plugin.UpdateChainAndProcess(
               parser_mediator, cache=cache, database=database,
               database_wal=database_wal, wal_file_entry=wal_file_entry)
 
-        except errors.WrongPlugin:
-          logging.debug(
-              u'Plugin: {0:s} cannot parse database: {1:s}'.format(
-                  plugin_object.NAME, parser_mediator.GetDisplayName()))
+        except Exception as exception:  # pylint: disable=broad-except
+          parser_mediator.ProduceExtractionError((
+              u'plugin: {0:s} unable to parse SQLite database with error: '
+              u'{2:s}').format(plugin.NAME, exception))
 
     finally:
       database.Close()
