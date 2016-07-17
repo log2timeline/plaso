@@ -18,37 +18,39 @@ class WinEvtRecordEvent(time_events.PosixTimeEvent):
   """Convenience class for a Windows EventLog (EVT) record event.
 
   Attributes:
-    computer_name: the computer name stored in the event record.
-    event_category: the event category.
-    event_identifier: the event identifier.
-    event_type: the event type.
-    facility: the event facility.
-    message_identifier: the event message identifier.
-    offset: the data offset of the event record with in the file.
-    record_number: the event record number.
-    recovered: boolean value to indicate the record was recovered.
-    severity: the event severity.
-    source_name: the name of the event source.
-    strings: array of event strings.
-    user_sid: the user security identifier (SID) stored in the event record.
+    computer_name (str): computer name stored in the event record.
+    event_category (int): event category.
+    event_identifier (int): event identifier.
+    event_type (int): event type.
+    facility (int): event facility.
+    message_identifier (int): event message identifier.
+    offset (int): data offset of the event record with in the file.
+    record_number (int): event record number.
+    recovered (bool): True if the record was recovered.
+    severity (int): event severity.
+    source_name (str): name of the event source.
+    strings (list[str]): event strings.
+    user_sid (str): user security identifier (SID) stored in the event record.
   """
 
   DATA_TYPE = u'windows:evt:record'
 
   def __init__(
-      self, timestamp, timestamp_description, evt_record, record_number,
+      self, posix_time, timestamp_description, evt_record, record_number,
       event_identifier, recovered=False):
     """Initializes the event.
 
     Args:
-      timestamp: the POSIX timestamp value.
-      timestamp_description: a description string for the timestamp value.
-      evt_record: the EVT record (instance of pyevt.record).
-      record_number: the event record number.
-      event_identifier: the event identifier.
-      recovered: optional boolean value to indicate the record was recovered.
+      posix_time (int): POSIX time value, which contains the number of seconds
+          since January 1, 1970 00:00:00 UTC.
+      timestamp_description (str): description of the usage of the timestamp
+          value.
+      evt_record (pyevt.record): event record.
+      record_number (int): event record number.
+      event_identifier (int): event identifier.
+      recovered (Optional[bool]): True if the record was recovered.
     """
-    super(WinEvtRecordEvent, self).__init__(timestamp, timestamp_description)
+    super(WinEvtRecordEvent, self).__init__(posix_time, timestamp_description)
 
     self.offset = evt_record.offset
     self.recovered = recovered
@@ -89,7 +91,7 @@ class WinEvtParser(interface.FileObjectParser):
     """Retrieves the format specification.
 
     Returns:
-      The format specification (instance of FormatSpecification).
+      FormatSpecification: format specification.
     """
     format_specification = specification.FormatSpecification(cls.NAME)
     format_specification.AddNewSignature(b'LfLe', offset=4)
@@ -100,10 +102,10 @@ class WinEvtParser(interface.FileObjectParser):
     """Extract data from a Windows EventLog (EVT) record.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      record_index: the event record index.
-      evt_record: an event record (instance of pyevt.record).
-      recovered: optional boolean value to indicate the record was recovered.
+      parser_mediator (ParserMediator): parser mediator.
+      record_index (int): event record index.
+      evt_record (pyevt.record): event record.
+      recovered (Optional[bool]): True if the record was recovered.
     """
     try:
       record_number = evt_record.identifier
@@ -159,8 +161,8 @@ class WinEvtParser(interface.FileObjectParser):
     """Parses a Windows EventLog (EVT) file-like object.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      file_object: a file-like object.
+      parser_mediator (ParserMediator): parser mediator.
+      file_object (dfvfs.FileIO): a file-like object.
     """
     evt_file = pyevt.file()
     evt_file.set_ascii_codepage(parser_mediator.codepage)
@@ -173,6 +175,9 @@ class WinEvtParser(interface.FileObjectParser):
       return
 
     for record_index, evt_record in enumerate(evt_file.records):
+      if parser_mediator.abort:
+        break
+
       try:
         self._ParseRecord(parser_mediator, record_index, evt_record)
       except IOError as exception:
@@ -181,6 +186,9 @@ class WinEvtParser(interface.FileObjectParser):
                 record_index, exception))
 
     for record_index, evt_record in enumerate(evt_file.recovered_records):
+      if parser_mediator.abort:
+        break
+
       try:
         self._ParseRecord(
             parser_mediator, record_index, evt_record, recovered=True)
