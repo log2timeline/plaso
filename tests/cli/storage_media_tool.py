@@ -7,6 +7,9 @@ import os
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.path import factory as path_spec_factory
+from dfvfs.volume import tsk_volume_system
+from dfvfs.volume import vshadow_volume_system
 
 from plaso.cli import storage_media_tool
 from plaso.lib import errors
@@ -63,15 +66,16 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
       u''])
 
   _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = u'\n'.join([
-      u'usage: storage_media_tool_test.py [--partition PARTITION_NUMBER]',
-      u'                                  [-o IMAGE_OFFSET]',
-      u'                                  [--sector_size BYTES_PER_SECTOR]',
+      u'usage: storage_media_tool_test.py [--partition PARTITION]',
+      (u'                                  [--partitions PARTITIONS] '
+       u'[-o IMAGE_OFFSET]'),
       u'                                  [--ob IMAGE_OFFSET_BYTES]',
+      u'                                  [--sector_size BYTES_PER_SECTOR]',
       u'',
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      u'  --partition PARTITION_NUMBER',
+      u'  --partition PARTITION',
       (u'                        Choose a partition number from a disk image. '
        u'This'),
       (u'                        partition number should correspond to the '
@@ -79,6 +83,18 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
       (u'                        number on the disk image, starting from '
        u'partition 1.'),
       u'                        All partitions can be defined as: "all".',
+      u'  --partitions PARTITIONS',
+      (u'                        Define partitions that need to be processed. '
+       u'A range'),
+      (u'                        of partitions can be defined as: "3..5". '
+       u'Multiple'),
+      (u'                        partitions can be defined as: "1,3,5" (a'
+       u' list of comma'),
+      (u'                        separated values). Ranges and lists can '
+       u'also be'),
+      (u'                        combined as: "1,3..5". The first partition '
+       u'is 1. All'),
+      u'                        partition can be defined as: "all".',
       u'  -o IMAGE_OFFSET, --offset IMAGE_OFFSET',
       (u'                        The offset of the volume within the storage '
        u'media'),
@@ -87,15 +103,15 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
       (u'                        size by default this can be overwritten with '
        u'the'),
       u'                        --sector_size option.',
-      u'  --sector_size BYTES_PER_SECTOR, --sector-size BYTES_PER_SECTOR',
-      (u'                        The number of bytes per sector, which is 512 '
-       u'by'),
-      u'                        default.',
       (u'  --ob IMAGE_OFFSET_BYTES, --offset_bytes IMAGE_OFFSET_BYTES, '
        u'--offset_bytes IMAGE_OFFSET_BYTES'),
       (u'                        The offset of the volume within the storage '
        u'media'),
       u'                        image in number of bytes.',
+      u'  --sector_size BYTES_PER_SECTOR, --sector-size BYTES_PER_SECTOR',
+      (u'                        The number of bytes per sector, which is 512 '
+       u'by'),
+      u'                        default.',
       u''])
 
   _EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS = u'\n'.join([
@@ -198,7 +214,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     test_tool = storage_media_tool.StorageMediaTool()
 
     options = test_lib.TestOptions()
-    options.partition_number = u'all'
+    options.partitions = u'all'
     options.source = source_path
     test_tool.ParseOptions(options)
 
@@ -263,6 +279,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     scan_node = scan_node.sub_nodes[0]
     self.assertEqual(
         scan_node.type_indicator, dfvfs_definitions.TYPE_INDICATOR_VSHADOW)
+
     # By default the file system inside a VSS volume is not scanned.
     self.assertEqual(len(scan_node.sub_nodes), 0)
 
@@ -290,12 +307,130 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     size_string = test_tool._FormatHumanReadableSize(1048576)
     self.assertEqual(size_string, expected_size_string)
 
+  def testGetNormalizedTSKVolumeIdentifiers(self):
+    """Tests the _GetNormalizedTSKVolumeIdentifiers function."""
+    test_tool = storage_media_tool.StorageMediaTool()
+
+    test_path = self._GetTestFilePath([u'tsk_volume_system.raw'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+    tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, parent=os_path_spec)
+
+    volume_system = tsk_volume_system.TSKVolumeSystem()
+    volume_system.Open(tsk_partition_path_spec)
+
+    volume_identifiers = test_tool._GetNormalizedTSKVolumeIdentifiers(
+        volume_system, [u'p1', u'p2'])
+    self.assertEqual(volume_identifiers, [1, 2])
+
+    with self.assertRaises(KeyError):
+      test_tool._GetNormalizedTSKVolumeIdentifiers(
+          volume_system, [1, 2])
+
+    with self.assertRaises(KeyError):
+      test_tool._GetNormalizedTSKVolumeIdentifiers(
+          volume_system, [u'p3'])
+
+  def testGetNormalizedVShadowVolumeIdentifiers(self):
+    """Tests the _GetNormalizedVShadowVolumeIdentifiers function."""
+    test_tool = storage_media_tool.StorageMediaTool()
+
+    test_path = self._GetTestFilePath([u'vsstest.qcow2'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+    qcow_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_QCOW, parent=os_path_spec)
+    vss_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_VSHADOW, parent=qcow_path_spec)
+
+    volume_system = vshadow_volume_system.VShadowVolumeSystem()
+    volume_system.Open(vss_path_spec)
+
+    volume_identifiers = test_tool._GetNormalizedVShadowVolumeIdentifiers(
+        volume_system, [u'vss1', u'vss2'])
+    self.assertEqual(volume_identifiers, [1, 2])
+
+    with self.assertRaises(KeyError):
+      test_tool._GetNormalizedTSKVolumeIdentifiers(
+          volume_system, [1, 2])
+
+    with self.assertRaises(KeyError):
+      test_tool._GetNormalizedTSKVolumeIdentifiers(
+          volume_system, [u'vss3'])
+
   # TODO: add test for _GetTSKPartitionIdentifiers.
   # TODO: add test for _GetVSSStoreIdentifiers.
-  # TODO: add test for _ParseCredentialOptions.
-  # TODO: add test for _ParseFilterOptions.
-  # TODO: add test for _ParseStorageMediaImageOptions.
-  # TODO: add test for _ParseVSSProcessingOptions.
+
+  def testParseCredentialOptions(self):
+    """Tests the _ParseCredentialOptions function."""
+    test_tool = storage_media_tool.StorageMediaTool()
+
+    options = test_lib.TestOptions()
+
+    test_tool._ParseCredentialOptions(options)
+
+    # TODO: improve test coverage.
+
+  def testParseFilterOptions(self):
+    """Tests the _ParseFilterOptions function."""
+    test_tool = storage_media_tool.StorageMediaTool()
+
+    options = test_lib.TestOptions()
+
+    test_tool._ParseFilterOptions(options)
+
+    # TODO: improve test coverage.
+
+  def testParseStorageMediaImageOptions(self):
+    """Tests the _ParseStorageMediaImageOptions function."""
+    test_tool = storage_media_tool.StorageMediaTool()
+
+    options = test_lib.TestOptions()
+    options.partitions = u'all'
+
+    test_tool._ParseStorageMediaImageOptions(options)
+
+    # Test if 'partition' option raises in combination with
+    # 'partitions' option.
+    options = test_lib.TestOptions()
+    options.partitions = u'all'
+    options.partition = u'1'
+
+    with self.assertRaises(errors.BadConfigOption):
+      test_tool._ParseStorageMediaImageOptions(options)
+
+    # Test if 'image_offset_bytes' option raises in combination with
+    # 'partitions' option.
+    options = test_lib.TestOptions()
+    options.partitions = u'all'
+    options.image_offset_bytes = 512
+
+    with self.assertRaises(errors.BadConfigOption):
+      test_tool._ParseStorageMediaImageOptions(options)
+
+    # Test if 'image_offset' option raises in combination with
+    # 'partitions' option.
+    options = test_lib.TestOptions()
+    options.bytes_per_sector = 512
+    options.partitions = u'all'
+    options.image_offset = 1
+
+    with self.assertRaises(errors.BadConfigOption):
+      test_tool._ParseStorageMediaImageOptions(options)
+
+    # TODO: improve test coverage.
+
+  def testParseVSSProcessingOptions(self):
+    """Tests the _ParseVSSProcessingOptions function."""
+    test_tool = storage_media_tool.StorageMediaTool()
+
+    options = test_lib.TestOptions()
+
+    test_tool._ParseVSSProcessingOptions(options)
+
+    # TODO: improve test coverage.
+
   # TODO: add test for _ParseVSSStoresString.
   # TODO: add test for _PromptUserForEncryptedVolumeCredential.
   # TODO: add test for _PromptUserForPartitionIdentifier.
@@ -370,7 +505,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
 
     test_tool.ParseOptions(options)
 
-    # TODO: improve this test.
+    # TODO: improve test coverage.
 
   def testScanSource(self):
     """Tests the ScanSource function."""
