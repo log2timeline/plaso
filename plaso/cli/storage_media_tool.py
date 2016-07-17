@@ -573,9 +573,14 @@ class StorageMediaTool(tools.CLITool):
           self._output_writer.Write(u'Unsupported credential data.\n')
           continue
 
-      result = self._source_scanner.Unlock(
-          scan_context, locked_scan_node.path_spec, credential_type,
-          credential_data)
+      try:
+        result = self._source_scanner.Unlock(
+            scan_context, locked_scan_node.path_spec, credential_type,
+            credential_data)
+      except IOError as exception:
+        logging.debug(u'Unable to unlock volume with error: {0:s}'.format(
+            exception))
+        result = False
 
       if not result:
         self._output_writer.Write(u'Unable to unlock volume.\n')
