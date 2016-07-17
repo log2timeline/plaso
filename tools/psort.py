@@ -30,6 +30,8 @@ from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.winnt import language_ids
 
+import pytz  # pylint: disable=wrong-import-order
+
 
 class PsortOptions(object):
   """Class to define psort options."""
@@ -143,8 +145,9 @@ class PsortTool(analysis_tool.AnalysisTool):
 
     time_slice_event_timestamp = None
     if time_slice_event_time_string:
+      timezone = pytz.timezone(self._timezone)
       time_slice_event_timestamp = timelib.Timestamp.FromTimeString(
-          time_slice_event_time_string, timezone=self._timezone)
+          time_slice_event_time_string, timezone=timezone)
       if time_slice_event_timestamp is None:
         raise errors.BadConfigOption(
             u'Unsupported time slice event date and time: {0:s}'.format(

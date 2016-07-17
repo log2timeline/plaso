@@ -3,7 +3,12 @@
 
 
 class AnalysisMediator(object):
-  """Class that implements the analysis plugin mediator."""
+  """Class that implements the analysis plugin mediator.
+
+  Attributes:
+    number_of_produced_analysis_reports (int): number of produced analysis
+        reports.
+  """
 
   def __init__(
       self, analysis_report_queue_producer, knowledge_base,
@@ -11,15 +16,14 @@ class AnalysisMediator(object):
     """Initializes an analysis plugin mediator object.
 
     Args:
-      analysis_report_queue_producer: the analysis report queue producer
-                                      (instance of ItemQueueProducer).
-      knowledge_base: A knowledge base object (instance of KnowledgeBase),
-                      which contains information from the source data needed
-                      for analysis.
-      data_location: A string containing location of the Plaso data files.
-      completion_event: An optional event object (instance of
-                        Multiprocessing.Event, Queue.Event or similar) that will
-                        be set when the analysis plugin is complete.
+      analysis_report_queue_producer (ItemQueueProducer): analysis report
+          queue producer.
+      knowledge_base (KnowledgeBase): contains information from the source
+          data needed for parsing.
+      data_location (Optional[str]): location of data files used during
+          analysis.
+      completion_event (Optional[Multiprocessing.Event]): set when the
+          analysis plugin is complete.
     """
     super(AnalysisMediator, self).__init__()
     self._analysis_report_queue_producer = analysis_report_queue_producer
@@ -30,18 +34,36 @@ class AnalysisMediator(object):
     self.number_of_produced_analysis_reports = 0
 
   @property
-  def users(self):
-    """The list of users."""
-    return self._knowledge_base.users
+  def data_location(self):
+    """str: path to the data files."""
+    return self._data_location
 
-  def GetRelativePath(self, path_spec):
-    """Retrieves the relative path of the path spec.
+  @property
+  def platform(self):
+    """str: platform."""
+    return self._knowledge_base.platform
+
+  def GetDisplayName(self, path_spec):
+    """Retrieves the display name for the path spec.
 
     Args:
-      path_spec: a PathSpec object (instance of dfvfs.PathSpec).
+      path_spec (dfvfs.PathSpec): paths specification.
 
     Returns:
-      A string containing the relative path or None.
+      str: human readable path.
+    """
+    relative_path = self.GetRelativePath(path_spec)
+
+    return u'{0:s}:{1:s}'.format(path_spec.type_indicator, relative_path)
+
+  def GetRelativePath(self, path_spec):
+    """Retrieves the relative path of a path specification.
+
+    Args:
+      path_spec (dfvfs.PathSpec): paths specification.
+
+    Returns:
+      str: relative path or None.
     """
     # TODO: Solve this differently, quite possibly inside dfVFS using mount
     # path spec.
@@ -50,138 +72,27 @@ class AnalysisMediator(object):
     # mediator.
     return file_path
 
-  @property
-  def data_location(self):
-    """Retrieves the path to the Plaso data files as a string."""
-    return self._data_location
+  def GetUsernameForPath(self, path):
+    """Retrieves a username for a specific path.
 
-  def GetDisplayName(self, path_spec):
-    """Retrieves the display name for the path spec.
+    This is determining if a specific path is within a user's directory and
+    returning the username of the user if so.
 
     Args:
-      file_entry: PathSpec object (instance of dfvfs.PathSpec).
+      path (str): path.
 
     Returns:
-      A human readable string that describes the path to the path spec.
+      str: username or None if the path does not appear to be within a user's
+          directory.
     """
-    relative_path = self.GetRelativePath(path_spec)
-
-    return u'{0:s}:{1:s}'.format(path_spec.type_indicator, relative_path)
-
-  @property
-  def platform(self):
-    """Retrieves platform information for the image being processed."""
-    return self._knowledge_base.platform
-
-  def GetPathSegmentSeparator(self, path):
-    """Given a path give back the path separator as a best guess.
-
-    Args:
-      path: the path.
-
-    Returns:
-      The path segment separator.
-    """
-    if path.startswith(u'\\') or path[1:].startswith(u':\\'):
-      return u'\\'
-
-    if path.startswith(u'/'):
-      return u'/'
-
-    if u'/' and u'\\' in path:
-      # Let's count slashes and guess which one is the right one.
-      forward_count = len(path.split(u'/'))
-      backward_count = len(path.split(u'\\'))
-
-      if forward_count > backward_count:
-        return u'/'
-      else:
-        return u'\\'
-
-    # Now we are sure there is only one type of separators yet
-    # the path does not start with one.
-    if u'/' in path:
-      return u'/'
-    else:
-      return u'\\'
-
-  def GetUsernameFromPath(self, user_paths, file_path, path_segment_separator):
-    """Return a username based on preprocessing and the path.
-
-    During preprocessing the tool will gather file paths to where each user
-    profile is stored, and which user it belongs to. This function takes in
-    a path to a file and compares it to a list of all discovered usernames
-    and paths to their profiles in the system. If it finds that the file path
-    belongs to a user profile it will return the username that the profile
-    belongs to.
-
-    Args:
-      user_paths: A dictionary object containing the paths per username.
-      file_path: The full path to the file being analyzed.
-      path_segment_separator: String containing the path segment separator.
-
-    Returns:
-      If possible the responsible username behind the file. Otherwise None.
-    """
-    if not user_paths:
-      return
-
-    if path_segment_separator != u'/':
-      use_path = file_path.replace(path_segment_separator, u'/')
-    else:
-      use_path = file_path
-
-    if use_path[1:].startswith(u':/'):
-      use_path = use_path[2:]
-
-    use_path = use_path.lower()
-
-    for user, path in user_paths.iteritems():
-      if use_path.startswith(path):
-        return user
-
-  def GetUserPaths(self, users):
-    """Retrieves the user paths.
-
-    Args:
-      users: a list of users.
-
-    Returns:
-      A dictionary object containing the paths per username or None if no users.
-    """
-    if not users:
-      return
-
-    user_paths = {}
-
-    user_separator = None
-    for user in users:
-      name = user.get(u'name')
-      path = user.get(u'path')
-
-      if not path or not name:
-        continue
-
-      if not user_separator:
-        user_separator = self.GetPathSegmentSeparator(path)
-
-      if user_separator != u'/':
-        path = path.replace(user_separator, u'/').replace(u'//', u'/')
-
-      if path[1:].startswith(u':/'):
-        path = path[2:]
-
-      name = name.lower()
-      user_paths[name] = path.lower()
-
-    return user_paths
+    return self._knowledge_base.GetUsernameForPath(path)
 
   def ProcessAnalysisReport(self, analysis_report, plugin_name=None):
     """Processes an analysis report before it is emitted to the queue.
 
     Args:
-      analysis_report: the analysis report object (instance of AnalysisReport).
-      plugin_name: Optional name of the plugin.
+      analysis_report (AnalysisReport): analysis report.
+      plugin_name (Optional[str]): name of the plugin.
     """
     if not getattr(analysis_report, u'plugin_name', None) and plugin_name:
       analysis_report.plugin_name = plugin_name
@@ -190,8 +101,8 @@ class AnalysisMediator(object):
     """Produces an analysis report onto the queue.
 
     Args:
-      analysis_report: the analysis report object (instance of AnalysisReport).
-      plugin_name: Optional name of the plugin.
+      analysis_report (AnalysisReport): analysis report.
+      plugin_name (Optional[str]): name of the plugin.
     """
     self.ProcessAnalysisReport(analysis_report, plugin_name=plugin_name)
 

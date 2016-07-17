@@ -17,22 +17,21 @@ class OutputMediator(object):
 
   def __init__(
       self, knowledge_base, formatter_mediator, fields_filter=None,
-      preferred_encoding=u'utf-8', timezone=pytz.UTC):
+      preferred_encoding=u'utf-8'):
     """Initializes a output mediator object.
 
     Args:
       knowledge_base (KnowledgeBase): knowledge base.
       formatter_mediator (FormatterMediator): formatter mediator.
       fields_filter (Optional[FilterObject]): filter object that indicates
-                                              which fields to output.
+          which fields to output.
       preferred_encoding (Optional[str]): preferred encoding to output.
-      timezone (Optional[datetime.tzinfo]): timezone to output.
     """
     super(OutputMediator, self).__init__()
     self._formatter_mediator = formatter_mediator
     self._knowledge_base = knowledge_base
     self._preferred_encoding = preferred_encoding
-    self._timezone = timezone
+    self._timezone = pytz.UTC
 
     self.fields_filter = fields_filter
 
@@ -239,3 +238,17 @@ class OutputMediator(object):
     store_number = getattr(event, u'store_number', None)
     return self._knowledge_base.GetUsername(
         user_sid, store_number, default_username=default_username)
+
+  def SetTimezone(self, timezone):
+    """Sets the timezone.
+
+    Args:
+      timezone (str): timezone.
+
+    Raises:
+      ValueError: if the timezone is not supported.
+    """
+    try:
+      self._timezone = pytz.timezone(timezone)
+    except pytz.UnknownTimeZoneError:
+      raise ValueError(u'Unsupported timezone: {0:s}'.format(timezone))
