@@ -284,9 +284,10 @@ class SQLiteParser(interface.FileEntryParser):
       filename (str): name of the database file entry.
 
     Returns:
-      tuple[SQLiteDatabase,dfvfs.FileEntry]:
-      * a database object with WAL file committed or None;
-      * a file entry object of WAL file or None.
+      tuple: contains:
+
+        SQLiteDatabase: a database object with WAL file committed or None
+        dfvfs.FileEntry: a file entry object of WAL file or None
     """
     path_spec = database_file_entry.path_spec
     location = getattr(path_spec, u'location', None)
