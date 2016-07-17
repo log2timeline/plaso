@@ -9,7 +9,6 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 
-from plaso.containers import preprocess
 from plaso.containers import sessions
 from plaso.engine import single_process
 from plaso.lib import errors
@@ -41,10 +40,9 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
 
     storage_writer = fake_storage.FakeStorageWriter(session)
 
-    preprocess_object = preprocess.PreprocessObject()
     test_engine.ProcessSources(
-        [source_path_spec], preprocess_object, storage_writer,
-        resolver_context, parser_filter_expression=u'filestat')
+        [source_path_spec], storage_writer, resolver_context,
+        parser_filter_expression=u'filestat')
 
     self.assertEqual(len(storage_writer.events), 15)
 

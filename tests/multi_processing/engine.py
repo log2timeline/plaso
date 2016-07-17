@@ -7,7 +7,6 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
-from plaso.containers import preprocess
 from plaso.containers import sessions
 from plaso.multi_processing import engine
 from plaso.storage import zip_file as storage_zip_file
@@ -37,10 +36,9 @@ class MultiProcessEngineTest(shared_test_lib.BaseTestCase):
       storage_writer = storage_zip_file.ZIPStorageFileWriter(
           session, temp_file)
 
-      preprocess_object = preprocess.PreprocessObject()
       test_engine.ProcessSources(
-          session.identifier, [source_path_spec], preprocess_object,
-          storage_writer, parser_filter_expression=u'filestat')
+          session.identifier, [source_path_spec], storage_writer,
+          parser_filter_expression=u'filestat')
 
     # TODO: implement a way to obtain the results without relying
     # on multi-process primitives e.g. by writing to a file.

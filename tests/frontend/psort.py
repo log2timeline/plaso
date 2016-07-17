@@ -234,7 +234,7 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
 
       with reader.StorageObjectReader(storage_file) as storage_reader:
         knowledge_base_object = knowledge_base.KnowledgeBase()
-        knowledge_base_object.InitializeLookupDictionaries(storage_file)
+        storage_file.ReadPreprocessingInformation(knowledge_base_object)
 
         output_mediator_object = output_mediator.OutputMediator(
             knowledge_base_object, self._formatter_mediator)

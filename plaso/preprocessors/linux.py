@@ -5,6 +5,7 @@ import csv
 
 from dfvfs.helpers import text_file
 
+from plaso.containers import artifacts
 from plaso.lib import errors
 from plaso.preprocessors import interface
 from plaso.preprocessors import manager
@@ -21,14 +22,12 @@ class LinuxHostname(interface.PreprocessPlugin):
     """Determines the hostname based on the contents of /etc/hostname.
 
     Args:
-      searcher: The file system searcher object (instance of
-                dfvfs.FileSystemSearcher).
-      knowledge_base: A knowledge base object (instance of KnowledgeBase),
-                      which contains information from the source data needed
-                      for parsing.
+      searcher (dfvfs.FileSystemSearcher): file system searcher.
+      knowledge_base (KnowledgeBase): knowledge base, which contains
+          information from the source data needed for parsing.
 
     Returns:
-      The hostname.
+      HostnameArtifact: hostname artifact or None.
 
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
@@ -43,8 +42,15 @@ class LinuxHostname(interface.PreprocessPlugin):
     file_data = file_object.read(512)
     file_object.close()
 
-    hostname, _, _ = file_data.partition('\n')
-    return u'{0:s}'.format(hostname)
+    hostname, _, _ = file_data.partition(b'\n')
+    try:
+      hostname = hostname.decode(u'utf-8')
+    except UnicodeDecodeError:
+      # TODO: add and store preprocessing errors.
+      hostname = hostname.decode(u'utf-8', errors=u'replace')
+
+    if hostname:
+      return artifacts.HostnameArtifact(name=hostname)
 
 
 class LinuxTimezone(interface.PreprocessPlugin):
@@ -59,15 +65,12 @@ class LinuxTimezone(interface.PreprocessPlugin):
     """Determines the timezone based on the contents of /etc/timezone.
 
     Args:
-      searcher: The file system searcher object (instance of
-                dfvfs.FileSystemSearcher).
-      knowledge_base: A knowledge base object (instance of KnowledgeBase),
-                      which contains information from the source data needed
-                      for parsing.
+      searcher (dfvfs.FileSystemSearcher): file system searcher.
+      knowledge_base (KnowledgeBase): knowledge base, which contains
+          information from the source data needed for parsing.
 
     Returns:
-      A string containing a tzdata (Olsen) timezone name (for example,
-      America/New_York).
+      str: an Olsen, or tzdata, timezone name, e.g. 'America/New_York'.
 
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
@@ -98,14 +101,12 @@ class LinuxUsernames(interface.PreprocessPlugin):
     """Determines the user information based on the contents of /etc/passwd.
 
     Args:
-      searcher: The file system searcher object (instance of
-                dfvfs.FileSystemSearcher).
-      knowledge_base: A knowledge base object (instance of KnowledgeBase),
-                      which contains information from the source data needed
-                      for parsing.
+      searcher (dfvfs.FileSystemSearcher): file system searcher.
+      knowledge_base (KnowledgeBase): knowledge base, which contains
+          information from the source data needed for parsing.
 
     Returns:
-      A list containing username information dicts.
+      list[UserAccountArtifact]: user account artifacts.
 
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
@@ -121,20 +122,31 @@ class LinuxUsernames(interface.PreprocessPlugin):
     file_object = file_entry.GetFileObject()
     text_file_object = text_file.TextFile(file_object)
 
-    reader = csv.reader(text_file_object, delimiter=':')
+    # username:password:uid:gid:full name:home directory:shell
+    try:
+      reader = csv.reader(text_file_object, delimiter=b':')
+    except csv.Error:
+      raise errors.PreProcessFail(u'Unable to read: {0:s}.'.format(path))
 
     users = []
     for row in reader:
-      # TODO: as part of artifacts, create a proper object for this.
-      user = {
-          u'uid': row[2],
-          u'gid': row[3],
-          u'name': row[0],
-          u'path': row[5],
-          u'shell': row[6]}
-      users.append(user)
+      if not row[0] or not row[2]:
+        # TODO: add and store preprocessing errors.
+        continue
+
+      user_account_artifact = artifacts.UserAccountArtifact(
+          identifier=row[2], username=row[0])
+      user_account_artifact.group_identifier = row[3] or None
+      user_account_artifact.full_name = row[4] or None
+      user_account_artifact.user_directory = row[5] or None
+      user_account_artifact.shell = row[6] or None
+
+      users.append(user_account_artifact)
 
     file_object.close()
+
+    if not users:
+      raise errors.PreProcessFail(u'Unable to find any users on the system.')
     return users
 
 

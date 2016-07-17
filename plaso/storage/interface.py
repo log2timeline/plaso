@@ -127,6 +127,24 @@ class BaseStorage(object):
     """Opens the storage."""
 
   @abc.abstractmethod
+  def ReadPreprocessingInformation(self, knowledge_base):
+    """Reads preprocessing information.
+
+    Args:
+      knowledge_base (KnowledgeBase): knowledge base, where
+          the preprocessing information is stored.
+    """
+
+  @abc.abstractmethod
+  def WritePreprocessingInformation(self, knowledge_base):
+    """Writes preprocessing information.
+
+    Args:
+      knowledge_base (KnowledgeBase): knowledge base, which contains
+          the preprocessing information.
+    """
+
+  @abc.abstractmethod
   def WriteSessionCompletion(self, session_completion):
     """Writes session completion information.
 
@@ -508,6 +526,15 @@ class StorageWriter(object):
 
     Args:
       serializers_profiler (SerializersProfiler): serializers profile.
+    """
+
+  @abc.abstractmethod
+  def WritePreprocessingInformation(self, knowledge_base):
+    """Writes preprocessing information.
+
+    Args:
+      knowledge_base (KnowledgeBase): knowledge base, which contains
+          the preprocessing information.
     """
 
   @abc.abstractmethod

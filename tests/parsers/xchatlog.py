@@ -10,8 +10,6 @@ from plaso.parsers import xchatlog
 
 from tests.parsers import test_lib
 
-import pytz  # pylint: disable=wrong-import-order
-
 
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
@@ -23,8 +21,7 @@ class XChatLogUnitTest(test_lib.ParserTestCase):
     """Tests the Parse function."""
     parser_object = xchatlog.XChatLogParser()
     storage_writer = self._ParseFile(
-        [u'xchat.log'], parser_object,
-        default_timezone=pytz.timezone(u'Europe/Rome'))
+        [u'xchat.log'], parser_object, timezone=u'Europe/Rome')
 
     self.assertEqual(len(storage_writer.events), 9)
 

@@ -24,11 +24,13 @@ class SingleProcessEngine(engine.BaseEngine):
   """Class that defines the single process engine."""
 
   def __init__(
-      self, enable_profiling=False, profiling_directory=None,
-      profiling_sample_rate=1000, profiling_type=u'all'):
+      self, debug_output=False, enable_profiling=False,
+      profiling_directory=None, profiling_sample_rate=1000,
+      profiling_type=u'all'):
     """Initializes an engine object.
 
     Args:
+      debug_output (Optional[bool]): True if debug output should be enabled.
       enable_profiling (Optional[bool]): True if profiling should be enabled.
       profiling_directory (Optional[str]): path to the directory where
           the profiling sample files should be stored.
@@ -45,7 +47,7 @@ class SingleProcessEngine(engine.BaseEngine):
             serializers.
     """
     super(SingleProcessEngine, self).__init__(
-        enable_profiling=enable_profiling,
+        debug_output=debug_output, enable_profiling=enable_profiling,
         profiling_directory=profiling_directory,
         profiling_sample_rate=profiling_sample_rate,
         profiling_type=profiling_type)
@@ -98,7 +100,7 @@ class SingleProcessEngine(engine.BaseEngine):
               self._current_display_name))
       logging.exception(exception)
 
-      if self._enable_debug_output:
+      if self._debug_output:
         pdb.post_mortem()
 
   def _ProcessSources(
@@ -288,18 +290,16 @@ class SingleProcessEngine(engine.BaseEngine):
     self._last_status_update_timestamp = current_timestamp
 
   def ProcessSources(
-      self, source_path_specs, preprocess_object, storage_writer,
-      resolver_context, filter_find_specs=None, filter_object=None,
-      hasher_names_string=None, mount_path=None, parser_filter_expression=None,
-      preferred_year=None, process_archive_files=False,
-      status_update_callback=None, temporary_directory=None,
-      text_prepend=None):
+      self, source_path_specs, storage_writer, resolver_context,
+      filter_find_specs=None, filter_object=None, hasher_names_string=None,
+      mount_path=None, parser_filter_expression=None, preferred_year=None,
+      process_archive_files=False, status_update_callback=None,
+      temporary_directory=None, text_prepend=None):
     """Processes the sources.
 
     Args:
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
-      preprocess_object (PreprocessObject): preprocess object.
       storage_writer (StorageWriter): storage writer for a session storage.
       resolver_context (dfvfs.Context): resolver context.
       filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
@@ -354,13 +354,11 @@ class SingleProcessEngine(engine.BaseEngine):
 
     try:
       storage_writer.WriteSessionStart()
+      storage_writer.WritePreprocessingInformation(self.knowledge_base)
 
       self._ProcessSources(
           source_path_specs, resolver_context, extraction_worker,
           parser_mediator, storage_writer, filter_find_specs=filter_find_specs)
-
-      # TODO: refactor the use of preprocess_object.
-      storage_writer.WritePreprocessObject(preprocess_object)
 
       # TODO: on abort use WriteSessionAborted instead of completion?
       storage_writer.WriteSessionCompletion()

@@ -461,6 +461,18 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
   # TODO: add test for _InitializeMergeBuffer.
 
+  def testGetPreprocessObjectsLegacyFormat(self):
+    """Tests the _GetPreprocessObjectsLegacyFormat function."""
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    storage_file = zip_file.ZIPStorageFile()
+    storage_file.Open(path=test_file)
+
+    preprocess_object_list = list(
+        storage_file._GetPreprocessObjectsLegacyFormat())
+    self.assertEqual(len(preprocess_object_list), 4)
+
+    storage_file.Close()
+
   def testGetSerializedDataStream(self):
     """Tests the _GetSerializedDataStream function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
@@ -786,6 +798,19 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
   # TODO: add test for _SerializeAttributeContainer.
   # TODO: add test for _WriteAttributeContainersHeap.
+
+  def testWritePreprocessObjectLegacyFormat(self):
+    """Tests the _WritePreprocessObjectLegacyFormat function."""
+    preprocess_object = preprocess.PreprocessObject()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      storage_file = zip_file.ZIPStorageFile()
+      storage_file.Open(temp_file, read_only=False)
+
+      storage_file._WritePreprocessObjectLegacyFormat(preprocess_object)
+
+      storage_file.Close()
 
   def testWriteSerializedErrors(self):
     """Tests the _WriteSerializedErrors function."""
@@ -1150,17 +1175,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  def testGetPreprocessObjects(self):
-    """Tests the GetPreprocessObjects function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_file = zip_file.ZIPStorageFile()
-    storage_file.Open(path=test_file)
-
-    preprocess_object_list = list(storage_file.GetPreprocessObjects())
-    self.assertEqual(len(preprocess_object_list), 4)
-
-    storage_file.Close()
-
   def testGetSessions(self):
     """Tests the GetSessions function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
@@ -1261,19 +1275,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
       storage_file.Close()
 
       storage_file.Open(path=temp_file)
-      storage_file.Close()
-
-  def testWritePreprocessObject(self):
-    """Tests the WritePreprocessObject function."""
-    preprocess_object = preprocess.PreprocessObject()
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_file = zip_file.ZIPStorageFile()
-      storage_file.Open(temp_file, read_only=False)
-
-      storage_file.WritePreprocessObject(preprocess_object)
-
       storage_file.Close()
 
   def testWriteSessionStartAndCompletion(self):

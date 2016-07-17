@@ -28,8 +28,6 @@ from plaso.storage import time_range as storage_time_range
 from plaso.storage import reader
 from plaso.storage import zip_file as storage_zip_file
 
-import pytz  # pylint: disable=wrong-import-order
-
 
 class PsortFrontend(analysis_frontend.AnalysisFrontend):
   """Class that implements the psort front-end."""
@@ -41,7 +39,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
   def __init__(self):
     """Initializes the front-end object."""
     super(PsortFrontend, self).__init__()
-
     self._analysis_process_info = []
     self._data_location = None
     self._filter_buffer = None
@@ -203,7 +200,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       analysis_report_incoming_queue = multi_process_queue.MultiProcessingQueue(
           timeout=5)
 
-    self._knowledge_base.InitializeLookupDictionaries(storage_file)
+    storage_file.ReadPreprocessingInformation(self._knowledge_base)
 
     session = self._CreateSession(
         command_line_arguments=command_line_arguments,
@@ -330,12 +327,12 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     return analysis_plugins, event_producers
 
-  def CreateOutputModule(self, preferred_encoding=u'utf-8', timezone=pytz.UTC):
+  def CreateOutputModule(self, preferred_encoding=u'utf-8', timezone=u'UTC'):
     """Create an output module.
 
     Args:
       preferred_encoding (Optional[str]): preferred encoding to output.
-      timezone (Optional[datetime.tzinfo]): timezone to output.
+      timezone (Optional[str]): timezone to output.
 
     Returns:
       OutputModule: output module.
@@ -354,7 +351,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     output_mediator_object = output_mediator.OutputMediator(
         self._knowledge_base, formatter_mediator,
-        preferred_encoding=preferred_encoding, timezone=timezone)
+        preferred_encoding=preferred_encoding)
+    output_mediator_object.SetTimezone(timezone)
 
     try:
       output_module = output_manager.OutputManager.NewOutputModule(

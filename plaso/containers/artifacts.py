@@ -5,7 +5,11 @@ from plaso.containers import interface
 from plaso.containers import manager
 
 
-class EnvironmentVariableArtifact(interface.AttributeContainer):
+class ArtifactAttributeContainer(interface.AttributeContainer):
+  """Base class to represent an artifact attribute container."""
+
+
+class EnvironmentVariableArtifact(ArtifactAttributeContainer):
   """Class to represent an environment variable artifact attribute container.
 
   Also see:
@@ -14,17 +18,17 @@ class EnvironmentVariableArtifact(interface.AttributeContainer):
   Attributes:
     case_sensitive (bool): True if environment variable name is case sensitive.
     name (str): environment variable name e.g. 'SystemRoot' as in
-                '%SystemRoot%' or 'HOME' in '$HOME'.
+        '%SystemRoot%' or 'HOME' in '$HOME'.
     value (str): environment variable value e.g. 'C:\\Windows' or '/home/user'.
   """
-  CONTAINER_TYPE = u'environment_variable_artifact'
+  CONTAINER_TYPE = u'environment_variable'
 
   def __init__(self, case_sensitive=True, name=None, value=None):
     """Initializes an environment variable artifact.
 
     Args:
       case_sensitive (Optional[bool]): True if environment variable name
-                                       is case sensitive.
+          is case sensitive.
       name (Optional[str]): environment variable name.
       value (Optional[str]): environment variable value.
     """
@@ -34,7 +38,7 @@ class EnvironmentVariableArtifact(interface.AttributeContainer):
     self.value = value
 
 
-class HostnameArtifact(interface.AttributeContainer):
+class HostnameArtifact(ArtifactAttributeContainer):
   """Class to represent a hostname artifact attribute container.
 
   Also see:
@@ -46,7 +50,7 @@ class HostnameArtifact(interface.AttributeContainer):
     name (str): name of the host according to the naming schema.
     schema (str): naming schema e.g. DNS, NIS, SMB/NetBIOS.
   """
-  CONTAINER_TYPE = u'hostname_artifact'
+  CONTAINER_TYPE = u'hostname'
 
   def __init__(self, name=None, schema=u'DNS'):
     """Initializes a hostname artifact.
@@ -60,15 +64,16 @@ class HostnameArtifact(interface.AttributeContainer):
     self.schema = schema
 
 
-class SystemConfigurationArtifact(interface.AttributeContainer):
+class SystemConfigurationArtifact(ArtifactAttributeContainer):
   """Class to represent a system configuration artifact attribute container.
 
   Attributes:
     code_page (str): system code page.
+    hostname (HostnameArtifact): hostname.
     time_zone (str): system time zone.
-    users (list[UserArtifact]): user
+    user_accounts (list[UserAccountArtifact]): user accounts.
   """
-  CONTAINER_TYPE = u'system_configuration_artifact'
+  CONTAINER_TYPE = u'system_configuration'
 
   def __init__(self, code_page=None, time_zone=None):
     """Initializes a system configuration artifact.
@@ -79,11 +84,14 @@ class SystemConfigurationArtifact(interface.AttributeContainer):
     """
     super(SystemConfigurationArtifact, self).__init__()
     self.code_page = code_page
+    self.hostname = None
     self.time_zone = time_zone
-    self.users = []
+    self.user_accounts = []
+
+    # TODO: add other values collected during preprocessing.
 
 
-class UserAccountArtifact(interface.AttributeContainer):
+class UserAccountArtifact(ArtifactAttributeContainer):
   """Class to represent an user account artifact attribute container.
 
   Also see:
@@ -92,27 +100,32 @@ class UserAccountArtifact(interface.AttributeContainer):
 
   Attributes:
     full_name (str): name describing the user e.g. full name.
+    group_identifier (str): identifier of the primary group the user is part of.
     identifier (str): user identifier.
     user_directory (str): path of the user (or home or profile) directory.
     username (str): name uniquely identifying the user.
   """
-  CONTAINER_TYPE = u'user_account_artifact'
+  CONTAINER_TYPE = u'user_account'
 
   def __init__(
-      self, full_name=None, identifier=None, user_directory=None,
-      username=None):
+      self, full_name=None, group_identifier=None, identifier=None,
+      user_directory=None, username=None):
     """Initializes an user artifact.
 
     Args:
       full_name (Optional[str]): name describing the user e.g. full name.
+      group_identifier (Optional[str]): identifier of the primary group
+          the user is part of.
       identifier (Optional[str]): user identifier.
       user_directory (Optional[str]): path of the user (or home or profile)
-                                      directory.
+          directory.
       username (Optional[str]): name uniquely identifying the user.
     """
     super(UserAccountArtifact, self).__init__()
     self.full_name = full_name
+    self.group_identifier = group_identifier
     self.identifier = identifier
+    # TODO: add shell.
     self.user_directory = user_directory
     self.username = username
 

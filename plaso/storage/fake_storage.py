@@ -185,18 +185,22 @@ class FakeStorageWriter(interface.StorageWriter):
     self._first_written_event_source_index = len(self.event_sources)
     self._written_event_source_index = self._first_written_event_source_index
 
-  # TODO: remove during phased processing refactor.
-  def WritePreprocessObject(self, unused_preprocess_object):
-    """Writes a preprocessing object.
+  def WritePreprocessingInformation(self, unused_knowledge_base):
+    """Writes preprocessing information.
 
     Args:
-      preprocess_object (PreprocessObject): preprocess object.
+      knowledge_base (KnowledgeBase): knowledge base, which contains
+          the preprocessing information.
 
     Raises:
-      IOError: when the storage writer is closed.
+      IOError: if the storage type does not support writing preprocessing
+               information or when the storage writer is closed.
     """
     if not self._is_open:
       raise IOError(u'Unable to write to closed storage writer.')
+
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Preprocessing information not supported by storage type.')
 
   def WriteSessionCompletion(self):
     """Writes session completion information.
