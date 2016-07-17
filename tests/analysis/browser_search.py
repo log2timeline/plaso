@@ -18,7 +18,9 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
     """Read a storage file that contains URL data and analyze it."""
     parser = sqlite.SQLiteParser()
     knowledge_base = self._SetUpKnowledgeBase()
-    storage_writer = self._ParseFile(['History'], parser, knowledge_base)
+    storage_writer = self._ParseFile([u'History'], parser, knowledge_base)
+
+    self.assertEqual(len(storage_writer.events), 71)
 
     event_queue = single_process.SingleProcessQueue()
     event_queue_producer = test_lib.TestEventObjectProducer(
@@ -47,7 +49,7 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
         u''])
 
     self.assertEqual(analysis_report.text, expected_text)
-    self.assertEqual(analysis_report.plugin_name, 'browser_search')
+    self.assertEqual(analysis_report.plugin_name, u'browser_search')
 
     expected_keys = set([u'Google Search'])
     self.assertEqual(set(analysis_report.report_dict.keys()), expected_keys)
