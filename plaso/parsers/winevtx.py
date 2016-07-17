@@ -18,36 +18,36 @@ class WinEvtxRecordEvent(time_events.FiletimeEvent):
   """Convenience class for a Windows XML EventLog (EVTX) record event.
 
   Attributes:
-    computer_name: the computer name stored in the event record.
-    event_identifier: the event identifier.
-    event_level: the event level.
-    message_identifier: the event message identifier.
-    offset: the data offset of the event record with in the file.
-    record_number: the event record number.
-    recovered: boolean value to indicate the record was recovered.
-    source_name: the name of the event source.
-    strings: array of event strings.
-    user_sid: the user security identifier (SID) stored in the event record.
-    xml_string: XML representation of the event.
+    computer_name (str): computer name stored in the event record.
+    event_identifier (int): event identifier.
+    event_level (int): event level.
+    message_identifier (int): event message identifier.
+    offset (int): data offset of the event record with in the file.
+    record_number (int): event record number.
+    recovered (bool): True if the record was recovered.
+    source_name (str): name of the event source.
+    strings (list[str]): event strings.
+    user_sid (str): user security identifier (SID) stored in the event record.
+    xml_string (str): XML representation of the event.
   """
 
   DATA_TYPE = u'windows:evtx:record'
 
   def __init__(
-      self, timestamp, evtx_record, record_number, event_identifier,
+      self, filetime, evtx_record, record_number, event_identifier,
       event_identifier_qualifiers, recovered=False):
     """Initializes the event.
 
     Args:
-      timestamp: the FILETIME value for the timestamp.
-      evtx_record: the EVTX record (instance of pyevtx.record).
-      record_number: the event record number.
-      event_identifier: the event identifier.
-      event_identifier_qualifiers: the event identifier qualifiers.
-      recovered: optional boolean value to indicate the record was recovered.
+      filetime (int): FILETIME timestamp value.
+      evtx_record (pyevtx.record): event record.
+      record_number (int): event record number.
+      event_identifier (int): event identifier.
+      event_identifier_qualifiers (int): event identifier qualifiers.
+      recovered (Optional[bool]): True if the record was recovered.
     """
     super(WinEvtxRecordEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
+        filetime, eventdata.EventTimestamp.WRITTEN_TIME)
 
     self.offset = evtx_record.offset
     self.recovered = recovered
@@ -95,10 +95,10 @@ class WinEvtxParser(interface.FileObjectParser):
     """Extract data from a Windows XML EventLog (EVTX) record.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      record_index: the event record index.
-      evtx_record: an event record (instance of pyevtx.record).
-      recovered: optional boolean value to indicate the record was recovered.
+      parser_mediator (ParserMediator): parser mediator.
+      record_index (int): event record index.
+      evtx_record (pyevtx.record): event record.
+      recovered (Optional[bool]): True if the record was recovered.
     """
     try:
       record_number = evtx_record.identifier
@@ -148,8 +148,8 @@ class WinEvtxParser(interface.FileObjectParser):
     """Parses a Windows XML EventLog (EVTX) file-like object.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      file_object: a file-like object.
+      parser_mediator (ParserMediator): parser mediator.
+      file_object (dfvfs.FileIO): a file-like object.
     """
     evtx_file = pyevtx.file()
     evtx_file.set_ascii_codepage(parser_mediator.codepage)
@@ -162,6 +162,9 @@ class WinEvtxParser(interface.FileObjectParser):
       return
 
     for record_index, evtx_record in enumerate(evtx_file.records):
+      if parser_mediator.abort:
+        break
+
       try:
         self._ParseRecord(parser_mediator, record_index, evtx_record)
       except IOError as exception:
@@ -170,6 +173,9 @@ class WinEvtxParser(interface.FileObjectParser):
                 record_index, exception))
 
     for record_index, evtx_record in enumerate(evtx_file.recovered_records):
+      if parser_mediator.abort:
+        break
+
       try:
         self._ParseRecord(
             parser_mediator, record_index, evtx_record, recovered=True)
