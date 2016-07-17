@@ -246,9 +246,9 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     Args:
       analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
-                                               be run.
+          be run.
       analysis_queue_port (Optional[int]): TCP port of the ZeroMQ analysis
-                                           report queues.
+          report queues.
       analysis_report_incoming_queue (Optional[Queue]):
           queue that reports should to pushed to, when ZeroMQ is not in use.
     """
@@ -288,12 +288,14 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     """Return a list of analysis plugins and event queues.
 
     Args:
-      analysis_plugins_string: comma separated string with names of analysis
-                               plugins to load.
+      analysis_plugins_string (str): comma separated names of analysis plugins
+          to load.
 
     Returns:
-      A tuple of two lists, one containing list of analysis plugins
-      and the other a list of event queues.
+      tuple: consists:
+
+        list[AnalysisPlugin]: analysis plugins
+        list[Queue]: event queues
     """
     if not analysis_plugins_string:
       return [], []
