@@ -23,8 +23,7 @@ class LinuxHostname(interface.PreprocessPlugin):
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
-      knowledge_base (KnowledgeBase): knowledge base, which contains
-          information from the source data needed for parsing.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
 
     Returns:
       HostnameArtifact: hostname artifact or None.
@@ -66,8 +65,7 @@ class LinuxTimezone(interface.PreprocessPlugin):
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
-      knowledge_base (KnowledgeBase): knowledge base, which contains
-          information from the source data needed for parsing.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
 
     Returns:
       str: an Olsen, or tzdata, timezone name, e.g. 'America/New_York'.
@@ -102,8 +100,7 @@ class LinuxUsernames(interface.PreprocessPlugin):
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
-      knowledge_base (KnowledgeBase): knowledge base, which contains
-          information from the source data needed for parsing.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
 
     Returns:
       list[UserAccountArtifact]: user account artifacts.

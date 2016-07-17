@@ -45,7 +45,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
       extension_identifier (str): Chrome extension identifier.
 
     Returns:
-      bytes: page content or None.
+      str: page content or None.
     """
     web_store_url = self._WEB_STORE_URL.format(xid=extension_identifier)
     try:
@@ -63,10 +63,10 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
     """Given a path give back the path separator as a best guess.
 
     Args:
-      path: the path.
+      path (str): path.
 
     Returns:
-      The path segment separator.
+      str: path segment separator.
     """
     if path.startswith(u'\\') or path[1:].startswith(u':\\'):
       return u'\\'

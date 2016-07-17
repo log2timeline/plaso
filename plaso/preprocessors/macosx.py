@@ -51,8 +51,7 @@ class PlistPreprocessPlugin(interface.PreprocessPlugin):
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
-      knowledge_base (KnowledgeBase): knowledge base, which contains
-          information from the source data needed for parsing.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
 
     Returns:
       object: preprocess attribute value or None.
@@ -108,8 +107,7 @@ class PlistKeyPreprocessPlugin(PlistPreprocessPlugin):
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
-      knowledge_base (KnowledgeBase): knowledge base, which contains
-          information from the source data needed for parsing.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
 
     Returns:
       object: value of the first key that is found.
@@ -231,11 +229,10 @@ class MacOSXTimeZone(interface.PreprocessPlugin):
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
-      knowledge_base (KnowledgeBase): knowledge base, which contains
-          information from the source data needed for parsing.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
 
     Returns:
-      The local timezone settings.
+      str: local time zone settings.
 
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
@@ -304,8 +301,7 @@ class MacOSXUsers(PlistPreprocessPlugin):
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
-      knowledge_base (KnowledgeBase): knowledge base, which contains
-          information from the source data needed for parsing.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
 
     Returns:
       list[UserAccountArtifact]: user account artifacts.

@@ -22,8 +22,7 @@ class WindowsPathPreprocessPlugin(interface.PreprocessPlugin):
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
-      knowledge_base (KnowledgeBase): knowledge base, which contains
-          information from the source data needed for parsing.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
 
     Returns:
       str: first path location string that is found.
@@ -84,12 +83,9 @@ class WindowsRegistryPreprocessPlugin(interface.PreprocessPlugin):
   def Run(self, win_registry, knowledge_base):
     """Runs the plugins to determine the value of a preprocessing attribute.
 
-    The resulting preprocessing attribute value is stored in the knowledge base.
-
     Args:
       win_registry (WinRegistry): Windows Registry.
-      knowledge_base (KnowledgeBase): knowledge base, which contains
-          information from the source data needed for parsing.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
 
     Raises:
       PreProcessFail: If a preprocessing failed.
@@ -293,8 +289,7 @@ class WindowsPathEnvironmentVariable(WindowsPathPreprocessPlugin):
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
-      knowledge_base (KnowledgeBase): knowledge base, which contains
-          information from the source data needed for parsing.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
 
     Returns:
       EnvironmentVariableArtifact: environment variable artifact or None.

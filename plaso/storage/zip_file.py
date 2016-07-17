@@ -1319,7 +1319,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
           self._event_heap.PushEvent(
               event, stream_number, event.store_number)
 
-  # TODO: remove after preprocess depreaction.
+  # TODO: remove after preprocess deprecation.
   def _GetPreprocessObjectsLegacyFormat(self):
     """Retrieves the preprocess objects in the legacy format.
 
@@ -1827,7 +1827,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     return self._ReadAttributeContainerFromStreamEntry(data_stream, u'event')
 
-  # TODO: remove after preprocess depreaction.
+  # TODO: remove after preprocess deprecation.
   def _ReadPreprocessingInformationLegacyFormat(self, knowledge_base):
     """Reads preprocessing information in the legacy format.
 
@@ -2004,13 +2004,12 @@ class ZIPStorageFile(interface.BaseFileStorage):
     if self._serializers_profiler:
       self._serializers_profiler.StopTiming(u'write')
 
-  # TODO: remove after preprocess depreaction.
+  # TODO: remove after preprocess deprecation.
   def _WritePreprocessingInformationLegacyFormat(self, knowledge_base):
     """Writes preprocessing information in legacy format.
 
     Args:
-      knowledge_base (KnowledgeBase): knowledge base, which contains
-          the preprocessing information.
+      knowledge_base (KnowledgeBase): contains the preprocessing information.
     """
     preprocess_object = preprocess.PreprocessObject()
 
@@ -2027,7 +2026,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     self._WritePreprocessObjectLegacyFormat(preprocess_object)
 
-  # TODO: remove after preprocess depreaction.
+  # TODO: remove after preprocess deprecation.
   def _WritePreprocessObjectLegacyFormat(self, preprocess_object):
     """Writes a preprocess object in the legacy format.
 
@@ -2920,7 +2919,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       knowledge_base (KnowledgeBase): knowledge base, where
           the preprocessing information is stored.
     """
-    # TODO: remove after preprocess depreaction.
+    # TODO: remove after preprocess deprecation.
     if self.format_version < 20160715:
       self._ReadPreprocessingInformationLegacyFormat(knowledge_base)
       return
@@ -2943,8 +2942,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     """Writes preprocessing information.
 
     Args:
-      knowledge_base (KnowledgeBase): knowledge base, which contains
-          the preprocessing information.
+      knowledge_base (KnowledgeBase): contains the preprocessing information.
 
     Raises:
       IOError: if the storage type does not support writing preprocess
@@ -2960,7 +2958,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     if self.storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError(u'Preprocess information not supported by storage type.')
 
-    # TODO: remove after preprocess depreaction.
+    # TODO: remove after preprocess deprecation.
     if self.format_version < 20160715:
       self._WritePreprocessingInformationLegacyFormat(knowledge_base)
       return
@@ -3461,8 +3459,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     """Writes preprocessing information.
 
     Args:
-      knowledge_base (KnowledgeBase): knowledge base, which contains
-          the preprocessing information.
+      knowledge_base (KnowledgeBase): contains the preprocessing information.
 
     Raises:
       IOError: if the storage type does not support writing preprocessing

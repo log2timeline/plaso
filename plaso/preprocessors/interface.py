@@ -100,12 +100,11 @@ class PreprocessPlugin(object):
     return list(searcher.Find(find_specs=[find_spec]))
 
   def _SetAttributeValue(self, attribute_value, knowledge_base):
-    """Sets the attribute value in the knowledge base.
+    """Sets an attribute value in the knowledge base.
 
     Args:
       attribute_value (object): preprocess attribute value.
-      knowledge_base (KnowledgeBase): knowledge base, which contains
-          information from the source data needed for parsing.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
     """
     if isinstance(attribute_value, list):
       for sub_attribute_value in attribute_value:
@@ -135,12 +134,11 @@ class PreprocessPlugin(object):
 
   @abc.abstractmethod
   def GetValue(self, searcher, knowledge_base):
-    """Retrieves the attribute value.
+    """Retrieves an attribute value.
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
-      knowledge_base (KnowledgeBase): knowledge base, which contains
-          information from the source data needed for parsing.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
 
     Returns:
       object: preprocess attribute value or None.
@@ -149,12 +147,9 @@ class PreprocessPlugin(object):
   def Run(self, searcher, knowledge_base):
     """Runs the plugins to determine the value of the preprocessing attribute.
 
-    The resulting preprocessing attribute value is stored in the knowledge base.
-
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
-      knowledge_base (KnowledgeBase): knowledge base, which contains
-          information from the source data needed for parsing.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
     """
     attribute_value = self.GetValue(searcher, knowledge_base)
     self._SetAttributeValue(attribute_value, knowledge_base)
@@ -170,8 +165,7 @@ class PathPreprocessPlugin(PreprocessPlugin):
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
-      knowledge_base (KnowledgeBase): knowledge base, which contains
-          information from the source data needed for parsing.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
 
     Returns:
       str: first path location string that is found.

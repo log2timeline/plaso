@@ -140,8 +140,7 @@ class BaseStorage(object):
     """Writes preprocessing information.
 
     Args:
-      knowledge_base (KnowledgeBase): knowledge base, which contains
-          the preprocessing information.
+      knowledge_base (KnowledgeBase): contains the preprocessing information.
     """
 
   @abc.abstractmethod
@@ -533,8 +532,7 @@ class StorageWriter(object):
     """Writes preprocessing information.
 
     Args:
-      knowledge_base (KnowledgeBase): knowledge base, which contains
-          the preprocessing information.
+      knowledge_base (KnowledgeBase): contains the preprocessing information.
     """
 
   @abc.abstractmethod

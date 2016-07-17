@@ -145,9 +145,9 @@ class ExtractionFrontend(frontend.Frontend):
     """Determines the parser filter preset.
 
     Args:
-      os_guess (Optional[str]): operating system guessed by the preprocessing.
+      os_guess (Optional[str]): operating system guessed by preprocessing.
       os_version (Optional[str]): operating system version determined by
-          the preprocessing.
+          preprocessing.
 
     Returns:
       str: parser filter preset, where None represents all parsers and plugins.
@@ -234,7 +234,7 @@ class ExtractionFrontend(frontend.Frontend):
     if not default_timezone:
       default_timezone = u'UTC'
 
-    logging.info(u'Setting default timezone to: {0:s}'.format(default_timezone))
+    logging.info(u'Setting timezone to: {0:s}'.format(default_timezone))
 
     try:
       self._engine.knowledge_base.SetTimezone(default_timezone)
@@ -276,7 +276,10 @@ class ExtractionFrontend(frontend.Frontend):
     """Retrieves the hashers information.
 
     Returns:
-      list[tuple[str,str]]: pairs of hasher names and descriptions.
+      list[tuple]: contains:
+
+        str: hasher name
+        str: hahser description
     """
     return hashers_manager.HashersManager.GetHashersInformation()
 
@@ -288,7 +291,10 @@ class ExtractionFrontend(frontend.Frontend):
           represents all parsers and plugins.
 
     Returns:
-      list[tuple[str,str]]: pairs of parser plugin names and descriptions.
+      list[tuple]: contains:
+
+        str: parser plugin name
+        str: parser plugin description
     """
     return parsers_manager.ParsersManager.GetParserPluginsInformation(
         parser_filter_expression=parser_filter_expression)
@@ -297,8 +303,10 @@ class ExtractionFrontend(frontend.Frontend):
     """Retrieves the parser presets information.
 
     Returns:
-      list[tuple[str,str]]: pairs of parser preset names and corresponding
-          parsers names.
+      list[tuple]: contains:
+
+        str: parser preset name
+        str: parsers names corresponding to the preset
     """
     parser_presets_information = []
     for preset_name, parser_names in sorted(parsers_presets.CATEGORIES.items()):
@@ -310,7 +318,10 @@ class ExtractionFrontend(frontend.Frontend):
     """Retrieves the parsers information.
 
     Returns:
-      list[tuple[str,str]]: pairs of parser names and descriptions.
+      list[tuple]: contains:
+
+        str: parser name
+        str: parser description
     """
     return parsers_manager.ParsersManager.GetParsersInformation()
 
@@ -497,6 +508,6 @@ class ExtractionFrontend(frontend.Frontend):
     """Sets whether the frontend is using ZeroMQ for queueing or not.
 
     Args:
-      use_zeromq (Optional[bool]): Tru if ZeroMQ should be used for queuing.
+      use_zeromq (Optional[bool]): True if ZeroMQ should be used for queuing.
     """
     self._use_zeromq = use_zeromq

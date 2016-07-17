@@ -9,10 +9,11 @@ class PreprocessObject(interface.AttributeContainer):
   """Object used to store all information gained from preprocessing.
 
   Attributes:
-    hosts (dict[str,str]): hostnames e.g. {'hostname': 'myhost'}
+    hosts (dict[str,str]): hostnames, for example {'hostname': 'myhost'}.
     time_zone_str (str): time zone, formatted as a string supported by
         pytz.timezone().
-    users (dict[str,str]): users e.g. {'name': 'me', 'sid': 'S-1', 'uid': '1'}
+    list[dict[str,str]]: users, for example [{'name': 'me', 'sid': 'S-1',
+        'uid': '1'}]
     zone (str): time zone, formatted as a string supported by pytz.timezone().
   """
   CONTAINER_TYPE = u'preprocess'

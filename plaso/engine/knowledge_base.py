@@ -17,7 +17,7 @@ class KnowledgeBase(object):
   """Class that implements the artifact knowledge base."""
 
   def __init__(self):
-    """Initialize the knowledge base object."""
+    """Initializes a knowledge base object."""
     super(KnowledgeBase, self).__init__()
     self._default_codepage = u'cp1252'
     self._environment_variables = {}
@@ -68,7 +68,8 @@ class KnowledgeBase(object):
       name (str): name of the environment variable.
 
     Returns:
-      EnvironmentVariableArtifact: environment variable artifact or None.
+      EnvironmentVariableArtifact: environment variable artifact or None
+          if there was no value set for the given name.
     """
     name = name.upper()
     return self._environment_variables.get(name, None)
@@ -114,7 +115,7 @@ class KnowledgeBase(object):
     return self._hostnames.get(store_number, None)
 
   def GetSystemConfigurationArtifact(self):
-    """Retrieves the knowledge base as system configuration artifact.
+    """Retrieves the knowledge base as a system configuration artifact.
 
     Returns:
       SystemConfigurationArtifact: system configuration artifact.
@@ -135,7 +136,7 @@ class KnowledgeBase(object):
 
     return system_configuration
 
-  # TODO: remove after preprocess depreaction.
+  # TODO: remove after preprocess deprecation.
   def GetUsersPreprocessObject(self):
     """Retrieves a list of users for the preprocess object.
 
@@ -204,15 +205,15 @@ class KnowledgeBase(object):
   def GetUsernameForPath(self, path):
     """Retrieves a username for a specific path.
 
-    This method compares the path with the user directories. The the path
-    has the same location as a user directory the corresponding username
-    is returned.
+    This is determining if a specific path is within a user's directory and
+    returning the username of the user if so.
 
     Args:
       path (str): path.
 
     Returns:
-      str: username or None.
+      str: username or None if the path does not appear to be within a user's
+          directory.
     """
     path = path.lower()
 
@@ -247,6 +248,8 @@ class KnowledgeBase(object):
 
   def ReadSystemConfigurationArtifact(self, store_number, system_configuration):
     """Reads the knowledge base values from a system configuration artifact.
+
+    Note that this overwrites existing values in the knowledge base.
 
     Args:
       store_number (int): store number.

@@ -332,7 +332,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     Args:
       preferred_encoding (Optional[str]): preferred encoding to output.
-      timezone (Optional[str]): timezone to output.
+      timezone (Optional[str]): timezone to use for timestamps in output.
 
     Returns:
       OutputModule: output module.

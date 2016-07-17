@@ -71,7 +71,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     """Retrieves the analysis reports from the queue consumer.
 
     Args:
-      analysis_report_queue_consumer (TestAnalysisReportQueueConsumer): the
+      analysis_report_queue_consumer (TestAnalysisReportQueueConsumer):
           analysis report queue consumer.
 
     Returns:

@@ -18,11 +18,12 @@ class AnalysisMediator(object):
     Args:
       analysis_report_queue_producer (ItemQueueProducer): analysis report
           queue producer.
-      knowledge_base (KnowledgeBase): knowledge base, which contains
-          information from the source data needed for parsing.
-      data_location (Optional[str]): location of the data files.
-      completion_event (Optional[Multiprocessing.Event]): multi processing event
-          that will be set when the analysis plugin is complete.
+      knowledge_base (KnowledgeBase): contains information from the source
+          data needed for parsing.
+      data_location (Optional[str]): location of data files used during
+          analysis.
+      completion_event (Optional[Multiprocessing.Event]): set when the
+          analysis plugin is complete.
     """
     super(AnalysisMediator, self).__init__()
     self._analysis_report_queue_producer = analysis_report_queue_producer
@@ -74,15 +75,15 @@ class AnalysisMediator(object):
   def GetUsernameForPath(self, path):
     """Retrieves a username for a specific path.
 
-    This method compares the path with the user directories. The the path
-    has the same location as a user directory the corresponding username
-    is returned.
+    This is determining if a specific path is within a user's directory and
+    returning the username of the user if so.
 
     Args:
       path (str): path.
 
     Returns:
-      str: username or None.
+      str: username or None if the path does not appear to be within a user's
+          directory.
     """
     return self._knowledge_base.GetUsernameForPath(path)
 
