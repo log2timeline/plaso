@@ -376,7 +376,7 @@ class SQLiteParser(interface.FileEntryParser):
         except Exception as exception:  # pylint: disable=broad-except
           parser_mediator.ProduceExtractionError((
               u'plugin: {0:s} unable to parse SQLite database with error: '
-              u'{2:s}').format(plugin.NAME, exception))
+              u'{1:s}').format(plugin.NAME, exception))
 
     finally:
       database.Close()
