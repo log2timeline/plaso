@@ -551,7 +551,8 @@ class StorageMediaTool(tools.CLITool):
       process_current_volume = process_current_volume.strip()
       process_current_volume = process_current_volume.lower()
 
-      if process_current_volume in (u'no', u'yes'):
+      if (not process_current_volume or
+          process_current_volume in (u'no', u'yes')):
         break
 
       self._output_writer.Write(
@@ -560,7 +561,7 @@ class StorageMediaTool(tools.CLITool):
           u'\n')
 
     self._output_writer.Write(u'\n')
-    return process_current_volume == u'yes'
+    return not process_current_volume or process_current_volume == u'yes'
 
   def _PromptUserForVSSStoreIdentifiers(
       self, volume_system, volume_identifiers, vss_stores=None):
