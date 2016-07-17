@@ -23,8 +23,6 @@ from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 from tests.frontend import test_lib
 
-import pytz  # pylint: disable=wrong-import-order
-
 
 class PsortTestEvent(events.EventObject):
   """Test event object."""
@@ -171,8 +169,8 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
     test_front_end.SetQuietMode(True)
 
     storage_file_path = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_file = storage_zip_file.StorageFile(
-        storage_file_path, read_only=True)
+    storage_file = storage_zip_file.ZIPStorageFile()
+    storage_file.Open(path=storage_file_path)
 
     try:
       output_writer = test_lib.StringIOOutputWriter()
@@ -225,13 +223,14 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'storage.plaso')
 
-      storage_file = storage_zip_file.StorageFile(temp_file)
+      storage_file = storage_zip_file.ZIPStorageFile()
+      storage_file.Open(path=temp_file, read_only=False)
       for event_object in event_objects:
         storage_file.AddEvent(event_object)
       storage_file.Close()
 
-      storage_file = storage_zip_file.StorageFile(
-          temp_file, read_only=True)
+      storage_file = storage_zip_file.ZIPStorageFile()
+      storage_file.Open(path=temp_file)
 
       with reader.StorageObjectReader(storage_file) as storage_reader:
         knowledge_base_object = knowledge_base.KnowledgeBase()
@@ -267,18 +266,6 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
 
     formatters_manager.FormattersManager.DeregisterFormatter(
         PsortTestEventFormatter)
-
-  def testGetLastGoodPreprocess(self):
-    """Tests the last good preprocess method."""
-    test_front_end = psort.PsortFrontend()
-    storage_file_path = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_file = storage_zip_file.StorageFile(
-        storage_file_path, read_only=True)
-    preprocessor_object = test_front_end._GetLastGoodPreprocess(storage_file)
-    self.assertIsNotNone(preprocessor_object)
-    # TODO: fix the following test, because the plaso file is in an old format
-    # preprocessor_object.zone does not contain a string.
-    self.assertEqual(preprocessor_object.zone, pytz.UTC)
 
   # TODO: add bogus data location test.
 

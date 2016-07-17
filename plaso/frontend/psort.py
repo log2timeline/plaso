@@ -242,33 +242,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     return counter
 
-  # TODO: fix docstring, function does not create the pre_obj the call to
-  # storage does. Likely refactor this functionality into the storage API.
-  def _GetLastGoodPreprocess(self, storage_file):
-    """Gets the last stored preprocessing object with time zone information.
-
-    From all preprocessing objects, try to get the last one that has
-    time zone information stored in it, the highest chance of it containing
-    the information we are seeking (defaulting to the last one). If there are
-    no preprocessing objects in the file, we'll make a new one
-
-    Args:
-      storage_file: a Plaso storage file object.
-
-    Returns:
-      A preprocess object (instance of PreprocessObject), or None if there are
-      no preprocess objects in the storage file.
-    """
-    pre_objs = storage_file.GetStorageInformation()
-    if not pre_objs:
-      return None
-    pre_obj = pre_objs[-1]
-    for obj in pre_objs:
-      if getattr(obj, u'time_zone_str', u''):
-        pre_obj = obj
-
-    return pre_obj
-
   def _StartAnalysisPlugins(
       self, analysis_plugins, analysis_queue_port=None,
       analysis_report_incoming_queue=None):
@@ -547,9 +520,9 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     # TODO: we are directly invoking ZIP file storage here. In storage rewrite
     # come up with a more generic solution.
+    storage_file = storage_zip_file.ZIPStorageFile()
     try:
-      storage_file = storage_zip_file.StorageFile(
-          self._storage_file_path, read_only=read_only)
+      storage_file.Open(path=self._storage_file_path, read_only=read_only)
     except IOError as exception:
       raise RuntimeError(
           u'Unable to open storage file: {0:s} with error: {1:s}.'.format(

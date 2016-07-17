@@ -28,10 +28,11 @@ There are multiple types of streams:
 * event_timestamps.#
   The event timestamps streams contain the timestamp of the serialized
   events.
-* information.dump
-  The serialized preprocessing object.
 * metadata.txt
   Stream that contains the storage metadata.
+* preprocess.#
+  Stream that contains the preprocessing information.
+  Only applies to session-based storage.
 * session_completion.#
   Stream that contains information about the completion of a session.
   Only applies to session-based storage.
@@ -98,6 +99,10 @@ See the _SerializedEventTagIndexTable class for more information about
 the actual structure of an event tag index value.
 
 + Version information
+
+Deprecated in version 20160715:
+* information.dump
+  The serialized preprocess objects.
 
 Deprecated in version 20160501:
 * serializer.txt
@@ -936,7 +941,6 @@ class _StorageMetadataReader(object):
     return storage_metadata
 
 
-# TODO: merge ZIPStorageFile and StorageFile.
 class ZIPStorageFile(interface.BaseFileStorage):
   """Class that defines the ZIP-based storage file.
 
@@ -946,11 +950,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
     storage_type (str): storage type.
   """
 
-  # TODO: remove after merge of ZIPStorageFile and StorageFile.
-  # pylint: disable=abstract-method
-
   # The format version.
-  _FORMAT_VERSION = 20160525
+  _FORMAT_VERSION = 20160715
 
   # The earliest format version, stored in-file, that this class
   # is able to read.
@@ -1009,6 +1010,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     self._event_timestamp_tables = {}
     self._event_timestamp_tables_lfu = []
     self._event_heap = None
+    self._last_preprocess = 0
     self._last_session = 0
     self._last_task = 0
     self._maximum_buffer_size = maximum_buffer_size
@@ -1648,6 +1650,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     self._event_tag_stream_number = self._GetLastStreamNumber(
         stream_name_prefix)
+
+    self._last_preprocess = self._GetLastStreamNumber(u'preprocess.')
 
     last_session_start = self._GetLastStreamNumber(u'session_start.')
     last_session_completion = self._GetLastStreamNumber(u'session_completion.')
@@ -2671,6 +2675,38 @@ class ZIPStorageFile(interface.BaseFileStorage):
         self._event_sources_list.number_of_attribute_containers)
     return number_of_event_sources
 
+  def GetPreprocessObjects(self):
+    """Retrieves the preprocess objects.
+
+    Yields:
+      PreprocessObject: preprocess object.
+
+    Raises:
+      IOError: if a stream is missing.
+    """
+    if self.format_version < 20160715:
+      stream_name = u'information.dump'
+      if self._HasStream(stream_name):
+        data_stream = _SerializedDataStream(
+            self._zipfile, self._zipfile_path, stream_name)
+
+        for preprocess_object in self._ReadAttributeContainersFromStream(
+            data_stream, u'preprocess'):
+          yield preprocess_object
+
+    else:
+      for stream_number in range(1, self._last_preprocess):
+        stream_name = u'preprocess.{0:06}'.format(stream_number)
+        if not self._HasStream(stream_name):
+          raise IOError(u'No such stream: {0:s}'.format(stream_name))
+
+        data_stream = _SerializedDataStream(
+            self._zipfile, self._zipfile_path, stream_name)
+
+        for preprocess_object in self._ReadAttributeContainersFromStream(
+            data_stream, u'preprocess'):
+          yield preprocess_object
+
   def GetSessions(self):
     """Retrieves the sessions.
 
@@ -2787,6 +2823,55 @@ class ZIPStorageFile(interface.BaseFileStorage):
     if not read_only:
       self._OpenWrite()
 
+  def WritePreprocessObject(self, preprocess_object):
+    """Writes a preprocess object.
+
+    Args:
+      preprocess_object (PreprocessObject): preprocess object.
+
+    Raises:
+      IOError: when the storage file is closed or read-only or
+               if the stream cannot be opened.
+    """
+    if not self._is_open:
+      raise IOError(u'Unable to write to closed storage file.')
+
+    if self._read_only:
+      raise IOError(u'Unable to write to read-only storage file.')
+
+    if self.format_version < 20160715:
+      stream_name = u'information.dump'
+
+      existing_stream_data = self._ReadStream(stream_name)
+    else:
+      stream_name = u'preprocess.{0:06d}'.format(self._last_preprocess)
+      if self._HasStream(stream_name):
+        raise IOError(u'Preprocess: {0:06d} already exists.'.format(
+            self._last_preprocess))
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(u'preprocess')
+
+    preproces_data = self._serializer.WriteSerialized(preprocess_object)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StopTiming(u'preprocess')
+
+    if self.format_version < 20160715:
+      preproces_data_size = construct.ULInt32(u'size').build(
+          len(preproces_data))
+      stream_data = b''.join([
+          existing_stream_data, preproces_data_size, preproces_data])
+
+      self._WriteStream(stream_name, stream_data)
+
+    else:
+      data_stream = _SerializedDataStream(
+          self._zipfile, self._zipfile_path, stream_name)
+      data_stream.WriteInitialize()
+      data_stream.WriteEntry(preproces_data)
+      data_stream.WriteFinalize()
+
   def WriteSessionCompletion(self, session_completion):
     """Writes session completion information.
 
@@ -2871,119 +2956,6 @@ class ZIPStorageFile(interface.BaseFileStorage):
       return
 
     self._WriteTaskStart(task_start)
-
-
-# TODO: remove StorageFile.
-class StorageFile(ZIPStorageFile):
-  """Class that defines the ZIP-based storage file."""
-
-  def __init__(
-      self, output_file, buffer_size=0, read_only=False,
-      storage_type=definitions.STORAGE_TYPE_SESSION):
-    """Initializes the storage file.
-
-    Args:
-      output_file: a string containing the name of the output file.
-      buffer_size: optional integer containing the maximum size of
-                   a single storage stream. A value of 0 indicates
-                   the limit is _MAXIMUM_BUFFER_SIZE.
-      read_only: optional boolean to indicate we are opening the storage file
-                 for reading only.
-      storage_type: optional string containing the storage type.
-
-    Raises:
-      IOError: if we open the file in read only mode and the file does
-               not exist.
-    """
-    super(StorageFile, self).__init__(
-        maximum_buffer_size=buffer_size, storage_type=storage_type)
-    self.Open(path=output_file, read_only=read_only)
-
-  def _ReadPreprocessObject(self, data_stream):
-    """Reads a preprocessing object.
-
-    Args:
-      data_stream: the data stream object (instance of _SerializedDataStream).
-
-    Returns:
-      An preprocessing object (instance of PreprocessObject) or None if the
-      preprocessing object cannot be read.
-    """
-    preprocess_data = data_stream.ReadEntry()
-    if not preprocess_data:
-      return
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(u'preprocess_object')
-
-    preprocess_object = self._serializer.ReadSerialized(preprocess_data)
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StopTiming(u'preprocess_object')
-
-    return preprocess_object
-
-  def GetStorageInformation(self):
-    """Retrieves storage (preprocessing) information stored in the storage file.
-
-    Returns:
-      A list of preprocessing objects (instances of PreprocessObject)
-      that contain the storage information.
-    """
-    stream_name = u'information.dump'
-    if not self._HasStream(stream_name):
-      return []
-
-    data_stream = _SerializedDataStream(
-        self._zipfile, self._zipfile_path, stream_name)
-
-    information = []
-    preprocess_object = self._ReadPreprocessObject(data_stream)
-    while preprocess_object:
-      information.append(preprocess_object)
-      preprocess_object = self._ReadPreprocessObject(data_stream)
-
-    return information
-
-  def WritePreprocessObject(self, preprocess_object):
-    """Writes a preprocess object.
-
-    Args:
-      preprocess_object: the preprocess object (instance of PreprocessObject).
-
-    Raises:
-      IOError: when the storage file is closed or read-only or
-               if the stream cannot be opened.
-    """
-    if not self._is_open:
-      raise IOError(u'Unable to write to closed storage file.')
-
-    if self._read_only:
-      raise IOError(u'Unable to write to read-only storage file.')
-
-    stream_name = u'information.dump'
-    existing_stream_data = self._ReadStream(stream_name)
-
-    # Store information about store range for this particular
-    # preprocessing object. This will determine which stores
-    # this information is applicable for.
-    if self._serializers_profiler:
-      self._serializers_profiler.StartTiming(u'preprocess_object')
-
-    preprocess_object_data = self._serializer.WriteSerialized(
-        preprocess_object)
-
-    if self._serializers_profiler:
-      self._serializers_profiler.StopTiming(u'preprocess_object')
-
-    # TODO: use _SerializedDataStream.
-    preprocess_object_data_size = construct.ULInt32(u'size').build(
-        len(preprocess_object_data))
-    stream_data = b''.join([
-        existing_stream_data, preprocess_object_data_size,
-        preprocess_object_data])
-
-    self._WriteStream(stream_name, stream_data)
 
 
 class ZIPStorageFileReader(interface.FileStorageReader):
@@ -3283,11 +3255,12 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     if self._storage_type == definitions.STORAGE_TYPE_TASK:
       self._storage_file = gzip_file.GZIPStorageFile(
           storage_type=self._storage_type)
-      self._storage_file.Open(path=self._output_file, read_only=False)
     else:
-      self._storage_file = StorageFile(
-          self._output_file, buffer_size=self._buffer_size,
+      self._storage_file = ZIPStorageFile(
+          maximum_buffer_size=self._buffer_size,
           storage_type=self._storage_type)
+
+    self._storage_file.Open(path=self._output_file, read_only=False)
 
     self._first_written_event_source_index = (
         self._storage_file.GetNumberOfEventSources())

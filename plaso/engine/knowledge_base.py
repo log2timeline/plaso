@@ -196,20 +196,17 @@ class KnowledgeBase(object):
     self._hostnames = {}
     self._preprocess_objects = {}
 
-    if not storage_file or not hasattr(storage_file, u'GetStorageInformation'):
-      return
-
-    for info in storage_file.GetStorageInformation():
-      store_range = getattr(info, u'store_range', None)
+    for preprocess_object in storage_file.GetPreprocessObjects():
+      store_range = getattr(preprocess_object, u'store_range', None)
       if not store_range:
         continue
 
       # TODO: should this be store_range[1] + 1 with or without + 1?
       # This is inconsistent in the current version of the codebase.
       for store_number in range(store_range[0], store_range[1]):
-        self._preprocess_objects[store_number] = info
+        self._preprocess_objects[store_number] = preprocess_object
 
-        hostname = getattr(info, u'hostname', None)
+        hostname = getattr(preprocess_object, u'hostname', None)
         if hostname:
           # TODO: A bit wasteful, if the range is large we are wasting keys.
           # Rewrite this logic into a more optimal one.
