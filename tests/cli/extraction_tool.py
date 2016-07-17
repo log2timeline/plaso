@@ -20,7 +20,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       u'                               [--preferred_year YEAR] [-p]',
       u'                               [--process_archives]',
       u'                               [--temporary_directory DIRECTORY]',
-      u'                               [--use_old_preprocess]',
       u'',
       u'Test argument parser.',
       u'',
@@ -84,18 +83,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       (u'                        Path to the directory that should be used to '
        u'store'),
       u'                        temporary files created during extraction.',
-      u'  --use_old_preprocess, --use-old-preprocess',
-      (u'                        Only used in conjunction when appending to a '
-       u'previous'),
-      (u'                        storage file. When this option is used then a '
-       u'new'),
-      (u'                        preprocessing object is not calculated and '
-       u'instead the'),
-      (u'                        last one that got added to the storage file '
-       u'is used.'),
-      (u'                        This can be handy when parsing an image that '
-       u'contains'),
-      u'                        more than a single partition.',
       u''])
 
   _EXPECTED_PERFOMANCE_OPTIONS = u'\n'.join([

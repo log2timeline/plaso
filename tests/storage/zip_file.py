@@ -1150,6 +1150,17 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
+  def testGetPreprocessObjects(self):
+    """Tests the GetPreprocessObjects function."""
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    storage_file = zip_file.ZIPStorageFile()
+    storage_file.Open(path=test_file)
+
+    preprocess_object_list = list(storage_file.GetPreprocessObjects())
+    self.assertEqual(len(preprocess_object_list), 4)
+
+    storage_file.Close()
+
   def testGetSessions(self):
     """Tests the GetSessions function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
@@ -1252,6 +1263,19 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
       storage_file.Open(path=temp_file)
       storage_file.Close()
 
+  def testWritePreprocessObject(self):
+    """Tests the WritePreprocessObject function."""
+    preprocess_object = preprocess.PreprocessObject()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      storage_file = zip_file.ZIPStorageFile()
+      storage_file.Open(temp_file, read_only=False)
+
+      storage_file.WritePreprocessObject(preprocess_object)
+
+      storage_file.Close()
+
   def testWriteSessionStartAndCompletion(self):
     """Tests the WriteSessionStart and WriteSessionCompletion functions."""
     session = sessions.Session()
@@ -1311,35 +1335,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
       with self.assertRaises(IOError):
         storage_file.WriteTaskCompletion(task_completion)
-
-      storage_file.Close()
-
-
-# TODO: remove StorageFile.
-class StorageFileTest(test_lib.StorageTestCase):
-  """Tests for the ZIP storage file object."""
-
-  # pylint: disable=protected-access
-
-  def testGetStorageInformation(self):
-    """Tests the GetStorageInformation function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_file = zip_file.StorageFile(test_file, read_only=True)
-
-    storage_information = storage_file.GetStorageInformation()
-    self.assertEqual(len(storage_information), 4)
-
-    storage_file.Close()
-
-  def testWritePreprocessObject(self):
-    """Tests the WritePreprocessObject function."""
-    preprocess_object = preprocess.PreprocessObject()
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_file = zip_file.StorageFile(temp_file)
-
-      storage_file.WritePreprocessObject(preprocess_object)
 
       storage_file.Close()
 

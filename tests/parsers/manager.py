@@ -195,6 +195,39 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     self.assertEqual(
         len(TestParserWithPlugins._plugin_classes), 0)
 
+  def testGetParserAndPluginNames(self):
+    """Tests the GetParserAndPluginNames function."""
+    TestParserWithPlugins.RegisterPlugin(TestPlugin)
+    manager.ParsersManager.RegisterParser(TestParserWithPlugins)
+    manager.ParsersManager.RegisterParser(TestParser)
+
+    parser_names = manager.ParsersManager.GetParserAndPluginNames(
+        parser_filter_expression=u'test_parser')
+    self.assertEqual(parser_names, [u'test_parser'])
+
+    parser_names = manager.ParsersManager.GetParserAndPluginNames(
+        parser_filter_expression=u'!test_parser')
+    self.assertNotIn(u'test_parser', parser_names)
+
+    expected_parser_names = [
+        u'test_parser_with_plugins',
+        u'test_parser_with_plugins/test_plugin']
+    parser_names = manager.ParsersManager.GetParserAndPluginNames(
+        parser_filter_expression=u'test_parser_with_plugins/test_plugin')
+    self.assertEqual(parser_names, expected_parser_names)
+
+    # Test with a parser name, not using plugin names.
+    expected_parser_names = [
+        u'test_parser_with_plugins',
+        u'test_parser_with_plugins/test_plugin']
+    parser_names = manager.ParsersManager.GetParserAndPluginNames(
+        parser_filter_expression=u'test_parser_with_plugins')
+    self.assertEqual(parser_names, expected_parser_names)
+
+    TestParserWithPlugins.DeregisterPlugin(TestPlugin)
+    manager.ParsersManager.DeregisterParser(TestParserWithPlugins)
+    manager.ParsersManager.DeregisterParser(TestParser)
+
   def testGetParserObjectByName(self):
     """Tests the GetParserObjectByName function."""
     manager.ParsersManager.RegisterParser(TestParser)
@@ -312,7 +345,6 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
   # TODO: add GetNamesOfParsersWithPlugins test.
   # TODO: add GetScanner test.
   # TODO: add GetSpecificationStore test.
-  # TODO: add  test.
 
 
 if __name__ == '__main__':
