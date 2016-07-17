@@ -130,9 +130,13 @@ class BaseStorage(object):
   def ReadPreprocessingInformation(self, knowledge_base):
     """Reads preprocessing information.
 
+    The preprocessing information contains the system configuration which
+    contains information about various system specific configuration data,
+    for example the user accounts.
+
     Args:
-      knowledge_base (KnowledgeBase): knowledge base, where
-          the preprocessing information is stored.
+      knowledge_base (KnowledgeBase): is used to store the preprocessing
+          information.
     """
 
   @abc.abstractmethod

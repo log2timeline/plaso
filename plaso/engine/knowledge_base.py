@@ -141,7 +141,8 @@ class KnowledgeBase(object):
     """Retrieves a list of users for the preprocess object.
 
     Returns:
-      list[dict[str,str]]: list of users.
+      list[dict[str,str]]: users, for example [{'name': 'me', 'sid': 'S-1',
+        'uid': '1'}]
     """
     users = []
 

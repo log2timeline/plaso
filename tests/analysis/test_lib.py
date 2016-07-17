@@ -173,8 +173,9 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     """Sets the user accounts in the knowledge base.
 
     Args:
-      knowledge_base_object (KnowledgeBase): knowledge base.
-      users (list[dict[str,str])): users.
+      knowledge_base (KnowledgeBase): is used to store information about users.
+      users (list[dict[str,str])): users, for example [{'name': 'me',
+        'sid': 'S-1', 'uid': '1'}]
     """
     for user in users:
       identifier = user.get(u'sid', user.get(u'uid', None))

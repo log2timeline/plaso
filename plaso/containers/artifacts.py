@@ -67,6 +67,9 @@ class HostnameArtifact(ArtifactAttributeContainer):
 class SystemConfigurationArtifact(ArtifactAttributeContainer):
   """Class to represent a system configuration artifact attribute container.
 
+  The system configuration contains the configuration data of a specific
+  system installation e.g. Windows or Linux.
+
   Attributes:
     code_page (str): system code page.
     hostname (HostnameArtifact): hostname.
