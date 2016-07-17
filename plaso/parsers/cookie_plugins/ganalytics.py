@@ -63,8 +63,8 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
   """A browser cookie plugin for __utma Google Analytics cookies.
 
   The structure of the cookie data:
-  <domain hash>.<visitor ID>.<first visit>.<previous>.<last vistit>.
-  <# of sessions>
+  <domain hash>.<visitor ID>.<first visit>.<previous>.<last visit>.
+  <number of sessions>
 
   For example:
   137167072.1215918423.1383170166.1383170166.1383170166.1
@@ -110,7 +110,7 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
       previous_visit_posix_time = None
 
       try:
-        # TODO: fix that we're loosing precission here use dfdatetime.
+        # TODO: fix that we're losing precission here use dfdatetime.
         last_visit_posix_time = int(fields[0], 10) / 10000000
       except ValueError:
         last_visit_posix_time = None
@@ -219,7 +219,7 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
       domain_hash = None
 
       try:
-        # TODO: fix that we're loosing precission here use dfdatetime.
+        # TODO: fix that we're losing precission here use dfdatetime.
         last_visit_posix_time = int(fields[0], 10) / 10000000
       except ValueError:
         last_visit_posix_time = None
@@ -285,7 +285,7 @@ class GoogleAnalyticsUtmtPlugin(interface.BaseCookiePlugin):
       return
 
     try:
-      # TODO: fix that we're loosing precission here use dfdatetime.
+      # TODO: fix that we're losing precission here use dfdatetime.
       last_visit_posix_time = int(fields[0], 10) / 10000000
     except ValueError:
       last_visit_posix_time = None
@@ -355,7 +355,7 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
       domain_hash = None
 
       try:
-        # TODO: fix that we're loosing precission here use dfdatetime.
+        # TODO: fix that we're losing precission here use dfdatetime.
         last_visit_posix_time = int(fields[0], 10) / 10000000
       except ValueError:
         last_visit_posix_time = None
