@@ -1737,7 +1737,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       access_mode = 'a'
 
       # Create a temporary directory to prevent multiple ZIP storage
-      # files in the same directory conflicting with eachother.
+      # files in the same directory conflicting with each other.
       directory_name = os.path.dirname(path)
       basename = os.path.basename(path)
       directory_name = tempfile.mkdtemp(dir=directory_name)
@@ -2502,7 +2502,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     """Adds event tags.
 
     Args:
-      event_tag (list[EventTag]): event tags.
+      event_tags (list[EventTag]): event tags.
 
     Raises:
       IOError: when the storage file is closed or read-only or
@@ -3104,6 +3104,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self._merge_task_storage_path = u''
     self._output_file = output_file
     self._storage_file = None
+    self._serializers_profiler = None
     self._task_storage_path = None
 
   def _UpdateCounters(self, event):
@@ -3370,6 +3371,9 @@ class ZIPStorageFileWriter(interface.StorageWriter):
           maximum_buffer_size=self._buffer_size,
           storage_type=self._storage_type)
 
+    if self._serializers_profiler:
+      self._storage_file.SetSerializersProfiler(self._serializers_profiler)
+
     self._storage_file.Open(path=self._output_file, read_only=False)
 
     self._first_written_event_source_index = (
@@ -3406,7 +3410,9 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     Args:
       serializers_profiler (SerializersProfiler): serializers profile.
     """
-    self._storage_file.SetSerializersProfiler(serializers_profiler)
+    self._serializers_profiler = serializers_profiler
+    if self._storage_file:
+      self._storage_file.SetSerializersProfiler(serializers_profiler)
 
   def StartTaskStorage(self):
     """Creates a temporary path for the task storage.
