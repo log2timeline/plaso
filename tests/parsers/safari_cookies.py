@@ -34,7 +34,7 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
     self.assertEqual(len(cookie_events), 182)
 
     event_object = cookie_events[3]
-    self.assertEqual(event_object.flags, u'HttpOnly|Secure')
+    self.assertEqual(event_object.flags, 5)
     self.assertEqual(event_object.url, u'accounts.google.com')
     self.assertEqual(event_object.cookie_name, u'GAPS')
 
