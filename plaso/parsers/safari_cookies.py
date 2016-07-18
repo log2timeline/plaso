@@ -138,6 +138,9 @@ class BinaryCookieParser(interface.FileObjectParser):
       parser_mediator.ProduceEvent(event_object)
 
     for plugin in self._cookie_plugins:
+      if parser_mediator.abort:
+        break
+
       if cookie_name != plugin.COOKIE_NAME:
         continue
 
@@ -169,6 +172,9 @@ class BinaryCookieParser(interface.FileObjectParser):
       return
 
     for page_offset in page_header.offsets:
+      if parser_mediator.abort:
+        break
+
       self._ParseCookieRecord(parser_mediator, page_data, page_offset)
 
     # TODO: check footer.
@@ -206,6 +212,9 @@ class BinaryCookieParser(interface.FileObjectParser):
       return
 
     for index, page_size in enumerate(file_header.page_sizes):
+      if parser_mediator.abort:
+        break
+
       page_data = file_object.read(page_size)
       if len(page_data) != page_size:
         parser_mediator.ProduceExtractionError(
