@@ -81,7 +81,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     """Parses the analysis plugin options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
     """
     # Get a list of all available plugins.
     analysis_plugin_info = self._front_end.GetAnalysisPluginInfo()
@@ -109,17 +109,16 @@ class PsortTool(analysis_tool.AnalysisTool):
     """Parses the experimental plugin options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
     """
-    use_zeromq = getattr(options, u'use_zeromq', False)
-    if use_zeromq:
-      self._front_end.SetUseZeroMQ(use_zeromq)
+    use_zeromq = getattr(options, u'use_zeromq', u'false')
+    self._front_end.SetUseZeroMQ(use_zeromq == u'true')
 
   def _ParseFilterOptions(self, options):
     """Parses the filter options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
@@ -162,7 +161,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     """Parses the informational options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
@@ -176,7 +175,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     """Parses the language options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
     """
     preferred_language = self.ParseStringOption(
         options, u'preferred_language', default_value=u'en-US')
@@ -274,9 +273,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     """Adds the analysis plugin options to the argument group
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
-      plugin_names: a string containing comma separated analysis plugin names.
+      argument_group (argparse._ArgumentGroup): argparse argument group.
+      plugin_names (str): comma separated analysis plugin names.
 
     Raises:
       BadConfigOption: if non-existing analysis plugin names are specified.
@@ -291,19 +289,19 @@ class PsortTool(analysis_tool.AnalysisTool):
     """Adds experimental options to the argument group
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
+    # TODO: make default True when issue #822 is fixed.
     argument_group.add_argument(
-        u'--use_zeromq', u'--use-zeromq', action=u'store_true',
-        dest=u'use_zeromq', help=u'Enables experimental queueing using ZeroMQ')
+        u'--use_zeromq', action=u'store', dest=u'use_zeromq',
+        metavar=u'CHOICE', choices=[u'false', u'true'], default=u'false',
+        help=(u'Enables or disables queueing using ZeroMQ'))
 
   def AddFilterOptions(self, argument_group):
     """Adds the filter options to the argument group.
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
         u'--slice', metavar=u'DATE', dest=u'slice', type=str,
@@ -342,8 +340,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     """Adds the language options to the argument group.
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
         u'--language', metavar=u'LANGUAGE', dest=u'preferred_language',
@@ -359,9 +356,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     """Adds the output module options to the argument group
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
-      module_names: a list of output module names.
+      argument_group (argparse._ArgumentGroup): argparse argument group.
+      module_names (list[str]): output module names.
     """
     if u'list' in module_names:
       return
@@ -563,7 +559,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     """Parses the options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.

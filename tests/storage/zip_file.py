@@ -469,7 +469,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     preprocess_object_list = list(
         storage_file._GetPreprocessObjectsLegacyFormat())
-    self.assertEqual(len(preprocess_object_list), 4)
+    self.assertEqual(len(preprocess_object_list), 0)
 
     storage_file.Close()
 
@@ -619,7 +619,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file.Open(path=test_file)
 
     stream_names = list(storage_file._GetStreamNames())
-    self.assertEqual(len(stream_names), 33)
+    self.assertEqual(len(stream_names), 31)
 
     storage_file.Close()
 
@@ -644,7 +644,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    expected_timestamp = 1468177846000000
+    expected_timestamp = 1468820255000000
 
     event_object = storage_file._GetSortedEvent(time_range=test_time_range)
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -1357,8 +1357,8 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
         1453449181000000, 1453449181000000, 1453449241000000, 1453449241000000,
         1453449241000000, 1453449241000000, 1453449272000000, 1453449272000000,
         1456708543000000, 1456708543000000, 1458774078000000, 1458774078000000,
-        1458774078000000, 1458774078000000, 1468177846000000, 1468177846000000,
-        1468177846000000, 1468177846000000, 1468177847000000, 1468177848000000,
+        1458774078000000, 1458774078000000, 1468820255000000, 1468820255000000,
+        1468820255000000, 1468820255000000, 1468820255000000, 1468820256000000,
         1479431720000000, 1479431720000000, 1479431743000000, 1479431743000000,
         1482083672000000, 1482083672000000, 1483206872000000, 1483206872000000]
 
@@ -1376,8 +1376,8 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
         timestamps.append(event_object.timestamp)
 
     expected_timestamps = [
-        1468177846000000, 1468177846000000, 1468177846000000, 1468177846000000,
-        1468177847000000, 1468177848000000, 1479431720000000, 1479431720000000,
+        1468820255000000, 1468820255000000, 1468820255000000, 1468820255000000,
+        1468820255000000, 1468820256000000, 1479431720000000, 1479431720000000,
         1479431743000000, 1479431743000000, 1482083672000000, 1482083672000000,
         1483206872000000, 1483206872000000]
 
