@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The Safari Binary cookie event formatter."""
 
+from plaso.lib import errors
 from plaso.formatters import interface
 from plaso.formatters import manager
 
@@ -53,7 +54,7 @@ class SafaryCookieFormatter(interface.ConditionalEventFormatter):
       flags = []
       for flag_value, flag_description in iter(self._COOKIE_FLAGS.items()):
         if cookie_flags & flag_value:
-        flags.append(flag_description)
+          flags.append(flag_description)
 
       event_values[u'flags'] = u'|'.join(flags)
 

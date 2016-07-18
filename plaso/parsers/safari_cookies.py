@@ -4,9 +4,8 @@
 import construct
 
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import eventdata
-
+from plaso.lib import specification
 # Need to register cookie plugins.
 from plaso.parsers import cookie_plugins  # pylint: disable=unused-import
 from plaso.parsers import interface
@@ -21,7 +20,7 @@ class BinaryCookieEvent(time_events.CocoaTimeEvent):
 
   def __init__(
       self, cocoa_time, timestamp_description, flags, url, cookie_name,
-      cookie_value path):
+      cookie_value, path):
     """Initialize a binary cookie event.
 
     Args:
@@ -81,7 +80,7 @@ class BinaryCookieParser(interface.FileObjectParser):
     self._cookie_plugins = (
         cookie_plugins_manager.CookiePluginsManager.GetPlugins())
 
-  def _ParseCookieRecord(self, parser_mediator, page_data):
+  def _ParseCookieRecord(self, parser_mediator, page_data, page_offset):
     """Parses a cookie record
 
     Args:
@@ -96,7 +95,7 @@ class BinaryCookieParser(interface.FileObjectParser):
       message = u'Unable to read cookie record at offset: {0:d}'.format(
           page_offset)
       parser_mediator.ProduceExtractionError(message)
-      continue
+      return
 
     # The offset is determine by the range between the start of the current
     # offset until the start of the next offset. Thus we need to determine
