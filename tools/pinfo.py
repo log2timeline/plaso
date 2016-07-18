@@ -222,7 +222,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
       enabled_parser_names = u'N/A'
       if session.enabled_parser_names:
-        enabled_parser_names = u', '.join(session.enabled_parser_names)
+        enabled_parser_names = u', '.join(sorted(session.enabled_parser_names))
 
       command_line_arguments = session.command_line_arguments or u'N/A'
       parser_filter_expression = session.parser_filter_expression or u'N/A'

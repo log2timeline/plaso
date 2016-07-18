@@ -196,10 +196,10 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(lines), 20)
 
     expected_line = (
-        u'2016-07-10T19:10:47+00:00,'
-        u'atime,'
+        u'2016-07-18T05:37:35+00:00,'
+        u'mtime,'
         u'FILE,'
-        u'OS atime,'
+        u'OS mtime,'
         u'OS:/tmp/test/test_data/syslog Type: file,'
         u'filestat,'
         u'OS:/tmp/test/test_data/syslog,-\n')
@@ -244,7 +244,7 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
         event_buffer = TestEventBuffer(
             output_module, check_dedups=False, store=storage_file)
 
-        self._front_end.ProcessEventsFromStorage(storage_reader, event_buffer)
+        self._front_end._ProcessEventsFromStorage(storage_reader, event_buffer)
 
     event_buffer.Flush()
     lines = []

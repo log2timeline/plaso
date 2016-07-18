@@ -1709,9 +1709,6 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
   def _OpenWrite(self):
     """Opens the storage file for writing."""
-    logging.debug(u'Writing to ZIP file with buffer size: {0:d}'.format(
-        self._maximum_buffer_size))
-
     if self._event_stream_number == 1:
       self._WriteStorageMetadata()
 
@@ -3100,7 +3097,6 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     super(ZIPStorageFileWriter, self).__init__(
         session, storage_type=storage_type, task=task)
     self._buffer_size = buffer_size
-    self._event_tags = []
     self._merge_task_storage_path = u''
     self._output_file = output_file
     self._storage_file = None
@@ -3202,7 +3198,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     if not self._storage_file:
       raise IOError(u'Unable to write to closed storage writer.')
 
-    self._event_tags.append(event_tag)
+    self._storage_file.AddEventTag(event_tag)
 
     self._session.event_labels_counter[u'total'] += 1
     for label in event_tag.labels:
@@ -3495,11 +3491,6 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError(u'Unsupported storage type.')
-
-    # TODO: write the tags incrementally instead of buffering them
-    # into a list.
-    if self._event_tags:
-      self._storage_file.AddEventTags(self._event_tags)
 
     session_completion = self._session.CreateSessionCompletion()
     self._storage_file.WriteSessionCompletion(session_completion)
