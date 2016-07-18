@@ -7,6 +7,7 @@ http://forensicswiki.org/wiki/L2T_CSV
 
 from plaso.lib import definitions
 from plaso.lib import errors
+from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import manager
@@ -32,7 +33,7 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
      Returns:
        A string containing the value for the field.
     """
-    if self._FIELD_DELIMITER:
+    if self._FIELD_DELIMITER and isinstance(field, py2to3.STRING_TYPES):
       return field.replace(self._FIELD_DELIMITER, u' ')
     return field
 
@@ -140,7 +141,7 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
     time_string = u'{0:02d}:{1:02d}:{2:02d}'.format(
         date_use.hour, date_use.minute, date_use.second)
 
-    output_values = (
+    output_values = [
         date_string,
         time_string,
         u'{0!s}'.format(self._output_mediator.timezone),
@@ -157,10 +158,15 @@ class L2TCSVOutputModule(interface.LinearOutputModule):
         u'{0!s}'.format(inode),
         u' '.join(notes),
         getattr(event_object, u'parser', u'-'),
-        extra_attributes)
+        extra_attributes]
 
-    output_line = u'{0:s}\n'.format(
-        u','.join(value.replace(u',', u' ') for value in output_values))
+    for index, value in enumerate(output_values):
+      if not isinstance(value, py2to3.STRING_TYPES):
+        value = u''
+      output_values[index] = value.replace(u',', u' ')
+
+    output_line = u','.join(output_values)
+    output_line = u'{0:s}\n'.format(output_line)
     self._WriteLine(output_line)
 
   def WriteHeader(self):
