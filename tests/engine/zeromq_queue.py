@@ -9,6 +9,10 @@ from plaso.lib import errors
 
 from tests import test_lib as shared_test_lib
 
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
 
 class testZeroMQQueues(shared_test_lib.BaseTestCase):
   """Tests for ZeroMQ queues."""
@@ -32,31 +36,47 @@ class testZeroMQQueues(shared_test_lib.BaseTestCase):
   def testSocketCreation(self):
     """Tests that ZeroMQ sockets are created when a new queue is created."""
     for queue_class in self._QUEUE_CLASSES:
-      test_queue = queue_class(delay_open=False)
+      queue_name = u'{0:s}_socket_creation'.format(queue_class.__name__)
+      test_queue = queue_class(
+          name=queue_name, delay_open=False, linger_seconds=1)
       self.assertIsNotNone(test_queue._zmq_socket)
+      test_queue.Close()
 
   def testQueueStart(self):
     """Tests that delayed creation of ZeroMQ sockets occurs correctly."""
     for queue_class in self._QUEUE_CLASSES:
-      test_queue = queue_class(delay_open=True)
-      self.assertIsNone(test_queue._zmq_socket)
+      queue_name = u'{0!s}_queue_start'.format(queue_class.__name__)
+      test_queue = queue_class(
+          name=queue_name, delay_open=True, linger_seconds=1)
+      message = u'{0:s} socket already exists.'.format(queue_name)
+      self.assertIsNone(test_queue._zmq_socket, message)
       test_queue.Open()
       self.assertIsNotNone(test_queue._zmq_socket)
+      test_queue.Close()
 
   def testPushPullQueues(self):
     """Tests than an item can be transferred between push and pull queues."""
-    push_queue = zeromq_queue.ZeroMQPushBindQueue(delay_open=False)
+    push_queue = zeromq_queue.ZeroMQPushBindQueue(
+        name=u'pushbind_pushpull', delay_open=False, linger_seconds=1)
     pull_queue = zeromq_queue.ZeroMQPullConnectQueue(
-        delay_open=False, port=push_queue.port)
+        name=u'pullconnect_pushpull', delay_open=False, port=push_queue.port,
+        linger_seconds=1)
     self._testItemTransferred(push_queue, pull_queue)
-    pull_queue = zeromq_queue.ZeroMQPullBindQueue(delay_open=False)
+    push_queue.Close()
+    pull_queue.Close()
+    pull_queue = zeromq_queue.ZeroMQPullBindQueue(
+        name=u'pullbind_pushpull', delay_open=False, linger_seconds=1)
     push_queue = zeromq_queue.ZeroMQPushConnectQueue(
-        delay_open=False, port=pull_queue.port)
+        name=u'pushconnect_pushpull', delay_open=False, port=pull_queue.port,
+        linger_seconds=1)
     self._testItemTransferred(push_queue, pull_queue)
+    push_queue.Close()
+    pull_queue.Close()
 
   def testBufferedReplyQueue(self):
     """Tests for the buffered reply queue."""
-    test_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(delay_open=False)
+    test_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
+        name=u'buffered_reply_bind', delay_open=False, linger_seconds=1)
     test_queue.PushItem(u'This is a test item.')
     test_queue.Empty()
     test_queue.Close()
@@ -65,14 +85,21 @@ class testZeroMQQueues(shared_test_lib.BaseTestCase):
 
   def testRequestAndBufferedReplyQueues(self):
     """Tests REQ and buffered REP queue pairs."""
-    reply_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(delay_open=False)
+    reply_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
+        name=u'bufferedreply_requestbuffer', delay_open=False, linger_seconds=1)
     request_queue = zeromq_queue.ZeroMQRequestConnectQueue(
-        delay_open=False, port=reply_queue.port)
+        name=u'requestconnect_requestbuffer', delay_open=False,
+        port=reply_queue.port, linger_seconds=1)
     self._testItemTransferred(reply_queue, request_queue)
-    request_queue = zeromq_queue.ZeroMQRequestBindQueue(delay_open=False)
+    reply_queue.Close()
+    request_queue.Close()
+    request_queue = zeromq_queue.ZeroMQRequestBindQueue(
+        name=u'requestbind_requestbuffer', delay_open=False, linger_seconds=1)
     reply_queue = zeromq_queue.ZeroMQBufferedReplyConnectQueue(
-        delay_open=False, port=request_queue.port)
+        name=u'replyconnect_requestbuffer', delay_open=False, port=request_queue.port, linger_seconds=0)
     self._testItemTransferred(reply_queue, request_queue)
+    reply_queue.Close()
+    request_queue.Close()
 
 
 if __name__ == '__main__':

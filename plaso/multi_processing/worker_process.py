@@ -194,6 +194,11 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
           logging.debug(u'ConsumeItems exiting, dequeued QueueAbort object.')
           break
 
+        if task is None:
+          logging.debug(u'Idunnoman: {0:s}'.format(task))
+          logging.debug(self._task_queue.__class__.__name__)
+          continue
+
         self._ProcessTask(task)
 
       logging.debug(
@@ -223,6 +228,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     if isinstance(self._task_queue, multi_process_queue.MultiProcessingQueue):
       self._task_queue.Close(abort=True)
     else:
+      logging.debug(u'closing queue')
       self._task_queue.Close()
 
   def _ProcessPathSpec(self, extraction_worker, parser_mediator, path_spec):
