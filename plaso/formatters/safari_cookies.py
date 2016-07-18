@@ -50,7 +50,9 @@ class SafaryCookieFormatter(interface.ConditionalEventFormatter):
     event_values = event_object.CopyToDict()
 
     cookie_flags = event_values.get(u'flags', None)
-    if cookie_flags:
+    if cookie_flags == 0:
+      del event_values[u'flags']
+    elif cookie_flags:
       flags = []
       for flag_value, flag_description in iter(self._COOKIE_FLAGS.items()):
         if cookie_flags & flag_value:
