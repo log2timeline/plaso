@@ -17,8 +17,8 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
     self._output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     self._test_tool = pinfo.PinfoTool(output_writer=self._output_writer)
 
-  def testCompareStorageInformation(self):
-    """Tests the CompareStorageInformation function."""
+  def testCompareStorages(self):
+    """Tests the CompareStorages function."""
     test_file1 = self._GetTestFilePath([u'psort_test.json.plaso'])
     test_file2 = self._GetTestFilePath([u'pinfo_test.json.plaso'])
 
@@ -28,10 +28,10 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
 
     self._test_tool.ParseOptions(options)
 
-    self.assertTrue(self._test_tool.CompareStorageInformation())
+    self.assertTrue(self._test_tool.CompareStorages())
 
     output = self._output_writer.ReadOutput()
-    self.assertEqual(output, b'Storage files are identical.\n')
+    self.assertEqual(output, b'Storages are identical.\n')
 
     options = cli_test_lib.TestOptions()
     options.compare_storage_file = test_file1
@@ -39,7 +39,10 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
 
     self._test_tool.ParseOptions(options)
 
-    self.assertFalse(self._test_tool.CompareStorageInformation())
+    self.assertFalse(self._test_tool.CompareStorages())
+
+    output = self._output_writer.ReadOutput()
+    self.assertEqual(output, b'Storages are different.\n')
 
   def testPrintStorageInformation(self):
     """Tests the PrintStorageInformation function."""
@@ -71,19 +74,20 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
         b'\n'
         b'**************** Session: fcd0c74d-403b-4406-8191-0a4ab19a74ee ******'
         b'***********\n'
-        b'              Start time : 2016-07-10T19:11:10.270444+00:00\n'
-        b'         Completion time : 2016-07-10T19:11:11.581644+00:00\n'
-        b'            Product name : plaso\n'
-        b'         Product version : 1.4.1_20160710\n'
-        b'  Command line arguments : ./tools/log2timeline.py --partition=all '
+        b'                Start time : 2016-07-10T19:11:10.270444+00:00\n'
+        b'           Completion time : 2016-07-10T19:11:11.581644+00:00\n'
+        b'              Product name : plaso\n'
+        b'           Product version : 1.4.1_20160710\n'
+        b'    Command line arguments : ./tools/log2timeline.py --partition=all '
         b'--quiet\n'
-        b'                           pinfo_test.json.plaso\n'
-        b'                           test_data/tsk_volume_system.raw\n'
-        b'Parser filter expression : N/A\n'
-        b'      Preferred encoding : UTF-8\n'
-        b'              Debug mode : False\n'
-        b'             Filter file : N/A\n'
-        b'       Filter expression : N/A\n'
+        b'                             pinfo_test.json.plaso\n'
+        b'                             test_data/tsk_volume_system.raw\n'
+        b'  Parser filter expression : N/A\n'
+        b'Enabled parser and plugins : N/A\n'
+        b'        Preferred encoding : UTF-8\n'
+        b'                Debug mode : False\n'
+        b'               Filter file : N/A\n'
+        b'         Filter expression : N/A\n'
         b'---------------------------------------------------------------------'
         b'-----------\n'
         b'\n'

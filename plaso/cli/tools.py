@@ -20,10 +20,9 @@ class CLITool(object):
   """Class that implements a CLI tool.
 
   Attributes:
-    list_timezones: boolean value to indicate the time zones should be listed.
-    preferred_encoding: string containing the preferred encoding of single-byte
-                        or multi-byte character strings (sometimes referred to
-                        as extended ASCII).
+    list_timezones (bool): True if the time zones should be listed.
+    preferred_encoding (str): preferred encoding of single-byte or multi-byte
+        character strings, sometimes referred to as extended ASCII.
   """
   # The maximum number of characters of a line written to the output writer.
   _LINE_LENGTH = 80
@@ -37,12 +36,10 @@ class CLITool(object):
     """Initializes the CLI tool object.
 
     Args:
-      input_reader: optional input reader (instance of InputReader).
-                    The default is None which indicates the use of the stdin
-                    input reader.
-      output_writer: optional output writer (instance of OutputWriter).
-                     The default is None which indicates the use of the stdout
-                     output writer.
+      input_reader (Optional[InputReader]): input reader, where None indicates
+          that the stdin input reader should be used.
+      output_writer (Optional[OutputWriter]): output writer, where None
+          indicates that the stdout output writer should be used.
     """
     super(CLITool, self).__init__()
 
@@ -62,7 +59,7 @@ class CLITool(object):
     self._log_file = None
     self._output_writer = output_writer
     self._quiet_mode = False
-    self._timezone = pytz.UTC
+    self._timezone = u'UTC'
     self._views_format_type = views.ViewsFactory.FORMAT_TYPE_CLI
 
     self.list_timezones = False
@@ -199,10 +196,12 @@ class CLITool(object):
 
       elif timezone_string:
         try:
-          self._timezone = pytz.timezone(timezone_string)
+          pytz.timezone(timezone_string)
         except pytz.UnknownTimeZoneError:
           raise errors.BadConfigOption(
               u'Unknown timezone: {0:s}'.format(timezone_string))
+
+        self._timezone = timezone_string
 
   def AddBasicOptions(self, argument_group):
     """Adds the basic options to the argument group.

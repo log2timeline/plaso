@@ -15,16 +15,13 @@ from dfvfs.path import factory as path_spec_factory
 import plaso
 from plaso.containers import event_sources
 from plaso.containers import events
+from plaso.containers import preprocess
 from plaso.containers import reports
 from plaso.containers import sessions
 from plaso.containers import tasks
-from plaso.lib import event
 from plaso.serializer import json_serializer
-from plaso.storage import collection
 
 from tests import test_lib as shared_test_lib
-
-import pytz  # pylint: disable=wrong-import-order
 
 
 class JSONSerializerTestCase(shared_test_lib.BaseTestCase):
@@ -431,170 +428,34 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         sorted(task_start_dict.items()),
         sorted(expected_task_start_dict.items()))
 
+  def testReadAndWriteSerializedPreprocessObject(self):
+    """Test ReadSerialized and WriteSerialized of PreprocessObject."""
+    expected_preprocess_object = preprocess.PreprocessObject()
 
-class JSONPreprocessObjectSerializerTest(JSONSerializerTestCase):
-  """Tests for the JSON preprocessing object serializer object."""
+    json_string = (
+        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            expected_preprocess_object))
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parsers = [
-        u'esedb', u'chrome_preferences', u'winfirewall', u'android_app_usage',
-        u'selinux', u'recycle_bin', u'pls_recall', u'filestat', u'sqlite',
-        u'cups_ipp', u'winiis', u'lnk', u'rplog', u'symantec_scanlog',
-        u'recycle_bin_info2', u'winevtx', u'plist', u'bsm_log', u'mac_keychain',
-        u'pcap', u'mac_securityd', u'utmp', u'pe', u'asl_log', u'opera_global',
-        u'custom_destinations', u'chrome_cache', u'popularity_contest',
-        u'prefetch', u'winreg', u'msiecf', u'bencode', u'skydrive_log',
-        u'openxml', u'xchatscrollback', u'utmpx', u'binary_cookies', u'syslog',
-        u'hachoir', u'opera_typed_history', u'winevt', u'mac_appfirewall_log',
-        u'winjob', u'olecf', u'xchatlog', u'macwifi', u'mactime', u'java_idx',
-        u'firefox_cache', u'mcafee_protection', u'skydrive_log_error']
+    self.assertIsNotNone(json_string)
 
-    self._json_dict = {
-        u'__type__': u'PreprocessObject',
-        u'collection_information': {
-            u'cmd_line': (
-                u'/usr/bin/log2timeline.py pinfo_test.json.plaso '
-                u'tsk_volume_system.raw'),
-            u'configured_zone': {
-                u'__type__': u'timezone',
-                u'zone': u'UTC'
-            },
-            u'debug': False,
-            u'file_processed': u'/tmp/tsk_volume_system.raw',
-            u'image_offset': 180224,
-            u'method': u'imaged processed',
-            u'os_detected': u'N/A',
-            u'output_file': u'pinfo_test.json.plaso',
-            u'parser_selection': u'(no list set)',
-            u'parsers': self._parsers,
-            u'preferred_encoding': u'utf-8',
-            u'preprocess': True,
-            u'recursive': False,
-            u'runtime': u'multi process mode',
-            u'serialized_buffer_size': 0,
-            u'time_of_run': 1430290411000000,
-            u'version': u'1.2.1_20150424',
-            u'vss parsing': False,
-            u'workers': 0
-        },
-        u'counter': {
-            u'__type__': u'collections.Counter',
-            u'filestat': 3,
-            u'total': 3
-        },
-        u'guessed_os': u'None',
-        u'plugin_counter': {
-            u'__type__': u'collections.Counter',
-        },
-        u'store_range': {
-            u'__type__': u'range',
-            u'end': 1,
-            u'start': 1
-        },
-        u'zone': {
-            u'__type__': u'timezone',
-            u'zone': u'UTC'
-        }
+    preprocess_object = (
+        json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
+            json_string))
+
+    self.assertIsNotNone(preprocess_object)
+    self.assertIsInstance(preprocess_object, preprocess.PreprocessObject)
+
+    expected_preprocess_object_dict = {
+        u'hosts': {},
+        u'time_zone_str': u'UTC',
+        u'users': {},
+        u'zone': u'UTC'
     }
 
-    self._counter = collections.Counter()
-    self._counter[u'filestat'] = 3
-    self._counter[u'total'] = 3
-
-    self._plugin_counter = collections.Counter()
-
-    self._serializer = json_serializer.JSONPreprocessObjectSerializer
-
-  def testReadSerialized(self):
-    """Tests the ReadSerialized function."""
-    preprocess_object = self._TestReadSerialized(
-        self._serializer, self._json_dict)
-
-    for key, value in iter(preprocess_object.counter.items()):
-      self.assertEquals(self._counter[key], value)
-
-  def testWriteSerialized(self):
-    """Tests the WriteSerialized function."""
-    preprocess_object = event.PreprocessObject()
-    preprocess_object.collection_information = {
-        u'cmd_line': (
-            u'/usr/bin/log2timeline.py pinfo_test.json.plaso '
-            u'tsk_volume_system.raw'),
-        u'configured_zone': pytz.UTC,
-        u'debug': False,
-        u'file_processed': u'/tmp/tsk_volume_system.raw',
-        u'image_offset': 180224,
-        u'method': u'imaged processed',
-        u'os_detected': u'N/A',
-        u'output_file': u'pinfo_test.json.plaso',
-        u'parser_selection': u'(no list set)',
-        u'parsers': self._parsers,
-        u'preferred_encoding': u'utf-8',
-        u'preprocess': True,
-        u'recursive': False,
-        u'runtime': u'multi process mode',
-        u'serialized_buffer_size': 0,
-        u'time_of_run': 1430290411000000,
-        u'version': u'1.2.1_20150424',
-        u'vss parsing': False,
-        u'workers': 0
-    }
-
-    preprocess_object.counter = self._counter
-    preprocess_object.guessed_os = u'None'
-    preprocess_object.plugin_counter = self._plugin_counter
-    preprocess_object.store_range = (1, 1)
-    preprocess_object.zone = pytz.UTC
-
-    self._TestWriteSerialized(
-        self._serializer, preprocess_object, self._json_dict)
-
-
-class JSONCollectionInformationSerializerTest(JSONSerializerTestCase):
-  """Tests for the JSON preprocessing collection information object."""
-
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._json_dict = {
-        u'__COUNTERS__': {
-            u'foobar': {
-                u'stuff': 1245
-            }
-        },
-        u'foo': u'bar',
-        u'foo2': u'randombar'
-    }
-
-    self._collection_information_object = collection.CollectionInformation()
-    self._collection_information_object.AddCounter(u'foobar')
-    self._collection_information_object.IncrementCounter(
-        u'foobar', u'stuff', value=1245)
-    self._collection_information_object.SetValue(u'foo', u'bar')
-    self._collection_information_object.SetValue(u'foo2', u'randombar')
-
-    self._serializer = json_serializer.JSONCollectionInformationObjectSerializer
-
-  def testReadSerialized(self):
-    """Tests the ReadSerialized function."""
-    collection_object = self._TestReadSerialized(
-        self._serializer, self._json_dict)
-
-    for key, value in iter(collection_object.GetValueDict().items()):
-      self.assertEqual(
-          value, self._collection_information_object.GetValue(key))
-
-    for identifier, counter in collection_object.GetCounters():
-      compare_counter = self._collection_information_object.GetCounter(
-          identifier)
-
-      for key, value in iter(counter.items()):
-        self.assertEqual(value, compare_counter[key])
-
-  def testWriteSerialized(self):
-    """Tests the WriteSerialized function."""
-    self._TestWriteSerialized(
-        self._serializer, self._collection_information_object, self._json_dict)
+    preprocess_object_dict = preprocess_object.CopyToDict()
+    self.assertEqual(
+        sorted(preprocess_object_dict.items()),
+        sorted(expected_preprocess_object_dict.items()))
 
 
 if __name__ == '__main__':

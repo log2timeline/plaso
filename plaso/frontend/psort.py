@@ -20,7 +20,6 @@ from plaso.frontend import analysis_frontend
 from plaso.lib import bufferlib
 from plaso.lib import errors
 from plaso.lib import py2to3
-from plaso.lib import timelib
 from plaso.multi_processing import multi_process_queue
 from plaso.output import event_buffer as output_event_buffer
 from plaso.output import manager as output_manager
@@ -28,8 +27,6 @@ from plaso.output import mediator as output_mediator
 from plaso.storage import time_range as storage_time_range
 from plaso.storage import reader
 from plaso.storage import zip_file as storage_zip_file
-
-import pytz  # pylint: disable=wrong-import-order
 
 
 class PsortFrontend(analysis_frontend.AnalysisFrontend):
@@ -42,7 +39,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
   def __init__(self):
     """Initializes the front-end object."""
     super(PsortFrontend, self).__init__()
-
     self._analysis_process_info = []
     self._data_location = None
     self._filter_buffer = None
@@ -167,11 +163,11 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       output_module (OutputModule): output module.
       storage_file (StorageFile): storage file.
       analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
-                                               be run.
+          be run.
       event_queue_producers (list[ItemQueueProducer]): event queue producers.
       command_line_arguments (Optional[str]): command line arguments.
       deduplicate_events (Optional[bool]): True if events should be
-                                           deduplicated.
+          deduplicated.
       preferred_encoding (Optional[str]): preferred encoding.
       time_slice (Optional[TimeSlice]): slice of time to output.
       use_time_slicer (Optional[bool]): True if the 'time slicer' should be
@@ -204,7 +200,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       analysis_report_incoming_queue = multi_process_queue.MultiProcessingQueue(
           timeout=5)
 
-    self._knowledge_base.InitializeLookupDictionaries(storage_file)
+    storage_file.ReadPreprocessingInformation(self._knowledge_base)
 
     session = self._CreateSession(
         command_line_arguments=command_line_arguments,
@@ -241,66 +237,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       session_completion = session.CreateSessionCompletion()
       storage_file.WriteSessionCompletion(session_completion)
 
-    for information in storage_file.GetStorageInformation():
-      if getattr(information, u'counter', None):
-        total = information.counter.get(u'total')
-        if total:
-          counter[u'Stored Events'] += total
-
-    if self._filter_object and not counter[u'Limited By']:
-      counter[u'Filter By Date'] = (
-          counter[u'Stored Events'] - counter[u'Events Included'] -
-          counter[u'Events Filtered Out'])
-
     return counter
-
-  def _SetAnalysisPluginProcessInformation(
-      self, analysis_plugins, pre_obj, command_line_arguments=None):
-    """Sets analysis plugin options in a preprocessor object.
-
-    Args:
-      analysis_plugins: the list of analysis plugins to add.
-      pre_obj: the preprocessor object (instance of PreprocessObject).
-      command_line_arguments: optional string of the command line arguments or
-                              None if not set.
-    """
-    analysis_plugin_names = [plugin.NAME for plugin in analysis_plugins]
-    time_of_run = timelib.Timestamp.GetNow()
-
-    pre_obj.collection_information[u'Action'] = u'Adding tags to storage.'
-    pre_obj.collection_information[u'cmd_line'] = command_line_arguments
-    pre_obj.collection_information[u'file_processed'] = self._storage_file_path
-    pre_obj.collection_information[u'method'] = u'Running Analysis Plugins'
-    pre_obj.collection_information[u'plugins'] = analysis_plugin_names
-    pre_obj.collection_information[u'time_of_run'] = time_of_run
-    pre_obj.counter = collections.Counter()
-
-  # TODO: fix docstring, function does not create the pre_obj the call to
-  # storage does. Likely refactor this functionality into the storage API.
-  def _GetLastGoodPreprocess(self, storage_file):
-    """Gets the last stored preprocessing object with time zone information.
-
-    From all preprocessing objects, try to get the last one that has
-    time zone information stored in it, the highest chance of it containing
-    the information we are seeking (defaulting to the last one). If there are
-    no preprocessing objects in the file, we'll make a new one
-
-    Args:
-      storage_file: a Plaso storage file object.
-
-    Returns:
-      A preprocess object (instance of PreprocessObject), or None if there are
-      no preprocess objects in the storage file.
-    """
-    pre_objs = storage_file.GetStorageInformation()
-    if not pre_objs:
-      return None
-    pre_obj = pre_objs[-1]
-    for obj in pre_objs:
-      if getattr(obj, u'time_zone_str', u''):
-        pre_obj = obj
-
-    return pre_obj
 
   def _StartAnalysisPlugins(
       self, analysis_plugins, analysis_queue_port=None,
@@ -390,12 +327,12 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     return analysis_plugins, event_producers
 
-  def CreateOutputModule(self, preferred_encoding=u'utf-8', timezone=pytz.UTC):
+  def CreateOutputModule(self, preferred_encoding=u'utf-8', timezone=u'UTC'):
     """Create an output module.
 
     Args:
       preferred_encoding (Optional[str]): preferred encoding to output.
-      timezone (Optional[datetime.tzinfo]): timezone to output.
+      timezone (Optional[str]): timezone to use for timestamps in output.
 
     Returns:
       OutputModule: output module.
@@ -414,7 +351,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     output_mediator_object = output_mediator.OutputMediator(
         self._knowledge_base, formatter_mediator,
-        preferred_encoding=preferred_encoding, timezone=timezone)
+        preferred_encoding=preferred_encoding)
+    output_mediator_object.SetTimezone(timezone)
 
     try:
       output_module = output_manager.OutputManager.NewOutputModule(
@@ -572,9 +510,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     pre_obj = None
     if analysis_plugins:
       pre_obj = getattr(self._knowledge_base, u'_pre_obj', None)
-      self._SetAnalysisPluginProcessInformation(
-          analysis_plugins, pre_obj,
-          command_line_arguments=command_line_arguments)
 
     if analysis_plugins:
       read_only = False
@@ -583,9 +518,9 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     # TODO: we are directly invoking ZIP file storage here. In storage rewrite
     # come up with a more generic solution.
+    storage_file = storage_zip_file.ZIPStorageFile()
     try:
-      storage_file = storage_zip_file.StorageFile(
-          self._storage_file_path, read_only=read_only)
+      storage_file.Open(path=self._storage_file_path, read_only=read_only)
     except IOError as exception:
       raise RuntimeError(
           u'Unable to open storage file: {0:s} with error: {1:s}.'.format(

@@ -24,11 +24,13 @@ class SingleProcessEngine(engine.BaseEngine):
   """Class that defines the single process engine."""
 
   def __init__(
-      self, enable_profiling=False, profiling_directory=None,
-      profiling_sample_rate=1000, profiling_type=u'all'):
+      self, debug_output=False, enable_profiling=False,
+      profiling_directory=None, profiling_sample_rate=1000,
+      profiling_type=u'all'):
     """Initializes an engine object.
 
     Args:
+      debug_output (Optional[bool]): True if debug output should be enabled.
       enable_profiling (Optional[bool]): True if profiling should be enabled.
       profiling_directory (Optional[str]): path to the directory where
           the profiling sample files should be stored.
@@ -45,7 +47,7 @@ class SingleProcessEngine(engine.BaseEngine):
             serializers.
     """
     super(SingleProcessEngine, self).__init__(
-        enable_profiling=enable_profiling,
+        debug_output=debug_output, enable_profiling=enable_profiling,
         profiling_directory=profiling_directory,
         profiling_sample_rate=profiling_sample_rate,
         profiling_type=profiling_type)
@@ -98,7 +100,7 @@ class SingleProcessEngine(engine.BaseEngine):
               self._current_display_name))
       logging.exception(exception)
 
-      if self._enable_debug_output:
+      if self._debug_output:
         pdb.post_mortem()
 
   def _ProcessSources(
@@ -150,30 +152,36 @@ class SingleProcessEngine(engine.BaseEngine):
         definitions.PROCESSING_STATUS_RUNNING, display_name,
         number_of_consumed_sources, storage_writer, force=True)
 
-    new_event_sources = True
-    while new_event_sources:
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'get_event_source')
+
+    event_source = storage_writer.GetFirstWrittenEventSource()
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'get_event_source')
+
+    while event_source:
       if self._abort:
         break
 
-      new_event_sources = False
-      event_source = storage_writer.GetNextEventSource()
-      while event_source:
-        new_event_sources = True
-        if self._abort:
-          break
+      self._ProcessPathSpec(
+          extraction_worker, parser_mediator, event_source.path_spec)
+      number_of_consumed_sources += 1
 
-        self._ProcessPathSpec(
-            extraction_worker, parser_mediator, event_source.path_spec)
-        number_of_consumed_sources += 1
+      if self._memory_profiler:
+        self._memory_profiler.Sample()
 
-        if self._memory_profiler:
-          self._memory_profiler.Sample()
+      self._UpdateStatus(
+          extraction_worker.processing_status, self._current_display_name,
+          number_of_consumed_sources, storage_writer)
 
-        event_source = storage_writer.GetNextEventSource()
+      if self._processing_profiler:
+        self._processing_profiler.StartTiming(u'get_event_source')
 
-        self._UpdateStatus(
-            extraction_worker.processing_status, self._current_display_name,
-            number_of_consumed_sources, storage_writer)
+      event_source = storage_writer.GetNextWrittenEventSource()
+
+      if self._processing_profiler:
+        self._processing_profiler.StopTiming(u'get_event_source')
 
     if self._abort:
       status = definitions.PROCESSING_STATUS_ABORTED
@@ -188,8 +196,12 @@ class SingleProcessEngine(engine.BaseEngine):
     if self._processing_profiler:
       self._processing_profiler.StopTiming(u'process_sources')
 
-  def _StartProfiling(self):
-    """Starts profiling."""
+  def _StartProfiling(self, extraction_worker):
+    """Starts profiling.
+
+    Args:
+      extraction_worker (worker.ExtractionWorker): extraction worker.
+    """
     if not self._enable_profiling:
       return
 
@@ -204,21 +216,25 @@ class SingleProcessEngine(engine.BaseEngine):
       identifier = u'{0:s}-parsers'.format(self._name)
       self._parsers_profiler = profiler.ParsersProfiler(
           identifier, path=self._profiling_directory)
-      self._extraction_worker.SetParsersProfiler(self._parsers_profiler)
+      extraction_worker.SetParsersProfiler(self._parsers_profiler)
 
     if self._profiling_type in (u'all', u'processing'):
       identifier = u'{0:s}-processing'.format(self._name)
       self._processing_profiler = profiler.ProcessingProfiler(
           identifier, path=self._profiling_directory)
-      self._extraction_worker.SetProcessingProfiler(self._processing_profiler)
+      extraction_worker.SetProcessingProfiler(self._processing_profiler)
 
     if self._profiling_type in (u'all', u'serializers'):
       identifier = u'{0:s}-serializers'.format(self._name)
       self._serializers_profiler = profiler.SerializersProfiler(
           identifier, path=self._profiling_directory)
 
-  def _StopProfiling(self):
-    """Stops profiling."""
+  def _StopProfiling(self, extraction_worker):
+    """Stops profiling.
+
+    Args:
+      extraction_worker (worker.ExtractionWorker): extraction worker.
+    """
     if not self._enable_profiling:
       return
 
@@ -227,12 +243,12 @@ class SingleProcessEngine(engine.BaseEngine):
       self._memory_profiler = None
 
     if self._profiling_type in (u'all', u'parsers'):
-      self._extraction_worker.SetParsersProfiler(None)
+      extraction_worker.SetParsersProfiler(None)
       self._parsers_profiler.Write()
       self._parsers_profiler = None
 
     if self._profiling_type in (u'all', u'processing'):
-      self._extraction_worker.SetProcessingProfiler(None)
+      extraction_worker.SetProcessingProfiler(None)
       self._processing_profiler.Write()
       self._processing_profiler = None
 
@@ -274,18 +290,16 @@ class SingleProcessEngine(engine.BaseEngine):
     self._last_status_update_timestamp = current_timestamp
 
   def ProcessSources(
-      self, source_path_specs, preprocess_object, storage_writer,
-      resolver_context, filter_find_specs=None, filter_object=None,
-      hasher_names_string=None, mount_path=None, parser_filter_expression=None,
-      preferred_year=None, process_archive_files=False,
-      status_update_callback=None, temporary_directory=None,
-      text_prepend=None):
+      self, source_path_specs, storage_writer, resolver_context,
+      filter_find_specs=None, filter_object=None, hasher_names_string=None,
+      mount_path=None, parser_filter_expression=None, preferred_year=None,
+      process_archive_files=False, status_update_callback=None,
+      temporary_directory=None, text_prepend=None):
     """Processes the sources.
 
     Args:
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
-      preprocess_object (PreprocessObject): preprocess object.
       storage_writer (StorageWriter): storage writer for a session storage.
       resolver_context (dfvfs.Context): resolver context.
       filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
@@ -331,7 +345,7 @@ class SingleProcessEngine(engine.BaseEngine):
 
     logging.debug(u'Processing started.')
 
-    self._StartProfiling()
+    self._StartProfiling(extraction_worker)
 
     if self._serializers_profiler:
       storage_writer.SetSerializersProfiler(self._serializers_profiler)
@@ -340,13 +354,11 @@ class SingleProcessEngine(engine.BaseEngine):
 
     try:
       storage_writer.WriteSessionStart()
+      storage_writer.WritePreprocessingInformation(self.knowledge_base)
 
       self._ProcessSources(
           source_path_specs, resolver_context, extraction_worker,
           parser_mediator, storage_writer, filter_find_specs=filter_find_specs)
-
-      # TODO: refactor the use of preprocess_object.
-      storage_writer.WritePreprocessObject(preprocess_object)
 
       # TODO: on abort use WriteSessionAborted instead of completion?
       storage_writer.WriteSessionCompletion()
@@ -357,7 +369,7 @@ class SingleProcessEngine(engine.BaseEngine):
       if self._serializers_profiler:
         storage_writer.SetSerializersProfiler(None)
 
-      self._StopProfiling()
+      self._StopProfiling(extraction_worker)
 
     if self._abort:
       logging.debug(u'Processing aborted.')

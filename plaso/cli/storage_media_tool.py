@@ -40,34 +40,32 @@ class StorageMediaTool(tools.CLITool):
     """Initializes the CLI tool object.
 
     Args:
-      input_reader: the input reader (instance of InputReader).
-                    The default is None which indicates the use of the stdin
-                    input reader.
-      output_writer: the output writer (instance of OutputWriter).
-                     The default is None which indicates the use of the stdout
-                     output writer.
+      input_reader (Optional[InputReader]): input reader, where None indicates
+          that the stdin input reader should be used.
+      output_writer (Optional[OutputWriter]): output writer, where None
+          indicates that the stdout output writer should be used.
     """
     super(StorageMediaTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._credentials = []
     self._filter_file = None
-    # TODO: refactor to partitions.
-    self._partition_string = None
+    self._partitions = None
     self._partition_offset = None
     self._process_vss = False
     self._source_scanner = source_scanner.SourceScanner()
     self._source_path = None
     self._source_path_specs = []
+    self._vss_only = False
     self._vss_stores = None
 
   def _FormatHumanReadableSize(self, size):
-    """Formats the size as a human readable string.
+    """Represents a number of bytes as as human readable string.
 
     Args:
-      size: The size in bytes.
+      size (int): size in bytes.
 
     Returns:
-      A human readable string of the size.
+      str: human readable string of the size.
     """
     magnitude_1000 = 0
     size_1000 = float(size)
@@ -97,10 +95,62 @@ class StorageMediaTool(tools.CLITool):
     return u'{0:s} / {1:s} ({2:d} B)'.format(
         size_string_1024, size_string_1000, size)
 
+  def _GetNormalizedTSKVolumeIdentifiers(
+      self, volume_system, volume_identifiers):
+    """Retrieves the normalized TSK volume identifiers.
+
+    Args:
+      volume_system (dfvfs.TSKVolumeSystem): volume system.
+      volume_identifiers (list[str]): allowed volume identifiers.
+
+    Returns:
+      list[int]: normalized volume identifiers.
+    """
+    normalized_volume_identifiers = []
+    for volume_identifier in volume_identifiers:
+      volume = volume_system.GetVolumeByIdentifier(volume_identifier)
+      if not volume:
+        raise errors.SourceScannerError(
+            u'Volume missing for identifier: {0:s}.'.format(volume_identifier))
+
+      try:
+        volume_identifier = int(volume.identifier[1:], 10)
+        normalized_volume_identifiers.append(volume_identifier)
+      except ValueError:
+        pass
+
+    return normalized_volume_identifiers
+
+  def _GetNormalizedVShadowVolumeIdentifiers(
+      self, volume_system, volume_identifiers):
+    """Retrieves the normalized VShadow volume identifiers.
+
+    Args:
+      volume_system (dfvfs.VShadowVolumeSystem): volume system.
+      volume_identifiers (list[str]): allowed volume identifiers.
+
+    Returns:
+      list[int]: normalized volume identifiers.
+    """
+    normalized_volume_identifiers = []
+    for volume_identifier in volume_identifiers:
+      volume = volume_system.GetVolumeByIdentifier(volume_identifier)
+      if not volume:
+        raise errors.SourceScannerError(
+            u'Volume missing for identifier: {0:s}.'.format(volume_identifier))
+
+      try:
+        volume_identifier = int(volume.identifier[3:], 10)
+        normalized_volume_identifiers.append(volume_identifier)
+      except ValueError:
+        pass
+
+    return normalized_volume_identifiers
+
   # TODO: refactor this method that it become more clear what it is
   # supposed to do.
   def _GetTSKPartitionIdentifiers(
-      self, scan_node, partition_string=None, partition_offset=None):
+      self, scan_node, partition_offset=None, partitions=None):
     """Determines the TSK partition identifiers.
 
     This method first checks for the preferred partition number, then for
@@ -108,14 +158,12 @@ class StorageMediaTool(tools.CLITool):
     no usable preferences were specified.
 
     Args:
-      scan_node: the scan node (instance of dfvfs.ScanNode).
-      partition_string: Optional preferred partition number string. The default
-                        is None.
-      partition_offset: Optional preferred partition byte offset. The default
-                        is None.
+      scan_node (dfvfs.SourceScanNode): scan node.
+      partition_offset (Optional[int]): preferred partition byte offset.
+      paritions (Optional[list[str]]): preferred partition identifiers.
 
     Returns:
-      A list of partition identifiers.
+      list[str]: partition identifiers.
 
     Raises:
       RuntimeError: if the volume for a specific identifier cannot be
@@ -135,28 +183,17 @@ class StorageMediaTool(tools.CLITool):
       self._output_writer.Write(u'[WARNING] No partitions found.\n')
       return
 
-    if partition_string == u'all':
-      return volume_identifiers
+    normalized_volume_identifiers = self._GetNormalizedTSKVolumeIdentifiers(
+        volume_system, volume_identifiers)
 
-    if partition_string is not None and not partition_string.startswith(u'p'):
-      return volume_identifiers
+    if partitions:
+      if partitions == [u'all']:
+        partitions = range(1, volume_system.number_of_volumes + 1)
 
-    partition_number = None
-    if partition_string:
-      try:
-        partition_number = int(partition_string[1:], 10)
-      except ValueError:
-        pass
-
-    if partition_number is not None and partition_number > 0:
-      # Plaso uses partition numbers starting with 1 while dfvfs expects
-      # the volume index to start with 0.
-      volume = volume_system.GetVolumeByIndex(partition_number - 1)
-      if volume:
-        return [u'p{0:d}'.format(partition_number)]
-
-      self._output_writer.Write(
-          u'[WARNING] No such partition: {0:d}.\n'.format(partition_number))
+      if not set(partitions).difference(normalized_volume_identifiers):
+        return [
+            u'p{0:d}'.format(partition_number)
+            for partition_number in partitions]
 
     if partition_offset is not None:
       for volume in volume_system.volumes:
@@ -186,12 +223,11 @@ class StorageMediaTool(tools.CLITool):
     """Determines the VSS store identifiers.
 
     Args:
-      scan_node: the scan node (instance of dfvfs.ScanNode).
-      vss_stores: Optional list of preferred VSS store identifiers. The
-                  default is None.
+      scan_node (dfvfs.SourceScanNode): scan node.
+      vss_stores (Optional[list[str]]): preferred VSS store identifiers.
 
     Returns:
-      A list of VSS store identifiers.
+      list[str] VSS store identifiers.
 
     Raises:
       SourceScannerError: if the format of or within the source
@@ -220,7 +256,7 @@ class StorageMediaTool(tools.CLITool):
     """Parses the credential options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
@@ -254,7 +290,7 @@ class StorageMediaTool(tools.CLITool):
     """Parses the filter options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
@@ -276,40 +312,104 @@ class StorageMediaTool(tools.CLITool):
 
     self._filter_file = filter_file
 
+  def _ParsePartitionsString(self, partitions):
+    """Parses the user specified partitions string.
+
+    Args:
+      partitions (str): partitions. A range of partitions can be defined
+           as: "3..5". Multiple partitions can be defined as: "1,3,5" (a list
+           of comma separated values). Ranges and lists can also be combined
+           as: "1,3..5". The first partition is 1. All partition can be
+           defined as: "all".
+
+    Returns:
+      list[str]: partitions.
+
+    Raises:
+      BadConfigOption: if the partitions option is invalid.
+    """
+    if not partitions:
+      return []
+
+    if partitions == u'all':
+      return [u'all']
+
+    partition_numbers = []
+    for partition_range in partitions.split(u','):
+      # Determine if the range is formatted as 1..3 otherwise it indicates
+      # a single partition number.
+      if u'..' in partition_range:
+        first_partition, last_partition = partition_range.split(u'..')
+        try:
+          first_partition = int(first_partition, 10)
+          last_partition = int(last_partition, 10)
+        except ValueError:
+          raise errors.BadConfigOption(
+              u'Invalid partition range: {0:s}.'.format(partition_range))
+
+        for partition_number in range(first_partition, last_partition + 1):
+          if partition_number not in partition_numbers:
+            partition_numbers.append(partition_number)
+      else:
+        if partition_range.startswith(u'p'):
+          partition_range = partition_range[1:]
+
+        try:
+          partition_number = int(partition_range, 10)
+        except ValueError:
+          raise errors.BadConfigOption(
+              u'Invalid partition range: {0:s}.'.format(partition_range))
+
+        if partition_number not in partition_numbers:
+          partition_numbers.append(partition_number)
+
+    return sorted(partition_numbers)
+
   def _ParseStorageMediaImageOptions(self, options):
     """Parses the storage media image options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    self._partition_string = getattr(options, u'partition_number', None)
-    if self._partition_string not in [None, u'all']:
-      if not isinstance(self._partition_string, py2to3.STRING_TYPES):
-        raise errors.BadConfigOption(
-            u'Invalid partition number {0!s}.'.format(
-                self._partition_string))
+    partitions = getattr(options, u'partitions', None)
+    self._partitions = self._ParsePartitionsString(partitions)
+
+    partition = getattr(options, u'partition', None)
+
+    if self._partitions and partition is not None:
+      raise errors.BadConfigOption((
+          u'Option "--partition" can not be used in combination '
+          u'with "--partitions".'))
+
+    if not self._partitions and partition is not None:
+      self._partitions = self._ParsePartitionsString(partition)
+
+    image_offset_bytes = getattr(options, u'image_offset_bytes', None)
+
+    if self._partitions and image_offset_bytes is not None:
+      raise errors.BadConfigOption((
+          u'Option "--image_offset_bytes" can not be used in combination '
+          u'with "--partitions" or "--partition".'))
+
+    image_offset = getattr(options, u'image_offset', None)
+
+    if self._partitions and image_offset is not None:
+      raise errors.BadConfigOption((
+          u'Option "--image_offset" can not be used in combination with '
+          u'"--partitions" or "--partition".'))
+
+    if (image_offset_bytes is not None and
+        isinstance(image_offset_bytes, py2to3.STRING_TYPES)):
       try:
-        partition_number = int(self._partition_string, 10)
-        self._partition_string = u'p{0:d}'.format(partition_number)
+        image_offset_bytes = int(image_offset_bytes, 10)
       except ValueError:
         raise errors.BadConfigOption(
-            u'Invalid partition number: {0:s}.'.format(self._partition_string))
+            u'Invalid image offset bytes: {0:s}.'.format(image_offset_bytes))
 
-    self._partition_offset = getattr(options, u'image_offset_bytes', None)
-    if (self._partition_offset is not None and
-        isinstance(self._partition_offset, py2to3.STRING_TYPES)):
-      try:
-        self._partition_offset = int(self._partition_offset, 10)
-      except ValueError:
-        raise errors.BadConfigOption(
-            u'Invalid image offset bytes: {0:s}.'.format(
-                self._partition_offset))
-
-    if self._partition_offset is None and hasattr(options, u'image_offset'):
-      image_offset = getattr(options, u'image_offset')
+    if image_offset_bytes is None and image_offset is not None:
       bytes_per_sector = getattr(
           options, u'bytes_per_sector', self._DEFAULT_BYTES_PER_SECTOR)
 
@@ -327,38 +427,46 @@ class StorageMediaTool(tools.CLITool):
           raise errors.BadConfigOption(
               u'Invalid bytes per sector: {0:s}.'.format(bytes_per_sector))
 
-      if image_offset:
-        self._partition_offset = image_offset * bytes_per_sector
+    if image_offset_bytes:
+      self._partition_offset = image_offset_bytes
+    elif image_offset:
+      self._partition_offset = image_offset * bytes_per_sector
 
   def _ParseVSSProcessingOptions(self, options):
     """Parses the VSS processing options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
     """
+    vss_only = False
+    vss_stores = None
+
     self._process_vss = not getattr(options, u'no_vss', True)
     if self._process_vss:
+      vss_only = getattr(options, u'vss_only', False)
       vss_stores = getattr(options, u'vss_stores', None)
-    else:
-      vss_stores = None
 
     if vss_stores:
       vss_stores = self._ParseVSSStoresString(vss_stores)
 
+    self._vss_only = vss_only
     self._vss_stores = vss_stores
 
   def _ParseVSSStoresString(self, vss_stores):
     """Parses the user specified VSS stores string.
 
     Args:
-      vss_stores: a string containing the VSS stores.
-                  Where 1 represents the first store.
+      vss_stores (str): VSS stores. A range of stores can be defined
+          as: "3..5". Multiple stores can be defined as: "1,3,5" (a list
+          of comma separated values). Ranges and lists can also be
+          combined as: "1,3..5". The first store is 1. All stores can be
+          defined as: "all".
 
     Returns:
-      The list of VSS stores.
+      list[str]: VSS stores.
 
     Raises:
       BadConfigOption: if the VSS stores option is invalid.
@@ -369,7 +477,7 @@ class StorageMediaTool(tools.CLITool):
     if vss_stores == u'all':
       return [u'all']
 
-    stores = []
+    store_numbers = []
     for vss_store_range in vss_stores.split(u','):
       # Determine if the range is formatted as 1..3 otherwise it indicates
       # a single store number.
@@ -383,8 +491,8 @@ class StorageMediaTool(tools.CLITool):
               u'Invalid VSS store range: {0:s}.'.format(vss_store_range))
 
         for store_number in range(first_store, last_store + 1):
-          if store_number not in stores:
-            stores.append(store_number)
+          if store_number not in store_numbers:
+            store_numbers.append(store_number)
       else:
         if vss_store_range.startswith(u'vss'):
           vss_store_range = vss_store_range[3:]
@@ -395,24 +503,23 @@ class StorageMediaTool(tools.CLITool):
           raise errors.BadConfigOption(
               u'Invalid VSS store range: {0:s}.'.format(vss_store_range))
 
-        if store_number not in stores:
-          stores.append(store_number)
+        if store_number not in store_numbers:
+          store_numbers.append(store_number)
 
-    return sorted(stores)
+    return sorted(store_numbers)
 
   def _PromptUserForEncryptedVolumeCredential(
       self, scan_context, locked_scan_node, credentials):
     """Prompts the user to provide a credential for an encrypted volume.
 
     Args:
-      scan_context: the source scanner context (instance of
-                    SourceScannerContext).
-      locked_scan_node: the locked scan node (instance of SourceScanNode).
-      credentials: the credentials supported by the locked scan node (instance
-                   of dfvfs.Credentials).
+      scan_context (dfvfs.SourceScannerContext): source scanner context.
+      locked_scan_node (dfvfs.SourceScanNode): locked scan node.
+      credentials (dfvfs.Credentials): credentials supported by the locked
+          scan node.
 
     Returns:
-      A boolean value indicating the volume was unlocked.
+      bool: True if the volume was unlocked.
     """
     # TODO: print volume description.
     if locked_scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_BDE:
@@ -466,14 +573,20 @@ class StorageMediaTool(tools.CLITool):
           self._output_writer.Write(u'Unsupported credential data.\n')
           continue
 
-      result = self._source_scanner.Unlock(
-          scan_context, locked_scan_node.path_spec, credential_type,
-          credential_data)
+      try:
+        result = self._source_scanner.Unlock(
+            scan_context, locked_scan_node.path_spec, credential_type,
+            credential_data)
+      except IOError as exception:
+        logging.debug(u'Unable to unlock volume with error: {0:s}'.format(
+            exception))
+        result = False
 
       if not result:
         self._output_writer.Write(u'Unable to unlock volume.\n')
         self._output_writer.Write(u'\n')
 
+    self._output_writer.Write(u'\n')
     return result
 
   def _PromptUserForPartitionIdentifier(
@@ -481,11 +594,11 @@ class StorageMediaTool(tools.CLITool):
     """Prompts the user to provide a partition identifier.
 
     Args:
-      volume_system: The volume system (instance of dfvfs.TSKVolumeSystem).
-      volume_identifiers: List of allowed volume identifiers.
+      volume_system (dfvfs.TSKVolumeSystem): volume system.
+      volume_identifiers (list[str]): allowed volume identifiers.
 
     Returns:
-      A string containing the partition identifier or "all".
+      str: partition identifier or 'all'.
 
     Raises:
       SourceScannerError: if the source cannot be processed.
@@ -534,7 +647,35 @@ class StorageMediaTool(tools.CLITool):
           u'with Ctrl^C.\n'
           u'\n')
 
+    self._output_writer.Write(u'\n')
     return selected_volume_identifier
+
+  def _PromptUserForVSSCurrentVolume(self):
+    """Prompts the user if the current volume with VSS should be processed.
+
+    Returns:
+      bool: True if the current volume with VSS should be processed.
+    """
+    while True:
+      self._output_writer.Write(
+          u'Volume Shadow Snapshots (VSS) were selected also process current\n'
+          u'volume? [yes, no]\n')
+
+      process_current_volume = self._input_reader.Read()
+      process_current_volume = process_current_volume.strip()
+      process_current_volume = process_current_volume.lower()
+
+      if (not process_current_volume or
+          process_current_volume in (u'no', u'yes')):
+        break
+
+      self._output_writer.Write(
+          u'\n'
+          u'Unsupported option, please try again or abort with Ctrl^C.\n'
+          u'\n')
+
+    self._output_writer.Write(u'\n')
+    return not process_current_volume or process_current_volume == u'yes'
 
   def _PromptUserForVSSStoreIdentifiers(
       self, volume_system, volume_identifiers, vss_stores=None):
@@ -544,29 +685,18 @@ class StorageMediaTool(tools.CLITool):
     to prompt the user if no usable preferences were specified.
 
     Args:
-      volume_system: The volume system (instance of dfvfs.VShadowVolumeSystem).
-      volume_identifiers: List of allowed volume identifiers.
-      vss_stores: Optional list of preferred VSS store identifiers. The
-                  default is None.
+      volume_system (dfvfs.VShadowVolumeSystem): volume system.
+      volume_identifiers (list[str]): allowed volume identifiers.
+      vss_stores (Optional[list[str]]): preferred VSS store identifiers.
 
     Returns:
-      The list of selected VSS store identifiers.
+      list[str]: selected VSS store identifiers.
 
     Raises:
       SourceScannerError: if the source cannot be processed.
     """
-    normalized_volume_identifiers = []
-    for volume_identifier in volume_identifiers:
-      volume = volume_system.GetVolumeByIdentifier(volume_identifier)
-      if not volume:
-        raise errors.SourceScannerError(
-            u'Volume missing for identifier: {0:s}.'.format(volume_identifier))
-
-      try:
-        volume_identifier = int(volume.identifier[3:], 10)
-        normalized_volume_identifiers.append(volume_identifier)
-      except ValueError:
-        pass
+    normalized_volume_identifiers = self._GetNormalizedVShadowVolumeIdentifiers(
+        volume_system, volume_identifiers)
 
     # TODO: refactor this to _GetVSSStoreIdentifiers.
     if vss_stores:
@@ -574,8 +704,7 @@ class StorageMediaTool(tools.CLITool):
         # We need to set the stores to cover all vss stores.
         vss_stores = range(1, volume_system.number_of_volumes + 1)
 
-      if not set(vss_stores).difference(
-          normalized_volume_identifiers):
+      if not set(vss_stores).difference(normalized_volume_identifiers):
         return vss_stores
 
     print_header = True
@@ -643,15 +772,15 @@ class StorageMediaTool(tools.CLITool):
           u'Ctrl^C.\n'
           u'\n')
 
+    self._output_writer.Write(u'\n')
     return selected_vss_stores
 
   def _ScanVolume(self, scan_context, volume_scan_node):
     """Scans the volume scan node for volume and file systems.
 
     Args:
-      scan_context: the source scanner context (instance of
-                    SourceScannerContext).
-      volume_scan_node: the volume scan node (instance of dfvfs.ScanNode).
+      scan_context (dfvfs.SourceScannerContext): source scanner context.
+      volume_scan_node (dfvfs.SourceScanNode): volume scan node.
 
     Raises:
       SourceScannerError: if the format of or within the source
@@ -660,22 +789,26 @@ class StorageMediaTool(tools.CLITool):
     if not volume_scan_node or not volume_scan_node.path_spec:
       raise errors.SourceScannerError(u'Invalid or missing volume scan node.')
 
+    selected_vss_stores = []
     if len(volume_scan_node.sub_nodes) == 0:
-      self._ScanVolumeScanNode(scan_context, volume_scan_node)
+      self._ScanVolumeScanNode(
+          scan_context, volume_scan_node, selected_vss_stores)
 
     else:
       # Some volumes contain other volume or file systems e.g. BitLocker ToGo
       # has an encrypted and unencrypted volume.
       for sub_scan_node in volume_scan_node.sub_nodes:
-        self._ScanVolumeScanNode(scan_context, sub_scan_node)
+        self._ScanVolumeScanNode(
+            scan_context, sub_scan_node, selected_vss_stores)
 
-  def _ScanVolumeScanNode(self, scan_context, volume_scan_node):
+  def _ScanVolumeScanNode(
+      self, scan_context, volume_scan_node, selected_vss_stores):
     """Scans an individual volume scan node for volume and file systems.
 
     Args:
-      scan_context: the source scanner context (instance of
-                    SourceScannerContext).
-      volume_scan_node: the volume scan node (instance of dfvfs.ScanNode).
+      scan_context (dfvfs.SourceScannerContext): source scanner context.
+      volume_scan_node (dfvfs.SourceScanNode): volume scan node.
+      selected_vss_stores (list[str]): selected VSS store identifiers.
 
     Raises:
       SourceScannerError: if the format of or within the source
@@ -702,19 +835,20 @@ class StorageMediaTool(tools.CLITool):
       self._ScanVolumeScanNodeEncrypted(scan_context, scan_node)
 
     elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
-      self._ScanVolumeScanNodeVSS(scan_node)
+      self._ScanVolumeScanNodeVSS(scan_node, selected_vss_stores)
 
     elif scan_node.type_indicator in (
         dfvfs_definitions.FILE_SYSTEM_TYPE_INDICATORS):
-      self._source_path_specs.append(scan_node.path_spec)
+      if (not self._vss_only or not selected_vss_stores or
+          self._PromptUserForVSSCurrentVolume()):
+        self._source_path_specs.append(scan_node.path_spec)
 
   def _ScanVolumeScanNodeEncrypted(self, scan_context, volume_scan_node):
     """Scans an encrypted volume scan node for volume and file systems.
 
     Args:
-      scan_context: the source scanner context (instance of
-                    SourceScannerContext).
-      volume_scan_node: the volume scan node (instance of dfvfs.ScanNode).
+      scan_context (dfvfs.SourceScannerContext): source scanner context.
+      volume_scan_node (dfvfs.SourceScanNode): volume scan node.
     """
     result = not scan_context.IsLockedScanNode(volume_scan_node.path_spec)
     if not result:
@@ -746,13 +880,13 @@ class StorageMediaTool(tools.CLITool):
           scan_context, scan_path_spec=volume_scan_node.path_spec)
       self._ScanVolume(scan_context, volume_scan_node)
 
-  def _ScanVolumeScanNodeVSS(self, volume_scan_node):
+  def _ScanVolumeScanNodeVSS(self, volume_scan_node, selected_vss_stores):
     """Scans a VSS volume scan node for volume and file systems.
 
     Args:
-      scan_context: the source scanner context (instance of
-                    SourceScannerContext).
-      volume_scan_node: the volume scan node (instance of dfvfs.ScanNode).
+      scan_context (dfvfs.SourceScannerContext): source scanner context.
+      volume_scan_node (dfvfs.SourceScanNode): volume scan node.
+      selected_vss_stores (list[str]): selected VSS store identifiers.
 
     Raises:
       SourceScannerError: if a VSS sub scan node cannot be retrieved.
@@ -768,7 +902,7 @@ class StorageMediaTool(tools.CLITool):
     vss_store_identifiers = self._GetVSSStoreIdentifiers(
         volume_scan_node, vss_stores=self._vss_stores)
 
-    self._vss_stores = list(vss_store_identifiers)
+    selected_vss_stores.extend(vss_store_identifiers)
 
     # Process VSS stores starting with the most recent one.
     vss_store_identifiers.reverse()
@@ -794,8 +928,7 @@ class StorageMediaTool(tools.CLITool):
     The credential options are use to unlock encrypted volumes.
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
         u'--credential', action=u'append', default=[], type=str,
@@ -812,8 +945,7 @@ class StorageMediaTool(tools.CLITool):
     """Adds the filter options to the argument group.
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
         u'-f', u'--file_filter', u'--file-filter', dest=u'file_filter',
@@ -827,16 +959,24 @@ class StorageMediaTool(tools.CLITool):
     """Adds the storage media image options to the argument group.
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
-        u'--partition', dest=u'partition_number', action=u'store', type=str,
+        u'--partition', dest=u'partition', action=u'store', type=str,
         default=None, help=(
             u'Choose a partition number from a disk image. This partition '
             u'number should correspond to the partition number on the disk '
             u'image, starting from partition 1. All partitions can be '
             u'defined as: "all".'))
+
+    argument_group.add_argument(
+        u'--partitions', dest=u'partitions', action=u'store', type=str,
+        default=None, help=(
+            u'Define partitions that need to be processed. A range of '
+            u'partitions can be defined as: "3..5". Multiple partitions can '
+            u'be defined as: "1,3,5" (a list of comma separated values). '
+            u'Ranges and lists can also be combined as: "1,3..5". The first '
+            u'partition is 1. All partition can be defined as: "all".'))
 
     argument_group.add_argument(
         u'-o', u'--offset', dest=u'image_offset', action=u'store', default=None,
@@ -847,31 +987,36 @@ class StorageMediaTool(tools.CLITool):
                 self._DEFAULT_BYTES_PER_SECTOR))
 
     argument_group.add_argument(
-        u'--sector_size', u'--sector-size', dest=u'bytes_per_sector',
-        action=u'store', type=int, default=self._DEFAULT_BYTES_PER_SECTOR,
-        help=(
-            u'The number of bytes per sector, which is {0:d} by '
-            u'default.').format(self._DEFAULT_BYTES_PER_SECTOR))
-
-    argument_group.add_argument(
         u'--ob', u'--offset_bytes', u'--offset_bytes',
         dest=u'image_offset_bytes', action=u'store', default=None, type=int,
         help=(
             u'The offset of the volume within the storage media image in '
             u'number of bytes.'))
 
+    argument_group.add_argument(
+        u'--sector_size', u'--sector-size', dest=u'bytes_per_sector',
+        action=u'store', type=int, default=self._DEFAULT_BYTES_PER_SECTOR,
+        help=(
+            u'The number of bytes per sector, which is {0:d} by '
+            u'default.').format(self._DEFAULT_BYTES_PER_SECTOR))
+
   def AddVSSProcessingOptions(self, argument_group):
     """Adds the VSS processing options to the argument group.
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
         u'--no_vss', u'--no-vss', dest=u'no_vss', action=u'store_true',
         default=False, help=(
             u'Do not scan for Volume Shadow Snapshots (VSS). This means that '
-            u'VSS information will not be included in the extraction phase.'))
+            u'Volume Shadow Snapshots (VSS) are not processed.'))
+
+    argument_group.add_argument(
+        u'--vss_only', u'--vss-only', dest=u'vss_only', action=u'store_true',
+        default=False, help=(
+            u'Do not process the current volume if Volume Shadow Snapshots '
+            u'(VSS) have been selected.'))
 
     argument_group.add_argument(
         u'--vss_stores', u'--vss-stores', dest=u'vss_stores', action=u'store',
@@ -887,7 +1032,7 @@ class StorageMediaTool(tools.CLITool):
     """Parses tool specific options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
@@ -910,7 +1055,7 @@ class StorageMediaTool(tools.CLITool):
     type values.
 
     Returns:
-      The scan context (instance of dfvfs.ScanContext).
+      dfvfs.SourceScannerContext: source scanner context.
 
     Raises:
       SourceScannerError: if the format of or within the source is
@@ -951,8 +1096,8 @@ class StorageMediaTool(tools.CLITool):
 
     else:
       partition_identifiers = self._GetTSKPartitionIdentifiers(
-          scan_node, partition_string=self._partition_string,
-          partition_offset=self._partition_offset)
+          scan_node, partition_offset=self._partition_offset,
+          partitions=self._partitions)
 
     if not partition_identifiers:
       self._ScanVolume(scan_context, scan_node)

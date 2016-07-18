@@ -41,9 +41,7 @@ class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
     #      75 events created by Google Analytics cookies.
     # In total: 1755 events.
     self.assertEqual(len(event_objects), 3 * 560)
-
-    # Double check that we've got at least the 75 Google Analytics sessions.
-    self.assertGreaterEqual(len(extra_objects), 75)
+    self.assertEqual(len(extra_objects), 75)
 
     # Check few "random" events to verify.
 
