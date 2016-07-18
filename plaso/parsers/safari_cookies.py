@@ -20,22 +20,23 @@ class BinaryCookieEvent(time_events.CocoaTimeEvent):
   DATA_TYPE = u'safari:cookie:entry'
 
   def __init__(
-      self, cocoa_time, timestamp_description, flags, url, value, name, path):
+      self, cocoa_time, timestamp_description, flags, url, cookie_name,
+      cookie_value path):
     """Initialize a binary cookie event.
 
     Args:
       cocoa_time (int): Cocoa time value.
       timestamp_description (str): description of the usage of the timestamp
           value.
-      flags (str): flags of the cookie.
+      flags (int): cookie flags.
       url (str): URL where this cookie is valid.
-      value (str): value or data of the cookie.
-      name (str): name of the cookie.
+      cookie_name (str): cookie name.
+      cookie_value (str): cookie value.
       path (str): path of the cookie.
     """
     super(BinaryCookieEvent, self).__init__(cocoa_time, timestamp_description)
-    self.cookie_name = name
-    self.cookie_value = value
+    self.cookie_name = cookie_name
+    self.cookie_value = cookie_value
     self.flags = flags
     self.path = path
     self.url = url
@@ -74,20 +75,85 @@ class BinaryCookieParser(interface.FileObjectParser):
       construct.Array(
           lambda ctx: ctx.number_of_cookies, construct.ULInt32(u'offsets')))
 
-  # Cookie flags.
-  COOKIE_FLAG_NONE = 0
-  COOKIE_FLAG_SECURE = 1
-  COOKIE_FLAG_UNKNOWN = 2
-  COOKIE_FLAG_HTTP_ONLY = 4
-
   def __init__(self):
     """Initializes a parser object."""
     super(BinaryCookieParser, self).__init__()
     self._cookie_plugins = (
         cookie_plugins_manager.CookiePluginsManager.GetPlugins())
 
+  def _ParseCookieRecord(self, parser_mediator, page_data):
+    """Parses a cookie record
+
+    Args:
+      parser_mediator (ParserMediator): parser mediator.
+      page_data (bytes): page data.
+      page_offset (int): offset of the cookie record relative to the start
+          of the page.
+    """
+    try:
+      cookie = self._COOKIE_RECORD.parse(page_data[page_offset:])
+    except construct.FieldError:
+      message = u'Unable to read cookie record at offset: {0:d}'.format(
+          page_offset)
+      parser_mediator.ProduceExtractionError(message)
+      continue
+
+    # The offset is determine by the range between the start of the current
+    # offset until the start of the next offset. Thus we need to determine
+    # the proper ordering of the offsets, since they are not always in the
+    # same ordering.
+    offset_dict = {
+        cookie.url_offset: u'url', cookie.name_offset: u'name',
+        cookie.value_offset: u'value', cookie.path_offset: u'path'}
+
+    offsets = sorted(offset_dict.keys())
+    offsets.append(cookie.size + page_offset)
+
+    # TODO: Find a better approach to parsing the data than this.
+    data_dict = {}
+    for current_offset in range(0, len(offsets) - 1):
+      # Get the current offset and the offset for the next entry.
+      start, end = offsets[current_offset:current_offset+2]
+      value = offset_dict.get(offsets[current_offset])
+      # Read the data.
+      data_all = page_data[start + page_offset:end + page_offset]
+      data, _, _ = data_all.partition(b'\x00')
+      data_dict[value] = data
+
+    url = data_dict.get(u'url')
+    cookie_name = data_dict.get(u'name')
+    cookie_value = data_dict.get(u'value')
+    path = data_dict.get(u'path')
+
+    if cookie.creation_date:
+      event_object = BinaryCookieEvent(
+          cookie.creation_date, eventdata.EventTimestamp.CREATION_TIME,
+          cookie.flags, url, cookie_name, cookie_value, path)
+      parser_mediator.ProduceEvent(event_object)
+
+    # TODO: generate event if no timestamp is set.
+    if cookie.expiration_date:
+      event_object = BinaryCookieEvent(
+          cookie.expiration_date, eventdata.EventTimestamp.EXPIRATION_TIME,
+          cookie.flags, url, cookie_name, cookie_value, path)
+      parser_mediator.ProduceEvent(event_object)
+
+    for plugin in self._cookie_plugins:
+      if cookie_name != plugin.COOKIE_NAME:
+        continue
+
+      try:
+        plugin.UpdateChainAndProcess(
+            parser_mediator, cookie_name=cookie_name, cookie_data=cookie_value,
+            url=url)
+
+      except Exception as exception:  # pylint: disable=broad-except
+        parser_mediator.ProduceExtractionError(
+            u'plugin: {0:s} unable to parse cookie with error: {1:s}'.format(
+                plugin.NAME, exception))
+
   def _ParsePage(self, parser_mediator, page_number, page_data):
-    """Extract events from a page and produce events.
+    """Parses a page.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
@@ -104,71 +170,9 @@ class BinaryCookieParser(interface.FileObjectParser):
       return
 
     for page_offset in page_header.offsets:
-      try:
-        cookie = self._COOKIE_RECORD.parse(page_data[page_offset:])
-      except construct.FieldError:
-        message = u'Unable to read cookie record at offset: {0:d}'.format(
-            page_offset)
-        parser_mediator.ProduceExtractionError(message)
-        continue
+      self._ParseCookieRecord(parser_mediator, page_data, page_offset)
 
-      # The offset is determine by the range between the start of the current
-      # offset until the start of the next offset. Thus we need to determine
-      # the proper ordering of the offsets, since they are not always in the
-      # same ordering.
-      offset_dict = {
-          cookie.url_offset: u'url', cookie.name_offset: u'name',
-          cookie.value_offset: u'value', cookie.path_offset: u'path'}
-
-      offsets = sorted(offset_dict.keys())
-      offsets.append(cookie.size + page_offset)
-
-      # TODO: Find a better approach to parsing the data than this.
-      data_dict = {}
-      for current_offset in range(0, len(offsets) - 1):
-        # Get the current offset and the offset for the next entry.
-        start, end = offsets[current_offset:current_offset+2]
-        value = offset_dict.get(offsets[current_offset])
-        # Read the data.
-        data_all = page_data[start + page_offset:end + page_offset]
-        data, _, _ = data_all.partition(b'\x00')
-        data_dict[value] = data
-
-      url = data_dict.get(u'url')
-      cookie_name = data_dict.get(u'name')
-      cookie_value = data_dict.get(u'value')
-      path = data_dict.get(u'path')
-
-      flags = []
-      flag_int = cookie.flags
-      if flag_int & self.COOKIE_FLAG_HTTP_ONLY:
-        flags.append(u'HttpOnly')
-      if flag_int & self.COOKIE_FLAG_UNKNOWN:
-        flags.append(u'Unknown')
-      if flag_int & self.COOKIE_FLAG_SECURE:
-        flags.append(u'Secure')
-
-      cookie_flags = u'|'.join(flags)
-
-      if cookie.creation_date:
-        event_object = BinaryCookieEvent(
-            cookie.creation_date, eventdata.EventTimestamp.CREATION_TIME,
-            cookie_flags, url, cookie_value, cookie_name, path)
-        parser_mediator.ProduceEvent(event_object)
-
-      if cookie.expiration_date:
-        event_object = BinaryCookieEvent(
-            cookie.expiration_date, eventdata.EventTimestamp.EXPIRATION_TIME,
-            cookie_flags, url, cookie_value, cookie_name, path)
-        parser_mediator.ProduceEvent(event_object)
-
-      for cookie_plugin in self._cookie_plugins:
-        try:
-          cookie_plugin.UpdateChainAndProcess(
-              parser_mediator, cookie_name=data_dict.get(u'name'),
-              cookie_data=data_dict.get(u'value'), url=data_dict.get(u'url'))
-        except errors.WrongPlugin:
-          pass
+    # TODO: check footer.
 
   @classmethod
   def GetFormatSpecification(cls):
