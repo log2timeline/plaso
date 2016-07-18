@@ -21,11 +21,11 @@ class FileObjectWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
     """Opens a Windows Registry file-like object.
 
     Args:
-      file_object: the Windows Registry file-like object.
-      ascii_codepage: optional ASCII string codepage.
+      file_object (dfvfs.FileIO): Windows Registry file-like object.
+      ascii_codepage (Optional[str]): ASCII string codepage.
 
     Returns:
-      The Windows Registry file (instance of WinRegistryFile) or None.
+      WinRegistryFile: Windows Registry file or None.
     """
     registry_file = dfwinreg_regf.REGFWinRegistryFile(
         ascii_codepage=ascii_codepage)
@@ -37,7 +37,6 @@ class FileObjectWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
     return registry_file
 
 
-# TODO: rename to REGFParser.
 class WinRegistryParser(interface.FileObjectParser):
   """Parses Windows NT Registry (REGF) files."""
 
@@ -61,16 +60,16 @@ class WinRegistryParser(interface.FileObjectParser):
     default_plugin_list_index = None
     key_paths = []
 
-    for list_index, plugin_object in enumerate(self._plugin_objects):
-      if plugin_object.NAME == u'winreg_default':
+    for list_index, plugin in enumerate(self._plugin_objects):
+      if plugin.NAME == u'winreg_default':
         default_plugin_list_index = list_index
         continue
 
-      for registry_key_filter in plugin_object.FILTERS:
+      for registry_key_filter in plugin.FILTERS:
         plugin_key_paths = getattr(registry_key_filter, u'key_paths', [])
         if (not plugin_key_paths and
-            plugin_object not in self._plugins_without_key_paths):
-          self._plugins_without_key_paths.append(plugin_object)
+            plugin not in self._plugins_without_key_paths):
+          self._plugins_without_key_paths.append(plugin)
           continue
 
         for plugin_key_path in plugin_key_paths:
@@ -79,11 +78,11 @@ class WinRegistryParser(interface.FileObjectParser):
             logging.warning((
                 u'Windows Registry key path: {0:s} defined by plugin: {1:s} '
                 u'already set by plugin: {2:s}').format(
-                    plugin_key_path, plugin_object.NAME,
+                    plugin_key_path, plugin.NAME,
                     self._plugin_per_key_path[plugin_key_path].NAME))
             continue
 
-          self._plugin_per_key_path[plugin_key_path] = plugin_object
+          self._plugin_per_key_path[plugin_key_path] = plugin
 
           key_paths.append(plugin_key_path)
 
@@ -93,19 +92,17 @@ class WinRegistryParser(interface.FileObjectParser):
     self._path_filter = path_filter.PathFilterScanTree(
         key_paths, case_sensitive=False, path_segment_separator=u'\\')
 
-  def _CanProcessKeyWithPlugin(self, registry_key, plugin_object):
+  def _CanProcessKeyWithPlugin(self, registry_key, plugin):
     """Determines if a plugin can process a Windows Registry key or its values.
 
     Args:
-      registry_key: a Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
-      plugin_object: a Windows Registry plugin object (instance of
-                     WindowsRegistryPlugin).
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+      plugin (WindowsRegistryPlugin): Windows Registry plugin.
 
     Returns:
-      A boolean value that indicates a match.
+      bool: True if the Registry key can be processed with the plugin.
     """
-    for registry_key_filter in plugin_object.FILTERS:
+    for registry_key_filter in plugin.FILTERS:
       # Skip filters that define key paths since they are already
       # checked by the path filter.
       if getattr(registry_key_filter, u'key_paths', []):
@@ -123,18 +120,16 @@ class WinRegistryParser(interface.FileObjectParser):
     format_specification.AddNewSignature(b'regf', offset=0)
     return format_specification
 
-  def _ParseKeyWithPlugin(self, parser_mediator, registry_key, plugin_object):
+  def _ParseKeyWithPlugin(self, parser_mediator, registry_key, plugin):
     """Parses the Registry key with a specific plugin.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      registry_key: a Registry key object (instance of
-                    dfwinreg.WinRegistryKey).
-      plugin_object: a Windows Registry plugin object (instance of
-                     WindowsRegistryPlugin).
+      parser_mediator (ParserMediator): parser mediator.
+      registry_key (dfwinreg.WinRegistryKey): Windwos Registry key.
+      plugin (WindowsRegistryPlugin): Windows Registry plugin.
     """
     try:
-      plugin_object.UpdateChainAndProcess(parser_mediator, registry_key)
+      plugin.UpdateChainAndProcess(parser_mediator, registry_key)
     except (IOError, dfwinreg_errors.WinRegistryValueError) as exception:
       parser_mediator.ProduceExtractionError(
           u'in key: {0:s} {1:s}'.format(registry_key.path, exception))
@@ -143,10 +138,10 @@ class WinRegistryParser(interface.FileObjectParser):
     """Normalizes a Windows Registry key path.
 
     Args:
-      key_path: a string containing a Windows Registry key path.
+      key_path (str): Windows Registry key path.
 
     Returns:
-      The normalized Windows Registry key path.
+      str: normalized Windows Registry key path.
     """
     normalized_key_path = key_path.lower()
     # The Registry key path should start with:
@@ -165,11 +160,13 @@ class WinRegistryParser(interface.FileObjectParser):
     """Parses the Registry keys recursively.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      root_key: a root Registry key object (instance of
-                dfwinreg.WinRegistryKey).
+      parser_mediator (ParserMediator): parser mediator.
+      root_key (dfwinreg.WinRegistryKey): root Windows Registry key.
     """
     for registry_key in root_key.RecurseKeys():
+      if parser_mediator.abort:
+        break
+
       matching_plugin = None
 
       normalized_key_path = self._NormalizeKeyPath(registry_key.path)
@@ -177,12 +174,9 @@ class WinRegistryParser(interface.FileObjectParser):
         matching_plugin = self._plugin_per_key_path[normalized_key_path]
 
       else:
-        for plugin_object in self._plugins_without_key_paths:
-          if parser_mediator.abort:
-            break
-
-          if self._CanProcessKeyWithPlugin(registry_key, plugin_object):
-            matching_plugin = plugin_object
+        for plugin in self._plugins_without_key_paths:
+          if self._CanProcessKeyWithPlugin(registry_key, plugin):
+            matching_plugin = plugin
             break
 
       if not matching_plugin:
@@ -195,8 +189,8 @@ class WinRegistryParser(interface.FileObjectParser):
     """Parses a Windows Registry file-like object.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      file_object: a file-like object.
+      parser_mediator (ParserMediator): parser mediator.
+      file_object (dfvfs.FileIO): a file-like object.
     """
     win_registry_reader = FileObjectWinRegistryFileReader()
 

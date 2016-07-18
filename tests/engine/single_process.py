@@ -12,7 +12,6 @@ from dfvfs.resolver import context
 from plaso.containers import sessions
 from plaso.engine import single_process
 from plaso.lib import errors
-from plaso.lib import event
 from plaso.storage import fake_storage
 
 from tests import test_lib as shared_test_lib
@@ -41,10 +40,9 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
 
     storage_writer = fake_storage.FakeStorageWriter(session)
 
-    preprocess_object = event.PreprocessObject()
     test_engine.ProcessSources(
-        [source_path_spec], preprocess_object, storage_writer,
-        resolver_context, parser_filter_expression=u'filestat')
+        [source_path_spec], storage_writer, resolver_context,
+        parser_filter_expression=u'filestat')
 
     self.assertEqual(len(storage_writer.events), 15)
 

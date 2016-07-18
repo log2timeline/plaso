@@ -86,7 +86,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     """Tests the ProcessSources function on a multi partition image."""
     options = cli_test_lib.TestOptions()
     # TODO: refactor to partitions.
-    options.partition_number = u'all'
+    options.partitions = u'all'
     options.quiet = True
     options.single_process = True
     options.status_view_mode = u'none'
@@ -159,9 +159,9 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
       self._test_tool.ProcessSources()
 
+      storage_file = storage_zip_file.ZIPStorageFile()
       try:
-        storage_file = storage_zip_file.StorageFile(
-            options.output, read_only=True)
+        storage_file.Open(path=options.output, read_only=True)
       except IOError as exception:
         self.fail((
             u'Unable to open storage file after processing with error: '

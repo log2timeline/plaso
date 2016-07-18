@@ -27,7 +27,6 @@ class ShellItemFileEntryEvent(time_events.FatDateTimeEvent):
       origin: A string containing the origin of the event (event source).
     """
     super(ShellItemFileEntryEvent, self).__init__(fat_date_time, usage)
-
     self.name = name
     self.long_name = long_name
     self.localized_name = localized_name

@@ -663,8 +663,6 @@ class Timestamp(object):
   def FromSystemtime(cls, systemtime):
     """Converts a SYSTEMTIME structure into a timestamp.
 
-    The SYSTEMTIME structure is mainly used in Windows registries.
-
     The SYSTEMTIME structure is a 128-bit struct containing 8 little endian
     16-bit integers structured like so:
       struct {
@@ -679,11 +677,11 @@ class Timestamp(object):
       }
 
     Args:
-      systemtime: The 128-bit SYSTEMTIME timestamp.
+      systemtime (bytes): 128-bit SYSTEMTIME timestamp value.
 
     Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC or 0 on error.
+      int: timestamp, which contains the number of micro seconds since
+          January 1, 1970, 00:00:00 UTC or 0 on error.
     """
     try:
       timestamp = cls.SYSTEMTIME_STRUCT.parse(systemtime)

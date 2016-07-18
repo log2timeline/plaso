@@ -79,7 +79,7 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
     analysis_plugin = tagging.TaggingPlugin(event_queue)
     tag_expression = analysis_plugin._ParseTaggingFile(
         self._GetTestFilePath([self._TEST_TAG_FILE_NAME]))
-    self.assertEqual(len(tag_expression.children), 3)
+    self.assertEqual(len(tag_expression.children), 4)
 
   def testInvalidTagParsing(self):
     """Test parsing of definition files that contain invalid directives."""
@@ -112,6 +112,10 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
     report = analysis_reports[0]
     tags = report.GetTags()
     self.assertEqual(len(tags), 3)
+    labels = []
+    for tag in tags:
+      labels.extend(tag.labels)
+    self.assertEqual(len(labels), 4)
 
     labels = []
     for tag in tags:

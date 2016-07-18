@@ -11,7 +11,6 @@ from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
 from plaso.frontend import psort
-from plaso.lib import event
 from plaso.lib import timelib
 from plaso.output import event_buffer as output_event_buffer
 from plaso.output import interface as output_interface
@@ -170,8 +169,8 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
     test_front_end.SetQuietMode(True)
 
     storage_file_path = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_file = storage_zip_file.StorageFile(
-        storage_file_path, read_only=True)
+    storage_file = storage_zip_file.ZIPStorageFile()
+    storage_file.Open(path=storage_file_path)
 
     try:
       output_writer = test_lib.StringIOOutputWriter()
@@ -194,7 +193,7 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
       lines.append(line)
       line = output_writer.GetLine()
 
-    self.assertEqual(len(lines), 18)
+    self.assertEqual(len(lines), 20)
 
     expected_line = (
         u'2016-07-10T19:10:47+00:00,'
@@ -204,7 +203,7 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
         u'OS:/tmp/test/test_data/syslog Type: file,'
         u'filestat,'
         u'OS:/tmp/test/test_data/syslog,-\n')
-    self.assertEquals(lines[13], expected_line)
+    self.assertEquals(lines[14], expected_line)
 
   def testOutput(self):
     """Testing if psort can output data."""
@@ -224,17 +223,18 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'storage.plaso')
 
-      storage_file = storage_zip_file.StorageFile(temp_file)
+      storage_file = storage_zip_file.ZIPStorageFile()
+      storage_file.Open(path=temp_file, read_only=False)
       for event_object in event_objects:
         storage_file.AddEvent(event_object)
       storage_file.Close()
 
-      storage_file = storage_zip_file.StorageFile(
-          temp_file, read_only=True)
+      storage_file = storage_zip_file.ZIPStorageFile()
+      storage_file.Open(path=temp_file)
 
       with reader.StorageObjectReader(storage_file) as storage_reader:
         knowledge_base_object = knowledge_base.KnowledgeBase()
-        knowledge_base_object.InitializeLookupDictionaries(storage_file)
+        storage_file.ReadPreprocessingInformation(knowledge_base_object)
 
         output_mediator_object = output_mediator.OutputMediator(
             knowledge_base_object, self._formatter_mediator)
@@ -266,36 +266,6 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
 
     formatters_manager.FormattersManager.DeregisterFormatter(
         PsortTestEventFormatter)
-
-  def testGetLastGoodPreprocess(self):
-    """Tests the last good preprocess method."""
-    test_front_end = psort.PsortFrontend()
-    storage_file_path = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_file = storage_zip_file.StorageFile(
-        storage_file_path, read_only=True)
-    preprocessor_object = test_front_end._GetLastGoodPreprocess(storage_file)
-    self.assertIsNotNone(preprocessor_object)
-    timezone = getattr(preprocessor_object, u'zone')
-    self.assertEqual(timezone.zone, u'UTC')
-
-  def testSetAnalysisPluginProcessInformation(self):
-    """Test the _SetAnalysisPluginProcessInformation method."""
-    test_front_end = psort.PsortFrontend()
-    analysis_plugins = [test_lib.TestAnalysisPlugin(None)]
-
-    preprocess_object = event.PreprocessObject()
-    preprocess_object.SetCollectionInformationValues({})
-    test_front_end._SetAnalysisPluginProcessInformation(
-        analysis_plugins, preprocess_object)
-    self.assertIsNotNone(preprocess_object)
-    plugin_names = preprocess_object.collection_information[u'plugins']
-    time_of_run = preprocess_object.collection_information[u'time_of_run']
-    method = preprocess_object.collection_information[u'method']
-
-    for analysis_plugin in analysis_plugins:
-      self.assertIn(analysis_plugin.NAME, plugin_names)
-    self.assertAlmostEqual(timelib.Timestamp.GetNow(), time_of_run, 2000000)
-    self.assertIsNotNone(method)
 
   # TODO: add bogus data location test.
 

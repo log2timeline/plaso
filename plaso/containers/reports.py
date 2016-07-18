@@ -2,6 +2,7 @@
 """Report related attribute container object definitions."""
 
 from plaso.containers import interface
+from plaso.containers import manager
 from plaso.lib import timelib
 
 
@@ -104,3 +105,6 @@ class AnalysisReport(interface.AttributeContainer):
       event_tags: a list of event tags (instances of EventTag).
     """
     self._event_tags = event_tags
+
+
+manager.AttributeContainersManager.RegisterAttributeContainer(AnalysisReport)

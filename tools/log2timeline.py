@@ -570,8 +570,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     # Check the list options first otherwise required options will raise.
     self._ParseExtractionOptions(options)
     self._ParseOutputOptions(options)
-    # TODO: refactor usage of self._old_preprocess.
-    self._front_end.SetUseOldPreprocess(self._old_preprocess)
     self._ParseTimezoneOption(options)
     self._ParseExperimentalOptions(options)
 
@@ -687,11 +685,13 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         command_line_arguments=self._command_line_arguments,
         enable_sigsegv_handler=self._enable_sigsegv_handler,
         filter_file=self._filter_file,
+        force_preprocessing=self._force_preprocessing,
         hasher_names_string=self._hasher_names_string,
         number_of_extraction_workers=self._number_of_extraction_workers,
         process_archive_files=self._process_archive_files,
         parser_filter_expression=self._parser_filter_expression,
         preferred_encoding=self.preferred_encoding,
+        preferred_year=self._preferred_year,
         single_process_mode=self._single_process_mode,
         status_update_callback=status_update_callback,
         timezone=self._timezone)
