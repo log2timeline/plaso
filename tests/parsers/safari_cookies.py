@@ -21,15 +21,16 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         [u'Cookies.binarycookies'], parser_object)
 
-    # There should be 182 events from the safari cookie parser in addition
-    # to those created by cookie plugins.
-    self.assertTrue(len(storage_writer.events) >= 182)
-
     cookie_events = []
     for event_object in storage_writer.events:
       if isinstance(event_object, safari_cookies.BinaryCookieEvent):
         cookie_events.append(event_object)
 
+    # There should be:
+    # * 207 events in total
+    # * 182 events from the safari cookie parser
+    # * 25 event from the cookie plugins
+    self.assertEqual(len(storage_writer.events), 207)
     self.assertEqual(len(cookie_events), 182)
 
     event_object = cookie_events[3]

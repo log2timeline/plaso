@@ -19,19 +19,21 @@ class BinaryCookieEvent(time_events.CocoaTimeEvent):
 
   DATA_TYPE = u'safari:cookie:entry'
 
-  def __init__(self, timestamp, timestamp_desc, flags, url, value, name, path):
-    """Initialize the binary cookie.
+  def __init__(
+      self, cocoa_time, timestamp_description, flags, url, value, name, path):
+    """Initialize a binary cookie event.
 
     Args:
-      timestamp: The timestamp in Cocoa format.
-      timestamp_desc: The usage string, describing the timestamp value.
-      flags: String containing the flags for the cookie.
-      url: The URL where this cookie is valid.
-      value: The value or data of the cookie.
-      name: The name of the cookie.
-      path: The path of the cookie.
+      cocoa_time (int): Cocoa time value.
+      timestamp_description (str): description of the usage of the timestamp
+          value.
+      flags (str): flags of the cookie.
+      url (str): URL where this cookie is valid.
+      value (str): value or data of the cookie.
+      name (str): name of the cookie.
+      path (str): path of the cookie.
     """
-    super(BinaryCookieEvent, self).__init__(timestamp, timestamp_desc)
+    super(BinaryCookieEvent, self).__init__(cocoa_time, timestamp_description)
     self.cookie_name = name
     self.cookie_value = value
     self.flags = flags
@@ -45,13 +47,14 @@ class BinaryCookieParser(interface.FileObjectParser):
   NAME = u'binary_cookies'
   DESCRIPTION = u'Parser for Safari Binary Cookie files.'
 
-  COOKIE_HEADER = construct.Struct(
+  _FILE_HEADER = construct.Struct(
       u'binary_cookie_header',
+      construct.Bytes(u'signature', 4),
       construct.UBInt32(u'pages'),
       construct.Array(lambda ctx: ctx.pages, construct.UBInt32(u'page_sizes')))
 
-  COOKIE_DATA = construct.Struct(
-      u'binary_cookie_data',
+  _COOKIE_RECORD = construct.Struct(
+      u'cookie_record',
       construct.ULInt32(u'size'),
       construct.Bytes(u'unknown_1', 4),
       construct.ULInt32(u'flags'),
@@ -64,8 +67,8 @@ class BinaryCookieParser(interface.FileObjectParser):
       construct.LFloat64(u'expiration_date'),
       construct.LFloat64(u'creation_date'))
 
-  PAGE_DATA = construct.Struct(
-      u'page_data',
+  _PAGE_HEADER = construct.Struct(
+      u'page_header',
       construct.Bytes(u'header', 4),
       construct.ULInt32(u'number_of_cookies'),
       construct.Array(
@@ -83,25 +86,28 @@ class BinaryCookieParser(interface.FileObjectParser):
     self._cookie_plugins = (
         cookie_plugins_manager.CookiePluginsManager.GetPlugins())
 
-  def _ParsePage(self, page_data, parser_mediator):
+  def _ParsePage(self, parser_mediator, page_number, page_data):
     """Extract events from a page and produce events.
 
     Args:
-      page_data: Raw bytes of the page.
-      file_entry: The file entry (instance of dfvfs.FileEntry).
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator (ParserMediator): parser mediator.
+      page_number (int): page number.
+      page_data (bytes): page data.
     """
     try:
-      page = self.PAGE_DATA.parse(page_data)
+      page_header = self._PAGE_HEADER.parse(page_data)
     except construct.FieldError:
-      parser_mediator.ProduceExtractionError(u'Unable to parse page')
+      # TODO: add offset
+      parser_mediator.ProduceExtractionError(
+          u'unable to read header of page: {0:d} at offset: 0x{1:08x}'.format(
+              page_number, 0))
       return
 
-    for page_offset in page.offsets:
+    for page_offset in page_header.offsets:
       try:
-        cookie = self.COOKIE_DATA.parse(page_data[page_offset:])
+        cookie = self._COOKIE_RECORD.parse(page_data[page_offset:])
       except construct.FieldError:
-        message = u'Unable to parse cookie data from offset: {0:d}'.format(
+        message = u'Unable to read cookie record at offset: {0:d}'.format(
             page_offset)
         parser_mediator.ProduceExtractionError(message)
         continue
@@ -164,40 +170,46 @@ class BinaryCookieParser(interface.FileObjectParser):
         except errors.WrongPlugin:
           pass
 
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification for parser selection.
+
+    Returns:
+      FormatSpecification: format specification.
+    """
+    format_specification = specification.FormatSpecification(cls.NAME)
+    format_specification.AddNewSignature(b'cook', offset=0)
+    return format_specification
+
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Safari binary cookie file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): parser mediator.
+      file_object (dfvfs.FileIO): file-like object to be parsed.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    # Start by verifying magic value.
-    # We do this here instead of in the header parsing routine due to the
-    # fact that we read an integer there and create an array, which is part
-    # of the header. For false hits this could end up with reading large chunks
-    # of data, which we don't want for false hits.
-    magic = file_object.read(4)
-    if magic != b'cook':
-      raise errors.UnableToParseFile(
-          u'The file is not a Binary Cookie file. Unsupported file signature.')
-
     try:
-      header = self.COOKIE_HEADER.parse_stream(file_object)
-    except (IOError, construct.ArrayError, construct.FieldError):
-      raise errors.UnableToParseFile(
-          u'The file is not a Binary Cookie file (bad header).')
+      file_header = self._FILE_HEADER.parse_stream(file_object)
+    except (IOError, construct.ArrayError, construct.FieldError) as exception:
+      parser_mediator.ProduceExtractionError(
+          u'unable to read file header with error: {0:s}.'.format(exception))
+      return
 
-    for page_size in header.page_sizes:
-      page = file_object.read(page_size)
-      if len(page) != page_size:
+    if file_header.signature != b'cook':
+      parser_mediator.ProduceExtractionError(u'unsupported file signature.')
+      return
+
+    for index, page_size in enumerate(file_header.page_sizes):
+      page_data = file_object.read(page_size)
+      if len(page_data) != page_size:
         parser_mediator.ProduceExtractionError(
-            u'Unable to continue parsing Binary Cookie file')
+            u'unable to read page: {0:d}'.format(index))
         break
 
-      self._ParsePage(page, parser_mediator)
+      self._ParsePage(parser_mediator, index, page_data)
 
 
 manager.ParsersManager.RegisterParser(BinaryCookieParser)
