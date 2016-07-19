@@ -29,7 +29,7 @@ class FileHistoryNamespaceEventObject(time_events.FiletimeEvent):
 
     Args:
       filetime (int): FILETIME timestamp value.
-      timestamp_description (str): description of the usage of the timestamp
+      timestamp_description (str): description of the meaning of the timestamp
           value.
       filename (str): name of the orignal file.
       file_attribute (int): file attribute.
