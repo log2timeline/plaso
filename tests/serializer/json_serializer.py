@@ -15,7 +15,6 @@ from dfvfs.path import factory as path_spec_factory
 import plaso
 from plaso.containers import event_sources
 from plaso.containers import events
-from plaso.containers import preprocess
 from plaso.containers import reports
 from plaso.containers import sessions
 from plaso.containers import tasks
@@ -428,34 +427,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         sorted(task_start_dict.items()),
         sorted(expected_task_start_dict.items()))
 
-  def testReadAndWriteSerializedPreprocessObject(self):
-    """Test ReadSerialized and WriteSerialized of PreprocessObject."""
-    expected_preprocess_object = preprocess.PreprocessObject()
-
-    json_string = (
-        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
-            expected_preprocess_object))
-
-    self.assertIsNotNone(json_string)
-
-    preprocess_object = (
-        json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
-            json_string))
-
-    self.assertIsNotNone(preprocess_object)
-    self.assertIsInstance(preprocess_object, preprocess.PreprocessObject)
-
-    expected_preprocess_object_dict = {
-        u'hosts': {},
-        u'time_zone_str': u'UTC',
-        u'users': {},
-        u'zone': u'UTC'
-    }
-
-    preprocess_object_dict = preprocess_object.CopyToDict()
-    self.assertEqual(
-        sorted(preprocess_object_dict.items()),
-        sorted(expected_preprocess_object_dict.items()))
 
 
 if __name__ == '__main__':
