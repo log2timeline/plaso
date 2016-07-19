@@ -18,10 +18,10 @@ class MsieWebCacheContainersEventObject(time_events.FiletimeEvent):
   """Convenience class for a MSIE WebCache Containers table event.
 
   Attributes:
-    container_identifier (str): container identifier.
+    container_identifier (int): container identifier.
     directory (str): name of the cache directory.
     name (str): name of the cache container.
-    set_identifier (str): set identifier.
+    set_identifier (int): set identifier.
   """
 
   DATA_TYPE = u'msie:webcache:containers'
@@ -35,10 +35,10 @@ class MsieWebCacheContainersEventObject(time_events.FiletimeEvent):
       filetime (int): FILETIME timestamp value.
       timestamp_description (str): description of the usage of the timestamp
           value.
-      container_identifier (str): container identifier.
+      container_identifier (int): container identifier.
       directory (str): name of the cache directory.
       name (str): name of the cache container.
-      set_identifier (str): set identifier.
+      set_identifier (int): set identifier.
     """
     super(MsieWebCacheContainersEventObject, self).__init__(
         filetime, timestamp_description)
@@ -126,27 +126,34 @@ class MsieWebCachePartitionsEventObject(time_events.FiletimeEvent):
   """Convenience class for a MSIE WebCache Partitions table event.
 
   Attributes:
+    directory (str): directory.
+    partition_identifier (int): partition identifier.
+    partition_type (int): partition type.
+    table_identifier (int): table identifier.
   """
 
   DATA_TYPE = u'msie:webcache:partitions'
 
-  # TODO: replace record values by explicit arguments.
-  def __init__(self, filetime, timestamp_description, record_values):
+  def __init__(
+      self, filetime, timestamp_description, directory, partition_identifier,
+      partition_type, table_identifier):
     """Initializes an event.
 
     Args:
       filetime (int): FILETIME timestamp value.
       timestamp_description (str): description of the usage of the timestamp
           value.
-      record_values (dict[str,object]): record values.
+      directory (str): directory.
+      partition_identifier (int): partition identifier.
+      partition_type (int): partition type.
+      table_identifier (int): table identifier.
     """
     super(MsieWebCachePartitionsEventObject, self).__init__(
         filetime, timestamp_description)
-
-    self.partition_identifier = record_values.get(u'PartitionId', 0)
-    self.partition_type = record_values.get(u'PartitionType', 0)
-    self.directory = record_values.get(u'Directory', u'')
-    self.table_identifier = record_values.get(u'TableId', 0)
+    self.directory = directory
+    self.partition_identifier = partition_identifier
+    self.partition_type = partition_type
+    self.table_identifier = table_identifier
 
 
 class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
@@ -265,19 +272,19 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
       record_values = self._GetRecordValues(
           parser_mediator, table.name, esedb_record)
 
-      container_identifier = record_values.get(u'ContainerId', 0)
-      directory = record_values.get(u'Directory', u'')
-      name = record_values.get(u'Name', u'')
-      set_identifier = record_values.get(u'SetId', 0)
+      container_identifier = record_values.get(u'ContainerId', None)
+      directory = record_values.get(u'Directory', None)
+      name = record_values.get(u'Name', None)
+      set_identifier = record_values.get(u'SetId', None)
 
-      timestamp = record_values.get(u'LastScavengeTime', 0)
+      timestamp = record_values.get(u'LastScavengeTime', None)
       if timestamp:
         event_object = MsieWebCacheContainersEventObject(
             timestamp, u'Last Scavenge Time', container_identifier, directory,
             name, set_identifier)
         parser_mediator.ProduceEvent(event_object)
 
-      timestamp = record_values.get(u'LastAccessTime', 0)
+      timestamp = record_values.get(u'LastAccessTime', None)
       if timestamp:
         event_object = MsieWebCacheContainersEventObject(
             timestamp, eventdata.EventTimestamp.ACCESS_TIME,
@@ -353,10 +360,16 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
       record_values = self._GetRecordValues(
           parser_mediator, table.name, esedb_record)
 
-      timestamp = record_values.get(u'LastScavengeTime', 0)
+      timestamp = record_values.get(u'LastScavengeTime', None)
       if timestamp:
+        directory = record_values.get(u'Directory', None)
+        partition_identifier = record_values.get(u'PartitionId', None)
+        partition_type = record_values.get(u'PartitionType', None)
+        table_identifier = record_values.get(u'TableId', None)
+
         event_object = MsieWebCachePartitionsEventObject(
-            timestamp, u'Last Scavenge Time', record_values)
+            timestamp, u'Last Scavenge Time', directory, partition_identifier,
+            partition_type, table_identifier)
         parser_mediator.ProduceEvent(event_object)
 
 
