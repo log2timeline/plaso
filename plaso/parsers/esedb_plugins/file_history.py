@@ -10,20 +10,31 @@ from plaso.parsers.esedb_plugins import interface
 
 
 class FileHistoryNamespaceEventObject(time_events.FiletimeEvent):
-  """Convenience class for a file history namespace table event."""
+  """Convenience class for a file history namespace table event.
+
+  Attributes:
+    file_attribute (int): file attribute.
+    identifier (int): identifier.
+    original_filename (str): original file name.
+    parent_identifier (int): parent identifier.
+    usn_number (int): USN number.
+  """
 
   DATA_TYPE = u'file_history:namespace:event'
 
-  def __init__(self, timestamp, usage, filename, record_values):
+  # TODO: replace record values by explicit arguments.
+  def __init__(self, filetime, timestamp_description, filename, record_values):
     """Initializes the event.
 
     Args:
-      timestamp: The FILETIME timestamp value.
-      usage: The usage string, describing the timestamp value.
-      filename: The name of the file.
-      record_values: A dict object containing the record values.
+      filetime (int): FILETIME timestamp value.
+      timestamp_description (str): description of the usage of the timestamp
+          value.
+      filename (srr): name of the orignal file.
+      record_values (dict[str,object]): record values.
     """
-    super(FileHistoryNamespaceEventObject, self).__init__(timestamp, usage)
+    super(FileHistoryNamespaceEventObject, self).__init__(
+        filetime, timestamp_description)
 
     self.file_attribute = record_values.get(u'fileAttrib')
     self.identifier = record_values.get(u'id')
@@ -45,22 +56,24 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
       u'library': u'',
       u'namespace': u'ParseNameSpace'}
 
-  def _GetDictFromStringsTable(self, table):
-    """Build a dict for the strings table.
+  def _GetDictFromStringsTable(self, parser_mediator, table):
+    """Build a dictionary of the value in the strings table.
 
     Args:
-      table: A table object for the strings table (instance of pyesedb.table).
+      parser_mediator (ParserMediator): parser mediator.
+      table (pyesedb.table): strings table.
 
     Returns:
-      A dict that contains the identification field as key and filename as
-      value.
+      dict[str,object]: values per column name.
     """
-    return_dict = {}
-
     if not table:
-      return return_dict
+      return {}
 
+    record_values = {}
     for record in table.records:
+      if parser_mediator.abort:
+        break
+
       if record.get_number_of_values() != 2:
         continue
 
@@ -69,20 +82,20 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
 
       if not identification:
         continue
-      return_dict[identification] = filename
+      record_values[identification] = filename
 
-    return return_dict
+    return record_values
 
   def ParseNameSpace(
-      self, parser_mediator, database=None, cache=None, table=None,
+      self, parser_mediator, cache=None, database=None, table=None,
       **unused_kwargs):
     """Parses the namespace table.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      database: Optional database object (instance of pyesedb.file).
-      cache: Optional cache object (instance of ESEDBCache).
-      table: Optional table object (instance of pyesedb.table).
+      parser_mediator (ParserMediator): parser mediator.
+      cache (Optional[ESEDBCache]): cache.
+      database (Optional[pyesedb.file]): ESE database.
+      table (Optional[pyesedb.table]): table.
     """
     if database is None:
       logging.warning(u'[{0:s}] invalid database'.format(self.NAME))
@@ -94,12 +107,16 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
 
     strings = cache.GetResults(u'strings')
     if not strings:
-      strings = self._GetDictFromStringsTable(
-          database.get_table_by_name(u'string'))
+      esedb_table = database.get_table_by_name(u'string')
+      strings = self._GetDictFromStringsTable(parser_mediator, esedb_table)
       cache.StoreDictInCache(u'strings', strings)
 
     for esedb_record in table.records:
-      record_values = self._GetRecordValues(table.name, esedb_record)
+      if parser_mediator.abort:
+        break
+
+      record_values = self._GetRecordValues(
+          parser_mediator, table.name, esedb_record)
 
       filename = strings.get(record_values.get(u'id', -1), u'')
       created_timestamp = record_values.get(u'fileCreated')

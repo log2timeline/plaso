@@ -158,7 +158,8 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
 
       try:
         record_values = self._GetRecordValues(
-            table.name, esedb_record, value_mappings=value_mappings)
+            parser_mediator, table.name, esedb_record,
+            value_mappings=value_mappings)
 
       except UnicodeDecodeError:
         parser_mediator.ProduceExtractionError((
@@ -225,7 +226,8 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
       return
 
     for esedb_record in table.records:
-      record_values = self._GetRecordValues(table.name, esedb_record)
+      record_values = self._GetRecordValues(
+          parser_mediator, table.name, esedb_record)
 
       timestamp = record_values.get(u'LastScavengeTime', 0)
       if timestamp:
@@ -272,7 +274,8 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
       return
 
     for esedb_record in table.records:
-      record_values = self._GetRecordValues(table.name, esedb_record)
+      record_values = self._GetRecordValues(
+          parser_mediator, table.name, esedb_record)
 
       timestamp = record_values.get(u'CreationTime', 0)
       if timestamp:
@@ -298,7 +301,8 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
       return
 
     for esedb_record in table.records:
-      record_values = self._GetRecordValues(table.name, esedb_record)
+      record_values = self._GetRecordValues(
+          parser_mediator, table.name, esedb_record)
 
       timestamp = record_values.get(u'LastScavengeTime', 0)
       if timestamp:
