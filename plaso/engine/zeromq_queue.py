@@ -66,7 +66,8 @@ class ZeroMQQueue(plaso_queue.Queue):
   SOCKET_CONNECTION_BIND = 1
   SOCKET_CONNECTION_CONNECT = 2
   SOCKET_CONNECTION_TYPE = None
-  _ZMQ_SOCKET_TIMEOUT_MILLISECONDS = 1000
+  _ZMQ_SOCKET_SEND_TIMEOUT_MILLISECONDS = 1000
+  _ZMQ_SOCKET_RECEIVE_TIMEOUT_MILLISECONDS = 1000
 
   def __init__(
       self, delay_open=True, linger_seconds=10, port=None, timeout_seconds=5,
@@ -106,6 +107,8 @@ class ZeroMQQueue(plaso_queue.Queue):
     self._high_water_mark = maximum_items
     self._linger_seconds = linger_seconds
     self.timeout_seconds = timeout_seconds
+    self._terminate_event = threading.Event()
+    self._zmq_context = None
     self._zmq_socket = None
     self._zmq_socket_timeout_milliseconds = 500
     self.name = name
@@ -116,9 +119,9 @@ class ZeroMQQueue(plaso_queue.Queue):
   def _SetSocketTimeouts(self):
     """Sets the timeouts for socket send and receive."""
     self._zmq_socket.setsockopt(
-      zmq.RCVTIMEO, self._ZMQ_SOCKET_TIMEOUT_MILLISECONDS)
+      zmq.RCVTIMEO, self._ZMQ_SOCKET_RECEIVE_TIMEOUT_MILLISECONDS)
     self._zmq_socket.setsockopt(
-      zmq.SNDTIMEO, self._ZMQ_SOCKET_TIMEOUT_MILLISECONDS)
+      zmq.SNDTIMEO, self._ZMQ_SOCKET_SEND_TIMEOUT_MILLISECONDS)
 
   def _SetSocketHighWaterMark(self):
     """Sets the high water mark for the socket.
@@ -130,8 +133,11 @@ class ZeroMQQueue(plaso_queue.Queue):
 
   def _CreateZMQSocket(self):
     """Creates a ZeroMQ socket."""
-    zmq_context = zmq.Context()
-    self._zmq_socket = zmq_context.socket(self._SOCKET_TYPE)
+    if not self._zmq_context:
+      self._zmq_context = zmq.Context()
+    if self._zmq_socket:
+      self._zmq_socket.close()
+    self._zmq_socket = self._zmq_context.socket(self._SOCKET_TYPE)
     self._SetSocketTimeouts()
     self._SetSocketHighWaterMark()
 
@@ -178,6 +184,12 @@ class ZeroMQQueue(plaso_queue.Queue):
     if abort:
       logging.warning(u'{0:s} queue aborting. Contents may be lost.'.format(
           self.name))
+      try:
+        self.Empty()
+      except NotImplementedError:
+        # Some queue types don't support this, but we're aborting, so we
+        # ignore the error.
+        pass
       self._linger_seconds = 0
     else:
       logging.debug(
@@ -186,6 +198,8 @@ class ZeroMQQueue(plaso_queue.Queue):
 
     if not self._zmq_socket:
       return
+    self._terminate_event.set()
+    self._closed = True
     self._zmq_socket.close(self._linger_seconds)
 
   @abc.abstractmethod
@@ -444,6 +458,8 @@ class ZeroMQRequestQueue(ZeroMQQueue):
 
   _SOCKET_TYPE = zmq.REQ
 
+  _ZMQ_SOCKET_SEND_TIMEOUT_MILLISECONDS = 5000
+
   def Empty(self):
     """Empties the queue.
 
@@ -490,26 +506,27 @@ class ZeroMQRequestQueue(ZeroMQQueue):
         self.name, self.port))
     if not self._zmq_socket:
       self._CreateZMQSocket()
-    try:
-      logging.debug(u'{0:s} Sending request'.format(self.name))
-      self._zmq_socket.send_pyobj(None)
-      with _ZeroMQTimeoutHandler(self.timeout_seconds):
-        received_object = self._zmq_socket.recv_pyobj()
-        logging.debug(u'received object: "{0:s}"'.format(received_object))
-        return received_object
-    except zmq.error.Again:
-      raise errors.QueueEmpty
-    except zmq.error.ZMQError as exception:
-      if exception.errno == errno.EINTR:
-        logging.error(
-            u'ZMQ syscall interrupted in {0:s}. Queue aborting.'.format(
-                self.name))
-        return plaso_queue.QueueAbort()
-      else:
+    while not self._terminate_event.isSet():
+      try:
+        logging.debug(u'{0:s} Sending request'.format(self.name))
+        with _ZeroMQTimeoutHandler(self.timeout_seconds):
+          self._zmq_socket.send_pyobj(None)
+          received_object = self._zmq_socket.recv_pyobj()
+          logging.debug(u'received object: "{0:s}"'.format(received_object))
+          return received_object
+      except zmq.error.Again:
+        raise errors.QueueEmpty
+      except zmq.error.ZMQError as exception:
+        if exception.errno == errno.EINTR:
+          logging.error(
+              u'ZMQ syscall interrupted in {0:s}. Queue aborting.'.format(
+                  self.name))
+          return plaso_queue.QueueAbort()
+        if exception.errno == zmq.EFSM:
+          raise
+      except KeyboardInterrupt:
+        self.Close(abort=True)
         raise
-    except KeyboardInterrupt:
-      self.Close(abort=True)
-      raise
 
   def PushItem(self, item, block=True):
     """Pushes an item on to the queue.
@@ -583,7 +600,6 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
     """
     self._buffer_timeout_seconds = buffer_timeout_seconds
     self._queue = Queue.Queue(maxsize=buffer_max_size)
-    self._terminate_event = threading.Event()
     # We need to set up the internal buffer queue before we call super, so that
     # if the call to super opens the ZMQSocket, the backing thread will work.
     super(ZeroMQBufferedQueue, self).__init__(
@@ -610,29 +626,6 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
       terminate_event: The event that signals that the queue should terminate.
     """
 
-  def Close(self, abort=False):
-    """Close the queue.
-
-    Unless the abort parameter is set to true, the underlying socket will remain
-    open for _linger_seconds before being destroyed.
-
-    Args:
-      abort: Whether the queue is closing due to an error condition, and the
-             queue should be close immediately.
-    """
-    if abort:
-      logging.warning(u'{0:s} Queue aborting. Contents may be lost.'.format(
-          self.name))
-      self.Empty()
-      self._linger_seconds = 0
-    else:
-      logging.debug(
-          u'{0:s} Queue closing, will linger for up to {1:d} seconds'.format(
-              self.name, self._linger_seconds))
-
-    # if hasattr(self, u'terminate_event'):
-    self._terminate_event.set()
-    self._closed = True
 
   def Empty(self):
     """Empty the queue."""
@@ -649,6 +642,9 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
   Instances of this class or subclasses may only be used to push items, not to
   pop.
   """
+
+  _ZMQ_SOCKET_RECEIVE_TIMEOUT_MILLISECONDS = 5000
+
 
   _SOCKET_TYPE = zmq.REP
 
@@ -668,14 +664,15 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
     while not terminate_event.isSet():
       try:
         # We need to receive a request before we send.
-        with _ZeroMQTimeoutHandler(self.timeout_seconds, terminate_event):
-          logging.debug(u'{0:s} waiting for request'.format(self.name))
-          _ = socket.recv()
-          logging.debug(u'{0:s} buffgot request'.format(self.name))
+        logging.debug(u'{0:s} waiting for request'.format(self.name))
+        _ = socket.recv()
+        logging.debug(u'{0:s} got request'.format(self.name))
       except zmq.error.Again:
         logging.debug(u'{0:s} did not receive a request within the '
                       u'timeout of {1:d} seconds.'.format(
             self.name, self.timeout_seconds))
+        # The socket is now out of sync, so we need to create a new one.
+        self._CreateZMQSocket()
         continue
       except zmq.error.ZMQError as exception:
         if exception.errno == errno.EINTR:
@@ -867,6 +864,9 @@ class ZeroMQBufferedPushConnectQueue(ZeroMQBufferedPushQueue):
 
   This queue may only be used to push items, not to pop.
   """
+
+  _ZMQ_SOCKET_SEND_TIMEOUT_MILLISECONDS = 5000
+
   SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_CONNECT
 
 
@@ -986,4 +986,7 @@ class ZeroMQBufferedPullConnectQueue(ZeroMQBufferedPullQueue):
 
   This queue may only be used to pop items, not to push.
   """
+
+  _ZMQ_SOCKET_SEND_TIMEOUT_MILLISECONDS = 5000
+
   SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_CONNECT
