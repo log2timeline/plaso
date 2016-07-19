@@ -26,32 +26,39 @@ class MsieWebCacheContainersEventObject(time_events.FiletimeEvent):
 
   DATA_TYPE = u'msie:webcache:containers'
 
-  # TODO: replace record values by explicit arguments.
-  def __init__(self, filetime, timestamp_description, record_values):
-    """Initializes the event.
+  def __init__(
+      self, filetime, timestamp_description, container_identifier, directory,
+      name, set_identifier):
+    """Initializes an event.
 
     Args:
       filetime (int): FILETIME timestamp value.
       timestamp_description (str): description of the usage of the timestamp
           value.
-      record_values (dict[str,object]): record values.
+      container_identifier (str): container identifier.
+      directory (str): name of the cache directory.
+      name (str): name of the cache container.
+      set_identifier (str): set identifier.
     """
     super(MsieWebCacheContainersEventObject, self).__init__(
         filetime, timestamp_description)
-    self.container_identifier = record_values.get(u'ContainerId', 0)
-    self.directory = record_values.get(u'Directory', u'')
-    self.name = record_values.get(u'Name', u'')
-    self.set_identifier = record_values.get(u'SetId', 0)
+    self.container_identifier = container_identifier
+    self.directory = directory
+    self.name = name
+    self.set_identifier = set_identifier
 
 
 class MsieWebCacheContainerEventObject(time_events.FiletimeEvent):
-  """Convenience class for a MSIE WebCache Container table event."""
+  """Convenience class for a MSIE WebCache Container table event.
+
+  Attributes:
+  """
 
   DATA_TYPE = u'msie:webcache:container'
 
   # TODO: replace record values by explicit arguments.
   def __init__(self, filetime, timestamp_description, record_values):
-    """Initializes the event.
+    """Initializes an event.
 
     Args:
       filetime (int): FILETIME timestamp value.
@@ -91,13 +98,16 @@ class MsieWebCacheContainerEventObject(time_events.FiletimeEvent):
 
 
 class MsieWebCacheLeakFilesEventObject(time_events.FiletimeEvent):
-  """Convenience class for a MSIE WebCache LeakFiles table event."""
+  """Convenience class for a MSIE WebCache LeakFiles table event.
+
+  Attributes:
+  """
 
   DATA_TYPE = u'msie:webcache:leak_file'
 
   # TODO: replace record values by explicit arguments.
   def __init__(self, filetime, timestamp_description, record_values):
-    """Initializes the event.
+    """Initializes an event.
 
     Args:
       filetime (int): FILETIME timestamp value.
@@ -113,13 +123,16 @@ class MsieWebCacheLeakFilesEventObject(time_events.FiletimeEvent):
 
 
 class MsieWebCachePartitionsEventObject(time_events.FiletimeEvent):
-  """Convenience class for a MSIE WebCache Partitions table event."""
+  """Convenience class for a MSIE WebCache Partitions table event.
+
+  Attributes:
+  """
 
   DATA_TYPE = u'msie:webcache:partitions'
 
   # TODO: replace record values by explicit arguments.
   def __init__(self, filetime, timestamp_description, record_values):
-    """Initializes the event.
+    """Initializes an event.
 
     Args:
       filetime (int): FILETIME timestamp value.
@@ -252,16 +265,23 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
       record_values = self._GetRecordValues(
           parser_mediator, table.name, esedb_record)
 
+      container_identifier = record_values.get(u'ContainerId', 0)
+      directory = record_values.get(u'Directory', u'')
+      name = record_values.get(u'Name', u'')
+      set_identifier = record_values.get(u'SetId', 0)
+
       timestamp = record_values.get(u'LastScavengeTime', 0)
       if timestamp:
         event_object = MsieWebCacheContainersEventObject(
-            timestamp, u'Last Scavenge Time', record_values)
+            timestamp, u'Last Scavenge Time', container_identifier, directory,
+            name, set_identifier)
         parser_mediator.ProduceEvent(event_object)
 
       timestamp = record_values.get(u'LastAccessTime', 0)
       if timestamp:
         event_object = MsieWebCacheContainersEventObject(
-            timestamp, eventdata.EventTimestamp.ACCESS_TIME, record_values)
+            timestamp, eventdata.EventTimestamp.ACCESS_TIME,
+            container_identifier, directory, name, set_identifier)
         parser_mediator.ProduceEvent(event_object)
 
       container_identifier = record_values.get(u'ContainerId', None)

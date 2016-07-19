@@ -14,33 +14,36 @@ class FileHistoryNamespaceEventObject(time_events.FiletimeEvent):
 
   Attributes:
     file_attribute (int): file attribute.
-    identifier (int): identifier.
+    identifier (str): identifier.
     original_filename (str): original file name.
-    parent_identifier (int): parent identifier.
+    parent_identifier (str): parent identifier.
     usn_number (int): USN number.
   """
 
   DATA_TYPE = u'file_history:namespace:event'
 
-  # TODO: replace record values by explicit arguments.
-  def __init__(self, filetime, timestamp_description, filename, record_values):
-    """Initializes the event.
+  def __init__(
+      self, filetime, timestamp_description, filename, file_attribute,
+      identifier, parent_identifier, usn_number):
+    """Initializes an event.
 
     Args:
       filetime (int): FILETIME timestamp value.
       timestamp_description (str): description of the usage of the timestamp
           value.
-      filename (srr): name of the orignal file.
-      record_values (dict[str,object]): record values.
+      filename (str): name of the orignal file.
+      file_attribute (int): file attribute.
+      identifier (str): identifier.
+      parent_identifier (str): parent identifier.
+      usn_number (int): USN number.
     """
     super(FileHistoryNamespaceEventObject, self).__init__(
         filetime, timestamp_description)
-
-    self.file_attribute = record_values.get(u'fileAttrib')
-    self.identifier = record_values.get(u'id')
+    self.file_attribute = file_attribute
+    self.identifier = identifier
     self.original_filename = filename
-    self.parent_identifier = record_values.get(u'parentId')
-    self.usn_number = record_values.get(u'usn')
+    self.parent_identifier = parent_identifier
+    self.usn_number = usn_number
 
 
 class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
@@ -118,20 +121,26 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
       record_values = self._GetRecordValues(
           parser_mediator, table.name, esedb_record)
 
-      filename = strings.get(record_values.get(u'id', -1), u'')
       created_timestamp = record_values.get(u'fileCreated')
+      file_attribute = record_values.get(u'fileAttrib')
+      filename = strings.get(record_values.get(u'id', -1), u'')
+      identifier = record_values.get(u'id')
+      parent_identifier = record_values.get(u'parentId')
+      usn_number = record_values.get(u'usn')
 
       if created_timestamp:
         event_object = FileHistoryNamespaceEventObject(
             created_timestamp, eventdata.EventTimestamp.CREATION_TIME,
-            filename, record_values)
+            filename, file_attribute, identifier, parent_identifier,
+            usn_number)
         parser_mediator.ProduceEvent(event_object)
 
       modified_timestamp = record_values.get(u'fileModified')
       if modified_timestamp:
         event_object = FileHistoryNamespaceEventObject(
             modified_timestamp, eventdata.EventTimestamp.MODIFICATION_TIME,
-            filename, record_values)
+            filename, file_attribute, identifier, parent_identifier,
+            usn_number)
         parser_mediator.ProduceEvent(event_object)
 
 
