@@ -15,24 +15,33 @@ from plaso.parsers.esedb_plugins import interface
 
 
 class MsieWebCacheContainersEventObject(time_events.FiletimeEvent):
-  """Convenience class for a MSIE WebCache Containers table event."""
+  """Convenience class for a MSIE WebCache Containers table event.
+
+  Attributes:
+    container_identifier (str): container identifier.
+    directory (str): name of the cache directory.
+    name (str): name of the cache container.
+    set_identifier (str): set identifier.
+  """
 
   DATA_TYPE = u'msie:webcache:containers'
 
-  def __init__(self, timestamp, usage, record_values):
+  # TODO: replace record values by explicit arguments.
+  def __init__(self, filetime, timestamp_description, record_values):
     """Initializes the event.
 
     Args:
-      timestamp: The FILETIME timestamp value.
-      usage: The usage string, describing the timestamp value.
-      record_values: A dict object containing the record values.
+      filetime (int): FILETIME timestamp value.
+      timestamp_description (str): description of the usage of the timestamp
+          value.
+      record_values (dict[str,object]): record values.
     """
-    super(MsieWebCacheContainersEventObject, self).__init__(timestamp, usage)
-
+    super(MsieWebCacheContainersEventObject, self).__init__(
+        filetime, timestamp_description)
     self.container_identifier = record_values.get(u'ContainerId', 0)
-    self.set_identifier = record_values.get(u'SetId', 0)
-    self.name = record_values.get(u'Name', u'')
     self.directory = record_values.get(u'Directory', u'')
+    self.name = record_values.get(u'Name', u'')
+    self.set_identifier = record_values.get(u'SetId', 0)
 
 
 class MsieWebCacheContainerEventObject(time_events.FiletimeEvent):
@@ -40,15 +49,18 @@ class MsieWebCacheContainerEventObject(time_events.FiletimeEvent):
 
   DATA_TYPE = u'msie:webcache:container'
 
-  def __init__(self, timestamp, usage, record_values):
+  # TODO: replace record values by explicit arguments.
+  def __init__(self, filetime, timestamp_description, record_values):
     """Initializes the event.
 
     Args:
-      timestamp: The FILETIME timestamp value.
-      usage: The usage string, describing the timestamp value.
-      record_values: A dict object containing the record values.
+      filetime (int): FILETIME timestamp value.
+      timestamp_description (str): description of the usage of the timestamp
+          value.
+      record_values (dict[str,object]): record values.
     """
-    super(MsieWebCacheContainerEventObject, self).__init__(timestamp, usage)
+    super(MsieWebCacheContainerEventObject, self).__init__(
+        filetime, timestamp_description)
 
     self.entry_identifier = record_values.get(u'EntryId', 0)
     self.container_identifier = record_values.get(u'ContainerId', 0)
@@ -83,15 +95,18 @@ class MsieWebCacheLeakFilesEventObject(time_events.FiletimeEvent):
 
   DATA_TYPE = u'msie:webcache:leak_file'
 
-  def __init__(self, timestamp, usage, record_values):
+  # TODO: replace record values by explicit arguments.
+  def __init__(self, filetime, timestamp_description, record_values):
     """Initializes the event.
 
     Args:
-      timestamp: The FILETIME timestamp value.
-      usage: The usage string, describing the timestamp value.
-      record_values: A dict object containing the record values.
+      filetime (int): FILETIME timestamp value.
+      timestamp_description (str): description of the usage of the timestamp
+          value.
+      record_values (dict[str,object]): record values.
     """
-    super(MsieWebCacheLeakFilesEventObject, self).__init__(timestamp, usage)
+    super(MsieWebCacheLeakFilesEventObject, self).__init__(
+        filetime, timestamp_description)
 
     self.leak_identifier = record_values.get(u'LeakId', 0)
     self.cached_filename = record_values.get(u'Filename', u'')
@@ -102,15 +117,18 @@ class MsieWebCachePartitionsEventObject(time_events.FiletimeEvent):
 
   DATA_TYPE = u'msie:webcache:partitions'
 
-  def __init__(self, timestamp, usage, record_values):
+  # TODO: replace record values by explicit arguments.
+  def __init__(self, filetime, timestamp_description, record_values):
     """Initializes the event.
 
     Args:
-      timestamp: The FILETIME timestamp value.
-      usage: The usage string, describing the timestamp value.
-      record_values: A dict object containing the record values.
+      filetime (int): FILETIME timestamp value.
+      timestamp_description (str): description of the usage of the timestamp
+          value.
+      record_values (dict[str,object]): record values.
     """
-    super(MsieWebCachePartitionsEventObject, self).__init__(timestamp, usage)
+    super(MsieWebCachePartitionsEventObject, self).__init__(
+        filetime, timestamp_description)
 
     self.partition_identifier = record_values.get(u'PartitionId', 0)
     self.partition_type = record_values.get(u'PartitionType', 0)
@@ -139,16 +157,18 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
     """Parses a Container_# table.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      table: The table object (instance of pyesedb.table).
-      container_name: String that contains the container name.
-                      The container name indicates the table type.
+      parser_mediator (ParserMediator): parser mediator.
+      table (pyesedb.table): table.
+      container_name (str): container name, which indicates the table type.
     """
     if table is None:
       logging.warning(u'[{0:s}] invalid Container_# table'.format(self.NAME))
       return
 
     for record_index, esedb_record in enumerate(table.records):
+      if parser_mediator.abort:
+        break
+
       # TODO: add support for:
       # wpnidm, iecompat, iecompatua, DNTException, DOMStore
       if container_name == u'Content':
@@ -167,8 +187,8 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
             u'in table: {1:s}').format(record_index, table.name))
         continue
 
-      if (container_name in [
-          u'Content', u'Cookies', u'History', u'iedownload'] or
+      if (container_name in (
+          u'Content', u'Cookies', u'History', u'iedownload') or
           container_name.startswith(u'MSHist')):
         timestamp = record_values.get(u'SyncTime', 0)
         if timestamp:
@@ -213,9 +233,9 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
     """Parses the Containers table.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      database: Optional database object (instance of pyesedb.file).
-      table: Optional table object (instance of pyesedb.table).
+      parser_mediator (ParserMediator): parser mediator.
+      database (Optional[pyesedb.file]): ESE database.
+      table (Optional[pyesedb.table]): table.
     """
     if database is None:
       logging.warning(u'[{0:s}] invalid database'.format(self.NAME))
@@ -226,6 +246,9 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
       return
 
     for esedb_record in table.records:
+      if parser_mediator.abort:
+        break
+
       record_values = self._GetRecordValues(
           parser_mediator, table.name, esedb_record)
 
@@ -261,9 +284,9 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
     """Parses the LeakFiles table.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      database: Optional database object (instance of pyesedb.file).
-      table: Optional table object (instance of pyesedb.table).
+      parser_mediator (ParserMediator): parser mediator.
+      database (Optional[pyesedb.file]): ESE database.
+      table (Optional[pyesedb.table]): table.
     """
     if database is None:
       logging.warning(u'[{0:s}] invalid database'.format(self.NAME))
@@ -274,6 +297,9 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
       return
 
     for esedb_record in table.records:
+      if parser_mediator.abort:
+        break
+
       record_values = self._GetRecordValues(
           parser_mediator, table.name, esedb_record)
 
@@ -288,9 +314,9 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
     """Parses the Partitions table.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      database: Optional database object (instance of pyesedb.file).
-      table: Optional table object (instance of pyesedb.table).
+      parser_mediator (ParserMediator): parser mediator.
+      database (Optional[pyesedb.file]): ESE database.
+      table (Optional[pyesedb.table]): table.
     """
     if database is None:
       logging.warning(u'[{0:s}] invalid database'.format(self.NAME))
@@ -301,6 +327,9 @@ class MsieWebCacheESEDBPlugin(interface.ESEDBPlugin):
       return
 
     for esedb_record in table.records:
+      if parser_mediator.abort:
+        break
+
       record_values = self._GetRecordValues(
           parser_mediator, table.name, esedb_record)
 
