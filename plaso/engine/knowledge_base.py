@@ -136,39 +136,6 @@ class KnowledgeBase(object):
 
     return system_configuration
 
-  # TODO: remove after preprocess deprecation.
-  def GetUsersPreprocessObject(self):
-    """Retrieves a list of users for the preprocess object.
-
-    Returns:
-      list[dict[str,str]]: users, for example [{'name': 'me', 'sid': 'S-1',
-        'uid': '1'}]
-    """
-    users = []
-
-    # TODO: refactor the use of store number.
-    user_accounts = self._user_accounts.get(0, [])
-    for user_account in iter(user_accounts.values()):
-      user_dict = {}
-      if user_account.username:
-        user_dict[u'name'] = user_account.username
-
-      if user_account.identifier:
-        if user_account.identifier.startswith(u'S-'):
-          user_dict[u'sid'] = user_account.identifier
-        else:
-          user_dict[u'uid'] = user_account.identifier
-
-      if user_account.group_identifier:
-        user_dict[u'gid'] = user_account.group_identifier
-
-      if user_account.user_directory:
-        user_dict[u'path'] = user_account.user_directory
-
-      users.append(user_dict)
-
-    return users
-
   # TODO: refactor.
   def GetUsername(self, user_identifier, store_number, default_username=u'-'):
     """Retrieves the username related to the event.
