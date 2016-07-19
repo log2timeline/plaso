@@ -25,7 +25,7 @@ class BinaryCookieEvent(time_events.CocoaTimeEvent):
 
     Args:
       cocoa_time (int): Cocoa time value.
-      timestamp_description (str): description of the usage of the timestamp
+      timestamp_description (str): description of the meaning of the timestamp
           value.
       flags (int): cookie flags.
       url (str): URL where this cookie is valid.
@@ -97,7 +97,7 @@ class BinaryCookieParser(interface.FileObjectParser):
       parser_mediator.ProduceExtractionError(message)
       return
 
-    # The offset is determine by the range between the start of the current
+    # The offset is determined by the range between the start of the current
     # offset until the start of the next offset. Thus we need to determine
     # the proper ordering of the offsets, since they are not always in the
     # same ordering.
