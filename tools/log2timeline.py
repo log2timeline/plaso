@@ -694,7 +694,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         preferred_year=self._preferred_year,
         single_process_mode=self._single_process_mode,
         status_update_callback=status_update_callback,
-        timezone=self._timezone)
+        timezone=self._timezone, yara_rules_string=self._yara_rules_string)
 
     if not processing_status:
       self._output_writer.Write(

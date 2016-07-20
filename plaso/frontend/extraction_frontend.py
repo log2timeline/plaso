@@ -7,8 +7,8 @@ import os
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 
-from plaso import hashers   # pylint: disable=unused-import
 from plaso import parsers   # pylint: disable=unused-import
+from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.containers import sessions
 from plaso.engine import single_process
 from plaso.engine import utils as engine_utils
@@ -16,7 +16,6 @@ from plaso.frontend import frontend
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_processing import engine as multi_process_engine
-from plaso.hashers import manager as hashers_manager
 from plaso.parsers import manager as parsers_manager
 from plaso.parsers import presets as parsers_presets
 from plaso.storage import zip_file as storage_zip_file
@@ -41,7 +40,6 @@ class ExtractionFrontend(frontend.Frontend):
     self._engine = None
     self._filter_expression = None
     self._filter_object = None
-    self._hasher_names = []
     self._mount_path = None
     self._parser_names = None
     self._profiling_directory = None
@@ -340,7 +338,8 @@ class ExtractionFrontend(frontend.Frontend):
       number_of_extraction_workers=0, parser_filter_expression=None,
       preferred_encoding=u'utf-8', preferred_year=None,
       process_archive_files=False, single_process_mode=False,
-      status_update_callback=None, temporary_directory=None, timezone=u'UTC'):
+      status_update_callback=None, temporary_directory=None, timezone=u'UTC',
+      yara_rules_string=None):
     """Processes the sources.
 
     Args:
@@ -369,7 +368,9 @@ class ExtractionFrontend(frontend.Frontend):
           updates.
       temporary_directory (Optional[str]): path of the directory for temporary
           files.
-      timezone (Optional[str]): timezone.
+      timezone (Optional[datetime.tzinfo]): timezone.
+      yara_rules_string (Optional[str]): unparsed yara rule definitions.
+
 
     Returns:
       The processing status (instance of ProcessingStatus) or None.
@@ -408,12 +409,6 @@ class ExtractionFrontend(frontend.Frontend):
         parser_filter_expression=parser_filter_expression):
       self._parser_names.append(parser_class.NAME)
 
-    self._hasher_names = []
-    hasher_manager = hashers_manager.HashersManager
-    for hasher_name in hasher_manager.GetHasherNamesFromString(
-        hasher_names_string=hasher_names_string):
-      self._hasher_names.append(hasher_name)
-
     self._SetTimezone(timezone)
 
     if filter_file:
@@ -448,7 +443,8 @@ class ExtractionFrontend(frontend.Frontend):
           process_archive_files=process_archive_files,
           status_update_callback=status_update_callback,
           temporary_directory=temporary_directory,
-          text_prepend=self._text_prepend)
+          text_prepend=self._text_prepend,
+          yara_rules_string=yara_rules_string)
 
     else:
       logging.debug(u'Starting extraction in multi process mode.')
@@ -467,7 +463,8 @@ class ExtractionFrontend(frontend.Frontend):
           status_update_callback=status_update_callback,
           show_memory_usage=self._show_worker_memory_information,
           temporary_directory=temporary_directory,
-          text_prepend=self._text_prepend)
+          text_prepend=self._text_prepend,
+          yara_rules_string=yara_rules_string)
 
     return processing_status
 
