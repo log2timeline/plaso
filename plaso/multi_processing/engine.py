@@ -394,6 +394,7 @@ class MultiProcessEngine(engine.BaseEngine):
     for path_spec in path_spec_extractor.ExtractPathSpecs(
         source_path_specs, find_specs=filter_find_specs,
         recurse_file_system=False):
+      logging.debug(u'_ProcessSources checking abort.')
       if self._abort:
         break
 
@@ -520,6 +521,7 @@ class MultiProcessEngine(engine.BaseEngine):
       self._processing_profiler.StopTiming(u'get_event_source')
 
     while event_source or self._task_manager.HasScheduledTasks():
+      logging.debug(u'MainProcess checking abort')
       if self._abort:
         break
 
@@ -575,7 +577,7 @@ class MultiProcessEngine(engine.BaseEngine):
       task_queue = zeromq_queue.ZeroMQRequestConnectQueue(
           delay_open=True, name=u'{0:s} pathspec'.format(process_name),
           linger_seconds=0, port=self._task_queue_port,
-          timeout_seconds=5)
+          timeout_seconds=5*60)
     else:
       task_queue = self._task_queue
 

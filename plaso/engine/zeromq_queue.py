@@ -134,6 +134,7 @@ class ZeroMQQueue(plaso_queue.Queue):
 
   def _CreateZMQSocket(self):
     """Creates a ZeroMQ socket."""
+    logging.debug(u'Creating socket for {0:s}'.format(self.name))
     if not self._zmq_context:
       self._zmq_context = zmq.Context()
     if self._zmq_socket:
@@ -455,7 +456,9 @@ class ZeroMQRequestQueue(ZeroMQQueue):
 
   _SOCKET_TYPE = zmq.REQ
 
-  _ZMQ_SOCKET_SEND_TIMEOUT_MILLISECONDS = 5000
+  _ZMQ_SOCKET_SEND_TIMEOUT_MILLISECONDS = 2000
+  _ZMQ_SOCKET_RECEIVE_TIMEOUT_MILLISECONDS = 2000
+
 
   def Empty(self):
     """Empties the queue.
@@ -509,23 +512,30 @@ class ZeroMQRequestQueue(ZeroMQQueue):
         logging.debug(u'{0:s} Sending request'.format(self.name))
         self._zmq_socket.send_pyobj(None)
       except zmq.error.Again:
+        logging.debug(u'{0:s} zeromq eagain'.format(self.name))
         if time.time() > last_retry_attempt:
-          logging.warn(u'[0:s] time out sending request for item'.format(
+          logging.warn(u'{0:s} time out requesting item'.format(
               self.name))
           return plaso_queue.QueueAbort()
+        logging.debug(
+            u'{0:s} Recreating socket after send, within timeout'.format(
+              self.name))
+        self._CreateZMQSocket()
         continue
       except zmq.error.ZMQError as exception:
+        logging.debug(u'{0:s} zeromq exception'.format(self.name))
         if exception.errno == errno.EINTR:
           logging.error(
-              u'ZMQ syscall interrupted in {0:s}. Queue aborting.'.format(
+              u'{0:s} ZMQ syscall interrupted. Queue aborting.'.format(
                   self.name))
           return plaso_queue.QueueAbort()
         if exception.errno == zmq.EFSM:
           if time.time() < last_retry_attempt:
-            logging.debug(u'Recreating socket after send')
+            logging.debug(u'{0:s} Recreating socket after send'.format(
+                self.name))
             self._CreateZMQSocket()
             continue
-          logging.warn(u'[0:s] time out sending request for item'.format(
+          logging.warn(u'{0:s} time out sending request for item'.format(
               self.name))
           return plaso_queue.QueueAbort()
         raise
@@ -534,11 +544,15 @@ class ZeroMQRequestQueue(ZeroMQQueue):
         raise
 
       try:
+        logging.debug(u'{0:s} receiving object.'.format(
+            self.name,))
         received_object = self._zmq_socket.recv_pyobj()
-        logging.debug(u'received object: "{0:s}"'.format(received_object))
+        logging.debug(u'{0:s} received object: "{1:s}"'.format(
+            self.name, received_object))
         return received_object
       except zmq.error.Again:
         if time.time() < last_retry_attempt:
+          self._CreateZMQSocket()
           continue
         raise errors.QueueEmpty
       except zmq.error.ZMQError as exception:
@@ -549,7 +563,7 @@ class ZeroMQRequestQueue(ZeroMQQueue):
           return plaso_queue.QueueAbort()
         if exception.errno == zmq.EFSM:
           if time.time() < last_retry_attempt:
-            logging.debug(u'Recreating socket after send')
+            logging.debug(u'Recreating socket after recv')
             self._CreateZMQSocket()
             continue
           logging.warn(u'[0:s] time out waiting for item'.format(
@@ -711,6 +725,7 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
   """
 
   _ZMQ_SOCKET_RECEIVE_TIMEOUT_MILLISECONDS = 5000
+  _ZMQ_SOCKET_SEND_TIMEOUT_MILLISECONDS = 2000
 
   _SOCKET_TYPE = zmq.REP
 
@@ -727,16 +742,22 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
       zmq.error.ZMQError: If an error occurs in ZeroMQ.
     """
     logging.debug(u'{0:s} responder thread started'.format(self.name))
+    last_retry_attempt = None
     while not terminate_event.isSet():
+      if not last_retry_attempt:
+        last_retry_attempt = time.time() + self.timeout_seconds
       try:
         # We need to receive a request before we send.
         logging.debug(u'{0:s} waiting for request'.format(self.name))
         _ = socket.recv()
         logging.debug(u'{0:s} got request'.format(self.name))
       except zmq.error.Again:
-        logging.debug(u'{0:s} did not receive a request within the '
-                      u'timeout of {1:d} seconds.'.format(
-            self.name, self.timeout_seconds))
+        if time.time() > last_retry_attempt:
+          logging.debug(
+              u'{0:s} did not receive a request within the timeout of {1:d} '
+              u'seconds. Queue terminating'.format(
+                  self.name, self.timeout_seconds))
+          self._terminate_event.set()
         # The socket is now out of sync, so we need to create a new one.
         self._CreateZMQSocket()
         continue
