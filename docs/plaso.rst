@@ -7,13 +7,13 @@ Subpackages
 .. toctree::
 
     plaso.analysis
+    plaso.analyzers
     plaso.cli
     plaso.containers
     plaso.engine
     plaso.filters
     plaso.formatters
     plaso.frontend
-    plaso.hashers
     plaso.lib
     plaso.multi_processing
     plaso.output

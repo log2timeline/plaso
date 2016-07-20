@@ -133,6 +133,7 @@ class MultiProcessEngine(engine.BaseEngine):
     self._temporary_directory = None
     self._text_prepend = None
     self._use_zeromq = use_zeromq
+    self._yara_rules_string = None
 
   def _AbortJoin(self, timeout=None):
     """Aborts all registered processes by joining with the parent process.
@@ -593,7 +594,8 @@ class MultiProcessEngine(engine.BaseEngine):
         profiling_sample_rate=self._profiling_sample_rate,
         profiling_type=self._profiling_type,
         temporary_directory=self._temporary_directory,
-        text_prepend=self._text_prepend)
+        text_prepend=self._text_prepend,
+        yara_rules_string=self._yara_rules_string)
 
     process.start()
     self._last_worker_number += 1
@@ -869,7 +871,8 @@ class MultiProcessEngine(engine.BaseEngine):
       try:
         self._task_manager.UpdateTask(task_identifier)
       except KeyError:
-        logging.error(u'Worker processing untracked task.')
+        logging.error(u'Worker processing untracked task: {0:s}.'.format(
+            task_identifier))
 
   def ProcessSources(
       self, session_identifier, source_path_specs, storage_writer,
@@ -878,7 +881,7 @@ class MultiProcessEngine(engine.BaseEngine):
       number_of_worker_processes=0, parser_filter_expression=None,
       preferred_year=None, process_archive_files=False,
       status_update_callback=None, show_memory_usage=False,
-      temporary_directory=None, text_prepend=None):
+      temporary_directory=None, text_prepend=None, yara_rules_string=None):
     """Processes the sources and extract event objects.
 
     Args:
@@ -907,6 +910,7 @@ class MultiProcessEngine(engine.BaseEngine):
       temporary_directory (Optional[str]): path of the directory for temporary
           files.
       text_prepend (Optional[str]): text to prepend to every event.
+      yara_rules_string (Optional[str]): unparsed yara rule definitions.
 
     Returns:
       ProcessingStatus: processing status.
@@ -946,6 +950,7 @@ class MultiProcessEngine(engine.BaseEngine):
     self._storage_writer = storage_writer
     self._temporary_directory = temporary_directory
     self._text_prepend = text_prepend
+    self._yara_rules_string = yara_rules_string
 
     # Set up the storage writer before the worker processes.
     storage_writer.StartTaskStorage()

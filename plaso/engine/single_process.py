@@ -60,6 +60,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._processing_profiler = None
     self._serializers_profiler = None
     self._status_update_callback = None
+    self._yara_rules_string = None
 
   def _ProcessPathSpec(self, extraction_worker, parser_mediator, path_spec):
     """Processes a path specification.
@@ -294,7 +295,7 @@ class SingleProcessEngine(engine.BaseEngine):
       filter_find_specs=None, filter_object=None, hasher_names_string=None,
       mount_path=None, parser_filter_expression=None, preferred_year=None,
       process_archive_files=False, status_update_callback=None,
-      temporary_directory=None, text_prepend=None):
+      temporary_directory=None, text_prepend=None, yara_rules_string=None):
     """Processes the sources.
 
     Args:
@@ -317,6 +318,7 @@ class SingleProcessEngine(engine.BaseEngine):
       temporary_directory (Optional[str]): path of the directory for temporary
           files.
       text_prepend (Optional[str]): text to prepend to every event.
+      yara_rules_string (Optional[str]): unparsed yara rule definitions.
 
     Returns:
       ProcessingStatus: processing status.
@@ -340,6 +342,9 @@ class SingleProcessEngine(engine.BaseEngine):
 
     if hasher_names_string:
       extraction_worker.SetHashers(hasher_names_string)
+
+    if yara_rules_string:
+      extraction_worker.SetYaraRules(yara_rules_string)
 
     self._status_update_callback = status_update_callback
 
@@ -444,13 +449,13 @@ class SingleProcessQueue(plaso_queue.Queue):
   def Close(self):
     """Closes this queue, indicating that no further items will be added to it.
 
-    This method has no effect on for the single process queue, but is included
+    This method has no effect for the single process queue, but is included
     for compatibility with the Multiprocessing queue."""
     return
 
   def Open(self):
     """Opens the queue, ready to enqueue or dequeue items.
 
-    This method has no effect on for the single process queue, but is included
+    This method has no effect for the single process queue, but is included
     for compatibility with the Multiprocessing queue."""
     return

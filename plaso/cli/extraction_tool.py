@@ -3,6 +3,8 @@
 
 import os
 
+import yara
+
 from plaso.cli import storage_media_tool
 from plaso.engine import engine
 from plaso.lib import definitions
@@ -59,6 +61,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
     self._temporary_directory = None
     self._text_prepend = None
+    self._yara_rules_string = None
 
     self.list_hashers = False
     self.list_parsers_and_plugins = False
@@ -77,6 +80,25 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     if isinstance(self._hasher_names_string, py2to3.STRING_TYPES):
       if self._hasher_names_string.lower() == u'list':
         self.list_hashers = True
+
+    yara_rules_path = getattr(options, u'yara_rules_path', None)
+    if yara_rules_path:
+      try:
+        with open(yara_rules_path, 'rb') as rules_file:
+          yara_rules_string = rules_file.read()
+        # We try to parse the rules here, to check that the definitions are
+        # valid. We then pass the string definitions along to the workers, so
+        # that they don't need read access to the rules file.
+        yara.compile(source=yara_rules_string)
+        self._yara_rules_string = yara_rules_string
+      except IOError as exception:
+        raise errors.BadConfigObject(
+            u'Unable to read Yara rules file: {0:s}, error was: {1!s}'.format(
+                yara_rules_path, exception))
+      except yara.Error as exception:
+        raise errors.BadConfigObject(
+            u'Unable to parse Yara rules in: {0:s}, error was: {1!s}'.format(
+                yara_rules_path, exception))
 
     parser_filter_expression = self.ParseStringOption(
         options, u'parsers', default_value=u'')
@@ -199,6 +221,11 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
             u'enabled or "none" to disable all hashers. Use "--hashers list" '
             u'or "--info" to list the available '
             u'hashers.'))
+
+    argument_group.add_argument(
+        u'--yara_rules', u'--yara-rules', dest=u'yara_rules_path',
+        type=str, metavar=u'PATH', action=u'store', help=(
+            u'Path to a file containing Yara rules definitions.'))
 
     # TODO: rename option name to parser_filter_expression.
     argument_group.add_argument(
