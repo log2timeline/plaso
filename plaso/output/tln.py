@@ -5,6 +5,7 @@ For documentation on the TLN format see: http://forensicswiki.org/wiki/TLN
 """
 
 from plaso.lib import errors
+from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import manager
@@ -96,7 +97,7 @@ class TLNBaseOutputModule(interface.LinearOutputModule):
      Returns:
        A string containing the value for the field.
     """
-    if self._FIELD_DELIMITER:
+    if self._FIELD_DELIMITER and isinstance(field, py2to3.STRING_TYPES):
       return field.replace(self._FIELD_DELIMITER, u' ')
     return field
 

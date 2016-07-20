@@ -46,36 +46,36 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
   """Tests for the chrome extension analysis plugin."""
 
   # Few config options here.
-  MAC_PATHS = [
-      '/Users/dude/Libary/Application Data/Google/Chrome/Default/Extensions',
-      ('/Users/dude/Libary/Application Data/Google/Chrome/Default/Extensions/'
-       'apdfllckaahabafndbhieahigkjlhalf'),
-      '/private/var/log/system.log',
-      '/Users/frank/Library/Application Data/Google/Chrome/Default',
-      '/Users/hans/Library/Application Data/Google/Chrome/Default',
-      ('/Users/frank/Library/Application Data/Google/Chrome/Default/'
-       'Extensions/pjkljhegncpnkpknbcohdijeoejaedia'),
-      '/Users/frank/Library/Application Data/Google/Chrome/Default/Extensions',]
+  _MACOSX_PATHS = [
+      u'/Users/dude/Libary/Application Data/Google/Chrome/Default/Extensions',
+      (u'/Users/dude/Libary/Application Data/Google/Chrome/Default/Extensions/'
+       u'apdfllckaahabafndbhieahigkjlhalf'),
+      u'/private/var/log/system.log',
+      u'/Users/frank/Library/Application Data/Google/Chrome/Default',
+      u'/Users/hans/Library/Application Data/Google/Chrome/Default',
+      (u'/Users/frank/Library/Application Data/Google/Chrome/Default/'
+       u'Extensions/pjkljhegncpnkpknbcohdijeoejaedia'),
+      u'/Users/frank/Library/Application Data/Google/Chrome/Default/Extensions']
 
-  WIN_PATHS = [
-      'C:\\Users\\Dude\\SomeFolder\\Chrome\\Default\\Extensions',
-      ('C:\\Users\\Dude\\SomeNoneStandardFolder\\Chrome\\Default\\Extensions\\'
-       'hmjkmjkepdijhoojdojkdfohbdgmmhki'),
-      ('\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions\\'
-       'blpcfgokakmgnkcojhhkbfbldkacnbeo'),
-      '\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions',
-      ('\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions\\'
-       'icppfcnhkcmnfdhfhphakoifcfokfdhg'),
-      'C:\\Windows\\System32',
-      '\\Stuff/with path separator\\Folder']
+  _WINDOWS_PATHS = [
+      u'C:\\Users\\Dude\\SomeFolder\\Chrome\\Default\\Extensions',
+      (u'C:\\Users\\Dude\\SomeNoneStandardFolder\\Chrome\\Default\\Extensions\\'
+       u'hmjkmjkepdijhoojdojkdfohbdgmmhki'),
+      (u'C:\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions\\'
+       u'blpcfgokakmgnkcojhhkbfbldkacnbeo'),
+      u'C:\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions',
+      (u'C:\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions\\'
+       u'icppfcnhkcmnfdhfhphakoifcfokfdhg'),
+      u'C:\\Windows\\System32',
+      u'C:\\Stuff/with path separator\\Folder']
 
-  MAC_USERS = [
+  _MACOSX_USERS = [
       {u'name': u'root', u'path': u'/var/root', u'sid': u'0'},
       {u'name': u'frank', u'path': u'/Users/frank', u'sid': u'4052'},
       {u'name': u'hans', u'path': u'/Users/hans', u'sid': u'4352'},
       {u'name': u'dude', u'path': u'/Users/dude', u'sid': u'1123'}]
 
-  WIN_USERS = [
+  _WINDOWS_USERS = [
       {u'name': u'dude', u'path': u'C:\\Users\\dude', u'sid': u'S-1'},
       {u'name': u'frank', u'path': u'C:\\Users\\frank', u'sid': u'S-2'}]
 
@@ -89,17 +89,30 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
 
     return event_object
 
+  def testGetPathSegmentSeparator(self):
+    """Tests the _GetPathSegmentSeparator function."""
+    event_queue = single_process.SingleProcessQueue()
+    analysis_plugin = TestChromeExtensionPlugin(event_queue)
+
+    for path in self._MACOSX_PATHS:
+      path_segment_separator = analysis_plugin._GetPathSegmentSeparator(path)
+      self.assertEqual(path_segment_separator, u'/')
+
+    for path in self._WINDOWS_PATHS:
+      path_segment_separator = analysis_plugin._GetPathSegmentSeparator(path)
+      self.assertEqual(path_segment_separator, u'\\')
+
   def testMacAnalyzerPlugin(self):
     """Test the plugin against mock events."""
-    knowledge_base = self._SetUpKnowledgeBase(knowledge_base_values={
-        'users': self.MAC_USERS})
+    knowledge_base = self._SetUpKnowledgeBase(
+        knowledge_base_values={u'users': self._MACOSX_USERS})
 
     event_queue = single_process.SingleProcessQueue()
 
     # Fill the incoming queue with events.
     test_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
     test_queue_producer.ProduceItems([
-        self._CreateTestEventObject(path) for path in self.MAC_PATHS])
+        self._CreateTestEventObject(path) for path in self._MACOSX_PATHS])
 
     # Initialize plugin.
     analysis_plugin = TestChromeExtensionPlugin(event_queue)
@@ -135,15 +148,15 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
 
   def testWinAnalyzePlugin(self):
     """Test the plugin against mock events."""
-    knowledge_base = self._SetUpKnowledgeBase(knowledge_base_values={
-        'users': self.WIN_USERS})
+    knowledge_base = self._SetUpKnowledgeBase(
+        knowledge_base_values={u'users': self._WINDOWS_USERS})
 
     event_queue = single_process.SingleProcessQueue()
 
     # Fill the incoming queue with events.
     test_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
     test_queue_producer.ProduceItems([
-        self._CreateTestEventObject(path) for path in self.WIN_PATHS])
+        self._CreateTestEventObject(path) for path in self._WINDOWS_PATHS])
 
     # Initialize plugin.
     analysis_plugin = TestChromeExtensionPlugin(event_queue)

@@ -21,7 +21,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
   def __init__(
       self, task_queue, storage_writer, knowledge_base, session_identifier,
-      worker_number, enable_debug_output=False, enable_profiling=False,
+      worker_number, debug_output=False, enable_profiling=False,
       filter_object=None, hasher_names_string=None, mount_path=None,
       parser_filter_expression=None, preferred_year=None,
       process_archive_files=False, profiling_directory=None,
@@ -40,8 +40,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
           information from the source data needed for parsing.
       session_identifier (str): identifier of the session.
       worker_number: a number that identifies the worker.
-      enable_debug_output (Optional[bool]): True if debug output should be
-          enabled.
+      debug_output (Optional[bool]): True if debug output should be enabled.
       enable_profiling (Optional[bool]): True if profiling should be enabled.
       filter_object (Optional[objectfilter.Filter]): filter object.
       hasher_names_string (Optional[str]): comma separated string of names
@@ -75,7 +74,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._abort = False
     self._buffer_size = 0
     self._current_display_name = u''
-    self._enable_debug_output = enable_debug_output
+    self._debug_output = debug_output
     self._enable_profiling = enable_profiling
     self._extraction_worker = None
     self._filter_object = filter_object
@@ -364,5 +363,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
   def SignalAbort(self):
     """Signals the process to abort."""
     self._abort = True
-    self._extraction_worker.SignalAbort()
-    self._parser_mediator.SignalAbort()
+    if self._extraction_worker:
+      self._extraction_worker.SignalAbort()
+    if self._parser_mediator:
+      self._parser_mediator.SignalAbort()

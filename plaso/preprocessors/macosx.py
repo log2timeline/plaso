@@ -5,6 +5,7 @@ import abc
 import logging
 import plistlib
 
+from plaso.containers import artifacts
 from plaso.lib import errors
 from plaso.lib import plist
 from plaso.parsers.plist_plugins import interface as plist_interface
@@ -16,13 +17,13 @@ class PlistPreprocessPlugin(interface.PreprocessPlugin):
   """Class that defines the plist preprocess plugin object."""
 
   def _GetPlistRootKey(self, file_entry):
-    """Open a plist file entry.
+    """Opens a plist file entry.
 
     Args:
-      file_entry: The plist file entry (instance of dfvfs.FileEntry).
+      file_entry (dfvfs.FileEntry): file entry of the plist.
 
     Returns:
-      The plist root key (instance of plistlib._InternalDict).
+      plistlib._InternalDict: plist root key.
 
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
@@ -46,16 +47,18 @@ class PlistPreprocessPlugin(interface.PreprocessPlugin):
 
   @abc.abstractmethod
   def GetValue(self, searcher, knowledge_base):
-    """Return the value for the attribute.
+    """Parses a plist file for a preprocessing attribute.
 
     Args:
-      searcher: The file system searcher object (instance of
-                dfvfs.FileSystemSearcher).
-      knowledge_base: A knowledge base object (instance of KnowledgeBase),
-                      which contains information from the source data needed
-                      for parsing.
+      searcher (dfvfs.FileSystemSearcher): file system searcher.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+
+    Returns:
+      object: preprocess attribute value or None.
+
+    Raises:
+      errors.PreProcessFail: if the preprocessing fails.
     """
-    raise NotImplementedError
 
 
 class PlistKeyPreprocessPlugin(PlistPreprocessPlugin):
@@ -85,9 +88,9 @@ class PlistKeyPreprocessPlugin(PlistPreprocessPlugin):
     the matches list.
 
     Args:
-      key: a plist key (instance of plistlib._InternalDict).
-      names: list of names of the keys to match.
-      matches: a list to add the keys with matching names.
+      key (plistlib._InternalDict): plist key.
+      names (list[str]): names of the keys to match.
+      matches (list[str]): keys with matching names.
     """
     for name, subkey in key.iteritems():
       if name in names:
@@ -103,14 +106,11 @@ class PlistKeyPreprocessPlugin(PlistPreprocessPlugin):
     Where the name of the keys are defined in PLIST_KEYS.
 
     Args:
-      searcher: The file system searcher object (instance of
-                dfvfs.FileSystemSearcher).
-      knowledge_base: A knowledge base object (instance of KnowledgeBase),
-                      which contains information from the source data needed
-                      for parsing.
+      searcher (dfvfs.FileSystemSearcher): file system searcher.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
 
     Returns:
-      The value of the first key that is found.
+      object: value of the first key that is found.
 
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
@@ -146,17 +146,14 @@ class PlistKeyPreprocessPlugin(PlistPreprocessPlugin):
     return self.ParseValue(key_name, key_value)
 
   def ParseValue(self, unused_key_name, key_value):
-    """Parses a key value.
+    """Parses a plist key value.
 
     Args:
-      key_name: The name of the key.
-      key_value: The value of the key.
+      key_name (str): name of the plist key.
+      key_value (str): value of the plist key.
 
     Returns:
-      The parsed value.
-
-    Raises:
-      errors.PreProcessFail: if the value cannot be parsed.
+      object: preprocess attribute value or None.
     """
     return key_value
 
@@ -178,6 +175,19 @@ class MacOSXHostname(PlistKeyPreprocessPlugin):
 
   PLIST_KEYS = [u'ComputerName', u'LocalHostName']
 
+  def ParseValue(self, unused_key_name, key_value):
+    """Parses a key value.
+
+    Args:
+      key_name (str): name of the plist key.
+      key_value (str): value of the plist key.
+
+    Returns:
+      HostnameArtifact: hostname artifact or None.
+    """
+    if key_value:
+      return artifacts.HostnameArtifact(name=key_value)
+
 
 class MacOSXKeyboard(PlistKeyPreprocessPlugin):
   """Fetches keyboard information from a Mac OS X system."""
@@ -188,17 +198,14 @@ class MacOSXKeyboard(PlistKeyPreprocessPlugin):
   PLIST_KEYS = [u'AppleCurrentKeyboardLayoutInputSourceID']
 
   def ParseValue(self, unused_key_name, key_value):
-    """Parses a key value.
+    """Parses a plist key value.
 
     Args:
-      key_name: The name of the key.
-      key_value: The value of the key.
+      key_name (str): name of the plist key.
+      key_value (str): value of the plist key.
 
     Returns:
-      The parsed value.
-
-    Raises:
-      errors.PreProcessFail: if the value cannot be parsed.
+      object: preprocess attribute value or None.
     """
     if isinstance(key_value, (list, tuple)):
       key_value = key_value[0]
@@ -221,14 +228,11 @@ class MacOSXTimeZone(interface.PreprocessPlugin):
     """Determines the local time zone settings.
 
     Args:
-      searcher: The file system searcher object (instance of
-                dfvfs.FileSystemSearcher).
-      knowledge_base: A knowledge base object (instance of KnowledgeBase),
-                      which contains information from the source data needed
-                      for parsing.
+      searcher (dfvfs.FileSystemSearcher): file system searcher.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
 
     Returns:
-      The local timezone settings.
+      str: local time zone settings.
 
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
@@ -257,7 +261,7 @@ class MacOSXUsers(PlistPreprocessPlugin):
   # Define the path to the user account information.
   USER_PATH = u'/private/var/db/dslocal/nodes/Default/users/[^_].+.plist'
 
-  _KEYS = frozenset([u'name', u'uid', u'home', u'realname'])
+  _KEYS = frozenset([u'gid', 'home', u'name', u'realname', u'shell', u'uid'])
 
   def _GetKeysDefaultEmpty(self, top_level, keys, depth=1):
     """Return keys nested in a plist dict, defaulting to an empty value.
@@ -268,12 +272,12 @@ class MacOSXUsers(PlistPreprocessPlugin):
     assign an empty string value ('') to the field.
 
     Args:
-      top_level: Plist in dictionary form.
-      keys: A list of keys that should be returned.
-      depth: Defines how many levels deep to check for a match.
+      top_level (plistlib._InternalDict): top level plist object.
+      keys (set[str]): names of keys that should be returned.
+      depth (int): depth within the plist, where 1 is top level.
 
     Returns:
-      A dictionary with just the keys requested.
+      dict[str,str]: values of the requested keys.
     """
     keys = set(keys)
     match = {}
@@ -296,14 +300,11 @@ class MacOSXUsers(PlistPreprocessPlugin):
     """Determines the user accounts.
 
     Args:
-      searcher: The file system searcher object (instance of
-                dfvfs.FileSystemSearcher).
-      knowledge_base: A knowledge base object (instance of KnowledgeBase),
-                      which contains information from the source data needed
-                      for parsing.
+      searcher (dfvfs.FileSystemSearcher): file system searcher.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
 
     Returns:
-      A list containing username information dicts.
+      list[UserAccountArtifact]: user account artifacts.
 
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
@@ -331,17 +332,25 @@ class MacOSXUsers(PlistPreprocessPlugin):
                 location, exception))
         continue
 
-      # TODO: as part of artifacts, create a proper object for this.
-      user = {
-          u'uid': match.get(u'uid', [-1])[0],
-          u'path': match.get(u'home', [u'<not set>'])[0],
-          u'name': match.get(u'name', [u'<not set>'])[0],
-          u'realname': match.get(u'realname', [u'N/A'])[0]}
-      users.append(user)
+      name = match.get(u'name', [None])[0]
+      uid = match.get(u'uid', [None])[0]
+
+      if not name or not uid:
+        # TODO: add and store preprocessing errors.
+        continue
+
+      user_account_artifact = artifacts.UserAccountArtifact(
+          identifier=uid, username=name)
+
+      user_account_artifact.group_identifier = match.get(u'gid', [None])[0]
+      user_account_artifact.full_name = match.get(u'realname', [None])[0]
+      user_account_artifact.shell = match.get(u'shell', [None])[0]
+      user_account_artifact.user_directory = match.get(u'home', [None])[0]
+
+      users.append(user_account_artifact)
 
     if not users:
       raise errors.PreProcessFail(u'Unable to find any users on the system.')
-
     return users
 
 

@@ -6,6 +6,7 @@ import logging
 
 from dfvfs.helpers import file_system_searcher
 
+from plaso.containers import artifacts
 from plaso.lib import definitions
 from plaso.lib import errors
 
@@ -61,13 +62,12 @@ class PreprocessPlugin(object):
     """Searches for a file entry that matches the path.
 
     Args:
-      searcher: The file system searcher object (instance of
-                dfvfs.FileSystemSearcher).
-      path: The location of the file entry relative to the file system
-            of the searcher.
+      searcher (dfvfs.FileSystemSearcher): file system searcher.
+      path (str): location of the file entry relative to the file system
+          of the searcher.
 
     Returns:
-      The file entry if successful or None otherwise.
+      dfvfs.FileEntry: file entry if successful or None otherwise.
 
     Raises:
       errors.PreProcessFail: if the file entry cannot be found or opened.
@@ -88,51 +88,71 @@ class PreprocessPlugin(object):
     """Searches for path specifications that matches the path.
 
     Args:
-      searcher: The file system searcher object (instance of
-                dfvfs.FileSystemSearcher).
-      path: The location of the file entry relative to the file system
-            of the searcher.
+      searcher (dfvfs.FileSystemSearcher): file system searcher.
+      path (str): location of the file entry relative to the file system
+          of the searcher.
 
     Returns:
-      A list of path specifcations.
+      list[dfvfs.PathSpec]: path specifcations.
     """
     find_spec = file_system_searcher.FindSpec(
         location_regex=path, case_sensitive=False)
     return list(searcher.Find(find_specs=[find_spec]))
 
-  @abc.abstractmethod
-  def GetValue(self, searcher, knowledge_base):
-    """Retrieves the attribute value.
+  def _SetAttributeValue(self, attribute_value, knowledge_base):
+    """Sets an attribute value in the knowledge base.
 
     Args:
-      searcher: The file system searcher object (instance of
-                dfvfs.FileSystemSearcher).
-      knowledge_base: A knowledge base object (instance of KnowledgeBase),
-                      which contains information from the source data needed
-                      for parsing.
+      attribute_value (object): preprocess attribute value.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+    """
+    if isinstance(attribute_value, list):
+      for sub_attribute_value in attribute_value:
+        self._SetAttributeValue(sub_attribute_value, knowledge_base)
+
+    elif isinstance(attribute_value, artifacts.EnvironmentVariableArtifact):
+      knowledge_base.SetEnvironmentVariable(attribute_value)
+
+    elif isinstance(attribute_value, artifacts.HostnameArtifact):
+      # TODO: refactor the use of store number.
+      attribute_value.store_number = 0
+      knowledge_base.SetHostname(attribute_value)
+
+    elif isinstance(attribute_value, artifacts.UserAccountArtifact):
+      # TODO: refactor the use of store number.
+      attribute_value.store_number = 0
+      knowledge_base.SetUserAccount(attribute_value)
+
+    else:
+      knowledge_base.SetValue(self.ATTRIBUTE, attribute_value)
+
+      # TODO: remove.
+      attribute_value = knowledge_base.GetValue(
+          self.ATTRIBUTE, default_value=u'N/A')
+      logging.info(u'[PreProcess] Set attribute: {0:s} to {1:s}'.format(
+          self.ATTRIBUTE, attribute_value))
+
+  @abc.abstractmethod
+  def GetValue(self, searcher, knowledge_base):
+    """Retrieves an attribute value.
+
+    Args:
+      searcher (dfvfs.FileSystemSearcher): file system searcher.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
 
     Returns:
-      The attribute value.
+      object: preprocess attribute value or None.
     """
-    raise NotImplementedError
 
   def Run(self, searcher, knowledge_base):
     """Runs the plugins to determine the value of the preprocessing attribute.
 
-    The resulting preprocessing attribute value is stored in the knowledge base.
-
     Args:
-      searcher: The file system searcher object (instance of
-                dfvfs.FileSystemSearcher).
-      knowledge_base: A knowledge base object (instance of KnowledgeBase),
-                      which contains information from the source data needed
-                      for parsing.
+      searcher (dfvfs.FileSystemSearcher): file system searcher.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
     """
-    value = self.GetValue(searcher, knowledge_base)
-    knowledge_base.SetValue(self.ATTRIBUTE, value)
-    value = knowledge_base.GetValue(self.ATTRIBUTE, default_value=u'N/A')
-    logging.info(u'[PreProcess] Set attribute: {0:s} to {1:s}'.format(
-        self.ATTRIBUTE, value))
+    attribute_value = self.GetValue(searcher, knowledge_base)
+    self._SetAttributeValue(attribute_value, knowledge_base)
 
 
 class PathPreprocessPlugin(PreprocessPlugin):
@@ -144,14 +164,11 @@ class PathPreprocessPlugin(PreprocessPlugin):
     """Returns the path as found by the searcher.
 
     Args:
-      searcher: The file system searcher object (instance of
-                dfvfs.FileSystemSearcher).
-      knowledge_base: A knowledge base object (instance of KnowledgeBase),
-                      which contains information from the source data needed
-                      for parsing.
+      searcher (dfvfs.FileSystemSearcher): file system searcher.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
 
     Returns:
-      The first path location string.
+      str: first path location string that is found.
 
     Raises:
       PreProcessFail: if the path could not be found.
@@ -179,11 +196,10 @@ def GuessOS(searcher):
   * Windows
 
   Args:
-    searcher: The file system searcher object (instance of
-              dfvfs.FileSystemSearcher).
+    searcher (dfvfs.FileSystemSearcher): file system searcher.
 
   Returns:
-     A string indicating which OS we are dealing with.
+    str: OS we are dealing with.
   """
   find_specs = [
       file_system_searcher.FindSpec(

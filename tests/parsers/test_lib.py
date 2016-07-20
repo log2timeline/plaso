@@ -20,8 +20,8 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for a parser."""
 
   def _CreateParserMediator(
-      self, storage_writer, file_entry=None, knowledge_base_values=None,
-      parser_chain=None):
+      self, storage_writer, file_entry=None,
+      knowledge_base_values=None, parser_chain=None, timezone=u'UTC'):
     """Creates a parser mediator.
 
     Args:
@@ -29,6 +29,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       file_entry (Optional[dfvfs.FileEntry]): file entry object being parsed.
       knowledge_base_values (Optional[dict]): knowledge base values.
       parser_chain (Optional[str]): parsing chain up to this point.
+      timezone (str): timezone.
 
     Returns:
       ParserMediator: parser mediator.
@@ -37,6 +38,8 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     if knowledge_base_values:
       for identifier, value in iter(knowledge_base_values.items()):
         knowledge_base_object.SetValue(identifier, value)
+
+    knowledge_base_object.SetTimezone(timezone)
 
     parser_mediator = mediator.ParserMediator(
         storage_writer, knowledge_base_object)
@@ -89,13 +92,16 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
     return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
-  def _ParseFile(self, path_segments, parser, knowledge_base_values=None):
+  def _ParseFile(
+      self, path_segments, parser, knowledge_base_values=None,
+      timezone=u'UTC'):
     """Parses a file with a parser and writes results to a storage writer.
 
     Args:
       path_segments (list[str]): path segments inside the test data directory.
       parser (BaseParser): parser.
       knowledge_base_values (Optional[dict]): knowledge base values.
+      timezone (str): timezone.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -104,16 +110,19 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
     return self._ParseFileByPathSpec(
-        path_spec, parser, knowledge_base_values=knowledge_base_values)
+        path_spec, parser, knowledge_base_values=knowledge_base_values,
+        timezone=timezone)
 
   def _ParseFileByPathSpec(
-      self, path_spec, parser, knowledge_base_values=None):
+      self, path_spec, parser, knowledge_base_values=None,
+      timezone=u'UTC'):
     """Parses a file with a parser and writes results to a storage writer.
 
     Args:
       path_spec (dfvfs.PathSpec): path specification.
       parser (BaseParser): parser.
       knowledge_base_values (Optional[dict]): knowledge base values.
+      timezone (str): timezone.
 
     Returns:
       FakeStorageWriter: storage writer.
@@ -122,7 +131,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     parser_mediator = self._CreateParserMediator(
         storage_writer, file_entry=file_entry,
-        knowledge_base_values=knowledge_base_values)
+        knowledge_base_values=knowledge_base_values, timezone=timezone)
 
     if isinstance(parser, interface.FileEntryParser):
       parser.Parse(parser_mediator)

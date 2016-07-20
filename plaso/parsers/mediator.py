@@ -21,8 +21,8 @@ class ParserMediator(object):
 
     Args:
       storage_writer (StorageWriter): storage writer.
-      knowledge_base (KnowledgeBase): information from the source data needed
-          for parsing.
+      knowledge_base (KnowledgeBase): contains information from the source
+          data needed for parsing.
       preferred_year (Optional[int]): preferred year.
       temporary_directory (Optional[str]): path of the directory for temporary
           files.

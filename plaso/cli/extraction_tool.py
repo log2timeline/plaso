@@ -61,7 +61,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
     self._temporary_directory = None
     self._text_prepend = None
-    self._use_old_preprocess = False
     self._yara_rules_string = None
 
     self.list_hashers = False
@@ -128,8 +127,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
       raise errors.BadConfigOption(
           u'No such temporary directory: {0:s}'.format(
               self._temporary_directory))
-
-    self._use_old_preprocess = getattr(options, u'use_old_preprocess', False)
 
   def _ParsePerformanceOptions(self, options):
     """Parses the performance options.
@@ -272,15 +269,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
         metavar=u'DIRECTORY', help=(
             u'Path to the directory that should be used to store temporary '
             u'files created during extraction.'))
-
-    argument_group.add_argument(
-        u'--use_old_preprocess', u'--use-old-preprocess',
-        dest='use_old_preprocess', action='store_true', default=False, help=(
-            u'Only used in conjunction when appending to a previous storage '
-            u'file. When this option is used then a new preprocessing object '
-            u'is not calculated and instead the last one that got added to '
-            u'the storage file is used. This can be handy when parsing an '
-            u'image that contains more than a single partition.'))
 
   def AddPerformanceOptions(self, argument_group):
     """Adds the performance options to the argument group.

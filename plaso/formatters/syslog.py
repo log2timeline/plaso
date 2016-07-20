@@ -22,4 +22,17 @@ class SyslogLineFormatter(interface.ConditionalEventFormatter):
   SOURCE_SHORT = u'LOG'
 
 
-manager.FormattersManager.RegisterFormatter(SyslogLineFormatter)
+class SyslogCommentFormatter(interface.ConditionalEventFormatter):
+  """Formatter for a syslog comment"""
+  DATA_TYPE = u'syslog:comment'
+
+  FORMAT_STRING_SEPARATOR = u''
+
+  FORMAT_STRING_PIECES = [u'{body}']
+
+  SOURCE_LONG = u'Log File'
+  SOURCE_SHORT = u'LOG'
+
+
+manager.FormattersManager.RegisterFormatters(
+    [SyslogLineFormatter, SyslogCommentFormatter])

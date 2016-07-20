@@ -56,13 +56,14 @@ class MultiProcessEngine(engine.BaseEngine):
   _WORKER_PROCESSES_MAXIMUM = 15
 
   def __init__(
-      self, enable_profiling=False,
+      self, debug_output=False, enable_profiling=False,
       maximum_number_of_tasks=_MAXIMUM_NUMBER_OF_TASKS,
       profiling_directory=None, profiling_sample_rate=1000,
       profiling_type=u'all', use_zeromq=True):
     """Initializes an engine object.
 
     Args:
+      debug_output (Optional[bool]): True if debug output should be enabled.
       enable_profiling (Optional[bool]): True if profiling should be enabled.
       maximum_number_of_tasks (Optional[int]): maximum number of concurrent
           tasks, where 0 represents no limit.
@@ -83,7 +84,7 @@ class MultiProcessEngine(engine.BaseEngine):
           instead of Python's multiprocessing queue.
     """
     super(MultiProcessEngine, self).__init__(
-        enable_profiling=enable_profiling,
+        debug_output=debug_output, enable_profiling=enable_profiling,
         profiling_directory=profiling_directory,
         profiling_sample_rate=profiling_sample_rate,
         profiling_type=profiling_type)
@@ -310,6 +311,61 @@ class MultiProcessEngine(engine.BaseEngine):
             memory_info.shared, memory_info.text, memory_info.lib,
             memory_info.data, memory_info.dirty, memory_info.percent * 100))
 
+  def _MergeTaskStorage(self, storage_writer):
+    """Merges a task storage with the session storage.
+
+    This function checks all task storages that are ready to merge and updates
+    the scheduled tasks. Note that to prevent this function holding up
+    the task scheduling loop only the first available task storage is merged.
+
+    Args:
+      storage_writer (StorageWriter): storage writer for a session storage used
+          to merge task storage.
+    """
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'merge_check')
+
+    # GetScheduledTaskIdentifiers makes a copy of the keys since we are
+    # changing the dictionary inside the loop.
+    task_storage_merged = False
+    for task_identifier in self._task_manager.GetScheduledTaskIdentifiers():
+      if self._abort:
+        break
+
+      if storage_writer.CheckTaskStorageReadyForMerge(
+          task_identifier):
+        # Make sure completed tasks are not considered idle when not
+        # yet merged.
+        self._task_manager.UpdateTask(task_identifier)
+
+      # Merge only one task-based storage file per loop to keep tasks flowing.
+      if task_storage_merged:
+        continue
+
+      self._status = definitions.PROCESSING_STATUS_MERGING
+      self._merge_task_identifier = task_identifier
+
+      if self._processing_profiler:
+        self._processing_profiler.StartTiming(u'merge')
+
+      # TODO: look into time slicing merge.
+      if storage_writer.MergeTaskStorage(task_identifier):
+        self._task_manager.CompleteTask(task_identifier)
+        task_storage_merged = True
+
+      if self._processing_profiler:
+        self._processing_profiler.StopTiming(u'merge')
+
+      self._status = definitions.PROCESSING_STATUS_RUNNING
+      self._merge_task_identifier = u''
+      self._number_of_produced_errors = storage_writer.number_of_errors
+      self._number_of_produced_events = storage_writer.number_of_events
+      self._number_of_produced_sources = (
+          storage_writer.number_of_event_sources)
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'merge_check')
+
   def _ProcessSources(
       self, source_path_specs, storage_writer, filter_find_specs=None):
     """Processes the sources.
@@ -413,12 +469,36 @@ class MultiProcessEngine(engine.BaseEngine):
 
     self._processes_per_pid[process.pid] = process
 
-  def _ScheduleTasks(self, storage_writer):
-    """Schedule tasks.
+  def _ScheduleTask(self, task):
+    """Schedules a task.
 
     Args:
-      storage_writer (StorageWriter): storage writer for a session storage used
-          to merge task storage.
+      task (Task): task.
+
+    Returns:
+      bool: True if the task was scheduled.
+    """
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'schedule_task')
+
+    try:
+      self._task_queue.PushItem(task, block=False)
+      self._task_manager.ScheduleTask(task.identifier)
+      is_scheduled = True
+
+    except Queue.Full:
+      is_scheduled = False
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'schedule_task')
+
+    return is_scheduled
+
+  def _ScheduleTasks(self, storage_writer):
+    """Schedules tasks.
+
+    Args:
+      storage_writer (StorageWriter): storage writer for a session storage.
     """
     logging.debug(u'Task scheduler started')
 
@@ -431,106 +511,45 @@ class MultiProcessEngine(engine.BaseEngine):
 
     task = None
 
-    new_event_sources = True
-    while new_event_sources:
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'get_event_source')
+
+    event_source = storage_writer.GetFirstWrittenEventSource()
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'get_event_source')
+
+    while event_source or self._task_manager.HasScheduledTasks():
       if self._abort:
-        return
+        break
 
-      new_event_sources = False
+      if event_source and not task:
+        task = self._task_manager.CreateTask(self._session_identifier)
+        task.path_spec = event_source.path_spec
+        event_source = None
 
-      if self._processing_profiler:
-        self._processing_profiler.StartTiming(u'get_event_source')
+        self._number_of_consumed_sources += 1
 
-      event_source = storage_writer.GetNextEventSource()
+        if self._memory_profiler:
+          self._memory_profiler.Sample()
 
-      if self._processing_profiler:
-        self._processing_profiler.StopTiming(u'get_event_source')
+      if task:
+        if self._ScheduleTask(task):
+          task = None
 
-      while event_source or self._task_manager.HasScheduledTasks():
-        new_event_sources = True
-        if self._abort:
-          break
+      self._MergeTaskStorage(storage_writer)
 
-        if event_source and not task:
-          task = self._task_manager.CreateTask(self._session_identifier)
-          task.path_spec = event_source.path_spec
-          event_source = None
+      if not event_source and not task:
+        if self._processing_profiler:
+          self._processing_profiler.StartTiming(u'get_event_source')
 
-          self._number_of_consumed_sources += 1
-
-          if self._memory_profiler:
-            self._memory_profiler.Sample()
-
-        if task:
-          if self._processing_profiler:
-            self._processing_profiler.StartTiming(u'push_task')
-
-          try:
-            self._task_queue.PushItem(task, block=False)
-            self._task_manager.ScheduleTask(task.identifier)
-            task = None
-
-          except Queue.Full:
-            pass
-
-          if self._processing_profiler:
-            self._processing_profiler.StopTiming(u'push_task')
+        event_source = storage_writer.GetNextWrittenEventSource()
 
         if self._processing_profiler:
-          self._processing_profiler.StartTiming(u'merge_check')
+          self._processing_profiler.StopTiming(u'get_event_source')
 
-        # GetScheduledTaskIdentifiers makes a copy of the keys since we are
-        # changing the dictionary inside the loop.
-        task_storage_merged = False
-        for task_identifier in self._task_manager.GetScheduledTaskIdentifiers():
-          if self._abort:
-            break
-
-          if storage_writer.CheckTaskStorageReadyForMerge(
-              task_identifier):
-            # Make sure completed tasks are not considered idle when not
-            # yet merged.
-            self._task_manager.UpdateTask(task_identifier)
-
-          # Merge one task-based storage file per loop to keep tasks flowing.
-          if task_storage_merged:
-            continue
-
-          self._status = definitions.PROCESSING_STATUS_MERGING
-          self._merge_task_identifier = task_identifier
-
-          if self._processing_profiler:
-            self._processing_profiler.StartTiming(u'merge')
-
-          # TODO: look into time slicing merge.
-          if storage_writer.MergeTaskStorage(task_identifier):
-            self._task_manager.CompleteTask(task_identifier)
-            task_storage_merged = True
-
-          if self._processing_profiler:
-            self._processing_profiler.StopTiming(u'merge')
-
-          self._status = definitions.PROCESSING_STATUS_RUNNING
-          self._merge_task_identifier = u''
-          self._number_of_produced_errors = storage_writer.number_of_errors
-          self._number_of_produced_events = storage_writer.number_of_events
-          self._number_of_produced_sources = (
-              storage_writer.number_of_event_sources)
-
-        if self._processing_profiler:
-          self._processing_profiler.StopTiming(u'merge_check')
-
-        if not event_source and not task:
-          if self._processing_profiler:
-            self._processing_profiler.StartTiming(u'get_event_source')
-
-          event_source = storage_writer.GetNextEventSource()
-
-          if self._processing_profiler:
-            self._processing_profiler.StopTiming(u'get_event_source')
-
-      for task in self._task_manager.GetAbandonedTasks():
-        self._processing_status.error_path_specs.append(task.path_spec)
+    for task in self._task_manager.GetAbandonedTasks():
+      self._processing_status.error_path_specs.append(task.path_spec)
 
     self._status = definitions.PROCESSING_STATUS_IDLE
 
@@ -562,7 +581,7 @@ class MultiProcessEngine(engine.BaseEngine):
     process = worker_process.WorkerProcess(
         task_queue, storage_writer, self.knowledge_base,
         self._session_identifier, self._last_worker_number,
-        enable_debug_output=self._enable_debug_output,
+        debug_output=self._debug_output,
         enable_profiling=self._enable_profiling,
         enable_sigsegv_handler=self._enable_sigsegv_handler,
         filter_object=self._filter_object,
@@ -856,8 +875,8 @@ class MultiProcessEngine(engine.BaseEngine):
             task_identifier))
 
   def ProcessSources(
-      self, session_identifier, source_path_specs, preprocess_object,
-      storage_writer, enable_sigsegv_handler=False, filter_find_specs=None,
+      self, session_identifier, source_path_specs, storage_writer,
+      enable_sigsegv_handler=False, filter_find_specs=None,
       filter_object=None, hasher_names_string=None, mount_path=None,
       number_of_worker_processes=0, parser_filter_expression=None,
       preferred_year=None, process_archive_files=False,
@@ -869,7 +888,6 @@ class MultiProcessEngine(engine.BaseEngine):
       session_identifier (str): identifier of the session.
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
-      preprocess_object (PreprocessObject): preprocess object.
       storage_writer (StorageWriter): storage writer for a session storage.
       enable_sigsegv_handler (Optional[bool]): True if the SIGSEGV handler
           should be enabled.
@@ -970,13 +988,11 @@ class MultiProcessEngine(engine.BaseEngine):
 
     try:
       storage_writer.WriteSessionStart()
+      storage_writer.WritePreprocessingInformation(self.knowledge_base)
 
       self._ProcessSources(
           source_path_specs, storage_writer,
           filter_find_specs=filter_find_specs)
-
-      # TODO: refactor the use of preprocess_object.
-      storage_writer.WritePreprocessObject(preprocess_object)
 
       # TODO: on abort use WriteSessionAborted instead of completion?
       storage_writer.WriteSessionCompletion()

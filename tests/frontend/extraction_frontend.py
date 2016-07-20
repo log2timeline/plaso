@@ -41,7 +41,7 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
   # TODO: add test for _GetParserFilterPreset
   # TODO: add test for _PreprocessSource
   # TODO: add test for _PreprocessSetCollectionInformation
-  # TODO: add test for _PreprocessSetTimezone
+  # TODO: add test for _SetTimezone
 
   def testEnableAndDisableProfiling(self):
     """Tests the EnableProfiling and DisableProfiling functions."""
@@ -126,9 +126,9 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
 
       test_front_end.ProcessSources([path_spec], source_type)
 
+      storage_file = storage_zip_file.ZIPStorageFile()
       try:
-        storage_file = storage_zip_file.StorageFile(
-            storage_file_path, read_only=True)
+        storage_file.Open(path=storage_file_path)
       except IOError:
         self.fail(u'Unable to open storage file after processing.')
 
@@ -146,11 +146,6 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
     test_front_end = extraction_frontend.ExtractionFrontend()
     test_front_end.SetDebugMode(enable_debug=True)
 
-  def testSetEnablePreprocessing(self):
-    """Tests the SetEnablePreprocessing function."""
-    test_front_end = extraction_frontend.ExtractionFrontend()
-    test_front_end.SetEnablePreprocessing(True)
-
   def testSetShowMemoryInformation(self):
     """Tests the SetShowMemoryInformation function."""
     test_front_end = extraction_frontend.ExtractionFrontend()
@@ -165,11 +160,6 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
     """Tests the SetTextPrepend function."""
     test_front_end = extraction_frontend.ExtractionFrontend()
     test_front_end.SetTextPrepend(u'prepended text')
-
-  def testSetUseOldPreprocess(self):
-    """Tests the SetUseOldPreprocess function."""
-    test_front_end = extraction_frontend.ExtractionFrontend()
-    test_front_end.SetUseOldPreprocess(True)
 
   def testSetUseZeroMQ(self):
     """Tests the SetUseZeroMQ function."""
