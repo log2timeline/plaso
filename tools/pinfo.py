@@ -14,6 +14,7 @@ import uuid
 
 from plaso.cli import analysis_tool
 from plaso.cli import views as cli_views
+from plaso.engine import knowledge_base
 from plaso.frontend import analysis_frontend
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -73,7 +74,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     Args:
       analysis_reports_counter (collections.Counter): number of analysis
           reports per analysis plugin.
-      session_identifier (Optional[str]): sessio identifier.
+      session_identifier (Optional[str]): session identifier.
     """
     if not analysis_reports_counter:
       return
@@ -146,7 +147,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     Args:
       event_labels_counter (collections.Counter): number of event tags per
           label.
-      session_identifier (Optional[str]): sessio identifier.
+      session_identifier (Optional[str]): session identifier.
     """
     if not event_labels_counter:
       return
@@ -179,7 +180,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     Args:
       parsers_counter (collections.Counter): number of events per parser or
           parser plugin.
-      session_identifier (Optional[str]): sessio identifier.
+      session_identifier (Optional[str]): session identifier.
     """
     if not parsers_counter:
       return
@@ -201,6 +202,26 @@ class PinfoTool(analysis_tool.AnalysisTool):
     table_view.AddRow([u'Total', parsers_counter[u'total']])
 
     table_view.Write(self._output_writer)
+
+  def _PrintPreprocessingInformation(self, storage, session_number=None):
+    """Prints the details of the preprocessing information.
+
+    Args:
+      storage (BaseStorage): storage.
+      session_number (Optional[int]): session number.
+    """
+    knowledge_base = knowledge_base.KnowledgeBase()
+
+    storage.ReadPreprocessingInformation(knowledge_base)
+
+    system_configuration = knowledge_base.ReadSystemConfigurationArtifact(
+        session_number)
+    if not system_configuration:
+      return
+
+    title = u'Session: {0!s}'.format(session_identifier)
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, title=title)
 
   def _PrintSessionsDetails(self, storage):
     """Prints the details of the sessions.
