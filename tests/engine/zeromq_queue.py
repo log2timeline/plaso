@@ -20,11 +20,11 @@ class testZeroMQQueues(shared_test_lib.BaseTestCase):
   # pylint: disable=protected-access
 
   _QUEUE_CLASSES = frozenset([
-      zeromq_queue.ZeroMQPushBindQueue,
-      zeromq_queue.ZeroMQPullBindQueue,
-      zeromq_queue.ZeroMQRequestBindQueue,
-      zeromq_queue.ZeroMQBufferedPullBindQueue,
-      zeromq_queue.ZeroMQBufferedPushBindQueue])
+    zeromq_queue.ZeroMQPushBindQueue,
+    zeromq_queue.ZeroMQPullBindQueue,
+    zeromq_queue.ZeroMQRequestBindQueue,
+    zeromq_queue.ZeroMQBufferedPullBindQueue,
+    zeromq_queue.ZeroMQBufferedPushBindQueue])
 
   def _testItemTransferred(self, push_queue, pop_queue):
     """Tests than item can be transferred between two queues."""
@@ -33,14 +33,15 @@ class testZeroMQQueues(shared_test_lib.BaseTestCase):
     popped_item = pop_queue.PopItem()
     self.assertEqual(item, popped_item)
 
-  def testSocketCreation(self):
-    """Tests that ZeroMQ sockets are created when a new queue is created."""
-    for queue_class in self._QUEUE_CLASSES:
-      queue_name = u'{0:s}_socket_creation'.format(queue_class.__name__)
-      test_queue = queue_class(
-          name=queue_name, delay_open=False, linger_seconds=1)
-      self.assertIsNotNone(test_queue._zmq_socket)
-      test_queue.Close()
+  def testBufferedReplyQueue(self):
+    """Tests for the buffered reply queue."""
+    test_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
+        name=u'buffered_reply_bind', delay_open=False, linger_seconds=1)
+    test_queue.PushItem(u'This is a test item.')
+    test_queue.Empty()
+    test_queue.Close()
+    with self.assertRaises(errors.QueueAlreadyClosed):
+      test_queue.PushItem(u'This shouldn\'t work')
 
   def testQueueStart(self):
     """Tests that delayed creation of ZeroMQ sockets occurs correctly."""
@@ -73,16 +74,6 @@ class testZeroMQQueues(shared_test_lib.BaseTestCase):
     push_queue.Close()
     pull_queue.Close()
 
-  def testBufferedReplyQueue(self):
-    """Tests for the buffered reply queue."""
-    test_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
-        name=u'buffered_reply_bind', delay_open=False, linger_seconds=1)
-    test_queue.PushItem(u'This is a test item.')
-    test_queue.Empty()
-    test_queue.Close()
-    with self.assertRaises(errors.QueueAlreadyClosed):
-      test_queue.PushItem(u'This shouldn\'t work')
-
   def testRequestAndBufferedReplyQueues(self):
     """Tests REQ and buffered REP queue pairs."""
     reply_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
@@ -96,10 +87,20 @@ class testZeroMQQueues(shared_test_lib.BaseTestCase):
     request_queue = zeromq_queue.ZeroMQRequestBindQueue(
         name=u'requestbind_requestbuffer', delay_open=False, linger_seconds=1)
     reply_queue = zeromq_queue.ZeroMQBufferedReplyConnectQueue(
-        name=u'replyconnect_requestbuffer', delay_open=False, port=request_queue.port, linger_seconds=0)
+        name=u'replyconnect_requestbuffer', delay_open=False,
+        port=request_queue.port, linger_seconds=0)
     self._testItemTransferred(reply_queue, request_queue)
     reply_queue.Close()
     request_queue.Close()
+
+  def testSocketCreation(self):
+    """Tests that ZeroMQ sockets are created when a new queue is created."""
+    for queue_class in self._QUEUE_CLASSES:
+      queue_name = u'{0:s}_socket_creation'.format(queue_class.__name__)
+      test_queue = queue_class(
+          name=queue_name, delay_open=False, linger_seconds=1)
+      self.assertIsNotNone(test_queue._zmq_socket)
+      test_queue.Close()
 
 
 if __name__ == '__main__':

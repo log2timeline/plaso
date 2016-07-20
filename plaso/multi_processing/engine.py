@@ -574,7 +574,7 @@ class MultiProcessEngine(engine.BaseEngine):
       task_queue = zeromq_queue.ZeroMQRequestConnectQueue(
           delay_open=True, name=u'{0:s} pathspec'.format(process_name),
           linger_seconds=0, port=self._task_queue_port,
-          timeout_seconds=2)
+          timeout_seconds=5)
     else:
       task_queue = self._task_queue
 
@@ -965,10 +965,6 @@ class MultiProcessEngine(engine.BaseEngine):
       self._task_queue.Open()
       self._task_queue_port = self._task_queue.port
 
-    for _ in range(0, number_of_worker_processes):
-      extraction_process = self._StartExtractionWorkerProcess(storage_writer)
-      self._StartMonitoringProcess(extraction_process.pid)
-
     self._StartProfiling()
 
     if self._serializers_profiler:
@@ -983,6 +979,10 @@ class MultiProcessEngine(engine.BaseEngine):
     try:
       storage_writer.WriteSessionStart()
       storage_writer.WritePreprocessingInformation(self.knowledge_base)
+
+      for _ in range(0, number_of_worker_processes):
+        extraction_process = self._StartExtractionWorkerProcess(storage_writer)
+        self._StartMonitoringProcess(extraction_process.pid)
 
       self._ProcessSources(
           source_path_specs, storage_writer,
