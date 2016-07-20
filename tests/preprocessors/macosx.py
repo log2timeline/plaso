@@ -14,8 +14,8 @@ from plaso.preprocessors import macosx
 from tests import test_lib as shared_test_lib
 
 
-class MacOSXBuildTest(shared_test_lib.BaseTestCase):
-  """Tests for the Mac OS X build information preprocess plug-in object."""
+class MacOSXSystemVersionPluginTest(shared_test_lib.BaseTestCase):
+  """Tests for the plugin to determine Mac OS X System version information."""
 
   _FILE_DATA = (
       '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -36,25 +36,23 @@ class MacOSXBuildTest(shared_test_lib.BaseTestCase):
       '</dict>\n'
       '</plist>\n')
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
+  def testGetValue(self):
+    """Tests the GetValue function."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFile(
         u'/System/Library/CoreServices/SystemVersion.plist',
         self._FILE_DATA)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
-    self._searcher = file_system_searcher.FileSystemSearcher(
+    searcher = file_system_searcher.FileSystemSearcher(
         file_system_builder.file_system, mount_point)
 
-  def testGetValue(self):
-    """Tests the GetValue function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    plugin = macosx.MacOSXBuild()
-    plugin.Run(self._searcher, knowledge_base_object)
+    plugin = macosx. MacOSXSystemVersion()
+    plugin.Run(searcher, knowledge_base_object)
 
-    build = knowledge_base_object.GetValue('build')
+    build = knowledge_base_object.GetValue(u'operating_system_version')
     self.assertEqual(build, u'10.9.2')
 
 

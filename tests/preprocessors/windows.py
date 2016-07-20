@@ -226,7 +226,7 @@ class WindowsVersionTest(WindowsSoftwareRegistryTest):
     knowledge_base_object = knowledge_base.KnowledgeBase()
     plugin.Run(self._win_registry, knowledge_base_object)
 
-    osversion = knowledge_base_object.GetValue(u'osversion')
+    osversion = knowledge_base_object.GetValue(u'operating_system_product')
     self.assertEqual(osversion, u'Windows 7 Ultimate')
 
 

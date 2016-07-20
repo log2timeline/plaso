@@ -158,10 +158,10 @@ class PlistKeyPreprocessPlugin(PlistPreprocessPlugin):
     return key_value
 
 
-class MacOSXBuild(PlistKeyPreprocessPlugin):
-  """Fetches build information about a Mac OS X system."""
+class MacOSXSystemVersion(PlistKeyPreprocessPlugin):
+  """Plugin to determine Mac OS X system version information."""
 
-  ATTRIBUTE = u'build'
+  ATTRIBUTE = u'operating_system_version'
   PLIST_PATH = u'/System/Library/CoreServices/SystemVersion.plist'
 
   PLIST_KEYS = [u'ProductUserVisibleVersion']
@@ -355,4 +355,5 @@ class MacOSXUsers(PlistPreprocessPlugin):
 
 
 manager.PreprocessPluginsManager.RegisterPlugins([
-    MacOSXBuild, MacOSXHostname, MacOSXKeyboard, MacOSXTimeZone, MacOSXUsers])
+    MacOSXSystemVersionPlugin, MacOSXHostname, MacOSXKeyboard, MacOSXTimeZone,
+    MacOSXUsers])

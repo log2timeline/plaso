@@ -47,6 +47,7 @@ class WindowsPathPreprocessPlugin(interface.PreprocessPlugin):
 
 class WindowsSystemRegistryPath(WindowsPathPreprocessPlugin):
   """Get the system registry path."""
+
   SUPPORTED_OS = [u'Windows']
   ATTRIBUTE = u'sysregistry'
   PATH = u'/(Windows|WinNT|WINNT35|WTSRV)/System32/config'
@@ -241,6 +242,33 @@ class WindowsCodepage(WindowsRegistryValuePreprocessPlugin):
     return u'cp{0:s}'.format(value_data)
 
 
+class WindowsSystemProductPlugin(WindowsRegistryValuePreprocessPlugin):
+  """Plugin to determine Windows system product information."""
+
+  ATTRIBUTE = u'operating_system_product'
+  KEY_PATH = (
+      u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
+  VALUE_NAME = u'ProductName'
+
+
+class WindowsSystemRootEnvironmentVariable(
+    WindowsPathEnvironmentVariablePlugin):
+  """Plugin to determine the value of the %SystemRoot% environment variable."""
+
+  SUPPORTED_OS = [u'Windows']
+  ATTRIBUTE = u'systemroot'
+  PATH = u'/(Windows|WinNT|WINNT35|WTSRV)'
+
+
+class WindowsSystemVersionPlugin(WindowsRegistryValuePreprocessPlugin):
+  """Plugin to determine Windows system version information."""
+
+  ATTRIBUTE = u'operating_system_version'
+  KEY_PATH = (
+      u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
+  VALUE_NAME = u'CurrentVersion'
+
+
 class WindowsTimeZone(WindowsRegistryValuePreprocessPlugin):
   """A preprocessing class that fetches timezone information."""
 
@@ -272,17 +300,8 @@ class WindowsTimeZone(WindowsRegistryValuePreprocessPlugin):
     return time_zones.TIME_ZONES.get(lookup_key, value_data)
 
 
-class WindowsVersion(WindowsRegistryValuePreprocessPlugin):
-  """Fetch information about the current Windows version."""
-
-  ATTRIBUTE = u'osversion'
-  KEY_PATH = (
-      u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
-  VALUE_NAME = u'ProductName'
-
-
-class WindowsPathEnvironmentVariable(WindowsPathPreprocessPlugin):
-  """Preprocess plugin to determine the value of an environment variable."""
+class WindowsPathEnvironmentVariablePlugin(WindowsPathPreprocessPlugin):
+  """Plugin to determine the value of an environment variable."""
 
   def GetValue(self, searcher, knowledge_base):
     """Searches a path on a file system for a preprocessing attribute.
@@ -294,7 +313,7 @@ class WindowsPathEnvironmentVariable(WindowsPathPreprocessPlugin):
     Returns:
       EnvironmentVariableArtifact: environment variable artifact or None.
     """
-    relative_path = super(WindowsPathEnvironmentVariable, self).GetValue(
+    relative_path = super(WindowsPathEnvironmentVariablePlugin, self).GetValue(
         searcher, knowledge_base)
     return artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name=self.ATTRIBUTE, value=relative_path)
@@ -325,16 +344,8 @@ class WindowsRegistryEnvironmentVariable(WindowsRegistryValuePreprocessPlugin):
         case_sensitive=False, name=self.ATTRIBUTE, value=path)
 
 
-class WindowsSystemRootEnvironmentVariable(WindowsPathEnvironmentVariable):
-  """Preprocess plugin to determine the value of %SystemRoot%."""
-
-  SUPPORTED_OS = [u'Windows']
-  ATTRIBUTE = u'systemroot'
-  PATH = u'/(Windows|WinNT|WINNT35|WTSRV)'
-
-
-class WindowsWinDirEnvironmentVariable(WindowsPathEnvironmentVariable):
-  """Preprocess plugin to determine the value of %WinDir%."""
+class WindowsWinDirEnvironmentVariable(WindowsPathEnvironmentVariablePlugin):
+  """Plugin to determine the value of the %WinDir% environment variable."""
 
   SUPPORTED_OS = [u'Windows']
   ATTRIBUTE = u'windir'
@@ -386,5 +397,6 @@ class WindowsHostname(WindowsRegistryValuePreprocessPlugin):
 manager.PreprocessPluginsManager.RegisterPlugins([
     WindowsCodepage, WindowsHostname, WindowsProgramFilesEnvironmentVariable,
     WindowsProgramFilesX86EnvironmentVariable, WindowsSystemRegistryPath,
-    WindowsSystemRootEnvironmentVariable, WindowsTimeZone, WindowsUsers,
-    WindowsVersion, WindowsWinDirEnvironmentVariable])
+    WindowsSystemProductPlugin, WindowsSystemRootEnvironmentVariable,
+    WindowsSystemVersionPlugin, WindowsTimeZone, WindowsUsers,
+    WindowsWinDirEnvironmentVariable])
