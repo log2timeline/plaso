@@ -368,7 +368,9 @@ class ExtractionFrontend(frontend.Frontend):
           updates.
       temporary_directory (Optional[str]): path of the directory for temporary
           files.
-      timezone (Optional[str]): timezone.
+      timezone (Optional[datetime.tzinfo]): timezone.
+      yara_rules_string (Optional[str]): unparsed yara rule definitions.
+
 
     Returns:
       The processing status (instance of ProcessingStatus) or None.
