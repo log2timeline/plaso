@@ -14,7 +14,7 @@ from tests.parsers import test_lib
 class PyparsingConstantsTest(test_lib.ParserTestCase):
   """Tests the PyparsingConstants text parser."""
 
-  def testContstants(self):
+  def testConstants(self):
     """Tests parsing with constants."""
     with self.assertRaises(pyparsing.ParseException):
       text_parser.PyparsingConstants.MONTH.parseString(u'MMo')

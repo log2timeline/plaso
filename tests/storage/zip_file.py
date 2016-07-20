@@ -8,7 +8,6 @@ import zipfile
 
 from plaso.containers import errors
 from plaso.containers import event_sources
-from plaso.containers import preprocess
 from plaso.containers import reports
 from plaso.containers import sessions
 from plaso.containers import tasks
@@ -461,18 +460,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
   # TODO: add test for _InitializeMergeBuffer.
 
-  def testGetPreprocessObjectsLegacyFormat(self):
-    """Tests the _GetPreprocessObjectsLegacyFormat function."""
-    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
-    storage_file = zip_file.ZIPStorageFile()
-    storage_file.Open(path=test_file)
-
-    preprocess_object_list = list(
-        storage_file._GetPreprocessObjectsLegacyFormat())
-    self.assertEqual(len(preprocess_object_list), 4)
-
-    storage_file.Close()
-
   def testGetSerializedDataStream(self):
     """Tests the _GetSerializedDataStream function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
@@ -619,7 +606,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file.Open(path=test_file)
 
     stream_names = list(storage_file._GetStreamNames())
-    self.assertEqual(len(stream_names), 33)
+    self.assertEqual(len(stream_names), 31)
 
     storage_file.Close()
 
@@ -644,7 +631,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    expected_timestamp = 1468177846000000
+    expected_timestamp = 1468820255000000
 
     event_object = storage_file._GetSortedEvent(time_range=test_time_range)
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -798,19 +785,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
   # TODO: add test for _SerializeAttributeContainer.
   # TODO: add test for _WriteAttributeContainersHeap.
-
-  def testWritePreprocessObjectLegacyFormat(self):
-    """Tests the _WritePreprocessObjectLegacyFormat function."""
-    preprocess_object = preprocess.PreprocessObject()
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_file = zip_file.ZIPStorageFile()
-      storage_file.Open(temp_file, read_only=False)
-
-      storage_file._WritePreprocessObjectLegacyFormat(preprocess_object)
-
-      storage_file.Close()
 
   def testWriteSerializedErrors(self):
     """Tests the _WriteSerializedErrors function."""
@@ -1357,8 +1331,8 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
         1453449181000000, 1453449181000000, 1453449241000000, 1453449241000000,
         1453449241000000, 1453449241000000, 1453449272000000, 1453449272000000,
         1456708543000000, 1456708543000000, 1458774078000000, 1458774078000000,
-        1458774078000000, 1458774078000000, 1468177846000000, 1468177846000000,
-        1468177846000000, 1468177846000000, 1468177847000000, 1468177848000000,
+        1458774078000000, 1458774078000000, 1468820255000000, 1468820255000000,
+        1468820255000000, 1468820255000000, 1468820255000000, 1468820256000000,
         1479431720000000, 1479431720000000, 1479431743000000, 1479431743000000,
         1482083672000000, 1482083672000000, 1483206872000000, 1483206872000000]
 
@@ -1376,8 +1350,8 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
         timestamps.append(event_object.timestamp)
 
     expected_timestamps = [
-        1468177846000000, 1468177846000000, 1468177846000000, 1468177846000000,
-        1468177847000000, 1468177848000000, 1479431720000000, 1479431720000000,
+        1468820255000000, 1468820255000000, 1468820255000000, 1468820255000000,
+        1468820255000000, 1468820256000000, 1479431720000000, 1479431720000000,
         1479431743000000, 1479431743000000, 1482083672000000, 1482083672000000,
         1483206872000000, 1483206872000000]
 

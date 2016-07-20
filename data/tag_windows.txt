@@ -21,7 +21,7 @@ application_removal
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Application-Experience' and event_identifier is 908
 
 document_open
-  data_type is 'windows:registry:key_value' AND plugin contains 'mru' AND regvalue.__all__ not contains '.exe' AND timestamp > 0
+  data_type is 'windows:registry:key_value' AND plugin contains 'mru' AND regvalue.__all__ notcontains '.exe' AND timestamp > 0
 
 login_failed
   data_type is 'windows:evtx:record' and source_name is 'Microsoft-Windows-Security-Auditing' and event_identifier is 4625

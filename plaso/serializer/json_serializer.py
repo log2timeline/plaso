@@ -13,8 +13,6 @@ from plaso.containers import manager as containers_manager
 from plaso.lib import py2to3
 from plaso.serializer import interface
 
-import pytz  # pylint: disable=wrong-import-order
-
 
 class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
   """Class that implements the json attribute container serializer."""
@@ -48,11 +46,12 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     """
     if not isinstance(
         attribute_container, containers_interface.AttributeContainer):
-      raise TypeError(u'Not an attribute container type.')
+      raise TypeError(u'{0:s} is not an attribute container type.'.format(
+          type(attribute_container)))
 
     container_type = getattr(attribute_container, u'CONTAINER_TYPE', None)
     if not container_type:
-      raise ValueError(u'Unuspported attribute container type: {0:s}.'.format(
+      raise ValueError(u'Unsupported attribute container type: {0:s}.'.format(
           type(attribute_container)))
 
     json_dict = {
@@ -207,23 +206,6 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     # a path specification.
     elif class_type == u'PathSpec':
       return cls._ConvertDictToPathSpec(json_dict)
-
-    # Provide backwards compatibility.
-    elif class_type == u'timezone':
-      zone = json_dict.get(u'zone', u'UTC')
-      return pytz.timezone(zone)
-
-    elif class_type == u'AnalysisReport':
-      container_type = u'analysis_report'
-
-    elif class_type == u'EventObject':
-      container_type = u'event'
-
-    elif class_type == u'EventTag':
-      container_type = u'event_tag'
-
-    elif class_type == u'PreprocessObject':
-      container_type = u'preprocess'
 
     else:
       raise ValueError(u'Unsupported class type: {0:s}'.format(class_type))

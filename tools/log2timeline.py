@@ -186,9 +186,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     Args:
       options (argparse.Namespace): command line arguments.
     """
-    use_zeromq = getattr(options, u'use_zeromq', False)
-    if use_zeromq:
-      self._front_end.SetUseZeroMQ(use_zeromq)
+    use_zeromq = getattr(options, u'use_zeromq', u'true')
+    self._front_end.SetUseZeroMQ(use_zeromq == u'true')
 
   def _ParseOutputOptions(self, options):
     """Parses the output options.
@@ -302,8 +301,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
-        u'--use_zeromq', action=u'store_true', dest=u'use_zeromq', help=(
-            u'Enables experimental queueing using ZeroMQ'))
+        u'--use_zeromq', action=u'store', dest=u'use_zeromq',
+        metavar=u'CHOICE', choices=[u'false', u'true'], default=u'true',
+        help=(u'Enables or disables queueing using ZeroMQ'))
 
   def AddOutputOptions(self, argument_group):
     """Adds the output options to the argument group.
@@ -694,7 +694,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         preferred_year=self._preferred_year,
         single_process_mode=self._single_process_mode,
         status_update_callback=status_update_callback,
-        timezone=self._timezone)
+        timezone=self._timezone, yara_rules_string=self._yara_rules_string)
 
     if not processing_status:
       self._output_writer.Write(
