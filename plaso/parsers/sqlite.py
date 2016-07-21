@@ -360,13 +360,13 @@ class SQLiteParser(interface.FileEntryParser):
     database_wal, wal_file_entry = self._OpenDatabaseWithWAL(
         parser_mediator, file_entry, file_object, filename)
 
-    database_tables = frozenset(database.tables)
-
     # Create a cache in which the resulting tables are cached.
     cache = SQLiteCache()
     try:
+      table_names = frozenset(database.tables)
+
       for plugin in self._plugin_objects:
-        if database_tables < plugin.REQUIRED_TABLES:
+        if table_names < plugin.REQUIRED_TABLES:
           continue
 
         try:
