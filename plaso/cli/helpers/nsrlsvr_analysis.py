@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The arguments helper for the Nsrlsvr analysis plugin."""
+"""Arguments helper for the nsrlsvr analysis plugin."""
 
 from plaso.analysis import nsrlsvr
 from plaso.cli.helpers import interface
@@ -8,11 +8,11 @@ from plaso.lib import errors
 
 
 class NsrlsvrAnalysisHelper(interface.ArgumentsHelper):
-  """CLI arguments helper class for the Nsrlsvr analysis plugin."""
+  """CLI arguments helper class for the nsrlsvr analysis plugin."""
 
   NAME = u'nsrlsvr_analysis'
   CATEGORY = u'analysis'
-  DESCRIPTION = u'Argument helper for the Nsrlsvr analysis plugin.'
+  DESCRIPTION = u'Argument helper for the nsrlsvr analysis plugin.'
 
   _DEFAULT_HOST = u'localhost'
   _DEFAULT_PORT = u'9120'
@@ -25,16 +25,14 @@ class NsrlsvrAnalysisHelper(interface.ArgumentsHelper):
     to it all the command line arguments this helper supports.
 
     Args:
-      argument_group: the argparse group (instance of argparse._ArgumentGroup or
-                      or argparse.ArgumentParser).
+      argument_group (argparse._ArgumentGroup|argparse.ArgumentParser): group
+          to append arguments to.
     """
-    argument_group.add_argument(
-        u'--nsrlsvr-host', dest=u'nsrlsvr_host',
+    argument_group.add_argument(u'--nsrlsvr-host', dest=u'nsrlsvr_host',
         type=str, action='store', default=cls._DEFAULT_HOST,
         help=u'Specify the host to query Nsrlsvr on.')
-    argument_group.add_argument(
-        u'--nsrlsvr-port', dest=u'nsrlvr_port', type=str,
-        action='store', default=cls._DEFAULT_PORT,
+    argument_group.add_argument(u'--nsrlsvr-port', dest=u'nsrlvr_port',
+        type=int, action='store', default=cls._DEFAULT_PORT,
         help=u'Port to use to query Nsrlsvr.')
 
   @classmethod
@@ -42,8 +40,9 @@ class NsrlsvrAnalysisHelper(interface.ArgumentsHelper):
     """Parses and validates options.
 
     Args:
-      options: the parser option object (instance of argparse.Namespace).
-      analysis_plugin: an analysis plugin (instance of AnalysisPlugin).
+      options (argparse.Namespace):  parser options object.
+      analysis_plugin (AnalysisPlugin): an NsrlsvrAnalysisPlugin instance to
+          configure.
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
@@ -52,12 +51,12 @@ class NsrlsvrAnalysisHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           u'Analysis plugin is not an instance of NsrlsvrAnalysisPlugin')
 
-    host = cls._ParseStringOption(
-        options, u'nsrlsvr_host', default_value=cls._DEFAULT_HOST)
+    host = cls._ParseStringOption(options, u'nsrlsvr_host',
+        default_value=cls._DEFAULT_HOST)
     analysis_plugin.SetHost(host)
 
-    protocol = cls._ParseStringOption(
-        options, u'nsrlsvr_protocol', default_value=cls._DEFAULT_PORT)
+    protocol = cls._ParseStringOption(options, u'nsrlsvr_protocol',
+        default_value=cls._DEFAULT_PORT)
     analysis_plugin.SetPort(protocol)
 
 
