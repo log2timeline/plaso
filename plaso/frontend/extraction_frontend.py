@@ -166,6 +166,8 @@ class ExtractionFrontend(frontend.Frontend):
 
     if operating_system_version:
       operating_system_product = operating_system_product.lower()
+    else:
+      operating_system_product = u''
 
     if operating_system_version:
       operating_system_version = operating_system_version.split(u'.')
