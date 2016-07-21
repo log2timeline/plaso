@@ -45,22 +45,22 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     # Open a socket
     nsrl_socket = socket.create_connection((self._NSRL_ADDRESS, self._NSRL_PORT))
     # look through queries
-    for hash in hashes:
-      query = u'QUERY {0:s}'.format(hash)
+    for digest in hashes:
+      query = u'QUERY {0:s}'.format(digest)
       nsrl_socket.sendall(query)
       response = nsrl_socket.recv()
       if response.split(u' ')[1] == u'1':
-        hash_analysis = interface.HashAnalysis(hash, True)
+        hash_analysis = interface.HashAnalysis(digest, True)
         hash_analyses.append(hash_analysis)
       else:
-        hash_analysis = interface.HashAnalysis(hash, False)
+        hash_analysis = interface.HashAnalysis(digest, False)
         hash_analyses.append(hash_analysis)
     return hash_analyses
 
 class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
   """An analysis plugin for looking up hashes in nsrlsvr."""
   # nsrlsvr allows lookups using any of these hash algorithms.
-  REQUIRED_HASH_ATTRIBUTES = [u'sha256_hash']
+  REQUIRED_HASH_ATTRIBUTES = [u'sha256_hash', u'md5_hash']
 
   DATA_TYPES = [u'pe:compilation:compilation_time']
 
@@ -69,28 +69,32 @@ class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
   NAME = u'nsrlsvr'
 
   def __init__(self, event_queue):
-    """Initializes a VirusTotal analysis plugin.
+    """Initializes a nsrlsvr analysis plugin.
 
     Args:
       event_queue: A queue that is used to listen for incoming events.
     """
     super(NsrlsvrAnalysisPlugin, self).__init__(
-        event_queue, NsrlsvrAnalysisPlugin)
+        event_queue, NsrlsvrAnalyzer)
+
+  def SetHost(self, host):
+    pass
+
+  def SetPort(self, port):
+    pass
 
 
   def GenerateTagStrings(self, hash_information):
     """Generates a list of strings that will be used in the event tag.
 
     Args:
-      hash_information: A dictionary containing the JSON decoded contents of the
-                        result of a VirusTotal lookup, as produced by the
-                        VirusTotalAnalyzer.
+      hash_information: TODO
 
     Returns:
       A list of strings describing the results from VirusTotal.
     """
     if hash_information:
-      return u'nsrl_present'
-    return u'nsrl_not_present'
+      return [u'nsrl_present']
+    return [u'nsrl_not_present']
 
 manager.AnalysisPluginManager.RegisterPlugin(NsrlsvrAnalysisPlugin)
