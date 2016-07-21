@@ -190,17 +190,12 @@ class PathPreprocessPlugin(PreprocessPlugin):
 def GuessOS(searcher):
   """Returns a string representing what we think the underlying OS is.
 
-  The available return strings are:
-
-  * Linux
-  * MacOSX
-  * Windows
-
   Args:
     searcher (dfvfs.FileSystemSearcher): file system searcher.
 
   Returns:
-    str: operating system we are dealing with.
+    str: operating system for example "Windows". This should be one of
+        the OPERATING_SYSTEMS definitions.
   """
   find_specs = [
       file_system_searcher.FindSpec(

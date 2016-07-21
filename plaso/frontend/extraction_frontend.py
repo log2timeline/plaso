@@ -145,7 +145,8 @@ class ExtractionFrontend(frontend.Frontend):
     """Determines the parser filter preset.
 
     Args:
-      operating_system (str): operating system for example "Windows".
+      operating_system (str): operating system for example "Windows". This
+          should be one of the OPERATING_SYSTEMS definitions.
       operating_system_product (str): operating system product for
           example "Windows XP" as determined by preprocessing.
       operating_system_version (str): operating system version for
@@ -162,9 +163,13 @@ class ExtractionFrontend(frontend.Frontend):
     # this behavior, need to add a parameter to the frontend that takes
     # care of overwriting this behavior.
 
-    parser_filter_preset = None
+    if operating_system == definitions.OPERATING_SYSTEM_LINUX:
+      return = u'linux'
 
-    if operating_system_version:
+    if operating_system == definitions.OPERATING_SYSTEM_MACOSX:
+      return u'macosx'
+
+    if operating_system_product:
       operating_system_product = operating_system_product.lower()
     else:
       operating_system_product = u''
@@ -174,37 +179,27 @@ class ExtractionFrontend(frontend.Frontend):
     else:
       operating_system_version = [u'0', u'0']
 
-    if (not parser_filter_preset and operating_system_version and
-        operating_system_version):
+    # Windows NT 5 (2000, XP and 2003).
+    if (u'windows' in operating_system_product and
+        operating_system_version[0] == u'5'):
+      return u'winxp'
 
-      # TODO: Improve this detection, this should be more 'intelligent', since
-      # there are quite a lot of versions out there that would benefit from
-      # loading up the set of 'winxp' parsers.
-      if u'windows' in operating_system_product:
-        # Windows NT 5 (2000, XP and 2003)
-        if operating_system_version[0] == u'5':
-          parser_filter_preset = u'winxp'
+    # TODO: Improve this detection, this should be more 'intelligent', since
+    # there are quite a lot of versions out there that would benefit from
+    # loading up the set of 'winxp' parsers.
+    if (u'windows xp' in operating_system_product or
+        u'windows server 2000' in operating_system_product or
+        u'windows server 2003' in operating_system_product):
+      return u'winxp'
 
-    if not parser_filter_preset and operating_system_product:
-      if u'windows xp' in operating_system_product:
-        parser_filter_preset = u'winxp'
-      elif u'windows server 2000' in operating_system_product:
-        parser_filter_preset = u'winxp'
-      elif u'windows server 2003' in operating_system_product:
-        parser_filter_preset = u'winxp'
-      elif u'windows' in operating_system_product:
-        # Fallback for other Windows versions.
-        parser_filter_preset = u'win7'
+    # Fallback for other Windows versions.
+    if u'windows' in operating_system_product:
+      return u'win7'
 
-    if not parser_filter_preset and operating_system:
-      if operating_system == definitions.OPERATING_SYSTEM_LINUX:
-        parser_filter_preset = u'linux'
-      elif operating_system == definitions.OPERATING_SYSTEM_MACOSX:
-        parser_filter_preset = u'macosx'
-      elif operating_system == definitions.OPERATING_SYSTEM_WINDOWS:
-        parser_filter_preset = u'win7'
+    if operating_system == definitions.OPERATING_SYSTEM_WINDOWS:
+      return u'win7'
 
-    return parser_filter_preset
+    return
 
   def _PreprocessSources(self, source_path_specs):
     """Preprocesses the sources.
