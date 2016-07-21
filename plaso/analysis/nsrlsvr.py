@@ -46,10 +46,10 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     hash_analyses = []
     # Open a socket
     logging.debug(
-        u'Opening connection to {0:s}:{1:s}'.format(self._NSRL_ADDRESS,
-            self._NSRL_PORT), self._SOCKET_TIMEOUT)
+        u'Opening connection to {0:s}:{1:d}'.format(self._NSRL_ADDRESS,
+            self._NSRL_PORT))
     nsrl_socket = socket.create_connection(
-        (self._NSRL_ADDRESS, self._NSRL_PORT))
+        (self._NSRL_ADDRESS, self._NSRL_PORT), self._SOCKET_TIMEOUT)
     # look through queries
     for digest in hashes:
       query = u'QUERY {0:s}'.format(digest)
