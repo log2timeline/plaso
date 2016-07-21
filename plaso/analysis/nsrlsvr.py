@@ -8,10 +8,13 @@ from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.lib import errors
 
-class NsrlsvrAnalyzer(interface.HashAnalyzer):
 
+class NsrlsvrAnalyzer(interface.HashAnalyzer):
   _NSRL_ADDRESS = u'127.0.0.1'
   _NSRL_PORT = 9120
+
+  _RECEIVE_BUFFER_SIZE = 4096
+  _SOCKET_TIMEOUT = 3
 
   def __init__(self, hash_queue, hash_analysis_queue, **kwargs):
     """Initializes a VirusTotal Analyzer thread.
@@ -22,9 +25,8 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
       hash_analysis_queue: A queue (instance of Queue.queue) that the analyzer
                            will append HashAnalysis objects to.
     """
-    super(NsrlsvrAnalyzer, self).__init__(
-        hash_queue, hash_analysis_queue, **kwargs)
-
+    super(NsrlsvrAnalyzer, self).__init__(hash_queue, hash_analysis_queue,
+        **kwargs)
 
   def Analyze(self, hashes):
     """Looks up hashes in VirusTotal using the VirusTotal HTTP API.
@@ -43,12 +45,16 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     """
     hash_analyses = []
     # Open a socket
-    nsrl_socket = socket.create_connection((self._NSRL_ADDRESS, self._NSRL_PORT))
+    logging.debug(
+        u'Opening connection to {0:s}:{1:s}'.format(self._NSRL_ADDRESS,
+            self._NSRL_PORT), self._SOCKET_TIMEOUT)
+    nsrl_socket = socket.create_connection(
+        (self._NSRL_ADDRESS, self._NSRL_PORT))
     # look through queries
     for digest in hashes:
       query = u'QUERY {0:s}'.format(digest)
       nsrl_socket.sendall(query)
-      response = nsrl_socket.recv()
+      response = nsrl_socket.recv(self._RECEIVE_BUFFER_SIZE)
       if response.split(u' ')[1] == u'1':
         hash_analysis = interface.HashAnalysis(digest, True)
         hash_analyses.append(hash_analysis)
@@ -56,6 +62,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
         hash_analysis = interface.HashAnalysis(digest, False)
         hash_analyses.append(hash_analysis)
     return hash_analyses
+
 
 class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
   """An analysis plugin for looking up hashes in nsrlsvr."""
@@ -74,15 +81,13 @@ class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     Args:
       event_queue: A queue that is used to listen for incoming events.
     """
-    super(NsrlsvrAnalysisPlugin, self).__init__(
-        event_queue, NsrlsvrAnalyzer)
+    super(NsrlsvrAnalysisPlugin, self).__init__(event_queue, NsrlsvrAnalyzer)
 
   def SetHost(self, host):
     pass
 
   def SetPort(self, port):
     pass
-
 
   def GenerateTagStrings(self, hash_information):
     """Generates a list of strings that will be used in the event tag.
@@ -96,5 +101,6 @@ class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     if hash_information:
       return [u'nsrl_present']
     return [u'nsrl_not_present']
+
 
 manager.AnalysisPluginManager.RegisterPlugin(NsrlsvrAnalysisPlugin)
