@@ -21,25 +21,26 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         [u'Cookies.binarycookies'], parser_object)
 
-    # There should be 182 events from the safari cookie parser in addition
-    # to those created by cookie plugins.
-    self.assertTrue(len(storage_writer.events) >= 182)
-
     cookie_events = []
     for event_object in storage_writer.events:
       if isinstance(event_object, safari_cookies.BinaryCookieEvent):
         cookie_events.append(event_object)
 
+    # There should be:
+    # * 207 events in total
+    # * 182 events from the safari cookie parser
+    # * 25 event from the cookie plugins
+    self.assertEqual(len(storage_writer.events), 207)
     self.assertEqual(len(cookie_events), 182)
 
     event_object = cookie_events[3]
-    self.assertEqual(event_object.flags, u'HttpOnly|Secure')
+    self.assertEqual(event_object.flags, 5)
     self.assertEqual(event_object.url, u'accounts.google.com')
     self.assertEqual(event_object.cookie_name, u'GAPS')
 
     event_object = cookie_events[48]
 
-    self.assertEqual(event_object.flags, u'')
+    self.assertEqual(event_object.flags, 0)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-08 20:54:50')
 
@@ -49,10 +50,11 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.cookie_name, u'nonsession')
     self.assertEqual(event_object.path, u'/')
 
-    expected_msg = u'.ebay.com </> (nonsession)'
-    expected_msg_short = u'.ebay.com (nonsession)'
+    expected_message = u'.ebay.com </> (nonsession)'
+    expected_message_short = u'.ebay.com (nonsession)'
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(
+        event_object, expected_message, expected_message_short)
 
     event_object = cookie_events[52]
     self.assertEqual(event_object.cookie_name, u'fpc')
