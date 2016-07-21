@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 """The definitions."""
 
-OS_LINUX = u'Linux'
-OS_MACOSX = u'MacOSX'
-# TODO: keeping this compatible with the existing code for now.
-# Rename None to Unknown in the future.
-OS_UNKNOWN = u'None'
-OS_WINDOWS = u'Windows'
+OPERATING_SYSTEM_LINUX = u'Linux'
+OPERATING_SYSTEM_MACOSX = u'MacOSX'
+OPERATING_SYSTEM_UNKNOWN = u'Unknown'
+OPERATING_SYSTEM_WINDOWS = u'Windows'
 
 PROCESSING_STATUS_ABORTED = u'aborted'
 PROCESSING_STATUS_ANALYZING = u'analyzing'
