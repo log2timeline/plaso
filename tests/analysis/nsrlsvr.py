@@ -21,7 +21,7 @@ class MockNsrlsvrSocket(object):
     super(MockNsrlsvrSocket, self).__init__()
     self._data = None
 
-  def recv(self):
+  def recv(self, unused_buffer_size):
     if self._data == u'QUERY {0:s}'.format(NsrlSvrTest.EVENT_1_HASH):
       self._data = None
       return u'OK 1'
