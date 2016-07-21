@@ -6,33 +6,29 @@ import socket
 
 from plaso.analysis import interface
 from plaso.analysis import manager
-from plaso.lib import errors
 
 
 class NsrlsvrAnalyzer(interface.HashAnalyzer):
-  _NSRL_ADDRESS = u'127.0.0.1'
-  _NSRL_PORT = 9120
-
+  """Class that analyzes file hashes by consulting an nsrlsvr instance."""
   _RECEIVE_BUFFER_SIZE = 4096
   _SOCKET_TIMEOUT = 3
 
   def __init__(self, hash_queue, hash_analysis_queue, **kwargs):
-    """Initializes a VirusTotal Analyzer thread.
+    """Initializes an nsrlsvr analyzer thread.
 
     Args:
-      hash_queue: A queue (instance of Queue.queue) that contains hashes to
-                  be analyzed.
-      hash_analysis_queue: A queue (instance of Queue.queue) that the analyzer
-                           will append HashAnalysis objects to.
+      hash_queue (Queue.queue):  contains hashes to be analyzed.
+      hash_analysis_queue (Queue.queue): that the analyzer will append
+          HashAnalysis objects this queue.
     """
     super(NsrlsvrAnalyzer, self).__init__(hash_queue, hash_analysis_queue,
         **kwargs)
+    self._host = None
+    self._port = None
+    self.hashes_per_batch = 100
 
   def Analyze(self, hashes):
-    """Looks up hashes in VirusTotal using the VirusTotal HTTP API.
-
-    The API is documented here:
-      https://www.virustotal.com/en/documentation/public-api/
+    """Looks up hashes in nsrlsvr.
 
     Args:
       hashes: A list of hashes (strings) to look up.
@@ -41,16 +37,14 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
       A list of HashAnalysis objects.
 
     Raises:
-      RuntimeError: If the VirusTotal API key has not been set.
+      RuntimeError:
     """
     hash_analyses = []
     # Open a socket
     logging.debug(
-        u'Opening connection to {0:s}:{1:d}'.format(self._NSRL_ADDRESS,
-            self._NSRL_PORT))
-    nsrl_socket = socket.create_connection(
-        (self._NSRL_ADDRESS, self._NSRL_PORT), self._SOCKET_TIMEOUT)
-    # look through queries
+        u'Opening connection to {0:s}:{1:d}'.format(self._host, self._port))
+    nsrl_socket = socket.create_connection((self._host, self._port),
+        self._SOCKET_TIMEOUT)
     for digest in hashes:
       query = u'QUERY {0:s}'.format(digest)
       nsrl_socket.sendall(query)
@@ -61,7 +55,25 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
       else:
         hash_analysis = interface.HashAnalysis(digest, False)
         hash_analyses.append(hash_analysis)
+    nsrl_socket.close()
     return hash_analyses
+
+  def SetHost(self, host):
+    """Sets the address or hostname of the server running nsrlsvr.
+
+    Args:
+      host (str): IP address or hostname to query.
+    """
+    self._host = host
+
+  def SetPort(self, port):
+    """Sets the port where nsrlsvr is listening.
+
+    Args:
+      port (int): port to query.
+
+    """
+    self._port = port
 
 
 class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
@@ -69,38 +81,52 @@ class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
   # nsrlsvr allows lookups using any of these hash algorithms.
   REQUIRED_HASH_ATTRIBUTES = [u'sha256_hash', u'md5_hash']
 
-  DATA_TYPES = [u'pe:compilation:compilation_time']
+  # The NSRL contains files of all different types, and can handle a high load
+  # so look up all files.
+  DATA_TYPES = [u'fs:stat', u'fs:stat:ntfs']
 
   URLS = [u'https://rjhansen.github.io/nsrlsvr/']
 
   NAME = u'nsrlsvr'
 
   def __init__(self, event_queue):
-    """Initializes a nsrlsvr analysis plugin.
+    """Initializes an nsrlsvr analysis plugin.
 
     Args:
-      event_queue: A queue that is used to listen for incoming events.
+      event_queue (Queue.queue)): queue of events to analyze.
     """
     super(NsrlsvrAnalysisPlugin, self).__init__(event_queue, NsrlsvrAnalyzer)
-
-  def SetHost(self, host):
-    pass
-
-  def SetPort(self, port):
-    pass
 
   def GenerateTagStrings(self, hash_information):
     """Generates a list of strings that will be used in the event tag.
 
     Args:
-      hash_information: TODO
+      hash_information (bool): whether the analyzer received a response from
+          nsrlsvr indicating that the hash was present in its loaded nsrl
+          version.
 
     Returns:
-      A list of strings describing the results from VirusTotal.
+      list[str]: strings describing the results from nsrlsvr.
     """
     if hash_information:
       return [u'nsrl_present']
     return [u'nsrl_not_present']
+
+  def SetHost(self, host):
+    """Sets the address or hostname of the server running nsrlsvr.
+
+    Args:
+      host (str): IP address or hostname to query.
+    """
+    self._analyzer.SetHost(host)
+
+  def SetPort(self, port):
+    """Sets the port where nsrlsvr is listening.
+
+    Args:
+      port (int): port to query.
+    """
+    self._analyzer.SetPort(port)
 
 
 manager.AnalysisPluginManager.RegisterPlugin(NsrlsvrAnalysisPlugin)
