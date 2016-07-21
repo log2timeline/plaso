@@ -1,37 +1,31 @@
 # -*- coding: utf-8 -*-
-"""This file contains a class to provide a hashing framework to Plaso.
-
-This class contains a base framework class for parsing files.
-"""
-
+"""The hasher interface."""
 import abc
 
 
 class BaseHasher(object):
-  """Class that provides the interface for hashing functionality."""
+  """Base class for objects that calculate hashes."""
 
   NAME = u'base_hasher'
-  DESCRIPTION = u''
+  DESCRIPTION = u'Calculates a digest hash over input data.'
 
   @abc.abstractmethod
   def GetBinaryDigest(self):
     """Retrieves the digest of the hash function as a binary string.
 
     Returns:
-      A binary string hash digest calculated over the data blocks passed to
-      Update().
+      bytes: binary hash digest calculated over the data blocks passed to
+          Update().
     """
-    raise NotImplementedError
 
   @abc.abstractmethod
   def GetStringDigest(self):
     """Retrieves the digest of the hash function expressed as a Unicode string.
 
     Returns:
-      A string hash digest calculated over the data blocks passed to
-      Update(). The string will consist of printable Unicode characters.
+      str: string hash digest calculated over the data blocks passed to
+          Update(). The string consists of printable Unicode characters.
     """
-    raise NotImplementedError
 
   @abc.abstractmethod
   def Update(self, data):
@@ -41,6 +35,5 @@ class BaseHasher(object):
     concatenation of the arguments.
 
     Args:
-      data: a string of data with which to update the context of the hasher.
+      data(bytes): data with which to update the context of the hasher.
     """
-    raise NotImplementedError

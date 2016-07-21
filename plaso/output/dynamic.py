@@ -42,292 +42,292 @@ class DynamicFieldsHelper(object):
     """Initializes a dynamic fields helper object.
 
     Args:
-      output_mediator: the output mediator object (instance of OutputMediator).
+      output_mediator (OutputMediator): output mediator.
     """
     super(DynamicFieldsHelper, self).__init__()
     self._output_mediator = output_mediator
 
-  def _FormatDate(self, event_object):
+  def _FormatDate(self, event):
     """Formats the date.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A string containing the value for the date field.
+      str: date field.
     """
     try:
       date_use = timelib.Timestamp.CopyToDatetime(
-          event_object.timestamp, self._output_mediator.timezone,
+          event.timestamp, self._output_mediator.timezone,
           raise_error=True)
     except OverflowError as exception:
-      self._ReportEventError(event_object, (
+      self._ReportEventError(event, (
           u'unable to copy timestamp: {0:d} to a human readable date '
           u'with error: {1:s}. Defaulting to: "0000-00-00"').format(
-              event_object.timestamp, exception))
+              event.timestamp, exception))
 
       return u'0000-00-00'
 
     return u'{0:04d}-{1:02d}-{2:02d}'.format(
         date_use.year, date_use.month, date_use.day)
 
-  def _FormatDateTime(self, event_object):
+  def _FormatDateTime(self, event):
     """Formats the date and time in ISO 8601 format.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A string containing the value for the date field.
+      str: date and time field.
     """
     try:
       return timelib.Timestamp.CopyToIsoFormat(
-          event_object.timestamp, timezone=self._output_mediator.timezone,
+          event.timestamp, timezone=self._output_mediator.timezone,
           raise_error=True)
 
     except OverflowError as exception:
-      self._ReportEventError(event_object, (
+      self._ReportEventError(event, (
           u'unable to copy timestamp: {0:d} to a human readable date and time '
           u'with error: {1:s}. Defaulting to: "0000-00-00T00:00:00"').format(
-              event_object.timestamp, exception))
+              event.timestamp, exception))
 
       return u'0000-00-00T00:00:00'
 
-  def _FormatHostname(self, event_object):
+  def _FormatHostname(self, event):
     """Formats the hostname.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A string containing the value for the hostname field.
+      str: hostname field.
     """
-    return self._output_mediator.GetHostname(event_object)
+    return self._output_mediator.GetHostname(event)
 
-  def _FormatInode(self, event_object):
+  def _FormatInode(self, event):
     """Formats the inode.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A string containing the value for the inode field.
+      str: inode field.
     """
-    inode = event_object.inode
+    inode = event.inode
     if inode is None:
-      if (hasattr(event_object, u'pathspec') and
-          hasattr(event_object.pathspec, u'image_inode')):
-        inode = event_object.pathspec.image_inode
+      if (hasattr(event, u'pathspec') and
+          hasattr(event.pathspec, u'image_inode')):
+        inode = event.pathspec.image_inode
     if inode is None:
       inode = u'-'
 
     return inode
 
-  def _FormatMACB(self, event_object):
+  def _FormatMACB(self, event):
     """Formats the legacy MACB representation.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A string containing the value for the MACB field.
+      str: MACB field.
     """
-    return self._output_mediator.GetMACBRepresentation(event_object)
+    return self._output_mediator.GetMACBRepresentation(event)
 
-  def _FormatMessage(self, event_object):
+  def _FormatMessage(self, event):
     """Formats the message.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A string containing the value for the message field.
+      str: message field.
 
     Raises:
       NoFormatterFound: If no event formatter can be found to match the data
-                        type in the event object.
+                        type in the event.
     """
-    message, _ = self._output_mediator.GetFormattedMessages(event_object)
+    message, _ = self._output_mediator.GetFormattedMessages(event)
     if message is None:
       raise errors.NoFormatterFound(
           u'Unable to find event formatter for: {0:s}.'.format(
-              getattr(event_object, u'data_type', u'UNKNOWN')))
+              getattr(event, u'data_type', u'UNKNOWN')))
 
     return message
 
-  def _FormatMessageShort(self, event_object):
+  def _FormatMessageShort(self, event):
     """Formats the short message.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A string containing the value for the short message field.
+      str: short message field.
 
     Raises:
       NoFormatterFound: If no event formatter can be found to match the data
-                        type in the event object.
+                        type in the event.
     """
-    _, message_short = self._output_mediator.GetFormattedMessages(event_object)
+    _, message_short = self._output_mediator.GetFormattedMessages(event)
     if message_short is None:
       raise errors.NoFormatterFound(
           u'Unable to find event formatter for: {0:s}.'.format(
-              getattr(event_object, u'data_type', u'UNKNOWN')))
+              getattr(event, u'data_type', u'UNKNOWN')))
 
     return message_short
 
-  def _FormatSource(self, event_object):
+  def _FormatSource(self, event):
     """Formats the source.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A string containing the value for the source field.
+      str: source field.
 
     Raises:
       NoFormatterFound: If no event formatter can be found to match the data
-                        type in the event object.
+                        type in the event.
     """
-    _, source = self._output_mediator.GetFormattedSources(event_object)
+    _, source = self._output_mediator.GetFormattedSources(event)
     if source is None:
       raise errors.NoFormatterFound(
           u'Unable to find event formatter for: {0:s}.'.format(
-              getattr(event_object, u'data_type', u'UNKNOWN')))
+              getattr(event, u'data_type', u'UNKNOWN')))
 
     return source
 
-  def _FormatSourceShort(self, event_object):
+  def _FormatSourceShort(self, event):
     """Formats the short source.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A string containing the value for the short source field.
+      str: short source field.
 
     Raises:
       NoFormatterFound: If no event formatter can be found to match the data
-                        type in the event object.
+                        type in the event.
     """
-    source_short, _ = self._output_mediator.GetFormattedSources(event_object)
+    source_short, _ = self._output_mediator.GetFormattedSources(event)
     if source_short is None:
       raise errors.NoFormatterFound(
           u'Unable to find event formatter for: {0:s}.'.format(
-              getattr(event_object, u'data_type', u'UNKNOWN')))
+              getattr(event, u'data_type', u'UNKNOWN')))
 
     return source_short
 
-  def _FormatTag(self, event_object):
+  def _FormatTag(self, event):
     """Formats the event tag.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A string containing the value for the event tag field.
+      str: event tag field.
     """
-    tag = getattr(event_object, u'tag', None)
+    tag = getattr(event, u'tag', None)
 
     if not tag:
       return u'-'
 
     return u' '.join(tag.labels)
 
-  def _FormatTime(self, event_object):
-    """Formats the timestamp.
+  def _FormatTime(self, event):
+    """Formats the time.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A string containing the value for the timestamp field.
+      str: time field.
     """
     try:
       date_use = timelib.Timestamp.CopyToDatetime(
-          event_object.timestamp, self._output_mediator.timezone,
+          event.timestamp, self._output_mediator.timezone,
           raise_error=True)
     except OverflowError as exception:
-      self._ReportEventError(event_object, (
+      self._ReportEventError(event, (
           u'unable to copy timestamp: {0:d} to a human readable time '
           u'with error: {1:s}. Defaulting to: "00:00:00"').format(
-              event_object.timestamp, exception))
+              event.timestamp, exception))
 
       return u'00:00:00'
 
     return u'{0:02d}:{1:02d}:{2:02d}'.format(
         date_use.hour, date_use.minute, date_use.second)
 
-  def _FormatTimestampDescription(self, event_object):
+  def _FormatTimestampDescription(self, event):
     """Formats the timestamp description.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A string containing the value for the timestamp description field.
+      str: timestamp description field.
     """
-    return getattr(event_object, u'timestamp_desc', u'-')
+    return getattr(event, u'timestamp_desc', u'-')
 
-  def _FormatUsername(self, event_object):
+  def _FormatUsername(self, event):
     """Formats the username.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A string containing the value for the username field.
+      str: username field.
     """
-    return self._output_mediator.GetUsername(event_object)
+    return self._output_mediator.GetUsername(event)
 
-  def _FormatZone(self, unused_event_object):
-    """Formats the timezone.
+  def _FormatZone(self, unused_event):
+    """Formats the time zone.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A string containing the value for the timezone field.
+      str: time zone field.
     """
     return self._output_mediator.timezone
 
-  def _GetEventStorageIdentifier(self, event_object):
-    """Retrieves the event storage identifier of an event object.
+  def _GetEventStorageIdentifier(self, event):
+    """Retrieves the event storage identifier of an event.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A string containing the event storage identifier or "N/A".
+      str: event storage identifier or "N/A".
     """
-    store_number = getattr(event_object, u'store_number', None)
-    store_index = getattr(event_object, u'store_index', None)
+    store_number = getattr(event, u'store_number', None)
+    store_index = getattr(event, u'store_index', None)
 
     if store_number is None or store_index is None:
       return u'N/A'
 
     return u'{0:d}:{1:d}'.format(store_number, store_index)
 
-  def _ReportEventError(self, event_object, error_message):
+  def _ReportEventError(self, event, error_message):
     """Reports an event related error.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
       error_message: a string containing the error message.
     """
-    event_storage_identifier = self._GetEventStorageIdentifier(event_object)
+    event_storage_identifier = self._GetEventStorageIdentifier(event)
     error_message = (
         u'Event: {0:s} data type: {1:s} display name: {2:s} '
         u'parser chain: {3:s} with error: {4:s}').format(
-            event_storage_identifier, event_object.data_type,
-            event_object.display_name, event_object.parser, error_message)
+            event_storage_identifier, event.data_type,
+            event.display_name, event.parser, error_message)
     logging.error(error_message)
 
-  def GetFormattedField(self, event_object, field_name):
+  def GetFormattedField(self, event, field_name):
     """Formats the specified field.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
       field_name: a string containing the name of the field.
 
     Returns:
@@ -339,9 +339,9 @@ class DynamicFieldsHelper(object):
       callback_function = getattr(self, callback_name, None)
 
     if callback_function:
-      output_value = callback_function(event_object)
+      output_value = callback_function(event)
     else:
-      output_value = getattr(event_object, field_name, u'-')
+      output_value = getattr(event, field_name, u'-')
 
     if output_value is None:
       output_value = u'-'
@@ -387,10 +387,9 @@ class DynamicOutputModule(interface.LinearOutputModule):
     Returns:
       A string containing the value for the field.
     """
-    if not self._field_delimiter:
-      return field
-
-    return field.replace(self._field_delimiter, u' ')
+    if self._field_delimiter and isinstance(field, py2to3.STRING_TYPES):
+      return field.replace(self._field_delimiter, u' ')
+    return field
 
   def SetFieldDelimiter(self, field_delimiter):
     """Sets the field delimiter.
@@ -408,16 +407,16 @@ class DynamicOutputModule(interface.LinearOutputModule):
     """
     self._fields = fields
 
-  def WriteEventBody(self, event_object):
-    """Writes the body of an event object to the output.
+  def WriteEventBody(self, event):
+    """Writes the body of an event to the output.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
     """
     output_values = []
     for field_name in self._fields:
       output_value = self._dynamic_fields_helper.GetFormattedField(
-          event_object, field_name)
+          event, field_name)
 
       output_value = self._SanitizeField(output_value)
       output_values.append(output_value)

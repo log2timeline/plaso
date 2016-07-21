@@ -15,7 +15,7 @@ from plaso.parsers import manager
 dependencies.CheckModuleVersion(u'pyolecf')
 
 
-class OleCfParser(interface.FileObjectParser):
+class OLECFParser(interface.FileObjectParser):
   """Parses OLE Compound Files (OLECF)."""
 
   _INITIAL_FILE_OFFSET = None
@@ -87,4 +87,4 @@ class OleCfParser(interface.FileObjectParser):
     olecf_file.close()
 
 
-manager.ParsersManager.RegisterParser(OleCfParser)
+manager.ParsersManager.RegisterParser(OLECFParser)

@@ -16,7 +16,7 @@ from plaso.parsers import plugins
 dependencies.CheckModuleVersion(u'pyesedb')
 
 
-class EseDbCache(plugins.BasePluginCache):
+class ESEDBCache(plugins.BasePluginCache):
   """A cache storing query results for ESEDB plugins."""
 
   def StoreDictInCache(self, attribute_name, dict_object):
@@ -29,7 +29,7 @@ class EseDbCache(plugins.BasePluginCache):
     setattr(self, attribute_name, dict_object)
 
 
-class EseDbParser(interface.FileObjectParser):
+class ESEDBParser(interface.FileObjectParser):
   """Parses Extensible Storage Engine (ESE) database files (EDB)."""
 
   _INITIAL_FILE_OFFSET = None
@@ -63,7 +63,7 @@ class EseDbParser(interface.FileObjectParser):
       return
 
     # Compare the list of available plugin objects.
-    cache = EseDbCache()
+    cache = ESEDBCache()
     for plugin_object in self._plugin_objects:
       try:
         plugin_object.UpdateChainAndProcess(
@@ -80,4 +80,4 @@ class EseDbParser(interface.FileObjectParser):
     esedb_file.close()
 
 
-manager.ParsersManager.RegisterParser(EseDbParser)
+manager.ParsersManager.RegisterParser(ESEDBParser)

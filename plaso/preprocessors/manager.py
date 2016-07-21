@@ -19,16 +19,10 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
     """Initializes a Windows Registry file reader object.
 
     Args:
-      file_system: the file system object (instance of vfs.FileSystem).
-      mount_point: the mount point path specification (instance of
-                   path.PathSpec).
-      path_attributes: optional dictionary of path attributes. The path
-                       attributes correspond to environment variable names
-                       that can be used in the Windows paths. E.g. the
-                       systemroot path attribute corresponds to the
-                       %SystemRoot% environment variable. At moment only
-                       the systemroot and userprofile path attributes are
-                       supported.
+      file_system (dfvfs.FileSytem): file system.
+      mount_point (dfvfs.PathSpec): mount point path specification.
+      path_attributes (Optional[dict[str, str]]): path attributes e.g.
+          {'SystemRoot': '\\Windows'}
     """
     super(FileSystemWinRegistryFileReader, self).__init__()
     self._file_system = file_system
@@ -47,20 +41,20 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
           self._path_resolver.SetEnvironmentVariable(
               u'UserProfile', attribute_value)
 
-  def _OpenPathSpec(self, path_spec, ascii_codepage=u'cp1252'):
+  def _OpenPathSpec(self, path_specification, ascii_codepage=u'cp1252'):
     """Opens the Windows Registry file specified by the path specification.
 
     Args:
-      path_spec: a path specfication (instance of dfvfs.PathSpec).
-      ascii_codepage: optional ASCII string codepage.
+      path_specification (dfvfs.PathSpec): path specfication.
+      ascii_codepage (Optional[str]): ASCII string codepage.
 
     Returns:
-      The Windows Registry file (instance of WinRegistryFile) or None.
+      WinRegistryFile: Windows Registry file or None.
     """
-    if not path_spec:
+    if not path_specification:
       return
 
-    file_entry = self._file_system.GetFileEntryByPathSpec(path_spec)
+    file_entry = self._file_system.GetFileEntryByPathSpec(path_specification)
     if file_entry is None:
       return
 
@@ -86,17 +80,17 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
     """Opens the Windows Registry file specified by the path.
 
     Args:
-      path: string containing the path of the Windows Registry file.
-      ascii_codepage: optional ASCII string codepage.
+      path (str): path of the Windows Registry file.
+      ascii_codepage (Optional[str]): ASCII string codepage.
 
     Returns:
-      The Windows Registry file (instance of WinRegistryFile) or None.
+      WinRegistryFile: Windows Registry file or None.
     """
-    path_spec = self._path_resolver.ResolvePath(path)
-    if path_spec is None:
+    path_specification = self._path_resolver.ResolvePath(path)
+    if path_specification is None:
       return
 
-    return self._OpenPathSpec(path_spec)
+    return self._OpenPathSpec(path_specification)
 
 
 class PreprocessPluginsManager(object):

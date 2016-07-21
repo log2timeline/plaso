@@ -13,11 +13,11 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.engine import extractors
 from plaso.engine import knowledge_base
 from plaso.engine import utils as engine_utils
 from plaso.frontend import frontend
-from plaso.hashers import manager as hashers_manager
 from plaso.lib import py2to3
 from plaso.lib import specification
 from plaso.lib import timelib
@@ -446,7 +446,7 @@ class FileSaver(object):
     Returns:
       A hexadecimal string of the MD5 hash.
     """
-    hasher_object = hashers_manager.HashersManager.GetHasherObject(u'sha256')
+    hasher_object = hashers_manager.HashersManager.GetHasher(u'sha256')
     file_object.seek(0, os.SEEK_SET)
 
     data = file_object.read(self._READ_BUFFER_SIZE)

@@ -2,7 +2,6 @@
 """Parser for the Google Chrome Cookie database."""
 
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import eventdata
 # Register the cookie plugins.
 from plaso.parsers import cookie_plugins  # pylint: disable=unused-import
@@ -17,41 +16,34 @@ class ChromeCookieEvent(time_events.WebKitTimeEvent):
   DATA_TYPE = u'chrome:cookie:entry'
 
   def __init__(
-      self, timestamp, usage, hostname, cookie_name, value, path, secure,
-      httponly, persistent):
+      self, timestamp, timestamp_description, hostname, cookie_name, value,
+      path, secure, httponly, persistent, url):
     """Initializes the event.
 
     Args:
-      timestamp: The timestamp value in WebKit format..
-      usage: Timestamp description string.
-      hostname: The hostname of host that set the cookie value.
-      cookie_name: The name field of the cookie.
-      value: The value of the cookie.
-      path: An URI of the page that set the cookie.
-      secure: Indication if this cookie should only be transmitted over a secure
-      channel.
-      httponly: An indication that the cookie cannot be accessed through client
-      side script.
-      persistent: A flag indicating cookies persistent value.
+      webkit_time (int): WebKit time value.
+      timestamp_description (str): description of the usage of the timestamp
+          value.
+      hostname (str): hostname of host that set the cookie value.
+      cookie_name (str): name of the cookie.
+      value (str): value of the cookie.
+      path (str): path where the cookie got set.
+      secure (bool): True if the cookie should only be transmitted over
+          a secure channel.
+      httponly (bool): True if the cookie cannot be accessed through client
+          side script.
+      persistent (bool): True if the cookie is persistent.
+      url (str): URL or path where the cookie got set.
     """
-    super(ChromeCookieEvent, self).__init__(timestamp, usage)
-    if hostname.startswith('.'):
-      hostname = hostname[1:]
-
-    self.host = hostname
+    super(ChromeCookieEvent, self).__init__(timestamp, timestamp_description)
     self.cookie_name = cookie_name
     self.data = value
-    self.path = path
-    self.secure = True if secure else False
+    self.host = hostname
     self.httponly = True if httponly else False
+    self.path = path
     self.persistent = True if persistent else False
-
-    if self.secure:
-      scheme = u'https'
-    else:
-      scheme = u'http'
-
-    self.url = u'{0:s}://{1:s}{2:s}'.format(scheme, hostname, path)
+    self.secure = True if secure else False
+    self.url = url
 
 
 class ChromeCookiePlugin(interface.SQLitePlugin):
@@ -86,7 +78,7 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
       u'utmcct': u'Path to the page of referring link.'}
 
   def __init__(self):
-    """Initializes a plugin object."""
+    """Initializes a plugin."""
     super(ChromeCookiePlugin, self).__init__()
     self._cookie_plugins = (
         cookie_plugins_manager.CookiePluginsManager.GetPlugins())
@@ -95,49 +87,58 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
     """Parses a cookie row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): parser mediator.
+      row (sqlite3.Row): row resulting from the query.
+      query (Optional[str]): query string.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
 
+    cookie_name = row['name']
+
+    hostname = row['host_key']
+    if hostname.startswith('.'):
+      hostname = hostname[1:]
+
+    if row['secure']:
+      scheme = u'https'
+    else:
+      scheme = u'http'
+
+    url = u'{0:s}://{1:s}{2:s}'.format(scheme, hostname, row['path'])
+
     event_object = ChromeCookieEvent(
         row['creation_utc'], eventdata.EventTimestamp.CREATION_TIME,
-        row['host_key'], row['name'], row['value'], row['path'],
-        row['secure'], row['httponly'], row['persistent'])
+        hostname, cookie_name, row['value'], row['path'],
+        row['secure'], row['httponly'], row['persistent'], url)
     parser_mediator.ProduceEvent(event_object, query=query)
 
     event_object = ChromeCookieEvent(
         row['last_access_utc'], eventdata.EventTimestamp.ACCESS_TIME,
-        row['host_key'], row['name'], row['value'], row['path'],
-        row['secure'], row['httponly'], row['persistent'])
+        hostname, cookie_name, row['value'], row['path'],
+        row['secure'], row['httponly'], row['persistent'], url)
     parser_mediator.ProduceEvent(event_object, query=query)
 
     if row['has_expires']:
       event_object = ChromeCookieEvent(
           row['expires_utc'], u'Cookie Expires',
-          row['host_key'], row['name'], row['value'], row['path'],
-          row['secure'], row['httponly'], row['persistent'])
+          hostname, cookie_name, row['value'], row['path'],
+          row['secure'], row['httponly'], row['persistent'], url)
       parser_mediator.ProduceEvent(event_object, query=query)
 
-    # Go through all cookie plugins to see if there are is any specific parsing
-    # needed.
-    hostname = row['host_key']
-    if hostname.startswith('.'):
-      hostname = hostname[1:]
+    for plugin in self._cookie_plugins:
+      if cookie_name != plugin.COOKIE_NAME:
+        continue
 
-    url = u'http{0:s}://{1:s}{2:s}'.format(
-        u's' if row['secure'] else u'', hostname, row['path'])
-
-    for cookie_plugin in self._cookie_plugins:
       try:
-        cookie_plugin.UpdateChainAndProcess(
-            parser_mediator, cookie_name=row['name'],
-            cookie_data=row['value'], url=url)
-      except errors.WrongPlugin:
-        pass
+        plugin.UpdateChainAndProcess(
+            parser_mediator, cookie_data=row['value'], cookie_name=cookie_name,
+            url=url)
 
+      except Exception as exception:  # pylint: disable=broad-except
+        parser_mediator.ProduceExtractionError(
+            u'plugin: {0:s} unable to parse cookie with error: {1:s}'.format(
+                plugin.NAME, exception))
 
 
 sqlite.SQLiteParser.RegisterPlugin(ChromeCookiePlugin)

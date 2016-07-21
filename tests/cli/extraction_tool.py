@@ -15,11 +15,12 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
   """Tests for the extraction tool object."""
 
   _EXPECTED_OUTPUT_EXTRACTION_OPTIONS = u'\n'.join([
-      (u'usage: extraction_tool_test.py [--hashers HASHER_LIST] '
-       u'[--parsers PARSER_LIST]'),
+      (u'usage: extraction_tool_test.py [--hashers HASHER_LIST]'
+       u' [--yara_rules PATH]'),
+      (u'                               [--parsers PARSER_LIST]'
+       u' [--preferred_year YEAR]'),
       u'                               [-p] [--process_archives]',
       u'                               [--temporary_directory DIRECTORY]',
-      u'                               [--use_old_preprocess]',
       u'',
       u'Test argument parser.',
       u'',
@@ -36,6 +37,9 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       (u'                        hashers. Use "--hashers list" or "--info" to '
        u'list the'),
       u'                        available hashers.',
+      u'  --yara_rules PATH, --yara-rules PATH',
+      (u'                        Path to a file containing Yara rules '
+       u'definitions.'),
       u'  --parsers PARSER_LIST',
       (u'                        Define a list of parsers to use by the tool. '
        u'This is a'),
@@ -61,6 +65,12 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       (u'                        case insensitive. Use "--parsers list" or '
        u'"--info" to'),
       u'                        list the available parsers.',
+      u'  --preferred_year YEAR, --preferred-year YEAR',
+      (u'                        When a format\'s timestamp does not include '
+       u'a year,'),
+      (u'                        e.g. syslog, use this as the initial year '
+       u'instead of'),
+      u'                        attempting auto-detection.',
       (u'  -p, --preprocess      Turn on preprocessing. Preprocessing is '
        u'turned on by'),
       (u'                        default when parsing image files, however if '
@@ -77,21 +87,9 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       (u'                        Path to the directory that should be used to '
        u'store'),
       u'                        temporary files created during extraction.',
-      u'  --use_old_preprocess, --use-old-preprocess',
-      (u'                        Only used in conjunction when appending to a '
-       u'previous'),
-      (u'                        storage file. When this option is used then a '
-       u'new'),
-      (u'                        preprocessing object is not calculated and '
-       u'instead the'),
-      (u'                        last one that got added to the storage file '
-       u'is used.'),
-      (u'                        This can be handy when parsing an image that '
-       u'contains'),
-      u'                        more than a single partition.',
       u''])
 
-  _EXPECTED_PERFOMANCE_OPTIONS = u'\n'.join([
+  _EXPECTED_PERFORMANCE_OPTIONS = u'\n'.join([
       u'usage: extraction_tool_test.py [--buffer_size BUFFER_SIZE]',
       u'                               [--queue_size QUEUE_SIZE]',
       u'',
@@ -158,7 +156,7 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
     test_tool.AddPerformanceOptions(argument_parser)
 
     output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_PERFOMANCE_OPTIONS)
+    self.assertEqual(output, self._EXPECTED_PERFORMANCE_OPTIONS)
 
   def testAddProfilingOptions(self):
     """Tests the AddProfilingOptions function."""
