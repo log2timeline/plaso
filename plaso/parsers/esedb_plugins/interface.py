@@ -6,7 +6,6 @@ import logging
 import construct
 import pyesedb  # pylint: disable=wrong-import-order
 
-from plaso.lib import errors
 from plaso.parsers import plugins
 
 
@@ -48,19 +47,23 @@ class ESEDBPlugin(plugins.BasePlugin):
   def __init__(self):
     """Initializes the ESE database plugin."""
     super(ESEDBPlugin, self).__init__()
-    self._required_tables = frozenset(self.REQUIRED_TABLES.keys())
     self._tables = {}
     self._tables.update(self.REQUIRED_TABLES)
     self._tables.update(self.OPTIONAL_TABLES)
+
+  @property
+  def required_tables(self):
+    """set[str]: required table names."""
+    return frozenset(self.REQUIRED_TABLES.keys())
 
   def _ConvertValueBinaryDataToStringAscii(self, value):
     """Converts a binary data value into a string.
 
     Args:
-      value: The binary data value containing an ASCII string or None.
+      value (bytes): binary data value containing an ASCII string or None.
 
     Returns:
-      A string or None if value is None.
+      str: string representation of binary data value or None.
     """
     if value:
       return value.decode(u'ascii')
@@ -69,10 +72,10 @@ class ESEDBPlugin(plugins.BasePlugin):
     """Converts a binary data value into a base-16 (hexadecimal) string.
 
     Args:
-      value: The binary data value or None.
+      value (bytes): binary data value or None.
 
     Returns:
-      A string or None if value is None.
+      str: string representation of binary data value or None.
     """
     if value:
       return value.encode(u'hex')
@@ -81,11 +84,11 @@ class ESEDBPlugin(plugins.BasePlugin):
     """Converts a binary data value into an integer.
 
     Args:
-      value: The binary data value containing an unsigned 64-bit big-endian
-             integer.
+      value (bytes): binary data value containing an unsigned 64-bit big-endian
+          integer.
 
     Returns:
-      An integer or None if value is None.
+      int: integer representation of binary data value or None.
     """
     if value:
       return self._UINT64_BIG_ENDIAN.parse(value)
@@ -94,11 +97,11 @@ class ESEDBPlugin(plugins.BasePlugin):
     """Converts a binary data value into an integer.
 
     Args:
-      value: The binary data value containing an unsigned 64-bit little-endian
-             integer.
+      value (int): binary data value containing an unsigned 64-bit little-endian
+          integer.
 
     Returns:
-      An integer or None if value is None.
+      int: integer representation of binary data value or None.
     """
     if value:
       return self._UINT64_LITTLE_ENDIAN.parse(value)
@@ -107,11 +110,11 @@ class ESEDBPlugin(plugins.BasePlugin):
     """Retrieves a specific value from the record.
 
     Args:
-      record: The ESE record object (instance of pyesedb.record).
-      value_entry: The value entry.
+      record (pyesedb.record): ESE record.
+      value_entry (int): value entry.
 
     Returns:
-      An object containing the value.
+      object: value.
 
     Raises:
       ValueError: if the value is not supported.
@@ -156,21 +159,26 @@ class ESEDBPlugin(plugins.BasePlugin):
       return long_value.get_data()
     return record.get_value_data(value_entry)
 
-  def _GetRecordValues(self, table_name, record, value_mappings=None):
+  def _GetRecordValues(
+      self, parser_mediator, table_name, record, value_mappings=None):
     """Retrieves the values from the record.
 
     Args:
-      table_name: The name of the table.
-      record: The ESE record object (instance of pyesedb.record).
-      value_mappings: Optional dict of value mappings, which map the column
-                      name to a callback method.
+      parser_mediator (ParserMediator): parser mediator.
+      table_name (str): name of the table.
+      record (pyesedb.record): ESE record.
+      value_mappings (Optional[dict[str,str]): value mappings, which map
+          the column name to a callback method.
 
     Returns:
-      An dict containing the values.
+      dict[str,object]: values per column name.
     """
     record_values = {}
 
     for value_entry in range(0, record.number_of_values):
+      if parser_mediator.abort:
+        break
+
       column_name = record.get_column_name(value_entry)
       if column_name in record_values:
         logging.warning(
@@ -201,28 +209,13 @@ class ESEDBPlugin(plugins.BasePlugin):
 
     return record_values
 
-  def _GetTableNames(self, database):
-    """Retrieves the table names in a database.
-
-    Args:
-      database: The ESE database object (instance of pyesedb.file).
-
-    Returns:
-      A list of the table names.
-    """
-    table_names = []
-    for esedb_table in database.tables:
-      table_names.append(esedb_table.name)
-
-    return table_names
-
-  def GetEntries(self, parser_mediator, database=None, cache=None, **kwargs):
+  def GetEntries(self, parser_mediator, cache=None, database=None, **kwargs):
     """Extracts event objects from the database.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      database: Optional ESE database object (instance of pyesedb.file).
-      cache: Optional cache object (instance of ESEDBCache).
+      parser_mediator (ParserMediator): parser mediator.
+      cache (Optional[ESEDBCache]): cache.
+      database (Optional[pyesedb.file]): ESE database.
 
     Raises:
       ValueError: If the database attribute is not valid.
@@ -233,6 +226,7 @@ class ESEDBPlugin(plugins.BasePlugin):
     for table_name, callback_method in iter(self._tables.items()):
       if parser_mediator.abort:
         break
+
       if not callback_method:
         # Table names without a callback method are allowed to improve
         # the detection of a database based on its table names.
@@ -255,32 +249,25 @@ class ESEDBPlugin(plugins.BasePlugin):
       # that are assigned dynamically and cannot be defined by
       # the table name-callback mechanism.
       callback(
-          parser_mediator, database=database, table=esedb_table, cache=cache,
+          parser_mediator, cache=cache, database=database, table=esedb_table,
           **kwargs)
 
-  def Process(self, parser_mediator, database=None, cache=None, **kwargs):
+  def Process(self, parser_mediator, cache=None, database=None, **kwargs):
     """Determines if this is the appropriate plugin for the database.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      database: Optional ESE database object (instance of pyesedb.file).
-      cache: Optional cache object (instance of ESEDBCache).
+      parser_mediator (ParserMediator): parser mediator.
+      cache (Optional[ESEDBCache]): cache.
+      database (Optional[pyesedb.file]): ESE database.
 
     Raises:
-      errors.WrongPlugin: If the database does not contain all the tables
-                          defined in the required_tables set.
       ValueError: If the database attribute is not valid.
     """
     if database is None:
       raise ValueError(u'Invalid database.')
 
-    table_names = frozenset(self._GetTableNames(database))
-    if self._required_tables.difference(table_names):
-      raise errors.WrongPlugin(
-          u'[{0:s}] required tables not found.'.format(self.NAME))
-
     # This will raise if unhandled keyword arguments are passed.
     super(ESEDBPlugin, self).Process(parser_mediator)
 
     self.GetEntries(
-        parser_mediator, database=database, cache=cache, **kwargs)
+        parser_mediator, cache=cache, database=database, **kwargs)
