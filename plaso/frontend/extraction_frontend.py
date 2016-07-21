@@ -164,7 +164,7 @@ class ExtractionFrontend(frontend.Frontend):
     # care of overwriting this behavior.
 
     if operating_system == definitions.OPERATING_SYSTEM_LINUX:
-      return = u'linux'
+      return u'linux'
 
     if operating_system == definitions.OPERATING_SYSTEM_MACOSX:
       return u'macosx'
