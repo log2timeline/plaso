@@ -216,18 +216,32 @@ class WindowsUsersTest(WindowsSoftwareRegistryTest):
     self.assertEqual(user_account.user_directory, u'C:\\Users\\rsydow')
 
 
-class WindowsVersionTest(WindowsSoftwareRegistryTest):
-  """Tests for the Windows version preprocess plug-in object."""
+class WindowsSystemProductPluginTest(WindowsSoftwareRegistryTest):
+  """Tests for the plugin to determine Windows system version information."""
 
   def testGetValue(self):
     """Tests the GetValue function."""
-    plugin = windows.WindowsVersion()
+    plugin = windows.WindowsSystemProductPlugin()
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
     plugin.Run(self._win_registry, knowledge_base_object)
 
     osversion = knowledge_base_object.GetValue(u'operating_system_product')
     self.assertEqual(osversion, u'Windows 7 Ultimate')
+
+
+class WindowsSystemVersionPluginTest(WindowsSoftwareRegistryTest):
+  """Tests for the plugin to determine Windows system version information."""
+
+  def testGetValue(self):
+    """Tests the GetValue function."""
+    plugin = windows.WindowsSystemVersionPlugin()
+
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    plugin.Run(self._win_registry, knowledge_base_object)
+
+    osversion = knowledge_base_object.GetValue(u'operating_system_version')
+    self.assertEqual(osversion, u'6.1')
 
 
 if __name__ == '__main__':

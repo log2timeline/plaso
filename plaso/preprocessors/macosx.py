@@ -158,7 +158,7 @@ class PlistKeyPreprocessPlugin(PlistPreprocessPlugin):
     return key_value
 
 
-class MacOSXSystemVersion(PlistKeyPreprocessPlugin):
+class MacOSXSystemVersionPlugin(PlistKeyPreprocessPlugin):
   """Plugin to determine Mac OS X system version information."""
 
   ATTRIBUTE = u'operating_system_version'

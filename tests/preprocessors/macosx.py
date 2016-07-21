@@ -15,7 +15,7 @@ from tests import test_lib as shared_test_lib
 
 
 class MacOSXSystemVersionPluginTest(shared_test_lib.BaseTestCase):
-  """Tests for the plugin to determine Mac OS X System version information."""
+  """Tests for the plugin to determine Mac OS X system version information."""
 
   _FILE_DATA = (
       '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -49,7 +49,7 @@ class MacOSXSystemVersionPluginTest(shared_test_lib.BaseTestCase):
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    plugin = macosx. MacOSXSystemVersion()
+    plugin = macosx.MacOSXSystemVersionPlugin()
     plugin.Run(searcher, knowledge_base_object)
 
     build = knowledge_base_object.GetValue(u'operating_system_version')

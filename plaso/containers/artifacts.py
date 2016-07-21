@@ -74,7 +74,8 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
     code_page (str): system code page.
     hostname (HostnameArtifact): hostname.
     keyboard_layout (str): keyboard layout.
-    operating_system (str): operating system for example "Darwing" or "Windows".
+    operating_system (str): operating system for example "Mac OS X" or
+        "Windows".
     operating_system_product (str): operating system product for example
         "Windows XP".
     operating_system_version (str): operating system version for example

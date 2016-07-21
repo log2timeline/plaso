@@ -45,6 +45,25 @@ class WindowsPathPreprocessPlugin(interface.PreprocessPlugin):
     return relative_path
 
 
+class WindowsPathEnvironmentVariablePlugin(WindowsPathPreprocessPlugin):
+  """Plugin to determine the value of an environment variable."""
+
+  def GetValue(self, searcher, knowledge_base):
+    """Searches a path on a file system for a preprocessing attribute.
+
+    Args:
+      searcher (dfvfs.FileSystemSearcher): file system searcher.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+
+    Returns:
+      EnvironmentVariableArtifact: environment variable artifact or None.
+    """
+    relative_path = super(WindowsPathEnvironmentVariablePlugin, self).GetValue(
+        searcher, knowledge_base)
+    return artifacts.EnvironmentVariableArtifact(
+        case_sensitive=False, name=self.ATTRIBUTE, value=relative_path)
+
+
 class WindowsSystemRegistryPath(WindowsPathPreprocessPlugin):
   """Get the system registry path."""
 
@@ -298,25 +317,6 @@ class WindowsTimeZone(WindowsRegistryValuePreprocessPlugin):
     # Map the Windows time zone name to a Python equivalent name.
     lookup_key = value_data.replace(u' ', u'')
     return time_zones.TIME_ZONES.get(lookup_key, value_data)
-
-
-class WindowsPathEnvironmentVariablePlugin(WindowsPathPreprocessPlugin):
-  """Plugin to determine the value of an environment variable."""
-
-  def GetValue(self, searcher, knowledge_base):
-    """Searches a path on a file system for a preprocessing attribute.
-
-    Args:
-      searcher (dfvfs.FileSystemSearcher): file system searcher.
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
-
-    Returns:
-      EnvironmentVariableArtifact: environment variable artifact or None.
-    """
-    relative_path = super(WindowsPathEnvironmentVariablePlugin, self).GetValue(
-        searcher, knowledge_base)
-    return artifacts.EnvironmentVariableArtifact(
-        case_sensitive=False, name=self.ATTRIBUTE, value=relative_path)
 
 
 class WindowsRegistryEnvironmentVariable(WindowsRegistryValuePreprocessPlugin):
