@@ -9,7 +9,17 @@ from plaso.analysis import manager
 
 
 class NsrlsvrAnalyzer(interface.HashAnalyzer):
-  """Class that analyzes file hashes by consulting an nsrlsvr instance."""
+  """Class that analyzes file hashes by consulting an nsrlsvr instance.
+
+  Attributes:
+    analyses_performed (int): number of analysis batches completed by this
+        analyzer.
+    hashes_per_batch (int): maximum number of hashes to analyze at once.
+    seconds_spent_analyzing (int): number of seconds this analyzer has spent
+        performing analysis (as opposed to waiting on queues, etc.)
+    wait_after_analysis (int): number of seconds the analyzer will sleep for
+        after analyzing a batch of hashes.
+  """
   _RECEIVE_BUFFER_SIZE = 4096
   _SOCKET_TIMEOUT = 3
 
@@ -17,7 +27,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     """Initializes an nsrlsvr analyzer thread.
 
     Args:
-      hash_queue (Queue.queue):  contains hashes to be analyzed.
+      hash_queue (Queue.queue): contains hashes to be analyzed.
       hash_analysis_queue (Queue.queue): that the analyzer will append
           HashAnalysis objects this queue.
     """
@@ -31,12 +41,11 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     """Looks up hashes in nsrlsvr.
 
     Args:
-      hashes (list[str]):  hashes to look up.
+      hashes (list[str]): hashes to look up.
 
     Returns:
-      list[HashAnalysis]: analysis results.
+      list[HashAnalysis]: analysis results, or an empty list on error.
     """
-    hash_analyses = []
     # Open a socket
     logging.debug(
         u'Opening connection to {0:s}:{1:d}'.format(self._host, self._port))
@@ -48,7 +57,8 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
           u'Error communicating with nsrlsvr {0:s}. nsrlsvr plugin is '
           u'aborting.').format(exception))
       self.SignalAbort()
-      return hash_analyses
+      return []
+    hash_analyses = []
     for digest in hashes:
       query = u'QUERY {0:s}\n'.format(digest)
       try:
@@ -61,7 +71,9 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
         self.SignalAbort()
         return hash_analyses
 
-      if response.split(u' ')[1] == u'1':
+      _, _, nsrl_result = response.rpartition(u' ')
+
+      if nsrl_result == u'1':
         hash_analysis = interface.HashAnalysis(digest, True)
         hash_analyses.append(hash_analysis)
       else:
@@ -83,7 +95,6 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
 
     Args:
       port (int): port to query.
-
     """
     self._port = port
 
@@ -105,17 +116,17 @@ class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     """Initializes an nsrlsvr analysis plugin.
 
     Args:
-      event_queue (Queue.queue)): queue of events to analyze.
+      event_queue (Queue.queue): queue of events to analyze.
     """
     super(NsrlsvrAnalysisPlugin, self).__init__(event_queue, NsrlsvrAnalyzer)
 
-  def GenerateTagStrings(self, hash_information):
+  def GenerateLabels(self, hash_information):
     """Generates a list of strings that will be used in the event tag.
 
     Args:
       hash_information (bool): whether the analyzer received a response from
-          nsrlsvr indicating that the hash was present in its loaded nsrl
-          version.
+          nsrlsvr indicating that the hash was present in its loaded NSRL
+          set.
 
     Returns:
       list[str]: strings describing the results from nsrlsvr.

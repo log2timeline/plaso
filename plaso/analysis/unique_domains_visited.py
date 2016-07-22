@@ -36,21 +36,21 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
     super(UniqueDomainsVisitedPlugin, self).__init__(incoming_queue)
     self._domains = []
 
-  def ExamineEvent(self, analysis_mediator, event_object, **kwargs):
-    """Analyzes an event_object and extracts domains from it.
+  def ExamineEvent(self, mediator, event, **kwargs):
+    """Analyzes an event and extracts domains from it.
 
     We only evaluate straightforward web history events, not visits which can
     be inferred by TypedURLs, cookies or other means.
 
     Args:
-      analysis_mediator: The analysis mediator object (instance of
-                         AnalysisMediator).
-      event_object: The event object (instance of EventObject) to examine.
+      mediator (AnalysisMediator): encapsulates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
+      event: The event object (instance of EventObject) to examine.
     """
-    if event_object.data_type not in self._DATATYPES:
+    if event.data_type not in self._DATATYPES:
       return
 
-    url = getattr(event_object, u'url', None)
+    url = getattr(event, u'url', None)
     if url is None:
       return
     parsed_url = urlparse.urlparse(url)
@@ -60,12 +60,12 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
       return
     self._domains.append(domain)
 
-  def CompileReport(self, analysis_mediator):
+  def CompileReport(self, mediator):
     """Compiles an analysis report.
 
     Args:
-      analysis_mediator: The analysis mediator object (instance of
-                         AnalysisMediator).
+      mediator (AnalysisMediator): encapsulates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
 
     Returns:
       The analysis report (instance of AnalysisReport).

@@ -24,6 +24,8 @@ class _MockNsrlsvrSocket(object):
     super(_MockNsrlsvrSocket, self).__init__()
     self._data = None
 
+  # These methods are part of the socket interface, hence their names do not
+  # follow the Plaso style guide.
   def recv(self, unused_buffer_size):
     """Mocks the socket.recv method."""
     if self._data == u'QUERY {0:s}\n'.format(NsrlSvrTest.EVENT_1_HASH):

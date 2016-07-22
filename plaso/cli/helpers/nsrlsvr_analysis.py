@@ -42,7 +42,7 @@ class NsrlsvrAnalysisHelper(interface.ArgumentsHelper):
     """Parses and validates options.
 
     Args:
-      options (argparse.Namespace):  parser options object.
+      options (argparse.Namespace): parser options object.
       analysis_plugin (AnalysisPlugin): an NsrlsvrAnalysisPlugin instance to
           configure.
 

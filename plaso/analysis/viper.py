@@ -139,7 +139,7 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
       raise ValueError(u'Invalid protocol specified for Viper lookup')
     self._analyzer.SetProtocol(protocol)
 
-  def GenerateTagStrings(self, hash_information):
+  def GenerateLabels(self, hash_information):
     """Generates a list of strings that will be used in the event tag.
 
     Args:

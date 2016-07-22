@@ -56,30 +56,30 @@ class AnalysisPlugin(plaso_queue.ItemQueueConsumer):
     """Initializes an analysis plugin.
 
     Args:
-      incoming_queue: A queue that is used to listen to incoming events.
+      incoming_queue (Queue.queue): queue of events to analyze.
     """
     super(AnalysisPlugin, self).__init__(incoming_queue)
     self.plugin_type = definitions.PLUGIN_TYPE_REPORT
 
-  def _ConsumeItem(self, item, analysis_mediator=None, **kwargs):
+  def _ConsumeItem(self, item, mediator=None, **kwargs):
     """Consumes an item callback for ConsumeItems.
 
     Args:
-      item: the item object.
-      analysis_mediator: The analysis mediator object (instance of
-                         AnalysisMediator).
+      item (object): item.
+      mediator (Optional[AnalysisMediator]): encapsulates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
       kwargs: keyword arguments to pass to the _ConsumeItem callback.
     """
     # TODO: rename to ExamineItem.
-    self.ExamineEvent(analysis_mediator, item, **kwargs)
+    self.ExamineEvent(mediator, item, **kwargs)
 
   @property
   def plugin_name(self):
-    """Return the name of the plugin."""
+    """str: name of the plugin."""
     return self.NAME
 
   @abc.abstractmethod
-  def CompileReport(self, analysis_mediator):
+  def CompileReport(self, mediator):
     """Compiles a report of the analysis.
 
     After the plugin has received every copy of an event to
@@ -87,39 +87,39 @@ class AnalysisPlugin(plaso_queue.ItemQueueConsumer):
     can be assembled.
 
     Args:
-      analysis_mediator: The analysis mediator object (instance of
-                         AnalysisMediator).
+      mediator (AnalysisMediator): encapsulates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
 
     Returns:
-      The analysis report (instance of AnalysisReport).
+      AnalysisReport: report.
     """
 
   @abc.abstractmethod
-  def ExamineEvent(self, analysis_mediator, event_object, **kwargs):
+  def ExamineEvent(self, mediator, event, **kwargs):
     """Analyzes an event object.
 
     Args:
-      analysis_mediator: The analysis mediator object (instance of
-                         AnalysisMediator).
-      event_object: An event object (instance of EventObject).
+      mediator (AnalysisMediator): encapsulates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
+      event (EventObject): event.
     """
 
-  def RunPlugin(self, analysis_mediator):
+  def RunPlugin(self, mediator):
     """For each item in the queue send the read event to analysis.
 
     Args:
-      analysis_mediator: The analysis mediator object (instance of
-                         AnalysisMediator).
+      mediator (AnalysisMediator): encapsulates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
     """
-    self.ConsumeItems(analysis_mediator=analysis_mediator)
+    self.ConsumeItems(mediator=mediator)
 
-    analysis_report = self.CompileReport(analysis_mediator)
+    analysis_report = self.CompileReport(mediator)
 
     if analysis_report:
       analysis_report.time_compiled = timelib.Timestamp.GetNow()
-      analysis_mediator.ProduceAnalysisReport(
+      mediator.ProduceAnalysisReport(
           analysis_report, plugin_name=self.plugin_name)
-    analysis_mediator.ReportingComplete()
+    mediator.ReportingComplete()
 
 
 class HashTaggingAnalysisPlugin(AnalysisPlugin):
@@ -129,9 +129,9 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
   the HashAnalyzer interface.
 
   Attributes:
-    hash_analysis_queue: A queue (instance of Queue.Queue) that contains
-                         the results of analysis of file hashes.
-    hash_queue: A queue (instance of Queue.Queue) that contains file hashes.
+    hash_analysis_queue (Queue.queue): queue that contains the results of
+        analysis of file hashes.
+    hash_queue(Queue.queue): queue that contains file hashes.
   """
   # The event data types the plugin will collect hashes from. Subclasses
   # must override this attribute.
@@ -153,9 +153,9 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     """Initializes a hash tagging analysis plugin.
 
     Args:
-      incoming_queue: A queue that is used to listen for incoming events.
-      analyzer_class: A subclass of HashAnalyzer that will be instantiated
-                      by the plugin.
+      incoming_queue (Queue.queue): queue that contains events to be analyzed.
+      analyzer_class (type): A subclass of HashAnalyzer that will be
+          instantiated by the plugin.
     """
     super(HashTaggingAnalysisPlugin, self).__init__(incoming_queue)
     self._analysis_queue_timeout = self.DEFAULT_QUEUE_TIMEOUT
@@ -169,39 +169,45 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
 
     self._analyzer = analyzer_class(self.hash_queue, self.hash_analysis_queue)
 
-  def _GenerateTextLine(self, analysis_mediator, pathspec, tag_strings):
-    """Generates a line of text regarding the plugins findings.
+  def _GenerateTextLine(self, mediator, pathspec, labels):
+    """Generates a line of text regarding the plugin's findings.
 
     Args:
-      analysis_mediator: The analysis mediator object (instance of
-                         AnalysisMediator).
-      pathspec: The pathspec (instance of dfvfs.PathSpec) whose hash was
-                looked up by the plugin.
-      tag_strings: A list of strings describing the plugin's results for a given
-                   pathspec.
+      mediator (AnalysisMediator): encapsulates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
+      pathspec (dfvfs.PathSpec): pathspec whose hash was looked up by the
+          plugin.
+      labels (list[str]): strings describing the plugin's results for a given
+          pathspec.
+
+    Returns:
+      str: human readable text regarding the plugin's findings.
     """
-    display_name = analysis_mediator.GetDisplayName(pathspec)
-    return u'{0:s}: {1:s}'.format(display_name, u', '.join(tag_strings))
+    display_name = mediator.GetDisplayName(pathspec)
+    return u'{0:s}: {1:s}'.format(display_name, u', '.join(labels))
 
   @abc.abstractmethod
-  def GenerateTagStrings(self, hash_information):
+  def GenerateLabels(self, hash_information):
     """Generates a list of strings to tag events with.
 
     Args:
-      hash_information: An object that encapsulates the result of the
-                        analysis of a hash, as returned by the Analyze() method
-                        of the analyzer class associated with this plugin.
+      hash_information (object): object that encapsulates the result of the
+          analysis of a hash, as returned by the Analyze() method of the
+          analyzer class associated with this plugin.
 
     Returns:
-      A list of string tags to apply to events.
+      list[str]: list of labels to apply to events.
     """
 
   def _CreateTag(self, event_uuid, labels):
     """Creates an event tag.
 
     Args:
-      event_uuid: The UUID of the event that should be tagged.
-      labels: A list of strings that contains the labels.
+      event_uuid (uuid.UUID): identifier of the event that should be tagged.
+      labels (list[str]): labels for the gag.
+
+    Returns:
+      EventTag: event tag.
     """
     event_tag = events.EventTag(
         comment=u'Tag applied by {0:s} analysis plugin'.format(self.NAME),
@@ -212,30 +218,29 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
   def _HandleHashAnalysis(self, hash_analysis):
     """Deals with a the results of the analysis of a hash.
 
-    This method ensures that tag strings are generated for the hash,
+    This method ensures that labels are generated for the hash,
     then tags all events derived from files with that hash.
 
     Args:
-      hash_analysis: The the hash analysis plugin's results for a given hash
-                     (instance of HashAnalysis).
+      hash_analysis (HashAnalysis): hash analysis plugin's results for a given
+          hash.
 
     Returns:
-      A tuple of:
-        pathspecs: A list of pathspecs (instances of dfvfs.PathSpec) that had
-                   the hash value looked up.
-        tag_strings: A list of strings that corresponds to the hash value that
-                     was looked up.
-        tags: A list of event tags (instances of EventTag) for all events that
-              were extracted from the path specifications.
+      tuple: containing:
+
+        list[dfvfs.PathSpec]: pathspecs that had the hash value looked up.
+        list[str]: labels that corresponds to the hash value that was looked up.
+        list[EventTag]: event tags for all events that were extracted from the
+            path specifications.
     """
     tags = []
-    tag_strings = self.GenerateTagStrings(hash_analysis.hash_information)
+    labels = self.GenerateLabels(hash_analysis.hash_information)
     pathspecs = self._hash_pathspecs[hash_analysis.subject_hash]
     for pathspec in pathspecs:
       for event_uuid in self._event_uuids_by_pathspec[pathspec]:
-        tag = self._CreateTag(event_uuid, tag_strings)
+        tag = self._CreateTag(event_uuid, labels)
         tags.append(tag)
-    return pathspecs, tag_strings, tags
+    return pathspecs, labels, tags
 
   def _EnsureRequesterStarted(self):
     """Checks if the analyzer is running and starts it if not."""
@@ -243,21 +248,21 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
       self._analyzer.start()
       self._analyzer_started = True
 
-  def ExamineEvent(self, analysis_mediator, event_object, **kwargs):
+  def ExamineEvent(self, mediator, event, **kwargs):
     """Evaluates whether an event contains the right data for a hash lookup.
 
     Args:
-      analysis_mediator: The analysis mediator object (instance of
-                         AnalysisMediator).
-      event_object: An event object (instance of EventObject).
+      mediator (AnalysisMediator): encapsulates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
+      event (EventObject): event.
     """
     self._EnsureRequesterStarted()
-    pathspec = event_object.pathspec
+    pathspec = event.pathspec
     event_uuids = self._event_uuids_by_pathspec[pathspec]
-    event_uuids.append(event_object.uuid)
-    if event_object.data_type in self.DATA_TYPES:
+    event_uuids.append(event.uuid)
+    if event.data_type in self.DATA_TYPES:
       for attribute in self.REQUIRED_HASH_ATTRIBUTES:
-        hash_for_lookup = getattr(event_object, attribute, None)
+        hash_for_lookup = getattr(event, attribute, None)
         if not hash_for_lookup:
           continue
         pathspecs = self._hash_pathspecs[hash_for_lookup]
@@ -270,14 +275,14 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
       warning_message = (
           u'Event with ID {0:s} had none of the required attributes '
           u'{1:s}.').format(
-              event_object.uuid, self.REQUIRED_HASH_ATTRIBUTES)
+              event.uuid, self.REQUIRED_HASH_ATTRIBUTES)
       logging.warning(warning_message)
 
   def _ContinueReportCompilation(self):
     """Determines if the plugin should continue trying to compile the report.
 
     Returns:
-      True if the plugin should continue, False otherwise.
+      bool: True if the plugin should continue, False otherwise.
     """
     analyzer_alive = self._analyzer.is_alive()
     hash_queue_has_tasks = self.hash_queue.unfinished_tasks > 0
@@ -285,21 +290,21 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     return (analyzer_alive and hash_queue_has_tasks) or analysis_queue
 
   def EstimateTimeRemaining(self):
-    """Estimate how long until all hashes have been analyzed.
+    """Estimates how long until all hashes have been analyzed.
 
     Returns:
-      The estimated number of seconds until all hashes have been analyzed.
+      int: estimated number of seconds until all hashes have been analyzed.
     """
     number_of_hashes = self.hash_queue.qsize()
     hashes_per_batch = self._analyzer.hashes_per_batch
     wait_time_per_batch = self._analyzer.wait_after_analysis
     try:
-      average_analysis_time = (
-          self._analyzer.seconds_spent_analyzing /
+      average_analysis_time = divmod(
+          self._analyzer.seconds_spent_analyzing,
           self._analyzer.analyses_performed)
     except ZeroDivisionError:
       average_analysis_time = 1
-    batches_remaining = number_of_hashes / hashes_per_batch
+    batches_remaining = divmod(number_of_hashes, hashes_per_batch)
     estimated_seconds_per_batch = average_analysis_time + wait_time_per_batch
     return batches_remaining * estimated_seconds_per_batch
 
@@ -320,15 +325,15 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     logging.info(log_message)
     self._time_of_last_status_log = current_time
 
-  def CompileReport(self, analysis_mediator):
+  def CompileReport(self, mediator):
     """Compiles an analysis report.
 
     Args:
-      analysis_mediator: The analysis mediator object (instance of
-                         AnalysisMediator).
+      mediator (AnalysisMediator): encapsulates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
 
     Returns:
-      The analysis report (instance of AnalysisReport).
+      AnalysisReport: report.
     """
     tags = []
     lines_of_text = [u'{0:s} hash tagging Results'.format(self.NAME)]
@@ -345,8 +350,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
           hash_analysis)
       tags.extend(new_tags)
       for pathspec in pathspecs:
-        text_line = self._GenerateTextLine(
-            analysis_mediator, pathspec, tag_strings)
+        text_line = self._GenerateTextLine(mediator, pathspec, tag_strings)
         lines_of_text.append(text_line)
 
     self._analyzer.SignalAbort()
@@ -365,14 +369,13 @@ class HashAnalyzer(threading.Thread):
   This interface should be implemented once for each hash analysis plugin.
 
   Attributes:
-    analyses_performed: The number of analysis batches completed by this
-                        analyzer.
-    hashes_per_batch: The maximum number of hashes to analyze at once.
-    seconds_spent_analyzing: The number of seconds this analyzer has spent
-                             performing analysis (as opposed to waiting on
-                             queues, etc.)
-    wait_after_analysis: How long the analyzer will sleep for after analyzing a
-                         batch of hashes.
+    analyses_performed (int): number of analysis batches completed by this
+        analyzer.
+    hashes_per_batch (int): maximum number of hashes to analyze at once.
+    seconds_spent_analyzing (int): number of seconds this analyzer has spent
+        performing analysis (as opposed to waiting on queues, etc.)
+    wait_after_analysis (int): number of seconds the analyzer will sleep for
+        after analyzing a batch of hashes.
   """
   # How long to wait for new items to be added to the the input queue.
   EMPTY_QUEUE_WAIT_TIME = 4
@@ -383,14 +386,12 @@ class HashAnalyzer(threading.Thread):
     """Initializes a hash analyzer.
 
     Args:
-      hash_queue: A queue (instance of Queue.queue) that contains hashes to
-                  be analyzed.
-      hash_analysis_queue: A queue (instance of Queue.queue) that the analyzer
-                           will append HashAnalysis objects to.
-      hashes_per_batch: The number of hashes to analyze at once. The default
-                        is 1.
-      wait_after_analysis: The number of seconds to wait after each batch is
-                           analyzed.
+      hash_queue (Queue.queue): contains hashes to be analyzed.
+      hash_analysis_queue (Queue.queue): queue that the analyzer will append
+          HashAnalysis objects to.
+      hashes_per_batch (Optional[int]): number of hashes to analyze at once.
+      wait_after_analysis (Optional[int]: number of seconds to wait after each
+          batch is analyzed.
     """
     super(HashAnalyzer, self).__init__()
     self._abort = False
@@ -402,29 +403,29 @@ class HashAnalyzer(threading.Thread):
     self.wait_after_analysis = wait_after_analysis
     # Indicate that this is a daemon thread. The program will exit if only
     # daemon threads are running. This thread should never block program exit.
-    self.daemon = True
 
   @abc.abstractmethod
   def Analyze(self, hashes):
     """Analyzes a list of hashes.
 
     Args:
-      hashes: A list of hashes (strings) to look up.
+      hashes (list[str]): list of hashes to look up.
 
     Returns:
-      A list of hash analysis objects (instances of HashAnalysis).
+      list[HashAnalysis]: list of results of analyzing the hashes.
     """
 
   def _GetHashes(self, target_queue, max_hashes):
     """Retrieves a list of items from a queue.
 
     Args:
-      target_queue: The target_queue to retrieve items from.
-      max_hashes: The maximum number of items to retrieve from the target_queue.
+      target_queue (Queue.queue): queue to retrieve hashes from.
+      max_hashes (int): maximum number of items to retrieve from the
+          target_queue.
 
     Returns:
-      A list of at most max_hashes elements from the target_queue. The list
-      may have no elements if the target_queue is empty.
+      list[object]: list of at most max_hashes elements from the target_queue.
+          The list may have no elements if the target_queue is empty.
     """
     hashes = []
     for _ in range(0, max_hashes):
@@ -467,10 +468,9 @@ class HTTPHashAnalyzer(HashAnalyzer):
     """Initializes a HTTP hash analyzer.
 
     Args:
-      hash_queue: A queue (instance of Queue.queue) that contains hashes to
-                  be analyzed.
-      hash_analysis_queue: A queue (instance of Queue.queue) that the analyzer
-                           will append HashAnalysis objects to.
+      hash_queue (Queue.queue): A queue that contains hashes to be analyzed.
+      hash_analysis_queue (Queue.queue): queue that the analyzer will append
+          HashAnalysis objects to.
     """
     super(HTTPHashAnalyzer, self).__init__(
         hash_queue, hash_analysis_queue, **kwargs)
@@ -509,24 +509,24 @@ class HTTPHashAnalyzer(HashAnalyzer):
     """Analyzes a list of hashes.
 
     Args:
-      hashes: A list of hashes (strings) to look up.
+      hashes (list[str]): hashes to look up.
 
     Returns:
-      A list of hash analysis objects (instances of HashAnalysis).
+      list[HashAnalysis]: analysis results.
     """
 
   def MakeRequestAndDecodeJSON(self, url, method, **kwargs):
     """Make a HTTP request and decode the results as JSON.
 
     Args:
-      url: The URL to make a request to.
-      method: The HTTP method to use to make the request, as a string. GET and
-              POST are supported.
+      url (str): URL to make a request to.
+      method (str): HTTP method to used to make the request. GET and POST are
+          supported.
       kwargs: Parameters to the requests .get() or post() methods, depending
-              on the value of the method parameter.
+          on the value of the method parameter.
 
     Returns:
-      The body of the HTTP response, decoded from JSON.
+      dict[str, object]: body of the HTTP response, decoded from JSON.
 
     Raises:
       ConnectionError: If it is not possible to connect to the given URL, or it
@@ -562,19 +562,18 @@ class HashAnalysis(object):
   """A class that holds information about a hash.
 
   Attributes:
-    hash_information: An object containing information about the hash.
-    subject_hash: The hash that was analyzed.
+    hash_information (object): object containing information about the hash.
+    subject_hash (str):  hash that was analyzed.
   """
 
   def __init__(self, subject_hash, hash_information):
     """Initializes a HashAnalysis object.
 
     Args:
-      subject_hash: The hash that the hash_information relates to.
-      hash_information: An object containing information about the hash.
-                        This object will be used by the _GenerateTagString
-                        method in the HashTaggingAnalysisPlugin to tag events
-                        that relate to the hash.
+      subject_hash (str): hash that the hash_information relates to.
+      hash_information (object): information about the hash. This object will be
+          used by the GenerateLabels method in the HashTaggingAnalysisPlugin
+          to tag events that relate to the hash.
     """
     self.hash_information = hash_information
     self.subject_hash = subject_hash
