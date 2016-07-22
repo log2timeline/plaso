@@ -195,7 +195,7 @@ def GuessOS(searcher):
 
   Returns:
     str: operating system for example "Windows". This should be one of
-        the OPERATING_SYSTEMS definitions.
+        the values in definitions.OPERATING_SYSTEMS.
   """
   find_specs = [
       file_system_searcher.FindSpec(

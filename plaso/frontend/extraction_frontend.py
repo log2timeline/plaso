@@ -146,7 +146,7 @@ class ExtractionFrontend(frontend.Frontend):
 
     Args:
       operating_system (str): operating system for example "Windows". This
-          should be one of the OPERATING_SYSTEMS definitions.
+          should be one of the values in definitions.OPERATING_SYSTEMS.
       operating_system_product (str): operating system product for
           example "Windows XP" as determined by preprocessing.
       operating_system_version (str): operating system version for
