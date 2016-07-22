@@ -229,7 +229,7 @@ class KnowledgeBase(object):
 
     # TODO: refactor the use of store number.
     self._user_accounts[store_number] = {
-        user_account.name: user_account
+        user_account.username: user_account
         for user_account in system_configuration.user_accounts}
 
   def SetDefaultCodepage(self, codepage):
