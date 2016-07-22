@@ -14,7 +14,7 @@ class TextEvent(time_events.TimestampEvent):
   # TODO: remove attributes as and argument and pass them as individual
   # arguments.
   def __init__(self, timestamp, offset, attributes):
-    """Initializes an event.
+    """Initializes a text event.
 
     Args:
       timestamp (int): timestamp, which contains the number of microseconds

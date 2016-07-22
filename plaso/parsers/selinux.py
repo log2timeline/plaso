@@ -42,7 +42,8 @@ class SELinuxLineEvent(text_events.TextEvent):
   Attributes:
     audit_type (str): audit type.
     body (str): body of the log line.
-    pid (int): process indentifier (PID) that created the SELinux log line.
+    pid (int): identifier of the process (PID) that created the SELinux
+        log line.
   """
 
   DATA_TYPE = u'selinux:line'
@@ -55,7 +56,8 @@ class SELinuxLineEvent(text_events.TextEvent):
           since January 1, 1970, 00:00:00 UTC.
       offset (int): offset of the text event within the event source.
       audit_type (str): audit type.
-      pid (int): process indentifier (PID) that created the SELinux log line.
+      pid (int): identifier of the process (PID) that created the SELinux
+          log line.
       body (str): body of the log line.
     """
     # TODO: remove the need to pass an empty dict.
