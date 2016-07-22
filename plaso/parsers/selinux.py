@@ -98,7 +98,7 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
       pyparsing.Literal(u'type').setResultsName(u'key') +
       pyparsing.Suppress(u'=') + (
           pyparsing.Word(pyparsing.srange(u'[A-Z_]')) ^ 
-          pyparsing.Regex(u'UNKNOWN\[[0-9]+\]')).setResultsName(u'value'))
+          pyparsing.Regex(r'UNKNOWN\[[0-9]+\]')).setResultsName(u'value'))
 
   _SELINUX_TYPE_AVC_GROUP = pyparsing.Group(
       pyparsing.Literal(u'type').setResultsName(u'key') +
