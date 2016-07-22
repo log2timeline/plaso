@@ -200,7 +200,7 @@ class ZeroMQQueue(plaso_queue.Queue):
 
     self._terminate_event.set()
     self._closed = True
-    self._zmq_socket.close(self._linger_seconds)
+    # self._zmq_socket.close(self._linger_seconds)
 
   @abc.abstractmethod
   def Empty(self):
@@ -704,9 +704,9 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
 
     self._terminate_event.set()
     if self._zmq_thread:
+      logging.debug(u'[{0:s}] Waiting for thread to exit.'.format(self.name))
       self._zmq_thread.join(timeout=self.timeout_seconds)
     self._closed = True
-    self._zmq_socket.close(self._linger_seconds)
 
   def Empty(self):
     """Empty the queue."""
