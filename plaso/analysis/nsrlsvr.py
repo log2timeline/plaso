@@ -60,6 +60,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
              u'aborting.').format(exception))
         self.SignalAbort()
         return hash_analyses
+
       if response.split(u' ')[1] == u'1':
         hash_analysis = interface.HashAnalysis(digest, True)
         hash_analyses.append(hash_analysis)
