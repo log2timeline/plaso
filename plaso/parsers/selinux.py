@@ -37,9 +37,32 @@ __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
 
 class SELinuxLineEvent(text_events.TextEvent):
-  """Convenience class for a SELinux log line event."""
+  """Convenience class for a SELinux log line event.
+
+  Attributes:
+    audit_type (str): audit type.
+    body (str): body of the log line.
+    pid (int): process indentifier (PID) that created the SELinux log line.
+  """
 
   DATA_TYPE = u'selinux:line'
+
+  def __init__(self, timestamp, offset, audit_type, pid, body):
+    """Initializes an event.
+
+    Args:
+      timestamp (int): timestamp, which contains the number of microseconds
+          since January 1, 1970, 00:00:00 UTC.
+      offset (int): offset of the text event within the event source.
+      audit_type (str): audit type.
+      pid (int): process indentifier (PID) that created the SELinux log line.
+      body (str): body of the log line.
+    """
+    # TODO: remove the need to pass an empty dict.
+    super(SELinuxLineEvent, self).__init__(timestamp, offset, {})
+    self.audit_type = audit_type
+    self.body = body
+    self.pid = pid
 
 
 class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
@@ -74,10 +97,8 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
   _SELINUX_TYPE_GROUP = pyparsing.Group(
       pyparsing.Literal(u'type').setResultsName(u'key') +
       pyparsing.Suppress(u'=') + (
-          pyparsing.Word(pyparsing.srange("[A-Z_]")) ^ (
-              pyparsing.Literal(u'UNKNOWN[') +
-              pyparsing.Word(pyparsing.nums) +
-              pyparsing.Literal(u']'))).setResultsName(u'value'))
+          pyparsing.Word(pyparsing.srange(u'[A-Z_]')) ^ 
+          pyparsing.Regex(u'UNKNOWN\[[0-9]+\]')).setResultsName(u'value'))
 
   _SELINUX_TYPE_AVC_GROUP = pyparsing.Group(
       pyparsing.Literal(u'type').setResultsName(u'key') +
@@ -141,13 +162,10 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
     except pyparsing.ParseException:
       key_value_dict = {}
 
-    attributes = {
-        u'audit_type': structure.get(u'type'),
-        u'body': body_text,
-        u'pid': key_value_dict.get(u'pid')
-    }
+    audit_type = structure.get(u'type')
+    pid = key_value_dict.get(u'pid')
 
-    event_object = SELinuxLineEvent(timestamp, 0, attributes)
+    event_object = SELinuxLineEvent(timestamp, 0, audit_type, pid, body_text)
     parser_mediator.ProduceEvent(event_object)
 
   def VerifyStructure(self, parser_mediator, line):
