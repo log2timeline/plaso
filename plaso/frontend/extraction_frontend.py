@@ -139,13 +139,18 @@ class ExtractionFrontend(frontend.Frontend):
 
     return session
 
-  def _GetParserFilterPreset(self, os_guess=u'', os_version=u''):
+  def _GetParserFilterPreset(
+      self, operating_system, operating_system_product,
+      operating_system_version):
     """Determines the parser filter preset.
 
     Args:
-      os_guess (Optional[str]): operating system guessed by preprocessing.
-      os_version (Optional[str]): operating system version determined by
-          preprocessing.
+      operating_system (str): operating system for example "Windows". This
+          should be one of the values in definitions.OPERATING_SYSTEMS.
+      operating_system_product (str): operating system product for
+          example "Windows XP" as determined by preprocessing.
+      operating_system_version (str): operating system version for
+          example "5.1" as determined by preprocessing.
 
     Returns:
       str: parser filter preset, where None represents all parsers and plugins.
@@ -158,33 +163,43 @@ class ExtractionFrontend(frontend.Frontend):
     # this behavior, need to add a parameter to the frontend that takes
     # care of overwriting this behavior.
 
-    parser_filter_preset = None
+    if operating_system == definitions.OPERATING_SYSTEM_LINUX:
+      return u'linux'
 
-    if not parser_filter_preset and os_version:
-      os_version = os_version.lower()
+    if operating_system == definitions.OPERATING_SYSTEM_MACOSX:
+      return u'macosx'
 
-      # TODO: Improve this detection, this should be more 'intelligent', since
-      # there are quite a lot of versions out there that would benefit from
-      # loading up the set of 'winxp' parsers.
-      if u'windows xp' in os_version:
-        parser_filter_preset = u'winxp'
-      elif u'windows server 2000' in os_version:
-        parser_filter_preset = u'winxp'
-      elif u'windows server 2003' in os_version:
-        parser_filter_preset = u'winxp'
-      elif u'windows' in os_version:
-        # Fallback for other Windows versions.
-        parser_filter_preset = u'win7'
+    if operating_system_product:
+      operating_system_product = operating_system_product.lower()
+    else:
+      operating_system_product = u''
 
-    if not parser_filter_preset and os_guess:
-      if os_guess == definitions.OS_LINUX:
-        parser_filter_preset = u'linux'
-      elif os_guess == definitions.OS_MACOSX:
-        parser_filter_preset = u'macosx'
-      elif os_guess == definitions.OS_WINDOWS:
-        parser_filter_preset = u'win7'
+    if operating_system_version:
+      operating_system_version = operating_system_version.split(u'.')
+    else:
+      operating_system_version = [u'0', u'0']
 
-    return parser_filter_preset
+    # Windows NT 5 (2000, XP and 2003).
+    if (u'windows' in operating_system_product and
+        operating_system_version[0] == u'5'):
+      return u'winxp'
+
+    # TODO: Improve this detection, this should be more 'intelligent', since
+    # there are quite a lot of versions out there that would benefit from
+    # loading up the set of 'winxp' parsers.
+    if (u'windows xp' in operating_system_product or
+        u'windows server 2000' in operating_system_product or
+        u'windows server 2003' in operating_system_product):
+      return u'winxp'
+
+    # Fallback for other Windows versions.
+    if u'windows' in operating_system_product:
+      return u'win7'
+
+    if operating_system == definitions.OPERATING_SYSTEM_WINDOWS:
+      return u'win7'
+
+    return
 
   def _PreprocessSources(self, source_path_specs):
     """Preprocesses the sources.
@@ -394,11 +409,14 @@ class ExtractionFrontend(frontend.Frontend):
       self._PreprocessSources(source_path_specs)
 
     if not parser_filter_expression:
-      # TODO: clean up.
-      guessed_os = self._engine.knowledge_base.platform
-      os_version = self._engine.knowledge_base.GetValue(u'osversion')
+      operating_system = self._engine.knowledge_base.GetValue(
+          u'operating_system')
+      operating_system_product = self._engine.knowledge_base.GetValue(
+          u'operating_system_product')
+      operating_system_version = self._engine.knowledge_base.GetValue(
+          u'operating_system_version')
       parser_filter_expression = self._GetParserFilterPreset(
-          os_guess=guessed_os, os_version=os_version)
+          operating_system, operating_system_product, operating_system_version)
 
       if parser_filter_expression:
         logging.info(u'Parser filter expression changed to: {0:s}'.format(
