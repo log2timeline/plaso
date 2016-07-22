@@ -11,7 +11,7 @@ class TextEvent(time_events.TimestampEvent):
 
   DATA_TYPE = 'text:entry'
 
-  # TODO: remove attributes as and argument and pass them as individual
+  # TODO: remove attributes as an argument and pass them as individual
   # arguments.
   def __init__(self, timestamp, offset, attributes):
     """Initializes a text event.
