@@ -31,13 +31,10 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     """Looks up hashes in nsrlsvr.
 
     Args:
-      hashes: A list of hashes (strings) to look up.
+      hashes (list[str]):  hashes to look up.
 
     Returns:
-      A list of HashAnalysis objects.
-
-    Raises:
-      RuntimeError:
+      list[HashAnalysis]: analysis results.
     """
     hash_analyses = []
     # Open a socket
@@ -46,7 +43,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     nsrl_socket = socket.create_connection((self._host, self._port),
         self._SOCKET_TIMEOUT)
     for digest in hashes:
-      query = u'QUERY {0:s}'.format(digest)
+      query = u'QUERY {0:s}\n'.format(digest)
       nsrl_socket.sendall(query)
       response = nsrl_socket.recv(self._RECEIVE_BUFFER_SIZE)
       if response.split(u' ')[1] == u'1':
