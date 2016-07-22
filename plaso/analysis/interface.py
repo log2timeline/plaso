@@ -225,17 +225,15 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
         tag_strings: A list of strings that corresponds to the hash value that
                      was looked up.
         tags: A list of event tags (instances of EventTag) for all events that
-              were extracted from the path specifictions.
+              were extracted from the path specifications.
     """
     tags = []
-    event_uuids = []
     tag_strings = self.GenerateTagStrings(hash_analysis.hash_information)
     pathspecs = self._hash_pathspecs[hash_analysis.subject_hash]
     for pathspec in pathspecs:
-      event_uuids.extend(self._event_uuids_by_pathspec[pathspec])
-    for event_uuid in event_uuids:
-      tag = self._CreateTag(event_uuid, tag_strings)
-      tags.append(tag)
+     for event_uuid in self._event_uuids_by_pathspec[pathspec]:
+        tag = self._CreateTag(event_uuid, tag_strings)
+        tags.append(tag)
     return pathspecs, tag_strings, tags
 
   def _EnsureRequesterStarted(self):
@@ -245,8 +243,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
       self._analyzer_started = True
 
   def ExamineEvent(self, analysis_mediator, event_object, **kwargs):
-    """Evaluates whether an event contains the appropriate data for a hash
-    lookup.
+    """Evaluates whether an event contains the right data for a hash lookup.
 
     Args:
       analysis_mediator: The analysis mediator object (instance of
