@@ -10,6 +10,7 @@ import threading
 import time
 
 import requests
+
 # Some distributions unvendor urllib3 from the requests module, and we need to
 # access some methods inside urllib3 to disable warnings. We'll try to import it
 # here, to keep the imports together.
@@ -231,7 +232,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     tag_strings = self.GenerateTagStrings(hash_analysis.hash_information)
     pathspecs = self._hash_pathspecs[hash_analysis.subject_hash]
     for pathspec in pathspecs:
-     for event_uuid in self._event_uuids_by_pathspec[pathspec]:
+      for event_uuid in self._event_uuids_by_pathspec[pathspec]:
         tag = self._CreateTag(event_uuid, tag_strings)
         tags.append(tag)
     return pathspecs, tag_strings, tags

@@ -21,8 +21,8 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
       hash_analysis_queue (Queue.queue): that the analyzer will append
           HashAnalysis objects this queue.
     """
-    super(NsrlsvrAnalyzer, self).__init__(hash_queue, hash_analysis_queue,
-        **kwargs)
+    super(NsrlsvrAnalyzer, self).__init__(
+        hash_queue, hash_analysis_queue, **kwargs)
     self._host = None
     self._port = None
     self.hashes_per_batch = 100
@@ -41,12 +41,12 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     logging.debug(
         u'Opening connection to {0:s}:{1:d}'.format(self._host, self._port))
     try:
-      nsrl_socket = socket.create_connection((self._host, self._port),
-          self._SOCKET_TIMEOUT)
+      nsrl_socket = socket.create_connection(
+          (self._host, self._port), self._SOCKET_TIMEOUT)
     except socket.error as exception:
-      logging.error(
-        (u'Error communicating with nsrlsvr {0:s}. nsrlsvr plugin is '
-         u'aborting.').format(exception))
+      logging.error((
+          u'Error communicating with nsrlsvr {0:s}. nsrlsvr plugin is '
+          u'aborting.').format(exception))
       self.SignalAbort()
       return hash_analyses
     for digest in hashes:
@@ -56,8 +56,8 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
         response = nsrl_socket.recv(self._RECEIVE_BUFFER_SIZE)
       except socket.error as exception:
         logging.error(
-          (u'Error communicating with nsrlsvr {0:s}. nsrlsvr plugin is '
-           u'aborting.').format(exception))
+            (u'Error communicating with nsrlsvr {0:s}. nsrlsvr plugin is '
+             u'aborting.').format(exception))
         self.SignalAbort()
         return hash_analyses
       if response.split(u' ')[1] == u'1':

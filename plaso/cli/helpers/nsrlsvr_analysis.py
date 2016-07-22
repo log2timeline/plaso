@@ -28,11 +28,13 @@ class NsrlsvrAnalysisHelper(interface.ArgumentsHelper):
       argument_group (argparse._ArgumentGroup|argparse.ArgumentParser): group
           to append arguments to.
     """
-    argument_group.add_argument(u'--nsrlsvr-host', dest=u'nsrlsvr_host',
-        type=str, action='store', default=cls._DEFAULT_HOST,
+    argument_group.add_argument(
+        u'--nsrlsvr-host', dest=u'nsrlsvr_host', type=str, action='store',
+        default=cls._DEFAULT_HOST,
         help=u'Specify the host to query Nsrlsvr on.')
-    argument_group.add_argument(u'--nsrlsvr-port', dest=u'nsrlvr_port',
-        type=int, action='store', default=cls._DEFAULT_PORT,
+    argument_group.add_argument(
+        u'--nsrlsvr-port', dest=u'nsrlvr_port', type=int, action='store',
+        default=cls._DEFAULT_PORT,
         help=u'Port to use to query Nsrlsvr.')
 
   @classmethod
@@ -51,12 +53,12 @@ class NsrlsvrAnalysisHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           u'Analysis plugin is not an instance of NsrlsvrAnalysisPlugin')
 
-    host = cls._ParseStringOption(options, u'nsrlsvr_host',
-        default_value=cls._DEFAULT_HOST)
+    host = cls._ParseStringOption(
+        options, u'nsrlsvr_host', default_value=cls._DEFAULT_HOST)
     analysis_plugin.SetHost(host)
 
-    port = cls._ParseStringOption(options, u'nsrlsvr_port',
-        default_value=cls._DEFAULT_PORT)
+    port = cls._ParseStringOption(
+        options, u'nsrlsvr_port', default_value=cls._DEFAULT_PORT)
     analysis_plugin.SetPort(port)
 
 

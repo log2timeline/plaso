@@ -40,14 +40,14 @@ class _MockNsrlsvrSocket(object):
 class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
   """Tests for the nsrlsvr analysis plugin."""
   EVENT_1_HASH = (
-    u'2d79fcc6b02a2e183a0cb30e0e25d103f42badda9fbf86bbee06f93aa3855aff')
+      u'2d79fcc6b02a2e183a0cb30e0e25d103f42badda9fbf86bbee06f93aa3855aff')
   EVENT_2_HASH = (
-    u'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+      u'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
   TEST_EVENTS = [
-    {u'timestamp': timelib.Timestamp.CopyFromString(u'2015-01-01 17:00:00'),
-      u'sha256_hash': EVENT_1_HASH, u'uuid': u'8'},
-    {u'timestamp': timelib.Timestamp.CopyFromString(u'2016-01-01 17:00:00'),
-      u'sha256_hash': EVENT_2_HASH, u'uuid': u'9'}]
+      {u'timestamp': timelib.Timestamp.CopyFromString(u'2015-01-01 17:00:00'),
+       u'sha256_hash': EVENT_1_HASH, u'uuid': u'8'},
+      {u'timestamp': timelib.Timestamp.CopyFromString(u'2016-01-01 17:00:00'),
+       u'sha256_hash': EVENT_2_HASH, u'uuid': u'9'}]
 
   def _CreateTestEventObject(self, event_dictionary):
     """Create a test event with a set of attributes.
@@ -62,8 +62,8 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
     """
     test_pathspec = fake_path_spec.FakePathSpec(
         location=u'C:\\WINDOWS\\system32\\evil.exe')
-    event_object = pe.PECompilationEvent(event_dictionary[u'timestamp'],
-        u'Executable (EXE)', [], '')
+    event_object = pe.PECompilationEvent(
+        event_dictionary[u'timestamp'], u'Executable (EXE)', [], '')
     event_object.pathspec = test_pathspec
     event_object.sha256_hash = event_dictionary[u'sha256_hash']
     event_object.uuid = event_dictionary[u'uuid']
@@ -75,8 +75,8 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self.requests_patcher = mock.patch('socket.create_connection',
-        self._MockCreateConnection)
+    self.requests_patcher = mock.patch(
+        'socket.create_connection', self._MockCreateConnection)
     self.requests_patcher.start()
 
   def tearDown(self):
@@ -91,7 +91,7 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
     # Fill the incoming queue with events.
     test_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
     events = [self._CreateTestEventObject(test_event) for test_event in
-      self.TEST_EVENTS]
+              self.TEST_EVENTS]
     test_queue_producer.ProduceItems(events)
 
     # Set up the plugin.
@@ -100,8 +100,8 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
     analysis_plugin.SetPort(u'9120')
 
     # Run the analysis plugin.
-    analysis_report_queue_consumer = self._RunAnalysisPlugin(analysis_plugin,
-        knowledge_base)
+    analysis_report_queue_consumer = self._RunAnalysisPlugin(
+        analysis_plugin, knowledge_base)
     analysis_reports = self._GetAnalysisReportsFromQueue(
         analysis_report_queue_consumer)
 
