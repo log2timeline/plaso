@@ -14,6 +14,7 @@ import uuid
 
 from plaso.cli import analysis_tool
 from plaso.cli import views as cli_views
+from plaso.engine import knowledge_base
 from plaso.frontend import analysis_frontend
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -73,7 +74,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     Args:
       analysis_reports_counter (collections.Counter): number of analysis
           reports per analysis plugin.
-      session_identifier (Optional[str]): sessio identifier.
+      session_identifier (Optional[str]): session identifier.
     """
     if not analysis_reports_counter:
       return
@@ -136,6 +137,14 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
       table_view.AddRow([u'Message', error.message])
       table_view.AddRow([u'Parser chain', error.parser_chain])
+      for index, line in enumerate(error.path_spec.comparable.split(u'\n')):
+        if not line:
+          continue
+
+        if index == 0:
+          table_view.AddRow([u'Path specification', line])
+        else:
+          table_view.AddRow([u'', line])
 
       table_view.Write(self._output_writer)
 
@@ -146,7 +155,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     Args:
       event_labels_counter (collections.Counter): number of event tags per
           label.
-      session_identifier (Optional[str]): sessio identifier.
+      session_identifier (Optional[str]): session identifier.
     """
     if not event_labels_counter:
       return
@@ -179,7 +188,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     Args:
       parsers_counter (collections.Counter): number of events per parser or
           parser plugin.
-      session_identifier (Optional[str]): sessio identifier.
+      session_identifier (Optional[str]): session identifier.
     """
     if not parsers_counter:
       return
@@ -202,13 +211,66 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
     table_view.Write(self._output_writer)
 
+  def _PrintPreprocessingInformation(self, storage, session_number=None):
+    """Prints the details of the preprocessing information.
+
+    Args:
+      storage (BaseStorage): storage.
+      session_number (Optional[int]): session number.
+    """
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+
+    storage.ReadPreprocessingInformation(knowledge_base_object)
+
+    system_configuration = knowledge_base_object.GetSystemConfigurationArtifact(
+        session_number)
+    if not system_configuration:
+      return
+
+    title = u'System configuration'
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, title=title)
+
+    hostname = u'N/A'
+    if system_configuration.hostname:
+      hostname = system_configuration.hostname.name
+
+    operating_system = system_configuration.operating_system or u'N/A'
+    operating_system_product = (
+        system_configuration.operating_system_product or u'N/A')
+    operating_system_version = (
+        system_configuration.operating_system_version or u'N/A')
+    code_page = system_configuration.code_page or u'N/A'
+    keyboard_layout = system_configuration.keyboard_layout or u'N/A'
+    time_zone = system_configuration.time_zone or u'N/A'
+
+    table_view.AddRow([u'Hostname', hostname])
+    table_view.AddRow([u'Operating system', operating_system])
+    table_view.AddRow([u'Operating system product', operating_system_product])
+    table_view.AddRow([u'Operating system version', operating_system_version])
+    table_view.AddRow([u'Code page', code_page])
+    table_view.AddRow([u'Keyboard layout', keyboard_layout])
+    table_view.AddRow([u'Time zone', time_zone])
+
+    table_view.Write(self._output_writer)
+
+    title = u'User accounts'
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, title=title)
+
+    for user_account in system_configuration.user_accounts:
+      table_view.AddRow([
+          user_account.username, user_account.user_directory])
+
+    table_view.Write(self._output_writer)
+
   def _PrintSessionsDetails(self, storage):
     """Prints the details of the sessions.
 
     Args:
       storage (BaseStorage): storage.
     """
-    for session in storage.GetSessions():
+    for session_number, session in enumerate(storage.GetSessions()):
       session_identifier = uuid.UUID(hex=session.identifier)
 
       start_time = u'N/A'
@@ -249,6 +311,8 @@ class PinfoTool(analysis_tool.AnalysisTool):
       table_view.Write(self._output_writer)
 
       if self._verbose:
+        self._PrintPreprocessingInformation(storage, session_number + 1)
+
         self._PrintParsersCounter(
             session.parsers_counter, session_identifier=session_identifier)
 

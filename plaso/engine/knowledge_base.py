@@ -114,8 +114,12 @@ class KnowledgeBase(object):
     store_number = len(self._hostnames)
     return self._hostnames.get(store_number, None)
 
-  def GetSystemConfigurationArtifact(self):
+  def GetSystemConfigurationArtifact(self, session_number=0):
     """Retrieves the knowledge base as a system configuration artifact.
+
+    Args:
+      session_number (Optional[int]): session number, where 0 represents
+          the active session.
 
     Returns:
       SystemConfigurationArtifact: system configuration artifact.
@@ -125,13 +129,19 @@ class KnowledgeBase(object):
     system_configuration.code_page = self._values.get(
         u'codepage', self._default_codepage)
 
-    # TODO: refactor the use of store number.
-    system_configuration.hostname = self._hostnames.get(0, None)
+    system_configuration.hostname = self._hostnames.get(session_number, None)
 
+    system_configuration.keyboard_layout = self._values.get(
+        u'keyboard_layout', None)
+    system_configuration.operating_system = self._values.get(
+        u'operating_system', None)
+    system_configuration.operating_system_product = self._values.get(
+        u'operating_system_product', None)
+    system_configuration.operating_system_version = self._values.get(
+        u'operating_system_version', None)
     system_configuration.time_zone = self._values.get(u'timezone', u'UTC')
 
-    # TODO: refactor the use of store number.
-    user_accounts = self._user_accounts.get(0, {})
+    user_accounts = self._user_accounts.get(session_number, {})
     system_configuration.user_accounts = user_accounts.values()
 
     return system_configuration
