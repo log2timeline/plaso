@@ -129,11 +129,12 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
     self._extensions[extension_identifier] = name
     return name
 
-  def CompileReport(self, analysis_mediator):
+  def CompileReport(self, mediator):
     """Compiles an analysis report.
 
     Args:
-      analysis_mediator (AnalysisMediator): analysis mediator.
+      mediator (AnalysisMediator): mediates interactions between analysis
+          plugins and other components, such as storage and dfvfs.
 
     Returns:
       AnalysisReport: analysis report.
@@ -153,11 +154,12 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
     analysis_report.report_dict = self._results
     return analysis_report
 
-  def ExamineEvent(self, analysis_mediator, event, **kwargs):
+  def ExamineEvent(self, mediator, event, **kwargs):
     """Analyzes an event.
 
     Args:
-      analysis_mediator (AnalysisMediator): analysis mediator.
+      mediator (AnalysisMediator): mediates interactions between analysis
+          plugins and other components, such as storage and dfvfs.
       event (EventObject): event to examine.
     """
     # Only interested in filesystem events.
@@ -189,7 +191,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
       return
 
     # Get the user and ID.
-    user = analysis_mediator.GetUsernameForPath(filename)
+    user = mediator.GetUsernameForPath(filename)
 
     # We still want this information in here, so that we can
     # manually deduce the username.

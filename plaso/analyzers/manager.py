@@ -14,7 +14,7 @@ class AnalyzersManager(object):
     """Processes a file-like object with the provided analyzers.
 
     Args:
-      mediator (ParserMediator): encapsulates interactions between
+      mediator (ParserMediator): mediates interactions between
           parsers and other components, such as storage and abort signals.
       file_object (dfvfs.FileIO): file-like object to process.
       analyzers (list[analyzer]): analyzers to use on the file object.
