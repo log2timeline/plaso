@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests for the dependencies helper functions."""
 
-import os
 import socket
 import unittest
 
