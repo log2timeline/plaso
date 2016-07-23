@@ -92,7 +92,6 @@ class MultiProcessEngine(engine.BaseEngine):
     self._filter_find_specs = None
     self._filter_object = None
     self._hasher_names_string = None
-    self._last_status_update_timestamp = 0.0
     self._last_worker_number = 0
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._memory_profiler = None

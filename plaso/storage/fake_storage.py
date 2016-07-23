@@ -235,8 +235,11 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self.session_start = self._session.CreateSessionStart()
 
-  def WriteTaskCompletion(self):
+  def WriteTaskCompletion(self, aborted=False):
     """Writes task completion information.
+
+    Args:
+      aborted (Optional[bool]): True if the session was aborted.
 
     Raises:
       IOError: if the storage type does not support writing a task
@@ -248,6 +251,7 @@ class FakeStorageWriter(interface.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_TASK:
       raise IOError(u'Task completion not supported by storage type.')
 
+    self._task.aborted = aborted
     self.task_completion = self._task.CreateTaskCompletion()
 
   def WriteTaskStart(self):

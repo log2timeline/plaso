@@ -170,7 +170,7 @@ class SessionCompletion(interface.AttributeContainer):
           session start information.
     """
     super(SessionCompletion, self).__init__()
-    self.aborted = False
+    self.aborted = None
     self.analysis_reports_counter = None
     self.event_labels_counter = None
     self.identifier = identifier

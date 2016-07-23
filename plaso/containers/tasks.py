@@ -15,6 +15,7 @@ class Task(interface.AttributeContainer):
   e.g. to process a path specification or to analyze an event.
 
   Attributes:
+    aborted (bool): True if the session was aborted.
     completion_time (int): time that the task was completed. Contains the
         number of micro seconds since January 1, 1970, 00:00:00 UTC.
     identifier (str): unique identifier of the task.
@@ -34,6 +35,7 @@ class Task(interface.AttributeContainer):
           is part of.
     """
     super(Task, self).__init__()
+    self.aborted = False
     self.completion_time = None
     self.identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
     self.path_spec = None
@@ -49,6 +51,7 @@ class Task(interface.AttributeContainer):
     self.completion_time = int(time.time() * 1000000)
 
     task_completion = TaskCompletion()
+    task_completion.aborted = self.aborted
     task_completion.identifier = self.identifier
     task_completion.session_identifier = self.session_identifier
     task_completion.timestamp = self.completion_time
@@ -71,6 +74,7 @@ class TaskCompletion(interface.AttributeContainer):
   """Class to represent a task completion attribute container.
 
   Attributes:
+    aborted (bool): True if the session was aborted.
     identifier (str): unique identifier of the task.
     session_identifier (str): the identifier of the session the task
         is part of.
@@ -90,6 +94,7 @@ class TaskCompletion(interface.AttributeContainer):
           is part of.
     """
     super(TaskCompletion, self).__init__()
+    self.aborted = None
     self.identifier = identifier
     self.session_identifier = session_identifier
     self.timestamp = None

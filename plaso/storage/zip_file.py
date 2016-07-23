@@ -3249,8 +3249,11 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     session_start = self._session.CreateSessionStart()
     self._storage_file.WriteSessionStart(session_start)
 
-  def WriteTaskCompletion(self):
+  def WriteTaskCompletion(self, aborted=False):
     """Writes task completion information.
+
+    Args:
+      aborted (Optional[bool]): True if the session was aborted.
 
     Raises:
       IOError: if the storage type is not supported or
@@ -3262,6 +3265,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_TASK:
       raise IOError(u'Unsupported storage type.')
 
+    self._task.aborted = aborted
     task_completion = self._task.CreateTaskCompletion()
     self._storage_file.WriteTaskCompletion(task_completion)
 

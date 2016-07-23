@@ -56,7 +56,6 @@ class SessionCompletionTest(test_lib.AttributeContainerTestCase):
     self.assertEquals(session_completion.identifier, session_identifier)
 
     expected_dict = {
-        u'aborted': False,
         u'identifier': session_completion.identifier,
         u'timestamp': timestamp}
 

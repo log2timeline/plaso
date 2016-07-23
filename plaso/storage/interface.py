@@ -552,8 +552,12 @@ class StorageWriter(object):
     """Writes session start information."""
 
   @abc.abstractmethod
-  def WriteTaskCompletion(self):
-    """Writes task completion information."""
+  def WriteTaskCompletion(self, aborted=False):
+    """Writes task completion information.
+
+    Args:
+      aborted (Optional[bool]): True if the session was aborted.
+    """
 
   @abc.abstractmethod
   def WriteTaskStart(self):

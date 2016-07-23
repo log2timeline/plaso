@@ -24,6 +24,7 @@ class TasknTest(test_lib.AttributeContainerTestCase):
     self.assertIsNone(task.completion_time)
 
     expected_dict = {
+        u'aborted': False,
         u'identifier': task.identifier,
         u'session_identifier': task.session_identifier,
         u'start_time': task.start_time}

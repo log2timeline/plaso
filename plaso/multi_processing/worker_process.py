@@ -78,6 +78,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._filter_object = filter_object
     self._hasher_names_string = hasher_names_string
     self._knowledge_base = knowledge_base
+    self._last_task_completion_timestamp = 0
     self._memory_profiler = None
     self._mount_path = mount_path
     self._number_of_consumed_events = 0
@@ -277,11 +278,11 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
     storage_writer.Open()
 
+    self._parser_mediator.SetStorageWriter(storage_writer)
+
+    storage_writer.WriteTaskStart()
+
     try:
-      self._parser_mediator.SetStorageWriter(storage_writer)
-
-      storage_writer.WriteTaskStart()
-
       # TODO: add support for more task types.
       self._ProcessPathSpec(
           self._extraction_worker, self._parser_mediator, task.path_spec)
@@ -290,10 +291,11 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       if self._memory_profiler:
         self._memory_profiler.Sample()
 
-      # TODO: on abort use WriteTaskAborted instead of completion?
-      storage_writer.WriteTaskCompletion()
-
     finally:
+      storage_writer.WriteTaskCompletion(aborted=self._abort)
+
+      self._last_task_completion_timestamp = task.completion_time
+
       self._parser_mediator.SetStorageWriter(None)
 
       storage_writer.Close()
