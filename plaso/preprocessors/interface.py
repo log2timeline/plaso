@@ -186,20 +186,16 @@ class PathPreprocessPlugin(PreprocessPlugin):
     return relative_path
 
 
+# TODO: move this into preprocessing plugins.
 def GuessOS(searcher):
   """Returns a string representing what we think the underlying OS is.
-
-  The available return strings are:
-
-  * Linux
-  * MacOSX
-  * Windows
 
   Args:
     searcher (dfvfs.FileSystemSearcher): file system searcher.
 
   Returns:
-    str: OS we are dealing with.
+    str: operating system for example "Windows". This should be one of
+        the values in definitions.OPERATING_SYSTEMS.
   """
   find_specs = [
       file_system_searcher.FindSpec(
@@ -230,12 +226,12 @@ def GuessOS(searcher):
       u'\\wtsrv\\system32', u'/wtsrv/system32'])
 
   if windows_locations.intersection(set(locations)):
-    return definitions.OS_WINDOWS
+    return definitions.OPERATING_SYSTEM_WINDOWS
 
   if u'/system/library' in locations:
-    return definitions.OS_MACOSX
+    return definitions.OPERATING_SYSTEM_MACOSX
 
   if u'/etc' in locations:
-    return definitions.OS_LINUX
+    return definitions.OPERATING_SYSTEM_LINUX
 
-  return definitions.OS_UNKNOWN
+  return definitions.OPERATING_SYSTEM_UNKNOWN

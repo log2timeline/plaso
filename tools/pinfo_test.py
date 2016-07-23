@@ -4,6 +4,7 @@
 
 import unittest
 
+from plaso.cli import views as cli_views
 from tests.cli import test_lib as cli_test_lib
 
 from tools import pinfo
@@ -46,7 +47,107 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
 
   def testPrintStorageInformation(self):
     """Tests the PrintStorageInformation function."""
-    test_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
+    test_filename = u'pinfo_test.json.plaso'
+    session_identifier = u'65e59b3a-afa5-4aee-8d55-735cbd7b8686'
+    session_start_time = u'2016-07-18T05:37:58.992319+00:00'
+
+    command_line_arguments = (
+        u'./tools/log2timeline.py --partition=all --quiet '
+        u'pinfo_test.json.plaso test_data/tsk_volume_system.raw')
+
+    enabled_parser_names = u', '.join([
+        u'android_app_usage', u'asl_log', u'bencode',
+        u'bencode/bencode_transmission', u'bencode/bencode_utorrent',
+        u'binary_cookies', u'bsm_log', u'chrome_cache', u'chrome_preferences',
+        u'cups_ipp', u'custom_destinations', u'dockerjson', u'esedb',
+        u'esedb/esedb_file_history', u'esedb/msie_webcache', u'filestat',
+        u'firefox_cache', u'firefox_cache2', u'hachoir', u'java_idx', u'lnk',
+        u'mac_appfirewall_log', u'mac_keychain', u'mac_securityd', u'mactime',
+        u'macwifi', u'mcafee_protection', u'mft', u'msiecf', u'olecf',
+        u'olecf/olecf_automatic_destinations', u'olecf/olecf_default',
+        u'olecf/olecf_document_summary', u'olecf/olecf_summary', u'openxml',
+        u'opera_global', u'opera_typed_history', u'pe', u'plist',
+        u'plist/airport', u'plist/apple_id', u'plist/ipod_device',
+        u'plist/macosx_bluetooth', u'plist/macosx_install_history',
+        u'plist/macuser', u'plist/maxos_software_update',
+        u'plist/plist_default', u'plist/safari_history', u'plist/spotlight',
+        u'plist/spotlight_volume', u'plist/time_machine', u'pls_recall',
+        u'popularity_contest', u'prefetch', u'recycle_bin',
+        u'recycle_bin_info2', u'rplog', u'sccm', u'selinux', u'skydrive_log',
+        u'skydrive_log_old', u'sqlite', u'sqlite/android_calls',
+        u'sqlite/android_sms', u'sqlite/appusage', u'sqlite/chrome_cookies',
+        u'sqlite/chrome_extension_activity', u'sqlite/chrome_history',
+        u'sqlite/firefox_cookies', u'sqlite/firefox_downloads',
+        u'sqlite/firefox_history', u'sqlite/google_drive', u'sqlite/imessage',
+        u'sqlite/kik_messenger', u'sqlite/ls_quarantine',
+        u'sqlite/mac_document_versions', u'sqlite/mackeeper_cache',
+        u'sqlite/skype', u'sqlite/twitter_ios', u'sqlite/zeitgeist',
+        u'symantec_scanlog', u'syslog', u'syslog/cron', u'syslog/ssh',
+        u'usnjrnl', u'utmp', u'utmpx', u'winevt', u'winevtx', u'winfirewall',
+        u'winiis', u'winjob', u'winreg', u'winreg/appcompatcache',
+        u'winreg/bagmru', u'winreg/ccleaner', u'winreg/explorer_mountpoints2',
+        u'winreg/explorer_programscache', u'winreg/microsoft_office_mru',
+        u'winreg/microsoft_outlook_mru', u'winreg/mrulist_shell_item_list',
+        u'winreg/mrulist_string', u'winreg/mrulistex_shell_item_list',
+        u'winreg/mrulistex_string', u'winreg/mrulistex_string_and_shell_item',
+        u'winreg/mrulistex_string_and_shell_item_list', u'winreg/msie_zone',
+        u'winreg/mstsc_rdp', u'winreg/mstsc_rdp_mru', u'winreg/network_drives',
+        u'winreg/userassist', u'winreg/windows_boot_execute',
+        u'winreg/windows_boot_verify', u'winreg/windows_run',
+        u'winreg/windows_sam_users', u'winreg/windows_services',
+        u'winreg/windows_shutdown', u'winreg/windows_task_cache',
+        u'winreg/windows_timezone', u'winreg/windows_typed_urls',
+        u'winreg/windows_usb_devices', u'winreg/windows_usbstor_devices',
+        u'winreg/windows_version', u'winreg/winlogon', u'winreg/winrar_mru',
+        u'winreg/winreg_default', u'xchatlog', u'xchatscrollback'])
+
+    table_view = cli_views.ViewsFactory.GetTableView(
+        cli_views.ViewsFactory.FORMAT_TYPE_CLI,
+        title=u'Plaso Storage Information')
+    table_view.AddRow([u'Filename', test_filename])
+    table_view.AddRow([u'Format version', u'20160715'])
+    table_view.AddRow([u'Serialization format', u'json'])
+    table_view.Write(self._output_writer)
+
+    table_view = cli_views.ViewsFactory.GetTableView(
+        cli_views.ViewsFactory.FORMAT_TYPE_CLI, title=u'Sessions')
+    table_view.AddRow([session_identifier, session_start_time])
+    table_view.Write(self._output_writer)
+
+    title = u'Session: {0!s}'.format(session_identifier)
+    table_view = cli_views.ViewsFactory.GetTableView(
+        cli_views.ViewsFactory.FORMAT_TYPE_CLI, title=title)
+    table_view.AddRow([u'Start time', session_start_time])
+    table_view.AddRow([u'Completion time', u'2016-07-18T05:37:59.761184+00:00'])
+    table_view.AddRow([u'Product name', u'plaso'])
+    table_view.AddRow([u'Product version', u'1.4.1_20160717'])
+    table_view.AddRow([u'Command line arguments', command_line_arguments])
+    table_view.AddRow([u'Parser filter expression', u'N/A'])
+    table_view.AddRow([u'Enabled parser and plugins', enabled_parser_names])
+    table_view.AddRow([u'Preferred encoding', u'UTF-8'])
+    table_view.AddRow([u'Debug mode', u'False'])
+    table_view.AddRow([u'Filter file', u'N/A'])
+    table_view.AddRow([u'Filter expression', u'N/A'])
+    table_view.Write(self._output_writer)
+
+    table_view = cli_views.ViewsFactory.GetTableView(
+        cli_views.ViewsFactory.FORMAT_TYPE_CLI,
+        column_names=[u'Parser (plugin) name', u'Number of events'],
+        title=u'Events generated per parser')
+    table_view.AddRow([u'filestat', u'3'])
+    table_view.AddRow([u'Total', u'3'])
+    table_view.Write(self._output_writer)
+
+    expected_output = self._output_writer.ReadOutput()
+
+    expected_output = (
+        b'{0:s}'
+        b'No errors stored.\n'
+        b'\n'
+        b'No analysis reports stored.\n'
+        b'\n').format(expected_output)
+
+    test_file = self._GetTestFilePath([test_filename])
 
     options = cli_test_lib.TestOptions()
     options.storage_file = test_file
@@ -54,146 +155,6 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
     self._test_tool.ParseOptions(options)
 
     self._test_tool.PrintStorageInformation()
-
-    expected_output = (
-        b'\n'
-        b'************************** Plaso Storage Information ****************'
-        b'***********\n'
-        b'            Filename : pinfo_test.json.plaso\n'
-        b'      Format version : 20160715\n'
-        b'Serialization format : json\n'
-        b'---------------------------------------------------------------------'
-        b'-----------\n'
-        b'\n'
-        b'*********************************** Sessions ************************'
-        b'***********\n'
-        b'65e59b3a-afa5-4aee-8d55-735cbd7b8686 : '
-        b'2016-07-18T05:37:58.992319+00:00\n'
-        b'---------------------------------------------------------------------'
-        b'-----------\n'
-        b'\n'
-        b'**************** Session: 65e59b3a-afa5-4aee-8d55-735cbd7b8686 ******'
-        b'***********\n'
-        b'                Start time : 2016-07-18T05:37:58.992319+00:00\n'
-        b'           Completion time : 2016-07-18T05:37:59.761184+00:00\n'
-        b'              Product name : plaso\n'
-        b'           Product version : 1.4.1_20160717\n'
-        b'    Command line arguments : ./tools/log2timeline.py --partition=all '
-        b'--quiet\n'
-        b'                             pinfo_test.json.plaso\n'
-        b'                             test_data/tsk_volume_system.raw\n'
-        b'  Parser filter expression : N/A\n'
-        b'Enabled parser and plugins : android_app_usage, asl_log, bencode,\n'
-        b'                             bencode/bencode_transmission,\n'
-        b'                             bencode/bencode_utorrent, '
-        b'binary_cookies, bsm_log,\n'
-        b'                             chrome_cache, chrome_preferences, '
-        b'cups_ipp,\n'
-        b'                             custom_destinations, dockerjson, '
-        b'esedb,\n'
-        b'                             esedb/esedb_file_history, '
-        b'esedb/msie_webcache,\n'
-        b'                             filestat, firefox_cache, '
-        b'firefox_cache2, hachoir,\n'
-        b'                             java_idx, lnk, mac_appfirewall_log, '
-        b'mac_keychain,\n'
-        b'                             mac_securityd, mactime, macwifi,\n'
-        b'                             mcafee_protection, mft, msiecf, olecf,\n'
-        b'                             olecf/olecf_automatic_destinations,\n'
-        b'                             olecf/olecf_default, '
-        b'olecf/olecf_document_summary,\n'
-        b'                             olecf/olecf_summary, openxml, '
-        b'opera_global,\n'
-        b'                             opera_typed_history, pe, plist, '
-        b'plist/airport,\n'
-        b'                             plist/apple_id, plist/ipod_device,\n'
-        b'                             plist/macosx_bluetooth,\n'
-        b'                             plist/macosx_install_history, '
-        b'plist/macuser,\n'
-        b'                             plist/maxos_software_update, '
-        b'plist/plist_default,\n'
-        b'                             plist/safari_history, plist/spotlight,\n'
-        b'                             plist/spotlight_volume, '
-        b'plist/time_machine,\n'
-        b'                             pls_recall, popularity_contest, '
-        b'prefetch,\n'
-        b'                             recycle_bin, recycle_bin_info2, rplog, '
-        b'sccm,\n'
-        b'                             selinux, skydrive_log, '
-        b'skydrive_log_old, sqlite,\n'
-        b'                             sqlite/android_calls, '
-        b'sqlite/android_sms,\n'
-        b'                             sqlite/appusage, '
-        b'sqlite/chrome_cookies,\n'
-        b'                             sqlite/chrome_extension_activity,\n'
-        b'                             sqlite/chrome_history, '
-        b'sqlite/firefox_cookies,\n'
-        b'                             sqlite/firefox_downloads, '
-        b'sqlite/firefox_history,\n'
-        b'                             sqlite/google_drive, sqlite/imessage,\n'
-        b'                             sqlite/kik_messenger, '
-        b'sqlite/ls_quarantine,\n'
-        b'                             sqlite/mac_document_versions,\n'
-        b'                             sqlite/mackeeper_cache, sqlite/skype,\n'
-        b'                             sqlite/twitter_ios, sqlite/zeitgeist,\n'
-        b'                             symantec_scanlog, syslog, syslog/cron, '
-        b'syslog/ssh,\n'
-        b'                             usnjrnl, utmp, utmpx, winevt, winevtx,\n'
-        b'                             winfirewall, winiis, winjob, winreg,\n'
-        b'                             winreg/appcompatcache, winreg/bagmru,\n'
-        b'                             winreg/ccleaner, '
-        b'winreg/explorer_mountpoints2,\n'
-        b'                             winreg/explorer_programscache,\n'
-        b'                             winreg/microsoft_office_mru,\n'
-        b'                             winreg/microsoft_outlook_mru,\n'
-        b'                             winreg/mrulist_shell_item_list,\n'
-        b'                             winreg/mrulist_string,\n'
-        b'                             winreg/mrulistex_shell_item_list,\n'
-        b'                             winreg/mrulistex_string,\n'
-        b'                             '
-        b'winreg/mrulistex_string_and_shell_item,\n'
-        b'                             '
-        b'winreg/mrulistex_string_and_shell_item_list,\n'
-        b'                             winreg/msie_zone, winreg/mstsc_rdp,\n'
-        b'                             winreg/mstsc_rdp_mru, '
-        b'winreg/network_drives,\n'
-        b'                             winreg/userassist, '
-        b'winreg/windows_boot_execute,\n'
-        b'                             winreg/windows_boot_verify, '
-        b'winreg/windows_run,\n'
-        b'                             winreg/windows_sam_users, '
-        b'winreg/windows_services,\n'
-        b'                             winreg/windows_shutdown,\n'
-        b'                             winreg/windows_task_cache,\n'
-        b'                             winreg/windows_timezone,\n'
-        b'                             winreg/windows_typed_urls,\n'
-        b'                             winreg/windows_usb_devices,\n'
-        b'                             winreg/windows_usbstor_devices,\n'
-        b'                             winreg/windows_version, '
-        b'winreg/winlogon,\n'
-        b'                             winreg/winrar_mru, '
-        b'winreg/winreg_default,\n'
-        b'                             xchatlog, xchatscrollback\n'
-        b'        Preferred encoding : UTF-8\n'
-        b'                Debug mode : False\n'
-        b'               Filter file : N/A\n'
-        b'         Filter expression : N/A\n'
-        b'---------------------------------------------------------------------'
-        b'-----------\n'
-        b'\n'
-        b'************************* Events generated per parser ***************'
-        b'***********\n'
-        b'Parser (plugin) name : Number of events\n'
-        b'---------------------------------------------------------------------'
-        b'-----------\n'
-        b'            filestat : 3\n'
-        b'               Total : 3\n'
-        b'---------------------------------------------------------------------'
-        b'-----------\n'
-        b'No errors stored.\n'
-        b'\n'
-        b'No analysis reports stored.\n'
-        b'\n')
 
     output = self._output_writer.ReadOutput()
 

@@ -15,7 +15,7 @@ class WindowsDistributedLinkTrackingCreationEvent(time_events.UUIDTimeEvent):
             MFT entry with the corresponding NTFS $OBJECT_ID attribute.
   """
 
-  DATA_TYPE = 'windows:distributed_link_tracking:creation'
+  DATA_TYPE = u'windows:distributed_link_tracking:creation'
 
   def __init__(self, uuid, origin):
     """Initializes an event object.
@@ -43,7 +43,7 @@ class WindowsRegistryEvent(time_events.FiletimeEvent):
     urls: optional list of strings containing URLs.
   """
 
-  DATA_TYPE = 'windows:registry:key_value'
+  DATA_TYPE = u'windows:registry:key_value'
 
   def __init__(
       self, filetime, key_path, values_dict, usage=None, offset=None,
@@ -95,7 +95,7 @@ class WindowsRegistryInstallationEvent(time_events.PosixTimeEvent):
     service_pack: a string containing service pack.
     version: a string containing the version.
   """
-  DATA_TYPE = 'windows:registry:installation'
+  DATA_TYPE = u'windows:registry:installation'
 
   def __init__(
       self, posix_time, key_path, owner, product_name, service_pack, version):
@@ -128,7 +128,7 @@ class WindowsRegistryListEvent(time_events.FiletimeEvent):
     list_values: a string containing the list values.
     value_name: a string containing the Windows Registry value name.
   """
-  DATA_TYPE = 'windows:registry:list'
+  DATA_TYPE = u'windows:registry:list'
 
   def __init__(
       self, filetime, key_path, list_name, list_values,
@@ -154,7 +154,7 @@ class WindowsRegistryListEvent(time_events.FiletimeEvent):
 
 class WindowsRegistryServiceEvent(WindowsRegistryEvent):
   """Convenience class for service information retrieved from the Registry."""
-  DATA_TYPE = 'windows:registry:service'
+  DATA_TYPE = u'windows:registry:service'
 
 
 class WindowsRegistryNetworkEvent(time_events.SystemtimeEvent):
@@ -168,7 +168,7 @@ class WindowsRegistryNetworkEvent(time_events.SystemtimeEvent):
     source_append: optional string to append to the source_long of the event.
     ssid: the SSID of the connection.
   """
-  DATA_TYPE = 'windows:registry:network'
+  DATA_TYPE = u'windows:registry:network'
 
   def __init__(
       self, systemtime, timestamp_description, ssid, description,
@@ -204,7 +204,7 @@ class WindowsVolumeCreationEvent(time_events.FiletimeEvent):
             E.g. corresponding Prefetch file name.
     serial_number: a string containing the volume serial number.
   """
-  DATA_TYPE = 'windows:volume:creation'
+  DATA_TYPE = u'windows:volume:creation'
 
   def __init__(self, filetime, device_path, serial_number, origin):
     """Initializes an event object.

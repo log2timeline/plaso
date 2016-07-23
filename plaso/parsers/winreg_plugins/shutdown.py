@@ -22,7 +22,7 @@ class ShutdownWindowsRegistryEvent(time_events.FiletimeEvent):
     value_name: a string containing the name of the Registry value.
   """
 
-  DATA_TYPE = 'windows:registry:shutdown'
+  DATA_TYPE = u'windows:registry:shutdown'
 
   def __init__(self, filetime, key_path, offset, value_name):
     """Initializes a shutdown Windows Registry event.
