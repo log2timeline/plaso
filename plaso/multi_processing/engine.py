@@ -40,12 +40,8 @@ class MultiProcessEngine(engine.BaseEngine):
   # Maximum number of concurrent tasks.
   _MAXIMUM_NUMBER_OF_TASKS = 10000
 
-  _PROCESS_ABORT_TIMEOUT = 2.0
   _PROCESS_JOIN_TIMEOUT = 5.0
-  _PROCESS_TERMINATION_SLEEP = 0.5
-
-  _QUEUE_START_WAIT = 0.3
-  _QUEUE_START_WAIT_ATTEMPTS_MAXIMUM = 3
+  _PROCESS_WORKER_TIMEOUT = 15.0 * 60.0
 
   # Note that on average Windows seems to require a bit longer wait
   # than 5 seconds.
@@ -222,7 +218,16 @@ class MultiProcessEngine(engine.BaseEngine):
           u'processing_status': processing_status_string,
       }
 
-    self._UpdateProcessingStatus(pid, process_status)
+    last_activity_timestamp = self._UpdateProcessingStatus(pid, process_status)
+
+    if status_indicator != definitions.PROCESSING_STATUS_IDLE:
+      current_timestamp = time.time()
+      last_activity_timestamp += self._PROCESS_WORKER_TIMEOUT
+
+      if current_timestamp > last_activity_timestamp:
+        logging.error(u'Process {0:s} (PID: {1:d}) not updating.'.format(
+            process.name, pid))
+        status_indicator = definitions.PROCESSING_ERROR_STATUS
 
     if status_indicator in definitions.PROCESSING_ERROR_STATUS:
       logging.error(
@@ -237,16 +242,6 @@ class MultiProcessEngine(engine.BaseEngine):
       replacement_process = self._StartExtractionWorkerProcess(
           self._storage_writer)
       self._StartMonitoringProcess(replacement_process.pid)
-
-    elif status_indicator == definitions.PROCESSING_STATUS_COMPLETED:
-      number_of_events = process_status.get(u'number_of_events', 0)
-      number_of_sources = process_status.get(u'number_of_consumed_sources', 0)
-      logging.debug((
-          u'Process {0:s} (PID: {1:d}) has completed its processing. '
-          u'Total of {2:d} events extracted from {3:d} sources').format(
-              process.name, pid, number_of_events, number_of_sources))
-
-      self._StopMonitoringProcess(pid)
 
     elif self._show_memory_usage:
       self._LogMemoryUsage(pid)
@@ -838,6 +833,10 @@ class MultiProcessEngine(engine.BaseEngine):
       process_status (dict[str, object]): status values received from
           the worker process.
 
+    Returns:
+      int: timestamp received from the worker process that indicates the last
+          time worker activity was measured.
+
     Raises:
       KeyError: if the process is not registered with the engine.
     """
@@ -865,6 +864,8 @@ class MultiProcessEngine(engine.BaseEngine):
         u'number_of_consumed_sources', 0)
     number_of_produced_sources = process_status.get(
         u'number_of_produced_sources', 0)
+    last_activity_timestamp = process_status.get(
+        u'last_activity_timestamp', 0.0)
 
     self._processing_status.UpdateWorkerStatus(
         process.name, processing_status, pid, display_name,
@@ -879,6 +880,8 @@ class MultiProcessEngine(engine.BaseEngine):
       except KeyError:
         logging.error(u'Worker processing untracked task: {0:s}.'.format(
             task_identifier))
+
+    return last_activity_timestamp
 
   def ProcessSources(
       self, session_identifier, source_path_specs, storage_writer,

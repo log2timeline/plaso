@@ -78,7 +78,6 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._filter_object = filter_object
     self._hasher_names_string = hasher_names_string
     self._knowledge_base = knowledge_base
-    self._last_task_completion_timestamp = 0
     self._memory_profiler = None
     self._mount_path = mount_path
     self._number_of_consumed_events = 0
@@ -121,8 +120,10 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       number_of_produced_sources = None
 
     if self._extraction_worker:
+      last_activity_timestamp = self._extraction_worker.last_activity_timestamp
       processing_status = self._extraction_worker.processing_status
     else:
+      last_activity_timestamp = 0.0
       processing_status = self._status
 
     status = {
@@ -134,6 +135,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
         u'number_of_produced_errors': number_of_produced_errors,
         u'number_of_produced_events': number_of_produced_events,
         u'number_of_produced_sources': number_of_produced_sources,
+        u'last_activity_timestamp': last_activity_timestamp,
         u'processing_status': processing_status,
         u'task_identifier': self._task_identifier}
 
@@ -293,8 +295,6 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
     finally:
       storage_writer.WriteTaskCompletion(aborted=self._abort)
-
-      self._last_task_completion_timestamp = task.completion_time
 
       self._parser_mediator.SetStorageWriter(None)
 
