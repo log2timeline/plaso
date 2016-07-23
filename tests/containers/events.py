@@ -21,7 +21,7 @@ class EventObjectTest(test_lib.AttributeContainerTestCase):
     event = events.EventObject()
     event.timestamp = 123
     event.timestamp_desc = u'LAST WRITTEN'
-    event.dATA_TYPE = u'mock:nothing'
+    event.data_type = u'mock:nothing'
     event.inode = 124
     event.filename = u'c:/bull/skrytinmappa/skra.txt'
     event.another_attribute = False
@@ -60,7 +60,7 @@ class EventObjectTest(test_lib.AttributeContainerTestCase):
 
     event_a.timestamp = 123
     event_a.timestamp_desc = u'LAST WRITTEN'
-    event_a.dATA_TYPE = u'mock:nothing'
+    event_a.data_type = u'mock:nothing'
     event_a.inode = 124
     event_a.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_a.another_attribute = False
@@ -73,7 +73,7 @@ class EventObjectTest(test_lib.AttributeContainerTestCase):
 
     event_b.timestamp = 123
     event_b.timestamp_desc = 'LAST WRITTEN'
-    event_b.dATA_TYPE = u'mock:nothing'
+    event_b.data_type = u'mock:nothing'
     event_b.inode = 124
     event_b.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_b.another_attribute = False
@@ -86,21 +86,21 @@ class EventObjectTest(test_lib.AttributeContainerTestCase):
 
     event_c.timestamp = 123
     event_c.timestamp_desc = u'LAST UPDATED'
-    event_c.dATA_TYPE = u'mock:nothing'
+    event_c.data_type = u'mock:nothing'
     event_c.inode = 124
     event_c.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_c.another_attribute = False
 
     event_d.timestamp = 14523
     event_d.timestamp_desc = u'LAST WRITTEN'
-    event_d.dATA_TYPE = u'mock:nothing'
+    event_d.data_type = u'mock:nothing'
     event_d.inode = 124
     event_d.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_d.another_attribute = False
 
     event_e.timestamp = 123
     event_e.timestamp_desc = u'LAST WRITTEN'
-    event_e.dATA_TYPE = u'mock:nothing'
+    event_e.data_type = u'mock:nothing'
     event_e.inode = 623423
     event_e.filename = u'c:/afrit/onnurskra.txt'
     event_e.another_attribute = False
@@ -127,42 +127,42 @@ class EventObjectTest(test_lib.AttributeContainerTestCase):
 
     event_a.timestamp = 123
     event_a.timestamp_desc = u'LAST WRITTEN'
-    event_a.dATA_TYPE = u'mock:nothing'
+    event_a.data_type = u'mock:nothing'
     event_a.inode = 124
     event_a.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_a.another_attribute = False
 
     event_b.timestamp = 123
     event_b.timestamp_desc = u'LAST WRITTEN'
-    event_b.dATA_TYPE = u'mock:nothing'
+    event_b.data_type = u'mock:nothing'
     event_b.inode = 124
     event_b.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_b.another_attribute = False
 
     event_c.timestamp = 123
     event_c.timestamp_desc = u'LAST UPDATED'
-    event_c.dATA_TYPE = u'mock:nothing'
+    event_c.data_type = u'mock:nothing'
     event_c.inode = 124
     event_c.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_c.another_attribute = False
 
     event_d.timestamp = 14523
     event_d.timestamp_desc = u'LAST WRITTEN'
-    event_d.dATA_TYPE = u'mock:nothing'
+    event_d.data_type = u'mock:nothing'
     event_d.inode = 124
     event_d.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_d.another_attribute = False
 
     event_e.timestamp = 123
     event_e.timestamp_desc = u'LAST WRITTEN'
-    event_e.dATA_TYPE = u'mock:nothing'
+    event_e.data_type = u'mock:nothing'
     event_e.inode = 623423
     event_e.filename = u'c:/afrit/öñṅûŗ₅ḱŖūα.txt'
     event_e.another_attribute = False
 
     event_f.timestamp = 14523
     event_f.timestamp_desc = u'LAST WRITTEN'
-    event_f.dATA_TYPE = u'mock:nothing'
+    event_f.data_type = u'mock:nothing'
     event_f.inode = 124
     event_f.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_f.another_attribute = False
@@ -181,14 +181,14 @@ class EventObjectTest(test_lib.AttributeContainerTestCase):
 
     event_a.timestamp = 123
     event_a.timestamp_desc = u'LAST WRITTEN'
-    event_a.dATA_TYPE = u'mock:nothing'
+    event_a.data_type = u'mock:nothing'
     event_a.parser = u'filestat'
     event_a.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_a.another_attribute = False
 
     event_b.timestamp = 123
     event_b.timestamp_desc = u'LAST WRITTEN'
-    event_b.dATA_TYPE = u'mock:nothing'
+    event_b.data_type = u'mock:nothing'
     event_b.parser = u'filestat'
     event_b.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_b.another_attribute = False
@@ -202,14 +202,14 @@ class EventObjectTest(test_lib.AttributeContainerTestCase):
 
     event_a.timestamp = 123
     event_a.timestamp_desc = u'LAST WRITTEN'
-    event_a.dATA_TYPE = u'mock:nothing'
+    event_a.data_type = u'mock:nothing'
     event_a.parser = u'filestat'
     event_a.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_a.another_attribute = False
 
     event_b.timestamp = 123
     event_b.timestamp_desc = u'LAST WRITTEN'
-    event_b.dATA_TYPE = u'mock:nothing'
+    event_b.data_type = u'mock:nothing'
     event_b.parser = u'filestat'
     event_b.filename = u'c:/bull/skrytinmappa/skra.txt'
     event_b.another_attribute = False

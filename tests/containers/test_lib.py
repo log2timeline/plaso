@@ -21,7 +21,7 @@ def CreateTestEventObjects():
   """
   test_events = []
   hostname = u'MYHOSTNAME'
-  dATA_TYPE = u'test:event'
+  data_type = u'test:event'
 
   event_object = events.EventObject()
   event_object.username = u'joesmith'

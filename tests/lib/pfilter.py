@@ -46,7 +46,7 @@ class PFilterTest(unittest.TestCase):
     objects as well as the serialized ones.
     """
     event_object = events.EventObject()
-    event_object.dATA_TYPE = u'Weirdo:Made up Source:Last Written'
+    event_object.data_type = u'Weirdo:Made up Source:Last Written'
     event_object.timestamp = timelib.Timestamp.CopyFromString(
         u'2015-11-18 01:15:43')
     event_object.timestamp_desc = u'Last Written'
