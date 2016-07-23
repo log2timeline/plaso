@@ -47,7 +47,7 @@ class ViperAnalyzer(interface.HTTPHashAnalyzer):
       ValueError: If an invalid protocol is specified.
     """
     protocol = protocol.lower().strip()
-    if not protocol in self._SUPPORTED_PROTOCOLS:
+    if protocol not in self._SUPPORTED_PROTOCOLS:
       raise ValueError(u'Invalid protocol specified for Viper lookup')
     self._protocol = protocol
 
@@ -135,7 +135,7 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
       ValueError: If an invalid protocol is selected.
     """
     protocol = protocol.lower().strip()
-    if not protocol in [u'http', u'https']:
+    if protocol not in [u'http', u'https']:
       raise ValueError(u'Invalid protocol specified for Viper lookup')
     self._analyzer.SetProtocol(protocol)
 
