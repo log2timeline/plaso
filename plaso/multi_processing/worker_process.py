@@ -21,12 +21,11 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
   def __init__(
       self, task_queue, storage_writer, knowledge_base, session_identifier,
-      worker_number, debug_output=False, enable_profiling=False,
-      filter_object=None, hasher_names_string=None, mount_path=None,
-      parser_filter_expression=None, preferred_year=None,
-      process_archive_files=False, profiling_directory=None,
-      profiling_sample_rate=1000, profiling_type=u'all',
-      temporary_directory=None, text_prepend=None,
+      debug_output=False, enable_profiling=False, filter_object=None,
+      hasher_names_string=None, mount_path=None, parser_filter_expression=None,
+      preferred_year=None, process_archive_files=False,
+      profiling_directory=None, profiling_sample_rate=1000,
+      profiling_type=u'all', temporary_directory=None, text_prepend=None,
       yara_rules_string=None, **kwargs):
     """Initializes a worker process.
 
@@ -39,7 +38,6 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       knowledge_base (KnowledgeBase): knowledge base which contains
           information from the source data needed for parsing.
       session_identifier (str): identifier of the session.
-      worker_number: a number that identifies the worker.
       debug_output (Optional[bool]): True if debug output should be enabled.
       enable_profiling (Optional[bool]): True if profiling should be enabled.
       filter_object (Optional[objectfilter.Filter]): filter object.
@@ -101,11 +99,10 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._task_queue = task_queue
     self._temporary_directory = temporary_directory
     self._text_prepend = text_prepend
-    self._worker_number = worker_number
     self._yara_rules_string = yara_rules_string
 
   def _GetStatus(self):
-    """Returns a status dictionary.
+    """Returns status information.
 
     Returns:
       dict [str, object]: status attributes, indexed by name.
