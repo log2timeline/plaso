@@ -78,7 +78,7 @@ class AnalysisPluginManager(object):
     Returns:
       dict[str,AnalysisPlugin]: analysis plugins per name.
     """
-    plugin_objects = []
+    plugin_objects = {}
     for plugin_name, plugin_class in iter(cls._plugin_classes.items()):
       if plugin_name not in plugin_names:
         continue

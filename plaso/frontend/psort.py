@@ -67,7 +67,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       inode_list = inode.split(u';')
       try:
         new_inode = int(inode_list[0], 10)
-      except (ValueError, IndexError):
+      except (IndexError, ValueError):
         new_inode = 0
 
       event.inode = new_inode
@@ -373,25 +373,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     logging.info(u'Analysis plugins running')
 
-  def GetAnalysisPlugins(self, analysis_plugins_string):
-    """Retrieves analysis plugins.
-
-    Args:
-      analysis_plugins_string (str): comma separated names of analysis plugins
-          to enable.
-
-    Returns:
-      list[AnalysisPlugin]: analysis plugins.
-    """
-    if not analysis_plugins_string:
-      return []
-
-    analysis_plugins_list = [
-        name.strip() for name in analysis_plugins_string.split(u',')]
-
-    return analysis_manager.AnalysisPluginManager.GetPluginObjects(
-        analysis_plugins_list)
-
   def CreateOutputModule(self, preferred_encoding=u'utf-8', timezone=u'UTC'):
     """Create an output module.
 
@@ -444,6 +425,26 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         type: type of analysis plugin.
     """
     return analysis_manager.AnalysisPluginManager.GetAllPluginInformation()
+
+  def GetAnalysisPlugins(self, analysis_plugins_string):
+    """Retrieves analysis plugins.
+
+    Args:
+      analysis_plugins_string (str): comma separated names of analysis plugins
+          to enable.
+
+    Returns:
+      list[AnalysisPlugin]: analysis plugins.
+    """
+    if not analysis_plugins_string:
+      return []
+
+    analysis_plugins_list = [
+        name.strip() for name in analysis_plugins_string.split(u',')]
+
+    analysis_plugins = analysis_manager.AnalysisPluginManager.GetPluginObjects(
+        analysis_plugins_list)
+    return analysis_plugins.values()
 
   def GetDisabledOutputClasses(self):
     """Retrieves the disabled output classes.
