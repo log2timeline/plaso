@@ -504,8 +504,12 @@ def CheckTestDependencies(latest_version_check=False):
   return True
 
 
-def GetDPKGDepends():
+def GetDPKGDepends(exclude_version=False):
   """Retrieves the DPKG control file installation requirements.
+
+  Args:
+    exclude_version (Optional[bool]): True if the version should be excluded
+        from the dependency definitions.
 
   Returns:
     list[str]: dependency definitions for requires for DPKG control file.
@@ -523,15 +527,18 @@ def GetDPKGDepends():
       # the sqlite3 version.
       module_version = None
 
-    if not module_version:
+    if exclude_version or not module_version:
       requires.append(module_name)
     else:
       requires.append(u'{0:s} >= {1:s}'.format(module_name, module_version))
 
-  requires.append(u'pytsk3-python >= 4.1.2')
+  if exclude_version:
+    requires.append(u'python-pytsk3')
+  else:
+    requires.append(u'python-pytsk3 >= 4.1.2')
 
   for module_name, module_version in sorted(LIBYAL_DEPENDENCIES.items()):
-    if not module_version:
+    if exclude_version or not module_version:
       requires.append(u'lib{0:s}-python'.format(module_name[2:]))
     else:
       requires.append(u'lib{0:s}-python >= {1:d}'.format(

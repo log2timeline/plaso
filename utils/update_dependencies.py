@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Script to update the dependencies in various configuration files."""
 
-from __future__ import print_function
+import os
 import sys
 
 # Change PYTHONPATH to include plaso.
@@ -14,7 +14,7 @@ import plaso.dependencies
 class DPKGControllWriter(object):
   """Class to help write a dpkg control file."""
 
-  _PATH = u'config/dpkg/control'
+  _PATH = os.path.join(u'config', u'dpkg', u'control')
 
   _MAINTAINER = (
       u'Log2Timeline developers <log2timeline-dev@googlegroups.com>')
@@ -50,6 +50,77 @@ class DPKGControllWriter(object):
     file_content.append(
         u'Depends: {0:s}, ${{shlibs:Depends}}, ${{misc:Depends}}'.format(
             dependencies))
+
+    file_content.extend(self._FILE_FOOTER)
+
+    file_content = u'\n'.join(file_content)
+    file_content = file_content.encode(u'utf-8')
+
+    with open(self._PATH, 'wb') as file_object:
+      file_object.write(file_content)
+
+
+class GIFTInstallScriptWriter(object):
+  """Class to help write the install_gift_and_dependencies.sh file."""
+
+  _PATH = os.path.join(
+      u'config', u'linux', u'install_gift_and_dependencies.sh')
+
+  _FILE_HEADER = [
+      u'#!/usr/bin/env bash',
+      u'set -e',
+      u'',
+      u'# Dependencies for running Plaso, alphabetized, one per line.',
+      (u'# This should not include packages only required for testing or '
+       u'development.')]
+
+  _FILE_FOOTER = [
+      u'# Additional dependencies for running Plaso tests, alphabetized,',
+      u'# one per line.',
+      u'TEST_DEPENDENCIES="python-coverage',
+      u'                   python-coveralls',
+      u'                   python-docopt',
+      u'                   python-mock";',
+      u'',
+      u'# Additional dependencies for doing Plaso debugging, alphabetized,',
+      u'# one per line.',
+      u'DEBUG_DEPENDENCIES="python-guppy";',
+      u'',
+      u'# Additional dependencies for doing Plaso development, alphabetized,',
+      u'# one per line.',
+      u'DEVELOPMENT_DEPENDENCIES="python-sphinx',
+      u'                          pylint";',
+      u'',
+      u'sudo add-apt-repository ppa:gift/dev -y',
+      u'sudo apt-get update -q',
+      u'sudo apt-get install -y ${PLASO_DEPENDENCIES}',
+      u'',
+      u'if [[ "$*" =~ "include-debug" ]]; then',
+      u'    sudo apt-get install -y ${DEBUG_DEPENDENCIES}',
+      u'fi',
+      u'',
+      u'if [[ "$*" =~ "include-development" ]]; then',
+      u'    sudo apt-get install -y ${DEVELOPMENT_DEPENDENCIES}',
+      u'fi',
+      u'',
+      u'if [[ "$*" =~ "include-test" ]]; then',
+      u'    sudo apt-get install -y ${TEST_DEPENDENCIES}',
+      u'fi',
+      u'']
+
+  def Write(self):
+    """Writes a setup.cfg file."""
+    file_content = []
+    file_content.extend(self._FILE_HEADER)
+
+    dependencies = plaso.dependencies.GetDPKGDepends(exclude_version=True)
+    for index, dependency in enumerate(dependencies):
+      if index == 0:
+        file_content.append(u'PLASO_DEPENDENCIES="{0:s}'.format(dependency))
+      elif index + 1 == len(dependencies):
+        file_content.append(u'                    {0:s}";'.format(dependency))
+      else:
+        file_content.append(u'                    {0:s}'.format(dependency))
 
     file_content.extend(self._FILE_FOOTER)
 
@@ -137,9 +208,10 @@ class ToxIniWriter(object):
 
 
 if __name__ == u'__main__':
-  # TODO: add support for ./config/linux/install_gift_and_dependencies.sh.
-
   writer = DPKGControllWriter()
+  writer.Write()
+
+  writer = GIFTInstallScriptWriter()
   writer.Write()
 
   writer = SetupCfgWriter()
