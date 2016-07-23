@@ -84,9 +84,9 @@ class SingleProcessEngine(engine.BaseEngine):
         self._status_update_callback(self._processing_status)
 
     except IOError as exception:
-      logging.warning((
-          u'Unable to process path specification: {0:s} with error: '
-          u'{1:s}').format(self._current_display_name, exception))
+      parser_mediator.ProduceExtractionError((
+          u'unable to process path specification with error: '
+          u'{0:s}').format(exception), path_spec=path_spec)
 
     # We cannot recover from a CacheFullError and abort processing when
     # it is raised.
@@ -100,12 +100,16 @@ class SingleProcessEngine(engine.BaseEngine):
     # All exceptions need to be caught here to prevent the worker
     # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
-      logging.warning(
-          u'Unhandled exception while processing path spec: {0:s}.'.format(
-              self._current_display_name))
-      logging.exception(exception)
+      parser_mediator.ProduceExtractionError((
+          u'unable to process path specification with error: '
+          u'{0:s}').format(exception), path_spec=path_spec)
 
       if self._debug_output:
+        logging.warning(
+            u'Unhandled exception while processing path spec: {0:s}.'.format(
+                self._current_display_name))
+        logging.exception(exception)
+
         pdb.post_mortem()
 
   def _ProcessSources(
