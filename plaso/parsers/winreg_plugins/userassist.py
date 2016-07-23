@@ -23,7 +23,7 @@ class UserAssistWindowsRegistryEvent(time_events.FiletimeEvent):
     regvalue: a dictionary containing the UserAssist values.
   """
 
-  DATA_TYPE = 'windows:registry:userassist'
+  DATA_TYPE = u'windows:registry:userassist'
 
   def __init__(self, filetime, key_path, offset, values_dict):
     """Initializes an UserAssist Windows Registry event.

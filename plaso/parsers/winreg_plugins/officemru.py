@@ -22,7 +22,7 @@ class OfficeMRUWindowsRegistryEvent(time_events.FiletimeEvent):
             Windows Registry value.
     value_string: a string containing the MRU value.
   """
-  DATA_TYPE = 'windows:registry:office_mru'
+  DATA_TYPE = u'windows:registry:office_mru'
 
   def __init__(self, filetime, key_path, offset, value_string):
     """Initializes a Windows Registry event.

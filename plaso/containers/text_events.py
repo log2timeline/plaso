@@ -9,7 +9,7 @@ from plaso.lib import py2to3
 class TextEvent(time_events.TimestampEvent):
   """Convenience class for a text format-based event."""
 
-  DATA_TYPE = 'text:entry'
+  DATA_TYPE = u'text:entry'
 
   def __init__(self, timestamp, offset, attributes):
     """Initializes a text event object.
