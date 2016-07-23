@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.analysis import browser_search
-from plaso.engine import single_process
+from plaso.analysis import mediator
 from plaso.parsers import sqlite
 
 from tests.analysis import test_lib
@@ -14,28 +14,23 @@ from tests.analysis import test_lib
 class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
   """Tests for the browser search analysis plugin."""
 
-  def testAnalyzeFile(self):
-    """Read a storage file that contains URL data and analyze it."""
-    parser = sqlite.SQLiteParser()
+  def testExamineEvent(self):
+    """Tests the ExamineEvent function."""
     knowledge_base = self._SetUpKnowledgeBase()
+    analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
+
+    parser = sqlite.SQLiteParser()
     storage_writer = self._ParseFile([u'History'], parser, knowledge_base)
 
     self.assertEqual(len(storage_writer.events), 71)
 
-    event_queue = single_process.SingleProcessQueue()
-    event_queue_producer = test_lib.TestEventObjectProducer(
-        event_queue, storage_writer)
-    event_queue_producer.Run()
+    analysis_plugin = browser_search.BrowserSearchPlugin()
 
-    analysis_plugin = browser_search.BrowserSearchPlugin(event_queue)
-    analysis_report_queue_consumer = self._RunAnalysisPlugin(
-        analysis_plugin, knowledge_base)
-    analysis_reports = self._GetAnalysisReportsFromQueue(
-        analysis_report_queue_consumer)
+    for event in storage_writer.events:
+      analysis_plugin.ExamineEvent(analysis_mediator, event)
 
-    self.assertEqual(len(analysis_reports), 1)
-
-    analysis_report = analysis_reports[0]
+    analysis_report = analysis_plugin.CompileReport(analysis_mediator)
+    self.assertIsNotNone(analysis_report)
 
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.

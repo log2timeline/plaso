@@ -7,10 +7,9 @@ import unittest
 from dfdatetime import filetime as dfdatetime_filetime
 from dfvfs.path import fake_path_spec
 
+from plaso.analysis import mediator
 from plaso.analysis import windows_services
 from plaso.containers import windows_events
-from plaso.engine import plaso_queue
-from plaso.engine import single_process
 from plaso.parsers import winreg
 
 from tests.analysis import test_lib
@@ -19,7 +18,7 @@ from tests.analysis import test_lib
 class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
   """Tests for the Windows Services analysis plugin."""
 
-  SERVICE_EVENTS = [
+  _TEST_EVENTS = [
       {u'path': u'\\ControlSet001\\services\\TestbDriver',
        u'text_dict': {u'ImagePath': u'C:\\Dell\\testdriver.sys', u'Type': 2,
                       u'Start': 2, u'ObjectName': u''},
@@ -32,48 +31,45 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
        u'timestamp': 1346145839002031},
   ]
 
-  def _CreateTestEventObject(self, service_event):
-    """Create a test event object with a particular path.
+  def _CreateTestEventObject(self, event_dictionary):
+    """Create a test event with a set of attributes.
 
     Args:
-      service_event: A hash containing attributes of an event to add to the
-                     queue.
+      event_dictionary (dict[str, str]): contains attributes of an event to add
+          to the queue.
 
     Returns:
-      An EventObject representing the service to be created.
+      EventObject: event with the appropriate attributes for testing.
     """
     filetime = dfdatetime_filetime.Filetime(
-        timestamp=service_event[u'timestamp'])
-    event_object = windows_events.WindowsRegistryServiceEvent(
-        filetime, service_event[u'path'], service_event[u'text_dict'])
-    event_object.pathspec = fake_path_spec.FakePathSpec(
-        location=u'C:\\WINDOWS\\system32\\SYSTEM')
-    return event_object
+        timestamp=event_dictionary[u'timestamp'])
+    event = windows_events.WindowsRegistryServiceEvent(
+        filetime, event_dictionary[u'path'], event_dictionary[u'text_dict'])
 
-  def testSyntheticKeysText(self):
-    """Test the plugin against mock events."""
-    event_queue = single_process.SingleProcessQueue()
+    for attribute_name, attribute_value in event_dictionary.items():
+      if attribute_name in (u'path', u'text_dict', u'timestamp'):
+        continue
 
-    # Fill the incoming queue with events.
-    test_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
-    events = [self._CreateTestEventObject(service_event)
-              for service_event
-              in self.SERVICE_EVENTS]
-    test_queue_producer.ProduceItems(events)
+      setattr(event, attribute_name, attribute_value)
 
-    # Initialize plugin.
-    analysis_plugin = windows_services.WindowsServicesPlugin(event_queue)
+    return event
 
-    # Run the analysis plugin.
+  def testExamineEvent(self):
+    """Tests the ExamineEvent function."""
     knowledge_base = self._SetUpKnowledgeBase()
-    analysis_report_queue_consumer = self._RunAnalysisPlugin(
-        analysis_plugin, knowledge_base)
-    analysis_reports = self._GetAnalysisReportsFromQueue(
-        analysis_report_queue_consumer)
+    analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
 
-    self.assertEqual(len(analysis_reports), 1)
+    analysis_plugin = windows_services.WindowsServicesPlugin()
 
-    analysis_report = analysis_reports[0]
+    for event_dictionary in self._TEST_EVENTS:
+      event_dictionary[u'pathspec'] = fake_path_spec.FakePathSpec(
+          location=u'C:\\WINDOWS\\system32\\SYSTEM')
+
+      event = self._CreateTestEventObject(event_dictionary)
+      analysis_plugin.ExamineEvent(analysis_mediator, event)
+
+    analysis_report = analysis_plugin.CompileReport(analysis_mediator)
+    self.assertIsNotNone(analysis_report)
 
     expected_text = (
         u'Listing Windows Services\n'
@@ -92,29 +88,26 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     self.assertEqual(expected_text, analysis_report.text)
     self.assertEqual(analysis_report.plugin_name, 'windows_services')
 
-  def testRealEvents(self):
-    """Test the plugin with text output against real events from the parser."""
+  def testExamineEventOnSystemFile(self):
+    """Tests the ExamineEvent function on a SYSTEM Registry file."""
     # We could remove the non-Services plugins, but testing shows that the
     # performance gain is negligible.
 
-    parser = winreg.WinRegistryParser()
     knowledge_base = self._SetUpKnowledgeBase()
+    analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
+
+    parser = winreg.WinRegistryParser()
     storage_writer = self._ParseFile([u'SYSTEM'], parser, knowledge_base)
 
-    event_queue = single_process.SingleProcessQueue()
-    event_queue_producer = test_lib.TestEventObjectProducer(
-        event_queue, storage_writer)
-    event_queue_producer.Run()
+    self.assertEqual(len(storage_writer.events), 31436)
 
-    # Run the analysis plugin.
-    analysis_plugin = windows_services.WindowsServicesPlugin(event_queue)
-    analysis_report_queue_consumer = self._RunAnalysisPlugin(
-        analysis_plugin, knowledge_base)
-    analysis_reports = self._GetAnalysisReportsFromQueue(
-        analysis_report_queue_consumer)
+    analysis_plugin = windows_services.WindowsServicesPlugin()
 
-    report = analysis_reports[0]
-    text = report.text
+    for event in storage_writer.events:
+      analysis_plugin.ExamineEvent(analysis_mediator, event)
+
+    analysis_report = analysis_plugin.CompileReport(analysis_mediator)
+    self.assertIsNotNone(analysis_report)
 
     # We'll check that a few strings are in the report, like they're supposed
     # to be, rather than checking for the exact content of the string,
@@ -127,32 +120,29 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
         u'ControlSet002']
 
     for string in test_strings:
-      self.assertTrue(string in text)
+      self.assertIn(string, analysis_report.text)
 
-  def testRealEventsYAML(self):
-    """Test the plugin with YAML output against real events from the parser."""
+  def testExamineEventOnSystemFileWithYAML(self):
+    """Tests the ExamineEvent function on a SYSTEM Registry file with YAML."""
     # We could remove the non-Services plugins, but testing shows that the
     # performance gain is negligible.
 
-    parser = winreg.WinRegistryParser()
     knowledge_base = self._SetUpKnowledgeBase()
+    analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
+
+    parser = winreg.WinRegistryParser()
     storage_writer = self._ParseFile([u'SYSTEM'], parser, knowledge_base)
 
-    event_queue = single_process.SingleProcessQueue()
-    event_queue_producer = test_lib.TestEventObjectProducer(
-        event_queue, storage_writer)
-    event_queue_producer.Run()
+    self.assertEqual(len(storage_writer.events), 31436)
 
-    # Run the analysis plugin.
-    analysis_plugin = windows_services.WindowsServicesPlugin(event_queue)
+    analysis_plugin = windows_services.WindowsServicesPlugin()
     analysis_plugin.SetOutputFormat(u'yaml')
-    analysis_report_queue_consumer = self._RunAnalysisPlugin(
-        analysis_plugin, knowledge_base)
-    analysis_reports = self._GetAnalysisReportsFromQueue(
-        analysis_report_queue_consumer)
 
-    report = analysis_reports[0]
-    text = report.text
+    for event in storage_writer.events:
+      analysis_plugin.ExamineEvent(analysis_mediator, event)
+
+    analysis_report = analysis_plugin.CompileReport(analysis_mediator)
+    self.assertIsNotNone(analysis_report)
 
     # We'll check that a few strings are in the report, like they're supposed
     # to be, rather than checking for the exact content of the string,
@@ -165,8 +155,7 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
         u'ControlSet002']
 
     for string in test_strings:
-      self.assertTrue(string in text, u'{0:s} not found in report text'.format(
-          string))
+      self.assertIn(string, analysis_report.text)
 
 
 if __name__ == '__main__':

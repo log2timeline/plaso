@@ -572,7 +572,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     if self._use_zeromq:
       task_queue = zeromq_queue.ZeroMQRequestConnectQueue(
-          delay_open=True, name=u'{0:s} pathspec'.format(process_name),
+          delay_open=True, name=u'{0:s} task queue'.format(process_name),
           linger_seconds=0, port=self._task_queue_port,
           timeout_seconds=2)
     else:

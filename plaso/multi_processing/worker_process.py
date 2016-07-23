@@ -33,7 +33,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     multiprocessing.Process.
 
     Args:
-      task_queue (MultiProcessingQueue): task queue.
+      task_queue (Queue): task queue.
       storage_writer (StorageWriter): storage writer for a session storage.
       knowledge_base (KnowledgeBase): knowledge base which contains
           information from the source data needed for parsing.

@@ -229,20 +229,13 @@ class PsortTool(analysis_tool.AnalysisTool):
           configuration_object, output_module)
       missing_parameters = output_module.GetMissingArguments()
 
-    # TODO: fix or remove this comment.
-    # Get ANALYSIS PLUGINS AND CONFIGURE!
-    get_plugins_and_producers = self._front_end.GetAnalysisPluginsAndEventQueues
-    analysis_plugins, event_queue_producers = get_plugins_and_producers(
-        self._analysis_plugins)
-
+    analysis_plugins = self._front_end.GetPluginObjects(self._analysis_plugins)
     for analysis_plugin in analysis_plugins:
       helpers_manager.ArgumentHelperManager.ParseOptions(
           self._options, analysis_plugin)
 
-    self._front_end.SetStorageFile(self._storage_file_path)
-
     counter = self._front_end.ProcessStorage(
-        output_module, analysis_plugins, event_queue_producers,
+        self._storage_file_path, output_module, analysis_plugins,
         command_line_arguments=self._command_line_arguments,
         deduplicate_events=self._deduplicate_events,
         preferred_encoding=self.preferred_encoding,

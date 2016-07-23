@@ -39,6 +39,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     """Initializes the front-end object."""
     super(PsortFrontend, self).__init__()
     self._data_location = None
+    self._event_queues = []
     self._filter_buffer = None
     self._filter_expression = None
     # Instance of EventObjectFilter.
@@ -48,17 +49,14 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     self._preferred_language = u'en-US'
     self._processes_per_pid = {}
     self._quiet_mode = False
-    self._storage_file_path = None
     self._use_zeromq = True
 
-  def _AppendEvent(self, event, output_buffer, event_queues):
+  def _AppendEvent(self, event, output_buffer):
     """Appends an event object to an event output buffer and analysis queues.
 
     Args:
       event (EventObject): event.
       output_buffer (EventBuffer): output event buffer.
-      event_queues (list[Queue]): event queues that serve as input for
-          the analysis plugins.
     """
     output_buffer.Append(event)
 
@@ -74,8 +72,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
       event.inode = new_inode
 
-    for event_queue in event_queues:
-      event_queue.ProduceItem(event)
+    for event_queue in self._event_queues:
+      event_queue.PushItem(event)
 
   def _CleanUpAfterAbort(self):
     """Signals the front-end to stop running nicely after an abort."""
@@ -152,14 +150,13 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       counter[item] = value
 
   def _ProcessEventsFromStorage(
-      self, storage_reader, output_buffer, event_queues=None,
-      filter_buffer=None, my_filter=None, time_slice=None):
+      self, storage_reader, output_buffer, filter_buffer=None, my_filter=None,
+      time_slice=None):
     """Reads event objects from the storage to process and filter them.
 
     Args:
       storage_reader (StorageReader): storage reader.
       output_buffer (EventBuffer): output event buffer.
-      event_queues (Optional[list[Queue]]): event queues.
       filter_buffer (Optional[CircularBuffer]): filter buffer used to store
           previously discarded events to store time slice history.
       my_filter (Optional[FilterObject]): event filter.
@@ -173,14 +170,12 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     counter = collections.Counter()
     my_limit = getattr(my_filter, u'limit', 0)
     forward_entries = 0
-    if not event_queues:
-      event_queues = []
 
     for event in storage_reader.GetEvents(time_range=time_slice):
       # TODO: clean up this function.
       if not my_filter:
         counter[u'Events Included'] += 1
-        self._AppendEvent(event, output_buffer, event_queues)
+        self._AppendEvent(event, output_buffer)
       else:
         if my_filter.Match(event):
           counter[u'Events Included'] += 1
@@ -192,15 +187,15 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
               counter[u'Events Added From Slice'] += 1
               counter[u'Events Included'] += 1
               counter[u'Events Filtered Out'] -= 1
-              self._AppendEvent(event_in_buffer, output_buffer, event_queues)
-          self._AppendEvent(event, output_buffer, event_queues)
+              self._AppendEvent(event_in_buffer, output_buffer)
+          self._AppendEvent(event, output_buffer)
           if my_limit:
             if counter[u'Events Included'] == my_limit:
               break
         else:
           if filter_buffer and forward_entries:
             if forward_entries <= filter_buffer.size:
-              self._AppendEvent(event, output_buffer, event_queues)
+              self._AppendEvent(event, output_buffer)
               forward_entries += 1
               counter[u'Events Added From Slice'] += 1
               counter[u'Events Included'] += 1
@@ -214,7 +209,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
           else:
             counter[u'Events Filtered Out'] += 1
 
-    for event_queue in event_queues:
+    for event_queue in self._event_queues:
       event_queue.Close()
 
     if output_buffer.duplicate_counter:
@@ -225,18 +220,16 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     return counter
 
   def _ProcessStorage(
-      self, output_module, storage_file, analysis_plugins,
-      event_queue_producers, command_line_arguments=None,
-      deduplicate_events=True, preferred_encoding=u'utf-8',
-      time_slice=None, use_time_slicer=False):
+      self, storage_file, output_module, analysis_plugins,
+      command_line_arguments=None, deduplicate_events=True,
+      preferred_encoding=u'utf-8', time_slice=None, use_time_slicer=False):
     """Processes a plaso storage file.
 
     Args:
-      output_module (OutputModule): output module.
       storage_file (StorageFile): storage file.
+      output_module (OutputModule): output module.
       analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
           be run.
-      event_queue_producers (list[ItemQueueProducer]): event queue producers.
       command_line_arguments (Optional[str]): command line arguments.
       deduplicate_events (Optional[bool]): True if events should be
           deduplicated.
@@ -278,9 +271,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         command_line_arguments=command_line_arguments,
         preferred_encoding=preferred_encoding)
 
-    if not analysis_plugins:
-      event_queue_producers = []
-    else:
+    if analysis_plugins:
       self._StartAnalysisProcesses(
           analysis_plugins, analysis_queue_port, analysis_report_incoming_queue)
 
@@ -295,9 +286,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     with output_buffer:
       storage_reader = reader.StorageObjectReader(storage_file)
       counter = self._ProcessEventsFromStorage(
-          storage_reader, output_buffer, event_queues=event_queue_producers,
-          filter_buffer=self._filter_buffer, my_filter=self._filter_object,
-          time_slice=time_slice)
+          storage_reader, output_buffer, filter_buffer=self._filter_buffer,
+          my_filter=self._filter_object, time_slice=time_slice)
 
     # Get all reports and tags from analysis plugins.
     self._ProcessAnalysisPlugins(
@@ -346,14 +336,31 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     for analysis_plugin in analysis_plugins:
       if self._use_zeromq:
-        analysis_plugin_output_queue = zeromq_queue.ZeroMQPushConnectQueue(
-            delay_open=True, port=analysis_queue_port)
+        output_event_queue = zeromq_queue.ZeroMQPushBindQueue()
+        # Open the queue so it can bind to a random port, and we can get the
+        # port number to use in the input queue.
+        output_event_queue.Open()
+
       else:
-        analysis_plugin_output_queue = analysis_report_incoming_queue
+        output_event_queue = multi_process_queue.MultiProcessingQueue(timeout=5)
+
+      self._event_queues.append(output_event_queue)
+
+      if self._use_zeromq:
+        input_event_queue = zeromq_queue.ZeroMQPullConnectQueue(
+            delay_open=True, port=output_event_queue.port)
+
+        analysis_report_queue = zeromq_queue.ZeroMQPushConnectQueue(
+            delay_open=True, port=analysis_queue_port)
+
+      else:
+        input_event_queue = output_event_queue
+
+        analysis_report_queue = analysis_report_incoming_queue
 
       process_name = u'Analysis {0:s}'.format(analysis_plugin.plugin_name)
       process = analysis_process.AnalysisProcess(
-          analysis_plugin_output_queue, self._knowledge_base,
+          input_event_queue, analysis_report_queue, self._knowledge_base,
           analysis_plugin, data_location=self._data_location,
           name=process_name)
 
@@ -361,55 +368,29 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
       process.start()
 
-      logging.info(u'Plugin: [{0:s}] started.'.format(
-          analysis_plugin.plugin_name))
+      logging.info(u'Started analysis plugin: {0:s} (PID: {1:d}).'.format(
+          analysis_plugin.plugin_name, process.pid))
 
     logging.info(u'Analysis plugins running')
 
-  def GetAnalysisPluginsAndEventQueues(self, analysis_plugins_string):
-    """Return a list of analysis plugins and event queues.
+  def GetAnalysisPlugins(self, analysis_plugins_string):
+    """Retrieves analysis plugins.
 
     Args:
       analysis_plugins_string (str): comma separated names of analysis plugins
-          to load.
+          to enable.
 
     Returns:
-      tuple: consists:
-
-        list[AnalysisPlugin]: analysis plugins
-        list[Queue]: event queues
+      list[AnalysisPlugin]: analysis plugins.
     """
     if not analysis_plugins_string:
-      return [], []
+      return []
 
-    event_producers = []
-    # These are the queues analysis plugins will read from.
-    analysis_plugin_input_queues = []
     analysis_plugins_list = [
         name.strip() for name in analysis_plugins_string.split(u',')]
 
-    for _ in range(0, len(analysis_plugins_list)):
-      if self._use_zeromq:
-        output_queue = zeromq_queue.ZeroMQPushBindQueue()
-        # Open the queue so it can bind to a random port, and we can get the
-        # port number to use in the input queue.
-        output_queue.Open()
-        queue_port = output_queue.port
-        input_queue = zeromq_queue.ZeroMQPullConnectQueue(
-            port=queue_port, delay_open=True)
-        analysis_plugin_input_queues.append(input_queue)
-      else:
-        input_queue = multi_process_queue.MultiProcessingQueue(timeout=5)
-        analysis_plugin_input_queues.append(input_queue)
-        output_queue = input_queue
-      event_producers.append(plaso_queue.ItemQueueProducer(output_queue))
-
-    analysis_plugins = analysis_manager.AnalysisPluginManager.LoadPlugins(
-        analysis_plugins_list, analysis_plugin_input_queues)
-
-    analysis_plugins = list(analysis_plugins)
-
-    return analysis_plugins, event_producers
+    return analysis_manager.AnalysisPluginManager.GetPluginObjects(
+        analysis_plugins_list)
 
   def CreateOutputModule(self, preferred_encoding=u'utf-8', timezone=u'UTC'):
     """Create an output module.
@@ -498,16 +479,16 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     return output_manager.OutputManager.HasOutputClass(name)
 
   def ProcessStorage(
-      self, output_module, analysis_plugins, event_queue_producers,
+      self, storage_file_path, output_module, analysis_plugins,
       command_line_arguments=None, deduplicate_events=True,
       preferred_encoding=u'utf-8', time_slice=None, use_time_slicer=False):
     """Processes a plaso storage file.
 
     Args:
+      storage_file_path (str): path of the storage file.
       output_module (OutputModule): output module.
       analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
           be run.
-      event_queue_producers (list[ItemQueueProducer]): event queue producers.
       command_line_arguments (Optional[str]): command line arguments.
       deduplicate_events (Optional[bool]): True if events should be
           deduplicated.
@@ -534,15 +515,15 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     # come up with a more generic solution.
     storage_file = storage_zip_file.ZIPStorageFile()
     try:
-      storage_file.Open(path=self._storage_file_path, read_only=read_only)
+      storage_file.Open(path=storage_file_path, read_only=read_only)
     except IOError as exception:
       raise RuntimeError(
           u'Unable to open storage file: {0:s} with error: {1:s}.'.format(
-              self._storage_file_path, exception))
+              storage_file_path, exception))
 
     try:
       counter = self._ProcessStorage(
-          output_module, storage_file, analysis_plugins, event_queue_producers,
+          storage_file, output_module, analysis_plugins,
           command_line_arguments=command_line_arguments,
           deduplicate_events=deduplicate_events,
           preferred_encoding=preferred_encoding,
@@ -591,14 +572,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       quiet_mode (Optional[bool]): True when quiet mode should be enabled.
     """
     self._quiet_mode = quiet_mode
-
-  def SetStorageFile(self, storage_file_path):
-    """Sets the storage file path.
-
-    Args:
-      storage_file_path (str): path of the storage file.
-    """
-    self._storage_file_path = storage_file_path
 
   def SetUseZeroMQ(self, use_zeromq=True):
     """Sets whether ZeroMQ should be used for queueing or not.

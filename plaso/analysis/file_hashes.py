@@ -14,22 +14,18 @@ class FileHashesPlugin(interface.AnalysisPlugin):
   # Indicate that we can run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = True
 
-  def __init__(self, incoming_queue):
-    """Initializes the unique hashes plugin.
-
-    Args:
-      incoming_queue: a queue to read events from.
-    """
-    super(FileHashesPlugin, self).__init__(incoming_queue)
+  def __init__(self):
+    """Initializes the unique hashes plugin."""
+    super(FileHashesPlugin, self).__init__()
     self._paths_with_hashes = {}
 
-  def ExamineEvent(self, mediator, event, **kwargs):
+  def ExamineEvent(self, mediator, event):
     """Analyzes an event and creates extracts hashes as required.
 
     Args:
       mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
-      event: the event object (instance of EventObject) to examine.
+      event (EventObject): event to examine.
     """
     pathspec = getattr(event, u'pathspec', None)
     if pathspec is None:
