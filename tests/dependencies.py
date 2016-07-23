@@ -26,12 +26,11 @@ class DependenciesTest(unittest.TestCase):
 
   def testCheckLibyal(self):
     """Tests the _CheckLibyal function."""
-    result = page_content = dependencies._CheckLibyal(
+    result = dependencies._CheckLibyal(
         {u'pybde': 20140531}, verbose_output=False)
     self.assertTrue(result)
 
-    result = page_content = dependencies._CheckLibyal(
-        {u'bogus': 0}, verbose_output=False)
+    result = dependencies._CheckLibyal({u'bogus': 0}, verbose_output=False)
     self.assertFalse(result)
 
   @unittest.skipUnless(hostname, 'no internet connectivity')
@@ -44,22 +43,22 @@ class DependenciesTest(unittest.TestCase):
 
   def testCheckPythonModule(self):
     """Tests the _CheckPythonModule function."""
-    result = page_content = dependencies._CheckPythonModule(
+    result = dependencies._CheckPythonModule(
         u'dfvfs', u'__version__', u'20160510', verbose_output=False)
     self.assertTrue(result)
 
-    result = page_content = dependencies._CheckPythonModule(
+    result = dependencies._CheckPythonModule(
         u'bogus', u'__version__', u'0', verbose_output=False)
     self.assertFalse(result)
 
   def testCheckPytsk(self):
     """Tests the _CheckPytsk function."""
-    result = page_content = dependencies._CheckPytsk(verbose_output=False)
+    result = dependencies._CheckPytsk(verbose_output=False)
     self.assertTrue(result)
 
   def testCheckSqlite3(self):
     """Tests the _CheckSqlite3 function."""
-    result = page_content = dependencies._CheckSqlite3(verbose_output=False)
+    result = dependencies._CheckSqlite3(verbose_output=False)
     self.assertTrue(result)
 
   @unittest.skipUnless(hostname, 'no internet connectivity')
