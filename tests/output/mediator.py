@@ -15,7 +15,7 @@ from plaso.output import mediator
 
 class TestEvent(events.EventObject):
   """Test event object."""
-  DATA_TYPE = 'test:mediator'
+  DATA_TYPE = u'test:mediator'
 
   def __init__(self):
     """Initializes an event object."""
@@ -32,7 +32,7 @@ class TestEvent(events.EventObject):
 
 class TestEventFormatter(formatters_interface.EventFormatter):
   """Test event formatter."""
-  DATA_TYPE = 'test:mediator'
+  DATA_TYPE = u'test:mediator'
   FORMAT_STRING = u'{text}'
 
   SOURCE_SHORT = 'LOG'
