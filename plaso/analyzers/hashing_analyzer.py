@@ -3,19 +3,22 @@
 
 import logging
 
-from plaso.containers import analyzer_result
 from plaso.analyzers import interface
 from plaso.analyzers import manager
 from plaso.analyzers.hashers import manager as hashers_manager
+from plaso.containers import analyzer_result
+from plaso.lib import definitions
 
 
 class HashingAnalyzer(interface.BaseAnalyzer):
   """This class contains code for calculating file hashes of input files."""
+
   NAME = u'hashing'
+  DESCRIPTION = u'Calculates hashes of file content.'
+
+  PROCESSING_STATUS_HINT = definitions.PROCESSING_STATUS_HASHING
 
   INCREMENTAL_ANALYZER = True
-
-  DESCRIPTION = u'Calculates hashes of file content.'
 
   def __init__(self):
     """Initializes a hashing analyzer."""

@@ -3,16 +3,12 @@
 
 import abc
 
-from plaso.lib import definitions
-
 
 class BaseHasher(object):
   """Base class for objects that calculate hashes."""
 
   NAME = u'base_hasher'
   DESCRIPTION = u'Calculates a digest hash over input data.'
-
-  PROCESSING_STATUS_HINT = definitions.PROCESSING_STATUS_HASHING
 
   @abc.abstractmethod
   def GetBinaryDigest(self):

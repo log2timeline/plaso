@@ -123,7 +123,7 @@ class EventExtractionWorker(object):
       data_stream_name (str): name of the data stream.
 
     Raises:
-      RuntimeError: if the file-like object is cannot be retrieved from
+      RuntimeError: if the file-like object cannot be retrieved from
           the file entry.
     """
     if not self._analyzers:
