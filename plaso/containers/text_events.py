@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains the text format specific event object classes."""
+"""This file contains the text format specific event classes."""
 
 from plaso.containers import time_events
 from plaso.lib import eventdata
@@ -11,14 +11,16 @@ class TextEvent(time_events.TimestampEvent):
 
   DATA_TYPE = u'text:entry'
 
+  # TODO: remove attributes as an argument and pass them as individual
+  # arguments.
   def __init__(self, timestamp, offset, attributes):
-    """Initializes a text event object.
+    """Initializes a text event.
 
     Args:
-      timestamp: The timestamp time value. The timestamp contains the
-                 number of microseconds since Jan 1, 1970 00:00:00 UTC.
-      offset: The offset of the attributes.
-      attributes: A dict that contains the events attributes.
+      timestamp (int): timestamp, which contains the number of microseconds
+          since January 1, 1970, 00:00:00 UTC.
+      offset (int): offset of the text event within the event source.
+      attributes (dict[str,object]): event attributes.
     """
     super(TextEvent, self).__init__(
         timestamp, eventdata.EventTimestamp.WRITTEN_TIME)

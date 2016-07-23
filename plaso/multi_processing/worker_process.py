@@ -118,9 +118,9 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       number_of_produced_sources = (
           self._parser_mediator.number_of_produced_event_sources)
     else:
-      number_of_produced_errors = 0
-      number_of_produced_events = 0
-      number_of_produced_sources = 0
+      number_of_produced_errors = None
+      number_of_produced_events = None
+      number_of_produced_sources = None
 
     if self._extraction_worker:
       processing_status = self._extraction_worker.processing_status
@@ -130,7 +130,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     status = {
         u'display_name': self._current_display_name,
         u'identifier': self._name,
-        u'number_of_consumed_errors': 0,
+        u'number_of_consumed_errors': None,
         u'number_of_consumed_events': self._number_of_consumed_events,
         u'number_of_consumed_sources': self._number_of_consumed_sources,
         u'number_of_produced_errors': number_of_produced_errors,

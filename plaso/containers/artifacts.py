@@ -73,6 +73,13 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
   Attributes:
     code_page (str): system code page.
     hostname (HostnameArtifact): hostname.
+    keyboard_layout (str): keyboard layout.
+    operating_system (str): operating system for example "Mac OS X" or
+        "Windows".
+    operating_system_product (str): operating system product for example
+        "Windows XP".
+    operating_system_version (str): operating system version for example
+        "10.9.2" or "8.1".
     time_zone (str): system time zone.
     user_accounts (list[UserAccountArtifact]): user accounts.
   """
@@ -88,10 +95,12 @@ class SystemConfigurationArtifact(ArtifactAttributeContainer):
     super(SystemConfigurationArtifact, self).__init__()
     self.code_page = code_page
     self.hostname = None
+    self.keyboard_layout = None
+    self.operating_system = None
+    self.operating_system_product = None
+    self.operating_system_version = None
     self.time_zone = time_zone
     self.user_accounts = []
-
-    # TODO: add other values collected during preprocessing.
 
 
 class UserAccountArtifact(ArtifactAttributeContainer):

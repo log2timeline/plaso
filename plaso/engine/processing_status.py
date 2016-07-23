@@ -79,25 +79,29 @@ class ProcessStatus(object):
       ValueError: if the consumer or produced number of errors is smaller
           than the value of the previous update.
     """
-    if number_of_consumed_errors < self.number_of_consumed_errors:
-      raise ValueError(
-          u'Number of consumed errors smaller than previous update.')
+    consumed_errors_delta = 0
+    if number_of_consumed_errors is not None:
+      if number_of_consumed_errors < self.number_of_consumed_errors:
+        raise ValueError(
+            u'Number of consumed errors smaller than previous update.')
 
-    if number_of_produced_errors < self.number_of_produced_errors:
-      raise ValueError(
-          u'Number of produced errors smaller than previous update.')
+      consumed_errors_delta = (
+          number_of_consumed_errors - self.number_of_consumed_errors)
 
-    consumed_errors_delta = (
-        number_of_consumed_errors - self.number_of_consumed_errors)
+      self.number_of_consumed_errors = number_of_consumed_errors
+      self.number_of_consumed_errors_delta = consumed_errors_delta
 
-    self.number_of_consumed_errors = number_of_consumed_errors
-    self.number_of_consumed_errors_delta = consumed_errors_delta
+    produced_errors_delta = 0
+    if number_of_produced_errors is not None:
+      if number_of_produced_errors < self.number_of_produced_errors:
+        raise ValueError(
+            u'Number of produced errors smaller than previous update.')
 
-    produced_errors_delta = (
-        number_of_produced_errors - self.number_of_produced_errors)
+      produced_errors_delta = (
+          number_of_produced_errors - self.number_of_produced_errors)
 
-    self.number_of_produced_errors = number_of_produced_errors
-    self.number_of_produced_errors_delta = produced_errors_delta
+      self.number_of_produced_errors = number_of_produced_errors
+      self.number_of_produced_errors_delta = produced_errors_delta
 
     return consumed_errors_delta > 0 or produced_errors_delta > 0
 
@@ -118,25 +122,29 @@ class ProcessStatus(object):
       ValueError: if the consumer or produced number of events is smaller
           than the value of the previous update.
     """
-    if number_of_consumed_events < self.number_of_consumed_events:
-      raise ValueError(
-          u'Number of consumed events smaller than previous update.')
+    consumed_events_delta = 0
+    if number_of_consumed_events is not None:
+      if number_of_consumed_events < self.number_of_consumed_events:
+        raise ValueError(
+            u'Number of consumed events smaller than previous update.')
 
-    if number_of_produced_events < self.number_of_produced_events:
-      raise ValueError(
-          u'Number of produced events smaller than previous update.')
+      consumed_events_delta = (
+          number_of_consumed_events - self.number_of_consumed_events)
 
-    consumed_events_delta = (
-        number_of_consumed_events - self.number_of_consumed_events)
+      self.number_of_consumed_events = number_of_consumed_events
+      self.number_of_consumed_events_delta = consumed_events_delta
 
-    self.number_of_consumed_events = number_of_consumed_events
-    self.number_of_consumed_events_delta = consumed_events_delta
+    produced_events_delta = 0
+    if number_of_produced_events is not None:
+      if number_of_produced_events < self.number_of_produced_events:
+        raise ValueError(
+            u'Number of produced events smaller than previous update.')
 
-    produced_events_delta = (
-        number_of_produced_events - self.number_of_produced_events)
+      produced_events_delta = (
+          number_of_produced_events - self.number_of_produced_events)
 
-    self.number_of_produced_events = number_of_produced_events
-    self.number_of_produced_events_delta = produced_events_delta
+      self.number_of_produced_events = number_of_produced_events
+      self.number_of_produced_events_delta = produced_events_delta
 
     return consumed_events_delta > 0 or produced_events_delta > 0
 
@@ -157,25 +165,29 @@ class ProcessStatus(object):
       ValueError: if the consumer or produced number of event sources is
           smaller than the value of the previous update.
     """
-    if number_of_consumed_sources < self.number_of_consumed_sources:
-      raise ValueError(
-          u'Number of consumed sources smaller than previous update.')
+    consumed_sources_delta = 0
+    if number_of_consumed_sources is not None:
+      if number_of_consumed_sources < self.number_of_consumed_sources:
+        raise ValueError(
+            u'Number of consumed sources smaller than previous update.')
 
-    if number_of_produced_sources < self.number_of_produced_sources:
-      raise ValueError(
-          u'Number of produced sources smaller than previous update.')
+      consumed_sources_delta = (
+          number_of_consumed_sources - self.number_of_consumed_sources)
 
-    consumed_sources_delta = (
-        number_of_consumed_sources - self.number_of_consumed_sources)
+      self.number_of_consumed_sources = number_of_consumed_sources
+      self.number_of_consumed_sources_delta = consumed_sources_delta
 
-    self.number_of_consumed_sources = number_of_consumed_sources
-    self.number_of_consumed_sources_delta = consumed_sources_delta
+    produced_sources_delta = 0
+    if number_of_produced_sources is not None:
+      if number_of_produced_sources < self.number_of_produced_sources:
+        raise ValueError(
+            u'Number of produced sources smaller than previous update.')
 
-    produced_sources_delta = (
-        number_of_produced_sources - self.number_of_produced_sources)
+      produced_sources_delta = (
+          number_of_produced_sources - self.number_of_produced_sources)
 
-    self.number_of_produced_sources = number_of_produced_sources
-    self.number_of_produced_sources_delta = produced_sources_delta
+      self.number_of_produced_sources = number_of_produced_sources
+      self.number_of_produced_sources_delta = produced_sources_delta
 
     return consumed_sources_delta > 0 or produced_sources_delta > 0
 
