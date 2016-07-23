@@ -79,9 +79,9 @@ sys.setdefaultencoding(encoding)
 # "Plaso Langar Að Safna Öllu" was removed.
 plaso_description = 'Super timeline all the things'
 plaso_long_description = (
-    'log2timeline is a tool designed to extract timestamps from various files '
-    'found on a typical computer system(s) and aggregate them. Plaso is the '
-    'Python rewrite of log2timeline.')
+    'Log2Timeline is a framework to create super timelines. Its purpose '
+    'is to extract timestamps from various files found on typical computer '
+    'systems and aggregate them. Plaso is the Python rewrite of log2timeline.')
 
 setup(
     name='plaso',
@@ -90,7 +90,7 @@ setup(
     long_description=plaso_long_description,
     license='Apache License, Version 2.0',
     url='https://sites.google.com/a/kiddaland.net/plaso',
-    maintainer='Plaso development team',
+    maintainer='Log2Timeline developers',
     maintainer_email='log2timeline-dev@googlegroups.com',
     scripts=GetScripts(),
     cmdclass={'test': TestCommand},

@@ -56,8 +56,8 @@ PYTHON_DEPENDENCIES = [
     # TODO: determine the version of efilter.
     (u'efilter', u'', u'1.3', None),
     (u'hachoir_core', u'__version__', u'1.3.3', None),
-    (u'hachoir_parser', u'__version__', u'1.3.4', None),
     (u'hachoir_metadata', u'__version__', u'1.3.3', None),
+    (u'hachoir_parser', u'__version__', u'1.3.4', None),
     (u'IPython', u'__version__', u'1.2.1', None),
     (u'pefile', u'__version__', u'1.2.10-139', None),
     (u'psutil', u'__version__', u'1.2.1', None),
@@ -76,6 +76,30 @@ PYTHON_DEPENDENCIES = [
 # module_name, version_attribute_name, minimum_version, maximum_version
 PYTHON_TEST_DEPENDENCIES = [
     (u'mock', u'__version__', u'0.7.1', None)]
+
+# Maps Python module names to DPKG packages.
+_DPKG_PACKAGE_NAMES = {
+    u'hachoir_core': u'python-hachoir-core',
+    u'hachoir_metadata': u'python-hachoir-metadata',
+    u'hachoir_parser': u'python-hachoir-parser',
+    u'IPython': u'ipython',
+    u'pytz': u'python-tz'}
+
+# Maps Python module names to PyPI projects.
+_PYPI_PROJECT_NAMES = {
+    u'sqlite3': u'pysqlite',
+    u'yaml': u'PyYAML',
+    u'yara': u'yara-python',
+    u'xlsxwriter': u'XlsxWriter'}
+
+# Maps Python module names to RPM packages.
+_RPM_PACKAGE_NAMES = {
+    u'hachoir_core': u'python-hachoir-core',
+    u'hachoir_metadata': u'python-hachoir-metadata',
+    u'hachoir_parser': u'python-hachoir-parser',
+    u'IPython': u'python-ipython',
+    u'sqlite3': u'python-libs',
+    u'pytz': u'pytz'}
 
 _VERSION_SPLIT_REGEX = re.compile(r'\.|\-')
 
@@ -480,6 +504,42 @@ def CheckTestDependencies(latest_version_check=False):
   return True
 
 
+def GetDPKGDepends():
+  """Retrieves the DPKG control file installation requirements.
+
+  Returns:
+    list[str]: dependency definitions for requires for DPKG control file.
+  """
+  requires = []
+  for values in PYTHON_DEPENDENCIES:
+    module_name = values[0]
+    module_version = values[2]
+
+    # Map the import name to the DPKG package name.
+    module_name = _DPKG_PACKAGE_NAMES.get(
+        module_name, u'python-{0:s}'.format(module_name))
+    if module_name == u'python-libs':
+      # Override the python-libs version since it does not match
+      # the sqlite3 version.
+      module_version = None
+
+    if not module_version:
+      requires.append(module_name)
+    else:
+      requires.append(u'{0:s} >= {1:s}'.format(module_name, module_version))
+
+  requires.append(u'pytsk3-python >= 4.1.2')
+
+  for module_name, module_version in sorted(LIBYAL_DEPENDENCIES.items()):
+    if not module_version:
+      requires.append(u'lib{0:s}-python'.format(module_name[2:]))
+    else:
+      requires.append(u'lib{0:s}-python >= {1:d}'.format(
+          module_name[2:], module_version))
+
+  return sorted(requires)
+
+
 def GetInstallRequires():
   """Retrieves the setup.py installation requirements.
 
@@ -491,13 +551,14 @@ def GetInstallRequires():
     module_name = values[0]
     module_version = values[2]
 
-    # Map the import name to the pypi name.
-    if module_name == u'yaml':
-      module_name = u'PyYAML'
-    elif module_name == u'sqlite3':
+    # Map the import name to the PyPI project name.
+    module_name = _PYPI_PROJECT_NAMES.get(module_name, module_name)
+    if module_name == u'efilter':
+      module_version = u'1!{0:s}'.format(module_version)
+
+    elif module_name == u'pysqlite':
       # Override the pysqlite version since it does not match
       # the sqlite3 version.
-      module_name = u'pysqlite'
       module_version = None
 
     if not module_version:
@@ -516,3 +577,39 @@ def GetInstallRequires():
           module_name, module_version))
 
   return sorted(install_requires)
+
+
+def GetRPMRequires():
+  """Retrieves the setup.cfg RPM installation requirements.
+
+  Returns:
+    list[str]: dependency definitions for requires for setup.cfg.
+  """
+  requires = []
+  for values in PYTHON_DEPENDENCIES:
+    module_name = values[0]
+    module_version = values[2]
+
+    # Map the import name to the RPM package name.
+    module_name = _RPM_PACKAGE_NAMES.get(
+        module_name, u'python-{0:s}'.format(module_name))
+    if module_name == u'python-libs':
+      # Override the python-libs version since it does not match
+      # the sqlite3 version.
+      module_version = None
+
+    if not module_version:
+      requires.append(module_name)
+    else:
+      requires.append(u'{0:s} >= {1:s}'.format(module_name, module_version))
+
+  requires.append(u'pytsk3-python >= 4.1.2')
+
+  for module_name, module_version in sorted(LIBYAL_DEPENDENCIES.items()):
+    if not module_version:
+      requires.append(u'lib{0:s}-python'.format(module_name[2:]))
+    else:
+      requires.append(u'lib{0:s}-python >= {1:d}'.format(
+          module_name[2:], module_version))
+
+  return sorted(requires)

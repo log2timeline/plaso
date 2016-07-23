@@ -102,10 +102,20 @@ class DependenciesTest(unittest.TestCase):
 
   # CheckTestDependencies is tested in ./run_tests.py
 
+  def testGetDPKGDepends(self):
+    """Tests the GetDPKGDepends function."""
+    install_requires = dependencies.GetDPKGDepends()
+    self.assertIn(u'libbde-python >= 20140531', install_requires)
+
   def testGetInstallRequires(self):
     """Tests the GetInstallRequires function."""
     install_requires = dependencies.GetInstallRequires()
     self.assertIn(u'pybde >= 20140531', install_requires)
+
+  def testGetRPMRequires(self):
+    """Tests the GetRPMRequires function."""
+    install_requires = dependencies.GetRPMRequires()
+    self.assertIn(u'libbde-python >= 20140531', install_requires)
 
 
 if __name__ == '__main__':

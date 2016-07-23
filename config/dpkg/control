@@ -1,7 +1,7 @@
 Source: plaso
 Section: python
 Priority: extra
-Maintainer: Log2Timeline <log2timeline-dev@googlegroups.com>
+Maintainer: Log2Timeline developers <log2timeline-dev@googlegroups.com>
 Build-Depends: debhelper (>= 7.0.0), python, python-setuptools
 Standards-Version: 3.9.5
 X-Python-Version: >= 2.7
@@ -9,9 +9,8 @@ Homepage: https://github.com/log2timeline/plaso/
 
 Package: python-plaso
 Architecture: all
-Depends: libyaml-0-2, libbde-python, libesedb-python, libevt-python, libevtx-python, libewf-python, libfsntfs-python, libfwsi-python, liblnk-python, libmsiecf-python, libolecf-python, libqcow-python, libregf-python, libscca-python, , libsigscan-python, libsmdev-python, libsmraw-python, libvhdi-python, libvmdk-python, libvshadow-python, ipython, python-artifacts, python-bencode, python-binplist, python-construct, python-dateutil, python-dfdatetime, python-dfvfs, python-dfwinreg, python-dpkt, python-hachoir-core, python-hachoir-metadata, python-hachoir-parser, python-mock, python-pefile, python-psutil, python-pyparsing, python-pytsk3, python-six, python-yaml, python-tz, python-zmq, ${shlibs:Depends}, ${misc:Depends}
-Recommends: elasticsearch, libesedb-tools, libbde-tools, libevt-tools, libevtx-tools, libewf-tools, libfsntfs-tools, liblnk-tools, libmsiecf-tools, libolecf-tools, libqcow-tools, libregf-tools, libscca-tools, libsmdev-tools, libsmraw-tools, libvhdi-tools, libvmdk-tools, libvshadow-tools, pyelasticsearch, python-requests, python-xlsxwriter
-Description: Plaso Log2Timeline
- Log2Timeline is a framework to create super timelines.
- It is a framework to parse various files and collect time-based
- digital artifacts that can be used in computer forensics.
+Depends: ipython >= 1.2.1, libbde-python >= 20140531, libesedb-python >= 20150409, libevt-python >= 20120410, libevtx-python >= 20141112, libewf-python >= 20131210, libfsntfs-python >= 20151130, libfwsi-python >= 20150606, liblnk-python >= 20150830, libmsiecf-python >= 20150314, libolecf-python >= 20151223, libqcow-python >= 20131204, libregf-python >= 20150315, libscca-python >= 20151226, libsigscan-python >= 20150627, libsmdev-python >= 20140529, libsmraw-python >= 20140612, libvhdi-python >= 20131210, libvmdk-python >= 20140421, libvshadow-python >= 20160109, python-artifacts >= 20150409, python-bencode, python-binplist >= 0.1.4, python-construct >= 2.5.2, python-dateutil >= 1.5, python-dfdatetime >= 20160319, python-dfvfs >= 20160510, python-dfwinreg >= 20160320, python-dpkt >= 1.8, python-efilter >= 1.3, python-hachoir-core >= 1.3.3, python-hachoir-metadata >= 1.3.3, python-hachoir-parser >= 1.3.4, python-pefile >= 1.2.10-139, python-psutil >= 1.2.1, python-pyparsing >= 2.0.3, python-requests >= 2.2.1, python-six >= 1.1.0, python-tz, python-xlsxwriter >= 0.6.5, python-yaml >= 3.10, python-yara >= 3.4.0, python-zmq >= 2.1.11, pytsk3-python >= 4.1.2, ${shlibs:Depends}, ${misc:Depends}
+Description: Super timeline all the things
+ Log2Timeline is a framework to create super timelines. Its purpose
+ is to extract timestamps from various files found on typical computer
+ systems and aggregate them. Plaso is the Python rewrite of log2timeline.
