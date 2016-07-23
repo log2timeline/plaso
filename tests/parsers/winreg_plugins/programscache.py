@@ -43,7 +43,7 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
         u'2009-08-04 15:12:24')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_data_type = 'windows:shell_item:file_entry'
+    expected_dATA_TYPE = u'windows:shell_item:file_entry'
     self.assertEqual(event_object.data_type, expected_data_type)
 
     expected_message = (
@@ -72,7 +72,7 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
         u'2009-08-04 15:22:18.419625')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_data_type = 'windows:registry:list'
+    expected_dATA_TYPE = u'windows:registry:list'
     self.assertEqual(event_object.data_type, expected_data_type)
 
     expected_message = (
@@ -116,7 +116,7 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
         u'2009-08-04 15:22:18.419625')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_data_type = 'windows:registry:key_value'
+    expected_dATA_TYPE = u'windows:registry:key_value'
     self.assertEqual(event_object.data_type, expected_data_type)
 
   def testProcessStartPage2(self):
@@ -146,7 +146,7 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
         u'2010-11-10 07:50:38')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_data_type = 'windows:shell_item:file_entry'
+    expected_dATA_TYPE = u'windows:shell_item:file_entry'
     self.assertEqual(event_object.data_type, expected_data_type)
 
 

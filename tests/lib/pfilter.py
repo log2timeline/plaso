@@ -14,7 +14,7 @@ from plaso.lib import timelib
 
 class PfilterFakeFormatter(formatters_interface.EventFormatter):
   """A formatter for this fake class."""
-  DATA_TYPE = 'Weirdo:Made up Source:Last Written'
+  DATA_TYPE = u'Weirdo:Made up Source:Last Written'
 
   FORMAT_STRING = u'{text}'
   FORMAT_STRING_SHORT = u'{text_short}'
@@ -46,7 +46,7 @@ class PFilterTest(unittest.TestCase):
     objects as well as the serialized ones.
     """
     event_object = events.EventObject()
-    event_object.data_type = 'Weirdo:Made up Source:Last Written'
+    event_object.dATA_TYPE = u'Weirdo:Made up Source:Last Written'
     event_object.timestamp = timelib.Timestamp.CopyFromString(
         u'2015-11-18 01:15:43')
     event_object.timestamp_desc = u'Last Written'

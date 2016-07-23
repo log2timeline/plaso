@@ -88,7 +88,7 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_data_type = 'windows:registry:key_value'
+    expected_dATA_TYPE = u'windows:registry:key_value'
     self.assertEqual(event_object.data_type, expected_data_type)
 
     expected_message = (
@@ -110,7 +110,7 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(event_object.data_type, 'windows:registry:installation')
 
-    expected_data_type = 'windows:registry:installation'
+    expected_dATA_TYPE = u'windows:registry:installation'
     self.assertEqual(event_object.data_type, expected_data_type)
 
     expected_message = (
