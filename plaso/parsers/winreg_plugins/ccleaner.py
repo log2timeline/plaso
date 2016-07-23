@@ -20,7 +20,7 @@ class CCleanerUpdateEvent(time_events.TimestampEvent):
     key_path: the Windows Registry key path.
   """
 
-  DATA_TYPE = 'ccleaner:update'
+  DATA_TYPE = u'ccleaner:update'
 
   def __init__(self, timestamp, key_path):
     """Initializes an event object.

@@ -26,7 +26,7 @@ class SAMUsersWindowsRegistryEvent(time_events.FiletimeEvent):
             Windows Registry value.
     username: a string containing the username.
   """
-  DATA_TYPE = 'windows:registry:sam_users'
+  DATA_TYPE = u'windows:registry:sam_users'
 
   def __init__(
       self, filetime, timestamp_description, key_path, offset, account_rid,

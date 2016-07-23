@@ -21,7 +21,7 @@ def CreateTestEventObjects():
   """
   test_events = []
   hostname = u'MYHOSTNAME'
-  data_type = 'test:event'
+  data_type = u'test:event'
 
   event_object = events.EventObject()
   event_object.username = u'joesmith'
@@ -112,7 +112,7 @@ class TestAttributeContainer(interface.AttributeContainer):
 
 class TestEvent(events.EventObject):
   """Class to define a test event."""
-  DATA_TYPE = 'test:event'
+  DATA_TYPE = u'test:event'
 
   def __init__(self, timestamp, attributes):
     """Initializes an event object."""
