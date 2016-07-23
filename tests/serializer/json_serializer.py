@@ -312,6 +312,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     self.assertIsInstance(session_completion, sessions.SessionCompletion)
 
     expected_session_completion_dict = {
+        u'aborted': False,
         u'identifier': session_identifier,
         u'parsers_counter': parsers_counter,
         u'timestamp': timestamp

@@ -217,7 +217,7 @@ class FakeStorageWriter(interface.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError(u'Session start not supported by storage type.')
 
-    self._session = aborted
+    self._session.aborted = aborted
     self.session_completion = self._session.CreateSessionCompletion()
 
   def WriteSessionStart(self):
