@@ -82,11 +82,12 @@ class TaggingPlugin(interface.AnalysisPlugin):
     self.SetAndLoadTagFile(tag_file_path)
     return True
 
-  def ExamineEvent(self, analysis_mediator, event, **kwargs):
+  def ExamineEvent(self, mediator, event, **kwargs):
     """Analyzes an EventObject and tags it according to rules in the tag file.
 
     Args:
-      analysis_mediator (AnalysisMediator): analysis mediator.
+      mediator (AnalysisMediator): mediates interactions between analysis
+          plugins and other components, such as storage and dfvfs.
       event (EventObject): event to examine.
     """
     if self._tag_rules is None:
@@ -94,7 +95,7 @@ class TaggingPlugin(interface.AnalysisPlugin):
         # There's nothing to tag with, and we've already tried to find a good
         # tag file, so there's nothing we can do with this event (or any other).
         return
-      if not self._AttemptAutoDetectTagFile(analysis_mediator):
+      if not self._AttemptAutoDetectTagFile(mediator):
         logging.info(
             u'No tag definition file specified, and plaso was not able to '
             u'autoselect a tagging file. As no definitions were specified, '
@@ -216,11 +217,12 @@ class TaggingPlugin(interface.AnalysisPlugin):
     # Generate a repeated value with all the tags (None will be skipped).
     return efilter_ast.Repeat(*tags)
 
-  def CompileReport(self, analysis_mediator):
+  def CompileReport(self, mediator):
     """Compiles an analysis report.
 
     Args:
-      analysis_mediator (AnalysisMediator): analysis mediator.
+      mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
 
     Returns:
       AnalysisReport: analysis report.
