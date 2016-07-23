@@ -56,7 +56,7 @@ class AnalysisPluginManager(object):
     """
     results = []
     for plugin_class in iter(cls._plugin_classes.values()):
-      plugin_object = plugin_class(None)
+      plugin_object = plugin_class()
       if not show_all and not plugin_class.ENABLE_IN_EXTRACTION:
         continue
 
