@@ -18,6 +18,8 @@ except socket.error:
 class DependenciesTest(unittest.TestCase):
   """A unit test for the dependencies helper functions."""
 
+  # pylint: disable=protected-access
+
   # Show full diff results, part of TestCase so does not follow our naming
   # conventions.
   maxDiff = None
