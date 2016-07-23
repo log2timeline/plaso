@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Artifact related attribute container object definitions."""
+"""Artifact related attribute container definitions."""
 
 from plaso.containers import interface
 from plaso.containers import manager

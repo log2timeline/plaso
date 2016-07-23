@@ -523,30 +523,38 @@ class MultiProcessEngine(engine.BaseEngine):
       if self._abort:
         break
 
-      if event_source and not task:
-        task = self._task_manager.CreateTask(self._session_identifier)
-        task.path_spec = event_source.path_spec
-        event_source = None
+      try:
+        if event_source and not task:
+          task = self._task_manager.CreateTask(self._session_identifier)
+          task.path_spec = event_source.path_spec
+          event_source = None
 
-        self._number_of_consumed_sources += 1
+          self._number_of_consumed_sources += 1
 
-        if self._memory_profiler:
-          self._memory_profiler.Sample()
+          if self._memory_profiler:
+            self._memory_profiler.Sample()
 
-      if task:
-        if self._ScheduleTask(task):
-          task = None
+        if task:
+          if self._ScheduleTask(task):
+            task = None
 
-      self._MergeTaskStorage(storage_writer)
+        self._MergeTaskStorage(storage_writer)
 
-      if not event_source and not task:
-        if self._processing_profiler:
-          self._processing_profiler.StartTiming(u'get_event_source')
+        if not event_source and not task:
+          if self._processing_profiler:
+            self._processing_profiler.StartTiming(u'get_event_source')
 
-        event_source = storage_writer.GetNextWrittenEventSource()
+          event_source = storage_writer.GetNextWrittenEventSource()
 
-        if self._processing_profiler:
-          self._processing_profiler.StopTiming(u'get_event_source')
+          if self._processing_profiler:
+            self._processing_profiler.StopTiming(u'get_event_source')
+
+      except KeyboardInterrupt:
+        self._abort = True
+
+        self._processing_status.aborted = True
+        if self._status_update_callback:
+          self._status_update_callback(self._processing_status)
 
     for task in self._task_manager.GetAbandonedTasks():
       self._processing_status.error_path_specs.append(task.path_spec)
@@ -979,24 +987,23 @@ class MultiProcessEngine(engine.BaseEngine):
     if self._serializers_profiler:
       storage_writer.SetSerializersProfiler(self._serializers_profiler)
 
-    storage_writer.Open()
-
     # Start the status update thread after open of the storage writer
     # so we don't have to clean up the thread if the open fails.
     self._StartStatusUpdateThread()
 
+    storage_writer.Open()
+    storage_writer.WriteSessionStart()
+
     try:
-      storage_writer.WriteSessionStart()
       storage_writer.WritePreprocessingInformation(self.knowledge_base)
 
       self._ProcessSources(
           source_path_specs, storage_writer,
           filter_find_specs=filter_find_specs)
 
-      # TODO: on abort use WriteSessionAborted instead of completion?
-      storage_writer.WriteSessionCompletion()
-
     finally:
+      storage_writer.WriteSessionCompletion(aborted=self._abort)
+
       storage_writer.Close()
 
       # Stop the status update thread after close of the storage writer

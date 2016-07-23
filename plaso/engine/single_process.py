@@ -77,7 +77,11 @@ class SingleProcessEngine(engine.BaseEngine):
       extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
 
     except KeyboardInterrupt:
-      self.SignalAbort()
+      self._abort = True
+
+      self._processing_status.aborted = True
+      if self._status_update_callback:
+        self._status_update_callback(self._processing_status)
 
     except IOError as exception:
       logging.warning((
@@ -356,19 +360,18 @@ class SingleProcessEngine(engine.BaseEngine):
       storage_writer.SetSerializersProfiler(self._serializers_profiler)
 
     storage_writer.Open()
+    storage_writer.WriteSessionStart()
 
     try:
-      storage_writer.WriteSessionStart()
       storage_writer.WritePreprocessingInformation(self.knowledge_base)
 
       self._ProcessSources(
           source_path_specs, resolver_context, extraction_worker,
           parser_mediator, storage_writer, filter_find_specs=filter_find_specs)
 
-      # TODO: on abort use WriteSessionAborted instead of completion?
-      storage_writer.WriteSessionCompletion()
-
     finally:
+      storage_writer.WriteSessionCompletion(aborted=self._abort)
+
       storage_writer.Close()
 
       if self._serializers_profiler:

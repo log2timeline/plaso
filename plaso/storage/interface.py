@@ -540,8 +540,12 @@ class StorageWriter(object):
     """
 
   @abc.abstractmethod
-  def WriteSessionCompletion(self):
-    """Writes session completion information."""
+  def WriteSessionCompletion(self, aborted=False):
+    """Writes session completion information.
+
+    Args:
+      aborted (Optional[bool]): True if the session was aborted.
+    """
 
   @abc.abstractmethod
   def WriteSessionStart(self):
