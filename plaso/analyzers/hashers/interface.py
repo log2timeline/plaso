@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """The hasher interface."""
+
 import abc
+
+from plaso.lib import definitions
 
 
 class BaseHasher(object):
@@ -8,6 +11,8 @@ class BaseHasher(object):
 
   NAME = u'base_hasher'
   DESCRIPTION = u'Calculates a digest hash over input data.'
+
+  PROCESSING_STATUS_HINT = definitions.PROCESSING_STATUS_HASHING
 
   @abc.abstractmethod
   def GetBinaryDigest(self):

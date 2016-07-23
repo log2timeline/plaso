@@ -13,8 +13,6 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.analyzers import manager as analyzers_manager
-from plaso.analyzers import yara_analyzer
-from plaso.analyzers.hashers import interface as hashers_interface
 from plaso.containers import event_sources
 from plaso.engine import extractors
 from plaso.lib import definitions
@@ -120,19 +118,19 @@ class EventExtractionWorker(object):
     Args:
       mediator (ParserMediator): mediates the interactions between
           parsers and other components, such as storage and abort signals.
-          parsers and other components, such as storage and abort signals.
       file_entry (dfvfs.FileEntry): file entry relating to the data being
           analyzed.
       data_stream_name (str): name of the data stream.
 
     Raises:
-      RuntimeError: if the file-like object is missing.
+      RuntimeError: if the file-like object is cannot be retrieved from
+          the file entry.
     """
     if not self._analyzers:
       return
 
     display_name = mediator.GetDisplayName()
-    logging.debug(u'[AnalyzeDataStream] hashing file: {0:s}'.format(
+    logging.debug(u'[AnalyzeDataStream] analyzing file: {0:s}'.format(
         display_name))
 
     if self._processing_profiler:
@@ -156,7 +154,7 @@ class EventExtractionWorker(object):
       self._processing_profiler.StopTiming(u'analyzing')
 
     logging.debug(
-        u'[AnalyzeDataStream] completed hashing file: {0:s}'.format(
+        u'[AnalyzeDataStream] completed analyzing file: {0:s}'.format(
             display_name))
 
   def _AnalyzeFileObject(self, mediator, file_object):
@@ -190,12 +188,7 @@ class EventExtractionWorker(object):
             file_size > analyzer_object.SIZE_LIMIT):
           continue
 
-        if isinstance(analyzer_object, hashers_interface.BaseHasher):
-          self.processing_status = definitions.PROCESSING_STATUS_HASHING
-        elif isinstance(analyzer_object, yara_analyzer.YaraAnalyzer):
-          self.processing_status = definitions.PROCESSING_STATUS_YARA_SCAN
-        else:
-          self.processing_status = definitions.PROCESSING_STATUS_ANALYZING
+        self.processing_status = analyzer_object.PROCESSING_STATUS_HINT
 
         analyzer_object.Analyze(data)
 
