@@ -102,34 +102,23 @@ class SQLiteDatabase(object):
     self._temporary_directory = temporary_directory
     self._temp_wal_file_path = u''
 
-  def _OpenWALFileObject(self, wal_file_object):
-    """Opens the Write-Ahead Log (WAL) file object.
-
-    Args:
-      wal_file_object (dfvfs.FileIO): file-like object for the Write-Ahead
-          Log (WAL) file.
-
-    Raises:
-      IOError: if the file-like object cannot be read.
-    """
-    # Create WAL file using same filename so it is available for
-    # sqlite3.connect()
-    self._temp_wal_file_path = u'{0:s}-wal'.format(self._temp_db_file_path)
-    with open(self._temp_wal_file_path, u'wb') as wal_file:
-      try:
-        wal_file_object.seek(0, os.SEEK_SET)
-        data = wal_file_object.read(self._READ_BUFFER_SIZE)
-        while data:
-          wal_file.write(data)
-          data = wal_file_object.read(self._READ_BUFFER_SIZE)
-      except IOError:
-        self.Close()
-        raise
-
   @property
   def tables(self):
     """list[str]: names of all the tables."""
     return self._table_names
+
+  def _CopyFileObjectToTemporaryFile(self, file_object, temporary_file):
+    """Copies the contents of the file-like object to a temporary file.
+
+    Args:
+      file_object (dfvfs.FileIO): file-like object.
+      temporary_file (file): temporary file.
+    """
+    file_object.seek(0, os.SEEK_SET)
+    data = file_object.read(self._READ_BUFFER_SIZE)
+    while data:
+      temporary_file.write(data)
+      data = file_object.read(self._READ_BUFFER_SIZE)
 
   def Close(self):
     """Closes the database connection and clean up the temporary file."""
@@ -197,31 +186,35 @@ class SQLiteDatabase(object):
     # http://apidoc.apsw.googlecode.com/hg/example.html#example-vfs
     # Until then, just copy the file into a tempfile and parse it.
 
-    # Note that data is filled here with the file header data and
-    # that with will explicitly close the temporary files and thus
-    # making sure it is available for sqlite3.connect().
-    temp_file = tempfile.NamedTemporaryFile(
+    temporary_file = tempfile.NamedTemporaryFile(
         delete=False, dir=self._temporary_directory)
 
     try:
-      self._temp_db_file_path = temp_file.name
+      self._CopyFileObjectToTemporaryFile(file_object, temporary_file)
+      self._temp_db_file_path = temporary_file.name
 
-      try:
-        file_object.seek(0, os.SEEK_SET)
-        data = file_object.read(self._READ_BUFFER_SIZE)
-        while data:
-          temp_file.write(data)
-          data = file_object.read(self._READ_BUFFER_SIZE)
-      except IOError:
-        os.remove(self._temp_db_file_path)
-        self._temp_db_file_path = u''
-        raise
+    except IOError:
+      os.remove(temporary_file.name)
+      raise
 
     finally:
-      temp_file.close()
+      temporary_file.close()
 
     if wal_file_object:
-      self._OpenWALFileObject(wal_file_object)
+      # Create WAL file using same filename so it is available for
+      # sqlite3.connect()
+      temporary_filename = u'{0:s}-wal'.format(self._temp_db_file_path)
+      temporary_file = open(temporary_filename, 'wb')
+      try:
+        self._CopyFileObjectToTemporaryFile(wal_file_object, temporary_file)
+        self._temp_wal_file_path = temporary_filename
+
+      except IOError:
+        os.remove(temporary_filename)
+        raise
+
+      finally:
+        temporary_file.close()
 
     self._database = sqlite3.connect(self._temp_db_file_path)
     try:
@@ -343,11 +336,11 @@ class SQLiteParser(interface.FileEntryParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_object = file_entry.GetFileObject()
     filename = parser_mediator.GetFilename()
     database = SQLiteDatabase(
         filename, temporary_directory=parser_mediator.temporary_directory)
 
+    file_object = file_entry.GetFileObject()
     try:
       database.Open(file_object)
 
@@ -359,6 +352,8 @@ class SQLiteParser(interface.FileEntryParser):
 
     database_wal, wal_file_entry = self._OpenDatabaseWithWAL(
         parser_mediator, file_entry, file_object, filename)
+
+    file_object.close()
 
     # Create a cache in which the resulting tables are cached.
     cache = SQLiteCache()
