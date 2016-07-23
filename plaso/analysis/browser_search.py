@@ -244,7 +244,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     """Compiles an analysis report.
 
     Args:
-      mediator (AnalysisMediator): encapsulates interactions between
+      mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
 
     Returns:
@@ -280,7 +280,7 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     """Analyzes an event.
 
     Args:
-      mediator (AnalysisMediator): encapsulates interactions between
+      mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
       event (EventObject): event.
     """

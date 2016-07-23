@@ -86,7 +86,7 @@ class TaggingPlugin(interface.AnalysisPlugin):
     """Analyzes an EventObject and tags it according to rules in the tag file.
 
     Args:
-      mediator (AnalysisMediator): encapsulates interactions between analysis
+      mediator (AnalysisMediator): mediates interactions between analysis
           plugins and other components, such as storage and dfvfs.
       event (EventObject): event to examine.
     """
@@ -221,7 +221,7 @@ class TaggingPlugin(interface.AnalysisPlugin):
     """Compiles an analysis report.
 
     Args:
-      mediator (AnalysisMediator): encapsulates interactions between
+      mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
 
     Returns:

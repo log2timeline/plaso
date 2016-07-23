@@ -66,7 +66,7 @@ class AnalysisPlugin(plaso_queue.ItemQueueConsumer):
 
     Args:
       item (object): item.
-      mediator (Optional[AnalysisMediator]): encapsulates interactions between
+      mediator (Optional[AnalysisMediator]): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
       kwargs: keyword arguments to pass to the _ConsumeItem callback.
     """
@@ -87,7 +87,7 @@ class AnalysisPlugin(plaso_queue.ItemQueueConsumer):
     can be assembled.
 
     Args:
-      mediator (AnalysisMediator): encapsulates interactions between
+      mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
 
     Returns:
@@ -99,7 +99,7 @@ class AnalysisPlugin(plaso_queue.ItemQueueConsumer):
     """Analyzes an event object.
 
     Args:
-      mediator (AnalysisMediator): encapsulates interactions between
+      mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
       event (EventObject): event.
     """
@@ -108,7 +108,7 @@ class AnalysisPlugin(plaso_queue.ItemQueueConsumer):
     """For each item in the queue send the read event to analysis.
 
     Args:
-      mediator (AnalysisMediator): encapsulates interactions between
+      mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
     """
     self.ConsumeItems(mediator=mediator)
@@ -131,7 +131,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
   Attributes:
     hash_analysis_queue (Queue.queue): queue that contains the results of
         analysis of file hashes.
-    hash_queue(Queue.queue): queue that contains file hashes.
+    hash_queue (Queue.queue): queue that contains file hashes.
   """
   # The event data types the plugin will collect hashes from. Subclasses
   # must override this attribute.
@@ -173,7 +173,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     """Generates a line of text regarding the plugin's findings.
 
     Args:
-      mediator (AnalysisMediator): encapsulates interactions between
+      mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
       pathspec (dfvfs.PathSpec): pathspec whose hash was looked up by the
           plugin.
@@ -191,7 +191,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     """Generates a list of strings to tag events with.
 
     Args:
-      hash_information (object): object that encapsulates the result of the
+      hash_information (object): object that mediates the result of the
           analysis of a hash, as returned by the Analyze() method of the
           analyzer class associated with this plugin.
 
@@ -252,7 +252,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     """Evaluates whether an event contains the right data for a hash lookup.
 
     Args:
-      mediator (AnalysisMediator): encapsulates interactions between
+      mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
       event (EventObject): event.
     """
@@ -329,7 +329,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     """Compiles an analysis report.
 
     Args:
-      mediator (AnalysisMediator): encapsulates interactions between
+      mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
 
     Returns:

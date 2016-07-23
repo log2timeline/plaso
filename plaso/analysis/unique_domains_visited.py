@@ -43,7 +43,7 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
     be inferred by TypedURLs, cookies or other means.
 
     Args:
-      mediator (AnalysisMediator): encapsulates interactions between
+      mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
       event: The event object (instance of EventObject) to examine.
     """
@@ -64,7 +64,7 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
     """Compiles an analysis report.
 
     Args:
-      mediator (AnalysisMediator): encapsulates interactions between
+      mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
 
     Returns:

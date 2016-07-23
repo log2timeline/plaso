@@ -50,7 +50,7 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
       u'2d79fcc6b02a2e183a0cb30e0e25d103f42badda9fbf86bbee06f93aa3855aff')
   EVENT_2_HASH = (
       u'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
-  TEST_EVENTS = [
+  _TEST_EVENTS = [
       {u'timestamp': timelib.Timestamp.CopyFromString(u'2015-01-01 17:00:00'),
        u'sha256_hash': EVENT_1_HASH, u'uuid': u'8', u'data_type': u'fs:stat',
        u'pathspec': fake_path_spec.FakePathSpec(
@@ -65,12 +65,11 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
     """Create a test event with a set of attributes.
 
     Args:
-      event_dictionary (dict[str, str]: contains attributes of an event to add
+      event_dictionary (dict[str, str]): contains attributes of an event to add
           to the queue.
 
     Returns:
-      An event object (instance of EventObject) that contains the necessary
-      attributes for testing.
+      EventObject: event object with the appropriate attributes for testing.
     """
     event = events.EventObject()
     event.timestamp = event_dictionary[u'timestamp']
@@ -83,18 +82,23 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
 
   def _MockCreateConnection(
       self, unused_connection_information, unused_timeout):
-    """Mocks the socket create_connection call"""
+    """Mocks the socket create_connection call
+
+    Returns:
+      _MockNsrlsvrSocket: a socket that mocks an open socket to an nsrlsvr
+          instance.
+    """
     return _MockNsrlsvrSocket()
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self.socket_patcher = mock.patch(
+    self._socket_patcher = mock.patch(
         'socket.create_connection', self._MockCreateConnection)
-    self.socket_patcher.start()
+    self._socket_patcher.start()
 
   def tearDown(self):
     """Cleans up after running an individual test."""
-    self.socket_patcher.stop()
+    self._socket_patcher.stop()
 
   def testNsrlsvrLookup(self):
     """Tests for the nsrlsvr analysis plugin."""
@@ -104,10 +108,9 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
     # Fill the incoming queue with events.
     test_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
     event_objects = [self._CreateTestEventObject(test_event) for test_event in
-                     self.TEST_EVENTS]
+                     self._TEST_EVENTS]
     test_queue_producer.ProduceItems(event_objects)
 
-    # Set up the plugin.
     analysis_plugin = nsrlsvr.NsrlsvrAnalysisPlugin(event_queue)
     analysis_plugin.SetHost(u'127.0.0.1')
     analysis_plugin.SetPort(9120)

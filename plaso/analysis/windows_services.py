@@ -14,15 +14,15 @@ class WindowsService(yaml.YAMLObject):
   """Class to represent a Windows Service.
 
   Attributes:
-    name (str): name of the service
-    service_type (int): value of the Type value of the service key.
     image_path (str): value of the ImagePath value of the service key.
-    start_type (int):  value of the Start value of the service key.
+    name (str): name of the service
     object_name (str): value of the ObjectName value of the service key.
+    service_dll (str): value of the ServiceDll value in the service's Parameters
+        subkey.
+    service_type (int): value of the Type value of the service key.
     source (tuple[str, str]) : tuple containing the path and registry key
         describing where the service was found
-    service_dll (str): value of the ServiceDll value in the
-        service's Parameters subkey.
+    start_type (int):  value of the Start value of the service key.
     """
   # This is used for comparison operations and defines attributes that should
   # not be used during evaluation of whether two services are the same.
@@ -147,10 +147,10 @@ class WindowsService(yaml.YAMLObject):
         self.service_type, u'{0:d}'.format(self.service_type))
 
   def HumanReadableStartType(self):
-    """Return a human readable string describing the start_type value.
+    """Return a human readable string describing the start type value.
 
     Returns:
-      str: human readable description of the start_type value.
+      str: human readable description of the start type value.
     """
     if isinstance(self.start_type, py2to3.STRING_TYPES):
       return self.start_type
@@ -233,7 +233,7 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
     """Compiles an analysis report.
 
     Args:
-      mediator (AnalysisMediator): encapsulates interactions between analysis
+      mediator (AnalysisMediator): mediates interactions between analysis
           plugins and other components, such as storage and dfvfs.
 
     Returns:
@@ -260,7 +260,7 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
       At present, this method only handles events extracted from the Registry.
 
     Args:
-      mediator (AnalysisMediator): encapsulates interactions between analysis
+      mediator (AnalysisMediator): mediates interactions between analysis
           plugins and other components, such as storage and dfvfs.
       event: The event object (instance of EventObject) to examine.
     """

@@ -41,7 +41,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     """Looks up hashes in nsrlsvr.
 
     Args:
-      hashes (list[str]): hashes to look up.
+      hashes (list[str]): hash values to look up.
 
     Returns:
       list[HashAnalysis]: analysis results, or an empty list on error.
@@ -58,6 +58,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
           u'aborting.').format(exception))
       self.SignalAbort()
       return []
+
     hash_analyses = []
     for digest in hashes:
       query = u'QUERY {0:s}\n'.format(digest)
@@ -80,6 +81,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
         hash_analysis = interface.HashAnalysis(digest, False)
         hash_analyses.append(hash_analysis)
     nsrl_socket.close()
+
     return hash_analyses
 
   def SetHost(self, host):
@@ -101,6 +103,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
 
 class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
   """An analysis plugin for looking up hashes in nsrlsvr."""
+
   # nsrlsvr allows lookups using any of these hash algorithms.
   REQUIRED_HASH_ATTRIBUTES = [u'sha256_hash', u'md5_hash']
 

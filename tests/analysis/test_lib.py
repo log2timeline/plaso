@@ -173,7 +173,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     """Sets the user accounts in the knowledge base.
 
     Args:
-      knowledge_base_object (KnowledgeBase): is used to store information about
+      knowledge_base_object (KnowledgeBase): used to store information about
           users.
       users (list[dict[str,str])): users, for example [{'name': 'me',
         'sid': 'S-1', 'uid': '1'}]

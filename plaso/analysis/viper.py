@@ -143,12 +143,11 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     """Generates a list of strings that will be used in the event tag.
 
     Args:
-      hash_information: A dictionary containing the JSON decoded contents of the
-                        result of a Viper lookup, as produced by the
-                        ViperAnalyzer.
+      hash_information (dict[str, object]): JSON decoded contents of the result
+          of a Viper lookup, as produced by the ViperAnalyzer.
 
     Returns:
-      A list of strings describing the results from Viper.
+      list[str]: list of labels to apply to events.
     """
     if not hash_information:
       return u'File not present in Viper.'

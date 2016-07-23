@@ -27,7 +27,7 @@ class FileHashesPlugin(interface.AnalysisPlugin):
     """Analyzes an event and creates extracts hashes as required.
 
     Args:
-      mediator (AnalysisMediator): encapsulates interactions between
+      mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
       event: the event object (instance of EventObject) to examine.
     """
@@ -48,7 +48,7 @@ class FileHashesPlugin(interface.AnalysisPlugin):
     """Generates a string containing a pathspec and its hashes.
 
     Args:
-      mediator (AnalysisMediator): encapsulates interactions between analysis
+      mediator (AnalysisMediator): mediates interactions between analysis
           plugins and other components, such as storage and dfvfs.
       pathspec (dfvfs.Pathspec): the path specification) to generate a string
           for.
@@ -56,7 +56,8 @@ class FileHashesPlugin(interface.AnalysisPlugin):
           that hash for the path specification being processed.
 
     Returns:
-      str: string of the form "OS:/path/spec: test_hash=4".
+      str: string of the form "display_name: hash_type=hash_value". For example,
+          "OS:/path/spec: test_hash=4 other_hash=5".
     """
     display_name = mediator.GetDisplayName(pathspec)
     path_string = u'{0:s}:'.format(display_name)
@@ -69,7 +70,7 @@ class FileHashesPlugin(interface.AnalysisPlugin):
     """Compiles an analysis report.
 
     Args:
-      mediator (AnalysisMediator): encapsulates interactions between analysis
+      mediator (AnalysisMediator): mediates interactions between analysis
           plugins and other components, such as storage and dfvfs.
 
     Returns:
