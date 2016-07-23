@@ -284,6 +284,47 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         sorted(event_tag_dict.items()),
         sorted(expected_event_tag_dict.items()))
 
+  def testReadAndWriteSerializedSession(self):
+    """Test ReadSerialized and WriteSerialized of Session."""
+    parsers_counter = collections.Counter()
+    parsers_counter[u'filestat'] = 3
+    parsers_counter[u'total'] = 3
+
+    expected_session = sessions.Session()
+    expected_session.product_name = u'plaso'
+    expected_session.product_version = plaso.GetVersion()
+    expected_session.parsers_counter = parsers_counter
+
+    json_string = (
+        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            expected_session))
+
+    self.assertIsNotNone(json_string)
+
+    session = (
+        json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
+            json_string))
+
+    self.assertIsNotNone(session)
+    self.assertIsInstance(session, sessions.Session)
+
+    expected_session_dict = {
+        u'aborted': False,
+        u'analysis_reports_counter': session.analysis_reports_counter,
+        u'debug_mode': False,
+        u'event_labels_counter': session.event_labels_counter,
+        u'identifier': session.identifier,
+        u'parsers_counter': parsers_counter,
+        u'preferred_encoding': u'utf-8',
+        u'product_name': u'plaso',
+        u'product_version': plaso.GetVersion(),
+        u'start_time': session.start_time
+    }
+
+    session_dict = session.CopyToDict()
+    self.assertEqual(
+        sorted(session_dict.items()), sorted(expected_session_dict.items()))
+
   def testReadAndWriteSerializedSessionCompletion(self):
     """Test ReadSerialized and WriteSerialized of SessionCompletion."""
     timestamp = int(time.time() * 1000000)
@@ -358,6 +399,35 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     self.assertEqual(
         sorted(session_start_dict.items()),
         sorted(expected_session_start_dict.items()))
+
+  def testReadAndWriteSerializedTask(self):
+    """Test ReadSerialized and WriteSerialized of Task."""
+    session_identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
+
+    expected_task = tasks.Task(session_identifier=session_identifier)
+
+    json_string = (
+        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
+            expected_task))
+
+    self.assertIsNotNone(json_string)
+
+    task = json_serializer.JSONAttributeContainerSerializer.ReadSerialized(
+        json_string)
+
+    self.assertIsNotNone(task)
+    self.assertIsInstance(task, tasks.Task)
+
+    expected_task_dict = {
+        u'aborted': False,
+        u'identifier': task.identifier,
+        u'session_identifier': session_identifier,
+        u'start_time': task.start_time
+    }
+
+    task_dict = task.CopyToDict()
+    self.assertEqual(
+        sorted(task_dict.items()), sorted(expected_task_dict.items()))
 
   def testReadAndWriteSerializedTaskCompletion(self):
     """Test ReadSerialized and WriteSerialized of TaskCompletion."""
