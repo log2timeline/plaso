@@ -80,136 +80,19 @@ PYTHON_TEST_DEPENDENCIES = [
 _VERSION_SPLIT_REGEX = re.compile(r'\.|\-')
 
 
-def _DownloadPageContent(download_url):
-  """Downloads the page content.
-
-  Args:
-    download_url: the URL where to download the page content.
-
-  Returns:
-    The page content if successful, None otherwise.
-  """
-  if not download_url:
-    return
-
-  url_object = urlopen(download_url)
-  if not url_object or url_object.code != 200:
-    return
-
-  return url_object.read()
-
-
-def _ImportPythonModule(module_name):
-  """Imports a Python module.
-
-  Args:
-    module_name: the name of the module.
-
-  Returns:
-    The Python module object (instance of module) or None
-    if the module cannot be imported.
-  """
-  try:
-    module_object = list(map(__import__, [module_name]))[0]
-  except ImportError:
-    return
-
-  # If the module name contains dots get the upper most module object.
-  if u'.' in module_name:
-    for submodule_name in module_name.split(u'.')[1:]:
-      module_object = getattr(module_object, submodule_name, None)
-
-  return module_object
-
-
-def _GetLibyalGithubReleasesLatestVersion(library_name):
-  """Retrieves the latest version number of a libyal library on GitHub releases.
-
-  Args:
-    library_name: the name of the libyal library.
-
-  Returns:
-    The latest version for a given libyal library on GitHub releases
-    or 0 on error.
-  """
-  download_url = (
-      u'https://github.com/libyal/{0:s}/releases').format(library_name)
-
-  page_content = _DownloadPageContent(download_url)
-  if not page_content:
-    return 0
-
-  # The format of the project download URL is:
-  # /libyal/{project name}/releases/download/{git tag}/
-  # {project name}{status-}{version}.tar.gz
-  # Note that the status is optional and will be: beta, alpha or experimental.
-  expression_string = (
-      u'/libyal/{0:s}/releases/download/[^/]*/{0:s}-[a-z-]*([0-9]+)'
-      u'[.]tar[.]gz').format(library_name)
-  matches = re.findall(expression_string, page_content)
-
-  if not matches:
-    return 0
-
-  return int(max(matches))
-
-
-# TODO: Remove when Google Drive support is no longer needed.
-def _GetLibyalGoogleDriveLatestVersion(library_name):
-  """Retrieves the latest version number of a libyal library on Google Drive.
-
-  Args:
-    library_name: the name of the libyal library.
-
-  Returns:
-    The latest version for a given libyal library on Google Drive
-    or 0 on error.
-  """
-  download_url = u'https://code.google.com/p/{0:s}/'.format(library_name)
-
-  page_content = _DownloadPageContent(download_url)
-  if not page_content:
-    return 0
-
-  # The format of the library downloads URL is:
-  # https://googledrive.com/host/{random string}/
-  expression_string = (
-      b'<a href="(https://googledrive.com/host/[^/]*/)"[^>]*>Downloads</a>')
-  matches = re.findall(expression_string, page_content)
-
-  if not matches or len(matches) != 1:
-    return 0
-
-  page_content = _DownloadPageContent(matches[0])
-  if not page_content:
-    return 0
-
-  # The format of the library download URL is:
-  # /host/{random string}/{library name}-{status-}{version}.tar.gz
-  # Note that the status is optional and will be: beta, alpha or experimental.
-  expression_string = b'/host/[^/]*/{0:s}-[a-z-]*([0-9]+)[.]tar[.]gz'.format(
-      library_name)
-  matches = re.findall(expression_string, page_content)
-
-  if not matches:
-    return 0
-
-  return int(max(matches))
-
-
 def _CheckLibyal(
     libyal_python_modules, latest_version_check=False, verbose_output=True):
   """Checks the availability of libyal libraries.
 
   Args:
-    libyal_python_modules: a dictionary of libyal python module name as
-                           the key and version as the value.
-    latest_version_check: optional boolean value to indicate if the project
-                          site should be checked for the latest version.
-    verbose_output: optional boolean to indicate output should be verbose.
+    libyal_python_modules (dict[str,str]): libyal Python module names and
+        their versions.
+    latest_version_check (Optional[bool]): True if the project site should
+        be checked for the latest version.
+    verbose_output (Optional[bool]): True if output should be verbose.
 
   Returns:
-    True if the libyal libraries are available, False otherwise.
+    bool: True if the libyal libraries are available, False otherwise.
   """
   connection_error = False
   result = True
@@ -230,12 +113,6 @@ def _CheckLibyal(
         latest_version = _GetLibyalGithubReleasesLatestVersion(libyal_name)
       except urllib_error.URLError:
         latest_version = None
-
-      if not latest_version:
-        try:
-          latest_version = _GetLibyalGoogleDriveLatestVersion(libyal_name)
-        except urllib_error.URLError:
-          latest_version = None
 
       if not latest_version:
         print(
@@ -276,19 +153,17 @@ def _CheckPythonModule(
   """Checks the availability of a Python module.
 
   Args:
-    module_name: the name of the module.
-    version_attribute_name: the name of the attribute that contains the module
-                            version.
-    minimum_version: the minimum required version.
-    maximum_version: the maximum required version. This attribute is optional
-                     and should only be used if there is a recent API change
-                     that prevents the tool from running if a later version
-                     is used.
-    verbose_output: optional boolean to indicate output should be verbose.
+    module_name (str): name of the module.
+    version_attribute_name (str): name of the attribute that contains
+       the module version.
+    minimum_version (str): minimum required version.
+    maximum_version (Optional[str]): maximum required version. Should only be
+        used if there is a later version that is not supported.
+    verbose_output (Optional[bool]): True if output should be verbose.
 
   Returns:
-    True if the Python module is available and conforms to the minimum required
-    version. False otherwise.
+    bool: True if the Python module is available and conforms to
+        the minimum required version, False otherwise.
   """
   module_object = _ImportPythonModule(module_name)
   if not module_object:
@@ -339,10 +214,10 @@ def _CheckPytsk(verbose_output=True):
   """Checks the availability of pytsk.
 
   Args:
-    verbose_output: optional boolean to indicate output should be verbose.
+    verbose_output (Optional[bool]): True if output should be verbose.
 
   Returns:
-    True if the pytsk Python module is available, False otherwise.
+    bool: True if the pytsk Python module is available, False otherwise.
   """
   module_name = u'pytsk3'
   minimum_version_libtsk = u'4.1.2'
@@ -391,10 +266,10 @@ def _CheckSqlite3(verbose_output=True):
   """Checks the availability of sqlite3.
 
   Args:
-    verbose_output: optional boolean to indicate output should be verbose.
+    verbose_output (Optional[bool]): True if output should be verbose.
 
   Returns:
-    True if the sqlite3 Python module is available, False otherwise.
+    bool: True if the sqlite3 Python module is available, False otherwise.
   """
   # On Windows sqlite3 can be provided by both pysqlite2.dbapi2 and
   # sqlite3. sqlite3 is provided with the Python installation and
@@ -436,16 +311,93 @@ def _CheckSqlite3(verbose_output=True):
   return True
 
 
+def _DownloadPageContent(download_url):
+  """Downloads the page content.
+
+  Args:
+    download_url (str): URL where to download the page content.
+
+  Returns:
+    bytes: page content if successful, None otherwise.
+  """
+  if not download_url:
+    return
+
+  try:
+    url_object = urlopen(download_url)
+  except urllib_error.HTTPError:
+    return
+
+  if not url_object or url_object.code != 200:
+    return
+
+  return url_object.read()
+
+
+def _GetLibyalGithubReleasesLatestVersion(library_name):
+  """Retrieves the latest version number of a libyal library on GitHub releases.
+
+  Args:
+    library_name (str): name of the libyal library.
+
+  Returns:
+    int: latest version for a given libyal library on GitHub releases or
+        0 on error.
+  """
+  download_url = (
+      u'https://github.com/libyal/{0:s}/releases').format(library_name)
+
+  page_content = _DownloadPageContent(download_url)
+  if not page_content:
+    return 0
+
+  # The format of the project download URL is:
+  # /libyal/{project name}/releases/download/{git tag}/
+  # {project name}{status-}{version}.tar.gz
+  # Note that the status is optional and will be: beta, alpha or experimental.
+  expression_string = (
+      u'/libyal/{0:s}/releases/download/[^/]*/{0:s}-[a-z-]*([0-9]+)'
+      u'[.]tar[.]gz').format(library_name)
+  matches = re.findall(expression_string, page_content)
+
+  if not matches:
+    return 0
+
+  return int(max(matches))
+
+
+def _ImportPythonModule(module_name):
+  """Imports a Python module.
+
+  Args:
+    module_name (str): name of the module.
+
+  Returns:
+    module: Python module or None if the module cannot be imported.
+  """
+  try:
+    module_object = list(map(__import__, [module_name]))[0]
+  except ImportError:
+    return
+
+  # If the module name contains dots get the upper most module object.
+  if u'.' in module_name:
+    for submodule_name in module_name.split(u'.')[1:]:
+      module_object = getattr(module_object, submodule_name, None)
+
+  return module_object
+
+
 def CheckDependencies(latest_version_check=False, verbose_output=True):
   """Checks the availability of the dependencies.
 
   Args:
-    latest_version_check: optional boolean value to indicate if the project
-                          site should be checked for the latest version.
-    verbose_output: optional boolean to indicate output should be verbose.
+    latest_version_check (Optional[bool]): True if the project site should
+        be checked for the latest version.
+    verbose_output (Optional[bool]): True if output should be verbose.
 
   Returns:
-    True if the dependencies are available, False otherwise.
+    bool: True if the dependencies are available, False otherwise.
   """
   print(u'Checking availability and versions of plaso dependencies.')
   check_result = True
@@ -480,20 +432,19 @@ def CheckModuleVersion(module_name):
   """Checks the version requirements of a module.
 
   Args:
-    module_name: the name of the module.
+    module_name (str): name of the module.
 
   Raises:
     ImportError: if the module does not exists or does not meet
                  the version requirements.
   """
-  # TODO: add support for non libyal dependencies.
-  if module_name not in LIBYAL_DEPENDENCIES:
-    return
-
   try:
     module_object = list(map(__import__, [module_name]))[0]
   except ImportError:
     raise
+
+  if module_name not in LIBYAL_DEPENDENCIES:
+    return
 
   module_version = module_object.get_version()
   try:
@@ -511,8 +462,8 @@ def CheckTestDependencies(latest_version_check=False):
   """Checks the availability of the dependencies when running tests.
 
   Args:
-    latest_version_check: optional boolean value to indicate if the project
-                          site should be checked for the latest version.
+    latest_version_check (Optional[bool]): True if the project site should
+        be checked for the latest version.
 
   Returns:
     True if the dependencies are available, False otherwise.
@@ -530,7 +481,11 @@ def CheckTestDependencies(latest_version_check=False):
 
 
 def GetInstallRequires():
-  """Returns the install_requires for setup.py"""
+  """Retrieves the setup.py installation requirements.
+
+  Returns:
+    list[str]: dependency definitions for install_requires for setup.py.
+  """
   install_requires = []
   for values in PYTHON_DEPENDENCIES:
     module_name = values[0]
