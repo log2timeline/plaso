@@ -27,7 +27,7 @@ class DPKGControllWriter(object):
       u'Build-Depends: debhelper (>= 7.0.0), python, python-setuptools',
       u'Standards-Version: 3.9.5',
       u'X-Python-Version: >= 2.7',
-      u'Homepage: https://github.com/log2timeline/plaso/',
+      u'Homepage: https://github.com/log2timeline/plaso',
       u'',
       u'Package: python-plaso',
       u'Architecture: all']
