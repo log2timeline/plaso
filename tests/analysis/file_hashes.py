@@ -33,18 +33,18 @@ class UniqueHashesTest(test_lib.AnalysisPluginTestCase):
           location=u'/opt/no_hash_file')}
   ]
 
-  def testExamineEvent(self):
-    """Tests the ExamineEvent function."""
+  def testExamineEventAndCompileReport(self):
+    """Tests the ExamineEvent and CompileReport functions."""
     knowledge_base = self._SetUpKnowledgeBase()
     analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
 
-    analysis_plugin = file_hashes.FileHashesPlugin()
+    plugin = file_hashes.FileHashesPlugin()
 
     for event_dictionary in self._TEST_EVENTS:
       event = self._CreateTestEventObject(event_dictionary)
-      analysis_plugin.ExamineEvent(analysis_mediator, event)
+      plugin.ExamineEvent(analysis_mediator, event)
 
-    analysis_report = analysis_plugin.CompileReport(analysis_mediator)
+    analysis_report = plugin.CompileReport(analysis_mediator)
     self.assertIsNotNone(analysis_report)
 
     expected_text = (

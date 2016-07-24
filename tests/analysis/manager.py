@@ -11,7 +11,7 @@ from plaso.analysis import manager
 class TestAnalysisPlugin(interface.AnalysisPlugin):
   """Test analysis plugin."""
 
-  NAME = 'test_analysis_plugin'
+  NAME = 'test_plugin'
 
   def CompileReport(self, unused_analysis_mediator):
     """Compiles a report of the analysis.
@@ -68,7 +68,7 @@ class AnalysisPluginManagerTest(unittest.TestCase):
 
     plugin_set = set([name for name, _ in list(
         manager.AnalysisPluginManager.GetPlugins())])
-    self.assertTrue(u'test_analysis_plugin' in plugin_set)
+    self.assertTrue(u'test_plugin' in plugin_set)
 
     manager.AnalysisPluginManager.DeregisterPlugin(TestAnalysisPlugin)
 

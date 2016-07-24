@@ -79,23 +79,23 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
 
   def testGetPathSegmentSeparator(self):
     """Tests the _GetPathSegmentSeparator function."""
-    analysis_plugin = MockChromeExtensionPlugin()
+    plugin = MockChromeExtensionPlugin()
 
     for path in self._MACOSX_PATHS:
-      path_segment_separator = analysis_plugin._GetPathSegmentSeparator(path)
+      path_segment_separator = plugin._GetPathSegmentSeparator(path)
       self.assertEqual(path_segment_separator, u'/')
 
     for path in self._WINDOWS_PATHS:
-      path_segment_separator = analysis_plugin._GetPathSegmentSeparator(path)
+      path_segment_separator = plugin._GetPathSegmentSeparator(path)
       self.assertEqual(path_segment_separator, u'\\')
 
-  def testExamineEventMacOSXPaths(self):
-    """Tests the ExamineEvent function on Mac OS X paths."""
+  def testExamineEventAndCompileReportMacOSXPaths(self):
+    """Tests the ExamineEvent and CompileReport functions on Mac OS X paths."""
     knowledge_base = self._SetUpKnowledgeBase(
         knowledge_base_values={u'users': self._MACOSX_USERS})
     analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
 
-    analysis_plugin = MockChromeExtensionPlugin()
+    plugin = MockChromeExtensionPlugin()
 
     for path in self._MACOSX_PATHS:
       event_dictionary = {
@@ -105,12 +105,12 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
           u'timestamp_desc': u'Some stuff'}
 
       event = self._CreateTestEventObject(event_dictionary)
-      analysis_plugin.ExamineEvent(analysis_mediator, event)
+      plugin.ExamineEvent(analysis_mediator, event)
 
-    analysis_report = analysis_plugin.CompileReport(analysis_mediator)
+    analysis_report = plugin.CompileReport(analysis_mediator)
     self.assertIsNotNone(analysis_report)
 
-    self.assertEqual(analysis_plugin._sep, u'/')
+    self.assertEqual(plugin._sep, u'/')
 
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.
@@ -129,13 +129,13 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     expected_keys = set([u'frank', u'dude'])
     self.assertEqual(set(analysis_report.report_dict.keys()), expected_keys)
 
-  def testExamineEventWindowsPaths(self):
-    """Tests the ExamineEvent function on Windows paths."""
+  def testExamineEventAndCompileReportWindowsPaths(self):
+    """Tests the ExamineEvent and CompileReport functions on Windows paths."""
     knowledge_base = self._SetUpKnowledgeBase(
         knowledge_base_values={u'users': self._WINDOWS_USERS})
     analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
 
-    analysis_plugin = MockChromeExtensionPlugin()
+    plugin = MockChromeExtensionPlugin()
 
     for path in self._WINDOWS_PATHS:
       event_dictionary = {
@@ -145,12 +145,12 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
           u'timestamp_desc': u'Some stuff'}
 
       event = self._CreateTestEventObject(event_dictionary)
-      analysis_plugin.ExamineEvent(analysis_mediator, event)
+      plugin.ExamineEvent(analysis_mediator, event)
 
-    analysis_report = analysis_plugin.CompileReport(analysis_mediator)
+    analysis_report = plugin.CompileReport(analysis_mediator)
     self.assertIsNotNone(analysis_report)
 
-    self.assertEqual(analysis_plugin._sep, u'\\')
+    self.assertEqual(plugin._sep, u'\\')
 
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.

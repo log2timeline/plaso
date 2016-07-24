@@ -33,7 +33,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
       analysis_plugin_output_queue (Queue): analysis plugin output queue.
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for analysis.
-      plugin: the plugin running in the process (instance of AnalysisProcess).
+      plugin (AnalysisProcess): plugin running in the process.
       data_location (Optional[str]): path to the location that data files
           should be loaded from.
     """
@@ -78,7 +78,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
               type(exception)))
           break
 
-        if isinstance(task, plaso_queue.QueueAbort):
+        if isinstance(event, plaso_queue.QueueAbort):
           logging.debug(u'ConsumeItems exiting, dequeued QueueAbort object.')
           break
 
@@ -96,6 +96,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
       self._abort = True
 
+    # TODO: move to mediator after deprecating analysis_report_queue.
     analysis_report = self.plugin.CompileReport(mediator)
     if analysis_report:
       analysis_report.time_compiled = timelib.Timestamp.GetNow()

@@ -26,7 +26,7 @@ from plaso.lib import errors
 
 
 class AnalysisPlugin(object):
-  """Class that implements the analysis plugin interface."""
+  """Class that defines the analysis plugin interface."""
 
   # The URLS should contain a list of URLs with additional information about
   # this analysis plugin.

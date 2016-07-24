@@ -87,20 +87,20 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
     """Cleans up after running an individual test."""
     self._socket_patcher.stop()
 
-  def testExamineEvent(self):
-    """Tests the ExamineEvent function."""
+  def testExamineEventAndCompileReport(self):
+    """Tests the ExamineEvent and CompileReport functions."""
     knowledge_base = self._SetUpKnowledgeBase()
     analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
 
-    analysis_plugin = nsrlsvr.NsrlsvrAnalysisPlugin()
-    analysis_plugin.SetHost(u'127.0.0.1')
-    analysis_plugin.SetPort(9120)
+    plugin = nsrlsvr.NsrlsvrAnalysisPlugin()
+    plugin.SetHost(u'127.0.0.1')
+    plugin.SetPort(9120)
 
     for event_dictionary in self._TEST_EVENTS:
       event = self._CreateTestEventObject(event_dictionary)
-      analysis_plugin.ExamineEvent(analysis_mediator, event)
+      plugin.ExamineEvent(analysis_mediator, event)
 
-    analysis_report = analysis_plugin.CompileReport(analysis_mediator)
+    analysis_report = plugin.CompileReport(analysis_mediator)
     self.assertIsNotNone(analysis_report)
 
     tags = analysis_report.GetTags()

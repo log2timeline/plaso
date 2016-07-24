@@ -31,6 +31,8 @@ from plaso.storage import zip_file as storage_zip_file
 class PsortFrontend(analysis_frontend.AnalysisFrontend):
   """Class that implements the psort front-end."""
 
+  _QUEUE_TIMEOUT = 5
+
   # The amount of time to wait for analysis plugins to compile their reports,
   # in seconds.
   MAX_ANALYSIS_PLUGIN_REPORT_WAIT = 60
@@ -263,7 +265,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       analysis_queue_port = analysis_report_incoming_queue.port
     else:
       analysis_report_incoming_queue = multi_process_queue.MultiProcessingQueue(
-          timeout=5)
+          timeout=self._QUEUE_TIMEOUT)
 
     storage_file.ReadPreprocessingInformation(self._knowledge_base)
 
@@ -342,7 +344,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         output_event_queue.Open()
 
       else:
-        output_event_queue = multi_process_queue.MultiProcessingQueue(timeout=5)
+        output_event_queue = multi_process_queue.MultiProcessingQueue(
+            timeout=self._QUEUE_TIMEOUT)
 
       self._event_queues.append(output_event_queue)
 
@@ -486,7 +489,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     """Processes a plaso storage file.
 
     Args:
-      storage_file_path (str): path of the storage file.
+      storage_file_path (str): path to the storage file.
       output_module (OutputModule): output module.
       analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
           be run.

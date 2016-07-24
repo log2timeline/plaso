@@ -82,32 +82,32 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
 
   def testParseTaggingFile(self):
     """Tests the _ParseTaggingFile function."""
-    analysis_plugin = tagging.TaggingPlugin()
+    plugin = tagging.TaggingPlugin()
     test_path = self._GetTestFilePath([self._TEST_TAG_FILE_NAME])
 
-    tag_expression = analysis_plugin._ParseTaggingFile(test_path)
+    tag_expression = plugin._ParseTaggingFile(test_path)
     self.assertEqual(len(tag_expression.children), 4)
 
-    analysis_plugin = tagging.TaggingPlugin()
+    plugin = tagging.TaggingPlugin()
     test_path = self._GetTestFilePath([self._INVALID_TEST_TAG_FILE_NAME])
 
-    tag_expression = analysis_plugin._ParseTaggingFile(test_path)
+    tag_expression = plugin._ParseTaggingFile(test_path)
     self.assertEqual(len(tag_expression.children), 2)
 
-  def testExamineEvent(self):
-    """Tests the ExamineEvent function."""
+  def testExamineEventAndCompileReport(self):
+    """Tests the ExamineEvent and CompileReport functions."""
     test_file = self._GetTestFilePath([self._TEST_TAG_FILE_NAME])
     knowledge_base = self._SetUpKnowledgeBase()
     analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
 
-    analysis_plugin = tagging.TaggingPlugin()
-    analysis_plugin.SetAndLoadTagFile(test_file)
+    plugin = tagging.TaggingPlugin()
+    plugin.SetAndLoadTagFile(test_file)
 
     for event_dictionary in self._TEST_EVENTS:
       event = self._CreateTestEventObject(event_dictionary)
-      analysis_plugin.ExamineEvent(analysis_mediator, event)
+      plugin.ExamineEvent(analysis_mediator, event)
 
-    analysis_report = analysis_plugin.CompileReport(analysis_mediator)
+    analysis_report = plugin.CompileReport(analysis_mediator)
     self.assertIsNotNone(analysis_report)
 
     tags = analysis_report.GetTags()

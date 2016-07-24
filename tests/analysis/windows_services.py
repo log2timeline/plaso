@@ -54,21 +54,21 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
 
     return event
 
-  def testExamineEvent(self):
-    """Tests the ExamineEvent function."""
+  def testExamineEventAndCompileReport(self):
+    """Tests the ExamineEvent and CompileReport functions."""
     knowledge_base = self._SetUpKnowledgeBase()
     analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
 
-    analysis_plugin = windows_services.WindowsServicesPlugin()
+    plugin = windows_services.WindowsServicesPlugin()
 
     for event_dictionary in self._TEST_EVENTS:
       event_dictionary[u'pathspec'] = fake_path_spec.FakePathSpec(
           location=u'C:\\WINDOWS\\system32\\SYSTEM')
 
       event = self._CreateTestEventObject(event_dictionary)
-      analysis_plugin.ExamineEvent(analysis_mediator, event)
+      plugin.ExamineEvent(analysis_mediator, event)
 
-    analysis_report = analysis_plugin.CompileReport(analysis_mediator)
+    analysis_report = plugin.CompileReport(analysis_mediator)
     self.assertIsNotNone(analysis_report)
 
     expected_text = (
@@ -88,8 +88,8 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     self.assertEqual(expected_text, analysis_report.text)
     self.assertEqual(analysis_report.plugin_name, 'windows_services')
 
-  def testExamineEventOnSystemFile(self):
-    """Tests the ExamineEvent function on a SYSTEM Registry file."""
+  def testExamineEventAndCompileReportOnSystemFile(self):
+    """Tests the ExamineEvent and CompileReport functions on a SYSTEM Registry file."""
     # We could remove the non-Services plugins, but testing shows that the
     # performance gain is negligible.
 
@@ -101,12 +101,12 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
 
     self.assertEqual(len(storage_writer.events), 31436)
 
-    analysis_plugin = windows_services.WindowsServicesPlugin()
+    plugin = windows_services.WindowsServicesPlugin()
 
     for event in storage_writer.events:
-      analysis_plugin.ExamineEvent(analysis_mediator, event)
+      plugin.ExamineEvent(analysis_mediator, event)
 
-    analysis_report = analysis_plugin.CompileReport(analysis_mediator)
+    analysis_report = plugin.CompileReport(analysis_mediator)
     self.assertIsNotNone(analysis_report)
 
     # We'll check that a few strings are in the report, like they're supposed
@@ -122,8 +122,8 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     for string in test_strings:
       self.assertIn(string, analysis_report.text)
 
-  def testExamineEventOnSystemFileWithYAML(self):
-    """Tests the ExamineEvent function on a SYSTEM Registry file with YAML."""
+  def testExamineEventAndCompileReportOnSystemFileWithYAML(self):
+    """Tests the ExamineEvent and CompileReport functions on a SYSTEM Registry file with YAML."""
     # We could remove the non-Services plugins, but testing shows that the
     # performance gain is negligible.
 
@@ -135,13 +135,13 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
 
     self.assertEqual(len(storage_writer.events), 31436)
 
-    analysis_plugin = windows_services.WindowsServicesPlugin()
-    analysis_plugin.SetOutputFormat(u'yaml')
+    plugin = windows_services.WindowsServicesPlugin()
+    plugin.SetOutputFormat(u'yaml')
 
     for event in storage_writer.events:
-      analysis_plugin.ExamineEvent(analysis_mediator, event)
+      plugin.ExamineEvent(analysis_mediator, event)
 
-    analysis_report = analysis_plugin.CompileReport(analysis_mediator)
+    analysis_report = plugin.CompileReport(analysis_mediator)
     self.assertIsNotNone(analysis_report)
 
     # We'll check that a few strings are in the report, like they're supposed

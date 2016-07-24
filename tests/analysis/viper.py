@@ -38,12 +38,12 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
       u'sha256_hash': _EVENT_1_HASH,
       u'uuid': u'8'}]
 
-  def _CreateMockPost(self, unused_url, data=None):
-    """Creates a mock method to simulate a Viper API request.
+  def _MockPost(self, unused_url, data=None):
+    """Mock funtion to simulate a Viper API request.
 
     Args:
       url (str): URL being requested.
-      data (dict[str,str]): simulated form data for the Viper API request.
+      data (dict[str, object]): simulated form data for the Viper API request.
 
     Returns:
       MockResponse: mocked response that simulates a real response object
@@ -99,30 +99,30 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self.requests_patcher = mock.patch('requests.post', self._CreateMockPost)
+    self.requests_patcher = mock.patch(u'requests.post', self._MockPost)
     self.requests_patcher.start()
 
   def tearDown(self):
     """Cleans up after running an individual test."""
     self.requests_patcher.stop()
 
-  def testExamineEvent(self):
-    """Tests the ExamineEvent function."""
+  def testExamineEventAndCompileReport(self):
+    """Tests the ExamineEvent and CompileReport functions."""
     knowledge_base = self._SetUpKnowledgeBase()
     analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
 
-    analysis_plugin = viper.ViperAnalysisPlugin()
-    analysis_plugin.SetProtocol(u'http')
-    analysis_plugin.SetHost(u'localhost')
+    plugin = viper.ViperAnalysisPlugin()
+    plugin.SetProtocol(u'http')
+    plugin.SetHost(u'localhost')
 
     for event_dictionary in self._TEST_EVENTS:
       event_dictionary[u'pathspec'] = fake_path_spec.FakePathSpec(
           location=u'C:\\WINDOWS\\system32\\evil.exe')
 
       event = self._CreateTestEventObject(event_dictionary)
-      analysis_plugin.ExamineEvent(analysis_mediator, event)
+      plugin.ExamineEvent(analysis_mediator, event)
 
-    analysis_report = analysis_plugin.CompileReport(analysis_mediator)
+    analysis_report = plugin.CompileReport(analysis_mediator)
     self.assertIsNotNone(analysis_report)
 
     tags = analysis_report.GetTags()

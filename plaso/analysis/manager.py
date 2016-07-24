@@ -92,8 +92,10 @@ class AnalysisPluginManager(object):
     """Retrieves the registered analysis plugin classes.
 
     Yields:
-      A tuple that contains the uniquely identifying name of the plugin
-      and the plugin class (subclass of AnalysisPlugin).
+      tuple: contains:
+
+        str: name of the plugin
+        type: plugin class
     """
     for plugin_name, plugin_class in iter(cls._plugin_classes.items()):
       yield plugin_name, plugin_class

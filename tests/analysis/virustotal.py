@@ -39,12 +39,12 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
       u'sha256_hash': _EVENT_1_HASH,
       u'uuid': u'8'}]
 
-  def _CreateMockGet(self, url, params):
-    """Creates a mock method to simulate a VirusTotal API request.
+  def _MockGet(self, url, params):
+    """Mock function to simulate a VirusTotal API request.
 
     Args:
       url (str): URL being requested.
-      params (dict[str,str]): HTTP parameters for the VirusTotal API request.
+      params (dict[str, object]): HTTP parameters for the VirusTotal API request.
 
     Returns:
       MockResponse: mocked response that simulates a real response object
@@ -84,29 +84,29 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self.requests_patcher = mock.patch(u'requests.get', self._CreateMockGet)
+    self.requests_patcher = mock.patch(u'requests.get', self._MockGet)
     self.requests_patcher.start()
 
   def tearDown(self):
     """Cleans up after running an individual test."""
     self.requests_patcher.stop()
 
-  def testExamineEvent(self):
-    """Tests the ExamineEvent function."""
+  def testExamineEventAndCompileReport(self):
+    """Tests the ExamineEvent and CompileReport functions."""
     knowledge_base = self._SetUpKnowledgeBase()
     analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
 
-    analysis_plugin = virustotal.VirusTotalAnalysisPlugin()
-    analysis_plugin.SetAPIKey(self._FAKE_API_KEY)
+    plugin = virustotal.VirusTotalAnalysisPlugin()
+    plugin.SetAPIKey(self._FAKE_API_KEY)
 
     for event_dictionary in self._TEST_EVENTS:
       event_dictionary[u'pathspec'] = fake_path_spec.FakePathSpec(
           location=u'C:\\WINDOWS\\system32\\evil.exe')
 
       event = self._CreateTestEventObject(event_dictionary)
-      analysis_plugin.ExamineEvent(analysis_mediator, event)
+      plugin.ExamineEvent(analysis_mediator, event)
 
-    analysis_report = analysis_plugin.CompileReport(analysis_mediator)
+    analysis_report = plugin.CompileReport(analysis_mediator)
     self.assertIsNotNone(analysis_report)
 
     tags = analysis_report.GetTags()

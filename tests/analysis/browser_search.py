@@ -14,8 +14,8 @@ from tests.analysis import test_lib
 class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
   """Tests for the browser search analysis plugin."""
 
-  def testExamineEvent(self):
-    """Tests the ExamineEvent function."""
+  def testExamineEventAndCompileReport(self):
+    """Tests the ExamineEvent and CompileReport functions."""
     knowledge_base = self._SetUpKnowledgeBase()
     analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
 
@@ -24,12 +24,12 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
 
     self.assertEqual(len(storage_writer.events), 71)
 
-    analysis_plugin = browser_search.BrowserSearchPlugin()
+    plugin = browser_search.BrowserSearchPlugin()
 
     for event in storage_writer.events:
-      analysis_plugin.ExamineEvent(analysis_mediator, event)
+      plugin.ExamineEvent(analysis_mediator, event)
 
-    analysis_report = analysis_plugin.CompileReport(analysis_mediator)
+    analysis_report = plugin.CompileReport(analysis_mediator)
     self.assertIsNotNone(analysis_report)
 
     # Due to the behavior of the join one additional empty string at the end

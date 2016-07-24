@@ -33,21 +33,21 @@ class UniqueDomainsPluginTest(test_lib.AnalysisPluginTestCase):
        u'timestamp': timelib.Timestamp.CopyFromString(u'2015-04-04 04:00:00')},
       ]
 
-  def testExamineEvent(self):
-    """Tests the ExamineEvent function."""
+  def testExamineEventAndCompileReport(self):
+    """Tests the ExamineEvent and CompileReport functions."""
     knowledge_base = self._SetUpKnowledgeBase()
     analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
 
-    analysis_plugin = unique_domains_visited.UniqueDomainsVisitedPlugin()
+    plugin = unique_domains_visited.UniqueDomainsVisitedPlugin()
 
     for event_dictionary in self._TEST_EVENTS:
       event_dictionary[u'url'] = u'https://{0:s}/{1:s}'.format(
           event_dictionary[u'domain'], event_dictionary[u'path'])
 
       event = self._CreateTestEventObject(event_dictionary)
-      analysis_plugin.ExamineEvent(analysis_mediator, event)
+      plugin.ExamineEvent(analysis_mediator, event)
 
-    analysis_report = analysis_plugin.CompileReport(analysis_mediator)
+    analysis_report = plugin.CompileReport(analysis_mediator)
     self.assertIsNotNone(analysis_report)
 
     report_text = analysis_report.GetString()
