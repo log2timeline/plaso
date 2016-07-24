@@ -1,51 +1,11 @@
 # -*- coding: utf-8 -*-
 """This file contains a class for managing digest analyzers for Plaso."""
 
-import os
-
 
 class AnalyzersManager(object):
   """Class that implements the analyzers manager."""
 
   _analyzer_classes = {}
-
-  @classmethod
-  def AnalyzeFileObject(cls, mediator, file_object, analyzers):
-    """Processes a file-like object with the provided analyzers.
-
-    Args:
-      mediator (ParserMediator): mediates interactions between
-          parsers and other components, such as storage and abort signals.
-      file_object (dfvfs.FileIO): file-like object to process.
-      analyzers (list[analyzer]): analyzers to use on the file object.
-
-    Returns:
-      list(AnalyzerResult): results of the analyzers.
-    """
-    if not analyzers:
-      return
-
-    file_object.seek(0, os.SEEK_SET)
-
-    maximum_file_size = max([analyzer.SIZE_LIMIT for analyzer in analyzers])
-
-    results = []
-    file_size = file_object.get_size()
-    data = file_object.read(maximum_file_size)
-    while data:
-      for analyzer in analyzers:
-        if mediator.abort:
-          break
-        if analyzer.INCREMENTAL_ANALYZER or analyzer.SIZE_LIMIT > file_size:
-          analyzer.Analyze(data)
-        data = file_object.read(maximum_file_size)
-
-    for analyzer in analyzers:
-      if mediator.abort:
-        break
-      results.extend(analyzer.GetResults())
-      analyzer.Reset()
-    return results
 
   @classmethod
   def DeregisterAnalyzer(cls, analyzer_class):
@@ -65,15 +25,6 @@ class AnalyzersManager(object):
           analyzer_class.NAME))
 
     del cls._analyzer_classes[analyzer_name]
-
-  @classmethod
-  def GetAnalyzerNames(cls):
-    """Retrieves the names of all loaded analyzers.
-
-    Returns:
-      list[str]: of analyzer names.
-    """
-    return cls._analyzer_classes.keys()
 
   @classmethod
   def GetAnalyzersInformation(cls):
@@ -129,6 +80,15 @@ class AnalyzersManager(object):
         analyzer_instances.append(analyzer_class())
 
     return analyzer_instances
+
+  @classmethod
+  def GetAnalyzerNames(cls):
+    """Retrieves the names of all loaded analyzers.
+
+    Returns:
+      list[str]: of analyzer names.
+    """
+    return cls._analyzer_classes.keys()
 
   @classmethod
   def GetAnalyzers(cls):

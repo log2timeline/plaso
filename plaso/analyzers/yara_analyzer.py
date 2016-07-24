@@ -5,19 +5,21 @@ import logging
 
 import yara
 
-from plaso.containers import analyzer_result
 from plaso.analyzers import interface
 from plaso.analyzers import manager
+from plaso.containers import analyzer_result
+from plaso.lib import definitions
 
 
 class YaraAnalyzer(interface.BaseAnalyzer):
   """This class provides Yara matching functionality."""
 
   NAME = u'yara'
+  DESCRIPTION = u'Matches Yara rules over input data.'
+
+  PROCESSING_STATUS_HINT = definitions.PROCESSING_STATUS_YARA_SCAN
 
   INCREMENTAL_ANALYZER = False
-
-  DESCRIPTION = u'Matches Yara rules over input data.'
 
   _MATCH_TIMEOUT = 60
 
