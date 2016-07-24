@@ -523,32 +523,24 @@ class ZeroMQRequestQueue(ZeroMQQueue):
         # The existing socket is now out of sync, so we need to open a new one.
         self._CreateZMQSocket()
         continue
+
       except zmq.error.ZMQError as exception:
         if exception.errno == errno.EINTR:
           logging.error(
               u'{0:s} ZMQ syscall interrupted. Queue aborting.'.format(
                   self.name))
           return plaso_queue.QueueAbort()
-        if exception.errno == zmq.EFSM:
-          if time.time() > last_retry_time:
-            logging.warn(
-                u'{0:s} time out sending request for item'.format(self.name))
-            raise errors.QueueEmpty
-          self._CreateZMQSocket()
-          continue
 
         raise
+
       except KeyboardInterrupt:
         self.Close(abort=True)
         raise
 
       try:
-        logging.debug(u'{0:s} receiving object.'.format(
-            self.name,))
         received_object = self._zmq_socket.recv_pyobj()
-        logging.debug(u'{0:s} received object: "{1:s}"'.format(
-            self.name, received_object))
         return received_object
+
       except zmq.error.Again:
         if time.time() > last_retry_time:
           raise errors.QueueEmpty
@@ -730,30 +722,21 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
     """Listens for requests and replies to clients.
 
     Args:
-      source_queue: The queue to uses to pull items from.
-      socket: The socket to listen on, and send responses to.
-      terminate_event: The event that signals that the queue should terminate.
+      source_queue (Queue.queue): queue to use to pull items from.
+      socket (zmq.Socket): socket to listen on, and send responses to.
+      terminate_event (Queue.Event): event that signals that the queue should
+          terminate.
 
     Raises:
       QueueEmpty: If a timeout occurs when trying to reply to a request.
       zmq.error.ZMQError: If an error occurs in ZeroMQ.
     """
     logging.debug(u'{0:s} responder thread started'.format(self.name))
-    last_retry_time = None
     while not terminate_event.isSet():
-      if not last_retry_time:
-        last_retry_time = time.time() + self.timeout_seconds
       try:
         # We need to receive a request before we send.
         _ = socket.recv()
       except zmq.error.Again:
-        if time.time() > last_retry_time:
-          logging.debug(
-              u'{0:s} did not receive a request within the timeout of {1:d} '
-              u'seconds. Queue terminating'.format(
-                  self.name, self.timeout_seconds))
-          self._terminate_event.set()
-          break
         # The socket is now out of sync, so we need to create a new one.
         self._CreateZMQSocket()
         continue
@@ -773,6 +756,7 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
           item = source_queue.get(True, self._buffer_timeout_seconds)
       except Queue.Empty:
         logging.debug(u'{0:s} queue was empty'.format(self.name))
+        # Signal to any downstream queues that they should abort.
         item = plaso_queue.QueueAbort()
 
       try:

@@ -20,6 +20,7 @@ from plaso.engine import plaso_queue
 from plaso.engine import profiler
 from plaso.engine import zeromq_queue
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.multi_processing import multi_process_queue
 from plaso.multi_processing import process_info
 from plaso.multi_processing import task_manager
@@ -394,7 +395,6 @@ class MultiProcessEngine(engine.BaseEngine):
     for path_spec in path_spec_extractor.ExtractPathSpecs(
         source_path_specs, find_specs=filter_find_specs,
         recurse_file_system=False):
-      logging.debug(u'_ProcessSources checking abort.')
       if self._abort:
         break
 
@@ -521,7 +521,6 @@ class MultiProcessEngine(engine.BaseEngine):
       self._processing_profiler.StopTiming(u'get_event_source')
 
     while event_source or self._task_manager.HasScheduledTasks():
-      logging.debug(u'MainProcess checking abort')
       if self._abort:
         break
 
@@ -740,7 +739,10 @@ class MultiProcessEngine(engine.BaseEngine):
       self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
 
     # Set abort to True to stop queue.join_thread() from blocking.
-    self._task_queue.Close(abort=True)
+    try:
+      self._task_queue.Close(abort=True)
+    except errors.QueueAlreadyClosed:
+      pass
 
     if abort:
       # Kill any remaining processes.
@@ -1020,7 +1022,12 @@ class MultiProcessEngine(engine.BaseEngine):
       # due to incorrectly finalized IPC.
       self._KillProcess(os.getpid())
 
-    self._task_queue.Close(abort=self._abort)
+    try:
+      self._task_queue.Close(abort=self._abort)
+    except errors.QueueAlreadyClosed:
+      # The task queue should be closed by _StopExtractionProcesses, this
+      # close is a failsafe.
+      pass
 
     if self._processing_status.error_path_specs:
       task_storage_abort = True
