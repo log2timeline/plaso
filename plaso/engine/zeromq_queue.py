@@ -135,7 +135,7 @@ class ZeroMQQueue(plaso_queue.Queue):
       self._zmq_context = zmq.Context()
     if self._zmq_socket:
       logging.debug(u'Closing old socket for {0:s}'.format(self.name))
-      self._zmq_socket.close(self._linger_seconds)
+      self._zmq_socket.close(0)
     self._zmq_socket = self._zmq_context.socket(self._SOCKET_TYPE)
     self._SetSocketTimeouts()
     self._SetSocketHighWaterMark()
