@@ -631,6 +631,7 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
     """
     self._buffer_timeout_seconds = buffer_timeout_seconds
     self._queue = Queue.Queue(maxsize=buffer_max_size)
+    self._zmq_thread = None
     # We need to set up the internal buffer queue before we call super, so that
     # if the call to super opens the ZMQSocket, the backing thread will work.
     super(ZeroMQBufferedQueue, self).__init__(
