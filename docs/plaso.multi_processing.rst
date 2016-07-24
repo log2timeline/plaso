@@ -4,6 +4,14 @@ plaso.multi_processing package
 Submodules
 ----------
 
+plaso.multi_processing.analysis_process module
+----------------------------------------------
+
+.. automodule:: plaso.multi_processing.analysis_process
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.multi_processing.base_process module
 ------------------------------------------
 

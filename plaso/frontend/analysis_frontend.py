@@ -17,6 +17,6 @@ class AnalysisFrontend(frontend.Frontend):
 
     Args:
       data_location (str): path to the location that data files should
-                           be loaded from.
+          be loaded from.
     """
     self._data_location = data_location

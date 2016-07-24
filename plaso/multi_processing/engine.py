@@ -580,8 +580,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     process = worker_process.WorkerProcess(
         task_queue, storage_writer, self.knowledge_base,
-        self._session_identifier, self._last_worker_number,
-        debug_output=self._debug_output,
+        self._session_identifier, debug_output=self._debug_output,
         enable_profiling=self._enable_profiling,
         enable_sigsegv_handler=self._enable_sigsegv_handler,
         filter_object=self._filter_object,
