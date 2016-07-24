@@ -533,18 +533,18 @@ def GetDPKGDepends(exclude_version=False):
     if exclude_version or not module_version:
       requires.append(module_name)
     else:
-      requires.append(u'{0:s} >= {1:s}'.format(module_name, module_version))
+      requires.append(u'{0:s} (>= {1:s})'.format(module_name, module_version))
 
   if exclude_version:
     requires.append(u'python-pytsk3')
   else:
-    requires.append(u'python-pytsk3 >= 4.1.2')
+    requires.append(u'python-pytsk3 (>= 4.1.2)')
 
   for module_name, module_version in sorted(LIBYAL_DEPENDENCIES.items()):
     if exclude_version or not module_version:
       requires.append(u'lib{0:s}-python'.format(module_name[2:]))
     else:
-      requires.append(u'lib{0:s}-python >= {1:d}'.format(
+      requires.append(u'lib{0:s}-python (>= {1:d})'.format(
           module_name[2:], module_version))
 
   return sorted(requires)
