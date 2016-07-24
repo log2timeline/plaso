@@ -34,7 +34,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     multiprocessing.Process.
 
     Args:
-      task_queue (MultiProcessingQueue): task queue.
+      task_queue (PlasoQueue): task queue.
       storage_writer (StorageWriter): storage writer for a session storage.
       knowledge_base (KnowledgeBase): knowledge base which contains
           information from the source data needed for parsing.
@@ -199,13 +199,10 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
           logging.debug(u'ConsumeItems exiting, dequeued QueueAbort object.')
           break
 
-        if task is None:
-          logging.debug(u'Idunnoman: {0:s}'.format(task))
-          logging.debug(self._task_queue.__class__.__name__)
-          continue
-
         self._ProcessTask(task)
 
+
+      self._task_queue.Close(self._abort)
       logging.debug(
           u'{0!s} (PID: {1:d}) stopped monitoring task queue.'.format(
               self._name, self._pid))
