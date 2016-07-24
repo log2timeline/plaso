@@ -27,8 +27,8 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
     Args:
       analysis_plugin_output_queue (Queue): analysis plugin output queue.
-      knowledge_base (KnowledgeBase): knowledge base which contains
-          information from the source data needed for analysis.
+      knowledge_base (KnowledgeBase): contains information from the source
+          data needed for analysis.
       plugin: the plugin running in the process (instance of AnalysisProcess).
       data_location (Optional[str]): path to the location that data files
           should be loaded from.
@@ -46,7 +46,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     """Returns status information.
 
     Returns:
-      dict [str, object]: status attributes, indexed by name.
+      dict[str, object]: status attributes, indexed by name.
     """
     return {}
 

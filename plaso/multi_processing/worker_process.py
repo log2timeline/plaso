@@ -105,7 +105,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     """Returns status information.
 
     Returns:
-      dict [str, object]: status attributes, indexed by name.
+      dict[str, object]: status attributes, indexed by name.
     """
     if self._parser_mediator:
       number_of_produced_errors = (
