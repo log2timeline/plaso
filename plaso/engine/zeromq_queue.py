@@ -136,7 +136,8 @@ class ZeroMQQueue(plaso_queue.Queue):
     if self._zmq_socket:
       logging.debug(u'Closing old socket for {0:s}'.format(self.name))
       if self.IsBound():
-        self._zmq_socket.unbind()
+        address = u'{0:s}:{1:d}'.format(self._SOCKET_ADDRESS, self.port)
+        self._zmq_socket.unbind(address)
       self._zmq_socket.close()
     self._zmq_socket = self._zmq_context.socket(self._SOCKET_TYPE)
     self._SetSocketTimeouts()
