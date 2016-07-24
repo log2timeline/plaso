@@ -55,9 +55,9 @@ class DependenciesTest(unittest.TestCase):
     result = dependencies._CheckPyTSK(verbose_output=False)
     self.assertTrue(result)
 
-  def testCheckSqlite3(self):
-    """Tests the _CheckSqlite3 function."""
-    result = dependencies._CheckSqlite3(verbose_output=False)
+  def testCheckSQLite3(self):
+    """Tests the _CheckSQLite3 function."""
+    result = dependencies._CheckSQLite3(verbose_output=False)
     self.assertTrue(result)
 
   @unittest.skipUnless(hostname, 'no internet connectivity')

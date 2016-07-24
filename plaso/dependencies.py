@@ -286,7 +286,7 @@ def _CheckPyTSK(verbose_output=True):
   return True
 
 
-def _CheckSqlite3(verbose_output=True):
+def _CheckSQLite3(verbose_output=True):
   """Checks the availability of sqlite3.
 
   Args:
@@ -432,7 +432,7 @@ def CheckDependencies(latest_version_check=False, verbose_output=True):
         verbose_output=verbose_output):
       check_result = False
 
-  if not _CheckSqlite3(verbose_output=verbose_output):
+  if not _CheckSQLite3(verbose_output=verbose_output):
     check_result = False
 
   if not _CheckPyTSK(verbose_output=verbose_output):
