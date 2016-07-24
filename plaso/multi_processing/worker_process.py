@@ -231,7 +231,10 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       self._task_queue.Close(abort=True)
     else:
       logging.debug(u'closing queue')
-      self._task_queue.Close()
+      try:
+        self._task_queue.Close()
+      except errors.QueueAlreadyClosed:
+        pass
 
   def _ProcessPathSpec(self, extraction_worker, parser_mediator, path_spec):
     """Processes a path specification.

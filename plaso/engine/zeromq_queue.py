@@ -536,10 +536,6 @@ class ZeroMQRequestQueue(ZeroMQQueue):
 
         raise
 
-      except KeyboardInterrupt:
-        self.Close(abort=True)
-        raise
-
       try:
         received_object = self._zmq_socket.recv_pyobj()
         return received_object
@@ -547,9 +543,9 @@ class ZeroMQRequestQueue(ZeroMQQueue):
       except zmq.error.Again:
         if time.time() > last_retry_time:
           raise errors.QueueEmpty
-
         # The existing socket is now out of sync, so we need to open a new one
         # and make another request.
+        logging.warn(u'{0:s} timeout receiving item'.format(self.name))
         self._CreateZMQSocket()
         continue
       except zmq.error.ZMQError as exception:
@@ -740,6 +736,8 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
         # We need to receive a request before we send.
         _ = socket.recv()
       except zmq.error.Again:
+        logging.warn(
+            u'{0:s} timeout waiting for a request.'.format(self.name))
         # The socket is now out of sync, so we need to create a new one.
         self._CreateZMQSocket()
         continue
@@ -767,7 +765,7 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
         self._zmq_socket.send_pyobj(item)
         logging.debug(u'{0:s} sent item'.format(self.name))
       except zmq.error.Again:
-        logging.debug(
+        logging.warn(
             u'{0:s} could not reply to a request.'.format(self.name))
         raise errors.QueueEmpty
       except zmq.error.ZMQError as exception:
@@ -972,6 +970,7 @@ class ZeroMQBufferedPullQueue(ZeroMQBufferedQueue):
         # No item received within timeout.
         logging.warn(u'{0:s} aborting, no item received in time.'.format(
             self.name))
+        raise
       except zmq.error.ZMQError as exception:
         if exception.errno == errno.EINTR:
           logging.error(u'ZMQ syscall interrupted in {0:s}.'.format(self.name))
@@ -1019,7 +1018,7 @@ class ZeroMQBufferedPullQueue(ZeroMQBufferedQueue):
     try:
       return self._queue.get(timeout=self._buffer_timeout_seconds)
     except Queue.Empty:
-      return plaso_queue.QueueAbort()
+      raise errors.QueueEmpty
     except KeyboardInterrupt:
       self.Close(abort=True)
       raise

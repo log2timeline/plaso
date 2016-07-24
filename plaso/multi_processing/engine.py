@@ -574,7 +574,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     if self._use_zeromq:
       task_queue = zeromq_queue.ZeroMQRequestConnectQueue(
-          delay_open=True, name=u'{0:s} pathspec'.format(process_name),
+          delay_open=True, name=u'{0:s}_task'.format(process_name),
           linger_seconds=0, port=self._task_queue_port,
           timeout_seconds=5*60)
     else:
@@ -965,7 +965,8 @@ class MultiProcessEngine(engine.BaseEngine):
 
     else:
       task_outbound_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
-          delay_open=True, name=u'Task queue', buffer_timeout_seconds=300)
+          delay_open=True, name=u'main_task_queue', buffer_timeout_seconds=300,
+          maximum_items=1)
       self._task_queue = task_outbound_queue
 
       # The ZeroMQ backed queue must be started first, so we can save its port.
