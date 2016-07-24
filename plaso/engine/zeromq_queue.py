@@ -395,9 +395,9 @@ class ZeroMQPushQueue(ZeroMQQueue):
 
     Raises:
       KeyboardInterrupt: If the process is sent a KeyboardInterrupt while
-                         pushing an item.
+          pushing an item.
       zmq.error.Again: If it was not possible to push the item to the queue
-                       within the timeout.
+          within the timeout.
       zmq.error.ZMQError: If a ZeroMQ specific error occurs.
     """
     logging.debug(u'Push on {0:s} queue, port {1:d}'.format(
@@ -800,7 +800,7 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
     Raises:
       QueueAlreadyClosed: If the queue is closed.
     """
-    logging.debug(u'Pushing {0!s} to queue'.format(item))
+    logging.debug(u'Pushing {0!s} to queue'.format(item.identifier))
     if self._closed:
       raise errors.QueueAlreadyClosed()
     if not self._zmq_socket:

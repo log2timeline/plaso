@@ -89,7 +89,6 @@ class TaskManager(object):
       if last_update > inactive_time:
         has_active_tasks = True
       else:
-        logging.d
         del self._scheduled_tasks[task_identifier]
         task = self._active_tasks[task_identifier]
         self._abandoned_tasks[task_identifier] = task
