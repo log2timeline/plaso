@@ -17,7 +17,7 @@ class DPKGControllWriter(object):
   _PATH = os.path.join(u'config', u'dpkg', u'control')
 
   _MAINTAINER = (
-      u'Log2Timeline developers <log2timeline-dev@googlegroups.com>')
+      u'Log2Timeline maintainers <log2timeline-maintainers@googlegroups.com>')
 
   _FILE_HEADER = [
       u'Source: plaso',
@@ -41,7 +41,7 @@ class DPKGControllWriter(object):
       u'']
 
   def Write(self):
-    """Writes a setup.cfg file."""
+    """Writes a dpkg control file."""
     file_content = []
     file_content.extend(self._FILE_HEADER)
 
@@ -110,7 +110,7 @@ class GIFTInstallScriptWriter(object):
       u'']
 
   def Write(self):
-    """Writes a setup.cfg file."""
+    """Writes a install_gift_and_dependencies.sh file."""
     file_content = []
     file_content.extend(self._FILE_HEADER)
 
@@ -138,7 +138,7 @@ class SetupCfgWriter(object):
   _PATH = u'setup.cfg'
 
   _MAINTAINER = (
-      u'Log2Timeline developers <log2timeline-dev@googlegroups.com>')
+      u'Log2Timeline maintainers <log2timeline-maintainers@googlegroups.com>')
 
   _FILE_HEADER = [
       u'[bdist_rpm]',

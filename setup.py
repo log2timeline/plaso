@@ -90,8 +90,8 @@ setup(
     long_description=plaso_long_description,
     license='Apache License, Version 2.0',
     url='https://sites.google.com/a/kiddaland.net/plaso',
-    maintainer='Log2Timeline developers',
-    maintainer_email='log2timeline-dev@googlegroups.com',
+    maintainer='Log2Timeline maintainers',
+    maintainer_email='log2timeline-maintainers@googlegroups.com',
     scripts=GetScripts(),
     cmdclass={'test': TestCommand},
     classifiers=[
