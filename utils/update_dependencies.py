@@ -48,7 +48,7 @@ class DPKGControllWriter(object):
     dependencies = plaso.dependencies.GetDPKGDepends()
     dependencies = u', '.join(dependencies)
     file_content.append(
-        u'Depends: {0:s}, ${{shlibs:Depends}}, ${{misc:Depends}}'.format(
+        u'Depends: {0:s}, ${{python:Depends}}, ${{misc:Depends}}'.format(
             dependencies))
 
     file_content.extend(self._FILE_FOOTER)
