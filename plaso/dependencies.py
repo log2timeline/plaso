@@ -578,10 +578,10 @@ def GetInstallRequires():
 
   for module_name, module_version in sorted(LIBYAL_DEPENDENCIES.items()):
     if not module_version:
-      install_requires.append(module_name)
+      install_requires.append(u'lib{0:s}-python'.format(module_name[2:]))
     else:
-      install_requires.append(u'{0:s} >= {1:d}'.format(
-          module_name, module_version))
+      install_requires.append(u'lib{0:s}-python >= {1:d}'.format(
+          module_name[2:], module_version))
 
   return sorted(install_requires)
 
