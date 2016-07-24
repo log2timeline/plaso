@@ -87,6 +87,9 @@ _DPKG_PACKAGE_NAMES = {
 
 # Maps Python module names to PyPI projects.
 _PYPI_PROJECT_NAMES = {
+    u'hachoir_core': u'hachoir-core',
+    u'hachoir_metadata': u'hachoir-metadata',
+    u'hachoir_parser': u'hachoir-parser',
     u'sqlite3': u'pysqlite',
     u'yaml': u'PyYAML',
     u'yara': u'yara-python',
