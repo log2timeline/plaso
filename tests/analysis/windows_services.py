@@ -89,7 +89,7 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     self.assertEqual(analysis_report.plugin_name, 'windows_services')
 
   def testExamineEventAndCompileReportOnSystemFile(self):
-    """Tests the ExamineEvent and CompileReport functions on a SYSTEM Registry file."""
+    """Tests the ExamineEvent and CompileReport functions on a SYSTEM file."""
     # We could remove the non-Services plugins, but testing shows that the
     # performance gain is negligible.
 
@@ -123,7 +123,7 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
       self.assertIn(string, analysis_report.text)
 
   def testExamineEventAndCompileReportOnSystemFileWithYAML(self):
-    """Tests the ExamineEvent and CompileReport functions on a SYSTEM Registry file with YAML."""
+    """Tests the ExamineEvent and CompileReport with YAML."""
     # We could remove the non-Services plugins, but testing shows that the
     # performance gain is negligible.
 

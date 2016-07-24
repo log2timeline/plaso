@@ -44,7 +44,8 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
 
     Args:
       url (str): URL being requested.
-      params (dict[str, object]): HTTP parameters for the VirusTotal API request.
+      params (dict[str, object]): HTTP parameters for the VirusTotal API
+          request.
 
     Returns:
       MockResponse: mocked response that simulates a real response object
