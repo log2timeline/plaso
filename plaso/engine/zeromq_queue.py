@@ -640,12 +640,13 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
   def _CreateZMQSocket(self):
     """Creates a ZeroMQ socket as well as a regular queue and a thread."""
     super(ZeroMQBufferedQueue, self)._CreateZMQSocket()
-    thread_name = u'{0:s}_zmq_responder'.format(self.name)
-    self._zmq_thread = threading.Thread(
-        target=self._ZeroMQResponder, args=(
-          self._queue, self._zmq_socket, self._terminate_event),
-        name=thread_name)
-    self._zmq_thread.start()
+    if not self._zmq_thread:
+      thread_name = u'{0:s}_zmq_responder'.format(self.name)
+      self._zmq_thread = threading.Thread(
+          target=self._ZeroMQResponder, args=(
+            self._queue, self._zmq_socket, self._terminate_event),
+          name=thread_name)
+      self._zmq_thread.start()
 
   @abc.abstractmethod
   def _ZeroMQResponder(self, source_queue, socket, terminate_event):
