@@ -358,7 +358,12 @@ def _DownloadPageContent(download_url):
   if not url_object or url_object.code != 200:
     return
 
-  return url_object.read()
+  page_content = url_object.read()
+
+  try:
+    return page_content.decode(u'utf-8')
+  except UnicodeDecodeError:
+    return
 
 
 def _GetLibyalGithubReleasesLatestVersion(library_name):
