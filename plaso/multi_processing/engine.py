@@ -215,19 +215,9 @@ class MultiProcessEngine(engine.BaseEngine):
         status_indicator = definitions.PROCESSING_STATUS_KILLED
 
       process_status = {
-          u'processing_status': processing_status_string,
-      }
+          u'processing_status': processing_status_string}
 
-    last_activity_timestamp = self._UpdateProcessingStatus(pid, process_status)
-
-    if status_indicator != definitions.PROCESSING_STATUS_IDLE:
-      current_timestamp = time.time()
-      last_activity_timestamp += self._PROCESS_WORKER_TIMEOUT
-
-      if current_timestamp > last_activity_timestamp:
-        logging.error(u'Process {0:s} (PID: {1:d}) not updating.'.format(
-            process.name, pid))
-        status_indicator = definitions.PROCESSING_ERROR_STATUS
+    self._UpdateProcessingStatus(pid, process_status)
 
     if status_indicator in definitions.PROCESSING_ERROR_STATUS:
       logging.error(
@@ -833,10 +823,6 @@ class MultiProcessEngine(engine.BaseEngine):
       process_status (dict[str, object]): status values received from
           the worker process.
 
-    Returns:
-      int: timestamp received from the worker process that indicates the last
-          time worker activity was measured.
-
     Raises:
       KeyError: if the process is not registered with the engine.
     """
@@ -864,8 +850,20 @@ class MultiProcessEngine(engine.BaseEngine):
         u'number_of_consumed_sources', 0)
     number_of_produced_sources = process_status.get(
         u'number_of_produced_sources', 0)
-    last_activity_timestamp = process_status.get(
-        u'last_activity_timestamp', 0.0)
+
+    if processing_status != definitions.PROCESSING_STATUS_IDLE:
+      last_activity_timestamp = process_status.get(
+          u'last_activity_timestamp', 0.0)
+
+      if last_activity_timestamp:
+        last_activity_timestamp += self._PROCESS_WORKER_TIMEOUT
+
+        current_timestamp = time.time()
+        if current_timestamp > last_activity_timestamp:
+          logging.error((
+              u'Process {0:s} (PID: {1:d}) has not reported activity within '
+              u'the timeout period.').format(process.name, pid))
+          processing_status = definitions.PROCESSING_ERROR_STATUS
 
     self._processing_status.UpdateWorkerStatus(
         process.name, processing_status, pid, display_name,
@@ -880,8 +878,6 @@ class MultiProcessEngine(engine.BaseEngine):
       except KeyError:
         logging.error(u'Worker processing untracked task: {0:s}.'.format(
             task_identifier))
-
-    return last_activity_timestamp
 
   def ProcessSources(
       self, session_identifier, source_path_specs, storage_writer,
@@ -989,11 +985,12 @@ class MultiProcessEngine(engine.BaseEngine):
     if self._serializers_profiler:
       storage_writer.SetSerializersProfiler(self._serializers_profiler)
 
+    storage_writer.Open()
+
     # Start the status update thread after open of the storage writer
     # so we don't have to clean up the thread if the open fails.
     self._StartStatusUpdateThread()
 
-    storage_writer.Open()
     storage_writer.WriteSessionStart()
 
     try:

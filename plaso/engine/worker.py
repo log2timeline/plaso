@@ -32,8 +32,8 @@ class EventExtractionWorker(object):
   extracted event objects are pushed on a storage queue for further processing.
 
   Attributes:
-    last_activity_timestamp (int): timestamp received from the worker that
-        indicates the last time activity was measured.
+    last_activity_timestamp (int): timestamp received that indicates the last
+        time activity was observed.
     processing_status (str): human readable status indication e.g. 'Hashing',
         'Extracting'.
   """

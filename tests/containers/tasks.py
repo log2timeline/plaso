@@ -11,7 +11,7 @@ from plaso.containers import tasks
 from tests.containers import test_lib
 
 
-class TasknTest(test_lib.AttributeContainerTestCase):
+class TaskTest(test_lib.AttributeContainerTestCase):
   """Tests for the task attributes container."""
 
   def testCopyToDict(self):
