@@ -47,6 +47,7 @@ PLASO_DEPENDENCIES="ipython
                     python-yaml
                     python-yara
                     python-zmq";
+
 # Additional dependencies for running Plaso tests, alphabetized,
 # one per line.
 TEST_DEPENDENCIES="python-coverage

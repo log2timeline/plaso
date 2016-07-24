@@ -75,6 +75,7 @@ class GIFTInstallScriptWriter(object):
        u'development.')]
 
   _FILE_FOOTER = [
+      u'',
       u'# Additional dependencies for running Plaso tests, alphabetized,',
       u'# one per line.',
       u'TEST_DEPENDENCIES="python-coverage',
