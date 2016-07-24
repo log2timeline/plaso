@@ -645,17 +645,16 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
       thread_name = u'{0:s}_zmq_responder'.format(self.name)
       self._zmq_thread = threading.Thread(
           target=self._ZeroMQResponder, args=(
-            self._queue, self._zmq_socket, self._terminate_event),
+            self._queue, self._terminate_event),
           name=thread_name)
       self._zmq_thread.start()
 
   @abc.abstractmethod
-  def _ZeroMQResponder(self, source_queue, socket, terminate_event):
+  def _ZeroMQResponder(self, source_queue, terminate_event):
     """Listens for requests and replies to clients.
 
     Args:
       source_queue (Queue.queue): queue to to pull items from.
-      socket (zmq.Socket): socket to listen on, and send responses to.
       terminate_event (Queue.Event): event that signals that the queue should
           terminate.
     """
@@ -720,12 +719,11 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
 
   _SOCKET_TYPE = zmq.REP
 
-  def _ZeroMQResponder(self, source_queue, socket, terminate_event):
+  def _ZeroMQResponder(self, source_queue, terminate_event):
     """Listens for requests and replies to clients.
 
     Args:
       source_queue (Queue.queue): queue to use to pull items from.
-      socket (zmq.Socket): socket to listen on, and send responses to.
       terminate_event (Queue.Event): event that signals that the queue should
           terminate.
 
@@ -737,7 +735,7 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
     while not terminate_event.isSet():
       try:
         # We need to receive a request before we send.
-        _ = socket.recv()
+        _ = self._zmq_socket.recv()
       except zmq.error.Again:
         logging.warn(
             u'{0:s} timeout waiting for a request.'.format(self.name))
@@ -777,7 +775,7 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
           break
         raise
     logging.info(u'Queue {0:s} responder exiting.'.format(self.name))
-    socket.close(self._linger_seconds)
+    self._zmq_socket.close(self._linger_seconds)
 
   def PopItem(self):
     """Pops an item of the queue.
@@ -842,12 +840,11 @@ class ZeroMQBufferedPushQueue(ZeroMQBufferedQueue):
 
   _SOCKET_TYPE = zmq.PUSH
 
-  def _ZeroMQResponder(self, source_queue, socket, terminate_event):
+  def _ZeroMQResponder(self, source_queue, terminate_event):
     """Listens for requests and replies to clients.
 
     Args:
       source_queue: The queue to uses to pull items from.
-      socket: The socket to listen to, and send responses to.
       terminate_event: The event that signals that the queue should terminate.
 
     Raises:
@@ -950,12 +947,11 @@ class ZeroMQBufferedPullQueue(ZeroMQBufferedQueue):
   _DOWNSTREAM_QUEUE_MAX_TRIES = 10
   _DOWNSTREAM_QUEUE_SLEEP_TIME = 0.2
 
-  def _ZeroMQResponder(self, source_queue, socket, terminate_event):
+  def _ZeroMQResponder(self, source_queue, terminate_event):
     """Listens for requests and replies to clients.
 
     Args:
       source_queue: The queue to uses to pull items from.
-      socket: The socket to listen to, and send responses to.
       terminate_event: The event that signals that the queue should terminate.
 
     Raises:
@@ -968,7 +964,7 @@ class ZeroMQBufferedPullQueue(ZeroMQBufferedQueue):
         with _ZeroMQTimeoutHandler(
             timeout_seconds=self.timeout_seconds,
             terminate_event=terminate_event):
-          item = socket.recv_pyobj()
+          item = self._zmq_socket.recv_pyobj()
       except zmq.error.Again:
         # No item received within timeout.
         logging.warn(u'{0:s} aborting, no item received in time.'.format(
