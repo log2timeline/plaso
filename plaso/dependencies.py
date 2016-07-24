@@ -234,7 +234,7 @@ def _CheckPythonModule(
   return True
 
 
-def _CheckPytsk(verbose_output=True):
+def _CheckPyTSK(verbose_output=True):
   """Checks the availability of pytsk.
 
   Args:
@@ -423,7 +423,7 @@ def CheckDependencies(latest_version_check=False, verbose_output=True):
   Returns:
     bool: True if the dependencies are available, False otherwise.
   """
-  print(u'Checking availability and versions of plaso dependencies.')
+  print(u'Checking availability and versions of dependencies.')
   check_result = True
 
   for values in PYTHON_DEPENDENCIES:
@@ -435,7 +435,7 @@ def CheckDependencies(latest_version_check=False, verbose_output=True):
   if not _CheckSqlite3(verbose_output=verbose_output):
     check_result = False
 
-  if not _CheckPytsk(verbose_output=verbose_output):
+  if not _CheckPyTSK(verbose_output=verbose_output):
     check_result = False
 
   libyal_check_result = _CheckLibyal(
@@ -495,7 +495,7 @@ def CheckTestDependencies(latest_version_check=False):
   if not CheckDependencies(latest_version_check=latest_version_check):
     return False
 
-  print(u'Checking availability and versions of plaso test dependencies.')
+  print(u'Checking availability and versions of test dependencies.')
   for values in PYTHON_TEST_DEPENDENCIES:
     if not _CheckPythonModule(
         values[0], values[1], values[2], maximum_version=values[3]):
