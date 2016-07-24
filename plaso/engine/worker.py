@@ -211,7 +211,7 @@ class EventExtractionWorker(object):
     allow directories to have data streams, e.g. NTFS.
 
     Args:
-      parser_mediator (ParserMediator): encapsulates interactions between
+      parser_mediator (ParserMediator): mediates interactions between
           parsers and other components, such as storage and abort signals.
       file_entry (dfvfs.FileEntry): file entry relating to the data being
           analyzed.

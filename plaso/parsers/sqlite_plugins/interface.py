@@ -50,28 +50,29 @@ class SQLitePlugin(plugins.BasePlugin):
   def GetEntries(
       self, parser_mediator, cache=None, database=None, database_wal=None,
       wal_file_entry=None, **unused_kwargs):
-    """Extracts event objects from a SQLite database.
+    """Extracts event from a SQLite database.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      cache: A SQLiteCache object.
-      database: A database object (instance of SQLiteDatabase).
-      database_wal: Optional database object with WAL file commited
-                    (instance of SQLiteDatabase).
-      wal_file_entry: Optional file entry for the database with committed WAL
-                      file (instance of dfvfs.FileEntry).
+      parser_mediator (ParserMediator): parser mediator.
+      cache (SQLiteCache): cache.
+      database (SQLiteDatabase): database.
+      database_wal (Optional[SQLiteDatabase]): database object with WAL file
+          commited.
+      wal_file_entry (Optional[dfvfs.FileEntry]): file entry for the database
+          with WAL file commited.
     """
     for query, callback_method in self.QUERIES:
       if parser_mediator.abort:
         break
-      try:
-        callback = getattr(self, callback_method, None)
-        if callback is None:
-          logging.warning(
-              u'[{0:s}] missing callback method: {1:s} for query: {2:s}'.format(
-                  self.NAME, callback_method, query))
-          continue
 
+      callback = getattr(self, callback_method, None)
+      if callback is None:
+        logging.warning(
+            u'[{0:s}] missing callback method: {1:s} for query: {2:s}'.format(
+                self.NAME, callback_method, query))
+        continue
+
+      try:
         sql_results = database.Query(query)
         if database_wal:
           wal_sql_results = database_wal.Query(query)

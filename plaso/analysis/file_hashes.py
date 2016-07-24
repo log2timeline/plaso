@@ -23,15 +23,15 @@ class FileHashesPlugin(interface.AnalysisPlugin):
     super(FileHashesPlugin, self).__init__(incoming_queue)
     self._paths_with_hashes = {}
 
-  def ExamineEvent(self, analysis_mediator, event_object, **kwargs):
-    """Analyzes an event_object and creates extracts hashes as required.
+  def ExamineEvent(self, mediator, event, **kwargs):
+    """Analyzes an event and creates extracts hashes as required.
 
     Args:
-      analysis_mediator: the analysis mediator object (instance of
-                         AnalysisMediator).
-      event_object: the event object (instance of EventObject) to examine.
+      mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
+      event: the event object (instance of EventObject) to examine.
     """
-    pathspec = getattr(event_object, u'pathspec', None)
+    pathspec = getattr(event, u'pathspec', None)
     if pathspec is None:
       return
     if self._paths_with_hashes.get(pathspec, None):
@@ -39,49 +39,49 @@ class FileHashesPlugin(interface.AnalysisPlugin):
       # hashes from it.
       return
     hash_attributes = {}
-    for attribute_name, attribute_value in event_object.GetAttributes():
+    for attribute_name, attribute_value in event.GetAttributes():
       if attribute_name.endswith(u'_hash'):
         hash_attributes[attribute_name] = attribute_value
     self._paths_with_hashes[pathspec] = hash_attributes
 
-  def _GeneratePathString(self, analysis_mediator, pathspec, hashes):
+  def _GeneratePathString(self, mediator, pathspec, hashes):
     """Generates a string containing a pathspec and its hashes.
 
     Args:
-      analysis_mediator: the analysis mediator object (instance of
-                         AnalysisMediator).
-      pathspec: the path specification (instance of dfVFS.PathSpec) to
-                generate a string for.
-      hashes: a dictionary mapping hash attribute names to the value of
-              that hash for the path specification being processed.
+      mediator (AnalysisMediator): mediates interactions between analysis
+          plugins and other components, such as storage and dfvfs.
+      pathspec (dfvfs.Pathspec): the path specification) to generate a string
+          for.
+      hashes (dict[str, str]): mapping of hash attribute names to the value of
+          that hash for the path specification being processed.
 
     Returns:
-      A string of the form "OS:/path/spec: test_hash=4".
+      str: string of the form "display_name: hash_type=hash_value". For example,
+          "OS:/path/spec: test_hash=4 other_hash=5".
     """
-    display_name = analysis_mediator.GetDisplayName(pathspec)
+    display_name = mediator.GetDisplayName(pathspec)
     path_string = u'{0:s}:'.format(display_name)
     for hash_name, hash_value in sorted(hashes.items()):
       path_string = u'{0:s} {1:s}={2:s}'.format(
           path_string, hash_name, hash_value)
     return path_string
 
-  def CompileReport(self, analysis_mediator):
+  def CompileReport(self, mediator):
     """Compiles an analysis report.
 
     Args:
-      analysis_mediator: the analysis mediator object (instance of
-                         AnalysisMediator).
+      mediator (AnalysisMediator): mediates interactions between analysis
+          plugins and other components, such as storage and dfvfs.
 
     Returns:
-      The analysis report (instance of AnalysisReport).
+      AnalysisReport: report.
     """
     lines_of_text = [u'Listing file paths and hashes']
     for pathspec, hashes in sorted(
         self._paths_with_hashes.items(),
         key=lambda tuple: tuple[0].comparable):
 
-      path_string = self._GeneratePathString(
-          analysis_mediator, pathspec, hashes)
+      path_string = self._GeneratePathString(mediator, pathspec, hashes)
       lines_of_text.append(path_string)
 
     lines_of_text.append(u'')

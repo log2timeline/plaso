@@ -47,7 +47,7 @@ class ViperAnalyzer(interface.HTTPHashAnalyzer):
       ValueError: If an invalid protocol is specified.
     """
     protocol = protocol.lower().strip()
-    if not protocol in self._SUPPORTED_PROTOCOLS:
+    if protocol not in self._SUPPORTED_PROTOCOLS:
       raise ValueError(u'Invalid protocol specified for Viper lookup')
     self._protocol = protocol
 
@@ -135,20 +135,19 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
       ValueError: If an invalid protocol is selected.
     """
     protocol = protocol.lower().strip()
-    if not protocol in [u'http', u'https']:
+    if protocol not in [u'http', u'https']:
       raise ValueError(u'Invalid protocol specified for Viper lookup')
     self._analyzer.SetProtocol(protocol)
 
-  def GenerateTagStrings(self, hash_information):
+  def GenerateLabels(self, hash_information):
     """Generates a list of strings that will be used in the event tag.
 
     Args:
-      hash_information: A dictionary containing the JSON decoded contents of the
-                        result of a Viper lookup, as produced by the
-                        ViperAnalyzer.
+      hash_information (dict[str, object]): JSON decoded contents of the result
+          of a Viper lookup, as produced by the ViperAnalyzer.
 
     Returns:
-      A list of strings describing the results from Viper.
+      list[str]: list of labels to apply to events.
     """
     if not hash_information:
       return u'File not present in Viper.'

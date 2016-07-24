@@ -60,6 +60,14 @@ plaso.analysis.mediator module
     :undoc-members:
     :show-inheritance:
 
+plaso.analysis.nsrlsvr module
+-----------------------------
+
+.. automodule:: plaso.analysis.nsrlsvr
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.analysis.tagging module
 -----------------------------
 

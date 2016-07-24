@@ -236,15 +236,16 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     if not url:
       return u''
 
-    # Strip addional key value pairs.
+    # Strip additional key value pairs.
     url, _, _ = url.partition(u'&')
     return url
 
-  def CompileReport(self, analysis_mediator):
+  def CompileReport(self, mediator):
     """Compiles an analysis report.
 
     Args:
-      analysis_mediator (AnalysisMediator): analysis mediator.
+      mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
 
     Returns:
       AnalysisReport: analysis report.
@@ -275,11 +276,12 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     analysis_report.report_dict = results
     return analysis_report
 
-  def ExamineEvent(self, unused_analysis_mediator, event, **kwargs):
+  def ExamineEvent(self, unused_mediator, event, **kwargs):
     """Analyzes an event.
 
     Args:
-      analysis_mediator (AnalysisMediator): analysis mediator.
+      mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
       event (EventObject): event.
     """
     # This event requires an URL attribute.
