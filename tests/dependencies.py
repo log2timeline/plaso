@@ -43,7 +43,7 @@ class DependenciesTest(unittest.TestCase):
   def testCheckPythonModule(self):
     """Tests the _CheckPythonModule function."""
     result = dependencies._CheckPythonModule(
-        u'dfvfs', u'__version__', u'20160510', verbose_output=False)
+        u'dfdatetime', u'__version__', u'20160319', verbose_output=False)
     self.assertTrue(result)
 
     result = dependencies._CheckPythonModule(
@@ -95,7 +95,7 @@ class DependenciesTest(unittest.TestCase):
 
   def testCheckModuleVersion(self):
     """Tests the CheckModuleVersion function."""
-    dependencies.CheckModuleVersion(u'dfwinreg')
+    dependencies.CheckModuleVersion(u'dfdatetime')
 
     with self.assertRaises(ImportError):
       dependencies.CheckModuleVersion(u'bogus')
