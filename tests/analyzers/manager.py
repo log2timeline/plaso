@@ -100,18 +100,6 @@ class AnalyzersManagerTest(test_lib.AnalyzerTestCase):
     for analyzer in analyzers:
       self.assertIsInstance(analyzer, interface.BaseAnalyzer)
 
-  def testAnalyzeFileObject(self):
-    """Tests processing a file object."""
-    manager.AnalyzersManager.RegisterAnalyzer(TestAnalyzer)
-    analyzer = manager.AnalyzersManager.GetAnalyzerInstance(u'testanalyze')
-    mediator = self._CreateMediator()
-    self.assertEqual(len(analyzer.GetResults()), 0)
-    file_entry = self._GetTestFileEntry([u'ímynd.dd'])
-    file_object = file_entry.GetFileObject()
-    results = manager.AnalyzersManager.AnalyzeFileObject(
-        mediator, file_object, [analyzer])
-    self.assertEqual(len(results), 1)
-
 
 if __name__ == '__main__':
   unittest.main()
