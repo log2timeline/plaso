@@ -484,6 +484,9 @@ class ZeroMQRequestQueue(ZeroMQQueue):
         # this queue, so we can consider it empty.
         logging.error(u'ZMQ syscall interrupted in {0:s}.'.format(self.name))
         return
+      if exception.errno == errno.EFSM:
+        # Socket is desyncronized, so we can't continue.
+        return
       else:
         raise
 
