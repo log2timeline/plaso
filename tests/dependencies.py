@@ -105,7 +105,7 @@ class DependenciesTest(unittest.TestCase):
   def testGetDPKGDepends(self):
     """Tests the GetDPKGDepends function."""
     install_requires = dependencies.GetDPKGDepends()
-    self.assertIn(u'libbde-python >= 20140531', install_requires)
+    self.assertIn(u'libbde-python (>= 20140531)', install_requires)
 
     install_requires = dependencies.GetDPKGDepends(exclude_version=True)
     self.assertIn(u'libbde-python', install_requires)
