@@ -139,6 +139,7 @@ class ZeroMQQueue(plaso_queue.Queue):
         address = u'{0:s}:{1:d}'.format(self._SOCKET_ADDRESS, self.port)
         self._zmq_socket.unbind(address)
       self._zmq_socket.close()
+      self._zmq_socket = None
     self._zmq_socket = self._zmq_context.socket(self._SOCKET_TYPE)
     self._SetSocketTimeouts()
     self._SetSocketHighWaterMark()
@@ -149,7 +150,23 @@ class ZeroMQQueue(plaso_queue.Queue):
         self._zmq_socket.connect(address)
         logging.debug(u'{0:s} connected to {1:s}'.format(self.name, address))
       else:
-        self._zmq_socket.bind(address)
+        while True:
+          try:
+            self._zmq_socket.bind(address)
+            break
+          except zmq.error.ZMQBindError:
+            time.sleep(1)
+            logging.warning(
+                u'{0:s} unable  to bind to specified port. Retrying'.format(
+                    self.name))
+            continue
+          except zmq.error.ZMQError:
+            time.sleep(1)
+            logging.warning(
+                u'{0:s} unable  to bind specified port (1). Retrying'.format(
+                    self.name))
+            continue
+
         logging.debug(u'{0:s} bound to specified port {1:s}'.format(
             self.name, address))
     else:
