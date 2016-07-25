@@ -2,11 +2,13 @@
 # -*- coding: utf-8 -*-
 """Tests the multi-processing queue."""
 
+import abc
 import logging
 import unittest
 
-from plaso.multi_processing import multi_process_queue
+from plaso.engine import plaso_queue
 from plaso.lib import errors
+from plaso.multi_processing import multi_process_queue
 
 from tests import test_lib as shared_test_lib
 
@@ -75,7 +77,7 @@ class ItemQueueConsumer(QueueConsumer):
             type(exception)))
         break
 
-      if isinstance(item, QueueAbort):
+      if isinstance(item, plaso_queue.QueueAbort):
         logging.debug(u'ConsumeItems exiting, dequeued QueueAbort object.')
         break
 

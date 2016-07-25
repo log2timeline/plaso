@@ -8,7 +8,6 @@ from plaso.containers import tasks
 from plaso.engine import plaso_queue
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.lib import timelib
 from plaso.multi_processing import base_process
 from plaso.multi_processing import multi_process_queue
 

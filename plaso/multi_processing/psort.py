@@ -7,6 +7,7 @@ import logging
 import os
 import time
 
+from plaso.engine import plaso_queue
 from plaso.engine import zeromq_queue
 from plaso.lib import bufferlib
 from plaso.lib import definitions
