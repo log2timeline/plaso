@@ -169,7 +169,7 @@ class ExtractionFrontend(frontend.Frontend):
     """Preprocesses the sources.
 
     Args:
-      engine (BaseEngine): engine to preproces the sources.
+      engine (BaseEngine): engine to preprocess the sources.
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
     """
