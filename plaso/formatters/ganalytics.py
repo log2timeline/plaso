@@ -37,6 +37,16 @@ class AnalyticsUtmbCookieFormatter(AnalyticsUtmaCookieFormatter):
       u'Domain Hash: {domain_hash}']
 
 
+class AnalyticsUtmtCookieFormatter(AnalyticsUtmaCookieFormatter):
+  """The UTMT Google Analytics cookie event formatter."""
+
+  DATA_TYPE = u'cookie:google:analytics:utmt'
+
+  FORMAT_STRING_PIECES = [
+      u'{url}',
+      u'({cookie_name})']
+
+
 class AnalyticsUtmzCookieFormatter(AnalyticsUtmaCookieFormatter):
   """The UTMZ Google Analytics cookie event formatter."""
 
@@ -57,4 +67,4 @@ class AnalyticsUtmzCookieFormatter(AnalyticsUtmaCookieFormatter):
 
 manager.FormattersManager.RegisterFormatters([
     AnalyticsUtmaCookieFormatter, AnalyticsUtmbCookieFormatter,
-    AnalyticsUtmzCookieFormatter])
+    AnalyticsUtmtCookieFormatter, AnalyticsUtmzCookieFormatter])
