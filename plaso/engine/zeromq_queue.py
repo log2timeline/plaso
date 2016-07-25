@@ -552,8 +552,12 @@ class ZeroMQRequestQueue(ZeroMQQueue):
         raise
 
       try:
-        received_object = self._zmq_socket.recv_pyobj()
-        return received_object
+        while not self._terminate_event.isSet():
+          if self._zmq_socket.poll(1000):
+            received_object = self._zmq_socket.recv_pyobj()
+            return received_object
+          else:
+            continue
 
       except zmq.error.Again:
         if time.time() > last_retry_time:
