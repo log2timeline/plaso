@@ -475,8 +475,8 @@ class ZeroMQRequestQueue(ZeroMQQueue):
 
   _SOCKET_TYPE = zmq.REQ
 
-  _ZMQ_SOCKET_SEND_TIMEOUT_MILLISECONDS = 2000
-  _ZMQ_SOCKET_RECEIVE_TIMEOUT_MILLISECONDS = 2000
+  _ZMQ_SOCKET_SEND_TIMEOUT_MILLISECONDS = 3000
+  _ZMQ_SOCKET_RECEIVE_TIMEOUT_MILLISECONDS = 3000
 
 
   def Empty(self):
@@ -553,7 +553,9 @@ class ZeroMQRequestQueue(ZeroMQQueue):
 
       try:
         while not self._terminate_event.isSet():
-          if self._zmq_socket.poll(1000):
+          events = self._zmq_socket.poll(1000)
+          if events:
+            logging.debug(u'Events: {0!s}'.format(events))
             received_object = self._zmq_socket.recv_pyobj()
             return received_object
           else:
