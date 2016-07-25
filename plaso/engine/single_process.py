@@ -83,11 +83,6 @@ class SingleProcessEngine(engine.BaseEngine):
       if self._status_update_callback:
         self._status_update_callback(self._processing_status)
 
-    except IOError as exception:
-      parser_mediator.ProduceExtractionError((
-          u'unable to process path specification with error: '
-          u'{0:s}').format(exception), path_spec=path_spec)
-
     # We cannot recover from a CacheFullError and abort processing when
     # it is raised.
     except dfvfs_errors.CacheFullError:

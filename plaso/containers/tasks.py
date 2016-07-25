@@ -94,7 +94,7 @@ class TaskCompletion(interface.AttributeContainer):
           is part of.
     """
     super(TaskCompletion, self).__init__()
-    self.aborted = None
+    self.aborted = False
     self.identifier = identifier
     self.session_identifier = session_identifier
     self.timestamp = None

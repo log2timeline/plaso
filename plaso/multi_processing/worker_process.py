@@ -244,11 +244,6 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     try:
       extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
 
-    except IOError as exception:
-      parser_mediator.ProduceExtractionError((
-          u'unable to process path specification with error: '
-          u'{0:s}').format(exception), path_spec=path_spec)
-
     except dfvfs_errors.CacheFullError:
       # TODO: signal engine of failure.
       self._abort = True
