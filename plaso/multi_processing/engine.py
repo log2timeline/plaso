@@ -25,8 +25,7 @@ class MultiProcessEngine(engine.BaseEngine):
   * manage the status update thread.
   """
 
-  # Note that on average Windows seems to require a bit longer wait
-  # than 5 seconds.
+  # Note that on average Windows seems to require a longer wait.
   _RPC_SERVER_TIMEOUT = 8.0
   _MAXIMUM_RPC_ERRORS = 10
 
