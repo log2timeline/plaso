@@ -42,7 +42,7 @@ class TestQueueConsumer(object):
       try:
         item = self._queue.PopItem()
 
-      except (errors.QueueClose, errors.QueueEmpty) as exception:
+      except (errors.QueueClose, errors.QueueEmpty):
         break
 
       if isinstance(item, plaso_queue.QueueAbort):
