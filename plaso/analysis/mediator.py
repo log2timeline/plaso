@@ -108,13 +108,3 @@ class AnalysisMediator(object):
 
     self._analysis_report_queue_producer.ProduceItem(analysis_report)
     self.number_of_produced_analysis_reports += 1
-
-  def ReportingComplete(self):
-    """Called by an analysis plugin to signal that it has generated its report.
-
-    This method signals to report consumers that no further reports will be
-    produced by the analysis plugin.
-    """
-    if self._completion_event:
-      self._completion_event.set()
-    self._analysis_report_queue_producer.Close()

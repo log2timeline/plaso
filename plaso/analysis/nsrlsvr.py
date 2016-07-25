@@ -115,13 +115,9 @@ class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
 
   NAME = u'nsrlsvr'
 
-  def __init__(self, event_queue):
-    """Initializes an nsrlsvr analysis plugin.
-
-    Args:
-      event_queue (Queue.queue): queue of events to analyze.
-    """
-    super(NsrlsvrAnalysisPlugin, self).__init__(event_queue, NsrlsvrAnalyzer)
+  def __init__(self):
+    """Initializes an nsrlsvr analysis plugin."""
+    super(NsrlsvrAnalysisPlugin, self).__init__(NsrlsvrAnalyzer)
 
   def GenerateLabels(self, hash_information):
     """Generates a list of strings that will be used in the event tag.
