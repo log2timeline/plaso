@@ -198,8 +198,6 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
         self._ProcessTask(task)
 
-
-      self._task_queue.Close(self._abort)
       logging.debug(
           u'{0!s} (PID: {1:d}) stopped monitoring task queue.'.format(
               self._name, self._pid))
@@ -227,11 +225,10 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     if isinstance(self._task_queue, multi_process_queue.MultiProcessingQueue):
       self._task_queue.Close(abort=True)
     else:
-      logging.debug(u'closing queue')
       try:
         self._task_queue.Close()
       except errors.QueueAlreadyClosed:
-        pass
+        logging.error(u'Queue for {0:s} was already closed.'.format(self.name))
 
   def _ProcessPathSpec(self, extraction_worker, parser_mediator, path_spec):
     """Processes a path specification.

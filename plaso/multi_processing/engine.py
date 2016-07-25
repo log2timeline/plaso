@@ -50,7 +50,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
   # Note that on average Windows seems to require a bit longer wait
   # than 5 seconds.
-  _RPC_SERVER_TIMEOUT = 30.0
+  _RPC_SERVER_TIMEOUT = 8.0
   _MAXIMUM_RPC_ERRORS = 10
 
   _WORKER_PROCESSES_MINIMUM = 2
@@ -570,7 +570,7 @@ class MultiProcessEngine(engine.BaseEngine):
       MultiProcessWorkerProcess: extraction worker process.
     """
     process_name = u'Worker_{0:02d}'.format(self._last_worker_number)
-    logging.debug(u'Starting worker {0:s}'.format(process_name))
+    logging.debug(u'Starting worker process {0:s}'.format(process_name))
 
     if self._use_zeromq:
       task_queue = zeromq_queue.ZeroMQRequestConnectQueue(
@@ -737,11 +737,15 @@ class MultiProcessEngine(engine.BaseEngine):
       self._AbortTerminate()
       self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
 
-    # Set abort to True to stop queue.join_thread() from blocking.
-    try:
+    # For Multiprocessing queues, set abort to True to stop queue.join_thread()
+    # from blocking.
+    if isinstance(self._task_queue, multi_process_queue.MultiProcessingQueue):
       self._task_queue.Close(abort=True)
-    except errors.QueueAlreadyClosed:
-      pass
+    else:
+      try:
+        self._task_queue.Close()
+      except errors.QueueAlreadyClosed:
+        pass
 
     if abort:
       # Kill any remaining processes.

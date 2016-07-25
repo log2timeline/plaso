@@ -31,8 +31,9 @@ class ZeroMQQueue(plaso_queue.Queue):
   _ZMQ_SOCKET_SEND_TIMEOUT_MILLISECONDS = 1500
   _ZMQ_SOCKET_RECEIVE_TIMEOUT_MILLISECONDS = 1500
 
-  def __init__(self, delay_open=True, linger_seconds=10, port=None,
-               timeout_seconds=5, name=u'Unnamed', maximum_items=1000):
+  def __init__(
+      self, delay_open=True, linger_seconds=10, port=None, timeout_seconds=5,
+      name=u'Unnamed', maximum_items=1000):
     """Initializes a ZeroMQ backed queue.
 
     Args:
@@ -807,7 +808,7 @@ class ZeroMQBufferedPushQueue(ZeroMQBufferedQueue):
     """Listens for requests and replies to clients.
 
     Args:
-      source_queue: The queue to use to pull items from.
+      source_queue (Queue.queue):  queue to use to pull items from.
 
     Raises:
       QueueEmpty: If the queue encountered a timeout trying to push an item.
@@ -870,7 +871,7 @@ class ZeroMQBufferedPushQueue(ZeroMQBufferedQueue):
     Raises:
       WrongQueueType: As Pop is not supported by this queue.
     """
-    raise errors.WrongQueueType
+    raise errors.WrongQueueType()
 
 
 class ZeroMQBufferedPushBindQueue(ZeroMQBufferedPushQueue):
@@ -886,8 +887,6 @@ class ZeroMQBufferedPushConnectQueue(ZeroMQBufferedPushQueue):
 
   This queue may only be used to push items, not to pop.
   """
-
-  _ZMQ_SOCKET_SEND_TIMEOUT_MILLISECONDS = 5000
 
   SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_CONNECT
 
@@ -957,8 +956,7 @@ class ZeroMQBufferedPullQueue(ZeroMQBufferedQueue):
     time this method is called.
 
     Returns:
-      object: item from the queue, or QueueAbort if no item could be retrieved
-          within the timeout.
+      object: item from the queue.
 
     Raises:
       QueueEmpty: If the queue is empty, and no item could be popped within the
@@ -987,7 +985,7 @@ class ZeroMQBufferedPullQueue(ZeroMQBufferedQueue):
     Args:
       item (object): item to push on the queue.
       block (Optional[bool]): whether the push should be performed in blocking
-          or non-block mode.
+          or non-blockingd mode.
 
     Raises:
       WrongQueueType: As Push is not supported this queue.
