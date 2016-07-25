@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """The hasher interface."""
+
 import abc
 
 

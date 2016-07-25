@@ -26,9 +26,10 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     """Initializes a process object.
 
     Args:
-      enable_sigsegv_handler (bool): True if the SIGSEGV handler should
-          be enabled.
-      kwargs: keyword arguments to pass to multiprocessing.Process.
+      enable_sigsegv_handler (Optional[bool]): True if the SIGSEGV handler
+          should be enabled.
+      kwargs (dict[str,object]): keyword arguments to pass to
+          multiprocessing.Process.
     """
     super(MultiProcessBaseProcess, self).__init__(**kwargs)
     self._enable_sigsegv_handler = enable_sigsegv_handler
@@ -44,12 +45,16 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
   @property
   def name(self):
-    """The process name."""
+    """str: process name."""
     return self._name
 
   @abc.abstractmethod
   def _GetStatus(self):
-    """Returns a status dictionary."""
+    """Returns status information.
+
+    Returns:
+      dict [str, object]: status attributes, indexed by name.
+    """
 
   @abc.abstractmethod
   def _Main(self):
@@ -77,8 +82,8 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     """Signal handler for the SIGSEGV signal.
 
     Args:
-      signal_number: Numeric representation of the signal.
-      stack_frame: The current stack frame (instance of frame object) or None.
+      signal_number (int): numeric representation of the signal.
+      stack_frame (frame): current stack frame or None.
     """
     self._OnCriticalError()
 
@@ -90,9 +95,10 @@ class MultiProcessBaseProcess(multiprocessing.Process):
 
   def _SigTermHandler(self, unused_signal_number, unused_stack_frame):
     """Signal handler for the SIGTERM signal.
+
     Args:
-      signal_number: Numeric representation of the signal.
-      stack_frame: The current stack frame (instance of frame object) or None.
+      signal_number (int): numeric representation of the signal.
+      stack_frame (frame): current stack frame or None.
     """
     self.SignalAbort()
 

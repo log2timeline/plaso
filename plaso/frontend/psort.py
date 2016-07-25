@@ -3,14 +3,12 @@
 
 from __future__ import print_function
 import collections
-import multiprocessing
 import logging
 
 from plaso import formatters   # pylint: disable=unused-import
 from plaso import output   # pylint: disable=unused-import
 
 from plaso.analysis import manager as analysis_manager
-from plaso.analysis import mediator as analysis_mediator
 from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.engine import plaso_queue
@@ -20,6 +18,7 @@ from plaso.frontend import analysis_frontend
 from plaso.lib import bufferlib
 from plaso.lib import errors
 from plaso.lib import py2to3
+from plaso.multi_processing import analysis_process
 from plaso.multi_processing import multi_process_queue
 from plaso.output import event_buffer as output_event_buffer
 from plaso.output import manager as output_manager
@@ -39,7 +38,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
   def __init__(self):
     """Initializes the front-end object."""
     super(PsortFrontend, self).__init__()
-    self._analysis_process_info = []
     self._data_location = None
     self._filter_buffer = None
     self._filter_expression = None
@@ -48,6 +46,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     self._knowledge_base = knowledge_base.KnowledgeBase()
     self._output_format = None
     self._preferred_language = u'en-US'
+    self._processes_per_pid = {}
     self._quiet_mode = False
     self._storage_file_path = None
     self._use_zeromq = True
@@ -120,12 +119,12 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     logging.info(u'Processing data from analysis plugins.')
 
     # Wait for all analysis plugins to complete.
-    for analysis_process_info in self._analysis_process_info:
-      name = analysis_process_info.plugin.NAME
-      if analysis_process_info.plugin.LONG_RUNNING_PLUGIN:
-        logging.warning(
-            u'{0:s} may take a long time to run. It will not be automatically '
-            u'terminated.'.format(name))
+    for pid, process in iter(self._processes_per_pid.items()):
+      name = process.plugin.NAME
+      if process.plugin.LONG_RUNNING_PLUGIN:
+        logging.warning((
+            u'{0:s} PID: {1:d} may take a long time to run. It will not '
+            u'be automatically terminated.').format(name, pid))
         report_wait = None
       else:
         report_wait = self.MAX_ANALYSIS_PLUGIN_REPORT_WAIT
@@ -133,7 +132,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       logging.info(
           u'Waiting for analysis plugin: {0:s} to complete.'.format(name))
 
-      completion_event = analysis_process_info.completion_event
+      completion_event = process.completion_event
       if completion_event.wait(report_wait):
         logging.info(u'Plugin {0:s} has completed.'.format(name))
       else:
@@ -153,14 +152,14 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       counter[item] = value
 
   def _ProcessEventsFromStorage(
-      self, storage_reader, output_buffer, analysis_queues=None,
+      self, storage_reader, output_buffer, event_queues=None,
       filter_buffer=None, my_filter=None, time_slice=None):
     """Reads event objects from the storage to process and filter them.
 
     Args:
       storage_reader (StorageReader): storage reader.
       output_buffer (EventBuffer): output event buffer.
-      analysis_queues (Optional[list[Queue]]): analysis queues.
+      event_queues (Optional[list[Queue]]): event queues.
       filter_buffer (Optional[CircularBuffer]): filter buffer used to store
           previously discarded events to store time slice history.
       my_filter (Optional[FilterObject]): event filter.
@@ -174,14 +173,14 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     counter = collections.Counter()
     my_limit = getattr(my_filter, u'limit', 0)
     forward_entries = 0
-    if not analysis_queues:
-      analysis_queues = []
+    if not event_queues:
+      event_queues = []
 
     for event in storage_reader.GetEvents(time_range=time_slice):
       # TODO: clean up this function.
       if not my_filter:
         counter[u'Events Included'] += 1
-        self._AppendEvent(event, output_buffer, analysis_queues)
+        self._AppendEvent(event, output_buffer, event_queues)
       else:
         if my_filter.Match(event):
           counter[u'Events Included'] += 1
@@ -193,15 +192,15 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
               counter[u'Events Added From Slice'] += 1
               counter[u'Events Included'] += 1
               counter[u'Events Filtered Out'] -= 1
-              self._AppendEvent(event_in_buffer, output_buffer, analysis_queues)
-          self._AppendEvent(event, output_buffer, analysis_queues)
+              self._AppendEvent(event_in_buffer, output_buffer, event_queues)
+          self._AppendEvent(event, output_buffer, event_queues)
           if my_limit:
             if counter[u'Events Included'] == my_limit:
               break
         else:
           if filter_buffer and forward_entries:
             if forward_entries <= filter_buffer.size:
-              self._AppendEvent(event, output_buffer, analysis_queues)
+              self._AppendEvent(event, output_buffer, event_queues)
               forward_entries += 1
               counter[u'Events Added From Slice'] += 1
               counter[u'Events Included'] += 1
@@ -215,8 +214,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
           else:
             counter[u'Events Filtered Out'] += 1
 
-    for analysis_queue in analysis_queues:
-      analysis_queue.Close()
+    for event_queue in event_queues:
+      event_queue.Close()
 
     if output_buffer.duplicate_counter:
       counter[u'Duplicate Removals'] = output_buffer.duplicate_counter
@@ -282,9 +281,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     if not analysis_plugins:
       event_queue_producers = []
     else:
-      self._StartAnalysisPlugins(
-          analysis_plugins, analysis_queue_port=analysis_queue_port,
-          analysis_report_incoming_queue=analysis_report_incoming_queue)
+      self._StartAnalysisProcesses(
+          analysis_plugins, analysis_queue_port, analysis_report_incoming_queue)
 
       # TODO: refactor to use storage writer.
       session_start = session.CreateSessionStart()
@@ -297,7 +295,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     with output_buffer:
       storage_reader = reader.StorageObjectReader(storage_file)
       counter = self._ProcessEventsFromStorage(
-          storage_reader, output_buffer, analysis_queues=event_queue_producers,
+          storage_reader, output_buffer, event_queues=event_queue_producers,
           filter_buffer=self._filter_buffer, my_filter=self._filter_object,
           time_slice=time_slice)
 
@@ -312,18 +310,37 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     return counter
 
-  def _StartAnalysisPlugins(
-      self, analysis_plugins, analysis_queue_port=None,
-      analysis_report_incoming_queue=None):
-    """Start all the analysis plugin.
+  def _RegisterProcess(self, process):
+    """Registers a process with the front-end.
+
+    Args:
+      process (MultiProcessBaseProcess): process.
+
+    Raises:
+      KeyError: if the process is already registered with the front-end.
+      ValueError: if the process object is missing.
+    """
+    if process is None:
+      raise ValueError(u'Missing process object.')
+
+    if process.pid in self._processes_per_pid:
+      raise KeyError(
+          u'Already managing process: {0!s} (PID: {1:d})'.format(
+              process.name, process.pid))
+
+    self._processes_per_pid[process.pid] = process
+
+  def _StartAnalysisProcesses(
+      self, analysis_plugins, analysis_queue_port,
+      analysis_report_incoming_queue):
+    """Starts the analysis processes.
 
     Args:
       analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
           be run.
-      analysis_queue_port (Optional[int]): TCP port of the ZeroMQ analysis
-          report queues.
-      analysis_report_incoming_queue (Optional[Queue]):
-          queue that reports should to pushed to, when ZeroMQ is not in use.
+      analysis_queue_port (int): TCP port of the ZeroMQ analysis report queues.
+      analysis_report_incoming_queue (multiprocessing.Queue): queue where
+          reports should be pushed to, when ZeroMQ is not used.
     """
     logging.info(u'Starting analysis plugins.')
 
@@ -334,26 +351,18 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       else:
         analysis_plugin_output_queue = analysis_report_incoming_queue
 
-      analysis_report_queue_producer = plaso_queue.ItemQueueProducer(
-          analysis_plugin_output_queue)
+      process_name = u'Analysis {0:s}'.format(analysis_plugin.plugin_name)
+      process = analysis_process.AnalysisProcess(
+          analysis_plugin_output_queue, self._knowledge_base,
+          analysis_plugin, data_location=self._data_location,
+          name=process_name)
 
-      completion_event = multiprocessing.Event()
-      analysis_mediator_object = analysis_mediator.AnalysisMediator(
-          analysis_report_queue_producer, self._knowledge_base,
-          data_location=self._data_location,
-          completion_event=completion_event)
-      analysis_process = multiprocessing.Process(
-          name=u'Analysis {0:s}'.format(analysis_plugin.plugin_name),
-          target=analysis_plugin.RunPlugin,
-          args=(analysis_mediator_object,))
+      self._RegisterProcess(process)
 
-      process_info = PsortAnalysisProcess(
-          completion_event, analysis_plugin, analysis_process)
-      self._analysis_process_info.append(process_info)
+      process.start()
 
-      analysis_process.start()
-      logging.info(
-          u'Plugin: [{0:s}] started.'.format(analysis_plugin.plugin_name))
+      logging.info(u'Plugin: [{0:s}] started.'.format(
+          analysis_plugin.plugin_name))
 
     logging.info(u'Analysis plugins running')
 
@@ -671,30 +680,3 @@ class PsortAnalysisReportQueueConsumer(plaso_queue.ItemQueueConsumer):
           u'The report is stored inside the storage file and can be '
           u'viewed using pinfo [if unable to view please submit a '
           u'bug report https://github.com/log2timeline/plaso/issues')
-
-
-# TODO: move to multi_processing and make this a process that can be monitored.
-class PsortAnalysisProcess(object):
-  """A class to contain information about a running analysis process.
-
-  Attributes:
-    completion_event (Optional[Multiprocessing.Event]): set when the
-        analysis plugin is complete.
-    plugin (AnalysisPlugin): analysis plugin run by the process.
-    process (Multiprocessing.Process): process that will run the analysis.
-  """
-
-  def __init__(self, completion_event, plugin, process):
-    """Initializes an analysis process.
-
-    Args:
-      completion_event (Optional[Multiprocessing.Event]): set when the
-          analysis plugin is complete.
-      plugin: the plugin running in the process (instance of AnalysisProcess).
-      process: the process (instance of Multiprocessing.Process) that
-               encapsulates the analysis process.
-    """
-    super(PsortAnalysisProcess, self).__init__()
-    self.completion_event = completion_event
-    self.plugin = plugin
-    self.process = process

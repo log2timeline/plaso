@@ -3,12 +3,17 @@
 
 import abc
 
+from plaso.lib import definitions
+
 
 class BaseAnalyzer(object):
   """Class that provides the interface for whole-file analysis."""
 
   NAME = u'base_analyzer'
   DESCRIPTION = u''
+
+  # Processing status hint used by the worker.
+  PROCESSING_STATUS_HINT = definitions.PROCESSING_STATUS_ANALYZING
 
   INCREMENTAL_ANALYZER = False
   SIZE_LIMIT = 32 * 1024 * 1024
