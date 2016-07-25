@@ -136,8 +136,8 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  def testProcessEventsFromStorage(self):
-    """Tests the _ProcessEventsFromStorage function."""
+  def testInternalExportEvents(self):
+    """Tests the _ExportEvents function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
     output_writer = cli_test_lib.TestOutputWriter()
 
@@ -176,7 +176,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
       event_buffer = TestEventBuffer(output_module, check_dedups=False)
 
-      test_engine._ProcessEventsFromStorage(storage_reader, event_buffer)
+      test_engine._ExportEvents(storage_reader, event_buffer)
 
     event_buffer.Flush()
 
@@ -196,8 +196,8 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
         b'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
         b'version,filename,inode,notes,format,extra'))
 
-  def testExportEventsWithOutputModule(self):
-    """Tests the ExportEventsWithOutputModule function."""
+  def testExportEvents(self):
+    """Tests the ExportEvents function."""
     storage_file_path = self._GetTestFilePath([u'psort_test.json.plaso'])
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
@@ -215,7 +215,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     storage_reader = storage_zip_file.ZIPStorageFileReader(storage_file_path)
 
     test_engine = psort.PsortMultiProcessEngine()
-    counter = test_engine.ExportEventsWithOutputModule(
+    counter = test_engine.ExportEvents(
         knowledge_base_object, storage_reader, output_module)
 
     # TODO: refactor preprocessing object.
