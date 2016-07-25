@@ -182,6 +182,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       else:
         filter_match = None
 
+      # pylint: disable=singleton-comparison
       if filter_match == False:
         if not time_slice_buffer:
           number_of_filtered_events += 1
@@ -202,6 +203,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           forward_entries = 0
 
       else:
+        # pylint: disable=singleton-comparison
         if filter_match == True and time_slice_buffer:
           # Empty the time slice buffer.
           for event_in_buffer in time_slice_buffer.Flush():
@@ -215,6 +217,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         self._ExportEvent(event, output_buffer)
         self._number_of_consumed_events += 1
 
+        # pylint: disable=singleton-comparison
         if (filter_match == True and filter_limit and
             filter_limit == self._number_of_consumed_events):
           break
@@ -308,6 +311,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       else:
         filter_match = None
 
+      # pylint: disable=singleton-comparison
       if filter_match == False:
         number_of_filtered_events += 1
         continue

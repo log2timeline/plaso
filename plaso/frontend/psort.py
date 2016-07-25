@@ -262,12 +262,10 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         use_time_slicer=use_time_slicer)
 
   def ProcessStorage(
-      self, session, storage_writer, analysis_plugins,
-      status_update_callback=None, time_slice=None):
+      self, storage_writer, analysis_plugins, status_update_callback=None):
     """Processes a plaso storage file.
 
     Args:
-      session (Session): session the storage changes are part of.
       storage_writer (StorageWriter): storage writer.
       analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
           be run.

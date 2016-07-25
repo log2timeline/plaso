@@ -690,9 +690,9 @@ class PsortTool(analysis_tool.AnalysisTool):
             u'is no longer supported.').format(self._output_format))
 
       if self._output_filename and os.path.exists(self._output_filename):
-        logging.warning(
-            u'Output file already exists: {0:s} and will be overwritten.'.format(
-                self._output_filename))
+        logging.warning((
+            u'Output file already exists: {0:s} and will be '
+            u'overwritten.').format(self._output_filename))
 
       output_file_object = open(self._output_filename, u'wb')
       output_writer = cli_tools.FileObjectOutputWriter(output_file_object)
@@ -748,7 +748,7 @@ class PsortTool(analysis_tool.AnalysisTool):
       # TODO: handle errors.BadConfigOption
 
       self._front_end.ProcessStorage(
-          session, storage_writer, analysis_plugins,
+          storage_writer, analysis_plugins,
           status_update_callback=status_update_callback)
 
     counter = collections.Counter()
