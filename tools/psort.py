@@ -738,11 +738,11 @@ class PsortTool(analysis_tool.AnalysisTool):
     else:
       status_update_callback = None
 
-    if analysis_plugins:
-      session = self._front_end.CreateSession(
-          command_line_arguments=self._command_line_arguments,
-          preferred_encoding=self.preferred_encoding)
+    session = self._front_end.CreateSession(
+        command_line_arguments=self._command_line_arguments,
+        preferred_encoding=self.preferred_encoding)
 
+    if analysis_plugins:
       storage_writer = self._front_end.CreateStorageWriter(
           session, self._storage_file_path)
       # TODO: handle errors.BadConfigOption
