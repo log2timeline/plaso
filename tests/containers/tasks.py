@@ -51,6 +51,7 @@ class TaskCompletionTest(test_lib.AttributeContainerTestCase):
     self.assertEquals(task_completion.identifier, task_identifier)
 
     expected_dict = {
+        u'aborted': False,
         u'identifier': task_completion.identifier,
         u'session_identifier': task_completion.session_identifier,
         u'timestamp': timestamp}
