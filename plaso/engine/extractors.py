@@ -471,7 +471,7 @@ class PathSpecExtractor(object):
           yield path_spec
 
       except (
-          dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
+          IOError, dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
           dfvfs_errors.PathSpecError) as exception:
         logging.warning(u'{0:s}'.format(exception))
 
