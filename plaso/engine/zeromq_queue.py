@@ -154,16 +154,10 @@ class ZeroMQQueue(plaso_queue.Queue):
           try:
             self._zmq_socket.bind(address)
             break
-          except zmq.error.ZMQBindError:
-            time.sleep(1)
-            logging.warning(
-                u'{0:s} unable  to bind to specified port. Retrying'.format(
-                    self.name))
-            continue
           except zmq.error.ZMQError:
             time.sleep(1)
             logging.warning(
-                u'{0:s} unable  to bind specified port (1). Retrying'.format(
+                u'{0:s} unable to bind specified port (1). Retrying'.format(
                     self.name))
             continue
 
@@ -754,8 +748,11 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
     logging.debug(u'{0:s} responder thread started'.format(self.name))
     while not terminate_event.isSet():
       try:
-        # We need to receive a request before we send.
-        _ = self._zmq_socket.recv()
+        if self._zmq_socket.poll(1000):
+          # We need to receive a request before we send.
+          _ = self._zmq_socket.recv()
+        else:
+          continue
       except zmq.error.Again:
         logging.warn(
             u'{0:s} timeout waiting for a request.'.format(self.name))
