@@ -15,7 +15,7 @@ from plaso.engine import utils as engine_utils
 from plaso.frontend import frontend
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.multi_processing import engine as multi_process_engine
+from plaso.multi_processing import task_engine as multi_process_engine
 from plaso.parsers import manager as parsers_manager
 from plaso.parsers import presets as parsers_presets
 from plaso.storage import zip_file as storage_zip_file
@@ -94,7 +94,7 @@ class ExtractionFrontend(frontend.Frontend):
           profiling_sample_rate=self._profiling_sample_rate,
           profiling_type=self._profiling_type)
     else:
-      engine = multi_process_engine.TaskBasedMultiProcessEngine(
+      engine = multi_process_engine.TaskMultiProcessEngine(
           debug_output=self._debug_mode,
           enable_profiling=self._enable_profiling,
           profiling_directory=self._profiling_directory,

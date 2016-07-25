@@ -8,17 +8,17 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.containers import sessions
-from plaso.multi_processing import engine
+from plaso.multi_processing import task_engine
 from plaso.storage import zip_file as storage_zip_file
 from tests import test_lib as shared_test_lib
 
 
-class TaskBasedMultiProcessEngineTest(shared_test_lib.BaseTestCase):
-  """Tests for the task-based multi-process engine."""
+class TaskMultiProcessEngineTest(shared_test_lib.BaseTestCase):
+  """Tests for the task multi-process engine."""
 
   def testProcessSources(self):
     """Tests the PreprocessSources and ProcessSources function."""
-    test_engine = engine.TaskBasedMultiProcessEngine(
+    test_engine = task_engine.TaskMultiProcessEngine(
         maximum_number_of_tasks=100)
 
     source_path = os.path.join(self._TEST_DATA_PATH, u'ímynd.dd')

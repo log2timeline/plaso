@@ -2,14 +2,8 @@
 # -*- coding: utf-8 -*-
 """Tests the multi-process processing engine."""
 
-import os
 import unittest
-from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.path import factory as path_spec_factory
 
-from plaso.containers import sessions
-from plaso.multi_processing import engine
-from plaso.storage import zip_file as storage_zip_file
 from tests import test_lib as shared_test_lib
 
 
