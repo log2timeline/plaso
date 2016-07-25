@@ -21,6 +21,10 @@ class ProcessStatus(object):
         the process.
     number_of_consumed_events_delta (int): number of events consumed by
         the process since the last status update.
+    number_of_consumed_reports (int): total number of event reports consumed
+        by the process.
+    number_of_consumed_reports_delta (int): number of event reports consumed
+        by the process since the last status update.
     number_of_consumed_sources (int): total number of event sources consumed
         by the process.
     number_of_consumed_sources_delta (int): number of event sources consumed
@@ -33,6 +37,10 @@ class ProcessStatus(object):
         the process.
     number_of_produced_events_delta (int): number of events produced by
         the process since the last status update.
+    number_of_produced_reports (int): total number of event reports
+        produced by the process.
+    number_of_produced_reports_delta (int): number of event reports produced
+        by the process since the last status update.
     number_of_produced_sources (int): total number of event sources
         produced by the process.
     number_of_produced_sources_delta (int): number of event sources produced
@@ -51,12 +59,16 @@ class ProcessStatus(object):
     self.number_of_consumed_errors_delta = 0
     self.number_of_consumed_events = 0
     self.number_of_consumed_events_delta = 0
+    self.number_of_consumed_reports = 0
+    self.number_of_consumed_reports_delta = 0
     self.number_of_consumed_sources = 0
     self.number_of_consumed_sources_delta = 0
     self.number_of_produced_errors = 0
     self.number_of_produced_errors_delta = 0
     self.number_of_produced_events = 0
     self.number_of_produced_events_delta = 0
+    self.number_of_produced_reports = 0
+    self.number_of_produced_reports_delta = 0
     self.number_of_produced_sources = 0
     self.number_of_produced_sources_delta = 0
     self.pid = None
@@ -148,6 +160,49 @@ class ProcessStatus(object):
 
     return consumed_events_delta > 0 or produced_events_delta > 0
 
+  def UpdateNumberOfEventReports(
+      self, number_of_consumed_reports, number_of_produced_reports):
+    """Updates the number of event reports.
+
+    Args:
+      number_of_consumed_reports (int): total number of event reports consumed
+          by the process.
+      number_of_produced_reports (int): total number of event reports produced
+          by the process.
+
+    Returns:
+      bool: True if either number of event reports has increased.
+
+    Raises:
+      ValueError: if the consumer or produced number of event reports is
+          smaller than the value of the previous update.
+    """
+    consumed_reports_delta = 0
+    if number_of_consumed_reports is not None:
+      if number_of_consumed_reports < self.number_of_consumed_reports:
+        raise ValueError(
+            u'Number of consumed reports smaller than previous update.')
+
+      consumed_reports_delta = (
+          number_of_consumed_reports - self.number_of_consumed_reports)
+
+      self.number_of_consumed_reports = number_of_consumed_reports
+      self.number_of_consumed_reports_delta = consumed_reports_delta
+
+    produced_reports_delta = 0
+    if number_of_produced_reports is not None:
+      if number_of_produced_reports < self.number_of_produced_reports:
+        raise ValueError(
+            u'Number of produced reports smaller than previous update.')
+
+      produced_reports_delta = (
+          number_of_produced_reports - self.number_of_produced_reports)
+
+      self.number_of_produced_reports = number_of_produced_reports
+      self.number_of_produced_reports_delta = produced_reports_delta
+
+    return consumed_reports_delta > 0 or produced_reports_delta > 0
+
   def UpdateNumberOfEventSources(
       self, number_of_consumed_sources, number_of_produced_sources):
     """Updates the number of event sources.
@@ -221,7 +276,8 @@ class ProcessingStatus(object):
       self, process_status, identifier, status, pid, display_name,
       number_of_consumed_sources, number_of_produced_sources,
       number_of_consumed_events, number_of_produced_events,
-      number_of_consumed_errors, number_of_produced_errors):
+      number_of_consumed_errors, number_of_produced_errors,
+      number_of_consumed_reports, number_of_produced_reports):
     """Updates a process status.
 
     Args:
@@ -243,6 +299,10 @@ class ProcessingStatus(object):
           the process.
       number_of_produced_errors (int): total number of errors produced by
           the process.
+      number_of_consumed_reports (int): total number of event reports consumed
+          by the process.
+      number_of_produced_reports (int): total number of event reports produced
+          by the process.
     """
     new_sources = process_status.UpdateNumberOfEventSources(
         number_of_consumed_sources, number_of_produced_sources)
@@ -253,19 +313,23 @@ class ProcessingStatus(object):
     new_errors = process_status.UpdateNumberOfErrors(
         number_of_consumed_errors, number_of_produced_errors)
 
+    new_reports = process_status.UpdateNumberOfEventReports(
+        number_of_consumed_reports, number_of_produced_reports)
+
     process_status.display_name = display_name
     process_status.identifier = identifier
     process_status.pid = pid
     process_status.status = status
 
-    if new_sources or new_events or new_errors:
+    if new_sources or new_events or new_errors or new_reports:
       process_status.last_running_time = time.time()
 
   def UpdateForemanStatus(
       self, identifier, status, pid, display_name,
       number_of_consumed_sources, number_of_produced_sources,
       number_of_consumed_events, number_of_produced_events,
-      number_of_consumed_errors, number_of_produced_errors):
+      number_of_consumed_errors, number_of_produced_errors,
+      number_of_consumed_reports, number_of_produced_reports):
     """Updates the status of the foreman.
 
     Args:
@@ -286,6 +350,10 @@ class ProcessingStatus(object):
           the foreman.
       number_of_produced_errors (int): total number of errors produced by
           the foreman.
+      number_of_consumed_reports (int): total number of event reports consumed
+          by the process.
+      number_of_produced_reports (int): total number of event reports produced
+          by the process.
     """
     if not self.foreman_status:
       self.foreman_status = ProcessStatus()
@@ -294,13 +362,15 @@ class ProcessingStatus(object):
         self.foreman_status, identifier, status, pid, display_name,
         number_of_consumed_sources, number_of_produced_sources,
         number_of_consumed_events, number_of_produced_events,
-        number_of_consumed_errors, number_of_produced_errors)
+        number_of_consumed_errors, number_of_produced_errors,
+        number_of_consumed_reports, number_of_produced_reports)
 
   def UpdateWorkerStatus(
       self, identifier, status, pid, display_name,
       number_of_consumed_sources, number_of_produced_sources,
       number_of_consumed_events, number_of_produced_events,
-      number_of_consumed_errors, number_of_produced_errors):
+      number_of_consumed_errors, number_of_produced_errors,
+      number_of_consumed_reports, number_of_produced_reports):
     """Updates the status of a worker.
 
     Args:
@@ -321,6 +391,10 @@ class ProcessingStatus(object):
           the worker.
       number_of_produced_errors (int): total number of errors produced by
           the worker.
+      number_of_consumed_reports (int): total number of event reports consumed
+          by the process.
+      number_of_produced_reports (int): total number of event reports produced
+          by the process.
     """
     if identifier not in self._workers_status:
       self._workers_status[identifier] = ProcessStatus()
@@ -330,4 +404,5 @@ class ProcessingStatus(object):
         process_status, identifier, status, pid, display_name,
         number_of_consumed_sources, number_of_produced_sources,
         number_of_consumed_events, number_of_produced_events,
-        number_of_consumed_errors, number_of_produced_errors)
+        number_of_consumed_errors, number_of_produced_errors,
+        number_of_consumed_reports, number_of_produced_reports)

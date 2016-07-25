@@ -82,9 +82,11 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._mount_path = None
     self._number_of_consumed_errors = 0
     self._number_of_consumed_events = 0
+    self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
     self._number_of_produced_errors = 0
     self._number_of_produced_events = 0
+    self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
     self._number_of_worker_processes = 0
     self._parser_filter_expression = None
@@ -178,9 +180,11 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._status = definitions.PROCESSING_STATUS_COLLECTING
     self._number_of_consumed_errors = 0
     self._number_of_consumed_events = 0
+    self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
     self._number_of_produced_errors = 0
     self._number_of_produced_events = 0
+    self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
 
     path_spec_extractor = extractors.PathSpecExtractor(self._resolver_context)
@@ -393,7 +397,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           self._name, self._status, self._pid, self._merge_task_identifier,
           self._number_of_consumed_sources, self._number_of_produced_sources,
           self._number_of_consumed_events, self._number_of_produced_events,
-          self._number_of_consumed_errors, self._number_of_produced_errors)
+          self._number_of_consumed_errors, self._number_of_produced_errors,
+          self._number_of_consumed_reports, self._number_of_produced_reports)
 
       if self._status_update_callback:
         self._status_update_callback(self._processing_status)
@@ -417,14 +422,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       # Signal all the processes to abort.
       self._AbortTerminate()
 
-    # Wake the processes to make sure that they are not blocking
-    # waiting for the queue not to be full.
     if not self._use_zeromq:
-      logging.debug(u'Emptying queues.')
+      logging.debug(u'Emptying queue.')
       self._task_queue.Empty()
 
       # Wake the processes to make sure that they are not blocking
-      # waiting for new items.
+      # waiting for the queue not to be full.
       for _ in range(self._number_of_worker_processes):
         self._task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
 
@@ -438,7 +441,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     # For Multiprocessing queues, set abort to True to stop queue.join_thread()
     # from blocking.
-    if isinstance(self._task_queue, multi_process_queue.MultiProcessingQueue):
+    if not self._use_zeromq:
       self._task_queue.Close(abort=True)
 
     if abort:
@@ -486,17 +489,21 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     display_name = process_status.get(u'display_name', u'')
     number_of_consumed_errors = process_status.get(
-        u'number_of_consumed_errors', 0)
+        u'number_of_consumed_errors', None)
     number_of_produced_errors = process_status.get(
-        u'number_of_produced_errors', 0)
+        u'number_of_produced_errors', None)
     number_of_consumed_events = process_status.get(
-        u'number_of_consumed_events', 0)
+        u'number_of_consumed_events', None)
     number_of_produced_events = process_status.get(
-        u'number_of_produced_events', 0)
+        u'number_of_produced_events', None)
+    number_of_consumed_reports = process_status.get(
+        u'number_of_consumed_reports', None)
+    number_of_produced_reports = process_status.get(
+        u'number_of_produced_reports', None)
     number_of_consumed_sources = process_status.get(
-        u'number_of_consumed_sources', 0)
+        u'number_of_consumed_sources', None)
     number_of_produced_sources = process_status.get(
-        u'number_of_produced_sources', 0)
+        u'number_of_produced_sources', None)
 
     if processing_status != definitions.PROCESSING_STATUS_IDLE:
       last_activity_timestamp = process_status.get(
@@ -516,7 +523,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         process.name, processing_status, pid, display_name,
         number_of_consumed_sources, number_of_produced_sources,
         number_of_consumed_events, number_of_produced_events,
-        number_of_consumed_errors, number_of_produced_errors)
+        number_of_consumed_errors, number_of_produced_errors,
+        number_of_consumed_reports, number_of_produced_reports)
 
     task_identifier = process_status.get(u'task_identifier', u'')
     if task_identifier:

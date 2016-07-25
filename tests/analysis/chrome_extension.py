@@ -6,7 +6,6 @@ import os
 import unittest
 
 from plaso.analysis import chrome_extension
-from plaso.analysis import mediator
 
 from tests.analysis import test_lib
 
@@ -91,12 +90,9 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
 
   def testExamineEventAndCompileReportMacOSXPaths(self):
     """Tests the ExamineEvent and CompileReport functions on Mac OS X paths."""
-    knowledge_base = self._SetUpKnowledgeBase(
-        knowledge_base_values={u'users': self._MACOSX_USERS})
-    analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
-
-    plugin = MockChromeExtensionPlugin()
-
+  def testExamineEventMacOSXPaths(self):
+    """Tests the ExamineEvent function on Mac OS X paths."""
+    events = []
     for path in self._MACOSX_PATHS:
       event_dictionary = {
           u'data_type': u'fs:stat',
@@ -105,10 +101,15 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
           u'timestamp_desc': u'Some stuff'}
 
       event = self._CreateTestEventObject(event_dictionary)
-      plugin.ExamineEvent(analysis_mediator, event)
+      events.append(event)
 
-    analysis_report = plugin.CompileReport(analysis_mediator)
-    self.assertIsNotNone(analysis_report)
+    plugin = MockChromeExtensionPlugin()
+    storage_writer = self._AnalyzeEvents(
+        events, plugin, knowledge_base_values={u'users': self._MACOSX_USERS})
+
+    self.assertEqual(len(storage_writer.analysis_reports), 1)
+
+    analysis_report = storage_writer.analysis_reports[0]
 
     self.assertEqual(plugin._sep, u'/')
 
@@ -131,12 +132,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
 
   def testExamineEventAndCompileReportWindowsPaths(self):
     """Tests the ExamineEvent and CompileReport functions on Windows paths."""
-    knowledge_base = self._SetUpKnowledgeBase(
-        knowledge_base_values={u'users': self._WINDOWS_USERS})
-    analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
-
-    plugin = MockChromeExtensionPlugin()
-
+    events = []
     for path in self._WINDOWS_PATHS:
       event_dictionary = {
           u'data_type': u'fs:stat',
@@ -145,10 +141,15 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
           u'timestamp_desc': u'Some stuff'}
 
       event = self._CreateTestEventObject(event_dictionary)
-      plugin.ExamineEvent(analysis_mediator, event)
+      events.append(event)
 
-    analysis_report = plugin.CompileReport(analysis_mediator)
-    self.assertIsNotNone(analysis_report)
+    plugin = MockChromeExtensionPlugin()
+    storage_writer = self._AnalyzeEvents(
+        events, plugin, knowledge_base_values={u'users': self._WINDOWS_USERS})
+
+    self.assertEqual(len(storage_writer.analysis_reports), 1)
+
+    analysis_report = storage_writer.analysis_reports[0]
 
     self.assertEqual(plugin._sep, u'\\')
 

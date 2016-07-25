@@ -7,7 +7,6 @@ import unittest
 from dfdatetime import filetime as dfdatetime_filetime
 from dfvfs.path import fake_path_spec
 
-from plaso.analysis import mediator
 from plaso.analysis import windows_services
 from plaso.containers import windows_events
 from plaso.parsers import winreg
@@ -56,20 +55,20 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
 
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
-    knowledge_base = self._SetUpKnowledgeBase()
-    analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
-
-    plugin = windows_services.WindowsServicesPlugin()
-
+    events = []
     for event_dictionary in self._TEST_EVENTS:
       event_dictionary[u'pathspec'] = fake_path_spec.FakePathSpec(
           location=u'C:\\WINDOWS\\system32\\SYSTEM')
 
       event = self._CreateTestEventObject(event_dictionary)
-      plugin.ExamineEvent(analysis_mediator, event)
+      events.append(event)
 
-    analysis_report = plugin.CompileReport(analysis_mediator)
-    self.assertIsNotNone(analysis_report)
+    plugin = windows_services.WindowsServicesPlugin()
+    storage_writer = self._AnalyzeEvents(events, plugin)
+
+    self.assertEqual(len(storage_writer.analysis_reports), 1)
+
+    analysis_report = storage_writer.analysis_reports[0]
 
     expected_text = (
         u'Listing Windows Services\n'
@@ -93,21 +92,16 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     # We could remove the non-Services plugins, but testing shows that the
     # performance gain is negligible.
 
-    knowledge_base = self._SetUpKnowledgeBase()
-    analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
-
     parser = winreg.WinRegistryParser()
-    storage_writer = self._ParseFile([u'SYSTEM'], parser, knowledge_base)
+    plugin = windows_services.WindowsServicesPlugin()
+
+    storage_writer = self._ParseAndAnalyzeFile([u'SYSTEM'], parser, plugin)
 
     self.assertEqual(len(storage_writer.events), 31436)
 
-    plugin = windows_services.WindowsServicesPlugin()
+    self.assertEqual(len(storage_writer.analysis_reports), 1)
 
-    for event in storage_writer.events:
-      plugin.ExamineEvent(analysis_mediator, event)
-
-    analysis_report = plugin.CompileReport(analysis_mediator)
-    self.assertIsNotNone(analysis_report)
+    analysis_report = storage_writer.analysis_reports[0]
 
     # We'll check that a few strings are in the report, like they're supposed
     # to be, rather than checking for the exact content of the string,
@@ -127,22 +121,17 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     # We could remove the non-Services plugins, but testing shows that the
     # performance gain is negligible.
 
-    knowledge_base = self._SetUpKnowledgeBase()
-    analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
-
     parser = winreg.WinRegistryParser()
-    storage_writer = self._ParseFile([u'SYSTEM'], parser, knowledge_base)
-
-    self.assertEqual(len(storage_writer.events), 31436)
-
     plugin = windows_services.WindowsServicesPlugin()
     plugin.SetOutputFormat(u'yaml')
 
-    for event in storage_writer.events:
-      plugin.ExamineEvent(analysis_mediator, event)
+    storage_writer = self._ParseAndAnalyzeFile([u'SYSTEM'], parser, plugin)
 
-    analysis_report = plugin.CompileReport(analysis_mediator)
-    self.assertIsNotNone(analysis_report)
+    self.assertEqual(len(storage_writer.events), 31436)
+
+    self.assertEqual(len(storage_writer.analysis_reports), 1)
+
+    analysis_report = storage_writer.analysis_reports[0]
 
     # We'll check that a few strings are in the report, like they're supposed
     # to be, rather than checking for the exact content of the string,

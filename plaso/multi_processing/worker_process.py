@@ -204,6 +204,8 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
           u'{0!s} (PID: {1:d}) stopped monitoring task queue.'.format(
               self._name, self._pid))
 
+    # All exceptions need to be caught here to prevent the process
+    # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
       logging.warning(
           u'Unhandled exception in process: {0!s} (PID: {1:d}).'.format(
@@ -250,8 +252,6 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
           u'ABORT: detected cache full error while processing '
           u'path spec: {0:s}').format(self._current_display_name))
 
-    # All exceptions need to be caught here to prevent the worker
-    # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
       parser_mediator.ProduceExtractionError((
           u'unable to process path specification with error: '

@@ -114,7 +114,6 @@ class MultiProcessEngine(engine.BaseEngine):
       pid (int): process ID (PID) of a registered worker process.
 
     Raises:
-      EngineAbort: when the worker process unexpectedly terminates.
       KeyError: if the process is not registered with the engine.
     """
     # TODO: Refactor this method, simplify and separate concerns (monitoring

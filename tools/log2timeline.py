@@ -83,12 +83,12 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._foreman_verbose = False
     self._front_end = log2timeline.Log2TimelineFrontend()
     self._number_of_extraction_workers = 0
-    self._stdout_output_writer = isinstance(
-        self._output_writer, cli_tools.StdoutOutputWriter)
+    self._output = None
     self._source_type = None
     self._source_type_string = u'UNKNOWN'
     self._status_view_mode = u'linear'
-    self._output = None
+    self._stdout_output_writer = isinstance(
+        self._output_writer, cli_tools.StdoutOutputWriter)
 
     self.dependencies_check = True
     self.list_output_modules = False
@@ -264,7 +264,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """
     for worker_status in processing_status.workers_status:
       status_line = (
-          u'{0:s} (PID: {1:d}) - events extracted: {2:d} - file: {3:s} '
+          u'{0:s} (PID: {1:d}) - events produced: {2:d} - file: {3:s} '
           u'- running: {4!s}\n').format(
               worker_status.identifier, worker_status.pid,
               worker_status.number_of_produced_events,

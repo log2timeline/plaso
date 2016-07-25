@@ -8,30 +8,26 @@ class AnalysisMediator(object):
   Attributes:
     number_of_produced_analysis_reports (int): number of produced analysis
         reports.
+    number_of_produced_event_tage (int): number of produced event tags.
   """
 
-  def __init__(
-      self, analysis_report_queue_producer, knowledge_base,
-      data_location=None, completion_event=None):
+  def __init__(self, storage_writer, knowledge_base, data_location=None):
     """Initializes an analysis plugin mediator object.
 
     Args:
-      analysis_report_queue_producer (ItemQueueProducer): analysis report
-          queue producer.
+      storage_writer (StorageWriter): storage writer.
       knowledge_base (KnowledgeBase): contains information from the source
-          data needed for parsing.
+          data needed for analysis.
       data_location (Optional[str]): location of data files used during
           analysis.
-      completion_event (Optional[Multiprocessing.Event]): set when the
-          analysis plugin is complete.
     """
     super(AnalysisMediator, self).__init__()
-    self._analysis_report_queue_producer = analysis_report_queue_producer
-    self._completion_event = completion_event
     self._data_location = data_location
     self._knowledge_base = knowledge_base
+    self._storage_writer = storage_writer
 
     self.number_of_produced_analysis_reports = 0
+    self.number_of_produced_event_tags = 0
 
   @property
   def data_location(self):
@@ -87,8 +83,8 @@ class AnalysisMediator(object):
     """
     return self._knowledge_base.GetUsernameForPath(path)
 
-  def ProcessAnalysisReport(self, analysis_report, plugin_name=None):
-    """Processes an analysis report before it is emitted to the queue.
+  def ProduceAnalysisReport(self, analysis_report, plugin_name=None):
+    """Produces an analysis report.
 
     Args:
       analysis_report (AnalysisReport): analysis report.
@@ -97,14 +93,16 @@ class AnalysisMediator(object):
     if not getattr(analysis_report, u'plugin_name', None) and plugin_name:
       analysis_report.plugin_name = plugin_name
 
-  def ProduceAnalysisReport(self, analysis_report, plugin_name=None):
-    """Produces an analysis report onto the queue.
+    self._storage_writer.AddAnalysisReport(analysis_report)
+
+    self.number_of_produced_analysis_reports += 1
+
+  def ProduceEventTag(self, event_tag):
+    """Produces an event tag.
 
     Args:
-      analysis_report (AnalysisReport): analysis report.
-      plugin_name (Optional[str]): name of the plugin.
+      event_tag (EventTag): event tag.
     """
-    self.ProcessAnalysisReport(analysis_report, plugin_name=plugin_name)
+    self._storage_writer.AddEventTage(event_tag)
 
-    self._analysis_report_queue_producer.ProduceItem(analysis_report)
-    self.number_of_produced_analysis_reports += 1
+    self.number_of_produced_event_tags += 1

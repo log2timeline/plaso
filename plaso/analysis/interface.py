@@ -47,9 +47,6 @@ class AnalysisPlugin(object):
   # should be able to run during the extraction phase.
   ENABLE_IN_EXTRACTION = False
 
-  # A flag to indicate that this plugin takes a long time to compile a report.
-  LONG_RUNNING_PLUGIN = False
-
   def __init__(self):
     """Initializes an analysis plugin."""
     super(AnalysisPlugin, self).__init__()
@@ -112,10 +109,6 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
   # to be added to the hash_analysis_queue by the analyzer thread.
   DEFAULT_QUEUE_TIMEOUT = 4
   SECONDS_BETWEEN_STATUS_LOG_MESSAGES = 30
-
-  # Hashing analysis plugins can take a long time to run, so set this by
-  # default.
-  LONG_RUNNING_PLUGIN = True
 
   def __init__(self, analyzer_class):
     """Initializes a hash tagging analysis plugin.

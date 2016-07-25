@@ -5,6 +5,7 @@ from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.analysis import mediator as analysis_mediator
 from plaso.containers import artifacts
 from plaso.containers import events
 from plaso.containers import sessions
@@ -19,12 +20,41 @@ from tests import test_lib as shared_test_lib
 class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for an analysis plugin."""
 
+  def _AnalyzeEvents(
+      self, event_objects, analysis_plugin, knowledge_base_values=None):
+    """Analyzes events using the analysis plugin.
+
+    Args:
+      event_objects (list[EventObject]]): events to analyze.
+      analysis_plugin (AnalysisPluging): analysis plugin.
+      knowledge_base_values (Optional[dict[str,str]]): knowledge base values.
+
+    Returns:
+      FakeStorageWriter: storage writer.
+    """
+    knowledge_base_object = self._SetUpKnowledgeBase(
+        knowledge_base_values=knowledge_base_values)
+
+    session = sessions.Session()
+    storage_writer = fake_storage.FakeStorageWriter(session)
+    storage_writer.Open()
+
+    mediator = analysis_mediator.AnalysisMediator(
+        storage_writer, knowledge_base_object)
+
+    for event in event_objects:
+      analysis_plugin.ExamineEvent(mediator, event)
+
+    analysis_report = analysis_plugin.CompileReport(mediator)
+    storage_writer.AddAnalysisReport(analysis_report)
+
+    return storage_writer
+
   def _CreateTestEventObject(self, event_dictionary):
     """Create a test event with a set of attributes.
 
     Args:
-      event_dictionary (dict[str, str]): contains attributes of an event to add
-          to the queue.
+      event_dictionary (dict[str, str]): contains attributes of an event.
 
     Returns:
       EventObject: event with the appropriate attributes for testing.
@@ -35,8 +65,38 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
 
     return event
 
+  def _ParseAndAnalyzeFile(
+      self, path_segments, parser, analysis_plugin, knowledge_base_values=None):
+    """Parses and analyzes a file using the parser and analysis plugin.
+
+    Args:
+      path_segments (list[str]): path segments inside the test data directory.
+      parser (BaseParser): parser.
+      analysis_plugin (AnalysisPluging): analysis plugin.
+      knowledge_base_values (Optional[dict[str,str]]): knowledge base values.
+
+    Returns:
+      FakeStorageWriter: storage writer.
+    """
+    knowledge_base_object = self._SetUpKnowledgeBase(
+        knowledge_base_values=knowledge_base_values)
+
+    storage_writer = self._ParseFile(
+        path_segments, parser, knowledge_base_object)
+
+    mediator = analysis_mediator.AnalysisMediator(
+        storage_writer, knowledge_base_object)
+
+    for event in storage_writer.events:
+      analysis_plugin.ExamineEvent(mediator, event)
+
+    analysis_report = analysis_plugin.CompileReport(mediator)
+    storage_writer.AddAnalysisReport(analysis_report)
+
+    return storage_writer
+
   def _ParseFile(self, path_segments, parser, knowledge_base_object):
-    """Parses a file using the parser object.
+    """Parses a file using the parser.
 
     Args:
       path_segments (list[str]): path segments inside the test data directory.
@@ -50,7 +110,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()
 
-    parser_mediator = parsers_mediator.ParserMediator(
+    mediator = parsers_mediator.ParserMediator(
         storage_writer, knowledge_base_object)
 
     path = self._GetTestFilePath(path_segments)
@@ -58,15 +118,15 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
         definitions.TYPE_INDICATOR_OS, location=path)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-    parser_mediator.SetFileEntry(file_entry)
+    mediator.SetFileEntry(file_entry)
 
     if isinstance(parser, parsers_interface.FileEntryParser):
-      parser.Parse(parser_mediator)
+      parser.Parse(mediator)
 
     elif isinstance(parser, parsers_interface.FileObjectParser):
       file_object = file_entry.GetFileObject()
       try:
-        parser.Parse(parser_mediator, file_object)
+        parser.Parse(mediator, file_object)
       finally:
         file_object.close()
 
