@@ -25,6 +25,7 @@ class AnalysisMediator(object):
     """
     super(AnalysisMediator, self).__init__()
     self._data_location = data_location
+    self._filter_expression = None
     self._knowledge_base = knowledge_base
     self._storage_writer = storage_writer
 
@@ -100,6 +101,10 @@ class AnalysisMediator(object):
     plugin_name = getattr(analysis_report, u'plugin_name', plugin.plugin_name)
     if plugin_name:
       analysis_report.plugin_name = plugin_name
+
+    if self._filter_expression:
+      # TODO: rename filter string when refactoring the analysis reports.
+      analysis_report.filter_string = self._filter_expression
 
     self._storage_writer.AddAnalysisReport(analysis_report)
 

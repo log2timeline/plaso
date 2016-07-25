@@ -32,9 +32,9 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     self._abort = False
     self._debug_mode = False
     self._enable_profiling = False
-    self._filter_expression = None
     # Instance of EventObjectFilter.
-    self._filter_object = None
+    self._event_filter = None
+    self._filter_expression = None
     self._knowledge_base = knowledge_base.KnowledgeBase()
     self._preferred_language = u'en-US'
     self._profiling_directory = None
@@ -232,45 +232,14 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     """
     return output_manager.OutputManager.HasOutputClass(name)
 
-  def ExportEventsWithOutputModule(
+  def ExportEvents(
       self, storage_reader, output_module, deduplicate_events=True,
-      time_slice=None, use_time_slicer=False):
+      status_update_callback=None, time_slice=None, use_time_slicer=False):
     """Exports events using an output module.
 
     Args:
       storage_reader (StorageReader): storage reader.
       output_module (OutputModule): output module.
-      deduplicate_events (Optional[bool]): True if events should be
-          deduplicated.
-      time_slice (Optional[TimeSlice]): slice of time to output.
-      use_time_slicer (Optional[bool]): True if the 'time slicer' should be
-          used. The 'time slicer' will provide a context of events around
-          an event of interest.
-
-    Returns:
-      collections.Counter: counter that tracks the number of events extracted
-          from storage and the analysis plugin results.
-    """
-    engine = self._CreateEngine()
-
-    return engine.ExportEventsWithOutputModule(
-        self._knowledge_base, storage_reader, output_module,
-        deduplicate_events=deduplicate_events,
-        filter_object=self._filter_object, time_slice=time_slice,
-        use_time_slicer=use_time_slicer)
-
-  def ProcessStorage(
-      self, session, storage_writer, output_module, analysis_plugins,
-      deduplicate_events=True, status_update_callback=None, time_slice=None,
-      use_time_slicer=False):
-    """Processes a plaso storage file.
-
-    Args:
-      session (Session): session the storage changes are part of.
-      storage_writer (StorageWriter): storage writer.
-      output_module (OutputModule): output module.
-      analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
-          be run.
       deduplicate_events (Optional[bool]): True if events should be
           deduplicated.
       status_update_callback (Optional[function]): callback function for status
@@ -283,6 +252,27 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     Returns:
       collections.Counter: counter that tracks the number of events extracted
           from storage and the analysis plugin results.
+    """
+    engine = self._CreateEngine()
+
+    return engine.ExportEvents(
+        self._knowledge_base, storage_reader, output_module,
+        deduplicate_events=deduplicate_events, event_filter=self._event_filter,
+        status_update_callback=status_update_callback, time_slice=time_slice,
+        use_time_slicer=use_time_slicer)
+
+  def ProcessStorage(
+      self, session, storage_writer, analysis_plugins,
+      status_update_callback=None, time_slice=None):
+    """Processes a plaso storage file.
+
+    Args:
+      session (Session): session the storage changes are part of.
+      storage_writer (StorageWriter): storage writer.
+      analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
+          be run.
+      status_update_callback (Optional[function]): callback function for status
+          updates.
 
     Raises:
       RuntimeError: if a non-recoverable situation is encountered.
@@ -290,28 +280,20 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     engine = self._CreateEngine()
 
     # TODO: add single processing support.
-    counter = engine.ProcessStorage(
-        self._knowledge_base, storage_writer, output_module,
-        self._data_location, analysis_plugins,
-        deduplicate_events=deduplicate_events,
+    engine.ProcessStorage(
+        self._knowledge_base, storage_writer, self._data_location,
+        analysis_plugins, event_filter=self._event_filter,
         filter_expression=self._filter_expression,
-        filter_object=self._filter_object,
-        status_update_callback=status_update_callback,
-        time_slice=time_slice, use_time_slicer=use_time_slicer)
+        status_update_callback=status_update_callback)
 
-    for item, value in iter(session.analysis_reports_counter.items()):
-      counter[item] = value
-
-    return counter
-
-  def SetFilter(self, filter_object, filter_expression):
-    """Set the filter information.
+  def SetEventFilter(self, event_filter, filter_expression):
+    """Sets the event filter information.
 
     Args:
-      filter_object (FilterObject): event filter.
+      event_filter (FilterObject): event filter.
       filter_expression (str): filter expression.
     """
-    self._filter_object = filter_object
+    self._event_filter = event_filter
     self._filter_expression = filter_expression
 
   def SetPreferredLanguageIdentifier(self, language_identifier):

@@ -10,8 +10,10 @@ See additional details here:
 """
 
 import argparse
+import collections
 import multiprocessing
 import logging
+import os
 import sys
 import time
 
@@ -68,8 +70,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._analysis_plugins_output_format = None
     self._command_line_arguments = None
     self._deduplicate_events = True
+    self._event_filter = None
     self._filter_expression = None
-    self._filter_object = None
     self._front_end = psort.PsortFrontend()
     self._options = None
     self._output_filename = None
@@ -173,9 +175,9 @@ class PsortTool(analysis_tool.AnalysisTool):
     """
     self._filter_expression = self.ParseStringOption(options, u'filter')
     if self._filter_expression:
-      self._filter_object = filters_manager.FiltersManager.GetFilterObject(
+      self._event_filter = filters_manager.FiltersManager.GetFilterObject(
           self._filter_expression)
-      if not self._filter_object:
+      if not self._event_filter:
         raise errors.BadConfigOption(
             u'Invalid filter expression: {0:s}'.format(self._filter_expression))
 
@@ -183,7 +185,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     time_slice_duration = getattr(options, u'slice_size', 5)
     self._use_time_slicer = getattr(options, u'slicer', False)
 
-    self._front_end.SetFilter(self._filter_object, self._filter_expression)
+    self._front_end.SetEventFilter(self._event_filter, self._filter_expression)
 
     # The slice and slicer cannot be set at the same time.
     if time_slice_event_time_string and self._use_time_slicer:
@@ -646,6 +648,10 @@ class PsortTool(analysis_tool.AnalysisTool):
     self.ParseLogFileOptions(options)
     self._ConfigureLogging(filename=self._log_file, log_level=logging_level)
 
+    self._deduplicate_events = getattr(options, u'dedup', True)
+
+    self._output_filename = getattr(options, u'write', None)
+
     self._output_format = getattr(options, u'output_format', None)
     if not self._output_format:
       raise errors.BadConfigOption(u'Missing output format.')
@@ -653,10 +659,6 @@ class PsortTool(analysis_tool.AnalysisTool):
     if not self._front_end.HasOutputClass(self._output_format):
       raise errors.BadConfigOption(
           u'Unsupported output format: {0:s}.'.format(self._output_format))
-
-    self._deduplicate_events = getattr(options, u'dedup', True)
-
-    self._output_filename = getattr(options, u'write', None)
 
     if self._data_location:
       self._front_end.SetDataLocation(self._data_location)
@@ -682,11 +684,19 @@ class PsortTool(analysis_tool.AnalysisTool):
         timezone=self._timezone)
 
     if isinstance(output_module, output_interface.LinearOutputModule):
-      if self._output_filename:
-        output_file_object = open(self._output_filename, u'wb')
-        output_writer = cli_tools.FileObjectOutputWriter(output_file_object)
-      else:
-        output_writer = cli_tools.StdoutOutputWriter()
+      if not self._output_filename:
+        raise errors.BadConfigOption((
+            u'Output format: {0:s} requires an output file, output to stdout '
+            u'is no longer supported.').format(self._output_format))
+
+      if self._output_filename and os.path.exists(self._output_filename):
+        logging.warning(
+            u'Output file already exists: {0:s} and will be overwritten.'.format(
+                self._output_filename))
+
+      output_file_object = open(self._output_filename, u'wb')
+      output_writer = cli_tools.FileObjectOutputWriter(output_file_object)
+
       output_module.SetOutputWriter(output_writer)
 
     helpers_manager.ArgumentHelperManager.ParseOptions(
@@ -721,24 +731,14 @@ class PsortTool(analysis_tool.AnalysisTool):
       helpers_manager.ArgumentHelperManager.ParseOptions(
           self._options, analysis_plugin)
 
-    if not analysis_plugins:
-      storage_reader = self._front_end.CreateStorageReader(
-          self._storage_file_path)
-
-      counter = self._front_end.ExportEventsWithOutputModule(
-          storage_reader, output_module,
-          deduplicate_events=self._deduplicate_events,
-          time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
-
+    if self._status_view_mode == u'linear':
+      status_update_callback = self._PrintStatusUpdateStream
+    elif self._status_view_mode == u'window':
+      status_update_callback = self._PrintStatusUpdate
     else:
       status_update_callback = None
-      if self._output_format == u'null':
-        # Status view currently only supported with null output format.
-        if self._status_view_mode == u'linear':
-          status_update_callback = self._PrintStatusUpdateStream
-        elif self._status_view_mode == u'window':
-          status_update_callback = self._PrintStatusUpdate
 
+    if analysis_plugins:
       session = self._front_end.CreateSession(
           command_line_arguments=self._command_line_arguments,
           preferred_encoding=self.preferred_encoding)
@@ -747,22 +747,37 @@ class PsortTool(analysis_tool.AnalysisTool):
           session, self._storage_file_path)
       # TODO: handle errors.BadConfigOption
 
-      counter = self._front_end.ProcessStorage(
-          session, storage_writer, output_module, analysis_plugins,
+      self._front_end.ProcessStorage(
+          session, storage_writer, analysis_plugins,
+          status_update_callback=status_update_callback)
+
+    counter = collections.Counter()
+    if self._output_format != u'null':
+      storage_reader = self._front_end.CreateStorageReader(
+          self._storage_file_path)
+
+      events_counter = self._front_end.ExportEvents(
+          storage_reader, output_module,
           deduplicate_events=self._deduplicate_events,
-          status_update_callback=status_update_callback,
           time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
 
-      # TODO: print analysis reports.
+      counter += events_counter
 
-    if not self._quiet_mode:
-      self._output_writer.Write(u'Processing completed.\n')
+    for item, value in iter(session.analysis_reports_counter.items()):
+      counter[item] = value
 
-      table_view = cli_views.ViewsFactory.GetTableView(
-          self._views_format_type, title=u'Counter')
-      for element, count in counter.most_common():
-        table_view.AddRow([element, count])
-      table_view.Write(self._output_writer)
+    if self._quiet_mode:
+      return
+
+    self._output_writer.Write(u'Processing completed.\n')
+
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, title=u'Counter')
+    for element, count in counter.most_common():
+      table_view.AddRow([element, count])
+    table_view.Write(self._output_writer)
+
+    # TODO: print analysis reports.
 
 
 def Main():
