@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The multi-process processing engine."""
 
+import abc
 import ctypes
 import logging
 import multiprocessing
@@ -28,41 +29,23 @@ from plaso.multi_processing import xmlrpc
 
 
 class MultiProcessEngine(engine.BaseEngine):
-  """Class that defines the multi-process engine.
+  """Class that defines the base multi-process engine.
 
-  The engine monitors the extraction of events. It monitors:
-  * the current file entry a worker is processing;
-  * the number of events extracted by each worker;
-  * an indicator whether a process is alive or not;
-  * the memory consumption of the processes.
+  This class contains functionality:
+  * to monitor and manage worker processes;
+  * to retrieve a process status information via RPC;
+  * to manage the status update thread.
   """
-
-  # Maximum number of concurrent tasks.
-  _MAXIMUM_NUMBER_OF_TASKS = 10000
-
-  _PROCESS_JOIN_TIMEOUT = 5.0
-  _PROCESS_WORKER_TIMEOUT = 15.0 * 60.0
-
-  # Note that on average Windows seems to require a bit longer wait
-  # than 5 seconds.
-  _RPC_SERVER_TIMEOUT = 8.0
-  _MAXIMUM_RPC_ERRORS = 10
-
-  _WORKER_PROCESSES_MINIMUM = 2
-  _WORKER_PROCESSES_MAXIMUM = 15
 
   def __init__(
       self, debug_output=False, enable_profiling=False,
-      maximum_number_of_tasks=_MAXIMUM_NUMBER_OF_TASKS,
       profiling_directory=None, profiling_sample_rate=1000,
-      profiling_type=u'all', use_zeromq=True):
+      profiling_type=u'all'):
     """Initializes an engine object.
 
     Args:
       debug_output (Optional[bool]): True if debug output should be enabled.
       enable_profiling (Optional[bool]): True if profiling should be enabled.
-      maximum_number_of_tasks (Optional[int]): maximum number of concurrent
-          tasks, where 0 represents no limit.
       profiling_directory (Optional[str]): path to the directory where
           the profiling sample files should be stored.
       profiling_sample_rate (Optional[int]): the profiling sample rate.
@@ -76,59 +59,21 @@ class MultiProcessEngine(engine.BaseEngine):
             the processing;
           * 'serializers' to profile CPU time consumed by individual
             serializers.
-      use_zeromq (Optional[bool]): True if ZeroMQ should be used for queuing
-          instead of Python's multiprocessing queue.
     """
     super(MultiProcessEngine, self).__init__(
         debug_output=debug_output, enable_profiling=enable_profiling,
         profiling_directory=profiling_directory,
         profiling_sample_rate=profiling_sample_rate,
         profiling_type=profiling_type)
-    self._enable_sigsegv_handler = False
-    self._filter_find_specs = None
-    self._filter_object = None
-    self._hasher_names_string = None
-    self._last_worker_number = 0
-    self._maximum_number_of_tasks = maximum_number_of_tasks
-    self._memory_profiler = None
-    self._merge_task_identifier = u''
-    self._mount_path = None
     self._name = u'Main'
-    self._number_of_consumed_errors = 0
-    self._number_of_consumed_events = 0
-    self._number_of_consumed_sources = 0
-    self._number_of_produced_errors = 0
-    self._number_of_produced_events = 0
-    self._number_of_produced_sources = 0
-    self._number_of_worker_processes = 0
-    self._parser_filter_expression = None
     self._pid = os.getpid()
-    self._preferred_year = None
-    self._process_archive_files = False
-    self._processes_per_pid = {}
     self._process_information_per_pid = {}
-    self._processing_profiler = None
-    self._resolver_context = context.Context()
+    self._processes_per_pid = {}
     self._rpc_clients_per_pid = {}
-    self._rpc_errors_per_pid = {}
-    self._serializers_profiler = None
-    self._session_identifier = None
     self._show_memory_usage = False
-    self._status = definitions.PROCESSING_STATUS_IDLE
     self._status_update_active = False
     self._status_update_callback = None
     self._status_update_thread = None
-    self._storage_writer = None
-    self._task_queue = None
-    self._task_queue_port = None
-    self._task_manager = task_manager.TaskManager(
-        maximum_number_of_tasks=maximum_number_of_tasks)
-    self._task_scheduler_active = False
-    self._task_scheduler_thread = None
-    self._temporary_directory = None
-    self._text_prepend = None
-    self._use_zeromq = use_zeromq
-    self._yara_rules_string = None
 
   def _AbortJoin(self, timeout=None):
     """Aborts all registered processes by joining with the parent process.
@@ -273,6 +218,7 @@ class MultiProcessEngine(engine.BaseEngine):
         logging.error(u'Unable to kill process {0:d} with error: {1:s}'.format(
             pid, exception))
 
+  # TODO: refactor this function.
   def _LogMemoryUsage(self, pid):
     """Logs memory information gathered from a process.
 
@@ -294,6 +240,266 @@ class MultiProcessEngine(engine.BaseEngine):
             process.name, memory_info.rss, memory_info.vms,
             memory_info.shared, memory_info.text, memory_info.lib,
             memory_info.data, memory_info.dirty, memory_info.percent * 100))
+
+  def _RaiseIfNotMonitored(self, pid):
+    """Raises if the process is not monitored by the engine.
+
+    Args:
+      pid (int): process identifier (PID).
+
+    Raises:
+      KeyError: if the process is not monitored by the engine.
+    """
+    if pid not in self._process_information_per_pid:
+      raise KeyError(
+          u'Process (PID: {0:d}) not monitored by engine.'.format(pid))
+
+  def _RaiseIfNotRegistered(self, pid):
+    """Raises if the process is not registered with the engine.
+
+    Args:
+      pid (int): process identifier (PID).
+
+    Raises:
+      KeyError: if the process is not registered with the engine.
+    """
+    if pid not in self._processes_per_pid:
+      raise KeyError(
+          u'Process (PID: {0:d}) not registered with engine'.format(pid))
+
+  def _RegisterProcess(self, process):
+    """Registers a process with the engine.
+
+    Args:
+      process (MultiProcessBaseProcess): process.
+
+    Raises:
+      KeyError: if the process is already registered with the engine.
+      ValueError: if the process object is missing.
+    """
+    if process is None:
+      raise ValueError(u'Missing process object.')
+
+    if process.pid in self._processes_per_pid:
+      raise KeyError(
+          u'Already managing process: {0!s} (PID: {1:d})'.format(
+              process.name, process.pid))
+
+    self._processes_per_pid[process.pid] = process
+
+  def _StartMonitoringProcess(self, pid):
+    """Starts monitoring a process.
+
+    Args:
+      pid (int): process identifier (PID).
+
+    Raises:
+      KeyError: if the process is not registered with the engine or
+                if the process if the processed is already being monitored.
+      IOError: if the RPC client cannot connect to the server.
+    """
+    self._RaiseIfNotRegistered(pid)
+
+    if pid in self._process_information_per_pid:
+      raise KeyError(
+          u'Process (PID: {0:d}) already in monitoring list.'.format(pid))
+
+    if pid in self._rpc_clients_per_pid:
+      raise KeyError(
+          u'RPC client (PID: {0:d}) already exists'.format(pid))
+
+    process = self._processes_per_pid[pid]
+    rpc_client = xmlrpc.XMLProcessStatusRPCClient()
+
+    # Make sure that a process has started its RPC server. RPC port will
+    # be 0 if no server is available.
+    rpc_port = process.rpc_port.value
+    time_waited_for_process = 0.0
+    while not rpc_port:
+      time.sleep(0.1)
+      rpc_port = process.rpc_port.value
+      time_waited_for_process += 0.1
+
+      if time_waited_for_process >= self._RPC_SERVER_TIMEOUT:
+        raise IOError(
+            u'RPC client unable to determine server (PID: {0:d}) port.'.format(
+                pid))
+
+    hostname = u'localhost'
+
+    if not rpc_client.Open(hostname, rpc_port):
+      raise IOError((
+          u'RPC client unable to connect to server (PID: {0:d}) '
+          u'http://{1:s}:{2:d}').format(pid, hostname, rpc_port))
+
+    self._rpc_clients_per_pid[pid] = rpc_client
+    self._process_information_per_pid[pid] = process_info.ProcessInfo(pid)
+
+  def _StartStatusUpdateThread(self):
+    """Starts the status update thread."""
+    self._status_update_active = True
+    self._status_update_thread = threading.Thread(
+        name=u'Status update', target=self._StatusUpdateThreadMain)
+    self._status_update_thread.start()
+
+  @abc.abstractmethod
+  def _StatusUpdateThreadMain(self):
+    """Main function of the status update thread."""
+
+  def _StopMonitoringProcess(self, pid):
+    """Stops monitoring a process.
+
+    Args:
+      pid (int): process identifier (PID).
+
+    Raises:
+      KeyError: if the process is not registered with the engine or
+                if the process is registered, but not monitored.
+    """
+    self._RaiseIfNotRegistered(pid)
+    self._RaiseIfNotMonitored(pid)
+
+    process = self._processes_per_pid[pid]
+    del self._process_information_per_pid[pid]
+
+    rpc_client = self._rpc_clients_per_pid.get(pid, None)
+    if rpc_client:
+      rpc_client.Close()
+      del self._rpc_clients_per_pid[pid]
+
+    if pid in self._rpc_errors_per_pid:
+      del self._rpc_errors_per_pid[pid]
+
+    logging.debug((
+        u'Process: {0:s} (PID: {1:d}) has been removed from the monitoring '
+        u'list.').format(process.name, pid))
+
+  def _StopMonitoringProcesses(self):
+    """Stops monitoring all processes."""
+    for pid in iter(self._process_information_per_pid.keys()):
+      self._StopMonitoringProcess(pid)
+
+  def _StopStatusUpdateThread(self):
+    """Stops the status update thread."""
+    self._status_update_active = False
+    if self._status_update_thread.isAlive():
+      self._status_update_thread.join()
+    self._status_update_thread = None
+
+  def _TerminateProcess(self, pid):
+    """Terminate a process.
+
+    Args:
+      pid (int): process identifier (PID).
+
+    Raises:
+      KeyError: if the process is not registered with the engine.
+    """
+    self._RaiseIfNotRegistered(pid)
+
+    process = self._processes_per_pid[pid]
+
+    logging.warning(u'Terminating process: (PID: {0:d}).'.format(pid))
+    process.terminate()
+
+    if process.is_alive():
+      logging.warning(u'Killing process: (PID: {0:d}).'.format(pid))
+      self._KillProcess(pid)
+
+    self._StopMonitoringProcess(pid)
+
+
+class TaskBasedMultiProcessEngine(MultiProcessEngine):
+  """Class that defines the multi-process engine.
+
+  The engine monitors the extraction of events. It monitors:
+  * the current file entry a worker is processing;
+  * the number of events extracted by each worker;
+  * an indicator whether a process is alive or not;
+  * the memory consumption of the processes.
+  """
+
+  # Maximum number of concurrent tasks.
+  _MAXIMUM_NUMBER_OF_TASKS = 10000
+
+  _PROCESS_JOIN_TIMEOUT = 5.0
+  _PROCESS_WORKER_TIMEOUT = 15.0 * 60.0
+
+  # Note that on average Windows seems to require a bit longer wait
+  # than 5 seconds.
+  _RPC_SERVER_TIMEOUT = 8.0
+  _MAXIMUM_RPC_ERRORS = 10
+
+  _WORKER_PROCESSES_MINIMUM = 2
+  _WORKER_PROCESSES_MAXIMUM = 15
+
+  def __init__(
+      self, debug_output=False, enable_profiling=False,
+      maximum_number_of_tasks=_MAXIMUM_NUMBER_OF_TASKS,
+      profiling_directory=None, profiling_sample_rate=1000,
+      profiling_type=u'all', use_zeromq=True):
+    """Initializes an engine object.
+
+    Args:
+      debug_output (Optional[bool]): True if debug output should be enabled.
+      enable_profiling (Optional[bool]): True if profiling should be enabled.
+      maximum_number_of_tasks (Optional[int]): maximum number of concurrent
+          tasks, where 0 represents no limit.
+      profiling_directory (Optional[str]): path to the directory where
+          the profiling sample files should be stored.
+      profiling_sample_rate (Optional[int]): the profiling sample rate.
+          Contains the number of event sources processed.
+      profiling_type (Optional[str]): type of profiling.
+          Supported types are:
+
+          * 'memory' to profile memory usage;
+          * 'parsers' to profile CPU time consumed by individual parsers;
+          * 'processing' to profile CPU time consumed by different parts of
+            the processing;
+          * 'serializers' to profile CPU time consumed by individual
+            serializers.
+      use_zeromq (Optional[bool]): True if ZeroMQ should be used for queuing
+          instead of Python's multiprocessing queue.
+    """
+    super(TaskBasedMultiProcessEngine, self).__init__(
+        debug_output=debug_output, enable_profiling=enable_profiling,
+        profiling_directory=profiling_directory,
+        profiling_sample_rate=profiling_sample_rate,
+        profiling_type=profiling_type)
+    self._enable_sigsegv_handler = False
+    self._filter_find_specs = None
+    self._filter_object = None
+    self._hasher_names_string = None
+    self._last_worker_number = 0
+    self._maximum_number_of_tasks = maximum_number_of_tasks
+    self._memory_profiler = None
+    self._merge_task_identifier = u''
+    self._mount_path = None
+    self._number_of_consumed_errors = 0
+    self._number_of_consumed_events = 0
+    self._number_of_consumed_sources = 0
+    self._number_of_produced_errors = 0
+    self._number_of_produced_events = 0
+    self._number_of_produced_sources = 0
+    self._number_of_worker_processes = 0
+    self._parser_filter_expression = None
+    self._preferred_year = None
+    self._process_archive_files = False
+    self._processing_profiler = None
+    self._resolver_context = context.Context()
+    self._rpc_errors_per_pid = {}
+    self._serializers_profiler = None
+    self._session_identifier = None
+    self._status = definitions.PROCESSING_STATUS_IDLE
+    self._storage_writer = None
+    self._task_queue = None
+    self._task_queue_port = None
+    self._task_manager = task_manager.TaskManager(
+        maximum_number_of_tasks=maximum_number_of_tasks)
+    self._temporary_directory = None
+    self._text_prepend = None
+    self._use_zeromq = use_zeromq
+    self._yara_rules_string = None
 
   def _MergeTaskStorage(self, storage_writer):
     """Merges a task storage with the session storage.
@@ -406,52 +612,6 @@ class MultiProcessEngine(engine.BaseEngine):
     """Creates a memory profiling sample."""
     if self._memory_profiler:
       self._memory_profiler.Sample()
-
-  def _RaiseIfNotMonitored(self, pid):
-    """Raises if the process is not monitored by the engine.
-
-    Args:
-      pid (int): process identifier (PID).
-
-    Raises:
-      KeyError: if the process is not monitored by the engine.
-    """
-    if pid not in self._process_information_per_pid:
-      raise KeyError(
-          u'Process (PID: {0:d}) not monitored by engine.'.format(pid))
-
-  def _RaiseIfNotRegistered(self, pid):
-    """Raises if the process is not registered with the engine.
-
-    Args:
-      pid (int): process identifier (PID).
-
-    Raises:
-      KeyError: if the process is not registered with the engine.
-    """
-    if pid not in self._processes_per_pid:
-      raise KeyError(
-          u'Process (PID: {0:d}) not registered with engine'.format(pid))
-
-  def _RegisterProcess(self, process):
-    """Registers a process with the engine.
-
-    Args:
-      process (MultiProcessBaseProcess): process.
-
-    Raises:
-      KeyError: if the process is already registered with the engine.
-      ValueError: if the process object is missing.
-    """
-    if process is None:
-      raise ValueError(u'Missing process object.')
-
-    if process.pid in self._processes_per_pid:
-      raise KeyError(
-          u'Already managing process: {0!s} (PID: {1:d})'.format(
-              process.name, process.pid))
-
-    self._processes_per_pid[process.pid] = process
 
   def _ScheduleTask(self, task):
     """Schedules a task.
@@ -595,54 +755,6 @@ class MultiProcessEngine(engine.BaseEngine):
 
     return process
 
-  def _StartMonitoringProcess(self, pid):
-    """Starts monitoring a process.
-
-    Args:
-      pid (int): process identifier (PID).
-
-    Raises:
-      KeyError: if the process is not registered with the engine or
-                if the process if the processed is already being monitored.
-      IOError: if the RPC client cannot connect to the server.
-    """
-    self._RaiseIfNotRegistered(pid)
-
-    if pid in self._process_information_per_pid:
-      raise KeyError(
-          u'Process (PID: {0:d}) already in monitoring list.'.format(pid))
-
-    if pid in self._rpc_clients_per_pid:
-      raise KeyError(
-          u'RPC client (PID: {0:d}) already exists'.format(pid))
-
-    process = self._processes_per_pid[pid]
-    rpc_client = xmlrpc.XMLProcessStatusRPCClient()
-
-    # Make sure that a process has started its RPC server. RPC port will
-    # be 0 if no server is available.
-    rpc_port = process.rpc_port.value
-    time_waited_for_process = 0.0
-    while not rpc_port:
-      time.sleep(0.1)
-      rpc_port = process.rpc_port.value
-      time_waited_for_process += 0.1
-
-      if time_waited_for_process >= self._RPC_SERVER_TIMEOUT:
-        raise IOError(
-            u'RPC client unable to determine server (PID: {0:d}) port.'.format(
-                pid))
-
-    hostname = u'localhost'
-
-    if not rpc_client.Open(hostname, rpc_port):
-      raise IOError((
-          u'RPC client unable to connect to server (PID: {0:d}) '
-          u'http://{1:s}:{2:d}').format(pid, hostname, rpc_port))
-
-    self._rpc_clients_per_pid[pid] = rpc_client
-    self._process_information_per_pid[pid] = process_info.ProcessInfo(pid)
-
   def _StartProfiling(self):
     """Starts profiling."""
     if not self._enable_profiling:
@@ -664,13 +776,6 @@ class MultiProcessEngine(engine.BaseEngine):
       identifier = u'{0:s}-serializers'.format(self._name)
       self._serializers_profiler = profiler.SerializersProfiler(
           identifier, path=self._profiling_directory)
-
-  def _StartStatusUpdateThread(self):
-    """Starts the status update thread."""
-    self._status_update_active = True
-    self._status_update_thread = threading.Thread(
-        name=u'Status update', target=self._StatusUpdateThreadMain)
-    self._status_update_thread.start()
 
   def _StatusUpdateThreadMain(self):
     """Main function of the status update thread."""
@@ -698,7 +803,7 @@ class MultiProcessEngine(engine.BaseEngine):
       abort (bool): True to indicated the stop is issued on abort.
     """
     logging.debug(u'Stopping extraction processes.')
-    self._StopProcessMonitoring()
+    self._StopMonitoringProcesses()
 
     # Note that multiprocessing.Queue is very sensitive regarding
     # blocking on either a get or a put. So we try to prevent using
@@ -736,39 +841,6 @@ class MultiProcessEngine(engine.BaseEngine):
       # Kill any remaining processes.
       self._AbortKill()
 
-  def _StopMonitoringProcess(self, pid):
-    """Stops monitoring a process.
-
-    Args:
-      pid (int): process identifier (PID).
-
-    Raises:
-      KeyError: if the process is not registered with the engine or
-                if the process is registered, but not monitored.
-    """
-    self._RaiseIfNotRegistered(pid)
-    self._RaiseIfNotMonitored(pid)
-
-    process = self._processes_per_pid[pid]
-    del self._process_information_per_pid[pid]
-
-    rpc_client = self._rpc_clients_per_pid.get(pid, None)
-    if rpc_client:
-      rpc_client.Close()
-      del self._rpc_clients_per_pid[pid]
-
-    if pid in self._rpc_errors_per_pid:
-      del self._rpc_errors_per_pid[pid]
-
-    logging.debug((
-        u'Process: {0:s} (PID: {1:d}) has been removed from the monitoring '
-        u'list.').format(process.name, pid))
-
-  def _StopProcessMonitoring(self):
-    """Stops monitoring processes."""
-    for pid in iter(self._process_information_per_pid.keys()):
-      self._StopMonitoringProcess(pid)
-
   def _StopProfiling(self):
     """Stops profiling."""
     if not self._enable_profiling:
@@ -785,35 +857,6 @@ class MultiProcessEngine(engine.BaseEngine):
     if self._profiling_type in (u'all', u'serializers'):
       self._serializers_profiler.Write()
       self._serializers_profiler = None
-
-  def _StopStatusUpdateThread(self):
-    """Stops the status update thread."""
-    self._status_update_active = False
-    if self._status_update_thread.isAlive():
-      self._status_update_thread.join()
-    self._status_update_thread = None
-
-  def _TerminateProcess(self, pid):
-    """Terminate a process.
-
-    Args:
-      pid (int): process identifier (PID).
-
-    Raises:
-      KeyError: if the process is not registered with the engine.
-    """
-    self._RaiseIfNotRegistered(pid)
-
-    process = self._processes_per_pid[pid]
-
-    logging.warning(u'Terminating process: (PID: {0:d}).'.format(pid))
-    process.terminate()
-
-    if process.is_alive():
-      logging.warning(u'Killing process: (PID: {0:d}).'.format(pid))
-      self._KillProcess(pid)
-
-    self._StopMonitoringProcess(pid)
 
   def _UpdateProcessingStatus(self, pid, process_status):
     """Updates the processing status.

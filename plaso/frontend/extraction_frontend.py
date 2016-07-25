@@ -37,7 +37,6 @@ class ExtractionFrontend(frontend.Frontend):
     self._collection_process = None
     self._debug_mode = False
     self._enable_profiling = False
-    self._engine = None
     self._filter_expression = None
     self._filter_object = None
     self._mount_path = None
@@ -48,7 +47,6 @@ class ExtractionFrontend(frontend.Frontend):
     self._use_zeromq = True
     self._resolver_context = context.Context()
     self._show_worker_memory_information = False
-    self._storage_file_path = None
     self._text_prepend = None
 
   def _CheckStorageFile(self, storage_file_path):
@@ -96,7 +94,7 @@ class ExtractionFrontend(frontend.Frontend):
           profiling_sample_rate=self._profiling_sample_rate,
           profiling_type=self._profiling_type)
     else:
-      engine = multi_process_engine.MultiProcessEngine(
+      engine = multi_process_engine.TaskBasedMultiProcessEngine(
           debug_output=self._debug_mode,
           enable_profiling=self._enable_profiling,
           profiling_directory=self._profiling_directory,
@@ -104,40 +102,6 @@ class ExtractionFrontend(frontend.Frontend):
           profiling_type=self._profiling_type, use_zeromq=self._use_zeromq)
 
     return engine
-
-  def _CreateSession(
-      self, command_line_arguments=None, filter_file=None,
-      parser_filter_expression=None, preferred_encoding=u'utf-8',
-      preferred_year=None):
-    """Creates the session start information.
-
-    Args:
-      command_line_arguments (Optional[str]): the command line arguments.
-      filter_file (Optional[str]): path to a file with find specifications.
-      parser_filter_expression (Optional[str]): parser filter expression.
-      preferred_encoding (Optional[str]): preferred encoding.
-      preferred_year (Optional[int]): preferred year.
-
-    Returns:
-      Session: session attribute container.
-    """
-    session = sessions.Session()
-
-    parser_and_plugin_names = [
-        parser_name for parser_name in (
-            parsers_manager.ParsersManager.GetParserAndPluginNames(
-                parser_filter_expression=parser_filter_expression))]
-
-    session.command_line_arguments = command_line_arguments
-    session.enabled_parser_names = parser_and_plugin_names
-    session.filter_expression = self._filter_expression
-    session.filter_file = filter_file
-    session.debug_mode = self._debug_mode
-    session.parser_filter_expression = parser_filter_expression
-    session.preferred_encoding = preferred_encoding
-    session.preferred_year = preferred_year
-
-    return session
 
   def _GetParserFilterPreset(
       self, operating_system, operating_system_product,
@@ -201,17 +165,18 @@ class ExtractionFrontend(frontend.Frontend):
 
     return
 
-  def _PreprocessSources(self, source_path_specs):
+  def _PreprocessSources(self, engine, source_path_specs):
     """Preprocesses the sources.
 
     Args:
+      engine (BaseEngine): engine to preproces the sources.
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
     """
     logging.debug(u'Starting preprocessing.')
 
     try:
-      self._engine.PreprocessSources(
+      engine.PreprocessSources(
           source_path_specs, resolver_context=self._resolver_context)
 
     except IOError as exception:
@@ -232,13 +197,15 @@ class ExtractionFrontend(frontend.Frontend):
   #   * credentials (encryption)
   #   * mount point
 
-  def _SetTimezone(self, timezone):
-    """Sets the timezone.
+  def _SetTimezone(self, knowledge_base, timezone):
+    """Sets the timezone in the knowlege base.
 
     Args:
+      knowledge_base (KnowledgeBase): contains information from the source
+          data needed for processing.
       timezone (str): timezone.
     """
-    time_zone_str = self._engine.knowledge_base.GetValue(u'time_zone_str')
+    time_zone_str = knowledge_base.GetValue(u'time_zone_str')
     if time_zone_str:
       default_timezone = time_zone_str
     else:
@@ -250,11 +217,59 @@ class ExtractionFrontend(frontend.Frontend):
     logging.info(u'Setting timezone to: {0:s}'.format(default_timezone))
 
     try:
-      self._engine.knowledge_base.SetTimezone(default_timezone)
+      knowledge_base.SetTimezone(default_timezone)
     except ValueError:
       logging.warning(
           u'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
-              default_timezone, self._engine.knowledge_base.timezone.zone))
+              default_timezone, knowledge_base.timezone.zone))
+
+  def CreateSession(
+      self, command_line_arguments=None, filter_file=None,
+      parser_filter_expression=None, preferred_encoding=u'utf-8',
+      preferred_year=None):
+    """Creates a session attribute containiner.
+
+    Args:
+      command_line_arguments (Optional[str]): the command line arguments.
+      filter_file (Optional[str]): path to a file with find specifications.
+      parser_filter_expression (Optional[str]): parser filter expression.
+      preferred_encoding (Optional[str]): preferred encoding.
+      preferred_year (Optional[int]): preferred year.
+
+    Returns:
+      Session: session attribute container.
+    """
+    session = sessions.Session()
+
+    parser_and_plugin_names = [
+        parser_name for parser_name in (
+            parsers_manager.ParsersManager.GetParserAndPluginNames(
+                parser_filter_expression=parser_filter_expression))]
+
+    session.command_line_arguments = command_line_arguments
+    session.enabled_parser_names = parser_and_plugin_names
+    session.filter_expression = self._filter_expression
+    session.filter_file = filter_file
+    session.debug_mode = self._debug_mode
+    session.parser_filter_expression = parser_filter_expression
+    session.preferred_encoding = preferred_encoding
+    session.preferred_year = preferred_year
+
+    return session
+
+  def CreateStorageWriter(self, session, storage_file_path):
+    """Creates a storage writer.
+
+    Args:
+      session (Session): session the storage changes are part of.
+      storage_file_path (str): path of the storage file.
+
+    Returns:
+      StorageWriter: storage writer.
+    """
+    self._CheckStorageFile(storage_file_path)
+
+    return storage_zip_file.ZIPStorageFileWriter(session, storage_file_path)
 
   def DisableProfiling(self):
     """Disabled profiling."""
@@ -347,34 +362,28 @@ class ExtractionFrontend(frontend.Frontend):
     return parsers_manager.ParsersManager.GetNamesOfParsersWithPlugins()
 
   def ProcessSources(
-      self, source_path_specs, source_type, command_line_arguments=None,
-      enable_sigsegv_handler=False, filter_file=None,
-      force_preprocessing=False, hasher_names_string=None,
-      number_of_extraction_workers=0, parser_filter_expression=None,
-      preferred_encoding=u'utf-8', preferred_year=None,
+      self, session, storage_writer, source_path_specs, source_type,
+      enable_sigsegv_handler=False, force_preprocessing=False,
+      hasher_names_string=None, number_of_extraction_workers=0,
       process_archive_files=False, single_process_mode=False,
       status_update_callback=None, temporary_directory=None, timezone=u'UTC',
       yara_rules_string=None):
     """Processes the sources.
 
     Args:
+      session (Session): session the storage changes are part of.
+      storage_writer (StorageWriter): storage writer.
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
       source_type (str): the dfVFS source type definition.
-      command_line_arguments (Optional[str]): the command line arguments.
       enable_sigsegv_handler (Optional[bool]): True if the SIGSEGV handler
           should be enabled.
-      filter_file (Optional[str]): path to a file that contains find
-          specifications.
       force_preprocessing (Optional[bool]): True if preprocessing should be
           forced.
       hasher_names_string (Optional[str]): comma separated string of names
           of hashers to use during processing.
       number_of_extraction_workers (Optional[int]): number of extraction
           workers to run. If 0, the number will be selected automatically.
-      parser_filter_expression (Optional[str]): parser filter expression.
-      preferred_encoding (Optional[str]): preferred encoding.
-      preferred_year (Optional[int]): preferred year.
       process_archive_files (Optional[bool]): True if archive files should be
           scanned for file entries.
       single_process_mode (Optional[bool]): True if the front-end should
@@ -386,78 +395,66 @@ class ExtractionFrontend(frontend.Frontend):
       timezone (Optional[datetime.tzinfo]): timezone.
       yara_rules_string (Optional[str]): unparsed yara rule definitions.
 
-
     Returns:
-      The processing status (instance of ProcessingStatus) or None.
+      ProcessingStatus: processing status or None.
 
     Raises:
       SourceScannerError: if the source scanner could not find a supported
                           file system.
       UserAbort: if the user initiated an abort.
     """
-    self._CheckStorageFile(self._storage_file_path)
-
     if source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
       # No need to multi process a single file source.
       single_process_mode = True
 
-    self._engine = self._CreateEngine(single_process_mode)
+    engine = self._CreateEngine(single_process_mode)
 
     # If the source is a directory or a storage media image
     # run pre-processing.
     if force_preprocessing or source_type in self._SOURCE_TYPES_TO_PREPROCESS:
-      self._PreprocessSources(source_path_specs)
+      self._PreprocessSources(engine, source_path_specs)
 
-    if not parser_filter_expression:
-      operating_system = self._engine.knowledge_base.GetValue(
+    if not session.parser_filter_expression:
+      operating_system = engine.knowledge_base.GetValue(
           u'operating_system')
-      operating_system_product = self._engine.knowledge_base.GetValue(
+      operating_system_product = engine.knowledge_base.GetValue(
           u'operating_system_product')
-      operating_system_version = self._engine.knowledge_base.GetValue(
+      operating_system_version = engine.knowledge_base.GetValue(
           u'operating_system_version')
-      parser_filter_expression = self._GetParserFilterPreset(
+      session.parser_filter_expression = self._GetParserFilterPreset(
           operating_system, operating_system_product, operating_system_version)
 
-      if parser_filter_expression:
+      if session.parser_filter_expression:
         logging.info(u'Parser filter expression changed to: {0:s}'.format(
-            parser_filter_expression))
+            session.parser_filter_expression))
 
     self._parser_names = []
     for _, parser_class in parsers_manager.ParsersManager.GetParsers(
-        parser_filter_expression=parser_filter_expression):
+        parser_filter_expression=session.parser_filter_expression):
       self._parser_names.append(parser_class.NAME)
 
-    self._SetTimezone(timezone)
+    self._SetTimezone(engine.knowledge_base, timezone)
 
-    if filter_file:
-      path_attributes = self._engine.knowledge_base.GetPathAttributes()
+    if session.filter_file:
+      path_attributes = engine.knowledge_base.GetPathAttributes()
       filter_find_specs = engine_utils.BuildFindSpecsFromFile(
-          filter_file, path_attributes=path_attributes)
+          session.filter_file, path_attributes=path_attributes)
     else:
       filter_find_specs = None
-
-    session = self._CreateSession(
-        command_line_arguments=command_line_arguments, filter_file=filter_file,
-        parser_filter_expression=parser_filter_expression,
-        preferred_encoding=preferred_encoding, preferred_year=preferred_year)
-
-    # TODO: we are directly invoking ZIP file storage here. In storage rewrite
-    # come up with a more generic solution.
-    storage_writer = storage_zip_file.ZIPStorageFileWriter(
-        session, self._storage_file_path)
 
     processing_status = None
     if single_process_mode:
       logging.debug(u'Starting extraction in single process mode.')
 
-      processing_status = self._engine.ProcessSources(
+      # TODO: check if preferred_encoding should be passed.
+      processing_status = engine.ProcessSources(
           source_path_specs, storage_writer, self._resolver_context,
           filter_find_specs=filter_find_specs,
           filter_object=self._filter_object,
           hasher_names_string=hasher_names_string,
           mount_path=self._mount_path,
-          parser_filter_expression=parser_filter_expression,
-          preferred_year=preferred_year,
+          parser_filter_expression=session.parser_filter_expression,
+          preferred_year=session.preferred_year,
           process_archive_files=process_archive_files,
           status_update_callback=status_update_callback,
           temporary_directory=temporary_directory,
@@ -467,7 +464,8 @@ class ExtractionFrontend(frontend.Frontend):
     else:
       logging.debug(u'Starting extraction in multi process mode.')
 
-      processing_status = self._engine.ProcessSources(
+      # TODO: check if preferred_encoding should be passed.
+      processing_status = engine.ProcessSources(
           session.identifier, source_path_specs, storage_writer,
           enable_sigsegv_handler=enable_sigsegv_handler,
           filter_find_specs=filter_find_specs,
@@ -475,8 +473,8 @@ class ExtractionFrontend(frontend.Frontend):
           hasher_names_string=hasher_names_string,
           mount_path=self._mount_path,
           number_of_worker_processes=number_of_extraction_workers,
-          parser_filter_expression=parser_filter_expression,
-          preferred_year=preferred_year,
+          parser_filter_expression=session.parser_filter_expression,
+          preferred_year=session.preferred_year,
           process_archive_files=process_archive_files,
           status_update_callback=status_update_callback,
           show_memory_usage=self._show_worker_memory_information,
@@ -502,14 +500,6 @@ class ExtractionFrontend(frontend.Frontend):
           as part of the worker monitoring.
     """
     self._show_worker_memory_information = show_memory
-
-  def SetStorageFile(self, storage_file_path):
-    """Sets the storage file path.
-
-    Args:
-      storage_file_path (str): path of the storage file.
-    """
-    self._storage_file_path = storage_file_path
 
   def SetTextPrepend(self, text_prepend):
     """Sets the text prepend.

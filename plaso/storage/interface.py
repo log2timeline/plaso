@@ -70,7 +70,7 @@ class BaseStorage(object):
       time_range (Optional[TimeRange]): time range used to filter events
           that fall in a specific period.
 
-    Returns:
+    Yields:
       EventObject: event.
     """
 
@@ -315,6 +315,19 @@ class StorageReader(object):
       EventTag: event tag.
     """
 
+  @abc.abstractmethod
+  def ReadPreprocessingInformation(self, knowledge_base):
+    """Reads preprocessing information.
+
+    The preprocessing information contains the system configuration which
+    contains information about various system specific configuration data,
+    for example the user accounts.
+
+    Args:
+      knowledge_base (KnowledgeBase): is used to store the preprocessing
+          information.
+    """
+
 
 class FileStorageReader(StorageReader):
   """Class that implements file-based storage reader."""
@@ -378,6 +391,19 @@ class FileStorageReader(StorageReader):
       generator(EventTag): event tag generator.
     """
     return self._storage_file.GetEventTags()
+
+  def ReadPreprocessingInformation(self, knowledge_base):
+    """Reads preprocessing information.
+
+    The preprocessing information contains the system configuration which
+    contains information about various system specific configuration data,
+    for example the user accounts.
+
+    Args:
+      knowledge_base (KnowledgeBase): is used to store the preprocessing
+          information.
+    """
+    return self._storage_file.ReadPreprocessingInformation(knowledge_base)
 
 
 class StorageWriter(object):
@@ -468,6 +494,18 @@ class StorageWriter(object):
     raise NotImplementedError()
 
   @abc.abstractmethod
+  def GetEvents(self, time_range=None):
+    """Retrieves the events in increasing chronological order.
+
+    Args:
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
+
+    Yields:
+      EventObject: event.
+    """
+
+  @abc.abstractmethod
   def GetFirstWrittenEventSource(self):
     """Retrieves the first event source that was written after open.
 
@@ -522,6 +560,19 @@ class StorageWriter(object):
                if the temporary path for the task storage does no exist.
     """
     raise NotImplementedError()
+
+  @abc.abstractmethod
+  def ReadPreprocessingInformation(self, knowledge_base):
+    """Reads preprocessing information.
+
+    The preprocessing information contains the system configuration which
+    contains information about various system specific configuration data,
+    for example the user accounts.
+
+    Args:
+      knowledge_base (KnowledgeBase): is used to store the preprocessing
+          information.
+    """
 
   @abc.abstractmethod
   def SetSerializersProfiler(self, serializers_profiler):

@@ -6,6 +6,7 @@ import multiprocessing
 
 from plaso.analysis import mediator as analysis_mediator
 from plaso.engine import plaso_queue
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.multi_processing import base_process
@@ -39,10 +40,13 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     """
     super(AnalysisProcess, self).__init__(**kwargs)
     self._abort = False
+    self._analysis_mediator = None
     self._analysis_report_queue = analysis_report_queue
     self._data_location = data_location
     self._event_queue = event_queue
     self._knowledge_base = knowledge_base
+    self._number_of_consumed_events = 0
+    self._status = definitions.PROCESSING_STATUS_INITIALIZED
 
     self.completion_event = multiprocessing.Event()
     self.plugin = plugin
@@ -53,14 +57,34 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     Returns:
       dict[str, object]: status attributes, indexed by name.
     """
-    return {}
+    if self._analysis_mediator:
+      number_of_produced_reports = (
+          self._analysis_mediator.number_of_produced_analysis_reports)
+    else:
+      number_of_produced_reports = None
+
+    status = {
+        u'display_name': u'',
+        u'identifier': self._name,
+        u'number_of_consumed_errors': None,
+        u'number_of_consumed_events': self._number_of_consumed_events,
+        u'number_of_consumed_reports': None,
+        u'number_of_consumed_sources': None,
+        u'number_of_produced_errors': None,
+        u'number_of_produced_events': None,
+        u'number_of_produced_reports': number_of_produced_reports,
+        u'number_of_produced_sources': None,
+        u'processing_status': self._status,
+        u'task_identifier': None}
+
+    return status
 
   def _Main(self):
     """The main loop."""
     analysis_report_queue_producer = plaso_queue.ItemQueueProducer(
         self._analysis_report_queue)
 
-    mediator = analysis_mediator.AnalysisMediator(
+    self._analysis_mediator = analysis_mediator.AnalysisMediator(
         analysis_report_queue_producer, self._knowledge_base,
         completion_event=self.completion_event,
         data_location=self._data_location)
@@ -73,6 +97,9 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
       while not self._abort:
         try:
           event = self._event_queue.PopItem()
+
+          self._number_of_consumed_events += 1
+
         except (errors.QueueClose, errors.QueueEmpty) as exception:
           logging.debug(u'ConsumeItems exiting with exception {0:s}.'.format(
               type(exception)))
@@ -82,7 +109,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
           logging.debug(u'ConsumeItems exiting, dequeued QueueAbort object.')
           break
 
-        self.plugin.ExamineEvent(mediator, event)
+        self.plugin.ExamineEvent(self._analysis_mediator, event)
 
       logging.debug(
           u'{0!s} (PID: {1:d}) stopped monitoring event queue.'.format(
@@ -90,18 +117,20 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
     except Exception as exception:  # pylint: disable=broad-except
       logging.warning(
-          u'Unhandled exception in worker: {0!s} (PID: {1:d}).'.format(
+          u'Unhandled exception in process: {0!s} (PID: {1:d}).'.format(
               self._name, self._pid))
       logging.exception(exception)
 
       self._abort = True
 
     # TODO: move to mediator after deprecating analysis_report_queue.
-    analysis_report = self.plugin.CompileReport(mediator)
+    analysis_report = self.plugin.CompileReport(self._analysis_mediator)
     if analysis_report:
       analysis_report.time_compiled = timelib.Timestamp.GetNow()
-      mediator.ProduceAnalysisReport(
+      self._analysis_mediator.ProduceAnalysisReport(
           analysis_report, plugin_name=self.plugin.plugin_name)
+
+    self._analysis_mediator = None
 
     self.completion_event.set()
     analysis_report_queue_producer.Close()

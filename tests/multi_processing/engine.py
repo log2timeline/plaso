@@ -16,9 +16,32 @@ from tests import test_lib as shared_test_lib
 class MultiProcessEngineTest(shared_test_lib.BaseTestCase):
   """Tests for the multi-process engine."""
 
+  # TODO: add test for _AbortJoin
+  # TODO: add test for _AbortKill
+  # TODO: add test for _AbortTerminate
+  # TODO: add test for _CheckStatusWorkerProcess
+  # TODO: add test for _GetProcessStatus
+  # TODO: add test for _KillProcess
+  # TODO: add test for _LogMemoryUsage
+  # TODO: add test for _ProfilingSampleMemory
+  # TODO: add test for _RaiseIfNotMonitored
+  # TODO: add test for _RaiseIfNotRegistered
+  # TODO: add test for _RegisterProcess
+  # TODO: add test for _StartMonitoringProcess
+  # TODO: add test for _StartStatusUpdateThread
+  # TODO: add test for _StopMonitoringProcess
+  # TODO: add test for _StopMonitoringProcesses
+  # TODO: add test for _StopStatusUpdateThread
+  # TODO: add test for _TerminateProcess
+
+
+class TaskBasedMultiProcessEngineTest(shared_test_lib.BaseTestCase):
+  """Tests for the task-based multi-process engine."""
+
   def testProcessSources(self):
     """Tests the PreprocessSources and ProcessSources function."""
-    test_engine = engine.MultiProcessEngine(maximum_number_of_tasks=100)
+    test_engine = engine.TaskBasedMultiProcessEngine(
+        maximum_number_of_tasks=100)
 
     source_path = os.path.join(self._TEST_DATA_PATH, u'ímynd.dd')
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -43,6 +66,7 @@ class MultiProcessEngineTest(shared_test_lib.BaseTestCase):
     # TODO: implement a way to obtain the results without relying
     # on multi-process primitives e.g. by writing to a file.
     # self.assertEqual(len(storage_writer.events), 15)
+
 
 if __name__ == '__main__':
   unittest.main()
