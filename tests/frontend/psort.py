@@ -177,8 +177,8 @@ class PsortFrontendTest(shared_test_lib.BaseTestCase):
       output_module = test_front_end.CreateOutputModule(storage_file)
       output_module.SetOutputWriter(output_writer)
 
-      test_front_end.SetStorageFile(storage_file_path)
-      counter = test_front_end.ProcessStorage(output_module, [], [])
+      counter = test_front_end.ProcessStorage(
+          storage_file_path, output_module, [])
 
     finally:
       storage_file.Close()

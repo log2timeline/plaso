@@ -195,7 +195,7 @@ class ParsersManager(object):
           where None represents all parsers and plugins.
 
     Returns:
-      list[tuple[str,str]]: pairs of parser plugin names and descriptions.
+      list[tuple[str, str]]: pairs of parser plugin names and descriptions.
     """
     parser_plugins_information = []
     for _, parser_class in cls.GetParsers(
@@ -232,8 +232,7 @@ class ParsersManager(object):
           where None represents all parsers and plugins.
 
     Returns:
-      A dictionary mapping parser names to parsers objects (instances of
-      BaseParser).
+      dict[str, BaseParser]: parsers per name.
     """
     includes, excludes = cls._GetParserFilters(parser_filter_expression)
 

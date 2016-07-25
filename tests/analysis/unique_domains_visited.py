@@ -4,10 +4,8 @@
 
 import unittest
 
+from plaso.analysis import mediator
 from plaso.analysis import unique_domains_visited
-from plaso.containers import events
-from plaso.engine import plaso_queue
-from plaso.engine import single_process
 from plaso.lib import timelib
 
 from tests.analysis import test_lib
@@ -15,7 +13,8 @@ from tests.analysis import test_lib
 
 class UniqueDomainsPluginTest(test_lib.AnalysisPluginTestCase):
   """Tests for the unique domains analysis plugin."""
-  _EVENT_DICTS = [
+
+  _TEST_EVENTS = [
       {u'data_type': u'chrome:history:file_downloaded',
        u'domain':u'firstevent.com',
        u'path': u'/1/index.html',
@@ -34,49 +33,27 @@ class UniqueDomainsPluginTest(test_lib.AnalysisPluginTestCase):
        u'timestamp': timelib.Timestamp.CopyFromString(u'2015-04-04 04:00:00')},
       ]
 
-  def _CreateTestEventObject(self, test_event):
-    """Create a test event object with a particular path.
-
-    Args:
-      test_event_dict: A dict containing attributes of an event to add to the
-                       queue.
-
-    Returns:
-      An event object (instance of EventObject) that contains the necessary
-      attributes for testing.
-    """
-    event_object = events.EventObject()
-    event_object.data_type = test_event[u'data_type']
-    event_object.url = u'https://{0:s}/{1:s}'.format(
-        test_event.get(u'domain', u''), test_event.get(u'path', u''))
-    event_object.timestamp = test_event[u'timestamp']
-    return event_object
-
-  def testUniqueDomainExtraction(self):
-    """Tests for the unique domains plugin."""
-    event_queue = single_process.SingleProcessQueue()
+  def testExamineEventAndCompileReport(self):
+    """Tests the ExamineEvent and CompileReport functions."""
     knowledge_base = self._SetUpKnowledgeBase()
+    analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
 
-    # Fill the incoming queue with events.
-    test_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
-    event_objects = [
-        self._CreateTestEventObject(test_event)
-        for test_event in self._EVENT_DICTS]
-    test_queue_producer.ProduceItems(event_objects)
+    plugin = unique_domains_visited.UniqueDomainsVisitedPlugin()
 
-    # Set up the plugin.
-    analysis_plugin = unique_domains_visited.UniqueDomainsVisitedPlugin(
-        event_queue)
+    for event_dictionary in self._TEST_EVENTS:
+      event_dictionary[u'url'] = u'https://{0:s}/{1:s}'.format(
+          event_dictionary[u'domain'], event_dictionary[u'path'])
 
-    analysis_report_queue_consumer = self._RunAnalysisPlugin(
-        analysis_plugin, knowledge_base)
-    analysis_reports = self._GetAnalysisReportsFromQueue(
-        analysis_report_queue_consumer)
+      event = self._CreateTestEventObject(event_dictionary)
+      plugin.ExamineEvent(analysis_mediator, event)
 
-    self.assertEqual(len(analysis_reports), 1)
-    report_text = analysis_reports[0].GetString()
-    for event_object in self._EVENT_DICTS:
-      self.assertIn(event_object.get(u'domain', u''), report_text)
+    analysis_report = plugin.CompileReport(analysis_mediator)
+    self.assertIsNotNone(analysis_report)
+
+    report_text = analysis_report.GetString()
+    for event_dictionary in self._TEST_EVENTS:
+      domain = event_dictionary.get(u'domain', u'')
+      self.assertIn(domain, report_text)
 
 
 if __name__ == '__main__':

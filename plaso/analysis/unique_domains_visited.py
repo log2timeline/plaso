@@ -27,16 +27,12 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
       u'macosx:lsquarantine', u'msiecf:redirected', u'msiecf:url',
       u'msie:webcache:container', u'opera:history', u'safari:history:visit']
 
-  def __init__(self, incoming_queue):
-    """Initializes the domains visited plugin.
-
-    Args:
-      incoming_queue: A queue to read events from.
-    """
-    super(UniqueDomainsVisitedPlugin, self).__init__(incoming_queue)
+  def __init__(self):
+    """Initializes the domains visited plugin."""
+    super(UniqueDomainsVisitedPlugin, self).__init__()
     self._domains = []
 
-  def ExamineEvent(self, mediator, event, **kwargs):
+  def ExamineEvent(self, mediator, event):
     """Analyzes an event and extracts domains from it.
 
     We only evaluate straightforward web history events, not visits which can
@@ -45,7 +41,7 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
     Args:
       mediator (AnalysisMediator): mediates interactions between
           analysis plugins and other components, such as storage and dfvfs.
-      event: The event object (instance of EventObject) to examine.
+      event (EventObject): event to examine.
     """
     if event.data_type not in self._DATATYPES:
       return

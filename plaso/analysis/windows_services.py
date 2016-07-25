@@ -197,13 +197,9 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
   # Indicate that we can run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = True
 
-  def __init__(self, incoming_queue):
-    """Initializes the Windows Services plugin
-
-    Args:
-      incoming_queue (Queue.queue): queue to read events from.
-    """
-    super(WindowsServicesPlugin, self).__init__(incoming_queue)
+  def __init__(self):
+    """Initializes the Windows Services plugin."""
+    super(WindowsServicesPlugin, self).__init__()
     self._output_format = u'text'
     self._service_collection = WindowsServiceCollection()
 
@@ -254,7 +250,7 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
     report_text = u'\n'.join(lines_of_text)
     return reports.AnalysisReport(plugin_name=self.NAME, text=report_text)
 
-  def ExamineEvent(self, mediator, event, **kwargs):
+  def ExamineEvent(self, mediator, event):
     """Analyzes an event and creates Windows Services as required.
 
       At present, this method only handles events extracted from the Registry.
@@ -262,7 +258,7 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
     Args:
       mediator (AnalysisMediator): mediates interactions between analysis
           plugins and other components, such as storage and dfvfs.
-      event: The event object (instance of EventObject) to examine.
+      event (EventObject): event to examine.
     """
     # TODO: Handle event log entries here also (ie, event id 4697).
     if getattr(event, u'data_type', None) != u'windows:registry:service':

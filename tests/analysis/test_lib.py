@@ -5,13 +5,10 @@ from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.analysis import mediator
 from plaso.containers import artifacts
-from plaso.containers import reports
+from plaso.containers import events
 from plaso.containers import sessions
 from plaso.engine import knowledge_base
-from plaso.engine import plaso_queue
-from plaso.engine import single_process
 from plaso.parsers import interface as parsers_interface
 from plaso.parsers import mediator as parsers_mediator
 from plaso.storage import fake_storage
@@ -19,72 +16,24 @@ from plaso.storage import fake_storage
 from tests import test_lib as shared_test_lib
 
 
-class TestAnalysisReportQueueConsumer(plaso_queue.ItemQueueConsumer):
-  """Class that implements a test analysis report queue consumer."""
-
-  def __init__(self, queue_object):
-    """Initializes the queue consumer.
-
-    Args:
-      queue_object (Queue): queue object.
-    """
-    super(TestAnalysisReportQueueConsumer, self).__init__(queue_object)
-    self.analysis_reports = []
-
-  def _ConsumeItem(self, analysis_report, **unused_kwargs):
-    """Consumes an item callback for ConsumeItems.
-
-    Args:
-      analysis_report (AnalysisReport): analysis report.
-    """
-    self.analysis_reports.append(analysis_report)
-
-  @property
-  def number_of_analysis_reports(self):
-    """The number of analysis reports."""
-    return len(self.analysis_reports)
-
-
-class TestEventObjectProducer(plaso_queue.ItemQueueProducer):
-  """Class that implements an event object producer."""
-
-  def __init__(self, queue_object, storage_writer):
-    """Initializes the queue producer object.
-
-    Args:
-      queue_object (Queue): queue.
-      storage_writer (FakeStorageWriter): storage writer.
-    """
-    super(TestEventObjectProducer, self).__init__(queue_object)
-    self._storage_writer = storage_writer
-
-  def Run(self):
-    """Produces event object onto the queue."""
-    for event_object in self._storage_writer.events:
-      self.ProduceItem(event_object)
-
-
 class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for an analysis plugin."""
 
-  def _GetAnalysisReportsFromQueue(self, analysis_report_queue_consumer):
-    """Retrieves the analysis reports from the queue consumer.
+  def _CreateTestEventObject(self, event_dictionary):
+    """Create a test event with a set of attributes.
 
     Args:
-      analysis_report_queue_consumer (TestAnalysisReportQueueConsumer):
-          analysis report queue consumer.
+      event_dictionary (dict[str, str]): contains attributes of an event to add
+          to the queue.
 
     Returns:
-      list[AnalysisReport]: analysis reports.
+      EventObject: event with the appropriate attributes for testing.
     """
-    analysis_report_queue_consumer.ConsumeItems()
+    event = events.EventObject()
+    for attribute_name, attribute_value in event_dictionary.items():
+      setattr(event, attribute_name, attribute_value)
 
-    analysis_reports = []
-    for analysis_report in analysis_report_queue_consumer.analysis_reports:
-      self.assertIsInstance(analysis_report, reports.AnalysisReport)
-      analysis_reports.append(analysis_report)
-
-    return analysis_reports
+    return event
 
   def _ParseFile(self, path_segments, parser, knowledge_base_object):
     """Parses a file using the parser object.
@@ -126,29 +75,6 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
           u'Got unexpected parser type: {0:s}'.format(type(parser)))
 
     return storage_writer
-
-  def _RunAnalysisPlugin(self, analysis_plugin, knowledge_base_object):
-    """Analyzes an event object queue using the plugin object.
-
-    Args:
-      analysis_plugin (AnalysisPlugin): analysis plugin.
-      knowledge_base_object (KnowledgeBase): knowledge base.
-
-    Returns:
-      TestAnalysisReportQueueConsumer: analysis report queue consumer.
-    """
-    analysis_report_queue = single_process.SingleProcessQueue()
-    analysis_report_queue_consumer = TestAnalysisReportQueueConsumer(
-        analysis_report_queue)
-    analysis_report_queue_producer = plaso_queue.ItemQueueProducer(
-        analysis_report_queue)
-
-    analysis_mediator = mediator.AnalysisMediator(
-        analysis_report_queue_producer, knowledge_base_object)
-
-    analysis_plugin.RunPlugin(analysis_mediator)
-
-    return analysis_report_queue_consumer
 
   def _SetUpKnowledgeBase(self, knowledge_base_values=None):
     """Sets up a knowledge base.

@@ -22,13 +22,9 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
   _TITLE_RE = re.compile(r'<title>([^<]+)</title>')
   _WEB_STORE_URL = u'https://chrome.google.com/webstore/detail/{xid}?hl=en-US'
 
-  def __init__(self, incoming_queue):
-    """Initializes the Chrome extension analysis plugin.
-
-    Args:
-      incoming_queue (Queue): queue for incoming events.
-    """
-    super(ChromeExtensionPlugin, self).__init__(incoming_queue)
+  def __init__(self):
+    """Initializes the Chrome extension analysis plugin."""
+    super(ChromeExtensionPlugin, self).__init__()
 
     # Saved list of already looked up extensions.
     self._extensions = {}
@@ -154,7 +150,7 @@ class ChromeExtensionPlugin(interface.AnalysisPlugin):
     analysis_report.report_dict = self._results
     return analysis_report
 
-  def ExamineEvent(self, mediator, event, **kwargs):
+  def ExamineEvent(self, mediator, event):
     """Analyzes an event.
 
     Args:
