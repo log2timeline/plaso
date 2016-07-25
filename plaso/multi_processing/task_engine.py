@@ -427,7 +427,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._task_queue.Empty()
 
       # Wake the processes to make sure that they are not blocking
-      # waiting for the queue not to be full.
+      # waiting for the queue new items.
       for _ in range(self._number_of_worker_processes):
         self._task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
 

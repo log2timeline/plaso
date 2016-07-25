@@ -88,7 +88,7 @@ class ProcessStatus(object):
       bool: True if either number of errors has increased.
 
     Raises:
-      ValueError: if the consumer or produced number of errors is smaller
+      ValueError: if the consumed or produced number of errors is smaller
           than the value of the previous update.
     """
     consumed_errors_delta = 0
@@ -131,7 +131,7 @@ class ProcessStatus(object):
       bool: True if either number of events has increased.
 
     Raises:
-      ValueError: if the consumer or produced number of events is smaller
+      ValueError: if the consumed or produced number of events is smaller
           than the value of the previous update.
     """
     consumed_events_delta = 0
@@ -174,7 +174,7 @@ class ProcessStatus(object):
       bool: True if either number of event reports has increased.
 
     Raises:
-      ValueError: if the consumer or produced number of event reports is
+      ValueError: if the consumed or produced number of event reports is
           smaller than the value of the previous update.
     """
     consumed_reports_delta = 0
@@ -217,7 +217,7 @@ class ProcessStatus(object):
       bool: True if either number of event sources has increased.
 
     Raises:
-      ValueError: if the consumer or produced number of event sources is
+      ValueError: if the consumed or produced number of event sources is
           smaller than the value of the previous update.
     """
     consumed_sources_delta = 0

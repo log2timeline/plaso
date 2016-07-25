@@ -733,7 +733,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     else:
       status_update_callback = None
       if self._output_format == u'null':
-        # Status view currently only supported with null ouput format.
+        # Status view currently only supported with null output format.
         if self._status_view_mode == u'linear':
           status_update_callback = self._PrintStatusUpdateStream
         elif self._status_view_mode == u'window':

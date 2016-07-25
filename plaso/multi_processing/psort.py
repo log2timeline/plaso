@@ -427,6 +427,16 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       # Signal all the processes to abort.
       self._AbortTerminate()
 
+    if not self._use_zeromq:
+      logging.debug(u'Emptying queues.')
+
+      for event_queue in self._event_queues:
+        event_queue.Empty()
+
+        # Wake the processes to make sure that they are not blocking
+        # waiting for the queue new items.
+        event_queue.PushItem(plaso_queue.QueueAbort(), block=False)
+
     # Try waiting for the processes to exit normally.
     self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
 

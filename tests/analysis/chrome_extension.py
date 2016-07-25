@@ -90,8 +90,6 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
 
   def testExamineEventAndCompileReportMacOSXPaths(self):
     """Tests the ExamineEvent and CompileReport functions on Mac OS X paths."""
-  def testExamineEventMacOSXPaths(self):
-    """Tests the ExamineEvent function on Mac OS X paths."""
     events = []
     for path in self._MACOSX_PATHS:
       event_dictionary = {

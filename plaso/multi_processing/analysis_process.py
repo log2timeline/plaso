@@ -77,7 +77,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
   def _Main(self):
     """The main loop."""
-    logging.debug(u'Analyzer: {0!s} (PID: {1:d}) started'.format(
+    logging.debug(u'Analysis plugin: {0!s} (PID: {1:d}) started'.format(
         self._name, self._pid))
 
     self._status = definitions.PROCESSING_STATUS_ANALYZING
@@ -132,13 +132,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
       if not self._abort:
         self._status = definitions.PROCESSING_STATUS_REPORTING
 
-        # TODO: move to mediator after deprecating analysis_report_queue.
-        analysis_report = self._analysis_plugin.CompileReport(
-            self._analysis_mediator)
-        if analysis_report:
-          analysis_report.time_compiled = timelib.Timestamp.GetNow()
-          self._analysis_mediator.ProduceAnalysisReport(
-              analysis_report, plugin_name=self._analysis_plugin.plugin_name)
+        self._analysis_mediator.ProduceAnalysisReport(self._analysis_plugin)
 
     # All exceptions need to be caught here to prevent the process
     # from being killed by an uncaught exception.
@@ -169,7 +163,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     else:
       self._status = definitions.PROCESSING_STATUS_COMPLETED
 
-    logging.debug(u'Analyzer: {0!s} (PID: {1:d}) stopped'.format(
+    logging.debug(u'Analysis plugin: {0!s} (PID: {1:d}) stopped'.format(
         self._name, self._pid))
 
     if isinstance(self._event_queue, multi_process_queue.MultiProcessingQueue):

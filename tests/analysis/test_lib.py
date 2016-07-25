@@ -21,12 +21,12 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for an analysis plugin."""
 
   def _AnalyzeEvents(
-      self, event_objects, analysis_plugin, knowledge_base_values=None):
+      self, event_objects, plugin, knowledge_base_values=None):
     """Analyzes events using the analysis plugin.
 
     Args:
       event_objects (list[EventObject]]): events to analyze.
-      analysis_plugin (AnalysisPluging): analysis plugin.
+      plugin (AnalysisPluging): plugin.
       knowledge_base_values (Optional[dict[str,str]]): knowledge base values.
 
     Returns:
@@ -43,9 +43,9 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
         storage_writer, knowledge_base_object)
 
     for event in event_objects:
-      analysis_plugin.ExamineEvent(mediator, event)
+      plugin.ExamineEvent(mediator, event)
 
-    analysis_report = analysis_plugin.CompileReport(mediator)
+    analysis_report = plugin.CompileReport(mediator)
     storage_writer.AddAnalysisReport(analysis_report)
 
     return storage_writer
@@ -66,13 +66,13 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     return event
 
   def _ParseAndAnalyzeFile(
-      self, path_segments, parser, analysis_plugin, knowledge_base_values=None):
+      self, path_segments, parser, plugin, knowledge_base_values=None):
     """Parses and analyzes a file using the parser and analysis plugin.
 
     Args:
       path_segments (list[str]): path segments inside the test data directory.
       parser (BaseParser): parser.
-      analysis_plugin (AnalysisPluging): analysis plugin.
+      plugin (AnalysisPluging): plugin.
       knowledge_base_values (Optional[dict[str,str]]): knowledge base values.
 
     Returns:
@@ -88,9 +88,9 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
         storage_writer, knowledge_base_object)
 
     for event in storage_writer.events:
-      analysis_plugin.ExamineEvent(mediator, event)
+      plugin.ExamineEvent(mediator, event)
 
-    analysis_report = analysis_plugin.CompileReport(mediator)
+    analysis_report = plugin.CompileReport(mediator)
     storage_writer.AddAnalysisReport(analysis_report)
 
     return storage_writer

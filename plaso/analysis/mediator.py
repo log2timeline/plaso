@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The analysis plugin mediator object."""
 
+from plaso.lib import timelib
+
 
 class AnalysisMediator(object):
   """Class that implements the analysis plugin mediator.
@@ -8,7 +10,7 @@ class AnalysisMediator(object):
   Attributes:
     number_of_produced_analysis_reports (int): number of produced analysis
         reports.
-    number_of_produced_event_tage (int): number of produced event tags.
+    number_of_produced_event_tags (int): number of produced event tags.
   """
 
   def __init__(self, storage_writer, knowledge_base, data_location=None):
@@ -83,14 +85,20 @@ class AnalysisMediator(object):
     """
     return self._knowledge_base.GetUsernameForPath(path)
 
-  def ProduceAnalysisReport(self, analysis_report, plugin_name=None):
+  def ProduceAnalysisReport(self, plugin):
     """Produces an analysis report.
 
     Args:
-      analysis_report (AnalysisReport): analysis report.
-      plugin_name (Optional[str]): name of the plugin.
+      plugin (AnalysisPlugin): plugin.
     """
-    if not getattr(analysis_report, u'plugin_name', None) and plugin_name:
+    analysis_report = plugin.CompileReport(self)
+    if not analysis_report:
+      return
+
+    analysis_report.time_compiled = timelib.Timestamp.GetNow()
+
+    plugin_name = getattr(analysis_report, u'plugin_name', plugin.plugin_name)
+    if plugin_name:
       analysis_report.plugin_name = plugin_name
 
     self._storage_writer.AddAnalysisReport(analysis_report)
