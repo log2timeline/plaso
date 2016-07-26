@@ -20,7 +20,6 @@ from plaso.engine import plaso_queue
 from plaso.engine import profiler
 from plaso.engine import zeromq_queue
 from plaso.lib import definitions
-from plaso.lib import errors
 from plaso.multi_processing import multi_process_queue
 from plaso.multi_processing import process_info
 from plaso.multi_processing import task_manager
@@ -55,6 +54,8 @@ class MultiProcessEngine(engine.BaseEngine):
 
   _WORKER_PROCESSES_MINIMUM = 2
   _WORKER_PROCESSES_MAXIMUM = 15
+
+  _ZEROMQ_QUEUE_TIMEOUT_SECONDS = 300
 
   def __init__(
       self, debug_output=False, enable_profiling=False,
@@ -576,7 +577,7 @@ class MultiProcessEngine(engine.BaseEngine):
       task_queue = zeromq_queue.ZeroMQRequestConnectQueue(
           delay_open=True, name=u'{0:s}_task'.format(process_name),
           linger_seconds=0, port=self._task_queue_port,
-          timeout_seconds=5*60)
+          timeout_seconds=self._ZEROMQ_QUEUE_TIMEOUT_SECONDS)
     else:
       task_queue = self._task_queue
 
@@ -731,25 +732,15 @@ class MultiProcessEngine(engine.BaseEngine):
 
     # Try waiting for the processes to exit normally.
     self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
-
-    if not abort:
-      # Check if the processes are still alive and terminate them if necessary.
-      self._AbortTerminate()
-      self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
-
-    # For Multiprocessing queues, set abort to True to stop queue.join_thread()
-    # from blocking.
-    if isinstance(self._task_queue, multi_process_queue.MultiProcessingQueue):
-      self._task_queue.Close(abort=True)
-    else:
-      try:
-        self._task_queue.Close()
-      except errors.QueueAlreadyClosed:
-        pass
+    self._task_queue.Close(abort=abort)
 
     if abort:
       # Kill any remaining processes.
       self._AbortKill()
+    else:
+      # Check if the processes are still alive and terminate them if necessary.
+      self._AbortTerminate()
+      self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
 
   def _StopMonitoringProcess(self, pid):
     """Stops monitoring a process.
@@ -1026,12 +1017,10 @@ class MultiProcessEngine(engine.BaseEngine):
       # due to incorrectly finalized IPC.
       self._KillProcess(os.getpid())
 
-    try:
-      self._task_queue.Close(abort=self._abort)
-    except errors.QueueAlreadyClosed:
       # The task queue should be closed by _StopExtractionProcesses, this
-      # close is a failsafe.
-      pass
+      # close is a failsafe, primarily due to MultiProcessingQueue's blocking
+      # behaviour.
+      self._task_queue.Close(abort=True)
 
     if self._processing_status.error_path_specs:
       task_storage_abort = True

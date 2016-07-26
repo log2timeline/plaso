@@ -35,8 +35,7 @@ class testZeroMQQueues(shared_test_lib.BaseTestCase):
     test_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
         name=u'bufferedreply_bind', delay_open=False, linger_seconds=1)
     test_queue.PushItem(u'This is a test item.')
-    test_queue.Empty()
-    test_queue.Close()
+    test_queue.Close(abort=True)
     with self.assertRaises(errors.QueueAlreadyClosed):
       test_queue.PushItem(u'This shouldn\'t work')
 
@@ -100,7 +99,6 @@ class testZeroMQQueues(shared_test_lib.BaseTestCase):
           name=queue_name, delay_open=False, linger_seconds=1)
       self.assertIsNotNone(test_queue._zmq_socket)
       test_queue.Close()
-
 
 if __name__ == '__main__':
   unittest.main()

@@ -415,7 +415,7 @@ class SingleProcessQueue(plaso_queue.Queue):
     """Determines if the queue is empty."""
     return len(self._queue) == 0
 
-  def PushItem(self, item):
+  def PushItem(self, item, **unused_kwargs):
     """Pushes an item onto the queue.
 
     Raises:
@@ -446,7 +446,7 @@ class SingleProcessQueue(plaso_queue.Queue):
     except KeyboardInterrupt:
       raise errors.QueueClose
 
-  def Close(self):
+  def Close(self, **unused_kwargs):
     """Closes this queue, indicating that no further items will be added to it.
 
     This method has no effect for the single process queue, but is included
