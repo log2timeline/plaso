@@ -28,7 +28,9 @@ class TaggingPlugin(interface.AnalysisPlugin):
 
   ENABLE_IN_EXTRACTION = True
 
-  _OS_TAG_FILES = {u'macosx': u'tag_macosx.txt', u'windows': u'tag_windows.txt'}
+  _OS_TAG_FILES = {
+      u'macosx': u'tag_macosx.txt',
+      u'windows': u'tag_windows.txt'}
 
   # A line with no indent is a tag name.
   _TAG_LABEL_LINE = re.compile(r'^(\w+)')
@@ -38,13 +40,9 @@ class TaggingPlugin(interface.AnalysisPlugin):
   _OBJECTFILTER_WORDS = re.compile(
       r'\s(is|isnot|equals|notequals|inset|notinset|contains|notcontains)\s')
 
-  def __init__(self, incoming_queue):
-    """Initializes the tagging engine object.
-
-    Args:
-      incoming_queue (Queue): queue that listens to incoming events.
-    """
-    super(TaggingPlugin, self).__init__(incoming_queue)
+  def __init__(self):
+    """Initializes the tagging analysis plugin."""
+    super(TaggingPlugin, self).__init__()
     self._autodetect_tag_file_attempt = False
     self._tag_rules = None
     self._tagging_file_name = None
@@ -82,7 +80,7 @@ class TaggingPlugin(interface.AnalysisPlugin):
     self.SetAndLoadTagFile(tag_file_path)
     return True
 
-  def ExamineEvent(self, mediator, event, **kwargs):
+  def ExamineEvent(self, mediator, event):
     """Analyzes an EventObject and tags it according to rules in the tag file.
 
     Args:
