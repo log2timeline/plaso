@@ -29,25 +29,24 @@ class SafaryCookieFormatter(interface.ConditionalEventFormatter):
       2: u'Unknown',
       4: u'HttpOnly'}
 
-  def GetMessages(self, unused_formatter_mediator, event_object):
+  def GetMessages(self, unused_formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 
     Args:
-      formatter_mediator: the formatter mediator object (instance of
-                          FormatterMediator).
-      event_object: the event object (instance of EventObject).
+      formatter_mediator (FormatterMediator): formatter mediator.
+      event (EventObject): event.
 
     Returns:
-      A tuple containing the formatted message string and short message string.
+      tuple(str, str): formatted message string and short message string.
 
     Raises:
       WrongFormatter: if the event object cannot be formatted by the formatter.
     """
-    if self.DATA_TYPE != event_object.data_type:
+    if self.DATA_TYPE != event.data_type:
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
-          event_object.data_type))
+          event.data_type))
 
-    event_values = event_object.CopyToDict()
+    event_values = event.CopyToDict()
 
     cookie_flags = event_values.get(u'flags', None)
     if cookie_flags == 0:

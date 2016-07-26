@@ -47,10 +47,10 @@ class Sqlite3DatabaseFile(object):
     """Determines if a specific table exists.
 
     Args:
-      table_name: the table name.
+      table_name (str): the table name.
 
     Returns:
-      True if the table exists, false otheriwse.
+      bool: True if the table exists, False otheriwse.
 
     Raises:
       RuntimeError: if the database is not opened.
@@ -71,12 +71,12 @@ class Sqlite3DatabaseFile(object):
     """Retrieves values from a table.
 
     Args:
-      table_names: list of table names.
-      column_names: list of column names.
-      condition: string containing the condition.
+      table_names (list[str]): table names.
+      column_names (list[str]): column names.
+      condition (str): condition.
 
     Yields:
-      A row object (instance of sqlite3.row).
+      sqlite3.row: row.
 
     Raises:
       RuntimeError: if the database is not opened.
@@ -105,14 +105,13 @@ class Sqlite3DatabaseFile(object):
     """Opens the database file.
 
     Args:
-      filename: the filename of the database.
-      read_only: optional boolean value to indicate the database should be
-                 opened in read-only mode. Since sqlite3 does not support
-                 a real read-only mode we fake it by only permitting SELECT
-                 queries.
+      filename (str): filename of the database.
+      read_only (Optional[bool]): True if the database should be opened in
+          read-only mode. Since sqlite3 does not support a real read-only
+          mode we fake it by only permitting SELECT queries.
 
     Returns:
-      A boolean containing True if successful or False if not.
+      bool: True if successful or False if not.
 
     Raises:
       RuntimeError: if the database is already opened.
@@ -154,10 +153,10 @@ class Sqlite3DatabaseReader(object):
     """Opens the database reader object.
 
     Args:
-      filename: the filename of the database.
+      filename (str): filename of the database.
 
     Returns:
-      A boolean containing True if successful or False if not.
+      bool: True if successful or False if not.
     """
     return self._database_file.Open(filename, read_only=True)
 
@@ -183,10 +182,10 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Retrieves the Event Log provider key.
 
     Args:
-      log_source: the Event Log source.
+      log_source (str): Event Log source.
 
     Returns:
-      An Event Log provider key or None if not available.
+      str: Event Log provider key or None if not available.
 
     Raises:
       RuntimeError: if more than one value is found in the database.
@@ -212,12 +211,12 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Retrieves a specific message from a specific message table.
 
     Args:
-      message_file_key: the message file key.
-      lcid: integer containing the language code identifier (LCID).
-      message_identifier: the message identifier.
+      message_file_key (int): message file key.
+      lcid (int): language code identifier (LCID).
+      message_identifier (int): message identifier.
 
     Returns:
-      The message string or None if not available.
+      str: message string or None if not available.
 
     Raises:
       RuntimeError: if more than one value is found in the database.
@@ -247,10 +246,10 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Retrieves the message file keys.
 
     Args:
-      event_log_provider_key: the Event Log provider key.
+      event_log_provider_key (int): Event Log provider key.
 
     Yields:
-      A message file key.
+      int: message file key.
     """
     table_names = [u'message_file_per_event_log_provider']
     column_names = [u'message_file_key']
@@ -266,10 +265,10 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Reformats the message string.
 
     Args:
-      message_string: the message string.
+      message_string (str): message string.
 
     Returns:
-      The message string in Python format() (PEP 3101) style.
+      str: message string in Python format() (PEP 3101) style.
     """
     def place_holder_specifier_replacer(match_object):
       """Replaces message string place holders into Python format() style."""
@@ -298,12 +297,12 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Retrieves a specific message for a specific Event Log source.
 
     Args:
-      log_source: the Event Log source.
-      lcid: the language code identifier (LCID).
-      message_identifier: the message identifier.
+      log_source (str): Event Log source.
+      lcid (int): language code identifier (LCID).
+      message_identifier (int): message identifier.
 
     Returns:
-      The message string or None if not available.
+      str: message string or None if not available.
     """
     event_log_provider_key = self._GetEventLogProviderKey(log_source)
     if not event_log_provider_key:
@@ -331,10 +330,10 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Retrieves the metadata attribute.
 
     Args:
-      attribute_name: the name of the metadata attribute.
+      attribute_name (str): name of the metadata attribute.
 
     Returns:
-      The value of the metadata attribute or None.
+      str: the metadata attribute or None.
 
     Raises:
       RuntimeError: if more than one value is found in the database.
@@ -364,10 +363,10 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
     """Opens the database reader object.
 
     Args:
-      filename: the filename of the database.
+      filename (str): filename of the database.
 
     Returns:
-      A boolean containing True if successful or False if not.
+      bool: True if successful or False if not.
 
     Raises:
       RuntimeError: if the version or string format of the database

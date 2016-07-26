@@ -55,11 +55,11 @@ class EventFormatter(object):
     """Determines the formatted message string.
 
     Args:
-      format_string: a Unicode string containing the message format string.
-      event_values: a dictionary object containing the event (object) values.
+      format_string (str): message format string.
+      event_values (dict[str, object]): event values.
 
     Returns:
-      The formatted message string.
+      str: formatted message string.
     """
     if not isinstance(format_string, py2to3.UNICODE_TYPE):
       logging.warning(u'Format string: {0:s} is non-Unicode.'.format(
@@ -111,13 +111,12 @@ class EventFormatter(object):
     """Determines the formatted message strings.
 
     Args:
-      format_string: a Unicode string containing the message format string.
-      short_format_string: a Unicode string containing the short message
-                           format string.
-      event_values: a dictionary object containing the event (object) values.
+      format_string (str): message format string.
+      short_format_string (str): short message format string.
+      event_values (dict[str, object]): event values.
 
     Returns:
-      A tuple containing the formatted message string and short message string.
+      tuple(str, str): formatted message string and short message string.
     """
     message_string = self._FormatMessage(format_string, event_values)
 
@@ -137,7 +136,7 @@ class EventFormatter(object):
     """Retrieves the attribute names in the format string.
 
     Returns:
-      A set containing the attribute names.
+      set(str): attribute names.
     """
     if self._format_string_attribute_names is None:
       self._format_string_attribute_names = (
@@ -146,43 +145,42 @@ class EventFormatter(object):
 
     return set(self._format_string_attribute_names)
 
-  def GetMessages(self, unused_formatter_mediator, event_object):
+  def GetMessages(self, unused_formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 
     Args:
-      formatter_mediator: the formatter mediator object (instance of
-                          FormatterMediator).
-      event_object: the event object (instance of EventObject).
+      formatter_mediator (FormatterMediator): formatter mediator.
+      event (EventObject): event.
 
     Returns:
-      A tuple containing the formatted message string and short message string.
+      tuple(str, str): formatted message string and short message string.
 
     Raises:
       WrongFormatter: if the event object cannot be formatted by the formatter.
     """
-    if self.DATA_TYPE != event_object.data_type:
+    if self.DATA_TYPE != event.data_type:
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
-          event_object.data_type))
+          event.data_type))
 
-    event_values = event_object.CopyToDict()
+    event_values = event.CopyToDict()
     return self._FormatMessages(
         self.FORMAT_STRING, self.FORMAT_STRING_SHORT, event_values)
 
-  def GetSources(self, event_object):
+  def GetSources(self, event):
     """Determines the the short and long source for an event object.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A tuple of the short and long source string.
+      tuple(str, str): short and long source string.
 
     Raises:
       WrongFormatter: if the event object cannot be formatted by the formatter.
     """
-    if self.DATA_TYPE != event_object.data_type:
+    if self.DATA_TYPE != event.data_type:
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
-          event_object.data_type))
+          event.data_type))
 
     return self.SOURCE_SHORT, self.SOURCE_LONG
 
@@ -190,14 +188,14 @@ class EventFormatter(object):
 class ConditionalEventFormatter(EventFormatter):
   """Base class to conditionally format event data using format string pieces.
 
-     Define the (long) format string and the short format string by defining
-     FORMAT_STRING_PIECES and FORMAT_STRING_SHORT_PIECES. The syntax of the
-     format strings pieces is similar to of the event formatter
-     (EventFormatter). Every format string piece should contain a single
-     attribute name or none.
+  Define the (long) format string and the short format string by defining
+  FORMAT_STRING_PIECES and FORMAT_STRING_SHORT_PIECES. The syntax of the
+  format strings pieces is similar to of the event formatter
+  (EventFormatter). Every format string piece should contain a single
+  attribute name or none.
 
-     FORMAT_STRING_SEPARATOR is used to control the string which the separate
-     string pieces should be joined. It contains a space by default.
+  FORMAT_STRING_SEPARATOR is used to control the string which the separate
+  string pieces should be joined. It contains a space by default.
   """
   # The format string pieces.
   FORMAT_STRING_PIECES = [u'']
@@ -209,8 +207,8 @@ class ConditionalEventFormatter(EventFormatter):
   def __init__(self):
     """Initializes the conditional formatter.
 
-       A map is build of the string pieces and their corresponding attribute
-       name to optimize conditional string formatting.
+    A map is build of the string pieces and their corresponding attribute
+    name to optimize conditional string formatting.
 
     Raises:
       RuntimeError: when an invalid format string piece is encountered.
@@ -265,7 +263,7 @@ class ConditionalEventFormatter(EventFormatter):
       event_values: a dictionary object containing the event (object) values.
 
     Returns:
-      A tuple containing the formatted message string and short message string.
+      tuple(str, str): formatted message string and short message string.
     """
     # Using getattr here to make sure the attribute is not set to None.
     # if A.b = None, hasattr(A, b) is True but getattr(A, b, None) is False.
@@ -297,7 +295,7 @@ class ConditionalEventFormatter(EventFormatter):
     """Retrieves the attribute names in the format string.
 
     Returns:
-      A set containing the attribute names.
+      set(str): attribute names.
     """
     if self._format_string_attribute_names is None:
       self._format_string_attribute_names = []
@@ -310,23 +308,22 @@ class ConditionalEventFormatter(EventFormatter):
 
     return set(self._format_string_attribute_names)
 
-  def GetMessages(self, unused_formatter_mediator, event_object):
+  def GetMessages(self, unused_formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 
     Args:
-      formatter_mediator: the formatter mediator object (instance of
-                          FormatterMediator).
-      event_object: the event object (instance of EventObject).
+      formatter_mediator (FormatterMediator): formatter mediator.
+      event (EventObject): event.
 
     Returns:
-      A tuple containing the formatted message string and short message string.
+      tuple(str, str): formatted message string and short message string.
 
     Raises:
       WrongFormatter: if the event object cannot be formatted by the formatter.
     """
-    if self.DATA_TYPE != event_object.data_type:
+    if self.DATA_TYPE != event.data_type:
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
-          event_object.data_type))
+          event.data_type))
 
-    event_values = event_object.CopyToDict()
+    event_values = event.CopyToDict()
     return self._ConditionalFormatMessages(event_values)

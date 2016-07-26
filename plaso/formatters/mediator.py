@@ -35,8 +35,8 @@ class FormatterMediator(object):
     """Opens the Windows Event Log resource database reader.
 
     Returns:
-      The Windows Event Log resource database reader (instance of
-      WinevtResourcesSqlite3DatabaseReader) or None.
+      WinevtResourcesSqlite3DatabaseReader: Windows Event Log resource
+          database reader or None.
     """
     if not self._winevt_database_reader and self._data_location:
       database_path = os.path.join(
@@ -53,18 +53,18 @@ class FormatterMediator(object):
 
   @property
   def lcid(self):
-    """The preferred Language Code identifier (LCID)."""
+    """int: preferred Language Code identifier (LCID)."""
     return self._lcid
 
   def GetWindowsEventMessage(self, log_source, message_identifier):
     """Retrieves the message string for a specific Windows Event Log source.
 
     Args:
-      log_source: the Event Log source.
-      message_identifier: the message identifier.
+      log_source (str): Event Log source.
+      message_identifier (int): message identifier.
 
     Returns:
-      The message string or None if not available.
+      str: message string or None if not available.
     """
     database_reader = self._GetWinevtRcDatabaseReader()
     if not database_reader:
@@ -83,8 +83,8 @@ class FormatterMediator(object):
     """Sets the preferred language identifier.
 
     Args:
-      language_identifier: the language identifier string e.g. en-US for
-                           US English or is-IS for Icelandic.
+      language_identifier (str): language identifier string e.g. en-US for
+          US English or is-IS for Icelandic.
 
     Raises:
       KeyError: if the language identifier is not defined.

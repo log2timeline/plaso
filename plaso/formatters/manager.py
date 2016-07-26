@@ -19,7 +19,7 @@ class FormattersManager(object):
     The formatter classes are identified based on their lower case data type.
 
     Args:
-      formatter_class: the class object of the formatter.
+      formatter_class (type): class of the formatter.
 
     Raises:
       KeyError: if formatter class is not set for the corresponding data type.
@@ -37,11 +37,11 @@ class FormattersManager(object):
     """Retrieves the formatter object for a specific data type.
 
     Args:
-      data_type: The data type.
+      data_type (str): data type.
 
     Returns:
-      The corresponding formatter (instance of EventFormatter) or
-      the default formatter (instance of DefaultFormatter) if not available.
+      EventFormatter: corresponding formatter the default formatter if
+          not available.
     """
     data_type = data_type.lower()
     if data_type not in cls._formatter_objects:
@@ -63,36 +63,33 @@ class FormattersManager(object):
     return cls._formatter_objects[data_type]
 
   @classmethod
-  def GetMessageStrings(cls, formatter_mediator, event_object):
+  def GetMessageStrings(cls, formatter_mediator, event):
     """Retrieves the formatted message strings for a specific event object.
 
     Args:
-      formatter_mediator: the formatter mediator object (instance of
-                          FormatterMediator).
-      event_object: the event object (instance of EventObject).
+      formatter_mediator (FormatterMediator): formatter mediator.
+      event (EventObject): event.
 
     Returns:
-      A list that contains both the longer and shorter version of the message
-      string.
+      list[str, str]: longer and shorter version of the message string.
     """
-    formatter_object = cls.GetFormatterObject(event_object.data_type)
-    return formatter_object.GetMessages(formatter_mediator, event_object)
+    formatter_object = cls.GetFormatterObject(event.data_type)
+    return formatter_object.GetMessages(formatter_mediator, event)
 
   @classmethod
-  def GetSourceStrings(cls, event_object):
+  def GetSourceStrings(cls, event):
     """Retrieves the formatted source strings for a specific event object.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A list that contains the source_short and source_long version of the
-      event.
+      list[str, str]: short and long version of the source of the event.
     """
     # TODO: change this to return the long variant first so it is consistent
     # with GetMessageStrings.
-    formatter_object = cls.GetFormatterObject(event_object.data_type)
-    return formatter_object.GetSources(event_object)
+    formatter_object = cls.GetFormatterObject(event.data_type)
+    return formatter_object.GetSources(event)
 
   @classmethod
   def RegisterFormatter(cls, formatter_class):
@@ -101,7 +98,7 @@ class FormattersManager(object):
     The formatter classes are identified based on their lower case data type.
 
     Args:
-      formatter_class: the class object of the formatter.
+      formatter_class (type): class of the formatter.
 
     Raises:
       KeyError: if formatter class is already set for the corresponding
@@ -122,7 +119,7 @@ class FormattersManager(object):
     The formatter classes are identified based on their lower case data type.
 
     Args:
-      formatter_classes: a list of class objects of the formatters.
+      formatter_classes (list[type]): classes of the formatters.
 
     Raises:
       KeyError: if formatter class is already set for the corresponding

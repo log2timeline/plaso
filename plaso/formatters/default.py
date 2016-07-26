@@ -12,18 +12,17 @@ class DefaultFormatter(interface.EventFormatter):
   FORMAT_STRING = u'<WARNING DEFAULT FORMATTER> Attributes: {attribute_driven}'
   FORMAT_STRING_SHORT = u'<DEFAULT> {attribute_driven}'
 
-  def GetMessages(self, unused_formatter_mediator, event_object):
+  def GetMessages(self, unused_formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 
     Args:
-      formatter_mediator: the formatter mediator object (instance of
-                          FormatterMediator).
-      event_object: the event object (instance of EventObject).
+      formatter_mediator (FormatterMediator): formatter mediator.
+      event (EventObject): event.
 
     Returns:
-      A tuple containing the formatted message string and short message string.
+      tuple(str, str): formatted message string and short message string.
     """
-    event_values = event_object.CopyToDict()
+    event_values = event.CopyToDict()
 
     # TODO: clean up the default formatter and add a test to make sure
     # it is clear how it is intended to work.

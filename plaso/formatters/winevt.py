@@ -50,7 +50,7 @@ class WinEVTFormatter(interface.ConditionalEventFormatter):
     """Retrieves a string representation of the event type.
 
     Args:
-      event_type: The numeric event type.
+      event_type (int): numeric event type.
 
     Returns:
       An Unicode string containing a description of the event type.
@@ -63,7 +63,7 @@ class WinEVTFormatter(interface.ConditionalEventFormatter):
     """Retrieves a string representation of the severity.
 
     Args:
-      severity: The numeric severity.
+      severity (int): numeric severity.
 
     Returns:
       An Unicode string containing a description of the event type.
@@ -72,25 +72,24 @@ class WinEVTFormatter(interface.ConditionalEventFormatter):
       return self._SEVERITY[severity]
     return u'Unknown {0:d}'.format(severity)
 
-  def GetMessages(self, formatter_mediator, event_object):
+  def GetMessages(self, formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 
     Args:
-      formatter_mediator: the formatter mediator object (instance of
-                          FormatterMediator).
-      event_object: the event object (instance of EventObject).
+      formatter_mediator (FormatterMediator): formatter mediator.
+      event (EventObject): event.
 
     Returns:
-      A tuple containing the formatted message string and short message string.
+      tuple(str, str): formatted message string and short message string.
 
     Raises:
       WrongFormatter: if the event object cannot be formatted by the formatter.
     """
-    if self.DATA_TYPE != event_object.data_type:
+    if self.DATA_TYPE != event.data_type:
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
-          event_object.data_type))
+          event.data_type))
 
-    event_values = event_object.CopyToDict()
+    event_values = event.CopyToDict()
 
     event_type = event_values.get(u'event_type', None)
     if event_type is not None:
