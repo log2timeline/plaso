@@ -19,39 +19,40 @@ class WinJobEvent(time_events.TimestampEvent):
   """Convenience class for a Windows Scheduled Task event.
 
   Attributes:
-    application: string that contains the path to job executable.
-    comment: string that contains the job description.
-    parameter: string that contains the application command line parameters.
-    trigger: an integer that contains the event trigger, e.g. DAILY.
-    username: string that contains the username that scheduled the job.
-    working_dir: string that contains the working path for task.
+    application (str): path to job executable.
+    description (str): description of the scheduled task.
+    parameters (str): application command line parameters.
+    trigger (int): event trigger, e.g. DAILY.
+    username (str): username that scheduled the task.
+    working_directory (str): working directory of the scheduled task.
   """
 
   DATA_TYPE = u'windows:tasks:job'
 
   def __init__(
-      self, timestamp, timestamp_description, application, parameter,
+      self, timestamp, timestamp_description, application, parameters,
       working_dir, username, trigger, description):
     """Initializes the event object.
 
     Args:
-      timestamp: the timestamp which is an integer containing the number
-                 of micro seconds since January 1, 1970, 00:00:00 UTC.
-      timestamp_description: the usage string for the timestamp value.
-      application: string that contains the path to job executable.
-      parameter: string that contains the application command line parameters.
-      working_dir: string that contains the working path for task.
-      username: string that contains the username that scheduled the job.
-      trigger: an integer that contains the event trigger, e.g. DAILY.
-      description: string that contains the job description.
+      timestamp (int): timestamp, which contains the number of microseconds
+          since January 1, 1970, 00:00:00 UTC.
+      timestamp_description (str): description of the usage of the timestamp
+          value.
+      application (str): path to job executable.
+      parameters (str): application command line parameters.
+      working_directory (str): working directory of the scheduled task.
+      username (str): username that scheduled the task.
+      trigger (int): event trigger, e.g. DAILY.
+      description (str): description of the scheduled task.
     """
     super(WinJobEvent, self).__init__(timestamp, timestamp_description)
     self.application = application
     self.comment = description
-    self.parameter = parameter
+    self.parameters = parameters
     self.trigger = trigger
     self.username = username
-    self.working_dir = working_dir
+    self.working_directory = working_directory
 
 
 class WinJobParser(interface.FileObjectParser):
@@ -87,15 +88,16 @@ class WinJobParser(interface.FileObjectParser):
       construct.ULInt32(u'exit_code'),
       construct.ULInt32(u'status'),
       construct.ULInt32(u'flags'),
-      construct.ULInt16(u'ran_year'),
-      construct.ULInt16(u'ran_month'),
-      construct.ULInt16(u'ran_weekday'),
-      construct.ULInt16(u'ran_day'),
-      construct.ULInt16(u'ran_hour'),
-      construct.ULInt16(u'ran_minute'),
-      construct.ULInt16(u'ran_second'),
-      construct.ULInt16(u'ran_millisecond'),
-      )
+      construct.Struct(
+          u'last_run_time',
+          construct.ULInt16(u'year'),
+          construct.ULInt16(u'month'),
+          construct.ULInt16(u'weekday'),
+          construct.ULInt16(u'day'),
+          construct.ULInt16(u'hours'),
+          construct.ULInt16(u'minutes'),
+          construct.ULInt16(u'seconds'),
+          construct.ULInt16(u'milliseconds')))
 
   # Using Construct's utf-16 encoding here will create strings with their
   # null terminators exposed. Instead, we'll read these variables raw and
@@ -153,6 +155,60 @@ class WinJobParser(interface.FileObjectParser):
       construct.ULInt16(u'trigger_reserved2'),
       construct.ULInt16(u'trigger_reserved3'))
 
+  def _CopySystemTimeToTimestamp(self, system_time_struct, timezone):
+    """Copies a system time to a timestamp.
+
+    Args:
+      system_time_struct (construct.Struct): structure representing the system
+          time.
+      timezone (datetime.tzinfo): timezone.
+    """
+    return timelib.Timestamp.FromTimeParts(
+        system_time_struct.year, system_time_struct.month,
+        system_time_struct.day, system_time_struct.hours,
+        system_time_struct.minutes, system_time_struct.seconds,
+        microseconds=system_time_struct.milliseconds * 1000,
+        timezone=timezone)
+
+  def _IsEmptySystemTime(self, system_time_struct):
+    """Determines if the system time is empty.
+
+    Args:
+      system_time_struct (construct.Struct): structure representing the system
+          time.
+
+    Return:
+      bool: True if the system time is empty.
+    """
+    return (
+        system_time_struct.year == 0 or system_time_struct.month == 0 and
+        system_time_struct.weekday == 0 and system_time_struct.day == 0 and
+        system_time_struct.hours == 0 and system_time_struct.minutes == 0 and
+        system_time_struct.seconds == 0 and
+        system_time_struct.milliseconds == 0)
+
+  def _IsValidSystemTime(self, system_time_struct):
+    """Determines if the system time is valid.
+
+    Args:
+      system_time_struct (construct.Struct): structure representing the system
+          time.
+
+    Return:
+      bool: True if the system time is valid.
+    """
+    return (
+        system_time_struct.year >= 1601 and
+        system_time_struct.year <= 30827 and
+        system_time_struct.month >= 1 and system_time_struct.month <= 12 and
+        system_time_struct.weekday >= 0 and system_time_struct.weekday <= 6 and
+        system_time_struct.day >= 1 and system_time_struct.day <= 31 and
+        system_time_struct.hours >= 0 and system_time_struct.hours <= 23 and
+        system_time_struct.minutes >= 0 and system_time_struct.minutes <= 59 and
+        system_time_struct.seconds >= 0 and system_time_struct.seconds <= 59 and
+        system_time_struct.milliseconds >= 0 and
+        system_time_struct.milliseconds <= 999)
+
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows job file-like object.
 
@@ -187,21 +243,17 @@ class WinJobParser(interface.FileObjectParser):
           u'Unable to parse Windows Task Job file with error: {0:s}'.format(
               exception))
 
-    try:
-      last_run_date = timelib.Timestamp.FromTimeParts(
-          header_struct.ran_year,
-          header_struct.ran_month,
-          header_struct.ran_day,
-          header_struct.ran_hour,
-          header_struct.ran_minute,
-          header_struct.ran_second,
-          microseconds=header_struct.ran_millisecond * 1000,
-          timezone=parser_mediator.timezone)
-    except errors.TimestampError as exception:
-      last_run_date = None
-      parser_mediator.ProduceExtractionError(
-          u'unable to determine last run date with error: {0:s}'.format(
-              exception))
+    if self._IsEmptySystemTime(header_struct.last_run_time):
+      last_run_time = None
+    else:
+      try:
+        last_run_time = self._CopySystemTimeToTimestamp(
+            header_struct.last_run_time, parser_mediator.timezone)
+      except errors.TimestampError as exception:
+        last_run_time = None
+        parser_mediator.ProduceExtractionError(
+            u'unable to determine last run time with error: {0:s}'.format(
+                exception))
 
     try:
       scheduled_date = timelib.Timestamp.FromTimeParts(
@@ -224,9 +276,9 @@ class WinJobParser(interface.FileObjectParser):
     username = binary.ReadUTF16(job_variable_struct.username)
     working_dir = binary.ReadUTF16(job_variable_struct.working_dir)
 
-    if last_run_date is not None:
+    if last_run_time is not None:
       event_object = WinJobEvent(
-          last_run_date, eventdata.EventTimestamp.LAST_RUNTIME, application,
+          last_run_time, eventdata.EventTimestamp.LAST_RUNTIME, application,
           parameter, working_dir, username, job_variable_struct.trigger_type,
           description)
       parser_mediator.ProduceEvent(event_object)
@@ -238,7 +290,7 @@ class WinJobParser(interface.FileObjectParser):
           description)
       parser_mediator.ProduceEvent(event_object)
 
-    # TODO: create a timeless event object if last_run_date and scheduled_date
+    # TODO: create a timeless event object if last_run_time and scheduled_date
     # are None? What should be the description of this event?
 
     if job_variable_struct.sched_end_year:

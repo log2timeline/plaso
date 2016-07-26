@@ -18,12 +18,15 @@ class WinJobTest(test_lib.ParserTestCase):
   def testParse(self):
     """Tests the Parse function."""
     parser_object = winjob.WinJobParser()
-    storage_writer = self._ParseFile(
-        [u'wintask.job'], parser_object)
+    storage_writer = self._ParseFile([u'wintask.job'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 2)
 
     event_object = storage_writer.events[0]
+
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-08-24 12:42:00.112')
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_application = (
         u'C:\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe')
@@ -41,10 +44,6 @@ class WinJobTest(test_lib.ParserTestCase):
         u'features may not work. This task uninstalls itself when there is '
         u'no Google software using it.')
     self.assertEqual(event_object.comment, expected_comment)
-
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-08-24 12:42:00.112')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Parse second event. Same metadata; different timestamp event.
     event_object = storage_writer.events[1]

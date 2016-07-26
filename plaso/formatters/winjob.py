@@ -13,10 +13,10 @@ class WinJobFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_PIECES = [
       u'Application: {application}',
-      u'{parameter}',
+      u'{parameters}',
       u'Scheduled by: {username}',
-      u'Working Directory: {working_dir}',
-      u'Run Iteration: {trigger}']
+      u'Working directory: {working_directory}',
+      u'Run iteration: {trigger}']
 
   SOURCE_LONG = u'Windows Scheduled Task Job'
   SOURCE_SHORT = u'JOB'
