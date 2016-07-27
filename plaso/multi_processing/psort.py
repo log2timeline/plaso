@@ -463,6 +463,9 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._StartStatusUpdateThread()
 
     storage_writer.Open()
+
+    storage_writer.ReadPreprocessingInformation(knowledge_base_object)
+
     storage_writer.WriteSessionStart()
 
     try:

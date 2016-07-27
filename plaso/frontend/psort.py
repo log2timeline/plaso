@@ -286,8 +286,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     """
     engine = self._CreateEngine()
 
-    storage_writer.ReadPreprocessingInformation(self._knowledge_base)
-
     # TODO: add single processing support.
     counter = engine.ProcessStorage(
         self._knowledge_base, storage_writer, output_module,

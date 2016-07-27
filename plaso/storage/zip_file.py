@@ -3162,7 +3162,13 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     Args:
       knowledge_base (KnowledgeBase): is used to store the preprocessing
           information.
+
+    Raises:
+      IOError: when the storage writer is closed.
     """
+    if not self._storage_file:
+      raise IOError(u'Unable to read from closed storage writer.')
+
     return self._storage_file.ReadPreprocessingInformation(knowledge_base)
 
   def SetSerializersProfiler(self, serializers_profiler):
