@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """The single process processing engine."""
 
-import collections
 import logging
 import os
 import pdb
@@ -12,11 +11,9 @@ from dfvfs.lib import errors as dfvfs_errors
 from plaso.containers import event_sources
 from plaso.engine import engine
 from plaso.engine import extractors
-from plaso.engine import plaso_queue
 from plaso.engine import profiler
 from plaso.engine import worker
 from plaso.lib import definitions
-from plaso.lib import errors
 from plaso.parsers import mediator as parsers_mediator
 
 
@@ -77,12 +74,11 @@ class SingleProcessEngine(engine.BaseEngine):
       extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
 
     except KeyboardInterrupt:
-      self.SignalAbort()
+      self._abort = True
 
-    except IOError as exception:
-      logging.warning((
-          u'Unable to process path specification: {0:s} with error: '
-          u'{1:s}').format(self._current_display_name, exception))
+      self._processing_status.aborted = True
+      if self._status_update_callback:
+        self._status_update_callback(self._processing_status)
 
     # We cannot recover from a CacheFullError and abort processing when
     # it is raised.
@@ -96,12 +92,16 @@ class SingleProcessEngine(engine.BaseEngine):
     # All exceptions need to be caught here to prevent the worker
     # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
-      logging.warning(
-          u'Unhandled exception while processing path spec: {0:s}.'.format(
-              self._current_display_name))
-      logging.exception(exception)
+      parser_mediator.ProduceExtractionError((
+          u'unable to process path specification with error: '
+          u'{0:s}').format(exception), path_spec=path_spec)
 
       if self._debug_output:
+        logging.warning(
+            u'Unhandled exception while processing path spec: {0:s}.'.format(
+                self._current_display_name))
+        logging.exception(exception)
+
         pdb.post_mortem()
 
   def _ProcessSources(
@@ -283,7 +283,8 @@ class SingleProcessEngine(engine.BaseEngine):
         self._name, status, self._pid, display_name,
         number_of_consumed_sources, storage_writer.number_of_event_sources,
         0, storage_writer.number_of_events,
-        0, storage_writer.number_of_errors)
+        0, storage_writer.number_of_errors,
+        0, 0)
 
     if self._status_update_callback:
       self._status_update_callback(self._processing_status)
@@ -356,19 +357,18 @@ class SingleProcessEngine(engine.BaseEngine):
       storage_writer.SetSerializersProfiler(self._serializers_profiler)
 
     storage_writer.Open()
+    storage_writer.WriteSessionStart()
 
     try:
-      storage_writer.WriteSessionStart()
       storage_writer.WritePreprocessingInformation(self.knowledge_base)
 
       self._ProcessSources(
           source_path_specs, resolver_context, extraction_worker,
           parser_mediator, storage_writer, filter_find_specs=filter_find_specs)
 
-      # TODO: on abort use WriteSessionAborted instead of completion?
-      storage_writer.WriteSessionCompletion()
-
     finally:
+      storage_writer.WriteSessionCompletion(aborted=self._abort)
+
       storage_writer.Close()
 
       if self._serializers_profiler:
@@ -385,77 +385,3 @@ class SingleProcessEngine(engine.BaseEngine):
     self._status_update_callback = None
 
     return self._processing_status
-
-
-class SingleProcessQueue(plaso_queue.Queue):
-  """Single process queue."""
-
-  def __init__(self, maximum_number_of_queued_items=0):
-    """Initializes a single process queue object.
-
-    Args:
-      maximum_number_of_queued_items: the maximum number of queued items.
-                                      The default is 0, which represents
-                                      no limit.
-    """
-    super(SingleProcessQueue, self).__init__()
-
-    # The Queue interface defines the maximum number of queued items to be
-    # 0 if unlimited as does the multi processing queue, but deque uses
-    # None to indicate no limit.
-    if maximum_number_of_queued_items == 0:
-      maximum_number_of_queued_items = None
-
-    # maxlen contains the maximum number of items allowed to be queued,
-    # where None represents unlimited.
-    self._queue = collections.deque(
-        maxlen=maximum_number_of_queued_items)
-
-  def IsEmpty(self):
-    """Determines if the queue is empty."""
-    return len(self._queue) == 0
-
-  def PushItem(self, item, **unused_kwargs):
-    """Pushes an item onto the queue.
-
-    Raises:
-      QueueFull: when the queue is full.
-    """
-    number_of_items = len(self._queue)
-
-    # Deque will drop the first item in the queue when maxlen is exceeded.
-    if not self._queue.maxlen or number_of_items < self._queue.maxlen:
-      self._queue.append(item)
-      number_of_items += 1
-
-    if self._queue.maxlen and number_of_items == self._queue.maxlen:
-      raise errors.QueueFull
-
-  def PopItem(self):
-    """Pops an item off the queue or None on timeout.
-
-    Raises:
-      QueueClose: on user abort.
-      QueueEmpty: when the queue is empty.
-    """
-    try:
-      # Using popleft to have FIFO behavior.
-      return self._queue.popleft()
-    except IndexError:
-      raise errors.QueueEmpty
-    except KeyboardInterrupt:
-      raise errors.QueueClose
-
-  def Close(self, **unused_kwargs):
-    """Closes this queue, indicating that no further items will be added to it.
-
-    This method has no effect for the single process queue, but is included
-    for compatibility with the Multiprocessing queue."""
-    return
-
-  def Open(self):
-    """Opens the queue, ready to enqueue or dequeue items.
-
-    This method has no effect for the single process queue, but is included
-    for compatibility with the Multiprocessing queue."""
-    return

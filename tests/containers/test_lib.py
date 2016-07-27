@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""This file contains the tests for the event attribute container objects."""
+"""This file contains the tests for the event attribute containers."""
 
 import unittest
 
@@ -124,7 +124,7 @@ class TestEvent(events.EventObject):
 
 
 class AttributeContainerTestCase(unittest.TestCase):
-  """The unit test case for an attribute container object."""
+  """The unit test case for an attribute container."""
 
   # Show full diff results, part of TestCase so does not follow our naming
   # conventions.

@@ -10,7 +10,6 @@ import time
 import textwrap
 
 try:
-  import win32api
   import win32console
 except ImportError:
   win32console = None
@@ -84,41 +83,16 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._foreman_verbose = False
     self._front_end = log2timeline.Log2TimelineFrontend()
     self._number_of_extraction_workers = 0
-    self._stdout_output_writer = isinstance(
-        self._output_writer, cli_tools.StdoutOutputWriter)
+    self._output = None
     self._source_type = None
     self._source_type_string = u'UNKNOWN'
     self._status_view_mode = u'linear'
-    self._output = None
+    self._stdout_output_writer = isinstance(
+        self._output_writer, cli_tools.StdoutOutputWriter)
 
     self.dependencies_check = True
     self.list_output_modules = False
     self.show_info = False
-
-  def _ClearScreen(self):
-    """Clears the terminal/console screen."""
-    if not win32console:
-      # ANSI escape sequence to clear screen.
-      self._output_writer.Write(b'\033[2J')
-      # ANSI escape sequence to move cursor to top left.
-      self._output_writer.Write(b'\033[H')
-
-    else:
-      # Windows cmd.exe does not support ANSI escape codes, thus instead we
-      # fill the console screen buffer with spaces.
-      top_left_coordinate = win32console.PyCOORDType(0, 0)
-      screen_buffer = win32console.GetStdHandle(win32api.STD_OUTPUT_HANDLE)
-      screen_buffer_information = screen_buffer.GetConsoleScreenBufferInfo()
-
-      screen_buffer_attributes = screen_buffer_information[u'Attributes']
-      screen_buffer_size = screen_buffer_information[u'Size']
-      console_size = screen_buffer_size.X * screen_buffer_size.Y
-
-      screen_buffer.FillConsoleOutputCharacter(
-          u' ', console_size, top_left_coordinate)
-      screen_buffer.FillConsoleOutputAttribute(
-          screen_buffer_attributes, console_size, top_left_coordinate)
-      screen_buffer.SetConsoleCursorPosition(top_left_coordinate)
 
   def _FormatStatusTableRow(self, process_status):
     """Formats a status table row.
@@ -271,6 +245,10 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._output_writer.Write(u'\n'.join(status_table))
     self._output_writer.Write(u'\n')
 
+    if processing_status.aborted:
+      self._output_writer.Write(
+          u'Processing aborted - waiting for clean up.\n\n')
+
     # TODO: remove update flicker. For win32console we could set the cursor
     # top left, write the table, clean the remainder of the screen buffer
     # and set the cursor at the end of the table.
@@ -286,7 +264,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     """
     for worker_status in processing_status.workers_status:
       status_line = (
-          u'{0:s} (PID: {1:d}) - events extracted: {2:d} - file: {3:s} '
+          u'{0:s} (PID: {1:d}) - events produced: {2:d} - file: {3:s} '
           u'- running: {4!s}\n').format(
               worker_status.identifier, worker_status.pid,
               worker_status.number_of_produced_events,
@@ -645,7 +623,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           profiling_directory=self._profiling_directory,
           profiling_sample_rate=self._profiling_sample_rate,
           profiling_type=self._profiling_type)
-    self._front_end.SetStorageFile(self._output)
     self._front_end.SetShowMemoryInformation(show_memory=self._foreman_verbose)
 
     scan_context = self.ScanSource()
@@ -680,18 +657,24 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     else:
       status_update_callback = None
 
-    processing_status = self._front_end.ProcessSources(
-        self._source_path_specs, self._source_type,
+    session = self._front_end.CreateSession(
         command_line_arguments=self._command_line_arguments,
-        enable_sigsegv_handler=self._enable_sigsegv_handler,
         filter_file=self._filter_file,
+        parser_filter_expression=self._parser_filter_expression,
+        preferred_encoding=self.preferred_encoding,
+        preferred_year=self._preferred_year)
+
+    storage_writer = self._front_end.CreateStorageWriter(
+        session, self._output)
+    # TODO: handle errors.BadConfigOption
+
+    processing_status = self._front_end.ProcessSources(
+        session, storage_writer, self._source_path_specs, self._source_type,
+        enable_sigsegv_handler=self._enable_sigsegv_handler,
         force_preprocessing=self._force_preprocessing,
         hasher_names_string=self._hasher_names_string,
         number_of_extraction_workers=self._number_of_extraction_workers,
         process_archive_files=self._process_archive_files,
-        parser_filter_expression=self._parser_filter_expression,
-        preferred_encoding=self.preferred_encoding,
-        preferred_year=self._preferred_year,
         single_process_mode=self._single_process_mode,
         status_update_callback=status_update_callback,
         timezone=self._timezone, yara_rules_string=self._yara_rules_string)
@@ -700,10 +683,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       self._output_writer.Write(
           u'WARNING: missing processing status information.\n')
 
-    else:
-      if processing_status.aborted:
-        self._output_writer.Write(u'Processing aborted.\n')
-      elif processing_status.error_path_specs:
+    elif not processing_status.aborted:
+      if processing_status.error_path_specs:
         self._output_writer.Write(u'Processing completed with errors.\n')
       else:
         self._output_writer.Write(u'Processing completed.\n')

@@ -3002,6 +3002,24 @@ class ZIPStorageFileWriter(interface.StorageWriter):
         self._session, storage_file_path, buffer_size=self._buffer_size,
         storage_type=definitions.STORAGE_TYPE_TASK, task=task)
 
+  def GetEvents(self, time_range=None):
+    """Retrieves the events in increasing chronological order.
+
+    Args:
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
+
+    Returns:
+      generator(EventObject): event generator.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to read from closed storage writer.')
+
+    return self._storage_file.GetEvents(time_range=time_range)
+
   def GetFirstWrittenEventSource(self):
     """Retrieves the first event source that was written after open.
 
@@ -3134,6 +3152,25 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     os.rename(storage_file_path, merge_storage_file_path)
 
+  def ReadPreprocessingInformation(self, knowledge_base):
+    """Reads preprocessing information.
+
+    The preprocessing information contains the system configuration which
+    contains information about various system specific configuration data,
+    for example the user accounts.
+
+    Args:
+      knowledge_base (KnowledgeBase): is used to store the preprocessing
+          information.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to read from closed storage writer.')
+
+    return self._storage_file.ReadPreprocessingInformation(knowledge_base)
+
   def SetSerializersProfiler(self, serializers_profiler):
     """Sets the serializers profiler.
 
@@ -3213,8 +3250,11 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     self._storage_file.WritePreprocessingInformation(knowledge_base)
 
-  def WriteSessionCompletion(self):
+  def WriteSessionCompletion(self, aborted=False):
     """Writes session completion information.
+
+    Args:
+      aborted (Optional[bool]): True if the session was aborted.
 
     Raises:
       IOError: if the storage type is not supported or
@@ -3226,6 +3266,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError(u'Unsupported storage type.')
 
+    self._session.aborted = aborted
     session_completion = self._session.CreateSessionCompletion()
     self._storage_file.WriteSessionCompletion(session_completion)
 
@@ -3245,8 +3286,11 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     session_start = self._session.CreateSessionStart()
     self._storage_file.WriteSessionStart(session_start)
 
-  def WriteTaskCompletion(self):
+  def WriteTaskCompletion(self, aborted=False):
     """Writes task completion information.
+
+    Args:
+      aborted (Optional[bool]): True if the session was aborted.
 
     Raises:
       IOError: if the storage type is not supported or
@@ -3258,6 +3302,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_TASK:
       raise IOError(u'Unsupported storage type.')
 
+    self._task.aborted = aborted
     task_completion = self._task.CreateTaskCompletion()
     self._storage_file.WriteTaskCompletion(task_completion)
 

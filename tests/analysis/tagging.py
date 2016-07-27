@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.analysis import mediator
 from plaso.analysis import tagging
 from plaso.lib import timelib
 from plaso.containers import events
@@ -96,19 +95,20 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
 
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
-    test_file = self._GetTestFilePath([self._TEST_TAG_FILE_NAME])
-    knowledge_base = self._SetUpKnowledgeBase()
-    analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
+    event_objects = []
+    for event_dictionary in self._TEST_EVENTS:
+      event = self._CreateTestEventObject(event_dictionary)
+      event_objects.append(event)
 
+    test_file = self._GetTestFilePath([self._TEST_TAG_FILE_NAME])
     plugin = tagging.TaggingPlugin()
     plugin.SetAndLoadTagFile(test_file)
 
-    for event_dictionary in self._TEST_EVENTS:
-      event = self._CreateTestEventObject(event_dictionary)
-      plugin.ExamineEvent(analysis_mediator, event)
+    storage_writer = self._AnalyzeEvents(event_objects, plugin)
 
-    analysis_report = plugin.CompileReport(analysis_mediator)
-    self.assertIsNotNone(analysis_report)
+    self.assertEqual(len(storage_writer.analysis_reports), 1)
+
+    analysis_report = storage_writer.analysis_reports[0]
 
     tags = analysis_report.GetTags()
     self.assertEqual(len(tags), 3)

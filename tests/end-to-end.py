@@ -721,10 +721,15 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
     Returns:
       bool: True if psort ran successfully.
     """
+    tagging_file_path = test_definition.tagging_file
+    if self._test_sources_path:
+      tagging_file_path = os.path.join(
+          self._test_sources_path, tagging_file_path)
+
     # TODO: determine why --analysis=tagging fails.
     tagging_options = (
         u'--analysis tagging --output-format=null '
-        u'--tagging-file {0:s}').format(test_definition.tagging_file)
+        u'--tagging-file {0:s}').format(tagging_file_path)
 
     stdout_file = os.path.join(
         temp_directory, u'{0:s}-psort-tagging.out'.format(test_definition.name))

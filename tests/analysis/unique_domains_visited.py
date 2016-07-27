@@ -4,7 +4,6 @@
 
 import unittest
 
-from plaso.analysis import mediator
 from plaso.analysis import unique_domains_visited
 from plaso.lib import timelib
 
@@ -35,20 +34,20 @@ class UniqueDomainsPluginTest(test_lib.AnalysisPluginTestCase):
 
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
-    knowledge_base = self._SetUpKnowledgeBase()
-    analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
-
-    plugin = unique_domains_visited.UniqueDomainsVisitedPlugin()
-
+    events = []
     for event_dictionary in self._TEST_EVENTS:
       event_dictionary[u'url'] = u'https://{0:s}/{1:s}'.format(
           event_dictionary[u'domain'], event_dictionary[u'path'])
 
       event = self._CreateTestEventObject(event_dictionary)
-      plugin.ExamineEvent(analysis_mediator, event)
+      events.append(event)
 
-    analysis_report = plugin.CompileReport(analysis_mediator)
-    self.assertIsNotNone(analysis_report)
+    plugin = unique_domains_visited.UniqueDomainsVisitedPlugin()
+    storage_writer = self._AnalyzeEvents(events, plugin)
+
+    self.assertEqual(len(storage_writer.analysis_reports), 1)
+
+    analysis_report = storage_writer.analysis_reports[0]
 
     report_text = analysis_report.GetString()
     for event_dictionary in self._TEST_EVENTS:

@@ -14,6 +14,7 @@ class Session(interface.AttributeContainer):
   """Class to represent a session attribute container.
 
   Attributes:
+    aborted (bool): True if the session was aborted.
     analysis_reports_counter (collections.Counter): number of analysis reports
         per analysis plugin.
     command_line_arguments (str): command line arguments.
@@ -42,6 +43,7 @@ class Session(interface.AttributeContainer):
   def __init__(self):
     """Initializes a session attribute container."""
     super(Session, self).__init__()
+    self.aborted = False
     self.analysis_reports_counter = collections.Counter()
     self.command_line_arguments = None
     self.completion_time = None
@@ -72,6 +74,8 @@ class Session(interface.AttributeContainer):
     """
     if self.identifier != session_completion.identifier:
       raise ValueError(u'Session identifier mismatch.')
+
+    self.aborted = session_completion.aborted
 
     if session_completion.analysis_reports_counter:
       self.analysis_reports_counter = (
@@ -112,6 +116,7 @@ class Session(interface.AttributeContainer):
     self.completion_time = int(time.time() * 1000000)
 
     session_completion = SessionCompletion()
+    session_completion.aborted = self.aborted
     session_completion.analysis_reports_counter = self.analysis_reports_counter
     session_completion.event_labels_counter = self.event_labels_counter
     session_completion.identifier = self.identifier
@@ -144,6 +149,7 @@ class SessionCompletion(interface.AttributeContainer):
   """Class to represent a session completion attribute container.
 
   Attributes:
+    aborted (bool): True if the session was aborted.
     analysis_reports_counter (collections.Counter): number of analysis reports
         per analysis plugin.
     event_labels_counter (collections.Counter): number of event tags per label.
@@ -164,6 +170,7 @@ class SessionCompletion(interface.AttributeContainer):
           session start information.
     """
     super(SessionCompletion, self).__init__()
+    self.aborted = False
     self.analysis_reports_counter = None
     self.event_labels_counter = None
     self.identifier = identifier

@@ -7,7 +7,6 @@ import unittest
 import mock
 from dfvfs.path import fake_path_spec
 
-from plaso.analysis import mediator
 from plaso.analysis import viper
 from plaso.lib import timelib
 from plaso.parsers import pe
@@ -108,22 +107,23 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
 
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
-    knowledge_base = self._SetUpKnowledgeBase()
-    analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
-
-    plugin = viper.ViperAnalysisPlugin()
-    plugin.SetProtocol(u'http')
-    plugin.SetHost(u'localhost')
-
+    events = []
     for event_dictionary in self._TEST_EVENTS:
       event_dictionary[u'pathspec'] = fake_path_spec.FakePathSpec(
           location=u'C:\\WINDOWS\\system32\\evil.exe')
 
       event = self._CreateTestEventObject(event_dictionary)
-      plugin.ExamineEvent(analysis_mediator, event)
+      events.append(event)
 
-    analysis_report = plugin.CompileReport(analysis_mediator)
-    self.assertIsNotNone(analysis_report)
+    plugin = viper.ViperAnalysisPlugin()
+    plugin.SetProtocol(u'http')
+    plugin.SetHost(u'localhost')
+
+    storage_writer = self._AnalyzeEvents(events, plugin)
+
+    self.assertEqual(len(storage_writer.analysis_reports), 1)
+
+    analysis_report = storage_writer.analysis_reports[0]
 
     tags = analysis_report.GetTags()
     self.assertEqual(len(tags), 1)
