@@ -12,7 +12,9 @@ class NullOutputModule(interface.OutputModule):
   DESCRIPTION = u'Output module that does not output anything.'
 
   def WriteEventBody(self, unused_event_object):
-    """Writes the body of an event object to a null device.
+    """Writes the event object to the output.
+
+    Since this is the null output module nothing is actually written.
 
     Args:
       event_object: the event object (instance of EventObject).

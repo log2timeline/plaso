@@ -19,10 +19,10 @@ from plaso.multi_processing import xmlrpc
 class MultiProcessEngine(engine.BaseEngine):
   """Class that defines the base multi-process engine.
 
-  This class contains functionality:
-  * to monitor and manage worker processes;
-  * to retrieve a process status information via RPC;
-  * to manage the status update thread.
+  This class contains functionality to:
+  * monitor and manage worker processes;
+  * retrieve a process status information via RPC;
+  * manage the status update thread.
   """
 
   # Note that on average Windows seems to require a bit longer wait

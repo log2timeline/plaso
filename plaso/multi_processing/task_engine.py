@@ -22,11 +22,11 @@ from plaso.multi_processing import worker_process
 
 
 class TaskMultiProcessEngine(engine.MultiProcessEngine):
-  """Class that defines the multi-process engine.
+  """Class that defines the task multi-process engine.
 
-  This class contains functionality:
-  * to monitor and manage extraction tasks;
-  * to merge results returned by extraction workers.
+  This class contains functionality to:
+  * monitor and manage extraction tasks;
+  * merge results returned by extraction workers.
   """
 
   # Maximum number of concurrent tasks.
