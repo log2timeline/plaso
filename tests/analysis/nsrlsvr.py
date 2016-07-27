@@ -6,7 +6,6 @@ import unittest
 import mock
 from dfvfs.path import fake_path_spec
 
-from plaso.analysis import mediator
 from plaso.analysis import nsrlsvr
 from plaso.lib import eventdata
 from plaso.lib import timelib
@@ -89,19 +88,20 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
 
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
-    knowledge_base = self._SetUpKnowledgeBase()
-    analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
+    events = []
+    for event_dictionary in self._TEST_EVENTS:
+      event = self._CreateTestEventObject(event_dictionary)
+      events.append(event)
 
     plugin = nsrlsvr.NsrlsvrAnalysisPlugin()
     plugin.SetHost(u'127.0.0.1')
     plugin.SetPort(9120)
 
-    for event_dictionary in self._TEST_EVENTS:
-      event = self._CreateTestEventObject(event_dictionary)
-      plugin.ExamineEvent(analysis_mediator, event)
+    storage_writer = self._AnalyzeEvents(events, plugin)
 
-    analysis_report = plugin.CompileReport(analysis_mediator)
-    self.assertIsNotNone(analysis_report)
+    self.assertEqual(len(storage_writer.analysis_reports), 1)
+
+    analysis_report = storage_writer.analysis_reports[0]
 
     tags = analysis_report.GetTags()
     self.assertEqual(len(tags), 2)

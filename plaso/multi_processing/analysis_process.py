@@ -2,27 +2,21 @@
 """The multi-process analysis process."""
 
 import logging
-import multiprocessing
 
 from plaso.analysis import mediator as analysis_mediator
+from plaso.containers import tasks
 from plaso.engine import plaso_queue
 from plaso.lib import definitions
 from plaso.lib import errors
-from plaso.lib import timelib
 from plaso.multi_processing import base_process
+from plaso.multi_processing import multi_process_queue
 
 
 class AnalysisProcess(base_process.MultiProcessBaseProcess):
-  """Class that defines a multi-processing analysis process.
-
-  Attributes:
-    completion_event (Optional[Multiprocessing.Event]): set when the
-        analysis plugin is complete.
-    plugin (AnalysisPlugin): analysis plugin run by the process.
-  """
+  """Class that defines a multi-processing analysis process."""
 
   def __init__(
-      self, event_queue, analysis_report_queue, knowledge_base, plugin,
+      self, event_queue, storage_writer, knowledge_base, analysis_plugin,
       data_location=None, **kwargs):
     """Initializes an analysis process.
 
@@ -30,8 +24,8 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     multiprocessing.Process.
 
     Args:
-      event_queue (Queue): event input queue.
-      analysis_plugin_output_queue (Queue): analysis plugin output queue.
+      event_queue (Queue): event queue.
+      storage_writer (StorageWriter): storage writer for a session storage.
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for analysis.
       plugin (AnalysisProcess): plugin running in the process.
@@ -41,15 +35,16 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     super(AnalysisProcess, self).__init__(**kwargs)
     self._abort = False
     self._analysis_mediator = None
-    self._analysis_report_queue = analysis_report_queue
+    self._analysis_plugin = analysis_plugin
     self._data_location = data_location
     self._event_queue = event_queue
     self._knowledge_base = knowledge_base
+    self._memory_profiler = None
     self._number_of_consumed_events = 0
+    self._serializers_profiler = None
     self._status = definitions.PROCESSING_STATUS_INITIALIZED
-
-    self.completion_event = multiprocessing.Event()
-    self.plugin = plugin
+    self._storage_writer = storage_writer
+    self._task_identifier = u''
 
   def _GetStatus(self):
     """Returns status information.
@@ -81,13 +76,28 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
   def _Main(self):
     """The main loop."""
-    analysis_report_queue_producer = plaso_queue.ItemQueueProducer(
-        self._analysis_report_queue)
+    logging.debug(u'Analysis plugin: {0!s} (PID: {1:d}) started'.format(
+        self._name, self._pid))
+
+    self._status = definitions.PROCESSING_STATUS_ANALYZING
+
+    task = tasks.Task()
+    # TODO: temporary solution.
+    task.identifier = self._analysis_plugin.plugin_name
+
+    self._task_identifier = task.identifier
+
+    storage_writer = self._storage_writer.CreateTaskStorage(task)
+
+    if self._serializers_profiler:
+      storage_writer.SetSerializersProfiler(self._serializers_profiler)
+
+    storage_writer.Open()
 
     self._analysis_mediator = analysis_mediator.AnalysisMediator(
-        analysis_report_queue_producer, self._knowledge_base,
-        completion_event=self.completion_event,
-        data_location=self._data_location)
+        storage_writer, self._knowledge_base, data_location=self._data_location)
+
+    storage_writer.WriteTaskStart()
 
     try:
       logging.debug(
@@ -98,8 +108,6 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
         try:
           event = self._event_queue.PopItem()
 
-          self._number_of_consumed_events += 1
-
         except (errors.QueueClose, errors.QueueEmpty) as exception:
           logging.debug(u'ConsumeItems exiting with exception {0:s}.'.format(
               type(exception)))
@@ -109,12 +117,24 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
           logging.debug(u'ConsumeItems exiting, dequeued QueueAbort object.')
           break
 
-        self.plugin.ExamineEvent(self._analysis_mediator, event)
+        self._ProcessEvent(self._analysis_mediator, event)
+
+        self._number_of_consumed_events += 1
+
+        if self._memory_profiler:
+          self._memory_profiler.Sample()
 
       logging.debug(
           u'{0!s} (PID: {1:d}) stopped monitoring event queue.'.format(
               self._name, self._pid))
 
+      if not self._abort:
+        self._status = definitions.PROCESSING_STATUS_REPORTING
+
+        self._analysis_mediator.ProduceAnalysisReport(self._analysis_plugin)
+
+    # All exceptions need to be caught here to prevent the process
+    # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
       logging.warning(
           u'Unhandled exception in process: {0!s} (PID: {1:d}).'.format(
@@ -123,17 +143,50 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
       self._abort = True
 
-    # TODO: move to mediator after deprecating analysis_report_queue.
-    analysis_report = self.plugin.CompileReport(self._analysis_mediator)
-    if analysis_report:
-      analysis_report.time_compiled = timelib.Timestamp.GetNow()
-      self._analysis_mediator.ProduceAnalysisReport(
-          analysis_report, plugin_name=self.plugin.plugin_name)
+    finally:
+      storage_writer.WriteTaskCompletion(aborted=self._abort)
+
+      storage_writer.Close()
+
+      if self._serializers_profiler:
+        storage_writer.SetSerializersProfiler(None)
 
     self._analysis_mediator = None
 
-    self.completion_event.set()
-    analysis_report_queue_producer.Close()
+    self._storage_writer.PrepareMergeTaskStorage(task.identifier)
+
+    self._task_identifier = u''
+
+    if self._abort:
+      self._status = definitions.PROCESSING_STATUS_ABORTED
+    else:
+      self._status = definitions.PROCESSING_STATUS_COMPLETED
+
+    logging.debug(u'Analysis plugin: {0!s} (PID: {1:d}) stopped'.format(
+        self._name, self._pid))
+
+    if isinstance(self._event_queue, multi_process_queue.MultiProcessingQueue):
+      self._event_queue.Close(abort=True)
+    else:
+      self._event_queue.Close()
+
+  def _ProcessEvent(self, mediator, event):
+    """Processes an event.
+
+    Args:
+      mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
+      event (EventObject): event.
+    """
+    try:
+      self._analysis_plugin.ExamineEvent(mediator, event)
+
+    except Exception as exception:  # pylint: disable=broad-except
+      # TODO: write analysis error.
+
+      if self._debug_output:
+        logging.warning(u'Unhandled exception while processing event object.')
+        logging.exception(exception)
 
   def SignalAbort(self):
     """Signals the process to abort."""

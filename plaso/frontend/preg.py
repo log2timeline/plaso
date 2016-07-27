@@ -11,7 +11,6 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from dfwinreg import registry as dfwinreg_registry
 
 from plaso.containers import sessions
-from plaso.engine import plaso_queue
 from plaso.frontend import extraction_frontend
 from plaso.lib import py2to3
 from plaso.parsers import mediator as parsers_mediator
@@ -268,43 +267,6 @@ class PluginList(object):
         plugins_to_run.extend(plugins_per_type)
 
     return plugins_to_run
-
-
-class PregItemQueueConsumer(plaso_queue.ItemQueueConsumer):
-  """Class that implements a list event object queue consumer."""
-
-  def __init__(self, event_queue):
-    """Initializes the list event object queue consumer.
-
-    Args:
-      event_queue: the event object queue (instance of Queue).
-    """
-    super(PregItemQueueConsumer, self).__init__(event_queue)
-    self._event_objects = []
-
-  def _ConsumeItem(self, event_object, **unused_kwargs):
-    """Consumes an item callback for ConsumeItems.
-
-    Args:
-      event_object: the event object (instance of EventObject).
-    """
-    self._event_objects.append(event_object)
-
-  def GetItems(self):
-    """Retrieves the consumed event objects.
-
-    Yields:
-      Event objects (instance of EventObject)
-    """
-    if not self._event_objects:
-      raise StopIteration
-
-    event_object = self._event_objects.pop(0)
-    while event_object:
-      yield event_object
-      if not self._event_objects:
-        break
-      event_object = self._event_objects.pop(0)
 
 
 class PregFrontend(extraction_frontend.ExtractionFrontend):

@@ -25,8 +25,7 @@ class MultiProcessEngine(engine.BaseEngine):
   * manage the status update thread.
   """
 
-  # Note that on average Windows seems to require a bit longer wait
-  # than 5 seconds.
+  # Note that on average Windows seems to require a longer wait.
   _RPC_SERVER_TIMEOUT = 8.0
   _MAXIMUM_RPC_ERRORS = 10
 
@@ -114,7 +113,6 @@ class MultiProcessEngine(engine.BaseEngine):
       pid (int): process ID (PID) of a registered worker process.
 
     Raises:
-      EngineAbort: when the worker process unexpectedly terminates.
       KeyError: if the process is not registered with the engine.
     """
     # TODO: Refactor this method, simplify and separate concerns (monitoring

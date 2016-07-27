@@ -7,7 +7,6 @@ import unittest
 from dfvfs.path import fake_path_spec
 
 from plaso.analysis import file_hashes
-from plaso.analysis import mediator
 
 from tests.analysis import test_lib
 
@@ -35,17 +34,17 @@ class UniqueHashesTest(test_lib.AnalysisPluginTestCase):
 
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
-    knowledge_base = self._SetUpKnowledgeBase()
-    analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
-
-    plugin = file_hashes.FileHashesPlugin()
-
+    events = []
     for event_dictionary in self._TEST_EVENTS:
       event = self._CreateTestEventObject(event_dictionary)
-      plugin.ExamineEvent(analysis_mediator, event)
+      events.append(event)
 
-    analysis_report = plugin.CompileReport(analysis_mediator)
-    self.assertIsNotNone(analysis_report)
+    plugin = file_hashes.FileHashesPlugin()
+    storage_writer = self._AnalyzeEvents(events, plugin)
+
+    self.assertEqual(len(storage_writer.analysis_reports), 1)
+
+    analysis_report = storage_writer.analysis_reports[0]
 
     expected_text = (
         u'Listing file paths and hashes\n'

@@ -261,7 +261,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
   def ProcessStorage(
       self, session, storage_writer, output_module, analysis_plugins,
-      deduplicate_events=True, time_slice=None, use_time_slicer=False):
+      deduplicate_events=True, status_update_callback=None, time_slice=None,
+      use_time_slicer=False):
     """Processes a plaso storage file.
 
     Args:
@@ -272,6 +273,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
           be run.
       deduplicate_events (Optional[bool]): True if events should be
           deduplicated.
+      status_update_callback (Optional[function]): callback function for status
+          updates.
       time_slice (Optional[TimeSlice]): slice of time to output.
       use_time_slicer (Optional[bool]): True if the 'time slicer' should be
           used. The 'time slicer' will provide a context of events around
@@ -293,7 +296,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         deduplicate_events=deduplicate_events,
         filter_expression=self._filter_expression,
         filter_object=self._filter_object,
-        preferred_encoding=session.preferred_encoding,
+        status_update_callback=status_update_callback,
         time_slice=time_slice, use_time_slicer=use_time_slicer)
 
     for item, value in iter(session.analysis_reports_counter.items()):
