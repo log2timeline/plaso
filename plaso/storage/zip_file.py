@@ -3002,6 +3002,24 @@ class ZIPStorageFileWriter(interface.StorageWriter):
         self._session, storage_file_path, buffer_size=self._buffer_size,
         storage_type=definitions.STORAGE_TYPE_TASK, task=task)
 
+  def GetEvents(self, time_range=None):
+    """Retrieves the events in increasing chronological order.
+
+    Args:
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
+
+    Returns:
+      generator(EventObject): event generator.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to read from closed storage writer.')
+
+    return self._storage_file.GetEvents(time_range=time_range)
+
   def GetFirstWrittenEventSource(self):
     """Retrieves the first event source that was written after open.
 
@@ -3133,6 +3151,25 @@ class ZIPStorageFileWriter(interface.StorageWriter):
         self._merge_task_storage_path, u'{0:s}.plaso'.format(task_name))
 
     os.rename(storage_file_path, merge_storage_file_path)
+
+  def ReadPreprocessingInformation(self, knowledge_base):
+    """Reads preprocessing information.
+
+    The preprocessing information contains the system configuration which
+    contains information about various system specific configuration data,
+    for example the user accounts.
+
+    Args:
+      knowledge_base (KnowledgeBase): is used to store the preprocessing
+          information.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._storage_file:
+      raise IOError(u'Unable to read from closed storage writer.')
+
+    return self._storage_file.ReadPreprocessingInformation(knowledge_base)
 
   def SetSerializersProfiler(self, serializers_profiler):
     """Sets the serializers profiler.

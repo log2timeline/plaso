@@ -36,14 +36,6 @@ plaso.storage.interface module
     :undoc-members:
     :show-inheritance:
 
-plaso.storage.reader module
----------------------------
-
-.. automodule:: plaso.storage.reader
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.storage.time_range module
 -------------------------------
 

@@ -139,7 +139,6 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
         u'processing_status': processing_status,
         u'task_identifier': self._task_identifier}
 
-    self._status_is_running = status.get(u'is_running', False)
     return status
 
   def _Main(self):
@@ -207,7 +206,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
     except Exception as exception:  # pylint: disable=broad-except
       logging.warning(
-          u'Unhandled exception in worker: {0!s} (PID: {1:d}).'.format(
+          u'Unhandled exception in process: {0!s} (PID: {1:d}).'.format(
               self._name, self._pid))
       logging.exception(exception)
 
@@ -222,7 +221,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     else:
       self._status = definitions.PROCESSING_STATUS_COMPLETED
 
-    logging.debug(u'Extraction worker: {0!s} (PID: {1:d}) stopped'.format(
+    logging.debug(u'Worker: {0!s} (PID: {1:d}) stopped'.format(
         self._name, self._pid))
 
     if isinstance(self._task_queue, multi_process_queue.MultiProcessingQueue):
