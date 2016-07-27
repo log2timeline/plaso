@@ -48,15 +48,6 @@ class TaggingPlugin(interface.AnalysisPlugin):
     self._tagging_file_name = None
     self._tags = []
 
-  def SetAndLoadTagFile(self, tagging_file_path):
-    """Sets the tag file to be used by the plugin.
-
-    Args:
-      tagging_file_path (str): path of the tagging file.
-    """
-    self._tagging_file_name = tagging_file_path
-    self._tag_rules = self._ParseTaggingFile(self._tagging_file_name)
-
   def _AttemptAutoDetectTagFile(self, analysis_mediator):
     """Detects which tag file is most appropriate.
 
@@ -79,77 +70,6 @@ class TaggingPlugin(interface.AnalysisPlugin):
     tag_file_path = os.path.join(analysis_mediator.data_location, filename)
     self.SetAndLoadTagFile(tag_file_path)
     return True
-
-  def ExamineEvent(self, mediator, event):
-    """Analyzes an EventObject and tags it according to rules in the tag file.
-
-    Args:
-      mediator (AnalysisMediator): mediates interactions between analysis
-          plugins and other components, such as storage and dfvfs.
-      event (EventObject): event to examine.
-    """
-    if self._tag_rules is None:
-      if self._autodetect_tag_file_attempt:
-        # There's nothing to tag with, and we've already tried to find a good
-        # tag file, so there's nothing we can do with this event (or any other).
-        return
-      if not self._AttemptAutoDetectTagFile(mediator):
-        logging.info(
-            u'No tag definition file specified, and plaso was not able to '
-            u'autoselect a tagging file. As no definitions were specified, '
-            u'no events will be tagged.')
-        return
-
-    try:
-      matched_labels = efilter_api.apply(self._tag_rules, vars=event)
-    except efilter_errors.EfilterTypeError as exception:
-      logging.warning(u'Unable to apply efilter query with error: {0:s}'.format(
-          exception))
-      matched_labels = None
-
-    if not matched_labels:
-      return
-
-    event_uuid = getattr(event, u'uuid')
-    event_tag = events.EventTag(
-        comment=u'Tag applied by tagging analysis plugin.',
-        event_uuid=event_uuid)
-
-    for label in efilter_api.getvalues(matched_labels):
-      event_tag.AddLabel(label)
-
-    logging.debug(u'Tagging event: {0!s}'.format(event_uuid))
-    self._tags.append(event_tag)
-
-  def _ParseRule(self, rule):
-    """Parses a single tagging rule.
-
-    This method attempts to detect whether the rule is written with objectfilter
-    or dottysql syntax - either is acceptable.
-
-    Example:
-      _ParseRule('5 + 5')
-      # Returns Sum(Literal(5), Literal(5))
-
-    Args:
-      rule (str): rule in either objectfilter or dottysql syntax.
-
-    Returns:
-      efilter.query.Query: efilter query of the rule or None.
-    """
-    if self._OBJECTFILTER_WORDS.search(rule):
-      syntax = u'objectfilter'
-    else:
-      syntax = u'dottysql'
-
-    try:
-      return efilter_query.Query(rule, syntax=syntax)
-
-    except efilter_errors.EfilterParseError as exception:
-      stripped_rule = rule.rstrip()
-      logging.warning(
-          u'Unable to build query from rule: "{0:s}" with error: {1:s}'.format(
-              stripped_rule, exception.message))
 
   def _ParseDefinitions(self, tag_file_path):
     """Parses the tag file and yields tuples of label name, list of rule ASTs.
@@ -185,6 +105,36 @@ class TaggingPlugin(interface.AnalysisPlugin):
       # Yield any remaining tags once we reach the end of the file.
       if tag and queries:
         yield tag, queries
+
+  def _ParseRule(self, rule):
+    """Parses a single tagging rule.
+
+    This method attempts to detect whether the rule is written with objectfilter
+    or dottysql syntax - either is acceptable.
+
+    Example:
+      _ParseRule('5 + 5')
+      # Returns Sum(Literal(5), Literal(5))
+
+    Args:
+      rule (str): rule in either objectfilter or dottysql syntax.
+
+    Returns:
+      efilter.query.Query: efilter query of the rule or None.
+    """
+    if self._OBJECTFILTER_WORDS.search(rule):
+      syntax = u'objectfilter'
+    else:
+      syntax = u'dottysql'
+
+    try:
+      return efilter_query.Query(rule, syntax=syntax)
+
+    except efilter_errors.EfilterParseError as exception:
+      stripped_rule = rule.rstrip()
+      logging.warning(
+          u'Unable to build query from rule: "{0:s}" with error: {1:s}'.format(
+              stripped_rule, exception.message))
 
   def _ParseTaggingFile(self, tag_file_path):
     """Parses tag definitions from the source.
@@ -231,6 +181,56 @@ class TaggingPlugin(interface.AnalysisPlugin):
         plugin_name=self.NAME, text=report_text)
     analysis_report.SetTags(self._tags)
     return analysis_report
+
+  def ExamineEvent(self, mediator, event):
+    """Analyzes an EventObject and tags it according to rules in the tag file.
+
+    Args:
+      mediator (AnalysisMediator): mediates interactions between analysis
+          plugins and other components, such as storage and dfvfs.
+      event (EventObject): event to examine.
+    """
+    if self._tag_rules is None:
+      if self._autodetect_tag_file_attempt:
+        # There's nothing to tag with, and we've already tried to find a good
+        # tag file, so there's nothing we can do with this event (or any other).
+        return
+      if not self._AttemptAutoDetectTagFile(mediator):
+        logging.info(
+            u'No tag definition file specified, and plaso was not able to '
+            u'autoselect a tagging file. As no definitions were specified, '
+            u'no events will be tagged.')
+        return
+
+    try:
+      matched_labels = efilter_api.apply(self._tag_rules, vars=event)
+    except efilter_errors.EfilterTypeError as exception:
+      logging.warning(u'Unable to apply efilter query with error: {0:s}'.format(
+          exception))
+      matched_labels = None
+
+    if not matched_labels:
+      return
+
+    event_uuid = getattr(event, u'uuid')
+    event_tag = events.EventTag(
+        comment=u'Tag applied by tagging analysis plugin.',
+        event_uuid=event_uuid)
+
+    for label in efilter_api.getvalues(matched_labels):
+      event_tag.AddLabel(label)
+
+    logging.debug(u'Tagging event: {0!s}'.format(event_uuid))
+    self._tags.append(event_tag)
+
+  def SetAndLoadTagFile(self, tagging_file_path):
+    """Sets the tag file to be used by the plugin.
+
+    Args:
+      tagging_file_path (str): path of the tagging file.
+    """
+    self._tagging_file_name = tagging_file_path
+    self._tag_rules = self._ParseTaggingFile(self._tagging_file_name)
 
 
 manager.AnalysisPluginManager.RegisterPlugin(TaggingPlugin)

@@ -12,7 +12,6 @@ See additional details here:
 import argparse
 import multiprocessing
 import logging
-import pdb
 import sys
 import time
 
@@ -51,12 +50,10 @@ class PsortTool(analysis_tool.AnalysisTool):
     """Initializes the CLI tool object.
 
     Args:
-      input_reader: the input reader (instance of InputReader).
-                    The default is None which indicates the use of the stdin
-                    input reader.
-      output_writer: the output writer (instance of OutputWriter).
-                     The default is None which indicates the use of the stdout
-                     output writer.
+      input_reader (Optional[InputReader]): input reader, where None indicates
+          that the stdin input reader should be used.
+      output_writer (Optional[OutputWriter]): output writer, where None
+          indicates that the stdout output writer should be used.
     """
     super(PsortTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
@@ -185,80 +182,14 @@ class PsortTool(analysis_tool.AnalysisTool):
     else:
       self._front_end.SetPreferredLanguageIdentifier(preferred_language)
 
-  def _ProcessStorage(self):
-    """Processes a plaso storage file.
-
-    Raises:
-      BadConfigOption: when a configuration parameter fails validation.
-      RuntimeError: if a non-recoverable situation is encountered.
-    """
-    output_module = self._front_end.CreateOutputModule(
-        preferred_encoding=self.preferred_encoding, timezone=self._timezone)
-
-    if isinstance(output_module, output_interface.LinearOutputModule):
-      if self._output_filename:
-        output_file_object = open(self._output_filename, u'wb')
-        output_writer = cli_tools.FileObjectOutputWriter(output_file_object)
-      else:
-        output_writer = cli_tools.StdoutOutputWriter()
-      output_module.SetOutputWriter(output_writer)
-
-    helpers_manager.ArgumentHelperManager.ParseOptions(
-        self._options, output_module)
-
-    # Check if there are parameters that have not been defined and need to
-    # in order for the output module to continue. Prompt user to supply
-    # those that may be missing.
-    missing_parameters = output_module.GetMissingArguments()
-    while missing_parameters:
-      # TODO: refactor this.
-      configuration_object = PsortOptions()
-      setattr(configuration_object, u'output_format', output_module.NAME)
-      for parameter in missing_parameters:
-        value = self._PromptUserForInput(
-            u'Missing parameter {0:s} for output module'.format(parameter))
-        if value is None:
-          logging.warning(
-              u'Unable to set the missing parameter for: {0:s}'.format(
-                  parameter))
-          continue
-
-        setattr(configuration_object, parameter, value)
-
-      helpers_manager.ArgumentHelperManager.ParseOptions(
-          configuration_object, output_module)
-      missing_parameters = output_module.GetMissingArguments()
-
-    analysis_plugins = self._front_end.GetAnalysisPlugins(
-        self._analysis_plugins)
-    for analysis_plugin in analysis_plugins:
-      helpers_manager.ArgumentHelperManager.ParseOptions(
-          self._options, analysis_plugin)
-
-    counter = self._front_end.ProcessStorage(
-        self._storage_file_path, output_module, analysis_plugins,
-        command_line_arguments=self._command_line_arguments,
-        deduplicate_events=self._deduplicate_events,
-        preferred_encoding=self.preferred_encoding,
-        time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
-
-    if not self._quiet_mode:
-      self._output_writer.Write(u'Processing completed.\n')
-
-      table_view = cli_views.ViewsFactory.GetTableView(
-          self._views_format_type, title=u'Counter')
-      for element, count in counter.most_common():
-        table_view.AddRow([element, count])
-      table_view.Write(self._output_writer)
-
   def _PromptUserForInput(self, input_text):
     """Prompts user for an input and return back read data.
 
     Args:
-      input_text: the text used for prompting the user for input.
+      input_text (str): text used for prompting the user for input.
 
     Returns:
-      string containing the input read from the user.
+      str: input read from the user.
     """
     self._output_writer.Write(u'{0:s}: '.format(input_text))
     return self._input_reader.Read()
@@ -411,7 +342,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     """Parses the command line arguments.
 
     Returns:
-      A boolean value indicating the arguments were successfully parsed.
+      bool: True if the arguments were successfully parsed.
     """
     self._ConfigureLogging()
 
@@ -585,7 +516,6 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._output_format = getattr(options, u'output_format', None)
     if not self._output_format:
       raise errors.BadConfigOption(u'Missing output format.')
-    self._front_end.SetOutputFormat(self._output_format)
 
     if not self._front_end.HasOutputClass(self._output_format):
       raise errors.BadConfigOption(
@@ -608,27 +538,87 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._options = options
 
   def ProcessStorage(self):
-    """Processes a plaso storage."""
-    try:
-      self._ProcessStorage()
+    """Processes a plaso storage file.
 
-    except IOError as exception:
-      # Piping results to "|head" for instance causes an IOError.
-      if u'Broken pipe' not in exception:
-        logging.error(u'Processing stopped early: {0:s}.'.format(exception))
+    Raises:
+      BadConfigOption: when a configuration parameter fails validation.
+      RuntimeError: if a non-recoverable situation is encountered.
+    """
+    output_module = self._front_end.CreateOutputModule(
+        self._output_format, preferred_encoding=self.preferred_encoding,
+        timezone=self._timezone)
 
-    except KeyboardInterrupt:
-      pass
+    if isinstance(output_module, output_interface.LinearOutputModule):
+      if self._output_filename:
+        output_file_object = open(self._output_filename, u'wb')
+        output_writer = cli_tools.FileObjectOutputWriter(output_file_object)
+      else:
+        output_writer = cli_tools.StdoutOutputWriter()
+      output_module.SetOutputWriter(output_writer)
 
-    except errors.BadConfigOption as exception:
-      logging.error(u'{0:s}'.format(exception))
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        self._options, output_module)
 
-    # Catching every remaining exception in case we are debugging.
-    except Exception as exception:  # pylint: disable=broad-except
-      if not self._debug_mode:
-        raise
-      logging.error(u'{0:s}'.format(exception))
-      pdb.post_mortem()
+    # Check if there are parameters that have not been defined and need to
+    # in order for the output module to continue. Prompt user to supply
+    # those that may be missing.
+    missing_parameters = output_module.GetMissingArguments()
+    while missing_parameters:
+      # TODO: refactor this.
+      configuration_object = PsortOptions()
+      setattr(configuration_object, u'output_format', output_module.NAME)
+      for parameter in missing_parameters:
+        value = self._PromptUserForInput(
+            u'Missing parameter {0:s} for output module'.format(parameter))
+        if value is None:
+          logging.warning(
+              u'Unable to set the missing parameter for: {0:s}'.format(
+                  parameter))
+          continue
+
+        setattr(configuration_object, parameter, value)
+
+      helpers_manager.ArgumentHelperManager.ParseOptions(
+          configuration_object, output_module)
+      missing_parameters = output_module.GetMissingArguments()
+
+    analysis_plugins = self._front_end.GetAnalysisPlugins(
+        self._analysis_plugins)
+    for analysis_plugin in analysis_plugins:
+      helpers_manager.ArgumentHelperManager.ParseOptions(
+          self._options, analysis_plugin)
+
+    if not analysis_plugins:
+      storage_reader = self._front_end.CreateStorageReader(
+          self._storage_file_path)
+
+      counter = self._front_end.ExportEventsWithOutputModule(
+          storage_reader, output_module,
+          deduplicate_events=self._deduplicate_events,
+          time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
+
+    else:
+      session = self._front_end.CreateSession(
+          command_line_arguments=self._command_line_arguments,
+          preferred_encoding=self.preferred_encoding)
+
+      storage_writer = self._front_end.CreateStorageWriter(
+          session, self._storage_file_path)
+      # TODO: handle errors.BadConfigOption
+
+      counter = self._front_end.ProcessStorage(
+          session, storage_writer, output_module, analysis_plugins,
+          deduplicate_events=self._deduplicate_events,
+          time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
+
+    if not self._quiet_mode:
+      self._output_writer.Write(u'Processing completed.\n')
+
+      table_view = cli_views.ViewsFactory.GetTableView(
+          self._views_format_type, title=u'Counter')
+      for element, count in counter.most_common():
+        table_view.AddRow([element, count])
+      table_view.Write(self._output_writer)
 
 
 def Main():

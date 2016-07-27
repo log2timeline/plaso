@@ -8,6 +8,7 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.containers import sessions
 from plaso.frontend import extraction_frontend
 from plaso.storage import zip_file as storage_zip_file
 
@@ -109,6 +110,7 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
   # the behavior of the multi processing queue.
   def testProcessSources(self):
     """Tests the ProcessSources function."""
+    session = sessions.Session()
     test_front_end = extraction_frontend.ExtractionFrontend()
 
     test_file = self._GetTestFilePath([u'ímynd.dd'])
@@ -122,9 +124,11 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       storage_file_path = os.path.join(temp_directory, u'storage.plaso')
-      test_front_end.SetStorageFile(storage_file_path)
 
-      test_front_end.ProcessSources([path_spec], source_type)
+      storage_writer = storage_zip_file.ZIPStorageFileWriter(
+          session, storage_file_path)
+      test_front_end.ProcessSources(
+          session, storage_writer, [path_spec], source_type)
 
       storage_file = storage_zip_file.ZIPStorageFile()
       try:
@@ -150,11 +154,6 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
     """Tests the SetShowMemoryInformation function."""
     test_front_end = extraction_frontend.ExtractionFrontend()
     test_front_end.SetShowMemoryInformation(show_memory=False)
-
-  def testSetStorageFile(self):
-    """Tests the SetStorageFile function."""
-    test_front_end = extraction_frontend.ExtractionFrontend()
-    test_front_end.SetStorageFile(u'/tmp/storage.plaso')
 
   def testSetTextPrepend(self):
     """Tests the SetTextPrepend function."""

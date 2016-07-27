@@ -11,7 +11,7 @@ from plaso.lib import errors
 from plaso.output import manager as output_manager
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
-from tests.frontend import psort as psort_test
+from tests.multi_processing import psort as psort_test
 
 from tools import psort
 from tools import test_lib

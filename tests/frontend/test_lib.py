@@ -6,6 +6,7 @@ import io
 from plaso.analysis import interface as analysis_interface
 
 
+# TODO: replace by cli_test_lib.TestOutputWriter
 class StringIOOutputWriter(object):
   """Class that implements a StringIO output writer."""
 
