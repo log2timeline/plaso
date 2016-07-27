@@ -71,7 +71,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._command_line_arguments = None
     self._deduplicate_events = True
     self._event_filter = None
-    self._filter_expression = None
+    self._event_filter_expression = None
     self._front_end = psort.PsortFrontend()
     self._options = None
     self._output_filename = None
@@ -173,19 +173,20 @@ class PsortTool(analysis_tool.AnalysisTool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    self._filter_expression = self.ParseStringOption(options, u'filter')
-    if self._filter_expression:
+    self._event_filter_expression = self.ParseStringOption(options, u'filter')
+    if self._event_filter_expression:
       self._event_filter = filters_manager.FiltersManager.GetFilterObject(
-          self._filter_expression)
+          self._event_filter_expression)
       if not self._event_filter:
-        raise errors.BadConfigOption(
-            u'Invalid filter expression: {0:s}'.format(self._filter_expression))
+        raise errors.BadConfigOption(u'Invalid filter expression: {0:s}'.format(
+            self._event_filter_expression))
 
     time_slice_event_time_string = getattr(options, u'slice', None)
     time_slice_duration = getattr(options, u'slice_size', 5)
     self._use_time_slicer = getattr(options, u'slicer', False)
 
-    self._front_end.SetEventFilter(self._event_filter, self._filter_expression)
+    self._front_end.SetEventFilter(
+        self._event_filter, self._event_filter_expression)
 
     # The slice and slicer cannot be set at the same time.
     if time_slice_event_time_string and self._use_time_slicer:

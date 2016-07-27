@@ -265,7 +265,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
   def _ProcessStorage(
       self, knowledge_base_object, storage_writer, data_location,
-      analysis_plugins, event_filter=None, filter_expression=None):
+      analysis_plugins, event_filter=None, event_filter_expression=None):
     """Processes a plaso storage file.
 
     Args:
@@ -277,7 +277,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
           be run.
       event_filter (Optional[FilterObject]): event filter.
-      filter_expression (Optional[str]): filter expression.
+      event_filter_expression (Optional[str]): event filter expression.
 
     Raises:
       RuntimeError: if a non-recoverable situation is encountered.
@@ -299,7 +299,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     self._StartAnalysisProcesses(
         knowledge_base_object, storage_writer, analysis_plugins,
-        data_location, filter_expression=filter_expression)
+        data_location, event_filter_expression=event_filter_expression)
 
     logging.debug(u'Processing events.')
 
@@ -355,7 +355,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
   def _StartAnalysisProcesses(
       self, knowledge_base_object, storage_writer, analysis_plugins,
-      data_location, filter_expression=None):
+      data_location, event_filter_expression=None):
     """Starts the analysis processes.
 
     Args:
@@ -366,7 +366,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           be run.
       data_location (str): path to the location that data files should
           be loaded from.
-      filter_expression (Optional[str]): filter expression.
+      event_filter_expression (Optional[str]): event filter expression.
     """
     logging.info(u'Starting analysis plugins.')
 
@@ -393,7 +393,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       process = analysis_process.AnalysisProcess(
           input_event_queue, storage_writer, knowledge_base_object,
           analysis_plugin, data_location=data_location,
-          filter_expression=filter_expression, name=analysis_plugin.plugin_name)
+          event_filter_expression=event_filter_expression,
+          name=analysis_plugin.plugin_name)
 
       process.start()
 
@@ -575,7 +576,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
   def ProcessStorage(
       self, knowledge_base_object, storage_writer, data_location,
-      analysis_plugins, event_filter=None, filter_expression=None,
+      analysis_plugins, event_filter=None, event_filter_expression=None,
       status_update_callback=None):
     """Processes a plaso storage file.
 
@@ -588,7 +589,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
           be run.
       event_filter (Optional[FilterObject]): event filter.
-      filter_expression (Optional[str]): filter expression.
+      event_filter_expression (Optional[str]): event filter expression.
       status_update_callback (Optional[function]): callback function for status
           updates.
     """
@@ -611,7 +612,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       self._ProcessStorage(
           knowledge_base_object, storage_writer, data_location,
           analysis_plugins, event_filter=event_filter,
-          filter_expression=filter_expression)
+          event_filter_expression=event_filter_expression)
 
     except KeyboardInterrupt:
       self._abort = True

@@ -34,7 +34,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     self._enable_profiling = False
     # Instance of EventObjectFilter.
     self._event_filter = None
-    self._filter_expression = None
+    self._event_filter_expression = None
     self._knowledge_base = knowledge_base.KnowledgeBase()
     self._preferred_language = u'en-US'
     self._profiling_directory = None
@@ -281,18 +281,18 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     engine.ProcessStorage(
         self._knowledge_base, storage_writer, self._data_location,
         analysis_plugins, event_filter=self._event_filter,
-        filter_expression=self._filter_expression,
+        event_filter_expression=self._event_filter_expression,
         status_update_callback=status_update_callback)
 
-  def SetEventFilter(self, event_filter, filter_expression):
+  def SetEventFilter(self, event_filter, event_filter_expression):
     """Sets the event filter information.
 
     Args:
       event_filter (FilterObject): event filter.
-      filter_expression (str): filter expression.
+      event_filter_expression (str): event filter expression.
     """
     self._event_filter = event_filter
-    self._filter_expression = filter_expression
+    self._event_filter_expression = event_filter_expression
 
   def SetPreferredLanguageIdentifier(self, language_identifier):
     """Sets the preferred language identifier.
