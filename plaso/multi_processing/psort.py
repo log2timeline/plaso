@@ -73,6 +73,120 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._status_update_callback = None
     self._use_zeromq = use_zeromq
 
+  def _AnalyzeEvent(self, event):
+    """Analyzes an event by pushing it to the event queues.
+
+    Args:
+      event (EventObject): event.
+    """
+    # TODO: refactor.
+    # Needed for duplicate removals, if two events
+    # are merged then we'll just pick the first inode value.
+    inode = event.inode
+    if isinstance(inode, py2to3.STRING_TYPES):
+      inode_list = inode.split(u';')
+      try:
+        new_inode = int(inode_list[0], 10)
+      except (IndexError, ValueError):
+        new_inode = 0
+
+      event.inode = new_inode
+
+    for event_queue in self._event_queues:
+      event_queue.PushItem(event)
+
+    self._number_of_consumed_events += 1
+
+  def _AnalyzeEvents(
+      self, knowledge_base_object, storage_writer, data_location,
+      analysis_plugins, event_filter=None, event_filter_expression=None):
+    """Analyzes events in a plaso storage.
+
+    Args:
+      knowledge_base_object (KnowledgeBase): contains information from
+          the source data needed for processing.
+      storage_writer (StorageWriter): storage writer.
+      data_location (str): path to the location that data files should
+          be loaded from.
+      analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
+          be run.
+      event_filter (Optional[FilterObject]): event filter.
+      event_filter_expression (Optional[str]): event filter expression.
+
+    Raises:
+      RuntimeError: if a non-recoverable situation is encountered.
+    """
+    self._status = definitions.PROCESSING_STATUS_RUNNING
+    self._number_of_consumed_errors = 0
+    self._number_of_consumed_events = 0
+    self._number_of_consumed_reports = 0
+    self._number_of_consumed_sources = 0
+    self._number_of_produced_errors = 0
+    self._number_of_produced_events = 0
+    self._number_of_produced_reports = 0
+    self._number_of_produced_sources = 0
+
+    number_of_filtered_events = 0
+
+    # Set up the storage writer before the analysis processes.
+    storage_writer.StartTaskStorage()
+
+    self._StartAnalysisProcesses(
+        knowledge_base_object, storage_writer, analysis_plugins,
+        data_location, event_filter_expression=event_filter_expression)
+
+    logging.debug(u'Processing events.')
+
+    filter_limit = getattr(event_filter, u'limit', None)
+
+    for event in storage_writer.GetEvents():
+      if event_filter:
+        filter_match = event_filter.Match(event)
+      else:
+        filter_match = None
+
+      # pylint: disable=singleton-comparison
+      if filter_match == False:
+        number_of_filtered_events += 1
+        continue
+
+      self._AnalyzeEvent(event)
+
+      if (event_filter and filter_limit and
+          filter_limit == self._number_of_consumed_events):
+        break
+
+    logging.debug(u'Processing analysis plugin results.')
+
+    # TODO: use a task based approach.
+    plugin_names = [plugin.plugin_name for plugin in analysis_plugins]
+    while plugin_names:
+      for plugin_name in list(plugin_names):
+        if self._abort:
+          break
+
+        # TODO: temporary solution.
+        task_identifier = plugin_name
+
+        if storage_writer.CheckTaskStorageReadyForMerge(task_identifier):
+          storage_writer.MergeTaskStorage(task_identifier)
+
+          # TODO: temporary solution.
+          plugin_names.remove(plugin_name)
+
+    storage_writer.StopTaskStorage(abort=self._abort)
+
+    if self._abort:
+      logging.debug(u'Processing aborted.')
+    else:
+      logging.debug(u'Processing completed.')
+
+    events_counter = collections.Counter()
+    events_counter[u'Events filtered'] = number_of_filtered_events
+    events_counter[u'Events processed'] = self._number_of_consumed_events
+
+    return events_counter
+
   def _CheckStatusAnalysisProcess(self, pid):
     """Checks the status of an analysis process.
 
@@ -236,120 +350,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     if filter_limit:
       events_counter[u'Limited By'] = filter_limit
-
-    return events_counter
-
-  def _ProcessEvent(self, event):
-    """Processes an event by pushing it to the event queues.
-
-    Args:
-      event (EventObject): event.
-    """
-    # TODO: refactor.
-    # Needed for duplicate removals, if two events
-    # are merged then we'll just pick the first inode value.
-    inode = event.inode
-    if isinstance(inode, py2to3.STRING_TYPES):
-      inode_list = inode.split(u';')
-      try:
-        new_inode = int(inode_list[0], 10)
-      except (IndexError, ValueError):
-        new_inode = 0
-
-      event.inode = new_inode
-
-    for event_queue in self._event_queues:
-      event_queue.PushItem(event)
-
-    self._number_of_consumed_events += 1
-
-  def _ProcessStorage(
-      self, knowledge_base_object, storage_writer, data_location,
-      analysis_plugins, event_filter=None, event_filter_expression=None):
-    """Processes a plaso storage file.
-
-    Args:
-      knowledge_base_object (KnowledgeBase): contains information from
-          the source data needed for processing.
-      storage_writer (StorageWriter): storage writer.
-      data_location (str): path to the location that data files should
-          be loaded from.
-      analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
-          be run.
-      event_filter (Optional[FilterObject]): event filter.
-      event_filter_expression (Optional[str]): event filter expression.
-
-    Raises:
-      RuntimeError: if a non-recoverable situation is encountered.
-    """
-    self._status = definitions.PROCESSING_STATUS_RUNNING
-    self._number_of_consumed_errors = 0
-    self._number_of_consumed_events = 0
-    self._number_of_consumed_reports = 0
-    self._number_of_consumed_sources = 0
-    self._number_of_produced_errors = 0
-    self._number_of_produced_events = 0
-    self._number_of_produced_reports = 0
-    self._number_of_produced_sources = 0
-
-    number_of_filtered_events = 0
-
-    # Set up the storage writer before the analysis processes.
-    storage_writer.StartTaskStorage()
-
-    self._StartAnalysisProcesses(
-        knowledge_base_object, storage_writer, analysis_plugins,
-        data_location, event_filter_expression=event_filter_expression)
-
-    logging.debug(u'Processing events.')
-
-    filter_limit = getattr(event_filter, u'limit', None)
-
-    for event in storage_writer.GetEvents():
-      if event_filter:
-        filter_match = event_filter.Match(event)
-      else:
-        filter_match = None
-
-      # pylint: disable=singleton-comparison
-      if filter_match == False:
-        number_of_filtered_events += 1
-        continue
-
-      self._ProcessEvent(event)
-
-      if (event_filter and filter_limit and
-          filter_limit == self._number_of_consumed_events):
-        break
-
-    logging.debug(u'Processing analysis plugin results.')
-
-    # TODO: use a task based approach.
-    plugin_names = [plugin.plugin_name for plugin in analysis_plugins]
-    while plugin_names:
-      for plugin_name in list(plugin_names):
-        if self._abort:
-          break
-
-        # TODO: temporary solution.
-        task_identifier = plugin_name
-
-        if storage_writer.CheckTaskStorageReadyForMerge(task_identifier):
-          storage_writer.MergeTaskStorage(task_identifier)
-
-          # TODO: temporary solution.
-          plugin_names.remove(plugin_name)
-
-    storage_writer.StopTaskStorage(abort=self._abort)
-
-    if self._abort:
-      logging.debug(u'Processing aborted.')
-    else:
-      logging.debug(u'Processing completed.')
-
-    events_counter = collections.Counter()
-    events_counter[u'Events filtered'] = number_of_filtered_events
-    events_counter[u'Events processed'] = self._number_of_consumed_events
 
     return events_counter
 
@@ -532,6 +532,75 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         number_of_consumed_errors, number_of_produced_errors,
         number_of_consumed_reports, number_of_produced_reports)
 
+  def AnalyzeEvents(
+      self, knowledge_base_object, storage_writer, data_location,
+      analysis_plugins, event_filter=None, event_filter_expression=None,
+      status_update_callback=None):
+    """Analyzes events in a plaso storage.
+
+    Args:
+      knowledge_base_object (KnowledgeBase): contains information from
+          the source data needed for processing.
+      storage_writer (StorageWriter): storage writer.
+      data_location (str): path to the location that data files should
+          be loaded from.
+      analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
+          be run.
+      event_filter (Optional[FilterObject]): event filter.
+      event_filter_expression (Optional[str]): event filter expression.
+      status_update_callback (Optional[function]): callback function for status
+          updates.
+    """
+    if not analysis_plugins:
+      return
+
+    self._status_update_callback = status_update_callback
+
+    storage_writer.Open()
+
+    storage_writer.ReadPreprocessingInformation(knowledge_base_object)
+
+    # Start the status update thread after open of the storage writer
+    # so we don't have to clean up the thread if the open fails.
+    self._StartStatusUpdateThread()
+
+    storage_writer.WriteSessionStart()
+
+    try:
+      self._AnalyzeEvents(
+          knowledge_base_object, storage_writer, data_location,
+          analysis_plugins, event_filter=event_filter,
+          event_filter_expression=event_filter_expression)
+
+    except KeyboardInterrupt:
+      self._abort = True
+
+      self._processing_status.aborted = True
+      if self._status_update_callback:
+        self._status_update_callback(self._processing_status)
+
+    finally:
+      storage_writer.WriteSessionCompletion(aborted=self._abort)
+
+      storage_writer.Close()
+
+      # Stop the status update thread after close of the storage writer
+      # so we include the storage sync to disk in the status updates.
+      self._StopStatusUpdateThread()
+
+    try:
+      self._StopAnalysisProcesses(abort=self._abort)
+
+    except KeyboardInterrupt:
+      self._AbortKill()
+
+      # The abort can leave the main process unresponsive
+      # due to incorrectly finalized IPC.
+      self._KillProcess(os.getpid())
+
+    # Reset values.
+    self._status_update_callback = None
+
   def ExportEvents(
       self, knowledge_base_object, storage_reader, output_module,
       deduplicate_events=True, event_filter=None, status_update_callback=None,
@@ -573,72 +642,3 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._status_update_callback = None
 
     return events_counter
-
-  def ProcessStorage(
-      self, knowledge_base_object, storage_writer, data_location,
-      analysis_plugins, event_filter=None, event_filter_expression=None,
-      status_update_callback=None):
-    """Processes a plaso storage file.
-
-    Args:
-      knowledge_base_object (KnowledgeBase): contains information from
-          the source data needed for processing.
-      storage_writer (StorageWriter): storage writer.
-      data_location (str): path to the location that data files should
-          be loaded from.
-      analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
-          be run.
-      event_filter (Optional[FilterObject]): event filter.
-      event_filter_expression (Optional[str]): event filter expression.
-      status_update_callback (Optional[function]): callback function for status
-          updates.
-    """
-    if not analysis_plugins:
-      return
-
-    self._status_update_callback = status_update_callback
-
-    storage_writer.Open()
-
-    storage_writer.ReadPreprocessingInformation(knowledge_base_object)
-
-    # Start the status update thread after open of the storage writer
-    # so we don't have to clean up the thread if the open fails.
-    self._StartStatusUpdateThread()
-
-    storage_writer.WriteSessionStart()
-
-    try:
-      self._ProcessStorage(
-          knowledge_base_object, storage_writer, data_location,
-          analysis_plugins, event_filter=event_filter,
-          event_filter_expression=event_filter_expression)
-
-    except KeyboardInterrupt:
-      self._abort = True
-
-      self._processing_status.aborted = True
-      if self._status_update_callback:
-        self._status_update_callback(self._processing_status)
-
-    finally:
-      storage_writer.WriteSessionCompletion(aborted=self._abort)
-
-      storage_writer.Close()
-
-      # Stop the status update thread after close of the storage writer
-      # so we include the storage sync to disk in the status updates.
-      self._StopStatusUpdateThread()
-
-    try:
-      self._StopAnalysisProcesses(abort=self._abort)
-
-    except KeyboardInterrupt:
-      self._AbortKill()
-
-      # The abort can leave the main process unresponsive
-      # due to incorrectly finalized IPC.
-      self._KillProcess(os.getpid())
-
-    # Reset values.
-    self._status_update_callback = None

@@ -748,7 +748,7 @@ class PsortTool(analysis_tool.AnalysisTool):
           session, self._storage_file_path)
       # TODO: handle errors.BadConfigOption
 
-      self._front_end.ProcessStorage(
+      self._front_end.AnalyzeEvents(
           storage_writer, analysis_plugins,
           status_update_callback=status_update_callback)
 

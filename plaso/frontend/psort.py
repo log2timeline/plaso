@@ -81,6 +81,29 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         profiling_sample_rate=self._profiling_sample_rate,
         profiling_type=self._profiling_type, use_zeromq=self._use_zeromq)
 
+  def AnalyzeEvents(
+      self, storage_writer, analysis_plugins, status_update_callback=None):
+    """Analyzes events in a plaso storage.
+
+    Args:
+      storage_writer (StorageWriter): storage writer.
+      analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
+          be run.
+      status_update_callback (Optional[function]): callback function for status
+          updates.
+
+    Raises:
+      RuntimeError: if a non-recoverable situation is encountered.
+    """
+    engine = self._CreateEngine()
+
+    # TODO: add single processing support.
+    engine.AnalyzeEvents(
+        self._knowledge_base, storage_writer, self._data_location,
+        analysis_plugins, event_filter=self._event_filter,
+        event_filter_expression=self._event_filter_expression,
+        status_update_callback=status_update_callback)
+
   def CreateOutputModule(
       self, output_format, preferred_encoding=u'utf-8', timezone=u'UTC'):
     """Create an output module.
@@ -260,29 +283,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
         deduplicate_events=deduplicate_events, event_filter=self._event_filter,
         status_update_callback=status_update_callback, time_slice=time_slice,
         use_time_slicer=use_time_slicer)
-
-  def ProcessStorage(
-      self, storage_writer, analysis_plugins, status_update_callback=None):
-    """Processes a plaso storage file.
-
-    Args:
-      storage_writer (StorageWriter): storage writer.
-      analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
-          be run.
-      status_update_callback (Optional[function]): callback function for status
-          updates.
-
-    Raises:
-      RuntimeError: if a non-recoverable situation is encountered.
-    """
-    engine = self._CreateEngine()
-
-    # TODO: add single processing support.
-    engine.ProcessStorage(
-        self._knowledge_base, storage_writer, self._data_location,
-        analysis_plugins, event_filter=self._event_filter,
-        event_filter_expression=self._event_filter_expression,
-        status_update_callback=status_update_callback)
 
   def SetEventFilter(self, event_filter, event_filter_expression):
     """Sets the event filter information.

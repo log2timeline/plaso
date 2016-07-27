@@ -196,6 +196,41 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
         b'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
         b'version,filename,inode,notes,format,extra'))
 
+  def testAnalyzeEvents(self):
+    """Tests the AnalyzeEvents function."""
+    storage_file_path = self._GetTestFilePath([u'psort_test.json.plaso'])
+
+    session = sessions.Session()
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+
+    formatter_mediator = formatters_mediator.FormatterMediator()
+    formatter_mediator.SetPreferredLanguageIdentifier(u'en-US')
+
+    output_mediator_object = output_mediator.OutputMediator(
+        knowledge_base_object, formatter_mediator)
+
+    output_module = null.NullOutputModule(output_mediator_object)
+
+    data_location = u''
+    analysis_plugin = tagging.TaggingPlugin()
+    # TODO: set tag file.
+
+    test_engine = psort.PsortMultiProcessEngine()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      shutil.copyfile(storage_file_path, temp_file)
+
+      storage_writer = storage_zip_file.ZIPStorageFileWriter(
+          session, temp_file)
+
+      counter = test_engine.AnalyzeEvents(
+          knowledge_base_object, storage_writer, output_module, data_location,
+          [analysis_plugin])
+
+    # TODO: assert if tests were successful.
+    _ = counter
+
   def testExportEvents(self):
     """Tests the ExportEvents function."""
     storage_file_path = self._GetTestFilePath([u'psort_test.json.plaso'])
@@ -237,41 +272,6 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
         u'filestat,'
         u'OS:/tmp/test/test_data/syslog,-')
     self.assertEquals(lines[14], expected_line)
-
-  def testProcessStorage(self):
-    """Tests the ProcessStorage function."""
-    storage_file_path = self._GetTestFilePath([u'psort_test.json.plaso'])
-
-    session = sessions.Session()
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
-    formatter_mediator = formatters_mediator.FormatterMediator()
-    formatter_mediator.SetPreferredLanguageIdentifier(u'en-US')
-
-    output_mediator_object = output_mediator.OutputMediator(
-        knowledge_base_object, formatter_mediator)
-
-    output_module = null.NullOutputModule(output_mediator_object)
-
-    data_location = u''
-    analysis_plugin = tagging.TaggingPlugin()
-    # TODO: set tag file.
-
-    test_engine = psort.PsortMultiProcessEngine()
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      shutil.copyfile(storage_file_path, temp_file)
-
-      storage_writer = storage_zip_file.ZIPStorageFileWriter(
-          session, temp_file)
-
-      counter = test_engine.ProcessStorage(
-          knowledge_base_object, storage_writer, output_module, data_location,
-          [analysis_plugin])
-
-    # TODO: assert if tests were successful.
-    _ = counter
 
   # TODO: add bogus data location test.
 
