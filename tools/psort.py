@@ -600,7 +600,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     else:
       session = self._front_end.CreateSession(
           command_line_arguments=self._command_line_arguments,
-          preferred_encoding=self._preferred_encoding)
+          preferred_encoding=self.preferred_encoding)
 
       storage_writer = self._front_end.CreateStorageWriter(
           session, self._storage_file_path)
