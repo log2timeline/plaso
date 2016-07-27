@@ -691,7 +691,7 @@ class PsortTool(analysis_tool.AnalysisTool):
             u'is no longer supported.').format(self._output_format))
 
       if self._output_filename and os.path.exists(self._output_filename):
-        logging.warning((
+        raise errors.BadConfigOption((
             u'Output file already exists: {0:s} and will be '
             u'overwritten.').format(self._output_filename))
 
