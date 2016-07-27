@@ -433,10 +433,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       logging.debug(u'Emptying queue.')
       self._task_queue.Empty()
 
-      # Wake the processes to make sure that they are not blocking
-      # waiting for the queue new items.
-      for _ in range(self._number_of_worker_processes):
-        self._task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
+    # Wake the processes to make sure that they are not blocking
+    # waiting for the queue new items.
+    for _ in range(self._number_of_worker_processes):
+      self._task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
 
     # Try waiting for the processes to exit normally.
     self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
