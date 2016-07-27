@@ -17,7 +17,7 @@ class ParserMediator(object):
   def __init__(
       self, storage_writer, knowledge_base, preferred_year=None,
       temporary_directory=None):
-    """Initializes a parser mediator object.
+    """Initializes a parser mediator.
 
     Args:
       storage_writer (StorageWriter): storage writer.

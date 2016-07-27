@@ -5,7 +5,6 @@
 import unittest
 
 from plaso.analysis import browser_search
-from plaso.analysis import mediator
 from plaso.parsers import sqlite
 
 from tests.analysis import test_lib
@@ -16,21 +15,16 @@ class BrowserSearchAnalysisTest(test_lib.AnalysisPluginTestCase):
 
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
-    knowledge_base = self._SetUpKnowledgeBase()
-    analysis_mediator = mediator.AnalysisMediator(None, knowledge_base)
-
     parser = sqlite.SQLiteParser()
-    storage_writer = self._ParseFile([u'History'], parser, knowledge_base)
+    plugin = browser_search.BrowserSearchPlugin()
+
+    storage_writer = self._ParseAndAnalyzeFile([u'History'], parser, plugin)
 
     self.assertEqual(len(storage_writer.events), 71)
 
-    plugin = browser_search.BrowserSearchPlugin()
+    self.assertEqual(len(storage_writer.analysis_reports), 1)
 
-    for event in storage_writer.events:
-      plugin.ExamineEvent(analysis_mediator, event)
-
-    analysis_report = plugin.CompileReport(analysis_mediator)
-    self.assertIsNotNone(analysis_report)
+    analysis_report = storage_writer.analysis_reports[0]
 
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.

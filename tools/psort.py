@@ -15,6 +15,12 @@ import logging
 import sys
 import time
 
+try:
+  import win32console
+except ImportError:
+  win32console = None
+
+import plaso
 # The following import makes sure the filters are registered.
 from plaso import filters  # pylint: disable=unused-import
 from plaso.cli import analysis_tool
@@ -25,6 +31,7 @@ from plaso.filters import manager as filters_manager
 from plaso.frontend import frontend
 from plaso.frontend import psort
 from plaso.output import interface as output_interface
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.winnt import language_ids
@@ -67,12 +74,56 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._options = None
     self._output_filename = None
     self._output_format = None
+    self._status_view_mode = u'linear'
+    self._stdout_output_writer = isinstance(
+        self._output_writer, cli_tools.StdoutOutputWriter)
     self._time_slice = None
     self._use_time_slicer = False
 
     self.list_analysis_plugins = False
     self.list_language_identifiers = False
     self.list_output_modules = False
+
+  def _FormatStatusTableRow(self, process_status):
+    """Formats a status table row.
+
+    Args:
+      process_status (ProcessStatus): processing status.
+    """
+    # This check makes sure the columns are tab aligned.
+    identifier = process_status.identifier
+    if len(identifier) < 8:
+      identifier = u'{0:s}\t'.format(identifier)
+
+    status = process_status.status
+    if len(status) < 8:
+      status = u'{0:s}\t'.format(status)
+
+    events = u''
+    if (process_status.number_of_consumed_events is not None and
+        process_status.number_of_consumed_events_delta is not None):
+      events = u'{0:d} ({1:d})'.format(
+          process_status.number_of_consumed_events,
+          process_status.number_of_consumed_events_delta)
+
+    # This check makes sure the columns are tab aligned.
+    if len(events) < 8:
+      events = u'{0:s}\t'.format(events)
+
+    reports = u''
+    if (process_status.number_of_produced_reports is not None and
+        process_status.number_of_produced_reports_delta is not None):
+      reports = u'{0:d} ({1:d})'.format(
+          process_status.number_of_produced_reports,
+          process_status.number_of_produced_reports_delta)
+
+    # This check makes sure the columns are tab aligned.
+    if len(reports) < 8:
+      reports = u'{0:s}\t'.format(reports)
+
+    # TODO: shorten display name to fit in 80 chars and show the filename.
+    return u'{0:s}\t{1:d}\t{2:s}\t{3:s}\t{4:s}'.format(
+        identifier, process_status.pid, status, events, reports)
 
   def _ParseAnalysisPluginOptions(self, options):
     """Parses the analysis plugin options.
@@ -168,6 +219,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._quiet_mode = getattr(options, u'quiet', False)
     self._front_end.SetQuietMode(self._quiet_mode)
 
+    self._status_view_mode = getattr(options, u'status_view_mode', u'linear')
+
   def _ParseLanguageOptions(self, options):
     """Parses the language options.
 
@@ -181,6 +234,74 @@ class PsortTool(analysis_tool.AnalysisTool):
       self.list_language_identifiers = True
     else:
       self._front_end.SetPreferredLanguageIdentifier(preferred_language)
+
+  def _PrintStatusHeader(self):
+    """Prints the processing status header."""
+    self._output_writer.Write(
+        u'Storage file\t: {0:s}\n'.format(self._storage_file_path))
+
+    self._output_writer.Write(u'\n')
+
+  def _PrintStatusUpdate(self, processing_status):
+    """Prints the processing status.
+
+    Args:
+      processing_status (ProcessingStatus): processing status.
+    """
+    if self._stdout_output_writer:
+      self._ClearScreen()
+
+    self._output_writer.Write(
+        u'plaso - {0:s} version {1:s}\n'.format(
+            self.NAME, plaso.GetVersion()))
+    self._output_writer.Write(u'\n')
+
+    self._PrintStatusHeader()
+
+    # TODO: for win32console get current color and set intensity,
+    # write the header separately then reset intensity.
+    status_header = u'Identifier\tPID\tStatus\t\tEvents\t\tReports'
+    if not win32console:
+      status_header = u'\x1b[1m{0:s}\x1b[0m'.format(status_header)
+
+    status_table = [status_header]
+
+    status_row = self._FormatStatusTableRow(processing_status.foreman_status)
+    status_table.append(status_row)
+
+    for worker_status in processing_status.workers_status:
+      status_row = self._FormatStatusTableRow(worker_status)
+      status_table.append(status_row)
+
+    status_table.append(u'')
+    self._output_writer.Write(u'\n'.join(status_table))
+    self._output_writer.Write(u'\n')
+
+    if processing_status.aborted:
+      self._output_writer.Write(
+          u'Processing aborted - waiting for clean up.\n\n')
+
+    # TODO: remove update flicker. For win32console we could set the cursor
+    # top left, write the table, clean the remainder of the screen buffer
+    # and set the cursor at the end of the table.
+    if self._stdout_output_writer:
+      # We need to explicitly flush stdout to prevent partial status updates.
+      sys.stdout.flush()
+
+  def _PrintStatusUpdateStream(self, processing_status):
+    """Prints the processing status as a stream of output.
+
+    Args:
+      processing_status (ProcessingStatus): processing status.
+    """
+    for worker_status in processing_status.workers_status:
+      status_line = (
+          u'{0:s} (PID: {1:d}) - events consumed: {2:d} - running: '
+          u'{3!s}\n').format(
+              worker_status.identifier, worker_status.pid,
+              worker_status.number_of_consumed_events,
+              worker_status.status not in definitions.PROCESSING_ERROR_STATUS)
+      self._output_writer.Write(status_line)
 
   def _PromptUserForInput(self, input_text):
     """Prompts user for an input and return back read data.
@@ -368,8 +489,20 @@ class PsortTool(analysis_tool.AnalysisTool):
     info_group = argument_parser.add_argument_group(u'Informational Arguments')
 
     self.AddLogFileOptions(info_group)
-
     self.AddInformationalOptions(info_group)
+
+    # The window status-view mode has an annoying flicker on Windows,
+    # hence we default to linear status-view mode instead.
+    if sys.platform.startswith(u'win'):
+      default_status_view = u'linear'
+    else:
+      default_status_view = u'window'
+
+    info_group.add_argument(
+        u'--status_view', u'--status-view', dest=u'status_view_mode',
+        choices=[u'linear', u'none', u'window'], action=u'store',
+        metavar=u'TYPE', default=default_status_view, help=(
+            u'The processing status view mode: "linear", "none" or "window".'))
 
     filter_group = argument_parser.add_argument_group(u'Filter Arguments')
 
@@ -598,6 +731,14 @@ class PsortTool(analysis_tool.AnalysisTool):
           time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
 
     else:
+      status_update_callback = None
+      if self._output_format == u'null':
+        # Status view currently only supported with null output format.
+        if self._status_view_mode == u'linear':
+          status_update_callback = self._PrintStatusUpdateStream
+        elif self._status_view_mode == u'window':
+          status_update_callback = self._PrintStatusUpdate
+
       session = self._front_end.CreateSession(
           command_line_arguments=self._command_line_arguments,
           preferred_encoding=self.preferred_encoding)
@@ -609,7 +750,10 @@ class PsortTool(analysis_tool.AnalysisTool):
       counter = self._front_end.ProcessStorage(
           session, storage_writer, output_module, analysis_plugins,
           deduplicate_events=self._deduplicate_events,
+          status_update_callback=status_update_callback,
           time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
+
+      # TODO: print analysis reports.
 
     if not self._quiet_mode:
       self._output_writer.Write(u'Processing completed.\n')
