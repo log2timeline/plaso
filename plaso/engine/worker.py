@@ -5,6 +5,7 @@ import copy
 import logging
 import os
 import re
+import time
 
 from dfvfs.analyzer import analyzer
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -31,6 +32,8 @@ class EventExtractionWorker(object):
   extracted event objects are pushed on a storage queue for further processing.
 
   Attributes:
+    last_activity_timestamp (int): timestamp received that indicates the last
+        time activity was observed.
     processing_status (str): human readable status indication e.g. 'Hashing',
         'Extracting'.
   """
@@ -106,6 +109,7 @@ class EventExtractionWorker(object):
     self._processing_profiler = None
     self._resolver_context = resolver_context
 
+    self.last_activity_timestamp = 0.0
     self.processing_status = definitions.PROCESSING_STATUS_IDLE
 
   def _AnalyzeDataStream(self, mediator, file_entry, data_stream_name):
@@ -191,6 +195,8 @@ class EventExtractionWorker(object):
         self.processing_status = analyzer_object.PROCESSING_STATUS_HINT
 
         analyzer_object.Analyze(data)
+
+        self.last_activity_timestamp = time.time()
 
       data = file_object.read(maximum_read_size)
 
@@ -303,12 +309,14 @@ class EventExtractionWorker(object):
       self._processing_profiler.StartTiming(u'extracting')
 
     self._event_extractor.ParseDataStream(
-        mediator, file_entry, data_stream_name=data_stream_name)
+        mediator, file_entry, data_stream_name)
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming(u'extracting')
 
     self.processing_status = definitions.PROCESSING_STATUS_RUNNING
+
+    self.last_activity_timestamp = time.time()
 
   def _ExtractMetadataFromFileEntry(self, mediator, file_entry):
     """Extracts metadata from a file entry.
@@ -452,6 +460,8 @@ class EventExtractionWorker(object):
                 dfvfs_definitions.FILE_ENTRY_TYPE_FILE)
             mediator.ProduceEventSource(event_source)
 
+            self.last_activity_timestamp = time.time()
+
         except (IOError, errors.MaximumRecursionDepth) as exception:
           error_message = (
               u'unable to process archive file with error: {0:s}').format(
@@ -508,6 +518,8 @@ class EventExtractionWorker(object):
         event_source.file_entry_type = dfvfs_definitions.FILE_ENTRY_TYPE_FILE
         mediator.ProduceEventSource(event_source)
 
+        self.last_activity_timestamp = time.time()
+
   def _ProcessDirectory(self, mediator, file_entry):
     """Processes a directory file entry.
 
@@ -553,6 +565,8 @@ class EventExtractionWorker(object):
 
       mediator.ProduceEventSource(event_source)
 
+      self.last_activity_timestamp = time.time()
+
     if self._processing_profiler:
       self._processing_profiler.StopTiming(u'collecting')
 
@@ -583,9 +597,10 @@ class EventExtractionWorker(object):
           if self._abort:
             break
 
-          file_entry_processed = True
           self._ProcessFileEntryDataStream(
               mediator, file_entry, data_stream.name)
+
+          file_entry_processed = True
 
         if not file_entry_processed:
           # For when the file entry does not contain a data stream.
@@ -661,10 +676,8 @@ class EventExtractionWorker(object):
         self._ProcessArchiveTypes(mediator, path_spec, archive_types)
 
       if dfvfs_definitions.TYPE_INDICATOR_ZIP in archive_types:
-        self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
-
         # ZIP files are the base of certain file formats like docx.
-        self._event_extractor.ParseDataStream(
+        self._ExtractContentFromDataStream(
             mediator, file_entry, data_stream_name)
 
     elif compressed_stream_types:
@@ -672,9 +685,7 @@ class EventExtractionWorker(object):
           mediator, path_spec, compressed_stream_types)
 
     else:
-      self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
-
-      self._event_extractor.ParseDataStream(
+      self._ExtractContentFromDataStream(
           mediator, file_entry, data_stream_name)
 
   def _ProcessMetadataFile(self, mediator, file_entry):
@@ -689,6 +700,8 @@ class EventExtractionWorker(object):
 
     self._event_extractor.ParseFileEntryMetadata(mediator, file_entry)
     self._event_extractor.ParseMetadataFile(mediator, file_entry, u'')
+
+    self.last_activity_timestamp = time.time()
 
   def GetAnalyzerNames(self):
     """Gets the names of the active analyzers.
@@ -706,6 +719,7 @@ class EventExtractionWorker(object):
           parsers and other components, such as storage and abort signals.
       path_spec (dfvfs.PathSpec): path specification.
     """
+    self.last_activity_timestamp = time.time()
     self.processing_status = definitions.PROCESSING_STATUS_RUNNING
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(
@@ -732,6 +746,7 @@ class EventExtractionWorker(object):
       # Make sure frame.f_locals does not keep a reference to file_entry.
       file_entry = None
 
+      self.last_activity_timestamp = time.time()
       self.processing_status = definitions.PROCESSING_STATUS_IDLE
 
   def SetHashers(self, hasher_names_string):
