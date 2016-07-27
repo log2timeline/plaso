@@ -120,8 +120,10 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       number_of_produced_sources = None
 
     if self._extraction_worker:
+      last_activity_timestamp = self._extraction_worker.last_activity_timestamp
       processing_status = self._extraction_worker.processing_status
     else:
+      last_activity_timestamp = 0.0
       processing_status = self._status
 
     status = {
@@ -133,6 +135,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
         u'number_of_produced_errors': number_of_produced_errors,
         u'number_of_produced_events': number_of_produced_events,
         u'number_of_produced_sources': number_of_produced_sources,
+        u'last_activity_timestamp': last_activity_timestamp,
         u'processing_status': processing_status,
         u'task_identifier': self._task_identifier}
 
@@ -241,26 +244,25 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     try:
       extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
 
-    except IOError as exception:
-      logging.warning((
-          u'Unable to process path specification: {0:s} with error: '
-          u'{1:s}').format(self._current_display_name, exception))
-
     except dfvfs_errors.CacheFullError:
       # TODO: signal engine of failure.
       self._abort = True
       logging.error((
           u'ABORT: detected cache full error while processing '
-          u'path spec: {0:s}').format(
-              self._current_display_name))
+          u'path spec: {0:s}').format(self._current_display_name))
 
     # All exceptions need to be caught here to prevent the worker
     # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
-      logging.warning(
-          u'Unhandled exception while processing path spec: {0:s}.'.format(
-              self._current_display_name))
-      logging.exception(exception)
+      parser_mediator.ProduceExtractionError((
+          u'unable to process path specification with error: '
+          u'{0:s}').format(exception), path_spec=path_spec)
+
+      if self._debug_output:
+        logging.warning(
+            u'Unhandled exception while processing path spec: {0:s}.'.format(
+                self._current_display_name))
+        logging.exception(exception)
 
   def _ProcessTask(self, task):
     """Processes a task.
@@ -277,11 +279,11 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
     storage_writer.Open()
 
+    self._parser_mediator.SetStorageWriter(storage_writer)
+
+    storage_writer.WriteTaskStart()
+
     try:
-      self._parser_mediator.SetStorageWriter(storage_writer)
-
-      storage_writer.WriteTaskStart()
-
       # TODO: add support for more task types.
       self._ProcessPathSpec(
           self._extraction_worker, self._parser_mediator, task.path_spec)
@@ -290,10 +292,9 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       if self._memory_profiler:
         self._memory_profiler.Sample()
 
-      # TODO: on abort use WriteTaskAborted instead of completion?
-      storage_writer.WriteTaskCompletion()
-
     finally:
+      storage_writer.WriteTaskCompletion(aborted=self._abort)
+
       self._parser_mediator.SetStorageWriter(None)
 
       storage_writer.Close()

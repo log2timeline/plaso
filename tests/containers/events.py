@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""This file contains the tests for the event attribute container objects."""
+"""This file contains the tests for the event attribute containers."""
 
 import unittest
 
@@ -9,12 +9,12 @@ from plaso.containers import events
 from tests.containers import test_lib
 
 
-class InvalidEventObject(events.EventObject):
-  """An event object without the required initialization."""
+class InvalidEvent(events.EventObject):
+  """An event without the required initialization."""
 
 
 class EventObjectTest(test_lib.AttributeContainerTestCase):
-  """Tests for the event attributes container object."""
+  """Tests for the event attributes container."""
 
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
@@ -218,21 +218,21 @@ class EventObjectTest(test_lib.AttributeContainerTestCase):
 
   def testNotInEventAndNoParent(self):
     """Call to an attribute that does not exist."""
-    event_object = test_lib.TestEvent(0, {})
+    event = test_lib.TestEvent(0, {})
 
     with self.assertRaises(AttributeError):
-      getattr(event_object, u'doesnotexist')
+      getattr(event, u'doesnotexist')
 
-  def testInvalidEventObject(self):
+  def testInvalidEvent(self):
     """Calls to format_string_short that has not been defined."""
-    event_object = InvalidEventObject()
+    event = InvalidEvent()
 
     with self.assertRaises(AttributeError):
-      getattr(event_object, u'format_string_short')
+      getattr(event, u'format_string_short')
 
 
 class EventTagTest(test_lib.AttributeContainerTestCase):
-  """Tests for the event tag attributes container object."""
+  """Tests for the event tag attributes container."""
 
   def testCopyToDict(self):
     """Tests the CopyToDict function."""

@@ -126,11 +126,6 @@ class BaseEngine(object):
       if platform:
         break
 
-  def SignalAbort(self):
-    """Signals the engine to abort."""
-    logging.warning(u'Aborted by user.')
-    self._abort = True
-
   @classmethod
   def SupportsMemoryProfiling(cls):
     """Determines if memory profiling is supported.

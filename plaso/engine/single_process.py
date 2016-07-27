@@ -77,12 +77,11 @@ class SingleProcessEngine(engine.BaseEngine):
       extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
 
     except KeyboardInterrupt:
-      self.SignalAbort()
+      self._abort = True
 
-    except IOError as exception:
-      logging.warning((
-          u'Unable to process path specification: {0:s} with error: '
-          u'{1:s}').format(self._current_display_name, exception))
+      self._processing_status.aborted = True
+      if self._status_update_callback:
+        self._status_update_callback(self._processing_status)
 
     # We cannot recover from a CacheFullError and abort processing when
     # it is raised.
@@ -96,12 +95,16 @@ class SingleProcessEngine(engine.BaseEngine):
     # All exceptions need to be caught here to prevent the worker
     # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
-      logging.warning(
-          u'Unhandled exception while processing path spec: {0:s}.'.format(
-              self._current_display_name))
-      logging.exception(exception)
+      parser_mediator.ProduceExtractionError((
+          u'unable to process path specification with error: '
+          u'{0:s}').format(exception), path_spec=path_spec)
 
       if self._debug_output:
+        logging.warning(
+            u'Unhandled exception while processing path spec: {0:s}.'.format(
+                self._current_display_name))
+        logging.exception(exception)
+
         pdb.post_mortem()
 
   def _ProcessSources(
@@ -356,19 +359,18 @@ class SingleProcessEngine(engine.BaseEngine):
       storage_writer.SetSerializersProfiler(self._serializers_profiler)
 
     storage_writer.Open()
+    storage_writer.WriteSessionStart()
 
     try:
-      storage_writer.WriteSessionStart()
       storage_writer.WritePreprocessingInformation(self.knowledge_base)
 
       self._ProcessSources(
           source_path_specs, resolver_context, extraction_worker,
           parser_mediator, storage_writer, filter_find_specs=filter_find_specs)
 
-      # TODO: on abort use WriteSessionAborted instead of completion?
-      storage_writer.WriteSessionCompletion()
-
     finally:
+      storage_writer.WriteSessionCompletion(aborted=self._abort)
+
       storage_writer.Close()
 
       if self._serializers_profiler:

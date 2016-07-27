@@ -271,6 +271,10 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._output_writer.Write(u'\n'.join(status_table))
     self._output_writer.Write(u'\n')
 
+    if processing_status.aborted:
+      self._output_writer.Write(
+          u'Processing aborted - waiting for clean up.\n\n')
+
     # TODO: remove update flicker. For win32console we could set the cursor
     # top left, write the table, clean the remainder of the screen buffer
     # and set the cursor at the end of the table.
@@ -700,10 +704,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       self._output_writer.Write(
           u'WARNING: missing processing status information.\n')
 
-    else:
-      if processing_status.aborted:
-        self._output_writer.Write(u'Processing aborted.\n')
-      elif processing_status.error_path_specs:
+    elif not processing_status.aborted:
+      if processing_status.error_path_specs:
         self._output_writer.Write(u'Processing completed with errors.\n')
       else:
         self._output_writer.Write(u'Processing completed.\n')

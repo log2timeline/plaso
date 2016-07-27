@@ -104,11 +104,14 @@ class MultiProcessingQueue(plaso_queue.Queue):
       # If no timeout is specified the queue will block if empty otherwise
       # a Queue.Empty exception is raised.
       return self._queue.get(timeout=self._timeout)
+
     except KeyboardInterrupt:
       raise errors.QueueClose
+
     # If close() is called on the multiprocessing.Queue while it is blocking
     # on get() it will raise IOError.
     except IOError:
       raise errors.QueueClose
+
     except Queue.Empty:
       raise errors.QueueEmpty

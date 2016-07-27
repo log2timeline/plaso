@@ -40,12 +40,8 @@ class MultiProcessEngine(engine.BaseEngine):
   # Maximum number of concurrent tasks.
   _MAXIMUM_NUMBER_OF_TASKS = 10000
 
-  _PROCESS_ABORT_TIMEOUT = 2.0
   _PROCESS_JOIN_TIMEOUT = 5.0
-  _PROCESS_TERMINATION_SLEEP = 0.5
-
-  _QUEUE_START_WAIT = 0.3
-  _QUEUE_START_WAIT_ATTEMPTS_MAXIMUM = 3
+  _PROCESS_WORKER_TIMEOUT = 15.0 * 60.0
 
   # Note that on average Windows seems to require a bit longer wait
   # than 5 seconds.
@@ -92,7 +88,6 @@ class MultiProcessEngine(engine.BaseEngine):
     self._filter_find_specs = None
     self._filter_object = None
     self._hasher_names_string = None
-    self._last_status_update_timestamp = 0.0
     self._last_worker_number = 0
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._memory_profiler = None
@@ -220,8 +215,7 @@ class MultiProcessEngine(engine.BaseEngine):
         status_indicator = definitions.PROCESSING_STATUS_KILLED
 
       process_status = {
-          u'processing_status': processing_status_string,
-      }
+          u'processing_status': processing_status_string}
 
     self._UpdateProcessingStatus(pid, process_status)
 
@@ -238,16 +232,6 @@ class MultiProcessEngine(engine.BaseEngine):
       replacement_process = self._StartExtractionWorkerProcess(
           self._storage_writer)
       self._StartMonitoringProcess(replacement_process.pid)
-
-    elif status_indicator == definitions.PROCESSING_STATUS_COMPLETED:
-      number_of_events = process_status.get(u'number_of_events', 0)
-      number_of_sources = process_status.get(u'number_of_consumed_sources', 0)
-      logging.debug((
-          u'Process {0:s} (PID: {1:d}) has completed its processing. '
-          u'Total of {2:d} events extracted from {3:d} sources').format(
-              process.name, pid, number_of_events, number_of_sources))
-
-      self._StopMonitoringProcess(pid)
 
     elif self._show_memory_usage:
       self._LogMemoryUsage(pid)
@@ -523,30 +507,38 @@ class MultiProcessEngine(engine.BaseEngine):
       if self._abort:
         break
 
-      if event_source and not task:
-        task = self._task_manager.CreateTask(self._session_identifier)
-        task.path_spec = event_source.path_spec
-        event_source = None
+      try:
+        if event_source and not task:
+          task = self._task_manager.CreateTask(self._session_identifier)
+          task.path_spec = event_source.path_spec
+          event_source = None
 
-        self._number_of_consumed_sources += 1
+          self._number_of_consumed_sources += 1
 
-        if self._memory_profiler:
-          self._memory_profiler.Sample()
+          if self._memory_profiler:
+            self._memory_profiler.Sample()
 
-      if task:
-        if self._ScheduleTask(task):
-          task = None
+        if task:
+          if self._ScheduleTask(task):
+            task = None
 
-      self._MergeTaskStorage(storage_writer)
+        self._MergeTaskStorage(storage_writer)
 
-      if not event_source and not task:
-        if self._processing_profiler:
-          self._processing_profiler.StartTiming(u'get_event_source')
+        if not event_source and not task:
+          if self._processing_profiler:
+            self._processing_profiler.StartTiming(u'get_event_source')
 
-        event_source = storage_writer.GetNextWrittenEventSource()
+          event_source = storage_writer.GetNextWrittenEventSource()
 
-        if self._processing_profiler:
-          self._processing_profiler.StopTiming(u'get_event_source')
+          if self._processing_profiler:
+            self._processing_profiler.StopTiming(u'get_event_source')
+
+      except KeyboardInterrupt:
+        self._abort = True
+
+        self._processing_status.aborted = True
+        if self._status_update_callback:
+          self._status_update_callback(self._processing_status)
 
     for task in self._task_manager.GetAbandonedTasks():
       self._processing_status.error_path_specs.append(task.path_spec)
@@ -859,6 +851,20 @@ class MultiProcessEngine(engine.BaseEngine):
     number_of_produced_sources = process_status.get(
         u'number_of_produced_sources', 0)
 
+    if processing_status != definitions.PROCESSING_STATUS_IDLE:
+      last_activity_timestamp = process_status.get(
+          u'last_activity_timestamp', 0.0)
+
+      if last_activity_timestamp:
+        last_activity_timestamp += self._PROCESS_WORKER_TIMEOUT
+
+        current_timestamp = time.time()
+        if current_timestamp > last_activity_timestamp:
+          logging.error((
+              u'Process {0:s} (PID: {1:d}) has not reported activity within '
+              u'the timeout period.').format(process.name, pid))
+          processing_status = definitions.PROCESSING_ERROR_STATUS
+
     self._processing_status.UpdateWorkerStatus(
         process.name, processing_status, pid, display_name,
         number_of_consumed_sources, number_of_produced_sources,
@@ -985,18 +991,18 @@ class MultiProcessEngine(engine.BaseEngine):
     # so we don't have to clean up the thread if the open fails.
     self._StartStatusUpdateThread()
 
+    storage_writer.WriteSessionStart()
+
     try:
-      storage_writer.WriteSessionStart()
       storage_writer.WritePreprocessingInformation(self.knowledge_base)
 
       self._ProcessSources(
           source_path_specs, storage_writer,
           filter_find_specs=filter_find_specs)
 
-      # TODO: on abort use WriteSessionAborted instead of completion?
-      storage_writer.WriteSessionCompletion()
-
     finally:
+      storage_writer.WriteSessionCompletion(aborted=self._abort)
+
       storage_writer.Close()
 
       # Stop the status update thread after close of the storage writer
