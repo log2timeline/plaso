@@ -26,7 +26,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
 
     Args:
       event_objects (list[EventObject]]): events to analyze.
-      plugin (AnalysisPluging): plugin.
+      plugin (AnalysisPlugin): plugin.
       knowledge_base_values (Optional[dict[str,str]]): knowledge base values.
 
     Returns:
@@ -72,7 +72,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     Args:
       path_segments (list[str]): path segments inside the test data directory.
       parser (BaseParser): parser.
-      plugin (AnalysisPluging): plugin.
+      plugin (AnalysisPlugin): plugin.
       knowledge_base_values (Optional[dict[str,str]]): knowledge base values.
 
     Returns:
