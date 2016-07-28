@@ -112,7 +112,7 @@ class Sqlite3DatabaseFile(object):
           mode we fake it by only permitting SELECT queries.
 
     Returns:
-      bool: True if successfu.
+      bool: True if successful.
 
     Raises:
       RuntimeError: if the database is already opened.
