@@ -303,9 +303,9 @@ class WinJobParser(interface.FileObjectParser):
               timezone=parser_mediator.timezone)
         except errors.TimestampError as exception:
           trigger_end_time = None
-          parser_mediator.ProduceExtractionError(
-              u'unable to determine scheduled end date with error: {0:s}'.format(
-                  exception))
+          parser_mediator.ProduceExtractionError((
+              u'unable to determine scheduled end date with error: '
+              u'{0:s}').format(exception))
 
         if trigger_end_time is not None:
           event = WinJobEvent(
@@ -314,8 +314,9 @@ class WinJobParser(interface.FileObjectParser):
               trigger_type=trigger_struct.trigger_type)
           parser_mediator.ProduceEvent(event)
 
-    # TODO: create a timeless event object if last_run_time and trigger_start_time
-    # are None? What should be the description of this event?
+    # TODO: create a timeless event object if last_run_time and
+    # trigger_start_time are None? What should be the description of
+    # this event?
 
 
 manager.ParsersManager.RegisterParser(WinJobParser)
