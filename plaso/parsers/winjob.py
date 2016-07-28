@@ -22,7 +22,7 @@ class WinJobEvent(time_events.TimestampEvent):
     application (str): path to job executable.
     description (str): description of the scheduled task.
     parameters (str): application command line parameters.
-    trigger (int): event trigger, e.g. DAILY.
+    trigger_type (int): trigger type.
     username (str): username that scheduled the task.
     working_directory (str): working directory of the scheduled task.
   """
@@ -31,7 +31,7 @@ class WinJobEvent(time_events.TimestampEvent):
 
   def __init__(
       self, timestamp, timestamp_description, application, parameters,
-      working_dir, username, trigger, description):
+      working_directory, username, description, trigger_type=None):
     """Initializes the event object.
 
     Args:
@@ -43,14 +43,14 @@ class WinJobEvent(time_events.TimestampEvent):
       parameters (str): application command line parameters.
       working_directory (str): working directory of the scheduled task.
       username (str): username that scheduled the task.
-      trigger (int): event trigger, e.g. DAILY.
       description (str): description of the scheduled task.
+      trigger_type (Optional[int]): trigger type.
     """
     super(WinJobEvent, self).__init__(timestamp, timestamp_description)
     self.application = application
     self.comment = description
     self.parameters = parameters
-    self.trigger = trigger
+    self.trigger_type = trigger_type
     self.username = username
     self.working_directory = working_directory
 
@@ -72,8 +72,8 @@ class WinJobParser(interface.FileObjectParser):
       0x0a00: u'Windows 10',
   }
 
-  _JOB_FIXED_STRUCT = construct.Struct(
-      u'job_fixed',
+  _JOB_FIXED_LENGTH_SECTION_STRUCT = construct.Struct(
+      u'job_fixed_length_section',
       construct.ULInt16(u'product_version'),
       construct.ULInt16(u'format_version'),
       construct.Bytes(u'job_uuid', 16),
@@ -103,7 +103,7 @@ class WinJobParser(interface.FileObjectParser):
   # null terminators exposed. Instead, we'll read these variables raw and
   # convert them using Plaso's ReadUTF16() for proper formatting.
   _JOB_VARIABLE_STRUCT = construct.Struct(
-      u'job_variable',
+      u'job_variable_length_section',
       construct.ULInt16(u'running_instance_count'),
       construct.ULInt16(u'application_length'),
       construct.String(
@@ -113,10 +113,10 @@ class WinJobParser(interface.FileObjectParser):
       construct.String(
           u'parameter',
           lambda ctx: ctx.parameter_length * 2),
-      construct.ULInt16(u'working_dir_length'),
+      construct.ULInt16(u'working_directory_length'),
       construct.String(
-          u'working_dir',
-          lambda ctx: ctx.working_dir_length * 2),
+          u'working_directory',
+          lambda ctx: ctx.working_directory_length * 2),
       construct.ULInt16(u'username_length'),
       construct.String(
           u'username',
@@ -136,6 +136,7 @@ class WinJobParser(interface.FileObjectParser):
       construct.ULInt16(u'number_of_triggers'))
 
   _TRIGGER_STRUCT = construct.Struct(
+      u'trigger',
       construct.ULInt16(u'size'),
       construct.ULInt16(u'reserved1'),
       construct.ULInt16(u'start_year'),
@@ -222,7 +223,8 @@ class WinJobParser(interface.FileObjectParser):
       UnableToParseFile: when the file cannot be parsed.
     """
     try:
-      header_struct = self._JOB_FIXED_STRUCT.parse_stream(file_object)
+      header_struct = self._JOB_FIXED_LENGTH_SECTION_STRUCT.parse_stream(
+          file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
           u'Unable to parse fixed-length section with error: {0:s}'.format(
@@ -249,7 +251,7 @@ class WinJobParser(interface.FileObjectParser):
     description = binary.ReadUTF16(job_variable_struct.comment)
     parameter = binary.ReadUTF16(job_variable_struct.parameter)
     username = binary.ReadUTF16(job_variable_struct.username)
-    working_dir = binary.ReadUTF16(job_variable_struct.working_dir)
+    working_directory = binary.ReadUTF16(job_variable_struct.working_directory)
 
     last_run_time = None
     if not self._IsEmptySystemTime(header_struct.last_run_time):
@@ -264,13 +266,12 @@ class WinJobParser(interface.FileObjectParser):
     if last_run_time is not None:
       event = WinJobEvent(
           last_run_time, eventdata.EventTimestamp.LAST_RUNTIME, application,
-          parameter, working_dir, username, job_variable_struct.trigger_type,
-          description)
+          parameter, working_directory, username, description)
       parser_mediator.ProduceEvent(event)
 
     for index in range(job_variable_struct.number_of_triggers):
       try:
-        trigger_struct = self._JOB_VARIABLE_STRUCT.parse_stream(file_object)
+        trigger_struct = self._TRIGGER_STRUCT.parse_stream(file_object)
       except (IOError, construct.FieldError) as exception:
         raise errors.UnableToParseFile(
             u'Unable to parse trigger: {0:d} with error: {1:s}'.format(
@@ -290,14 +291,15 @@ class WinJobParser(interface.FileObjectParser):
       if trigger_start_time is not None:
         event = WinJobEvent(
             trigger_start_time, u'Scheduled to start', application, parameter,
-            working_dir, username, trigger_struct.trigger_type, description)
+            working_directory, username, description,
+            trigger_type=trigger_struct.trigger_type)
         parser_mediator.ProduceEvent(event)
 
-      if trigger_struct.sched_end_year:
+      if trigger_struct.end_year:
         try:
           trigger_end_time = timelib.Timestamp.FromTimeParts(
-              trigger_struct.sched_end_year, trigger_struct.sched_end_month,
-              trigger_struct.sched_end_day, 0, 0, 0,
+              trigger_struct.end_year, trigger_struct.end_month,
+              trigger_struct.end_day, 0, 0, 0,
               timezone=parser_mediator.timezone)
         except errors.TimestampError as exception:
           trigger_end_time = None
@@ -308,7 +310,8 @@ class WinJobParser(interface.FileObjectParser):
         if trigger_end_time is not None:
           event = WinJobEvent(
               trigger_end_time, u'Scheduled to end', application, parameter,
-              working_dir, username, trigger_struct.trigger_type, description)
+              working_directory, username, description,
+              trigger_type=trigger_struct.trigger_type)
           parser_mediator.ProduceEvent(event)
 
     # TODO: create a timeless event object if last_run_time and trigger_start_time

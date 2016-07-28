@@ -16,7 +16,7 @@ class WinJobFormatter(interface.ConditionalEventFormatter):
       u'{parameters}',
       u'Scheduled by: {username}',
       u'Working directory: {working_directory}',
-      u'Run iteration: {trigger}']
+      u'Trigger type: {trigger_type}']
 
   SOURCE_LONG = u'Windows Scheduled Task Job'
   SOURCE_SHORT = u'JOB'
@@ -53,10 +53,10 @@ class WinJobFormatter(interface.ConditionalEventFormatter):
 
     event_values = event.CopyToDict()
 
-    trigger = event_values.get(u'trigger', None)
-    if trigger is not None:
-      event_values[u'trigger'] = self._TRIGGER_TYPES.get(
-          trigger, u'0x{0:04x}'.format(trigger))
+    trigger_type = event_values.get(u'trigger_type', None)
+    if trigger_type is not None:
+      event_values[u'trigger_type'] = self._TRIGGER_TYPES.get(
+          trigger_type, u'0x{0:04x}'.format(trigger_type))
 
     return self._ConditionalFormatMessages(event_values)
 

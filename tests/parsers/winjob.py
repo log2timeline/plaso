@@ -27,15 +27,14 @@ class WinJobTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-08-24 12:42:00.112')
     self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(
+        event_object.timestamp_desc, eventdata.EventTimestamp.LAST_RUNTIME)
 
     expected_application = (
         u'C:\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe')
     self.assertEqual(event_object.application, expected_application)
 
     self.assertEqual(event_object.username, u'Brian')
-    self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.LAST_RUNTIME)
-    self.assertEqual(event_object.trigger, 1)
 
     expected_comment = (
         u'Keeps your Google software up to date. If this task is disabled or '
@@ -48,16 +47,17 @@ class WinJobTest(test_lib.ParserTestCase):
     # Parse second event. Same metadata; different timestamp event.
     event_object = storage_writer.events[1]
 
-    self.assertEqual(event_object.timestamp_desc, u'Scheduled To Start')
-
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-12 15:42:00')
     self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp_desc, u'Scheduled to start')
+
+    self.assertEqual(event_object.trigger_type, 1)
 
     expected_message = (
         u'Application: {0:s} /ua /installsource scheduler '
         u'Scheduled by: Brian '
-        u'Run Iteration: DAILY').format(expected_application)
+        u'Trigger type: DAILY').format(expected_application)
 
     expected_short_message = (
         u'Application: {0:s} /ua /insta...').format(expected_application)
