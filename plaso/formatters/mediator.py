@@ -60,7 +60,7 @@ class FormatterMediator(object):
     """Retrieves the message string for a specific Windows Event Log source.
 
     Args:
-      log_source (str): Event Log source.
+      log_source (str): Event Log source, such as "Application Error".
       message_identifier (int): message identifier.
 
     Returns:
@@ -83,8 +83,8 @@ class FormatterMediator(object):
     """Sets the preferred language identifier.
 
     Args:
-      language_identifier (str): language identifier string e.g. en-US for
-          US English or is-IS for Icelandic.
+      language_identifier (str): language identifier string such as "en-US"
+          for US English or "is-IS" for Icelandic.
 
     Raises:
       KeyError: if the language identifier is not defined.

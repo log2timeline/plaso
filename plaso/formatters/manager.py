@@ -40,7 +40,7 @@ class FormattersManager(object):
       data_type (str): data type.
 
     Returns:
-      EventFormatter: corresponding formatter the default formatter if
+      EventFormatter: corresponding formatter or the default formatter if
           not available.
     """
     data_type = data_type.lower()
@@ -67,11 +67,13 @@ class FormattersManager(object):
     """Retrieves the formatted message strings for a specific event object.
 
     Args:
-      formatter_mediator (FormatterMediator): formatter mediator.
+      formatter_mediator (FormatterMediator): mediates the interactions between
+          formatters and other components, such as storage and Windows EventLog
+          resources.
       event (EventObject): event.
 
     Returns:
-      list[str, str]: longer and shorter version of the message string.
+      list[str, str]: long and short version of the message string.
     """
     formatter_object = cls.GetFormatterObject(event.data_type)
     return formatter_object.GetMessages(formatter_mediator, event)

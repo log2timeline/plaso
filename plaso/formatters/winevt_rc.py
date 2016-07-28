@@ -47,10 +47,10 @@ class Sqlite3DatabaseFile(object):
     """Determines if a specific table exists.
 
     Args:
-      table_name (str): the table name.
+      table_name (str): table name.
 
     Returns:
-      bool: True if the table exists, False otheriwse.
+      bool: True if the table exists.
 
     Raises:
       RuntimeError: if the database is not opened.
@@ -73,7 +73,8 @@ class Sqlite3DatabaseFile(object):
     Args:
       table_names (list[str]): table names.
       column_names (list[str]): column names.
-      condition (str): condition.
+      condition (str): query condition such as
+          "log_source == 'Application Error'".
 
     Yields:
       sqlite3.row: row.
@@ -111,7 +112,7 @@ class Sqlite3DatabaseFile(object):
           mode we fake it by only permitting SELECT queries.
 
     Returns:
-      bool: True if successful or False if not.
+      bool: True if successfu.
 
     Raises:
       RuntimeError: if the database is already opened.
@@ -156,7 +157,7 @@ class Sqlite3DatabaseReader(object):
       filename (str): filename of the database.
 
     Returns:
-      bool: True if successful or False if not.
+      bool: True if successful.
     """
     return self._database_file.Open(filename, read_only=True)
 
@@ -366,7 +367,7 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
       filename (str): filename of the database.
 
     Returns:
-      bool: True if successful or False if not.
+      bool: True if successful.
 
     Raises:
       RuntimeError: if the version or string format of the database
@@ -376,14 +377,14 @@ class WinevtResourcesSqlite3DatabaseReader(Sqlite3DatabaseReader):
       return False
 
     version = self.GetMetadataAttribute(u'version')
-    if not version or version not in [u'20150315']:
+    if not version or version != u'20150315':
       raise RuntimeError(u'Unsupported version: {0:s}'.format(version))
 
     string_format = self.GetMetadataAttribute(u'string_format')
     if not string_format:
       string_format = u'wrc'
 
-    if string_format not in [u'pep3101', u'wrc']:
+    if string_format not in (u'pep3101', u'wrc'):
       raise RuntimeError(u'Unsupported string format: {0:s}'.format(
           string_format))
 

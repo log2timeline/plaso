@@ -26,7 +26,9 @@ class ShutdownWindowsRegistryEventFormatter(
     """Determines the formatted message strings for an event object.
 
     Args:
-      formatter_mediator (FormatterMediator): formatter mediator.
+      formatter_mediator (FormatterMediator): mediates the interactions between
+          formatters and other components, such as storage and Windows EventLog
+          resources.
       event (EventObject): event.
 
     Returns:

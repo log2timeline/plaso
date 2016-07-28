@@ -50,10 +50,10 @@ class WinEVTFormatter(interface.ConditionalEventFormatter):
     """Retrieves a string representation of the event type.
 
     Args:
-      event_type (int): numeric event type.
+      event_type (int): event type.
 
     Returns:
-      An Unicode string containing a description of the event type.
+      str: description of the event type.
     """
     if event_type >= 0 and event_type < len(self._EVENT_TYPES):
       return self._EVENT_TYPES[event_type]
@@ -63,10 +63,10 @@ class WinEVTFormatter(interface.ConditionalEventFormatter):
     """Retrieves a string representation of the severity.
 
     Args:
-      severity (int): numeric severity.
+      severity (int): severity.
 
     Returns:
-      An Unicode string containing a description of the event type.
+      str: description of the event severity.
     """
     if severity >= 0 and severity < len(self._SEVERITY):
       return self._SEVERITY[severity]
@@ -76,7 +76,9 @@ class WinEVTFormatter(interface.ConditionalEventFormatter):
     """Determines the formatted message strings for an event object.
 
     Args:
-      formatter_mediator (FormatterMediator): formatter mediator.
+      formatter_mediator (FormatterMediator): mediates the interactions between
+          formatters and other components, such as storage and Windows EventLog
+          resources.
       event (EventObject): event.
 
     Returns:
