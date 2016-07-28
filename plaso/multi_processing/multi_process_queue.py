@@ -7,7 +7,7 @@ import multiprocessing
 try:
   import Queue
 except ImportError:
-  import queue as Queue # pylint: disable=import-error
+  import queue as Queue  # pylint: disable=import-error
 
 from plaso.engine import plaso_queue
 from plaso.lib import errors

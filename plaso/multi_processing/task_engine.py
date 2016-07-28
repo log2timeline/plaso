@@ -8,7 +8,7 @@ import os
 try:
   import Queue
 except ImportError:
-  import queue as Queue # pylint: disable=import-error
+  import queue as Queue  # pylint: disable=import-error
 import time
 
 from dfvfs.resolver import context
@@ -42,7 +42,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
   _WORKER_PROCESSES_MINIMUM = 2
   _WORKER_PROCESSES_MAXIMUM = 15
 
-  _ZEROMQ_QUEUE_TIMEOUT_SECONDS = 300
+  _ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS = 10 * 60
 
   def __init__(
       self, debug_output=False, enable_profiling=False,
@@ -627,8 +627,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     else:
       task_outbound_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
-          delay_open=True, name=u'main_task_queue', buffer_timeout_seconds=300,
-          maximum_items=1, timeout_seconds=self._ZEROMQ_QUEUE_TIMEOUT_SECONDS)
+          delay_open=True, linger_seconds=0, maximum_items=1,
+          name=u'main_task_queue',
+          timeout_seconds=self._ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS)
       self._task_queue = task_outbound_queue
 
       # The ZeroMQ backed queue must be started first, so we can save its port.
@@ -653,7 +654,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     try:
       storage_writer.WritePreprocessingInformation(self.knowledge_base)
 
-      for _ in range(0, number_of_worker_processes):
+      for _ in range(number_of_worker_processes):
         extraction_process = self._StartExtractionWorkerProcess(storage_writer)
         self._StartMonitoringProcess(extraction_process.pid)
 

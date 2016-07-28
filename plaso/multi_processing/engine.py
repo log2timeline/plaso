@@ -29,7 +29,7 @@ class MultiProcessEngine(engine.BaseEngine):
   _RPC_SERVER_TIMEOUT = 8.0
   _MAXIMUM_RPC_ERRORS = 10
 
-  _ZEROMQ_QUEUE_TIMEOUT_SECONDS = 300
+  _ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS = 300
 
   def __init__(
       self, debug_output=False, enable_profiling=False,
