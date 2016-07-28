@@ -133,19 +133,21 @@ class WinJobParser(interface.FileObjectParser):
       construct.String(
           u'reserved',
           lambda ctx: ctx.reserved_length),
-      construct.ULInt16(u'test'),
-      construct.ULInt16(u'trigger_size'),
-      construct.ULInt16(u'trigger_reserved1'),
-      construct.ULInt16(u'sched_start_year'),
-      construct.ULInt16(u'sched_start_month'),
-      construct.ULInt16(u'sched_start_day'),
-      construct.ULInt16(u'sched_end_year'),
-      construct.ULInt16(u'sched_end_month'),
-      construct.ULInt16(u'sched_end_day'),
-      construct.ULInt16(u'sched_start_hour'),
-      construct.ULInt16(u'sched_start_minute'),
-      construct.ULInt32(u'sched_duration'),
-      construct.ULInt32(u'sched_interval'),
+      construct.ULInt16(u'number_of_triggers'))
+
+  _TRIGGER_STRUCT = construct.Struct(
+      construct.ULInt16(u'size'),
+      construct.ULInt16(u'reserved1'),
+      construct.ULInt16(u'start_year'),
+      construct.ULInt16(u'start_month'),
+      construct.ULInt16(u'start_day'),
+      construct.ULInt16(u'end_year'),
+      construct.ULInt16(u'end_month'),
+      construct.ULInt16(u'end_day'),
+      construct.ULInt16(u'start_hour'),
+      construct.ULInt16(u'start_minute'),
+      construct.ULInt32(u'duration'),
+      construct.ULInt32(u'interval'),
       construct.ULInt32(u'trigger_flags'),
       construct.ULInt32(u'trigger_type'),
       construct.ULInt16(u'trigger_arg0'),
@@ -223,51 +225,24 @@ class WinJobParser(interface.FileObjectParser):
       header_struct = self._JOB_FIXED_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          u'Unable to parse Windows Task Job file with error: {0:s}'.format(
+          u'Unable to parse fixed-length section with error: {0:s}'.format(
               exception))
 
     if not header_struct.product_version in self._PRODUCT_VERSIONS:
-      raise errors.UnableToParseFile((
-          u'Unsupported product version in: 0x{0:04x} Scheduled Task '
-          u'file').format(header_struct.product_version))
+      raise errors.UnableToParseFile(
+          u'Unsupported product version in: 0x{0:04x}'.format(
+              header_struct.product_version))
 
     if not header_struct.format_version == 1:
       raise errors.UnableToParseFile(
-          u'Unsupported format version in: {0:d} Scheduled Task file'.format(
+          u'Unsupported format version in: {0:d}'.format(
               header_struct.format_version))
 
     try:
       job_variable_struct = self._JOB_VARIABLE_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
       raise errors.UnableToParseFile(
-          u'Unable to parse Windows Task Job file with error: {0:s}'.format(
-              exception))
-
-    if self._IsEmptySystemTime(header_struct.last_run_time):
-      last_run_time = None
-    else:
-      try:
-        last_run_time = self._CopySystemTimeToTimestamp(
-            header_struct.last_run_time, parser_mediator.timezone)
-      except errors.TimestampError as exception:
-        last_run_time = None
-        parser_mediator.ProduceExtractionError(
-            u'unable to determine last run time with error: {0:s}'.format(
-                exception))
-
-    try:
-      scheduled_date = timelib.Timestamp.FromTimeParts(
-          job_variable_struct.sched_start_year,
-          job_variable_struct.sched_start_month,
-          job_variable_struct.sched_start_day,
-          job_variable_struct.sched_start_hour,
-          job_variable_struct.sched_start_minute,
-          0,  # Seconds are not stored.
-          timezone=parser_mediator.timezone)
-    except errors.TimestampError as exception:
-      scheduled_date = None
-      parser_mediator.ProduceExtractionError(
-          u'unable to determine scheduled date with error: {0:s}'.format(
+          u'Unable to parse variable-length section with error: {0:s}'.format(
               exception))
 
     application = binary.ReadUTF16(job_variable_struct.application)
@@ -276,45 +251,68 @@ class WinJobParser(interface.FileObjectParser):
     username = binary.ReadUTF16(job_variable_struct.username)
     working_dir = binary.ReadUTF16(job_variable_struct.working_dir)
 
+    last_run_time = None
+    if not self._IsEmptySystemTime(header_struct.last_run_time):
+      try:
+        last_run_time = self._CopySystemTimeToTimestamp(
+            header_struct.last_run_time, parser_mediator.timezone)
+      except errors.TimestampError as exception:
+        parser_mediator.ProduceExtractionError(
+            u'unable to determine last run time with error: {0:s}'.format(
+                exception))
+
     if last_run_time is not None:
-      event_object = WinJobEvent(
+      event = WinJobEvent(
           last_run_time, eventdata.EventTimestamp.LAST_RUNTIME, application,
           parameter, working_dir, username, job_variable_struct.trigger_type,
           description)
-      parser_mediator.ProduceEvent(event_object)
+      parser_mediator.ProduceEvent(event)
 
-    if scheduled_date is not None:
-      event_object = WinJobEvent(
-          scheduled_date, u'Scheduled To Start', application, parameter,
-          working_dir, username, job_variable_struct.trigger_type,
-          description)
-      parser_mediator.ProduceEvent(event_object)
-
-    # TODO: create a timeless event object if last_run_time and scheduled_date
-    # are None? What should be the description of this event?
-
-    if job_variable_struct.sched_end_year:
+    for index in range(job_variable_struct.number_of_triggers):
       try:
-        scheduled_end_date = timelib.Timestamp.FromTimeParts(
-            job_variable_struct.sched_end_year,
-            job_variable_struct.sched_end_month,
-            job_variable_struct.sched_end_day,
-            0,  # Hours are not stored.
-            0,  # Minutes are not stored.
-            0,  # Seconds are not stored.
-            timezone=parser_mediator.timezone)
+        trigger_struct = self._JOB_VARIABLE_STRUCT.parse_stream(file_object)
+      except (IOError, construct.FieldError) as exception:
+        raise errors.UnableToParseFile(
+            u'Unable to parse trigger: {0:d} with error: {1:s}'.format(
+                index, exception))
+
+      try:
+        trigger_start_time = timelib.Timestamp.FromTimeParts(
+            trigger_struct.start_year, trigger_struct.start_month,
+            trigger_struct.start_day, trigger_struct.start_hour,
+            trigger_struct.start_minute, 0, timezone=parser_mediator.timezone)
       except errors.TimestampError as exception:
-        scheduled_end_date = None
+        trigger_start_time = None
         parser_mediator.ProduceExtractionError(
-            u'unable to determine scheduled end date with error: {0:s}'.format(
+            u'unable to determine scheduled date with error: {0:s}'.format(
                 exception))
 
-      if scheduled_end_date is not None:
-        event_object = WinJobEvent(
-            scheduled_end_date, u'Scheduled To End', application, parameter,
-            working_dir, username, job_variable_struct.trigger_type,
-            description)
-        parser_mediator.ProduceEvent(event_object)
+      if trigger_start_time is not None:
+        event = WinJobEvent(
+            trigger_start_time, u'Scheduled to start', application, parameter,
+            working_dir, username, trigger_struct.trigger_type, description)
+        parser_mediator.ProduceEvent(event)
+
+      if trigger_struct.sched_end_year:
+        try:
+          trigger_end_time = timelib.Timestamp.FromTimeParts(
+              trigger_struct.sched_end_year, trigger_struct.sched_end_month,
+              trigger_struct.sched_end_day, 0, 0, 0,
+              timezone=parser_mediator.timezone)
+        except errors.TimestampError as exception:
+          trigger_end_time = None
+          parser_mediator.ProduceExtractionError(
+              u'unable to determine scheduled end date with error: {0:s}'.format(
+                  exception))
+
+        if trigger_end_time is not None:
+          event = WinJobEvent(
+              trigger_end_time, u'Scheduled to end', application, parameter,
+              working_dir, username, trigger_struct.trigger_type, description)
+          parser_mediator.ProduceEvent(event)
+
+    # TODO: create a timeless event object if last_run_time and trigger_start_time
+    # are None? What should be the description of this event?
 
 
 manager.ParsersManager.RegisterParser(WinJobParser)
