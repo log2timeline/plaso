@@ -246,16 +246,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
       self._TerminateProcess(pid)
 
-  def _ExportEvent(self, event, event_buffer):
-    """Exports an event by appending it to the event buffer.
-
-    Args:
-      event (EventObject): event.
-      event_buffer (EventBuffer): output event buffer.
-    """
-    event_buffer.Append(event)
-    self._number_of_consumed_events += 1
-
   def _ExportEvents(
       self, storage_reader, output_buffer, event_filter=None, time_slice=None,
       use_time_slicer=False):
@@ -306,7 +296,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           number_of_filtered_events += 1
 
         elif forward_entries <= time_slice_buffer.size:
-          self._ExportEvent(event, output_buffer)
+          event_buffer.Append(event)
+          self._number_of_consumed_events += 1
           number_of_events_from_time_slice += 1
           forward_entries += 1
 
@@ -321,14 +312,15 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         if filter_match == True and time_slice_buffer:
           # Empty the time slice buffer.
           for event_in_buffer in time_slice_buffer.Flush():
-            self._ExportEvent(event_in_buffer, output_buffer)
+            event_buffer.Append(event_in_buffer)
+            self._number_of_consumed_events += 1
             self._number_of_consumed_events += 1
             number_of_filtered_events += 1
             number_of_events_from_time_slice += 1
 
           forward_entries = 1
 
-        self._ExportEvent(event, output_buffer)
+        event_buffer.Append(event)
         self._number_of_consumed_events += 1
 
         # pylint: disable=singleton-comparison
