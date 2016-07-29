@@ -247,13 +247,13 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       self._TerminateProcess(pid)
 
   def _ExportEvents(
-      self, storage_reader, output_buffer, event_filter=None, time_slice=None,
+      self, storage_reader, event_buffer, event_filter=None, time_slice=None,
       use_time_slicer=False):
     """Exports events using an output module.
 
     Args:
       storage_reader (StorageReader): storage reader.
-      output_buffer (EventBuffer): output event buffer.
+      event_buffer (EventBuffer): event buffer.
       event_filter (Optional[FilterObject]): event filter.
       time_slice (Optional[TimeRange]): time range that defines a time slice
           to filter events.
@@ -336,9 +336,9 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     for event_queue in self._event_queues:
       event_queue.Close()
 
-    if output_buffer.duplicate_counter:
+    if event_buffer.duplicate_counter:
       events_counter[u'Duplicate events removed'] = (
-          output_buffer.duplicate_counter)
+          event_buffer.duplicate_counter)
 
     if filter_limit:
       events_counter[u'Limited By'] = filter_limit
