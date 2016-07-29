@@ -4,7 +4,11 @@
 import logging
 import multiprocessing
 import os
-import Queue
+# The 'Queue' module was renamed to 'queue' in Python 3
+try:
+  import Queue
+except ImportError:
+  import queue as Queue  # pylint: disable=import-error
 import time
 
 from dfvfs.resolver import context
@@ -37,6 +41,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
   _WORKER_PROCESSES_MINIMUM = 2
   _WORKER_PROCESSES_MAXIMUM = 15
+
+  _ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS = 10 * 60
 
   def __init__(
       self, debug_output=False, enable_profiling=False,
@@ -329,6 +335,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       MultiProcessWorkerProcess: extraction worker process.
     """
     process_name = u'Worker_{0:02d}'.format(self._last_worker_number)
+    logging.debug(u'Starting worker process {0:s}'.format(process_name))
 
     if self._use_zeromq:
       task_queue = zeromq_queue.ZeroMQRequestConnectQueue(
@@ -426,27 +433,25 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       logging.debug(u'Emptying queue.')
       self._task_queue.Empty()
 
-      # Wake the processes to make sure that they are not blocking
-      # waiting for the queue new items.
-      for _ in range(self._number_of_worker_processes):
-        self._task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
+    # Wake the processes to make sure that they are not blocking
+    # waiting for the queue new items.
+    for _ in range(self._number_of_worker_processes):
+      self._task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
 
     # Try waiting for the processes to exit normally.
     self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
-
-    if not abort:
-      # Check if the processes are still alive and terminate them if necessary.
-      self._AbortTerminate()
-      self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
-
-    # For Multiprocessing queues, set abort to True to stop queue.join_thread()
-    # from blocking.
-    if not self._use_zeromq:
-      self._task_queue.Close(abort=True)
+    self._task_queue.Close(abort=abort)
 
     if abort:
       # Kill any remaining processes.
       self._AbortKill()
+    else:
+      # Check if the processes are still alive and terminate them if necessary.
+      self._AbortTerminate()
+      self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
+
+      self._task_queue.Close(abort=True)
+
 
   def _StopProfiling(self):
     """Stops profiling."""
@@ -622,7 +627,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     else:
       task_outbound_queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
-          delay_open=True, name=u'Task queue', buffer_timeout_seconds=300)
+          delay_open=True, linger_seconds=0, maximum_items=1,
+          name=u'main_task_queue',
+          timeout_seconds=self._ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS)
       self._task_queue = task_outbound_queue
 
       # The ZeroMQ backed queue must be started first, so we can save its port.
@@ -630,10 +637,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       # self._task_queue.name = u'Task queue'
       self._task_queue.Open()
       self._task_queue_port = self._task_queue.port
-
-    for _ in range(0, number_of_worker_processes):
-      extraction_process = self._StartExtractionWorkerProcess(storage_writer)
-      self._StartMonitoringProcess(extraction_process.pid)
 
     self._StartProfiling()
 
@@ -650,6 +653,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     try:
       storage_writer.WritePreprocessingInformation(self.knowledge_base)
+
+      for _ in range(number_of_worker_processes):
+        extraction_process = self._StartExtractionWorkerProcess(storage_writer)
+        self._StartMonitoringProcess(extraction_process.pid)
 
       self._ProcessSources(
           source_path_specs, storage_writer,
@@ -679,7 +686,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       # due to incorrectly finalized IPC.
       self._KillProcess(os.getpid())
 
-    self._task_queue.Close(abort=self._abort)
+    # The task queue should be closed by _StopExtractionProcesses, this
+    # close is a failsafe, primarily due to MultiProcessingQueue's
+    # blocking behaviour.
+    self._task_queue.Close(abort=True)
 
     if self._processing_status.error_path_specs:
       task_storage_abort = True

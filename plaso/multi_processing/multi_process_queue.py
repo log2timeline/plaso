@@ -3,7 +3,11 @@
 
 import logging
 import multiprocessing
-import Queue
+# The 'Queue' module was renamed to 'queue' in Python 3
+try:
+  import Queue
+except ImportError:
+  import queue as Queue  # pylint: disable=import-error
 
 from plaso.engine import plaso_queue
 from plaso.lib import errors
@@ -47,7 +51,6 @@ class MultiProcessingQueue(plaso_queue.Queue):
     """Opens the queue."""
     pass
 
-  # pylint: disable=arguments-differ
   def Close(self, abort=False):
     """Closes the queue.
 

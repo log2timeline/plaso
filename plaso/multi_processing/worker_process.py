@@ -33,7 +33,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     multiprocessing.Process.
 
     Args:
-      task_queue (Queue): task queue.
+      task_queue (PlasoQueue): task queue.
       storage_writer (StorageWriter): storage writer for a session storage.
       knowledge_base (KnowledgeBase): knowledge base which contains
           information from the source data needed for parsing.
@@ -229,7 +229,10 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     if isinstance(self._task_queue, multi_process_queue.MultiProcessingQueue):
       self._task_queue.Close(abort=True)
     else:
-      self._task_queue.Close()
+      try:
+        self._task_queue.Close()
+      except errors.QueueAlreadyClosed:
+        logging.error(u'Queue for {0:s} was already closed.'.format(self.name))
 
   def _ProcessPathSpec(self, extraction_worker, parser_mediator, path_spec):
     """Processes a path specification.
