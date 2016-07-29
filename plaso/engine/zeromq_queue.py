@@ -99,14 +99,14 @@ class ZeroMQQueue(plaso_queue.Queue):
 
     except zmq.error.Again:
       logging.warn(u'{0:s} could not send an item'.format(self.name))
-      return False
 
     except zmq.error.ZMQError as exception:
       if exception.errno == errno.EINTR:
         logging.error(
             u'ZMQ syscall interrupted in {0:s}.'.format(
                 self.name))
-        return False
+
+    return False
 
   def _ReceiveItemOnActivity(self, zmq_socket):
     """Attempts to receive an item from a ZeroMQ socket.
@@ -118,7 +118,7 @@ class ZeroMQQueue(plaso_queue.Queue):
       object: item from the socket.
 
     Raises:
-      errors.QueueEmpty: if no item could be received within the timeout.
+      QueueEmpty: if no item could be received within the timeout.
       zmq.error.ZMQError: if an error occurs in ZeroMQ
     """
     events = zmq_socket.poll(
@@ -141,8 +141,7 @@ class ZeroMQQueue(plaso_queue.Queue):
                   self.name))
         raise
 
-    else:
-      raise errors.QueueEmpty
+    raise errors.QueueEmpty
 
   def _SetSocketTimeouts(self):
     """Sets the timeouts for socket send and receive."""
@@ -323,13 +322,11 @@ class ZeroMQPullQueue(ZeroMQQueue):
     last_retry_timestamp = time.time() + self.timeout_seconds
     while not self._terminate_event.isSet() and not self._closed_event.isSet():
       try:
-        item = self._ReceiveItemOnActivity(self._zmq_socket)
-        return item
+        return self._ReceiveItemOnActivity(self._zmq_socket)
 
       except errors.QueueEmpty:
         if time.time() > last_retry_timestamp:
           raise
-        continue
 
       except KeyboardInterrupt:
         self.Close(abort=True)
@@ -497,8 +494,7 @@ class ZeroMQRequestQueue(ZeroMQQueue):
 
     while not self._terminate_event.isSet():
       try:
-        item = self._ReceiveItemOnActivity(self._zmq_socket)
-        return item
+        return self._ReceiveItemOnActivity(self._zmq_socket)
       except errors.QueueEmpty:
         continue
 
