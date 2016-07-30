@@ -314,7 +314,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           for event_in_buffer in time_slice_buffer.Flush():
             event_buffer.Append(event_in_buffer)
             self._number_of_consumed_events += 1
-            self._number_of_consumed_events += 1
             number_of_filtered_events += 1
             number_of_events_from_time_slice += 1
 
