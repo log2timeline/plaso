@@ -12,7 +12,7 @@ class TimestampEvent(events.EventObject):
     data_type (str): event data type.
     timestamp (int): timestamp, which contains the number of microseconds
         since January 1, 1970, 00:00:00 UTC.
-    timestamp_desc (str): description of the usage of the timestamp.
+    timestamp_desc (str): description of the meaning of the timestamp.
   """
 
   def __init__(self, timestamp, timestamp_description, data_type=None):
@@ -21,7 +21,7 @@ class TimestampEvent(events.EventObject):
     Args:
       timestamp (int): timestamp, which contains the number of microseconds
           since January 1, 1970, 00:00:00 UTC.
-      timestamp_description (str): description of the usage of the timestamp
+      timestamp_description (str): description of the meaning of the timestamp
           value.
       data_type (Optional[str]): event data type. If the data type is not set
           it is derived from the DATA_TYPE class attribute.
@@ -42,7 +42,7 @@ class CocoaTimeEvent(TimestampEvent):
 
     Args:
       cocoa_time (int): Cocoa time value.
-      timestamp_description (str): description of the usage of the timestamp
+      timestamp_description (str): description of the meaning of the timestamp
           value.
       data_type (Optional[str]): event data type. If the data type is not set
           it is derived from the DATA_TYPE class attribute.
@@ -60,7 +60,7 @@ class DelphiTimeEvent(TimestampEvent):
 
     Args:
       delphi_time (int): Delphi time value.
-      timestamp_description (str): description of the usage of the timestamp
+      timestamp_description (str): description of the meaning of the timestamp
           value.
       data_type (Optional[str]): event data type. If the data type is not set
           it is derived from the DATA_TYPE class attribute.
@@ -78,7 +78,7 @@ class FatDateTimeEvent(TimestampEvent):
 
     Args:
       fat_date_time (int): FAT date time value.
-      timestamp_description (str): description of the usage of the timestamp
+      timestamp_description (str): description of the meaning of the timestamp
           value.
       data_type (Optional[str]): event data type. If the data type is not set
           it is derived from the DATA_TYPE class attribute.
@@ -96,7 +96,7 @@ class FiletimeEvent(TimestampEvent):
 
     Args:
       filetime (int): FILETIME timestamp value.
-      timestamp_description (str): description of the usage of the timestamp
+      timestamp_description (str): description of the meaning of the timestamp
           value.
       data_type (Optional[str]): event data type. If the data type is not set
           it is derived from the DATA_TYPE class attribute.
@@ -115,7 +115,7 @@ class JavaTimeEvent(TimestampEvent):
     Args:
       java_time (int): Java timestamp, which contains the number of
           milliseconds since January 1, 1970, 00:00:00 UTC.
-      timestamp_description (str): description of the usage of the timestamp
+      timestamp_description (str): description of the meaning of the timestamp
           value.
       data_type (Optional[str]): event data type. If the data type is not set
           it is derived from the DATA_TYPE class attribute.
@@ -135,7 +135,7 @@ class PosixTimeEvent(TimestampEvent):
     Args:
       posix_time (int): POSIX time value, which contains the number of seconds
           since January 1, 1970 00:00:00 UTC.
-      timestamp_description (str): description of the usage of the timestamp
+      timestamp_description (str): description of the meaning of the timestamp
           value.
       data_type (Optional[str]): event data type. If the data type is not set
           it is derived from the DATA_TYPE class attribute.
@@ -159,7 +159,7 @@ class PythonDatetimeEvent(TimestampEvent):
 
     Args:
       datetime_time (datetime.datetime): datetime.
-      timestamp_description (str): description of the usage of the timestamp
+      timestamp_description (str): description of the meaning of the timestamp
           value.
       data_type (Optional[str]): event data type. If the data type is not set
           it is derived from the DATA_TYPE class attribute.
@@ -177,7 +177,7 @@ class SystemtimeEvent(TimestampEvent):
 
     Args:
       systemtime (bytes): 128-bit SYSTEMTIME timestamp value.
-      timestamp_description (str): description of the usage of the timestamp
+      timestamp_description (str): description of the meaning of the timestamp
           value.
       data_type (Optional[str]): event data type. If the data type is not set
           it is derived from the DATA_TYPE class attribute.
@@ -199,7 +199,7 @@ class UUIDTimeEvent(TimestampEvent):
 
     Args:
       uuid (uuid.UUID): UUID.
-      timestamp_description (str): description of the usage of the timestamp
+      timestamp_description (str): description of the meaning of the timestamp
           value.
 
     Raises:
@@ -226,7 +226,7 @@ class WebKitTimeEvent(TimestampEvent):
 
     Args:
       webkit_time (int): WebKit time value.
-      timestamp_description (str): description of the usage of the timestamp
+      timestamp_description (str): description of the meaning of the timestamp
           value.
       data_type (Optional[str]): event data type. If the data type is not set
           it is derived from the DATA_TYPE class attribute.

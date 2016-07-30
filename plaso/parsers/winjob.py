@@ -37,7 +37,7 @@ class WinJobEvent(time_events.TimestampEvent):
     Args:
       timestamp (int): timestamp, which contains the number of microseconds
           since January 1, 1970, 00:00:00 UTC.
-      timestamp_description (str): description of the usage of the timestamp
+      timestamp_description (str): description of the meaning of the timestamp
           value.
       application (str): path to job executable.
       parameters (str): application command line parameters.
