@@ -34,7 +34,9 @@ class WinRecycleEvent(time_events.FiletimeEvent):
       filetime (int): FILETIME timestamp value.
       filename (str): filename.
       file_size (int): file size.
-      ascii_filename (Optional[str]): ASCII filename.
+      ascii_filename (Optional[str]): typically the short filename stored
+          as an ASCII string, which is set when the INFO2 record contains
+          an ASCII filename.
       drive_number (Optional[int]): drive number.
       offset (Optional[int]): offset of the record on which the event is based.
       record_index (Optional[int]): index of the record on which the event is
@@ -72,17 +74,16 @@ class WinRecycleBinParser(interface.FileObjectParser):
     """Parses a Windows RecycleBin $Ixx file-like object.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       file_object (FileIO): file-like object.
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
     """
     # We may have to rely on filenames since this header is very generic.
+
     # TODO: Rethink this and potentially make a better test.
     filename = parser_mediator.GetFilename()
     if not filename.startswith(u'$I'):
-      raise errors.UnableToParseFile(u'Filename does not start with $I.')
+      return
 
     try:
       header_struct = self._FILE_HEADER_STRUCT.parse_stream(file_object)
@@ -146,11 +147,9 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
     """Parses a Windows Recycler INFO2 file-like object.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       file_object (FileIO): file-like object.
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
     """
     # Since this header value is really generic it is hard not to use filename
     # as an indicator too.
@@ -158,8 +157,7 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
     # TODO: Rethink this and potentially make a better test.
     filename = parser_mediator.GetFilename()
     if not filename.startswith(u'INFO2'):
-      raise errors.UnableToParseFile(
-          u'Not an INFO2 file, filename is not INFO2.')
+      return
 
     try:
       file_header_struct = self._FILE_HEADER_STRUCT.parse_stream(file_object)
@@ -172,7 +170,6 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
       parser_mediator.ProduceExtractionError(u'unsupport format signature.')
       return
 
-    # Limit record size to 65536 to be on the safe side.
     record_size = file_header_struct.record_size
     if record_size not in (280, 800):
       parser_mediator.ProduceExtractionError(
