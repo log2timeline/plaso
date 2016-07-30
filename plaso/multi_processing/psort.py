@@ -73,15 +73,12 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._status_update_callback = None
     self._use_zeromq = use_zeromq
 
-  def _AppendEvent(self, event, event_buffer):
-    """Appends an event object to an event output buffer and analysis queues.
+  def _AnalyzeEvent(self, event):
+    """Analyzes an event by pushing it to the event queues.
 
     Args:
       event (EventObject): event.
-      event_buffer (EventBuffer): output event buffer.
     """
-    event_buffer.Append(event)
-
     # TODO: refactor.
     # Needed for duplicate removals, if two events
     # are merged then we'll just pick the first inode value.
@@ -97,6 +94,98 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     for event_queue in self._event_queues:
       event_queue.PushItem(event)
+
+    self._number_of_consumed_events += 1
+
+  def _AnalyzeEvents(
+      self, knowledge_base_object, storage_writer, data_location,
+      analysis_plugins, event_filter=None, event_filter_expression=None):
+    """Analyzes events in a plaso storage.
+
+    Args:
+      knowledge_base_object (KnowledgeBase): contains information from
+          the source data needed for processing.
+      storage_writer (StorageWriter): storage writer.
+      data_location (str): path to the location that data files should
+          be loaded from.
+      analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
+          be run.
+      event_filter (Optional[FilterObject]): event filter.
+      event_filter_expression (Optional[str]): event filter expression.
+
+    Raises:
+      RuntimeError: if a non-recoverable situation is encountered.
+    """
+    self._status = definitions.PROCESSING_STATUS_RUNNING
+    self._number_of_consumed_errors = 0
+    self._number_of_consumed_events = 0
+    self._number_of_consumed_reports = 0
+    self._number_of_consumed_sources = 0
+    self._number_of_produced_errors = 0
+    self._number_of_produced_events = 0
+    self._number_of_produced_reports = 0
+    self._number_of_produced_sources = 0
+
+    number_of_filtered_events = 0
+
+    # Set up the storage writer before the analysis processes.
+    storage_writer.StartTaskStorage()
+
+    self._StartAnalysisProcesses(
+        knowledge_base_object, storage_writer, analysis_plugins,
+        data_location, event_filter_expression=event_filter_expression)
+
+    logging.debug(u'Processing events.')
+
+    filter_limit = getattr(event_filter, u'limit', None)
+
+    for event in storage_writer.GetEvents():
+      if event_filter:
+        filter_match = event_filter.Match(event)
+      else:
+        filter_match = None
+
+      # pylint: disable=singleton-comparison
+      if filter_match == False:
+        number_of_filtered_events += 1
+        continue
+
+      self._AnalyzeEvent(event)
+
+      if (event_filter and filter_limit and
+          filter_limit == self._number_of_consumed_events):
+        break
+
+    logging.debug(u'Processing analysis plugin results.')
+
+    # TODO: use a task based approach.
+    plugin_names = [plugin.plugin_name for plugin in analysis_plugins]
+    while plugin_names:
+      for plugin_name in list(plugin_names):
+        if self._abort:
+          break
+
+        # TODO: temporary solution.
+        task_identifier = plugin_name
+
+        if storage_writer.CheckTaskStorageReadyForMerge(task_identifier):
+          storage_writer.MergeTaskStorage(task_identifier)
+
+          # TODO: temporary solution.
+          plugin_names.remove(plugin_name)
+
+    storage_writer.StopTaskStorage(abort=self._abort)
+
+    if self._abort:
+      logging.debug(u'Processing aborted.')
+    else:
+      logging.debug(u'Processing completed.')
+
+    events_counter = collections.Counter()
+    events_counter[u'Events filtered'] = number_of_filtered_events
+    events_counter[u'Events processed'] = self._number_of_consumed_events
+
+    return events_counter
 
   def _CheckStatusAnalysisProcess(self, pid):
     """Checks the status of an analysis process.
@@ -157,15 +246,15 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
       self._TerminateProcess(pid)
 
-  def _ProcessEventsFromStorage(
-      self, storage_reader, output_buffer, filter_object=None, time_slice=None,
+  def _ExportEvents(
+      self, storage_reader, event_buffer, event_filter=None, time_slice=None,
       use_time_slicer=False):
-    """Reads event objects from the storage to process and filter them.
+    """Exports events using an output module.
 
     Args:
       storage_reader (StorageReader): storage reader.
-      output_buffer (EventBuffer): output event buffer.
-      filter_object (Optional[FilterObject]): event filter.
+      event_buffer (EventBuffer): event buffer.
+      event_filter (Optional[FilterObject]): event filter.
       time_slice (Optional[TimeRange]): time range that defines a time slice
           to filter events.
       use_time_slicer (Optional[bool]): True if the 'time slicer' should be
@@ -176,173 +265,88 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       collections.Counter: counter that tracks the number of unique events
           read from storage.
     """
-    filter_buffer = None
+    time_slice_buffer = None
     if time_slice:
       if time_slice.event_timestamp is not None:
         time_slice = storage_time_range.TimeRange(
             time_slice.start_timestamp, time_slice.end_timestamp)
 
       if use_time_slicer:
-        filter_buffer = bufferlib.CircularBuffer(time_slice.duration)
+        time_slice_buffer = bufferlib.CircularBuffer(time_slice.duration)
 
-    filter_limit = getattr(filter_object, u'limit', 0)
+    filter_limit = getattr(event_filter, u'limit', None)
     forward_entries = 0
 
     number_of_filtered_events = 0
-    number_of_sliced_events = 0
+    number_of_events_from_time_slice = 0
 
     for event in storage_reader.GetEvents(time_range=time_slice):
-      # TODO: clean up this function.
-      if not filter_object:
-        self._AppendEvent(event, output_buffer)
-        self._number_of_consumed_events += 1
-        continue
+      if event_filter:
+        filter_match = event_filter.Match(event)
+      else:
+        filter_match = None
 
-      if filter_object.Match(event):
-        if filter_buffer:
-          # Indicate we want forward buffering.
-          forward_entries = 1
-
-          # Empty the buffer.
-          for event_in_buffer in filter_buffer.Flush():
-            self._AppendEvent(event_in_buffer, output_buffer)
-            self._number_of_consumed_events += 1
-            number_of_filtered_events += 1
-            number_of_sliced_events += 1
-
-        self._AppendEvent(event, output_buffer)
-        self._number_of_consumed_events += 1
-
-        if filter_limit and filter_limit == self._number_of_consumed_events:
-          break
-
-        continue
-
-      if filter_buffer and forward_entries:
-        if forward_entries <= filter_buffer.size:
-          self._AppendEvent(event, output_buffer)
-          forward_entries += 1
-          number_of_sliced_events += 1
-          self._number_of_consumed_events += 1
-
-        else:
-          # Reached the max, don't include other entries.
-          forward_entries = 0
+      # pylint: disable=singleton-comparison
+      if filter_match == False:
+        if not time_slice_buffer:
           number_of_filtered_events += 1
 
-      elif filter_buffer:
-        filter_buffer.Append(event)
-        number_of_filtered_events += 1
+        elif forward_entries == 0:
+          time_slice_buffer.Append(event)
+          number_of_filtered_events += 1
+
+        elif forward_entries <= time_slice_buffer.size:
+          event_buffer.Append(event)
+          self._number_of_consumed_events += 1
+          number_of_events_from_time_slice += 1
+          forward_entries += 1
+
+        else:
+          # We reached the maximum size of the time slice and don't need to
+          # include other entries.
+          number_of_filtered_events += 1
+          forward_entries = 0
 
       else:
-        number_of_filtered_events += 1
+        # pylint: disable=singleton-comparison
+        if filter_match == True and time_slice_buffer:
+          # Empty the time slice buffer.
+          for event_in_buffer in time_slice_buffer.Flush():
+            event_buffer.Append(event_in_buffer)
+            self._number_of_consumed_events += 1
+            number_of_filtered_events += 1
+            number_of_events_from_time_slice += 1
+
+          forward_entries = 1
+
+        event_buffer.Append(event)
+        self._number_of_consumed_events += 1
+
+        # pylint: disable=singleton-comparison
+        if (filter_match == True and filter_limit and
+            filter_limit == self._number_of_consumed_events):
+          break
 
     events_counter = collections.Counter()
-    events_counter[u'Events added from slice'] = number_of_sliced_events
     events_counter[u'Events filtered'] = number_of_filtered_events
+    events_counter[u'Events from time slice'] = number_of_events_from_time_slice
     events_counter[u'Events processed'] = self._number_of_consumed_events
 
     for event_queue in self._event_queues:
       event_queue.Close()
 
-    if output_buffer.duplicate_counter:
+    if event_buffer.duplicate_counter:
       events_counter[u'Duplicate events removed'] = (
-          output_buffer.duplicate_counter)
+          event_buffer.duplicate_counter)
 
     if filter_limit:
       events_counter[u'Limited By'] = filter_limit
 
     return events_counter
 
-  def _ProcessStorage(
-      self, knowledge_base_object, storage_writer, output_module, data_location,
-      analysis_plugins, deduplicate_events=True, filter_expression=None,
-      filter_object=None, time_slice=None, use_time_slicer=False):
-    """Processes a plaso storage file.
-
-    Args:
-      knowledge_base_object (KnowledgeBase): contains information from
-          the source data needed for processing.
-      storage_writer (StorageWriter): storage writer.
-      output_module (OutputModule): output module.
-      data_location (str): path to the location that data files should
-          be loaded from.
-      analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
-          be run.
-      deduplicate_events (Optional[bool]): True if events should be
-          deduplicated.
-      filter_expression (Optional[str]): filter expression.
-      filter_object (Optional[FilterObject]): event filter.
-      time_slice (Optional[TimeSlice]): slice of time to output.
-      use_time_slicer (Optional[bool]): True if the 'time slicer' should be
-          used. The 'time slicer' will provide a context of events around
-          an event of interest.
-
-    Returns:
-      collections.Counter: counter that tracks the number of events extracted
-          from storage and the analysis plugin results.
-
-    Raises:
-      RuntimeError: if a non-recoverable situation is encountered.
-    """
-    # TODO: add filter_expression to report via mediator.
-    _ = filter_expression
-
-    self._status = definitions.PROCESSING_STATUS_RUNNING
-    self._number_of_consumed_errors = 0
-    self._number_of_consumed_events = 0
-    self._number_of_consumed_reports = 0
-    self._number_of_consumed_sources = 0
-    self._number_of_produced_errors = 0
-    self._number_of_produced_events = 0
-    self._number_of_produced_reports = 0
-    self._number_of_produced_sources = 0
-
-    # Set up the storage writer before the analysis processes.
-    storage_writer.StartTaskStorage()
-
-    self._StartAnalysisProcesses(
-        knowledge_base_object, storage_writer, analysis_plugins, data_location)
-
-    # TODO: refactor to first apply the analysis plugins
-    # then generate the output.
-    output_buffer = output_event_buffer.EventBuffer(
-        output_module, deduplicate_events)
-    with output_buffer:
-      counter = self._ProcessEventsFromStorage(
-          storage_writer, output_buffer, filter_object=filter_object,
-          time_slice=time_slice, use_time_slicer=use_time_slicer)
-
-    logging.info(u'Processing data from analysis plugins.')
-
-    # TODO: use a task based approach.
-    plugin_names = [plugin.plugin_name for plugin in analysis_plugins]
-    while plugin_names:
-      for plugin_name in list(plugin_names):
-        if self._abort:
-          break
-
-        # TODO: temporary solution.
-        task_identifier = plugin_name
-
-        if storage_writer.CheckTaskStorageReadyForMerge(task_identifier):
-          storage_writer.MergeTaskStorage(task_identifier)
-
-          # TODO: temporary solution.
-          plugin_names.remove(plugin_name)
-
-    storage_writer.StopTaskStorage(abort=self._abort)
-
-    if self._abort:
-      logging.debug(u'Processing aborted.')
-    else:
-      logging.debug(u'Processing completed.')
-
-    return counter
-
   def _StartAnalysisProcesses(
       self, knowledge_base_object, storage_writer, analysis_plugins,
-      data_location):
+      data_location, event_filter_expression=None):
     """Starts the analysis processes.
 
     Args:
@@ -353,6 +357,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           be run.
       data_location (str): path to the location that data files should
           be loaded from.
+      event_filter_expression (Optional[str]): event filter expression.
     """
     logging.info(u'Starting analysis plugins.')
 
@@ -379,6 +384,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       process = analysis_process.AnalysisProcess(
           input_event_queue, storage_writer, knowledge_base_object,
           analysis_plugin, data_location=data_location,
+          event_filter_expression=event_filter_expression,
           name=analysis_plugin.plugin_name)
 
       process.start()
@@ -517,70 +523,24 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         number_of_consumed_errors, number_of_produced_errors,
         number_of_consumed_reports, number_of_produced_reports)
 
-  def ExportEventsWithOutputModule(
-      self, knowledge_base_object, storage_reader, output_module,
-      deduplicate_events=True, filter_object=None, time_slice=None,
-      use_time_slicer=False):
-    """Exports events using an output module.
-
-    Args:
-      knowledge_base_object (KnowledgeBase): contains information from
-          the source data needed for processing.
-      storage_reader (StorageReader): storage reader.
-      output_module (OutputModule): output module.
-      deduplicate_events (Optional[bool]): True if events should be
-          deduplicated.
-      filter_object (Optional[FilterObject]): event filter.
-      time_slice (Optional[TimeSlice]): slice of time to output.
-      use_time_slicer (Optional[bool]): True if the 'time slicer' should be
-          used. The 'time slicer' will provide a context of events around
-          an event of interest.
-
-    Returns:
-      collections.Counter: counter that tracks the number of events extracted
-          from storage and the analysis plugin results.
-    """
-    storage_reader.ReadPreprocessingInformation(knowledge_base_object)
-
-    event_buffer = output_event_buffer.EventBuffer(
-        output_module, deduplicate_events)
-    with event_buffer:
-      counter = self._ProcessEventsFromStorage(
-          storage_reader, event_buffer, filter_object=filter_object,
-          time_slice=time_slice, use_time_slicer=use_time_slicer)
-
-    return counter
-
-  def ProcessStorage(
-      self, knowledge_base_object, storage_writer, output_module, data_location,
-      analysis_plugins, deduplicate_events=True, filter_expression=None,
-      filter_object=None, status_update_callback=None, time_slice=None,
-      use_time_slicer=False):
-    """Processes a plaso storage file.
+  def AnalyzeEvents(
+      self, knowledge_base_object, storage_writer, data_location,
+      analysis_plugins, event_filter=None, event_filter_expression=None,
+      status_update_callback=None):
+    """Analyzes events in a plaso storage.
 
     Args:
       knowledge_base_object (KnowledgeBase): contains information from
           the source data needed for processing.
       storage_writer (StorageWriter): storage writer.
-      output_module (OutputModule): output module.
       data_location (str): path to the location that data files should
           be loaded from.
       analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
           be run.
-      deduplicate_events (Optional[bool]): True if events should be
-          deduplicated.
-      filter_expression (Optional[str]): filter expression.
-      filter_object (Optional[FilterObject]): event filter.
+      event_filter (Optional[FilterObject]): event filter.
+      event_filter_expression (Optional[str]): event filter expression.
       status_update_callback (Optional[function]): callback function for status
           updates.
-      time_slice (Optional[TimeSlice]): slice of time to output.
-      use_time_slicer (Optional[bool]): True if the 'time slicer' should be
-          used. The 'time slicer' will provide a context of events around
-          an event of interest.
-
-    Returns:
-      collections.Counter: counter that tracks the number of events extracted
-          from storage and the analysis plugin results.
     """
     if not analysis_plugins:
       return
@@ -598,14 +558,12 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     storage_writer.WriteSessionStart()
 
     try:
-      counter = self._ProcessStorage(
-          knowledge_base_object, storage_writer, output_module, data_location,
-          analysis_plugins, deduplicate_events=deduplicate_events,
-          filter_expression=filter_expression, filter_object=filter_object,
-          time_slice=time_slice, use_time_slicer=use_time_slicer)
+      self._AnalyzeEvents(
+          knowledge_base_object, storage_writer, data_location,
+          analysis_plugins, event_filter=event_filter,
+          event_filter_expression=event_filter_expression)
 
     except KeyboardInterrupt:
-      counter = collections.Counter()
       self._abort = True
 
       self._processing_status.aborted = True
@@ -634,4 +592,44 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     # Reset values.
     self._status_update_callback = None
 
-    return counter
+  def ExportEvents(
+      self, knowledge_base_object, storage_reader, output_module,
+      deduplicate_events=True, event_filter=None, status_update_callback=None,
+      time_slice=None, use_time_slicer=False):
+    """Exports events using an output module.
+
+    Args:
+      knowledge_base_object (KnowledgeBase): contains information from
+          the source data needed for processing.
+      storage_reader (StorageReader): storage reader.
+      output_module (OutputModule): output module.
+      deduplicate_events (Optional[bool]): True if events should be
+          deduplicated.
+      event_filter (Optional[FilterObject]): event filter.
+      status_update_callback (Optional[function]): callback function for status
+          updates.
+      time_slice (Optional[TimeSlice]): slice of time to output.
+      use_time_slicer (Optional[bool]): True if the 'time slicer' should be
+          used. The 'time slicer' will provide a context of events around
+          an event of interest.
+
+    Returns:
+      collections.Counter: counter that tracks the number of events extracted
+          from storage.
+    """
+    self._status_update_callback = status_update_callback
+
+    storage_reader.ReadPreprocessingInformation(knowledge_base_object)
+
+    event_buffer = output_event_buffer.EventBuffer(
+        output_module, deduplicate_events)
+
+    with event_buffer:
+      events_counter = self._ExportEvents(
+          storage_reader, event_buffer, event_filter=event_filter,
+          time_slice=time_slice, use_time_slicer=use_time_slicer)
+
+    # Reset values.
+    self._status_update_callback = None
+
+    return events_counter
