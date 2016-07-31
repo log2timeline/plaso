@@ -2381,15 +2381,17 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     if self._path != self._zipfile_path and os.path.exists(self._zipfile_path):
       # On Windows the file can sometimes be still in use and we have to wait.
-      attempt = 1
+      attempts = 1
       while True:
         try:
           os.rename(self._zipfile_path, self._path)
+          break
+
         except OSError:
-          if attempt >= 3:
+          if attempts >= 3:
             raise
-          time.sleep(0.5)
-          attempt += 1
+          time.sleep(1.0)
+          attempts += 1
 
       directory_name = os.path.dirname(self._zipfile_path)
       os.rmdir(directory_name)
