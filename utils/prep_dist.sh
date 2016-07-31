@@ -22,7 +22,7 @@ SED_SCRIPT="
   d
 }";
 
-sed -i"~" -e "${SED_SCRIPT}" plaso/frontend/presets.py
+sed -i"~" -e "${SED_SCRIPT}" plaso/parsers/presets.py
 
 sed -i"~" '/hachoir_/d' plaso/dependencies.py
 
