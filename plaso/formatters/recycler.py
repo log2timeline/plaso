@@ -42,13 +42,13 @@ class WinRecyclerFormatter(interface.ConditionalEventFormatter):
 
   # The format string.
   FORMAT_STRING_PIECES = [
-      u'DC{index} ->',
-      u'{orig_filename}',
+      u'DC{record_index} ->',
+      u'{original_filename}',
       u'[{short_filename}]',
       u'(from drive: {drive_letter})']
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'Deleted file: {orig_filename}']
+      u'Deleted file: {original_filename}']
 
   SOURCE_LONG = u'Recycle Bin'
   SOURCE_SHORT = u'RECBIN'
