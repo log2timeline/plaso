@@ -23,10 +23,10 @@ class WinJobFormatterTest(test_lib.EventFormatterTestCase):
 
     expected_attribute_names = [
         u'application',
-        u'parameter',
+        u'parameters',
+        u'trigger_type',
         u'username',
-        u'working_dir',
-        u'trigger']
+        u'working_directory']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
