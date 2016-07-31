@@ -128,13 +128,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     number_of_filtered_events = 0
 
-    # Set up the storage writer before the analysis processes.
-    storage_writer.StartTaskStorage()
-
-    self._StartAnalysisProcesses(
-        knowledge_base_object, storage_writer, analysis_plugins,
-        data_location, event_filter_expression=event_filter_expression)
-
     logging.debug(u'Processing events.')
 
     filter_limit = getattr(event_filter, u'limit', None)
@@ -548,11 +541,20 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._status_update_callback = status_update_callback
 
     storage_writer.Open()
-
     storage_writer.ReadPreprocessingInformation(knowledge_base_object)
+
+    # Set up the storage writer before the analysis processes.
+    storage_writer.StartTaskStorage()
+
+    self._StartAnalysisProcesses(
+        knowledge_base_object, storage_writer, analysis_plugins,
+        data_location, event_filter_expression=event_filter_expression)
 
     # Start the status update thread after open of the storage writer
     # so we don't have to clean up the thread if the open fails.
+    # Start the status update thread after creating the analysis processes
+    # otherwise it fails on Windows with an error it cannot pickle thread
+    # locks.
     self._StartStatusUpdateThread()
 
     storage_writer.WriteSessionStart()

@@ -617,9 +617,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._text_prepend = text_prepend
     self._yara_rules_string = yara_rules_string
 
-    # Set up the storage writer before the worker processes.
-    storage_writer.StartTaskStorage()
-
     # Set up the task queue.
     if not self._use_zeromq:
       self._task_queue = multi_process_queue.MultiProcessingQueue(
@@ -645,18 +642,24 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     storage_writer.Open()
 
+    # Set up the storage writer before the worker processes.
+    storage_writer.StartTaskStorage()
+
+    for _ in range(number_of_worker_processes):
+      extraction_process = self._StartExtractionWorkerProcess(storage_writer)
+      self._StartMonitoringProcess(extraction_process.pid)
+
     # Start the status update thread after open of the storage writer
     # so we don't have to clean up the thread if the open fails.
+    # Start the status update thread after creating the worker processes
+    # otherwise it fails on Windows with an error it cannot pickle thread
+    # locks.
     self._StartStatusUpdateThread()
 
     storage_writer.WriteSessionStart()
 
     try:
       storage_writer.WritePreprocessingInformation(self.knowledge_base)
-
-      for _ in range(number_of_worker_processes):
-        extraction_process = self._StartExtractionWorkerProcess(storage_writer)
-        self._StartMonitoringProcess(extraction_process.pid)
 
       self._ProcessSources(
           source_path_specs, storage_writer,
