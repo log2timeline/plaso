@@ -9,6 +9,7 @@ try:
   import Queue
 except ImportError:
   import queue as Queue  # pylint: disable=import-error
+# pylint: disable=wrong-import-order
 import threading
 import time
 
@@ -792,7 +793,7 @@ class ZeroMQBufferedPushQueue(ZeroMQBufferedQueue):
 
       sent_successfully = self._SendItem(self._zmq_socket, item)
       if not sent_successfully:
-        logging.error(u'Queue {0:s} error sending item.')
+        logging.error(u'Queue {0:s} error sending item.'.format(self.name))
         break
 
     logging.info(u'Queue {0:s} responder exiting.'.format(self.name))
