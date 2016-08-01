@@ -243,7 +243,7 @@ class TravisBeforeInstallScript(object):
       u'\tsudo add-apt-repository ppa:gift/dev -y;',
       u'\tsudo apt-get update -q;',
       (u'\tsudo apt-get install -y ${COVERALL_DEPENDENCIES} '
-       u'${PYTHON2_DEPENDENCIES};'),
+       u'${PYTHON2_DEPENDENCIES} ${PYTHON2_TEST_DEPENDENCIES};'),
       u'fi',
       u'']
 
@@ -258,10 +258,20 @@ class TravisBeforeInstallScript(object):
 
     file_content.append(u'')
 
+    # TODO: determine test dependencies from plaso.dependencies.
+    file_content.append(u'PYTHON2_TEST_DEPENDENCIES="python-mock";')
+
+    file_content.append(u'')
+
     dependencies = plaso.dependencies.GetDPKGDepends(exclude_version=True)
     dependencies = u' '.join(dependencies)
     dependencies = dependencies.replace(u'python', u'python3')
     file_content.append(u'PYTHON3_DEPENDENCIES="{0:s}";'.format(dependencies))
+
+    file_content.append(u'')
+
+    # TODO: determine test dependencies from plaso.dependencies.
+    file_content.append(u'PYTHON3_TEST_DEPENDENCIES="python3-mock";')
 
     file_content.extend(self._FILE_FOOTER)
 
