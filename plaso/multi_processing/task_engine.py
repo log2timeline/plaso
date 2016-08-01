@@ -651,9 +651,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     # Start the status update thread after open of the storage writer
     # so we don't have to clean up the thread if the open fails.
-    # Start the status update thread after creating the worker processes
-    # otherwise it fails on Windows with an error it cannot pickle thread
-    # locks.
     self._StartStatusUpdateThread()
 
     storage_writer.WriteSessionStart()
