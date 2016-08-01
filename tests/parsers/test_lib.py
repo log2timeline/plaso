@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser related functions and classes for testing."""
 
+import heapq
+
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -14,6 +16,61 @@ from plaso.parsers import mediator
 from plaso.storage import fake_storage
 
 from tests import test_lib as shared_test_lib
+
+
+class _EventsHeap(object):
+  """Class that defines the events heap."""
+
+  def __init__(self):
+    """Initializes an events heap."""
+    super(_EventsHeap, self).__init__()
+    self._heap = []
+
+  def PopEvent(self):
+    """Pops an event from the heap.
+
+    Returns:
+      EventObject: event.
+    """
+    try:
+      _, _, _, _, event = heapq.heappop(self._heap)
+      return event
+
+    except IndexError:
+      return None
+
+  def PopEvents(self):
+    """Pops events from the heap.
+
+    Yields:
+      EventObject: event.
+    """
+    event = self.PopEvent()
+    while event:
+      yield event
+      event = self.PopEvent()
+
+  def PushEvent(self, event):
+    """Pushes an event onto the heap.
+
+    Args:
+      event (EventObject): event.
+    """
+    # TODO: remove store number and store index once no longer exposed.
+    # Replace them by event specific attributes relevant to sorting.
+    heap_values = (
+        event.timestamp, event.timestamp_desc, event.store_number,
+        event.store_index, event)
+    heapq.heappush(self._heap, heap_values)
+
+  def PushEvents(self, events):
+    """Pushes events onto the heap.
+
+    Args:
+      events list[EventObject]: events.
+    """
+    for event in events:
+      self.PushEvent(event)
 
 
 class ParserTestCase(shared_test_lib.BaseTestCase):
@@ -65,6 +122,19 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()
     return storage_writer
+
+  def _GetSortedEvents(self, events):
+    """Retrieves the events sorted in a deterministic order.
+
+    Args:
+      events (list[EventObject]): events.
+
+    Returns:
+      list[EventObject]: sorted events.
+    """
+    events_heap = _EventsHeap()
+    events_heap.PushEvents(events)
+    return list(events_heap.PopEvents())
 
   def _GetShortMessage(self, message_string):
     """Shortens a message string to a maximum of 80 character width.

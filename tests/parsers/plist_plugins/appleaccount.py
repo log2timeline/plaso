@@ -27,14 +27,17 @@ class AppleAccountPluginTest(test_lib.PlistPluginTestCase):
 
     self.assertEqual(len(storage_writer.events), 3)
 
+    # The older in which PlistParser generates events is undeterministic
+    # hence we sort the events.
+    events = self._GetSortedEvents(storage_writer.events)
+
     expected_timestamps = sorted([
         1372106802000000, 1387980032000000, 1387980032000000])
-    timestamps = sorted([
-        event_object.timestamp for event_object in storage_writer.events])
+    timestamps = sorted([event_object.timestamp for event_object in events])
 
     self.assertEqual(timestamps, expected_timestamps)
 
-    event_object = storage_writer.events[0]
+    event_object = events[0]
     self.assertEqual(event_object.root, u'/Accounts')
     self.assertEqual(event_object.key, u'email@domain.com')
 
@@ -48,13 +51,13 @@ class AppleAccountPluginTest(test_lib.PlistPluginTestCase):
     self._TestGetMessageStrings(
         event_object, expected_message, expected_message_short)
 
-    event_object = storage_writer.events[1]
+    event_object = events[1]
     expected_description = (
         u'Connected Apple account '
         u'email@domain.com (Joaquin Moreno Garijo)')
     self.assertEqual(event_object.desc, expected_description)
 
-    event_object = storage_writer.events[2]
+    event_object = events[2]
     expected_description = (
         u'Last validation Apple account '
         u'email@domain.com (Joaquin Moreno Garijo)')

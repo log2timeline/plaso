@@ -24,13 +24,17 @@ class SafariPluginTest(test_lib.PlistPluginTestCase):
 
     self.assertEqual(len(storage_writer.events), 18)
 
-    event_object = storage_writer.events[10]
+    # The older in which PlistParser generates events is undeterministic
+    # hence we sort the events.
+    events = self._GetSortedEvents(storage_writer.events)
+
+    event_object = events[7]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-08 17:31:00')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    event_object = storage_writer.events[8]
+    event_object = events[9]
 
     expected_url = u'http://netverslun.sci-mx.is/aminosyrur'
     self.assertEqual(event_object.url, expected_url)

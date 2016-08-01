@@ -24,15 +24,19 @@ class AirportPluginTest(test_lib.PlistPluginTestCase):
 
     self.assertEqual(len(storage_writer.events), 4)
 
+    # The older in which PlistParser generates events is undeterministic
+    # hence we sort the events.
+    events = self._GetSortedEvents(storage_writer.events)
+
     expected_timestamps = sorted([
         1375144166000000, 1386874984000000, 1386949546000000,
         1386950747000000])
     timestamps = sorted([
-        event_object.timestamp for event_object in storage_writer.events])
+        event_object.timestamp for event_object in events])
 
     self.assertEqual(timestamps, expected_timestamps)
 
-    event_object = storage_writer.events[0]
+    event_object = events[0]
     self.assertEqual(event_object.key, u'item')
     self.assertEqual(event_object.root, u'/RememberedNetworks')
 
