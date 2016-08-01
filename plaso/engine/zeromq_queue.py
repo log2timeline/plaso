@@ -669,17 +669,18 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
 
     item = None
     while not self._terminate_event.isSet():
-      try:
-        if self ._closed_event.isSet():
-          item = source_queue.get_nowait()
-        else:
-          item = source_queue.get(True, self._buffer_timeout_seconds)
+      if not item:
+        try:
+          if self ._closed_event.isSet():
+            item = source_queue.get_nowait()
+          else:
+            item = source_queue.get(True, self._buffer_timeout_seconds)
 
-      except Queue.Empty:
-        if self._closed_event.isSet():
-          break
+        except Queue.Empty:
+          if self._closed_event.isSet():
+            break
 
-        continue
+          continue
 
       try:
         # We need to receive a request before we can reply with the item.
@@ -693,6 +694,7 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
         continue
 
       sent_successfully = self._SendItem(self._zmq_socket, item)
+      item = None
       if not sent_successfully:
         logging.error(u'Queue {0:s} unable to send item.'.format(self.name))
         break
