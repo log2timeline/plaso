@@ -17,23 +17,26 @@ class JSONLineOutputModule(interface.LinearOutputModule):
   NAME = u'json_line'
   DESCRIPTION = u'Saves the events into a JSON line format.'
 
-  def WriteEventBody(self, event_object):
+  def WriteEventBody(self, event):
     """Writes the body of an event object to the output.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
     """
+    inode = getattr(event, u'inode', None)
+    if inode is None:
+      event.inode = 0
+
     try:
-      message, _ = self._output_mediator.GetFormattedMessages(event_object)
+      message, _ = self._output_mediator.GetFormattedMessages(event)
     except errors.WrongFormatter:
       message = None
 
     if message:
-      event_object.message = message
+      event.message = message
 
     json_string = (
-        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
-            event_object))
+        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(event))
     self._WriteLine(json_string)
     self._WriteLine(u'\n')
 

@@ -16,20 +16,24 @@ class JSONOutputModule(interface.LinearOutputModule):
     """Initializes the output module object.
 
     Args:
-      output_mediator: The output mediator object (instance of OutputMediator).
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfvfs.
     """
     super(JSONOutputModule, self).__init__(output_mediator)
     self._event_counter = 0
 
-  def WriteEventBody(self, event_object):
+  def WriteEventBody(self, event):
     """Writes the body of an event object to the output.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
     """
+    inode = getattr(event, u'inode', None)
+    if inode is None:
+      event.inode = 0
+
     json_string = (
-        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
-            event_object))
+        json_serializer.JSONAttributeContainerSerializer.WriteSerialized(event))
 
     if self._event_counter == 0:
       self._WriteLine(u'"event_{0:d}": {1:s}\n'.format(

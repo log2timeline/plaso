@@ -452,7 +452,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
       self._task_queue.Close(abort=True)
 
-
   def _StopProfiling(self):
     """Stops profiling."""
     if not self._enable_profiling:

@@ -100,8 +100,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         comment=expected_comment, event_uuid=expected_uuid)
     expected_event_tag.AddLabels(expected_labels)
 
-    self.assertTrue(expected_event_tag.IsValidForSerialization())
-
     expected_analysis_report = reports.AnalysisReport(
         plugin_name=u'chrome_extension_test', text=expected_report_text)
     expected_analysis_report.report_dict = expected_report_dict
