@@ -7,8 +7,6 @@ import uuid
 from plaso.containers import interface
 from plaso.containers import manager
 from plaso.lib import py2to3
-# TODO: deprecate usage of utils.GetUnicodeString()
-from plaso.lib import utils
 
 
 # TODO: split event into source and event components.
@@ -121,18 +119,23 @@ class EventObject(interface.AttributeContainer):
       if getattr(self, attribute) != getattr(event_object, attribute):
         return False
 
-    # If we are dealing with a filesystem event the inode number is
+    # If we are dealing with a file system event the inode number is
     # the attribute that really matters.
     if self.data_type.startswith(u'fs:'):
       inode = self.inode
-      if inode is not None:
-        inode = utils.GetUnicodeString(inode)
+      if isinstance(inode, py2to3.BYTES_TYPE):
+        inode = inode.decode(u'utf8', errors=u'ignore')
+      elif not isinstance(inode, py2to3.UNICODE_TYPE):
+        inode = u'{0!s}'.format(inode)
 
       event_object_inode = event_object.inode
-      if event_object_inode is not None:
-        event_object_inode = utils.GetUnicodeString(event_object_inode)
+      if isinstance(event_object_inode, py2to3.BYTES_TYPE):
+        event_object_inode = event_object_inode.decode(
+            u'utf8', errors=u'ignore')
+      elif not isinstance(inode, py2to3.UNICODE_TYPE):
+        event_object_inode = u'{0!s}'.format(event_object_inode)
 
-      return inode == event_object_inode
+      return self.inode == event_object.inode
 
     return True
 

@@ -103,11 +103,17 @@ import re
 from plaso.lib import errors
 from plaso.lib import lexer
 from plaso.lib import py2to3
-from plaso.lib import utils
 
 
 # pylint: disable=attribute-defined-outside-init
 # pylint: disable=missing-docstring
+
+def GetUnicodeString(string):
+  """Converts the string to Unicode if necessary."""
+  if not isinstance(string, py2to3.UNICODE_TYPE):
+    return str(string).decode(u'utf8', errors=u'ignore')
+  return string
+
 
 class InvalidNumberOfOperands(errors.Error):
   """The number of operands provided to this operator is wrong."""
@@ -338,14 +344,14 @@ class Regexp(GenericBinaryOperator):
     logging.debug(u'Compiled: {0!s}'.format(self.right_operand))
     try:
       self.compiled_re = re.compile(
-          utils.GetUnicodeString(self.right_operand), re.DOTALL)
+          GetUnicodeString(self.right_operand), re.DOTALL)
     except re.error:
       raise ValueError(u'Regular expression "{0!s}" is malformed.'.format(
           self.right_operand))
 
   def Operation(self, x, unused_y):
     try:
-      if self.compiled_re.search(utils.GetUnicodeString(x)):
+      if self.compiled_re.search(GetUnicodeString(x)):
         return True
     except TypeError:
       pass
@@ -361,7 +367,7 @@ class RegexpInsensitive(Regexp):
     # Note that right_operand is not necessarily a string.
     logging.debug(u'Compiled: {0!s}'.format(self.right_operand))
     try:
-      self.compiled_re = re.compile(utils.GetUnicodeString(self.right_operand),
+      self.compiled_re = re.compile(GetUnicodeString(self.right_operand),
                                     re.I | re.DOTALL)
     except re.error:
       raise ValueError(u'Regular expression "{0!s}" is malformed.'.format(

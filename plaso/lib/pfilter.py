@@ -13,7 +13,6 @@ from plaso.lib import errors
 from plaso.lib import objectfilter
 from plaso.lib import py2to3
 from plaso.lib import timelib
-from plaso.lib import utils
 from plaso.parsers import presets
 
 
@@ -272,11 +271,16 @@ class DateCompareObject(object):
       self.text = u'{0:f}'.format(data)
 
     elif isinstance(data, py2to3.STRING_TYPES):
-      self.text = utils.GetUnicodeString(data)
+      if isinstance(data, py2to3.BYTES_TYPE):
+        self.text = data.decode(u'utf-8', errors=u'ignore')
+      else:
+        self.text = data
+
       try:
-        self.data = timelib.Timestamp.FromTimeString(data)
+        self.data = timelib.Timestamp.FromTimeString(self.text)
       except (ValueError, errors.TimestampError):
-        raise ValueError(u'Wrongly formatted date string: {0:s}'.format(data))
+        raise ValueError(u'Wrongly formatted date string: {0:s}'.format(
+            self.text))
 
     elif isinstance(data, datetime.datetime):
       self.data = timelib.Timestamp.FromPythonDatetime(data)
