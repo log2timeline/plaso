@@ -11,7 +11,6 @@ from plaso.engine import plaso_queue
 from plaso.engine import zeromq_queue
 from plaso.lib import bufferlib
 from plaso.lib import definitions
-from plaso.lib import py2to3
 from plaso.multi_processing import analysis_process
 from plaso.multi_processing import engine as multi_process_engine
 from plaso.multi_processing import multi_process_queue
@@ -79,19 +78,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     Args:
       event (EventObject): event.
     """
-    # TODO: refactor.
-    # Needed for duplicate removals, if two events
-    # are merged then we'll just pick the first inode value.
-    inode = event.inode
-    if isinstance(inode, py2to3.STRING_TYPES):
-      inode_list = inode.split(u';')
-      try:
-        new_inode = int(inode_list[0], 10)
-      except (IndexError, ValueError):
-        new_inode = 0
-
-      event.inode = new_inode
-
     for event_queue in self._event_queues:
       event_queue.PushItem(event)
 
@@ -219,8 +205,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         status_indicator = definitions.PROCESSING_STATUS_KILLED
 
       process_status = {
-          u'processing_status': processing_status_string,
-      }
+          u'processing_status': processing_status_string}
 
     self._UpdateProcessingStatus(pid, process_status)
 
@@ -317,9 +302,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     events_counter[u'Events filtered'] = number_of_filtered_events
     events_counter[u'Events from time slice'] = number_of_events_from_time_slice
     events_counter[u'Events processed'] = self._number_of_consumed_events
-
-    for event_queue in self._event_queues:
-      event_queue.Close()
 
     if event_buffer.duplicate_counter:
       events_counter[u'Duplicate events removed'] = (
@@ -422,31 +404,29 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     if not self._use_zeromq:
       logging.debug(u'Emptying queues.')
-
       for event_queue in self._event_queues:
         event_queue.Empty()
 
-        # Wake the processes to make sure that they are not blocking
-        # waiting for the queue new items.
-        event_queue.PushItem(plaso_queue.QueueAbort(), block=False)
+    # Wake the processes to make sure that they are not blocking
+    # waiting for the queue new items.
+    for event_queue in self._event_queues:
+      event_queue.PushItem(plaso_queue.QueueAbort(), block=False)
 
     # Try waiting for the processes to exit normally.
     self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
-
-    if not abort:
-      # Check if the processes are still alive and terminate them if necessary.
-      self._AbortTerminate()
-      self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
-
-    # For Multiprocessing queues, set abort to True to stop queue.join_thread()
-    # from blocking.
-    if not self._use_zeromq:
-      for event_queue in self._event_queues:
-        event_queue.Close(abort=True)
+    for event_queue in self._event_queues:
+      event_queue.Close(abort=abort)
 
     if abort:
       # Kill any remaining processes.
       self._AbortKill()
+    else:
+      # Check if the processes are still alive and terminate them if necessary.
+      self._AbortTerminate()
+      self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
+
+      for event_queue in self._event_queues:
+        event_queue.Close(abort=True)
 
   def _UpdateProcessingStatus(self, pid, process_status):
     """Updates the processing status.

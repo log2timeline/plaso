@@ -17,7 +17,8 @@ class OutputModule(object):
     """Initializes the output module object.
 
     Args:
-      output_mediator: The output mediator object (instance of OutputMediator).
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfvfs.
 
     Raises:
       ValueError: when there are unused keyword arguments.
@@ -25,36 +26,36 @@ class OutputModule(object):
     super(OutputModule, self).__init__()
     self._output_mediator = output_mediator
 
-  def _GetEventStorageIdentifier(self, event_object):
+  def _GetEventStorageIdentifier(self, event):
     """Retrieves the event storage identifier of an event object.
 
     Args:
-      event_object: an event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
-      A string containing the event storage identifier or "N/A".
+      str: event storage identifier or "N/A".
     """
-    store_number = getattr(event_object, u'store_number', None)
-    store_index = getattr(event_object, u'store_index', None)
+    store_number = getattr(event, u'store_number', None)
+    store_index = getattr(event, u'store_index', None)
 
     if store_number is None or store_index is None:
       return u'N/A'
 
     return u'{0:d}:{1:d}'.format(store_number, store_index)
 
-  def _ReportEventError(self, event_object, error_message):
+  def _ReportEventError(self, event, error_message):
     """Reports an event related error.
 
     Args:
-      event_object: an event object (instance of EventObject).
-      error_message: a string containing the error message.
+      event (EventObject): event.
+      error_message (str): error message.
     """
-    event_storage_identifier = self._GetEventStorageIdentifier(event_object)
+    event_storage_identifier = self._GetEventStorageIdentifier(event)
     error_message = (
         u'Event: {0:s} data type: {1:s} display name: {2:s} '
         u'parser chain: {3:s} with error: {4:s}').format(
-            event_storage_identifier, event_object.data_type,
-            event_object.display_name, event_object.parser, error_message)
+            event_storage_identifier, event.data_type,
+            event.display_name, event.parser, error_message)
     logging.error(error_message)
 
   def Close(self):
@@ -62,11 +63,11 @@ class OutputModule(object):
     pass
 
   def GetMissingArguments(self):
-    """Return a list of arguments that are missing from the input.
+    """Retrieves arguments required by the module that have not been specified.
 
     Returns:
-      A list of argument names that are missing and necessary for the
-      module to continue to operate.
+      list[str]: names of argument that are required by the module and have
+          not been specified.
     """
     return []
 
@@ -74,27 +75,27 @@ class OutputModule(object):
     """Opens the output."""
     pass
 
-  def WriteEvent(self, event_object):
+  def WriteEvent(self, event):
     """Writes the event object to the output.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
     """
     self.WriteEventStart()
 
     try:
-      self.WriteEventBody(event_object)
+      self.WriteEventBody(event)
     except errors.NoFormatterFound:
-      self._ReportEventError(event_object, u'unable to retrieve formatter')
+      self._ReportEventError(event, u'unable to retrieve formatter')
 
     self.WriteEventEnd()
 
   @abc.abstractmethod
-  def WriteEventBody(self, event_object):
+  def WriteEventBody(self, event):
     """Writes the body of an event object to the output.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
     """
 
   def WriteEventEnd(self):
@@ -142,7 +143,8 @@ class LinearOutputModule(OutputModule):
     """Initializes the output module object.
 
     Args:
-      output_mediator: The output mediator object (instance of OutputMediator).
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfvfs.
 
     Raises:
       ValueError: if the output writer is missing.
@@ -154,7 +156,7 @@ class LinearOutputModule(OutputModule):
     """Write a single line to the supplied file-like object.
 
     Args:
-      line: the line of text to write.
+      line (str): line of text to write.
     """
     self._output_writer.Write(line)
 
@@ -162,8 +164,7 @@ class LinearOutputModule(OutputModule):
     """Set the output writer.
 
     Args:
-      output_writer: Optional output writer object (instance of
-                     CLIOutputWriter).
+      output_writer (CLIOutputWriter): output writer.
     """
     self._output_writer = output_writer
 
