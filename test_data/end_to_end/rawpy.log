@@ -11,7 +11,6 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 0
   {offset} 0
   {parser} syslog
   {store_index} 0
@@ -38,7 +37,6 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 0
   {offset} 0
   {parser} syslog
   {store_index} 1
@@ -65,7 +63,6 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 0
   {offset} 0
   {parser} syslog
   {store_index} 2
@@ -93,7 +90,6 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 0
   {offset} 0
   {parser} syslog
   {store_index} 3
@@ -121,7 +117,6 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 0
   {offset} 0
   {parser} syslog
   {store_index} 4
@@ -149,7 +144,6 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 0
   {offset} 0
   {parser} syslog
   {store_index} 5
@@ -174,7 +168,6 @@
   {data_type} syslog:comment
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 0
   {offset} 0
   {parser} syslog
   {store_index} 6
@@ -199,7 +192,6 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 0
   {offset} 0
   {parser} syslog
   {store_index} 7
@@ -226,7 +218,6 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 0
   {offset} 0
   {parser} syslog
   {store_index} 8
@@ -410,7 +401,6 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 0
   {offset} 0
   {parser} syslog
   {store_index} 12
@@ -436,7 +426,6 @@
   {data_type} syslog:comment
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
-  {inode} 0
   {offset} 0
   {parser} syslog
   {store_index} 13
@@ -461,7 +450,6 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 0
   {offset} 0
   {parser} syslog
   {store_index} 14
@@ -488,7 +476,6 @@
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {hostname} myhostname.myhost.com
-  {inode} 0
   {offset} 0
   {parser} syslog
   {store_index} 15

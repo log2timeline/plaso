@@ -23,26 +23,20 @@ class EventObject(interface.AttributeContainer):
   attributes.
 
   Attributes:
-    data_type: a string containing the event data type indicator.
-    display_name: a string containing a display friendly version
-                  of the path specification.
-    filename: a string containing the name of the file related to
-              the event or None.
-    hostname: a string containing the name of the host related to
-              the event or None.
-    inode: an integer containing the inode of the file related to
-              the event or None.
-    offset: an integer containing the offset of the event data or None.
-    pathspec: a path specification (instance of dfvfs.PathSpect) of the file
-              related to the event or None.
-    store_index: an integer containing the store index of the event
-                 within the storage file.
-    store_number: an integer containing the store number of the event
-                  within the storage file.
-    tag: an event tag (instance of EventTag) or None.
-    timestamp: an integer containing a timestamp of the number
-               of micro seconds since January 1, 1970, 00:00:00 UTC.
-    uuid: a string containing a unique identifier (UUID).
+    data_type (str): event data type indicator.
+    display_name (str): display friendly version of the path specification.
+    filename (str): name of the file related to the event.
+    hostname (str): name of the host related to the event.
+    inode (int): inode of the file related to the event.
+    offset (int): offset of the event data.
+    pathspec (dfvfs.PathSpec): path specification of the file related to
+        the event.
+    store_index (int): store index of the event within the storage file.
+    store_number (int): store number of the event within the storage file.
+    tag (EventTag): event tag.
+    timestamp (int): timestamp, which contains the number of microseconds
+        since January 1, 1970, 00:00:00 UTC.
+    uuid (str): unique identifier (UUID).
   """
   CONTAINER_TYPE = u'event'
   # TODO: eventually move data type out of event since the event source
@@ -105,10 +99,10 @@ class EventObject(interface.AttributeContainer):
     * store_index
 
     Args:
-      event_object: The event object to compare to (instance of EventObject).
+      event (EventObject): event to compare to.
 
     Returns:
-      A boolean value indicating if both event objects are considered equal.
+      bool: True if both event objects are considered equal.
     """
     # Note: if this method changes, the above EqualityString method MUST be
     # updated accordingly.
@@ -150,8 +144,8 @@ class EventObject(interface.AttributeContainer):
     equal as described in __eq__.
 
     Returns:
-      A string representation of the event object that can be used for equality
-      comparison.
+      str: string representation of the event object that can be used for
+          equality comparison.
     """
     attribute_names = set(self.__dict__.keys())
     fields = sorted(list(attribute_names.difference(self.COMPARE_EXCLUDE)))
@@ -205,7 +199,7 @@ class EventObject(interface.AttributeContainer):
     Attributes that are set to None are ignored.
 
     Returns:
-      A list of strings containing the attribute names.
+      list[str]: attribute names.
     """
     attribute_names = []
     for attribute_name in iter(self.__dict__.keys()):
@@ -224,15 +218,11 @@ class EventTag(interface.AttributeContainer):
   the store_number and store_index is preferred.
 
   Attributes:
-    comment: a string containing comments or None if not set.
-    event_uuid: a string containing the event identifier (UUID) or None
-                if not set.
-    labels: a list of strings containing labels. e.g. "malware",
-            "application_execution".
-    store_index: an integer containing the store index of the corresponding
-                 event or None if not set.
-    store_number: an integer containing the store number of the corresponding
-                  event or None if not set.
+    comment (str): comments.
+    event_uuid (str): event identifier (UUID).
+    labels (list[str]): labels, such as "malware", "application_execution".
+    store_index (int): store index of the corresponding event.
+    store_number (int): store number of the corresponding event.
   """
   CONTAINER_TYPE = u'event_tag'
 
@@ -247,8 +237,8 @@ class EventTag(interface.AttributeContainer):
     """Initializes an event tag.
 
     Args:
-      comment: optional string containing comments.
-      event_uuid: optional string containing the event identifier (UUID).
+      comment (Optional[str]): comments.
+      event_uuid (Optional[str]): event identifier (UUID).
     """
     super(EventTag, self).__init__()
     self.comment = comment
@@ -260,10 +250,7 @@ class EventTag(interface.AttributeContainer):
 
   @property
   def string_key(self):
-    """Return a string index key for this tag."""
-    if not self.IsValidForSerialization():
-      return u''
-
+    """str: string index key for this tag."""
     if self.event_uuid is not None:
       return self.event_uuid
 
@@ -273,7 +260,7 @@ class EventTag(interface.AttributeContainer):
     """Adds a comment to the event tag.
 
     Args:
-      comment: a string containing the comment.
+      comment (str): comment.
     """
     if not comment:
       return
@@ -287,7 +274,7 @@ class EventTag(interface.AttributeContainer):
     """Adds a label to the event tag.
 
     Args:
-      label: a string containing the label.
+      label (str): label.
 
     Raises:
       ValueError: if a label is malformed.
@@ -307,7 +294,7 @@ class EventTag(interface.AttributeContainer):
     """Adds labels to the event tag.
 
     Args:
-      labels: a list of strings containing the labels.
+      labels (list[str]): labels.
 
     Raises:
       ValueError: if a label is malformed.
@@ -326,7 +313,7 @@ class EventTag(interface.AttributeContainer):
     """Copies the event tag to a dictionary.
 
     Returns:
-      A dictionary containing the event tag attributes.
+      dict[str, object]: event tag attributes.
     """
     result_dict = {
         u'labels': self.labels
@@ -351,11 +338,11 @@ class EventTag(interface.AttributeContainer):
     unsupported characters are replaced with an underscore.
 
     Args:
-      text: a string containing the text to convert to a label.
-      prefix: optional string to prepend to the label.
+      text (str): label text.
+      prefix (Optional[str]): label prefix.
 
     Returns:
-      A string containing the converted text.
+      str: label.
     """
     text = u'{0:s}{1:s}'.format(prefix, text)
     return cls._INVALID_LABEL_CHARACTERS_REGEX.sub(u'_', text)
@@ -366,23 +353,12 @@ class EventTag(interface.AttributeContainer):
     Attributes that are set to None are ignored.
 
     Yields:
-      A tuple containing the event tag attribute name and value.
+      tuple[str, str]: event tag attribute name and value.
     """
     for attribute_name in self._ATTRIBUTE_NAMES:
       attribute_value = getattr(self, attribute_name, None)
       if attribute_value is not None:
         yield attribute_name, attribute_value
-
-  def IsValidForSerialization(self):
-    """Return whether or not this is a valid tag object."""
-    if self.event_uuid is not None:
-      return True
-
-    if (self.store_number is not None and self.store_index is not None and
-        self.store_number > -1 and self.store_index > -1):
-      return True
-
-    return False
 
 
 manager.AttributeContainersManager.RegisterAttributeContainers([

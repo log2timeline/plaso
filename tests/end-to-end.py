@@ -594,7 +594,7 @@ class ExtractAndOutputTestCase(TestCase):
     return result
 
   def _RunPsort(self, test_definition, temp_directory, storage_file):
-    """Runs psort on a storage file.
+    """Runs psort with the output options specified by the test definition.
 
     Args:
       test_definition (TestDefinition): test definition.
@@ -604,12 +604,26 @@ class ExtractAndOutputTestCase(TestCase):
     Returns:
       bool: True if psort ran successfully.
     """
+    output_options = test_definition.output_options
+
+    if test_definition.output_format:
+      output_options.append(u'-o {0:s}'.format(test_definition.output_format))
+
+    output_file_path = None
+    if test_definition.output_file:
+      output_file_path = os.path.join(
+          temp_directory, test_definition.output_file)
+      output_options.append(u'-w {0:s}'.format(output_file_path))
+
+    output_options = u' '.join(output_options)
+
     stdout_file = os.path.join(
         temp_directory, u'{0:s}-psort.out'.format(test_definition.name))
     stderr_file = os.path.join(
         temp_directory, u'{0:s}-psort.err'.format(test_definition.name))
-    command = u'{0:s} {1:s} > {2:s} 2> {3:s}'.format(
-        self._psort_path, storage_file, stdout_file, stderr_file)
+    command = u'{0:s} {1:s} {2:s} > {3:s} 2> {4:s}'.format(
+        self._psort_path, output_options, storage_file, stdout_file,
+        stderr_file)
 
     logging.info(u'Running: {0:s}'.format(command))
     result = self._RunCommand(command)
@@ -618,6 +632,9 @@ class ExtractAndOutputTestCase(TestCase):
       with open(stderr_file, 'rb') as file_object:
         output_data = file_object.read()
         print(output_data)
+
+    if output_file_path and os.path.exists(output_file_path):
+      shutil.copy(output_file_path, self._test_results_path)
 
     if os.path.exists(stdout_file):
       shutil.copy(stdout_file, self._test_results_path)
@@ -643,6 +660,21 @@ class ExtractAndOutputTestCase(TestCase):
       test_definition.extract_options = []
     elif isinstance(test_definition.extract_options, STRING_TYPES):
       test_definition.extract_options = test_definition.extract_options.split(
+          u',')
+
+    test_definition.output_file = test_definition_reader.GetConfigValue(
+        test_definition.name, u'output_file')
+
+    test_definition.output_format = test_definition_reader.GetConfigValue(
+        test_definition.name, u'output_format')
+
+    test_definition.output_options = test_definition_reader.GetConfigValue(
+        test_definition.name, u'output_options')
+
+    if test_definition.output_options is None:
+      test_definition.output_options = []
+    elif isinstance(test_definition.output_options, STRING_TYPES):
+      test_definition.output_options = test_definition.output_options.split(
           u',')
 
     test_definition.reference_storage_file = (
@@ -692,8 +724,7 @@ class ExtractAndOutputTestCase(TestCase):
           return False
 
       # Check if the resulting storage file can be read with psort.
-      if not self._RunPsort(
-          test_definition, temp_directory, storage_file):
+      if not self._RunPsort(test_definition, temp_directory, storage_file):
         return False
 
     return True
@@ -805,8 +836,7 @@ class ExtractAndTagTestCase(ExtractAndOutputTestCase):
         return False
 
       # Check if the resulting storage file can be read with psort.
-      if not self._RunPsort(
-          test_definition, temp_directory, storage_file):
+      if not self._RunPsort(test_definition, temp_directory, storage_file):
         return False
 
     return True
@@ -945,6 +975,10 @@ class OutputTestCase(TestCase):
 
   NAME = u'output'
 
+  _SUPPORTED_OUTPUT_FORMATS = frozenset([
+      u'dynamic', u'json', u'json_line', u'l2tcsv', u'l2ttln', u'rawpy',
+      u'tln'])
+
   def __init__(
       self, tools_path, test_sources_path, test_references_path,
       test_results_path, debug_output=False):
@@ -972,9 +1006,7 @@ class OutputTestCase(TestCase):
     Returns:
       bool: True if he output files are identical.
     """
-    if test_definition.output_format not in (
-        u'dynamic', u'json', u'json_line', u'l2tcsv', u'l2ttln', u'rawpy',
-        u'tln'):
+    if test_definition.output_format not in self._SUPPORTED_OUTPUT_FORMATS:
       logging.error(u'Unsuppored output format: {0:s}'.format(
           test_definition.output_format))
       return False
@@ -1006,8 +1038,7 @@ class OutputTestCase(TestCase):
 
     return result
 
-  def _RunPsortWithOutputOptions(
-      self, test_definition, temp_directory, storage_file):
+  def _RunPsort(self, test_definition, temp_directory, storage_file):
     """Runs psort with the output options specified by the test definition.
 
     Args:
@@ -1109,8 +1140,7 @@ class OutputTestCase(TestCase):
       return False
 
     with TempDirectory() as temp_directory:
-      if not self._RunPsortWithOutputOptions(
-          test_definition, temp_directory, source_path):
+      if not self._RunPsort(test_definition, temp_directory, source_path):
         return False
 
       # Compare output file with a reference output file.
