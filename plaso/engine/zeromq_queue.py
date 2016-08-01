@@ -10,7 +10,7 @@ try:
 except ImportError:
   import queue as Queue  # pylint: disable=import-error
 # pylint: disable=wrong-import-order
-import threading 
+import threading
 import time
 
 import zmq
