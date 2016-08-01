@@ -136,8 +136,8 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  def testProcessEventsFromStorage(self):
-    """Tests the _ProcessEventsFromStorage function."""
+  def testInternalExportEvents(self):
+    """Tests the _ExportEvents function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
     output_writer = cli_test_lib.TestOutputWriter()
 
@@ -176,7 +176,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
       event_buffer = TestEventBuffer(output_module, check_dedups=False)
 
-      test_engine._ProcessEventsFromStorage(storage_reader, event_buffer)
+      test_engine._ExportEvents(storage_reader, event_buffer)
 
     event_buffer.Flush()
 
@@ -196,50 +196,8 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
         b'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
         b'version,filename,inode,notes,format,extra'))
 
-  def testExportEventsWithOutputModule(self):
-    """Tests the ExportEventsWithOutputModule function."""
-    storage_file_path = self._GetTestFilePath([u'psort_test.json.plaso'])
-
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    output_writer = cli_test_lib.TestOutputWriter()
-
-    formatter_mediator = formatters_mediator.FormatterMediator()
-    formatter_mediator.SetPreferredLanguageIdentifier(u'en-US')
-
-    output_mediator_object = output_mediator.OutputMediator(
-        knowledge_base_object, formatter_mediator)
-
-    output_module = dynamic.DynamicOutputModule(output_mediator_object)
-    output_module.SetOutputWriter(output_writer)
-
-    storage_reader = storage_zip_file.ZIPStorageFileReader(storage_file_path)
-
-    test_engine = psort.PsortMultiProcessEngine()
-    counter = test_engine.ExportEventsWithOutputModule(
-        knowledge_base_object, storage_reader, output_module)
-
-    # TODO: refactor preprocessing object.
-    self.assertEqual(counter[u'Stored Events'], 0)
-
-    lines = []
-    output = output_writer.ReadOutput()
-    for line in output.split(b'\n'):
-      lines.append(line)
-
-    self.assertEqual(len(lines), 21)
-
-    expected_line = (
-        u'2016-07-18T05:37:35+00:00,'
-        u'mtime,'
-        u'FILE,'
-        u'OS mtime,'
-        u'OS:/tmp/test/test_data/syslog Type: file,'
-        u'filestat,'
-        u'OS:/tmp/test/test_data/syslog,-')
-    self.assertEquals(lines[14], expected_line)
-
-  def testProcessStorage(self):
-    """Tests the ProcessStorage function."""
+  def testAnalyzeEvents(self):
+    """Tests the AnalyzeEvents function."""
     storage_file_path = self._GetTestFilePath([u'psort_test.json.plaso'])
 
     session = sessions.Session()
@@ -266,12 +224,54 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       storage_writer = storage_zip_file.ZIPStorageFileWriter(
           session, temp_file)
 
-      counter = test_engine.ProcessStorage(
+      counter = test_engine.AnalyzeEvents(
           knowledge_base_object, storage_writer, output_module, data_location,
           [analysis_plugin])
 
     # TODO: assert if tests were successful.
     _ = counter
+
+  def testExportEvents(self):
+    """Tests the ExportEvents function."""
+    storage_file_path = self._GetTestFilePath([u'psort_test.json.plaso'])
+
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    output_writer = cli_test_lib.TestOutputWriter()
+
+    formatter_mediator = formatters_mediator.FormatterMediator()
+    formatter_mediator.SetPreferredLanguageIdentifier(u'en-US')
+
+    output_mediator_object = output_mediator.OutputMediator(
+        knowledge_base_object, formatter_mediator)
+
+    output_module = dynamic.DynamicOutputModule(output_mediator_object)
+    output_module.SetOutputWriter(output_writer)
+
+    storage_reader = storage_zip_file.ZIPStorageFileReader(storage_file_path)
+
+    test_engine = psort.PsortMultiProcessEngine()
+    counter = test_engine.ExportEvents(
+        knowledge_base_object, storage_reader, output_module)
+
+    # TODO: refactor preprocessing object.
+    self.assertEqual(counter[u'Stored Events'], 0)
+
+    lines = []
+    output = output_writer.ReadOutput()
+    for line in output.split(b'\n'):
+      lines.append(line)
+
+    self.assertEqual(len(lines), 21)
+
+    expected_line = (
+        u'2016-07-18T05:37:35+00:00,'
+        u'mtime,'
+        u'FILE,'
+        u'OS mtime,'
+        u'OS:/tmp/test/test_data/syslog Type: file,'
+        u'filestat,'
+        u'OS:/tmp/test/test_data/syslog,-')
+    self.assertEquals(lines[14], expected_line)
 
   # TODO: add bogus data location test.
 
