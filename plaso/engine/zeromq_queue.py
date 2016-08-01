@@ -66,10 +66,10 @@ class ZeroMQQueue(plaso_queue.Queue):
     if (self.SOCKET_CONNECTION_TYPE == self.SOCKET_CONNECTION_CONNECT
         and not port):
       raise ValueError(u'No port specified to connect to.')
-    self._closed_event = threading.Event()
+    self._closed_event = None
     self._high_water_mark = maximum_items
     self._linger_seconds = linger_seconds
-    self._terminate_event = threading.Event()
+    self._terminate_event = None
     self._zmq_context = None
     self._zmq_socket = None
     self.name = name
@@ -168,6 +168,12 @@ class ZeroMQQueue(plaso_queue.Queue):
 
     if not self._zmq_context:
       self._zmq_context = zmq.Context()
+
+    if not self._terminate_event:
+      self._terminate_event = threading.Event()
+
+    if not self._closed_event:
+      self._closed_event = threading.Event()
 
     if self._zmq_socket:
       logging.debug(u'Closing old socket for {0:s}'.format(self.name))
