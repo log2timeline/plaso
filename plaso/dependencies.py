@@ -67,7 +67,7 @@ PYTHON_DEPENDENCIES = [
     (u'pytz', u'', u'', None),
     (u'requests', u'__version__', u'2.2.1', None),
     (u'six', u'__version__', u'1.1.0', None),
-    (u'xlsxwriter', u'__version__', u'0.6.5', None),
+    (u'xlsxwriter', u'__version__', u'0.9.3', None),
     (u'yaml', u'__version__', u'3.10', None),
     (u'yara', u'YARA_VERSION', u'3.4.0', None),
     (u'zmq', u'__version__', u'2.1.11', None)]
