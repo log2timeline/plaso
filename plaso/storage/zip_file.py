@@ -968,6 +968,9 @@ class ZIPStorageFile(interface.BaseFileStorage):
   # The maximum serialized report size (32 MiB).
   _MAXIMUM_SERIALIZED_REPORT_SIZE = 32 * 1024 * 1024
 
+  _MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES = 5
+  _LOCKED_FILE_SLEEP_TIME = 1.0
+
   def __init__(
       self, maximum_buffer_size=0,
       storage_type=definitions.STORAGE_TYPE_SESSION):
@@ -2388,9 +2391,9 @@ class ZIPStorageFile(interface.BaseFileStorage):
           break
 
         except OSError:
-          if attempts >= 3:
+          if attempts > self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
             raise
-          time.sleep(1.0)
+          time.sleep(self._LOCKED_FILE_SLEEP_TIME)
           attempts += 1
 
       directory_name = os.path.dirname(self._zipfile_path)
