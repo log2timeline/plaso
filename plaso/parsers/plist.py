@@ -10,7 +10,7 @@ import logging
 from binplist import binplist
 
 from plaso.lib import errors
-from plaso.lib import utils
+from plaso.lib import py2to3
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -50,14 +50,18 @@ class PlistParser(interface.FileObjectParser):
     # Note that binplist.readPlist does not seek to offset 0.
     try:
       top_level_object = binplist.readPlist(file_object)
+
     except binplist.FormatError as exception:
-      # TODO: remove need for GetUnicodeString.
-      error_string = utils.GetUnicodeString(exception)
+      if not isinstance(exception, py2to3.BYTES_TYPE):
+        error_string = str(exception).decode(u'utf8', errors=u'replace')
+      else:
+        error_string = exception
+
       raise errors.UnableToParseFile(
           u'File is not a plist file: {0:s}'.format(error_string))
 
     except (
-        LookupError, binascii.Error, ValueError, AttributeError) as exception:
+        AttributeError, LookupError, ValueError, binascii.Error) as exception:
       raise errors.UnableToParseFile(
           u'Unable to parse XML file, reason: {0:s}'.format(exception))
 

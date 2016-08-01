@@ -211,8 +211,7 @@ class EventBuffer(object):
 
       setattr(first_event, attribute_name, join_value)
 
-    # Needed for duplicate removals, if two events
-    # are merged then we'll just pick the first inode value.
+    # If two events are merged then we'll just pick the first inode value.
     inode = first_event.inode
     if isinstance(inode, py2to3.STRING_TYPES):
       inode_list = inode.split(u';')
@@ -224,16 +223,20 @@ class EventBuffer(object):
       first_event.inode = new_inode
 
     # Special instance if this is a filestat entry we need to combine the
-    # description field.
-    if getattr(first_event, u'parser', u'') == u'filestat':
+    # timestamp description field.
+    parser_name = getattr(first_event, u'parser', None)
+
+    if parser_name == u'filestat':
       first_description = getattr(first_event, u'timestamp_desc', u'')
-      first_description = set(first_description.split(u';'))
+      first_description_set = set(first_description.split(u';'))
 
       second_description = getattr(second_event, u'timestamp_desc', u'')
-      second_description = set(second_description.split(u';'))
+      second_description_set = set(second_description.split(u';'))
 
-      descriptions = list(first_description | second_description)
-      descriptions.sort()
+      if first_description_set.difference(second_description_set):
+        descriptions_list = list(first_description_set.union(
+            second_description_set))
+        descriptions_list.sort()
+        description_value = u';'.join(descriptions_list)
 
-      if second_event.timestamp_desc not in first_event.timestamp_desc:
-        setattr(first_event, u'timestamp_desc', u';'.join(descriptions))
+        setattr(first_event, u'timestamp_desc', description_value)
