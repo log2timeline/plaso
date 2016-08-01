@@ -131,6 +131,7 @@ import logging
 import os
 import shutil
 import tempfile
+import time
 import warnings
 import zipfile
 
@@ -966,6 +967,9 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
   # The maximum serialized report size (32 MiB).
   _MAXIMUM_SERIALIZED_REPORT_SIZE = 32 * 1024 * 1024
+
+  _MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES = 5
+  _LOCKED_FILE_SLEEP_TIME = 1.0
 
   def __init__(
       self, maximum_buffer_size=0,
@@ -2379,7 +2383,19 @@ class ZIPStorageFile(interface.BaseFileStorage):
     self._is_open = False
 
     if self._path != self._zipfile_path and os.path.exists(self._zipfile_path):
-      os.rename(self._zipfile_path, self._path)
+      # On Windows the file can sometimes be still in use and we have to wait.
+      attempts = 1
+      while True:
+        try:
+          os.rename(self._zipfile_path, self._path)
+          break
+
+        except OSError:
+          if attempts > self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+            raise
+          time.sleep(self._LOCKED_FILE_SLEEP_TIME)
+          attempts += 1
+
       directory_name = os.path.dirname(self._zipfile_path)
       os.rmdir(directory_name)
 
