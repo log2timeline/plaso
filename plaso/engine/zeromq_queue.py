@@ -9,6 +9,7 @@ try:
   import Queue
 except ImportError:
   import queue as Queue  # pylint: disable=import-error
+# pylint: disable=wrong-import-order
 import threading
 import time
 
@@ -66,10 +67,10 @@ class ZeroMQQueue(plaso_queue.Queue):
     if (self.SOCKET_CONNECTION_TYPE == self.SOCKET_CONNECTION_CONNECT
         and not port):
       raise ValueError(u'No port specified to connect to.')
-    self._closed_event = threading.Event()
+    self._closed_event = None
     self._high_water_mark = maximum_items
     self._linger_seconds = linger_seconds
-    self._terminate_event = threading.Event()
+    self._terminate_event = None
     self._zmq_context = None
     self._zmq_socket = None
     self.name = name
@@ -168,6 +169,15 @@ class ZeroMQQueue(plaso_queue.Queue):
 
     if not self._zmq_context:
       self._zmq_context = zmq.Context()
+
+    # The these two events need to be created when the socket is opened, so that
+    # these unpickleable objects aren't passed through multiprocessing when the
+    # queue is created.
+    if not self._terminate_event:
+      self._terminate_event = threading.Event()
+
+    if not self._closed_event:
+      self._closed_event = threading.Event()
 
     if self._zmq_socket:
       logging.debug(u'Closing old socket for {0:s}'.format(self.name))
@@ -662,17 +672,18 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
 
     item = None
     while not self._terminate_event.isSet():
-      try:
-        if self ._closed_event.isSet():
-          item = source_queue.get_nowait()
-        else:
-          item = source_queue.get(True, self._buffer_timeout_seconds)
+      if not item:
+        try:
+          if self ._closed_event.isSet():
+            item = source_queue.get_nowait()
+          else:
+            item = source_queue.get(True, self._buffer_timeout_seconds)
 
-      except Queue.Empty:
-        if self._closed_event.isSet():
-          break
+        except Queue.Empty:
+          if self._closed_event.isSet():
+            break
 
-        continue
+          continue
 
       try:
         # We need to receive a request before we can reply with the item.
@@ -686,6 +697,7 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
         continue
 
       sent_successfully = self._SendItem(self._zmq_socket, item)
+      item = None
       if not sent_successfully:
         logging.error(u'Queue {0:s} unable to send item.'.format(self.name))
         break
@@ -786,7 +798,7 @@ class ZeroMQBufferedPushQueue(ZeroMQBufferedQueue):
 
       sent_successfully = self._SendItem(self._zmq_socket, item)
       if not sent_successfully:
-        logging.error(u'Queue {0:s} error sending item.')
+        logging.error(u'Queue {0:s} error sending item.'.format(self.name))
         break
 
     logging.info(u'Queue {0:s} responder exiting.'.format(self.name))
