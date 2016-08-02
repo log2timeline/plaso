@@ -33,11 +33,11 @@ class FileEntryFilter(object):
     """Compares the file entry against the filter.
 
     Args:
-      file_entry: The file entry (instance of dfvfs.FileEntry).
+      file_entry (dfvfs.FileEntry): file entry to compare.
 
     Returns:
-      A boolean indicating if the file entry matches the filter or
-      None if the filter does not apply
+      bool: True if the file entry matches the filter, False if not or
+          None if the filter does not apply.
     """
 
   @abc.abstractmethod
@@ -45,7 +45,7 @@ class FileEntryFilter(object):
     """Prints a human readable version of the filter.
 
     Args:
-      output_writer: the output writer object (instance of CLIOutputWriter).
+      output_writer (CLIOutputWriter): output writer.
     """
 
 
@@ -65,7 +65,7 @@ class DateTimeFileEntryFilter(FileEntryFilter):
 
   def AddDateTimeRange(
       self, time_value, start_time_string=None, end_time_string=None):
-    """Add a date time filter range.
+    """Adds a date time filter range.
 
     The time strings are formatted as:
     YYYY-MM-DD hh:mm:ss.######[+-]##:##
@@ -74,10 +74,10 @@ class DateTimeFileEntryFilter(FileEntryFilter):
     and timezone offset are optional. The default timezone is UTC.
 
     Args:
-      time_value: the time value strting e.g. atime, ctime, crtime, dtime,
-                  bkup and mtime.
-      start_time_string: the start date and time value string.
-      end_time_string: the end date and time value string.
+      time_value (str): time value, such as, atime, ctime, crtime, dtime, bkup
+          and mtime.
+      start_time_string (str): start date and time value string.
+      end_time_string (str): end date and time value string.
 
     Raises:
       ValueError: If the filter is badly formed.
@@ -118,11 +118,11 @@ class DateTimeFileEntryFilter(FileEntryFilter):
     """Compares the file entry against the filter.
 
     Args:
-      file_entry: The file entry (instance of dfvfs.FileEntry).
+      file_entry (dfvfs.FileEntry): file entry to compare.
 
     Returns:
-      A boolean indicating if the file entry matches the filter or
-      None if the filter does not apply.
+      bool: True if the file entry matches the filter, False if not or
+          None if the filter does not apply.
     """
     if not self._date_time_ranges:
       return
@@ -157,7 +157,7 @@ class DateTimeFileEntryFilter(FileEntryFilter):
     """Prints a human readable version of the filter.
 
     Args:
-      output_writer: the output writer object (instance of CLIOutputWriter).
+      output_writer (CLIOutputWriter): output writer.
     """
     if self._date_time_ranges:
       for date_time_range in self._date_time_ranges:
@@ -192,7 +192,7 @@ class ExtensionsFileEntryFilter(FileEntryFilter):
     An extension is defined as "pdf" as in "document.pdf".
 
     Args:
-      extensions: a list of extension strings.
+      extensions (list[str]): a list of extension strings.
     """
     super(ExtensionsFileEntryFilter, self).__init__()
     self._extensions = extensions
@@ -201,11 +201,11 @@ class ExtensionsFileEntryFilter(FileEntryFilter):
     """Compares the file entry against the filter.
 
     Args:
-      file_entry: The file entry (instance of dfvfs.FileEntry).
+      file_entry (dfvfs.FileEntry): file entry to compare.
 
     Returns:
-      A boolean indicating if the file entry matches the filter or
-      None if the filter does not apply
+      bool: True if the file entry matches the filter, False if not or
+          None if the filter does not apply.
     """
     location = getattr(file_entry.path_spec, u'location', None)
     if not location:
@@ -221,7 +221,7 @@ class ExtensionsFileEntryFilter(FileEntryFilter):
     """Prints a human readable version of the filter.
 
     Args:
-      output_writer: the output writer object (instance of CLIOutputWriter).
+      output_writer (CLIOutputWriter): output writer.
     """
     if self._extensions:
       output_writer.Write(u'\textensions: {0:s}\n'.format(
@@ -235,7 +235,7 @@ class NamesFileEntryFilter(FileEntryFilter):
     """Initializes the names-based file entry filter.
 
     Args:
-      names: a list of name strings.
+      names (list[str]): names.
     """
     super(NamesFileEntryFilter, self).__init__()
     self._names = names
@@ -244,10 +244,10 @@ class NamesFileEntryFilter(FileEntryFilter):
     """Compares the file entry against the filter.
 
     Args:
-      file_entry: The file entry (instance of dfvfs.FileEntry).
+      file_entry (dfvfs.FileEntry): file entry to compare.
 
     Returns:
-      A boolean indicating if the file entry matches the filter.
+      bool: True if the file entry matches the filter.
     """
     if not self._names or not file_entry.IsFile():
       return
@@ -258,7 +258,7 @@ class NamesFileEntryFilter(FileEntryFilter):
     """Prints a human readable version of the filter.
 
     Args:
-      output_writer: the output writer object (instance of CLIOutputWriter).
+      output_writer (CLIOutputWriter): output writer.
     """
     if self._names:
       output_writer.Write(u'\tnames: {0:s}\n'.format(
@@ -272,9 +272,8 @@ class SignaturesFileEntryFilter(FileEntryFilter):
     """Initializes the signature-based file entry filter.
 
     Args:
-      specification_store: a specification store (instance of
-                           FormatSpecificationStore).
-      signature_identifiers: a list of signature identifiers.
+      specification_store (FormatSpecificationStore): a specification store.
+      signature_identifiers (list[str]): signature identifiers.
     """
     super(SignaturesFileEntryFilter, self).__init__()
     self._signature_identifiers = []
@@ -289,12 +288,11 @@ class SignaturesFileEntryFilter(FileEntryFilter):
     """Initializes the scanner object form the specification store.
 
     Args:
-      specification_store: a specification store (instance of
-                           FormatSpecificationStore).
-      signature_identifiers: a list of signature identifiers.
+      specification_store (FormatSpecificationStore): a specification store.
+      signature_identifiers (list[str]): signature identifiers.
 
     Returns:
-      A scanner object (instance of pysigscan.scanner).
+      pysigscan.scanner: signature scanner.
     """
     scanner_object = pysigscan.scanner()
 
@@ -324,11 +322,11 @@ class SignaturesFileEntryFilter(FileEntryFilter):
     """Compares the file entry against the filter.
 
     Args:
-      file_entry: The file entry (instance of dfvfs.FileEntry).
+      file_entry (dfvfs.FileEntry): file entry to compare.
 
     Returns:
-      A boolean indicating if the file entry matches the filter or
-      None if the filter does not apply
+      bool: True if the file entry matches the filter, False if not or
+          None if the filter does not apply.
     """
     if not self._file_scanner or not file_entry.IsFile():
       return
@@ -340,6 +338,15 @@ class SignaturesFileEntryFilter(FileEntryFilter):
     try:
       scan_state = pysigscan.scan_state()
       self._file_scanner.scan_file_object(scan_state, file_object)
+
+    except IOError as exception:
+      # TODO: replace location by display name.
+      location = getattr(file_entry.path_spec, u'location', u'')
+      logging.error((
+          u'[skipping] unable to scan file: {0:s} for signatures '
+          u'with error: {1:s}').format(location, exception))
+      return False
+
     finally:
       file_object.close()
 
@@ -349,7 +356,7 @@ class SignaturesFileEntryFilter(FileEntryFilter):
     """Prints a human readable version of the filter.
 
     Args:
-      output_writer: the output writer object (instance of CLIOutputWriter).
+      output_writer (CLIOutputWriter): output writer.
     """
     if self._file_scanner:
       output_writer.Write(u'\tsignature identifiers: {0:s}\n'.format(
@@ -368,7 +375,7 @@ class FileEntryFilterCollection(object):
     """Adds a file entry filter to the collection.
 
     Args:
-      file_entry_filter: a file entry filter (instance of FileEntryFilter).
+      file_entry_filter (FileEntryFilter): file entry filter.
     """
     self._filters.append(file_entry_filter)
 
@@ -376,7 +383,7 @@ class FileEntryFilterCollection(object):
     """Determines if filters are defined.
 
     Returns:
-      A boolean value indicating if filters are defined.
+      bool: True if filters are defined.
     """
     return bool(self._filters)
 
@@ -384,11 +391,11 @@ class FileEntryFilterCollection(object):
     """Compares the file entry against the filter collection.
 
     Args:
-      file_entry: The file entry (instance of dfvfs.FileEntry).
+      file_entry (dfvfs.FileEntry): file entry to compare.
 
     Returns:
-      A boolean indicating if the file entry matches one of the filters.
-      If no filters are provided or applicable the result will be True.
+      bool: True if the file entry matches one of the filters. If no filters
+          are provided or applicable the result will be True.
     """
     if not self._filters:
       return True
@@ -404,7 +411,7 @@ class FileEntryFilterCollection(object):
     """Prints a human readable version of the filter.
 
     Args:
-      output_writer: the output writer object (instance of CLIOutputWriter).
+      output_writer (CLIOutputWriter): output writer.
     """
     if self._filters:
       output_writer.Write(u'Filters:\n')
@@ -430,8 +437,7 @@ class FileSaver(object):
     """Initializes the file saver object.
 
     Args:
-      skip_duplicates: boolean value to indicate if duplicate file content
-                       should be skipped.
+      skip_duplicates (bool): True if duplicate file content should be skipped.
     """
     super(FileSaver, self).__init__()
     self._digest_hashes = {}
@@ -441,10 +447,10 @@ class FileSaver(object):
     """Calculates a MD5 hash of the contents of given file object.
 
     Args:
-      file_object: a file-like object.
+      file_object (file): file-like object.
 
     Returns:
-      A hexadecimal string of the MD5 hash.
+      str: hexadecimal representation of the MD5 hash.
     """
     hasher_object = hashers_manager.HashersManager.GetHasher(u'sha256')
     file_object.seek(0, os.SEEK_SET)
@@ -460,8 +466,8 @@ class FileSaver(object):
     """Copies the content of a file-like object to a file.
 
     Args:
-      input_file_object: the input file-like object.
-      output_path: the path of the output file.
+      input_file_object (file): input file-like object.
+      output_path (str): path of the output file.
     """
     with open(output_path, 'wb') as output_file_object:
       input_file_object.seek(0, os.SEEK_SET)
@@ -475,9 +481,9 @@ class FileSaver(object):
     """Writes the contents of the source to the destination file.
 
     Args:
-      source_path_spec: the path specification of the source file.
-      destination_path: the path of the destination file.
-      filename_prefix: optional filename prefix.
+      source_path_spec (dfvfs.PathSpec): path specification of the source file.
+      destination_path (str): path of the destination file.
+      filename_prefix (Optional[str]): filename prefix.
     """
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(source_path_spec)
     if not file_entry.IsFile():
@@ -563,12 +569,10 @@ class ImageExportFrontend(frontend.Frontend):
     """Extracts files.
 
     Args:
-      source_path_specs: list of path specifications (instances of
-                         dfvfs.PathSpec) to process.
-      destination_path: the path where the extracted files should be stored.
-      remove_duplicates: optional boolean value to indicate if files with
-                         duplicate content should be removed. The default
-                         is True.
+      source_path_specs (list[dfvfs.PathSpec]): path specifications to process.
+      destination_path (str): path where the extracted files should be stored.
+      remove_duplicates (Optional[bool]): True if files with duplicate content
+          should be removed.
     """
     if not os.path.isdir(destination_path):
       os.makedirs(destination_path)
@@ -583,9 +587,9 @@ class ImageExportFrontend(frontend.Frontend):
     """Extracts a file.
 
     Args:
-      file_saver: the file saver object (instance of FileSaver)
-      path_spec: a path specification (instance of dfvfs.PathSpec).
-      destination_path: the path where the extracted files should be stored.
+      file_saver (FileSaver): file saver.
+      path_spec (dfvfs.PathSpec): path specification.
+      destination_path (str): path where the extracted files should be stored.
     """
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     if not self._filter_collection.Matches(file_entry):
@@ -610,14 +614,12 @@ class ImageExportFrontend(frontend.Frontend):
     potentially on every VSS if that is wanted.
 
     Args:
-      source_path_specs: list of path specifications (instances of
-                         dfvfs.PathSpec) to process.
-      destination_path: The path where the extracted files should be stored.
-      filter_file_path: The path of the file that contains the filter
-                        expressions.
-      remove_duplicates: optional boolean value to indicate if files with
-                         duplicate content should be removed. The default
-                         is True.
+      source_path_specs (list[dfvfs.PathSpec]): path specifications to process.
+      destination_path (str): path where the extracted files should be stored.
+      filter_file_path (str): path of the file that contains the filter
+          expressions.
+      remove_duplicates (Optional[bool]): True if files with duplicate content
+          should be removed.
     """
     for source_path_spec in source_path_specs:
       file_system, mount_point = self._GetSourceFileSystem(
@@ -648,16 +650,16 @@ class ImageExportFrontend(frontend.Frontend):
     """Retrieves the file system of the source.
 
     Args:
-      source_path_spec: The source path specification (instance of
-                        dfvfs.PathSpec) of the file system.
-      resolver_context: Optional resolver context (instance of dfvfs.Context).
-                        The default is None which will use the built in context
-                        which is not multi process safe. Note that every thread
-                        or process must have its own resolver context.
+      source_path_spec (dfvfs.PathSpec): source path specification of the file
+          system.
+      resolver_context (dfvfs.Context): resolver context.
 
     Returns:
-      A tuple of the file system (instance of dfvfs.FileSystem) and
-      the mount point path specification (instance of path.PathSpec).
+      tuple: contains:
+
+        dfvfs.FileSystem: file system.
+        dfvfs.PathSpec: mount point path specification that refers
+            to the base location of the file system.
 
     Raises:
       RuntimeError: if source path specification is not set.
@@ -680,11 +682,9 @@ class ImageExportFrontend(frontend.Frontend):
     """Preprocesses the image.
 
     Args:
-      file_system: the file system object (instance of vfs.FileSystem)
-                   to be preprocessed.
-      mount_point: the mount point path specification (instance of
-                   path.PathSpec) that refers to the base location
-                   of the file system.
+      file_system (dfvfs.FileSystem): file system to be preprocessed.
+      mount_point (dfvfs.PathSpec): mount point path specification that refers
+          to the base location of the file system.
     """
     if self._knowledge_base is not None:
       return
@@ -708,10 +708,10 @@ class ImageExportFrontend(frontend.Frontend):
     """Reads the format specification file.
 
     Args:
-      path: the path of the format specification file.
+      path (str): path of the format specification file.
 
     Returns:
-      The format specification store (instance of FormatSpecificationStore).
+      FormatSpecificationStore: format specification store.
     """
     specification_store = specification.FormatSpecificationStore()
 
@@ -754,7 +754,7 @@ class ImageExportFrontend(frontend.Frontend):
     """Determines if filters are defined.
 
     Returns:
-      A boolean value indicating if filters are defined.
+      bool: True if filters are defined.
     """
     return self._filter_collection.HasFilters()
 
@@ -773,7 +773,7 @@ class ImageExportFrontend(frontend.Frontend):
     and timezone offset are optional. The default timezone is UTC.
 
     Args:
-      date_filters: a list of strings containing date filter definitions.
+      date_filters (list[str]): date filter definitions.
 
     Raises:
       ValueError: if the date filter definitions are invalid.
@@ -808,7 +808,7 @@ class ImageExportFrontend(frontend.Frontend):
     """Parses the extensions string.
 
     Args:
-      extensions_string: a string with comma separated extensions to filter.
+      extensions_string (str): comma separated extensions to filter.
     """
     if not extensions_string:
       return
@@ -823,7 +823,7 @@ class ImageExportFrontend(frontend.Frontend):
     """Parses the name string.
 
     Args:
-      names_string: a string with comma separated filenames to filter.
+      names_string (str): comma separated filenames to filter.
     """
     if not names_string:
       return
@@ -837,10 +837,9 @@ class ImageExportFrontend(frontend.Frontend):
     """Parses the signature identifiers.
 
     Args:
-      data_location: the location of the format specification file
-                     (signatures.conf).
-      signature_identifiers: a string with comma separated signature
-                             identifiers.
+      data_location (str): location of the format specification file, for
+          example, "signatures.conf".
+      signature_identifiers (str): comma separated signature identifiers.
 
     Raises:
       IOError: if the format specification file could not be read from
@@ -876,7 +875,7 @@ class ImageExportFrontend(frontend.Frontend):
     """Prints the filter collection.
 
     Args:
-      output_writer: the output writer (instance of OutputWriter).
+      output_writer (CLIOutputWriter): output writer.
     """
     self._filter_collection.Print(output_writer)
 
@@ -886,13 +885,11 @@ class ImageExportFrontend(frontend.Frontend):
     """Processes the sources.
 
     Args:
-      source_path_specs: list of path specifications (instances of
-                         dfvfs.PathSpec) to process.
-      destination_path: the path where the extracted files should be stored.
-      filter_file: optional name of of the filter file.
-      remove_duplicates: optional boolean value to indicate if files with
-                         duplicate content should be removed. The default
-                         is True.
+      source_path_specs (list[dfvfs.PathSpec]): path specifications to process.
+      destination_path (str): path where the extracted files should be stored.
+      filter_file (Optional[str]): name of of the filter file.
+      remove_duplicates (Optional[bool]): True if files with duplicate content
+          should be removed.
     """
     if filter_file:
       self._ExtractWithFilter(
