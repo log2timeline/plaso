@@ -78,10 +78,7 @@ class GIFTInstallScriptWriter(object):
       u'',
       u'# Additional dependencies for running Plaso tests, alphabetized,',
       u'# one per line.',
-      u'TEST_DEPENDENCIES="python-coverage',
-      u'                   python-coveralls',
-      u'                   python-docopt',
-      u'                   python-mock";',
+      u'TEST_DEPENDENCIES="python-mock";',
       u'',
       u'# Additional dependencies for doing Plaso debugging, alphabetized,',
       u'# one per line.',
@@ -208,6 +205,83 @@ class ToxIniWriter(object):
       file_object.write(file_content)
 
 
+class TravisBeforeInstallScript(object):
+  """Class to help write the Travis-CI before_install.sh file."""
+
+  _PATH = os.path.join(
+      u'config', u'travis', u'before_install.sh')
+
+  _FILE_HEADER = [
+      u'#!/bin/bash',
+      u'#',
+      u'# Script to set up Travis-CI test VM.',
+      u'',
+      (u'COVERALL_DEPENDENCIES="python-coverage python-coveralls '
+       u'python-docopt";'),
+      u'']
+
+  # TODO: add Python3 dependencies.
+  _FILE_FOOTER = [
+      u'',
+      u'# Exit on error.',
+      u'set -e;',
+      u'',
+      u'if test `uname -s` = "Darwin";',
+      u'then',
+      u'\tgit clone https://github.com/log2timeline/l2tdevtools.git;',
+      u'',
+      u'\tmv l2tdevtools ../;',
+      u'\tmkdir dependencies;',
+      u'',
+      (u'\tPYTHONPATH=../l2tdevtools ../l2tdevtools/tools/update.py '
+       u'--download-directory=dependencies --preset=plaso;'),
+      u'',
+      u'elif test `uname -s` = "Linux";',
+      u'then',
+      u'\tsudo rm -f /etc/apt/sources.list.d/travis_ci_zeromq3-source.list;',
+      u'',
+      u'\tsudo add-apt-repository ppa:gift/dev -y;',
+      u'\tsudo apt-get update -q;',
+      (u'\tsudo apt-get install -y ${COVERALL_DEPENDENCIES} '
+       u'${PYTHON2_DEPENDENCIES} ${PYTHON2_TEST_DEPENDENCIES};'),
+      u'fi',
+      u'']
+
+  def Write(self):
+    """Writes a setup.cfg file."""
+    file_content = []
+    file_content.extend(self._FILE_HEADER)
+
+    dependencies = plaso.dependencies.GetDPKGDepends(exclude_version=True)
+    dependencies = u' '.join(dependencies)
+    file_content.append(u'PYTHON2_DEPENDENCIES="{0:s}";'.format(dependencies))
+
+    file_content.append(u'')
+
+    # TODO: determine test dependencies from plaso.dependencies.
+    file_content.append(u'PYTHON2_TEST_DEPENDENCIES="python-mock";')
+
+    file_content.append(u'')
+
+    dependencies = plaso.dependencies.GetDPKGDepends(exclude_version=True)
+    dependencies = u' '.join(dependencies)
+    dependencies = dependencies.replace(u'python', u'python3')
+    file_content.append(u'PYTHON3_DEPENDENCIES="{0:s}";'.format(dependencies))
+
+    file_content.append(u'')
+
+    # TODO: determine test dependencies from plaso.dependencies.
+    file_content.append(u'PYTHON3_TEST_DEPENDENCIES="python3-mock";')
+
+    file_content.extend(self._FILE_FOOTER)
+
+    file_content = u'\n'.join(file_content)
+    file_content = file_content.encode(u'utf-8')
+
+    with open(self._PATH, 'wb') as file_object:
+      file_object.write(file_content)
+
+
 if __name__ == u'__main__':
   writer = DPKGControllWriter()
   writer.Write()
@@ -219,4 +293,7 @@ if __name__ == u'__main__':
   writer.Write()
 
   writer = ToxIniWriter()
+  writer.Write()
+
+  writer = TravisBeforeInstallScript()
   writer.Write()
