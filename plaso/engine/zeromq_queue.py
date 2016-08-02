@@ -170,6 +170,9 @@ class ZeroMQQueue(plaso_queue.Queue):
     if not self._zmq_context:
       self._zmq_context = zmq.Context()
 
+    # The these two events need to be created when the socket is opened, so that
+    # these unpickleable objects aren't passed through multiprocessing when the
+    # queue is created.
     if not self._terminate_event:
       self._terminate_event = threading.Event()
 
