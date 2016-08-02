@@ -650,7 +650,7 @@ class EventExtractionWorker(object):
     skip_content_extraction = self._CanSkipContentExtraction(file_entry)
     if skip_content_extraction:
       display_name = mediator.GetDisplayName()
-      logging.info(
+      logging.debug(
           u'Skipping content extraction of: {0:s}'.format(display_name))
       self.processing_status = definitions.PROCESSING_STATUS_IDLE
       return
