@@ -50,10 +50,7 @@ PLASO_DEPENDENCIES="ipython
 
 # Additional dependencies for running Plaso tests, alphabetized,
 # one per line.
-TEST_DEPENDENCIES="python-coverage
-                   python-coveralls
-                   python-docopt
-                   python-mock";
+TEST_DEPENDENCIES="python-mock";
 
 # Additional dependencies for doing Plaso debugging, alphabetized,
 # one per line.
