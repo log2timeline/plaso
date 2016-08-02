@@ -14,7 +14,13 @@ from plaso.lib import errors
 
 
 class ImageExportTool(storage_media_tool.StorageMediaTool):
-  """Class that implements the image export CLI tool."""
+  """Class that implements the image export CLI tool.
+
+  Attributes:
+    has_filters (bool): True if filters have been specified via the options.
+    list_signature_identifiers (bool): True if information about the signature
+        identifiers should be shown.
+  """
 
   NAME = u'image_export'
   DESCRIPTION = (
@@ -31,12 +37,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     """Initializes the CLI tool object.
 
     Args:
-      input_reader: the input reader (instance of InputReader).
-                    The default is None which indicates the use of the stdin
-                    input reader.
-      output_writer: the output writer (instance of OutputWriter).
-                     The default is None which indicates the use of the stdout
-                     output writer.
+      input_reader (Optional[InputReader]): input reader, where None indicates
+          that the stdin input reader should be used.
+      output_writer (Optional[OutputWriter]): output writer, where None
+          indicates that the stdout output writer should be used.
     """
     super(ImageExportTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
@@ -81,7 +85,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     """Parses the command line arguments.
 
     Returns:
-      A boolean value indicating the arguments were successfully parsed.
+      bool: True if the arguments were successfully parsed.
     """
     self._ConfigureLogging()
 
@@ -184,8 +188,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     """Parses the options and initializes the front-end.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
-      source_option: optional name of the source option.
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
