@@ -12,7 +12,6 @@ from plaso.engine import worker
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_processing import base_process
-from plaso.multi_processing import multi_process_queue
 from plaso.parsers import mediator as parsers_mediator
 
 
@@ -226,13 +225,10 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     logging.debug(u'Worker: {0!s} (PID: {1:d}) stopped'.format(
         self._name, self._pid))
 
-    if isinstance(self._task_queue, multi_process_queue.MultiProcessingQueue):
-      self._task_queue.Close(abort=True)
-    else:
-      try:
-        self._task_queue.Close()
-      except errors.QueueAlreadyClosed:
-        logging.error(u'Queue for {0:s} was already closed.'.format(self.name))
+    try:
+      self._task_queue.Close(abort=self._abort)
+    except errors.QueueAlreadyClosed:
+      logging.error(u'Queue for {0:s} was already closed.'.format(self.name))
 
   def _ProcessPathSpec(self, extraction_worker, parser_mediator, path_spec):
     """Processes a path specification.
