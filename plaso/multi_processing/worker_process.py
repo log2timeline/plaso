@@ -216,6 +216,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._StopProfiling()
     self._extraction_worker = None
     self._parser_mediator = None
+    self._storage_writer = None
 
     if self._abort:
       self._status = definitions.PROCESSING_STATUS_ABORTED
@@ -296,9 +297,6 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       self._parser_mediator.SetStorageWriter(None)
 
       storage_writer.Close()
-
-      if self._serializers_profiler:
-        storage_writer.SetSerializersProfiler(None)
 
     self._storage_writer.PrepareMergeTaskStorage(task.identifier)
 

@@ -969,7 +969,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
   _MAXIMUM_SERIALIZED_REPORT_SIZE = 32 * 1024 * 1024
 
   _MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES = 5
-  _LOCKED_FILE_SLEEP_TIME = 1.0
+  _LOCKED_FILE_SLEEP_TIME = 0.5
 
   def __init__(
       self, maximum_buffer_size=0,
@@ -1447,7 +1447,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       IOError: if the stream cannot be opened.
     """
     return self._GetSerializedDataStream(
-        self._event_streams, u'event_source_data', stream_number)
+        self._event_source_streams, u'event_source_data', stream_number)
 
   def _GetSerializedEventStream(self, stream_number):
     """Retrieves the serialized event stream.
@@ -2360,8 +2360,9 @@ class ZIPStorageFile(interface.BaseFileStorage):
     Buffered attribute containers are written to file.
 
     Raises:
-      IOError: if the storage file is already closed or
-               if the event source cannot be serialized.
+      IOError: if the storage file is already closed,
+               if the event source cannot be serialized or
+               if the storage file cannot be closed.
     """
     if not self._is_open:
       raise IOError(u'Storage file already closed.')
@@ -2372,9 +2373,17 @@ class ZIPStorageFile(interface.BaseFileStorage):
     if self._serializers_profiler:
       self._serializers_profiler.Write()
 
-    self._event_streams = {}
+    # Make sure to flush the caches so that zipfile can be closed and freed.
+    # Otherwise on Windows the ZIP file remains locked and cannot be renamed.
+
     self._event_offset_tables = {}
     self._event_offset_tables_lfu = []
+    self._event_streams = {}
+
+    self._event_source_offset_tables = []
+    self._event_source_offset_tables_lfu = []
+    self._event_source_streams = {}
+
     self._event_timestamp_tables = {}
     self._event_timestamp_tables_lfu = []
 
@@ -2382,25 +2391,27 @@ class ZIPStorageFile(interface.BaseFileStorage):
     self._zipfile = None
     self._is_open = False
 
+    attempts = 1
     if self._path != self._zipfile_path and os.path.exists(self._zipfile_path):
       # On Windows the file can sometimes be still in use and we have to wait.
-      attempts = 1
-      while True:
+      while attempts <= self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
         try:
           os.rename(self._zipfile_path, self._path)
           break
 
         except OSError:
-          if attempts > self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
-            raise
           time.sleep(self._LOCKED_FILE_SLEEP_TIME)
           attempts += 1
 
-      directory_name = os.path.dirname(self._zipfile_path)
-      os.rmdir(directory_name)
+      if attempts <= self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+        directory_name = os.path.dirname(self._zipfile_path)
+        os.rmdir(directory_name)
 
     self._path = None
     self._zipfile_path = None
+
+    if attempts > self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+      raise IOError(u'Unable to close storage file.')
 
   def Flush(self):
     """Forces the serialized attribute containers to be written to file.

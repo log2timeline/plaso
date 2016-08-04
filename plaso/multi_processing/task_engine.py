@@ -639,8 +639,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if self._serializers_profiler:
       storage_writer.SetSerializersProfiler(self._serializers_profiler)
 
-    storage_writer.Open()
-
     # Set up the storage writer before the worker processes.
     storage_writer.StartTaskStorage()
 
@@ -648,24 +646,28 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       extraction_process = self._StartExtractionWorkerProcess(storage_writer)
       self._StartMonitoringProcess(extraction_process.pid)
 
-    # Start the status update thread after open of the storage writer
-    # so we don't have to clean up the thread if the open fails.
     self._StartStatusUpdateThread()
 
-    storage_writer.WriteSessionStart()
-
     try:
-      storage_writer.WritePreprocessingInformation(self.knowledge_base)
+      # Open the storage file after creating the worker processes otherwise
+      # the ZIP storage file will remain locked as long as the worker processes
+      # are alive.
+      storage_writer.Open()
+      storage_writer.WriteSessionStart()
 
-      self._ProcessSources(
-          source_path_specs, storage_writer,
-          filter_find_specs=filter_find_specs)
+      try:
+        storage_writer.WritePreprocessingInformation(self.knowledge_base)
+
+        self._ProcessSources(
+            source_path_specs, storage_writer,
+            filter_find_specs=filter_find_specs)
+
+      finally:
+        storage_writer.WriteSessionCompletion(aborted=self._abort)
+
+        storage_writer.Close()
 
     finally:
-      storage_writer.WriteSessionCompletion(aborted=self._abort)
-
-      storage_writer.Close()
-
       # Stop the status update thread after close of the storage writer
       # so we include the storage sync to disk in the status updates.
       self._StopStatusUpdateThread()

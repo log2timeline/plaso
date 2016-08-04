@@ -151,13 +151,10 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
       storage_writer.Close()
 
-      if self._serializers_profiler:
-        storage_writer.SetSerializersProfiler(None)
-
-    self._analysis_mediator = None
-
     self._storage_writer.PrepareMergeTaskStorage(task.identifier)
 
+    self._analysis_mediator = None
+    self._storage_writer = None
     self._task_identifier = u''
 
     if self._abort:
