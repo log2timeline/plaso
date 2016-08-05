@@ -44,6 +44,13 @@ do
 	cp "../l2tdevtools/data/licenses/LICENSE.${DEPENDENCY}" config/licenses/
 done
 
+rm -f config/licenses/LICENSE.hachoir-*
+rm -f config/licenses/LICENSE.guppy
+rm -f config/licenses/LICENSE.libexe
+rm -f config/licenses/LICENSE.libwrc
+rm -f config/licenses/LICENSE.mock
+rm -f config/licenses/LICENSE.pbr
+
 python ./utils/update_dependencies.py
 
 exit ${EXIT_SUCCESS};
