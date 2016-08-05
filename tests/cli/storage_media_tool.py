@@ -547,7 +547,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     source_path = self._GetTestFilePath([u'text_parser'])
     self._TestScanSourceDirectory(source_path)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'image.vhd.raw'])
+  @shared_test_lib.skipUnlessHasTestFile([u'image.vhd'])
   def testScanSourceVHDI(self):
     """Tests the ScanSource function on a VHD image."""
     source_path = self._GetTestFilePath([u'image.vhd'])

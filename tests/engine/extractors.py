@@ -72,7 +72,7 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
 
   @shared_test_lib.skipUnlessHasTestFile([u'System.evtx'])
   @shared_test_lib.skipUnlessHasTestFile([u'testdir', u'filter_1.txt'])
-  @shared_test_lib.skipUnlessHasTestFile([u'testdir', u'filter_2.txt'])
+  @shared_test_lib.skipUnlessHasTestFile([u'testdir', u'filter_3.txt'])
   def testExtractPathSpecsFileSystemWithFilter(self):
     """Tests the ExtractPathSpecs function on the file system with a filter."""
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
