@@ -338,13 +338,14 @@ class ZeroMQPullQueue(ZeroMQQueue):
       RuntimeError: if closed or terminate event is missing.
       zmq.error.ZMQError: If a ZeroMQ error occurs.
     """
+    if not self._zmq_socket:
+      self._CreateZMQSocket()
+
     if not self._closed_event or not self._terminate_event:
       raise RuntimeError(u'Missing closed or terminate event.')
 
     logging.debug(
         u'Pop on {0:s} queue, port {1:d}'.format(self.name, self.port))
-    if not self._zmq_socket:
-      self._CreateZMQSocket()
 
     last_retry_timestamp = time.time() + self.timeout_seconds
     while not self._closed_event.is_set() or not self._terminate_event.is_set():
@@ -424,13 +425,14 @@ class ZeroMQPushQueue(ZeroMQQueue):
       RuntimeError: if terminate event is missing.
       zmq.error.ZMQError: if a ZeroMQ specific error occurs.
     """
+    if not self._zmq_socket:
+      self._CreateZMQSocket()
+
     if not self._terminate_event:
       raise RuntimeError(u'Missing terminate event.')
 
     logging.debug(
         u'Push on {0:s} queue, port {1:d}'.format(self.name, self.port))
-    if not self._zmq_socket:
-      self._CreateZMQSocket()
 
     last_retry_timestamp = time.time() + self.timeout_seconds
     while not self._terminate_event.is_set():
@@ -486,14 +488,14 @@ class ZeroMQRequestQueue(ZeroMQQueue):
       RuntimeError: if terminate event is missing.
       zmq.error.ZMQError: if an error occurs in ZeroMQ.
     """
+    if not self._zmq_socket:
+      self._CreateZMQSocket()
+
     if not self._terminate_event:
       raise RuntimeError(u'Missing terminate event.')
 
     logging.debug(u'Pop on {0:s} queue, port {1:d}'.format(
         self.name, self.port))
-
-    if not self._zmq_socket:
-      self._CreateZMQSocket()
 
     last_retry_time = time.time() + self.timeout_seconds
     while not self._terminate_event.is_set():
