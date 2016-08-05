@@ -87,22 +87,6 @@ class ZeroMQQueue(plaso_queue.Queue):
     if not delay_open:
       self._CreateZMQSocket()
 
-  def _IsClosed(self):
-    """Determines if the queue was closed.
-
-    Returns:
-      bool: True if the closed event is available and set.
-    """
-    return self._closed_event and self._closed_event.is_set()
-
-  def _IsTerminated(self):
-    """Determines if the queue was terminated.
-
-    Returns:
-      bool: True if the terminate event is available and set.
-    """
-    return self._terminate_event and self._terminate_event.is_set()
-
   def _SendItem(self, zmq_socket, item, block=True):
     """Attempts to send an item to a ZeroMQ socket.
 
@@ -171,11 +155,13 @@ class ZeroMQQueue(plaso_queue.Queue):
   def _SetSocketTimeouts(self):
     """Sets the timeouts for socket send and receive."""
     receive_timeout = min(
-        self._ZMQ_SOCKET_RECEIVE_TIMEOUT_MILLISECONDS, divmod(
-            self.timeout_seconds, 1000))
+        self._ZMQ_SOCKET_RECEIVE_TIMEOUT_MILLISECONDS,
+        self.timeout_seconds * 1000)
+
     send_timeout = min(
-        self._ZMQ_SOCKET_SEND_TIMEOUT_MILLISECONDS, divmod(
-            self.timeout_seconds, 1000))
+        self._ZMQ_SOCKET_SEND_TIMEOUT_MILLISECONDS,
+        self.timeout_seconds * 1000)
+
     self._zmq_socket.setsockopt(zmq.RCVTIMEO, receive_timeout)
     self._zmq_socket.setsockopt(zmq.SNDTIMEO, send_timeout)
 
@@ -249,14 +235,15 @@ class ZeroMQQueue(plaso_queue.Queue):
     Raises:
       QueueAlreadyClosed: If the queue is not started, or has already been
           closed.
+      RuntimeError: if closed or terminate event is missing.
     """
-    if self._IsClosed():
-      if abort:
-        return
+    if not self._closed_event or not self._terminate_event:
+      raise RuntimeError(u'Missing closed or terminate event.')
+
+    if not abort and self._closed_event.is_set():
       raise errors.QueueAlreadyClosed()
 
-    if self._closed_event:
-      self._closed_event.set()
+    self._closed_event.set()
 
     if abort:
       logging.warning(
@@ -266,8 +253,7 @@ class ZeroMQQueue(plaso_queue.Queue):
       # We can't determine whether a there might be an operation being performed
       # on the socket in a separate method or thread, so we'll signal that any
       # such operation should cease.
-      if self._terminate_event:
-        self._terminate_event.set()
+      self._terminate_event.set()
 
     else:
       logging.debug(
@@ -276,17 +262,13 @@ class ZeroMQQueue(plaso_queue.Queue):
 
   def IsBound(self):
     """Checks if the queue is bound to a port."""
-    if (self.SOCKET_CONNECTION_TYPE == self.SOCKET_CONNECTION_BIND and
-        self.port is not None):
-      return True
-    return False
+    return (self.SOCKET_CONNECTION_TYPE == self.SOCKET_CONNECTION_BIND and
+            self.port is not None)
 
   def IsConnected(self):
     """Checks if the queue is connected to a port."""
-    if (self.SOCKET_CONNECTION_TYPE == self.SOCKET_CONNECTION_CONNECT and
-        self.port is not None):
-      return True
-    return False
+    return (self.SOCKET_CONNECTION_TYPE == self.SOCKET_CONNECTION_CONNECT and
+            self.port is not None)
 
   def IsEmpty(self):
     """Checks if the queue is empty.
@@ -353,15 +335,19 @@ class ZeroMQPullQueue(ZeroMQQueue):
     Raises:
       QueueEmpty: If the queue is empty, and no item could be popped within the
           queue timeout.
+      RuntimeError: if closed or terminate event is missing.
       zmq.error.ZMQError: If a ZeroMQ error occurs.
     """
+    if not self._closed_event or not self._terminate_event:
+      raise RuntimeError(u'Missing closed or terminate event.')
+
     logging.debug(
         u'Pop on {0:s} queue, port {1:d}'.format(self.name, self.port))
     if not self._zmq_socket:
       self._CreateZMQSocket()
 
     last_retry_timestamp = time.time() + self.timeout_seconds
-    while not self._IsClosed() or not self._IsTerminated():
+    while not self._closed_event.is_set() or not self._terminate_event.is_set():
       try:
         return self._ReceiveItemOnActivity(self._zmq_socket)
 
@@ -431,19 +417,23 @@ class ZeroMQPushQueue(ZeroMQQueue):
           or non-block mode.
 
     Raises:
-      KeyboardInterrupt: If the process is sent a KeyboardInterrupt while
+      KeyboardInterrupt: if the process is sent a KeyboardInterrupt while
           pushing an item.
-      errors.QueueFull: If it was not possible to push the item to the queue
+      QueueFull: if it was not possible to push the item to the queue
           within the timeout.
-      zmq.error.ZMQError: If a ZeroMQ specific error occurs.
+      RuntimeError: if terminate event is missing.
+      zmq.error.ZMQError: if a ZeroMQ specific error occurs.
     """
+    if not self._terminate_event:
+      raise RuntimeError(u'Missing terminate event.')
+
     logging.debug(
         u'Push on {0:s} queue, port {1:d}'.format(self.name, self.port))
     if not self._zmq_socket:
       self._CreateZMQSocket()
 
     last_retry_timestamp = time.time() + self.timeout_seconds
-    while not self._IsTerminated():
+    while not self._terminate_event.is_set():
       try:
         send_successful = self._SendItem(self._zmq_socket, item, block)
         if send_successful:
@@ -453,7 +443,6 @@ class ZeroMQPushQueue(ZeroMQQueue):
           logging.error(u'{0:s} unable to push item, raising.'.format(
               self.name))
           raise errors.QueueFull
-
 
       except KeyboardInterrupt:
         self.Close(abort=True)
@@ -490,20 +479,24 @@ class ZeroMQRequestQueue(ZeroMQQueue):
       object: item from the queue.
 
     Raises:
-      KeyboardInterrupt: If the process is sent a KeyboardInterrupt while
+      KeyboardInterrupt: if the process is sent a KeyboardInterrupt while
           popping an item.
-      QueueEmpty: If the queue is empty, and no item could be popped within the
+      QueueEmpty: if the queue is empty, and no item could be popped within the
           queue timeout.
-      zmq.error.ZMQError: If an error occurs in ZeroMQ.
+      RuntimeError: if terminate event is missing.
+      zmq.error.ZMQError: if an error occurs in ZeroMQ.
     """
-    logging.debug(
-        u'Pop on {0:s} queue, port {1:d}'.format(self.name, self.port))
+    if not self._terminate_event:
+      raise RuntimeError(u'Missing terminate event.')
+
+    logging.debug(u'Pop on {0:s} queue, port {1:d}'.format(
+        self.name, self.port))
 
     if not self._zmq_socket:
       self._CreateZMQSocket()
 
     last_retry_time = time.time() + self.timeout_seconds
-    while not self._IsTerminated():
+    while not self._terminate_event.is_set():
       try:
         self._zmq_socket.send_pyobj(None)
         break
@@ -517,7 +510,7 @@ class ZeroMQRequestQueue(ZeroMQQueue):
 
         continue
 
-    while not self._IsTerminated():
+    while not self._terminate_event.is_set():
       try:
         return self._ReceiveItemOnActivity(self._zmq_socket)
       except errors.QueueEmpty:
@@ -627,14 +620,15 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
     Raises:
       QueueAlreadyClosed: If the queue is not started, or has already been
           closed.
+      RuntimeError: if closed or terminate event is missing.
     """
-    if self._IsClosed():
-      if abort:
-        return
+    if not self._closed_event or not self._terminate_event:
+      raise RuntimeError(u'Missing closed or terminate event.')
+
+    if not abort and self._closed_event.is_set():
       raise errors.QueueAlreadyClosed()
 
-    if self._closed_event:
-      self._closed_event.set()
+    self._closed_event.set()
 
     if abort:
       logging.warning(
@@ -643,8 +637,7 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
       # We can't determine whether a there might be an operation being performed
       # on the socket in a separate method or thread, so we'll signal that any
       # such operation should cease.
-      if self._terminate_event:
-        self._terminate_event.set()
+      self._terminate_event.set()
 
       self._linger_seconds = 0
 
@@ -681,20 +674,26 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
 
     Args:
       source_queue (Queue.queue): queue to use to pull items from.
+
+    Raises:
+      RuntimeError: if closed or terminate event is missing.
     """
+    if not self._closed_event or not self._terminate_event:
+      raise RuntimeError(u'Missing closed or terminate event.')
+
     logging.debug(u'{0:s} responder thread started'.format(self.name))
 
     item = None
-    while not self._IsTerminated():
+    while not self._terminate_event.is_set():
       if not item:
         try:
-          if self._IsClosed():
+          if self._closed_event.is_set():
             item = source_queue.get_nowait()
           else:
             item = source_queue.get(True, self._buffer_timeout_seconds)
 
         except Queue.Empty:
-          if self._IsClosed():
+          if self._closed_event.is_set():
             break
 
           continue
@@ -705,7 +704,7 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
 
       except errors.QueueEmpty:
         logging.warn(u'{0:s} timeout waiting for a request.'.format(self.name))
-        if self._IsClosed() and self._queue.empty():
+        if self._closed_event.is_set() and self._queue.empty():
           break
 
         continue
@@ -742,8 +741,12 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
 
     Raises:
       QueueAlreadyClosed: If the queue is closed.
+      RuntimeError: if closed event is missing.
     """
-    if self._IsClosed():
+    if not self._closed_event:
+      raise RuntimeError(u'Missing closed event.')
+
+    if self._closed_event.is_set():
       raise errors.QueueAlreadyClosed()
 
     if not self._zmq_socket:

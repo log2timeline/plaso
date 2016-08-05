@@ -129,5 +129,6 @@ class testZeroMQQueues(shared_test_lib.BaseTestCase):
       self.assertIsNotNone(test_queue._zmq_socket)
       test_queue.Close()
 
+
 if __name__ == '__main__':
   unittest.main()
