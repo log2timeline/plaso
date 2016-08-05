@@ -33,6 +33,8 @@ then
 	exit ${EXIT_FAILURE};
 fi
 
+rm -rf config/licenses
+
 mkdir config/licenses
 
 DEPENDENCIES=`cat ../l2tdevtools/data/presets.ini | grep -A1 '\[plaso\]' | tail -n1 | sed 's/projects: //' | tr ',' ' '`;
@@ -41,6 +43,8 @@ for DEPENDENCY in ${DEPENDENCIES};
 do
 	cp "../l2tdevtools/data/licenses/LICENSE.${DEPENDENCY}" config/licenses/
 done
+
+python ./utils/update_dependencies.py
 
 exit ${EXIT_SUCCESS};
 
