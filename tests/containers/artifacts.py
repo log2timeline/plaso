@@ -6,10 +6,10 @@ import unittest
 
 from plaso.containers import artifacts
 
-from tests.containers import test_lib
+from tests import test_lib as shared_test_lib
 
 
-class EnvironmentVariableArtifactTest(test_lib.AttributeContainerTestCase):
+class EnvironmentVariableArtifactTest(shared_test_lib.BaseTestCase):
   """Tests for the environment variable aritifact."""
 
   def testCopyToDict(self):
@@ -31,7 +31,7 @@ class EnvironmentVariableArtifactTest(test_lib.AttributeContainerTestCase):
   # TODO: add more tests.
 
 
-class HostnameArtifactTest(test_lib.AttributeContainerTestCase):
+class HostnameArtifactTest(shared_test_lib.BaseTestCase):
   """Tests for the hostname aritifact."""
 
   def testCopyToDict(self):
@@ -51,7 +51,7 @@ class HostnameArtifactTest(test_lib.AttributeContainerTestCase):
   # TODO: add more tests.
 
 
-class SystemConfigurationArtifactTest(test_lib.AttributeContainerTestCase):
+class SystemConfigurationArtifactTest(shared_test_lib.BaseTestCase):
   """Tests for the system configuration aritifact."""
 
   def testCopyToDict(self):
@@ -73,7 +73,7 @@ class SystemConfigurationArtifactTest(test_lib.AttributeContainerTestCase):
   # TODO: add more tests.
 
 
-class UserAccountArtifactTest(test_lib.AttributeContainerTestCase):
+class UserAccountArtifactTest(shared_test_lib.BaseTestCase):
   """Tests for the user account artifact."""
 
   def testCopyToDict(self):

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 """This file contains the tests for the event attribute containers."""
 
-import unittest
-
 from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
@@ -121,11 +119,3 @@ class TestEvent(events.EventObject):
     self.timestamp_desc = u'Some time in the future'
     for attribute, value in attributes.iteritems():
       setattr(self, attribute, value)
-
-
-class AttributeContainerTestCase(unittest.TestCase):
-  """The unit test case for an attribute container."""
-
-  # Show full diff results, part of TestCase so does not follow our naming
-  # conventions.
-  maxDiff = None

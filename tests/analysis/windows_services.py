@@ -11,6 +11,7 @@ from plaso.analysis import windows_services
 from plaso.containers import windows_events
 from plaso.parsers import winreg
 
+from tests import test_lib as shared_test_lib
 from tests.analysis import test_lib
 
 
@@ -87,6 +88,7 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     self.assertEqual(expected_text, analysis_report.text)
     self.assertEqual(analysis_report.plugin_name, 'windows_services')
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
   def testExamineEventAndCompileReportOnSystemFile(self):
     """Tests the ExamineEvent and CompileReport functions on a SYSTEM file."""
     # We could remove the non-Services plugins, but testing shows that the
@@ -116,6 +118,7 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     for string in test_strings:
       self.assertIn(string, analysis_report.text)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
   def testExamineEventAndCompileReportOnSystemFileWithYAML(self):
     """Tests the ExamineEvent and CompileReport with YAML."""
     # We could remove the non-Services plugins, but testing shows that the

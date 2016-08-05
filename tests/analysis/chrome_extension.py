@@ -15,8 +15,14 @@ class MockChromeExtensionPlugin(chrome_extension.ChromeExtensionPlugin):
 
   NAME = 'chrome_extension_test'
 
-  _TEST_DATA_PATH = os.path.join(
-      os.getcwd(), u'test_data', u'chrome_extensions')
+  def __init__(self, test_data_path):
+    """Initializes a mock Chrome extension analysis plugin.
+
+    Args:
+      test_data_path (str): path to the test data.
+    """
+    super(MockChromeExtensionPlugin, self).__init__()
+    self._test_data_path = test_data_path
 
   def _GetChromeWebStorePage(self, extension_identifier):
     """Retrieves the page for the extension from the Chrome store website.
@@ -28,7 +34,7 @@ class MockChromeExtensionPlugin(chrome_extension.ChromeExtensionPlugin):
       str: page content or None.
     """
     chrome_web_store_file = os.path.join(
-        self._TEST_DATA_PATH, extension_identifier)
+        self._test_data_path, u'chrome_extensions', extension_identifier)
     if not os.path.exists(chrome_web_store_file):
       return
 
@@ -78,7 +84,8 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
 
   def testGetPathSegmentSeparator(self):
     """Tests the _GetPathSegmentSeparator function."""
-    plugin = MockChromeExtensionPlugin()
+    test_file = self._GetTestFilePath([])
+    plugin = MockChromeExtensionPlugin(test_file)
 
     for path in self._MACOSX_PATHS:
       path_segment_separator = plugin._GetPathSegmentSeparator(path)
@@ -101,7 +108,8 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
       event = self._CreateTestEventObject(event_dictionary)
       events.append(event)
 
-    plugin = MockChromeExtensionPlugin()
+    test_file = self._GetTestFilePath([])
+    plugin = MockChromeExtensionPlugin(test_file)
     storage_writer = self._AnalyzeEvents(
         events, plugin, knowledge_base_values={u'users': self._MACOSX_USERS})
 
@@ -141,7 +149,8 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
       event = self._CreateTestEventObject(event_dictionary)
       events.append(event)
 
-    plugin = MockChromeExtensionPlugin()
+    test_file = self._GetTestFilePath([])
+    plugin = MockChromeExtensionPlugin(test_file)
     storage_writer = self._AnalyzeEvents(
         events, plugin, knowledge_base_values={u'users': self._WINDOWS_USERS})
 

@@ -14,6 +14,7 @@ from dfvfs.volume import vshadow_volume_system
 from plaso.cli import storage_media_tool
 from plaso.lib import errors
 
+from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
 
 
@@ -151,10 +152,10 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     than 1 sub node.
 
     Args:
-      scan_context: scan context (instance of dfvfs.ScanContext).
+      scan_context (dfvfs.ScanContext): scan context.
 
     Returns:
-      A scan node (instance of dfvfs.ScanNode).
+      dfvfs.ScanNode: scan node.
     """
     scan_node = scan_context.GetRootScanNode()
     while len(scan_node.sub_nodes) == 1:
@@ -166,7 +167,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     """Tests the ScanSource function on a directory.
 
     Args:
-      source_path: the path of the source device, directory or file.
+      source_path (str): path of the source device, directory or file.
     """
     test_tool = storage_media_tool.StorageMediaTool()
 
@@ -189,7 +190,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     """Tests the ScanSource function on an image containing a single partition.
 
     Args:
-      source_path: the path of the source device, directory or file.
+      source_path (str): path of the source device, directory or file.
     """
     test_tool = storage_media_tool.StorageMediaTool()
 
@@ -209,7 +210,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     """Tests the ScanSource function on an image containing multiple partitions.
 
     Args:
-      source_path: the path of the source device, directory or file.
+      source_path (str): path of the source device, directory or file.
     """
     test_tool = storage_media_tool.StorageMediaTool()
 
@@ -250,7 +251,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     """Tests the ScanSource function on a VSS storage media image.
 
     Args:
-      source_path: the path of the source device, directory or file.
+      source_path (str): path of the source device, directory or file.
     """
     test_tool = storage_media_tool.StorageMediaTool()
 
@@ -307,6 +308,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     size_string = test_tool._FormatHumanReadableSize(1048576)
     self.assertEqual(size_string, expected_size_string)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'tsk_volume_system.raw'])
   def testGetNormalizedTSKVolumeIdentifiers(self):
     """Tests the _GetNormalizedTSKVolumeIdentifiers function."""
     test_tool = storage_media_tool.StorageMediaTool()
@@ -332,6 +334,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
       test_tool._GetNormalizedTSKVolumeIdentifiers(
           volume_system, [u'p3'])
 
+  @shared_test_lib.skipUnlessHasTestFile([u'vsstest.qcow2'])
   def testGetNormalizedVShadowVolumeIdentifiers(self):
     """Tests the _GetNormalizedVShadowVolumeIdentifiers function."""
     test_tool = storage_media_tool.StorageMediaTool()
@@ -492,6 +495,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     test_tool = storage_media_tool.StorageMediaTool()
@@ -507,32 +511,56 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
 
     # TODO: improve test coverage.
 
-  def testScanSource(self):
-    """Tests the ScanSource function."""
+  @shared_test_lib.skipUnlessHasTestFile([u'tsk_volume_system.raw'])
+  def testScanSourcePartitionedImage(self):
+    """Tests the ScanSource function on a partitioned image."""
     source_path = self._GetTestFilePath([u'tsk_volume_system.raw'])
     self._TestScanSourcePartitionedImage(source_path)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'image-split.E01'])
+  def testScanSourceSplitEWF(self):
+    """Tests the ScanSource function on a split EWF image."""
     source_path = self._GetTestFilePath([u'image-split.E01'])
     self._TestScanSourcePartitionedImage(source_path)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'image.E01'])
+  def testScanSourceEWF(self):
+    """Tests the ScanSource function on an EWF image."""
     source_path = self._GetTestFilePath([u'image.E01'])
     self._TestScanSourceImage(source_path)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'image.qcow2'])
+  def testScanSourceQCOW(self):
+    """Tests the ScanSource function on a QCOW image."""
     source_path = self._GetTestFilePath([u'image.qcow2'])
     self._TestScanSourceImage(source_path)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'vsstest.qcow2'])
+  def testScanSourceVSS(self):
+    """Tests the ScanSource function on a VSS."""
     source_path = self._GetTestFilePath([u'vsstest.qcow2'])
     self._TestScanSourceVSSImage(source_path)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'text_parser'])
+  def testScanSourceTextDirectory(self):
+    """Tests the ScanSource function on a directory."""
     source_path = self._GetTestFilePath([u'text_parser'])
     self._TestScanSourceDirectory(source_path)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'image.vhd.raw'])
+  def testScanSourceVHDI(self):
+    """Tests the ScanSource function on a VHD image."""
     source_path = self._GetTestFilePath([u'image.vhd'])
     self._TestScanSourceImage(source_path)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'image.vmdk'])
+  def testScanSourceVMDK(self):
+    """Tests the ScanSource function on a VMDK image."""
     source_path = self._GetTestFilePath([u'image.vmdk'])
     self._TestScanSourceImage(source_path)
 
+  def testScanSourceNonExisitingFile(self):
+    """Tests the ScanSource function on a non existing file."""
     with self.assertRaises(errors.SourceScannerError):
       source_path = self._GetTestFilePath([u'nosuchfile.raw'])
       self._TestScanSourceImage(source_path)
