@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""This file contains the tests for the event attribute containers."""
+"""Containers related functions and classes for testing."""
 
 from dfdatetime import filetime as dfdatetime_filetime
 

@@ -25,26 +25,35 @@ from tests import test_lib as shared_test_lib
 class TestEngine(engine.BaseEngine):
   """Class that defines the processing engine for testing."""
 
-  def __init__(self, test_data_path):
-    """Initialize a test engine object.
+  _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
 
-    Args:
-      test_data_path (str): path to the test data.
-    """
-    super(TestEngine, self).__init__()
-    self._test_data_path = test_data_path
-
+  def __init__(self):
+    """Initialize a test engine object."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    test_file_path = os.path.join(self._test_data_path, u'SOFTWARE')
+    test_file_path = self._GetTestFilePath([u'SOFTWARE'])
     file_system_builder.AddFileReadData(
         u'/Windows/System32/config/SOFTWARE', test_file_path)
-    test_file_path = os.path.join(self._test_data_path, u'SYSTEM')
+    test_file_path = self._GetTestFilePath([u'SYSTEM'])
     file_system_builder.AddFileReadData(
         u'/Windows/System32/config/SYSTEM', test_file_path)
 
+    super(TestEngine, self).__init__()
     self._file_system = file_system_builder.file_system
     self._mount_point = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
+
+  def _GetTestFilePath(self, path_segments):
+    """Retrieves the path of a test file in the test data directory.
+
+    Args:
+    path_segments (list[str]): path segments inside the test data directory.
+
+    Returns:
+      str: path of the test file.
+    """
+    # Note that we need to pass the individual path segments to os.path.join
+    # and not a list.
+    return os.path.join(self._TEST_DATA_PATH, *path_segments)
 
   def GetSourceFileSystem(self, source_path_spec, resolver_context=None):
     """Retrieves the file system of the source.
@@ -102,8 +111,7 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
 
   def testPreprocessSources(self):
     """Tests the PreprocessSources function."""
-    test_file = self._GetTestFilePath([])
-    test_engine = TestEngine(test_file)
+    test_engine = TestEngine()
 
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
