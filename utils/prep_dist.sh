@@ -26,5 +26,21 @@ sed -i"~" -e "${SED_SCRIPT}" plaso/parsers/presets.py
 
 sed -i"~" '/hachoir_/d' plaso/dependencies.py
 
+if ! test -d ../l2tdevtools;
+then
+	echo "Unable to locate l2tdevtools.";
+
+	exit ${EXIT_FAILURE};
+fi
+
+mkdir config/licenses
+
+DEPENDENCIES=`cat ../l2tdevtools/data/presets.ini | grep -A1 '\[plaso\]' | tail -n1 | sed 's/projects: //' | tr ',' ' '`;
+
+for DEPENDENCY in ${DEPENDENCIES};
+do
+	cp "../l2tdevtools/data/licenses/LICENSE.${DEPENDENCY}" config/licenses/
+done
+
 exit ${EXIT_SUCCESS};
 
