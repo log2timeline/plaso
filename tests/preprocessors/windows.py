@@ -70,30 +70,6 @@ class WindowsProgramFilesX86EnvironmentVariableTest(
     self.assertIsNone(environment_variable)
 
 
-class WindowsSystemRegistryPathPreprocessPluginTest(
-    test_lib.PreprocessPluginTestCase):
-  """Tests for the Windows system Registry path preprocess plug-in object."""
-
-  _FILE_DATA = b'regf'
-
-  def testRun(self):
-    """Tests the Run function."""
-    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    file_system_builder.AddFile(
-        u'/Windows/System32/config/SYSTEM', self._FILE_DATA)
-
-    mount_point = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
-
-    plugin = windows.WindowsSystemRegistryPathPreprocessPlugin()
-    knowledge_base = self._RunFileSystemPlugin(
-        file_system_builder.file_system, mount_point, plugin)
-
-    environment_variable = knowledge_base.GetEnvironmentVariable(u'sysregistry')
-    self.assertIsNotNone(environment_variable)
-    self.assertEqual(environment_variable.value, u'\\Windows\\System32\\config')
-
-
 class WindowsSystemRootEnvironmentVariableTest(
     test_lib.PreprocessPluginTestCase):
   """Tests for the %SystemRoot% environment variable plug-in."""

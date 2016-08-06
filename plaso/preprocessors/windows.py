@@ -115,22 +115,11 @@ class WindowsSystemProductPlugin(
     knowledge_base.SetValue(u'operating_system_product', value_data)
 
 
-class WindowsSystemRegistryPathPreprocessPlugin(
-    interface.WindowsPathEnvironmentVariablePlugin):
-  """The Windows system Registry path environment variable preprocess plugin.
-
-  Note that this is a plaso specific environment variable.
-  """
-
-  _NAME = u'sysregistry'
-  _PATH_REGEX = u'/(Windows|WinNT|WINNT35|WTSRV)/System32/config'
-
-
 class WindowsSystemRootEnvironmentVariable(
     interface.WindowsPathEnvironmentVariablePlugin):
   """The Windows %SystemRoot% environment variable preprocess plugin."""
 
-  _NAME = u'SystemRoot'
+  _NAME = u'systemroot'
   _PATH_REGEX = u'/(Windows|WinNT|WINNT35|WTSRV)'
 
 
@@ -261,7 +250,6 @@ manager.PreprocessPluginsManager.RegisterPlugins([
     WindowsCodepagePreprocessPlugin, WindowsHostnamePreprocessPlugin,
     WindowsProgramFilesEnvironmentVariable,
     WindowsProgramFilesX86EnvironmentVariable, WindowsSystemProductPlugin,
-    WindowsSystemRegistryPathPreprocessPlugin,
     WindowsSystemRootEnvironmentVariable, WindowsSystemVersionPlugin,
     WindowsTimeZonePreprocessPlugin, WindowsUserAccountsPreprocessPlugin,
     WindowsWinDirEnvironmentVariable])
