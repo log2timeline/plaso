@@ -181,6 +181,7 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
   For example:
   137167072.1.10.1383170166
   173272373.6.8.1440489514899
+  173272373.4.9.1373300660574
 
   Or:
   <last time>
@@ -236,10 +237,10 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
         number_of_pages_viewed = None
 
       try:
-        if fields[2] == u'8':
+        if fields[2] in (u'8', u'9'):
           # TODO: fix that we're losing precision here use dfdatetime.
           last_visit_posix_time = int(fields[3], 10) / 1000
-        elif fields[2] == u'10':
+        else:
           last_visit_posix_time = int(fields[3], 10)
       except ValueError:
         last_visit_posix_time = None
