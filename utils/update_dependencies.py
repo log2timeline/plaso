@@ -11,7 +11,7 @@ sys.path.insert(0, u'.')
 import plaso.dependencies
 
 
-class DPKGControllWriter(object):
+class DPKGControlWriter(object):
   """Class to help write a dpkg control file."""
 
   _PATH = os.path.join(u'config', u'dpkg', u'control')
@@ -283,7 +283,7 @@ class TravisBeforeInstallScript(object):
 
 
 if __name__ == u'__main__':
-  writer = DPKGControllWriter()
+  writer = DPKGControlWriter()
   writer.Write()
 
   writer = GIFTInstallScriptWriter()
