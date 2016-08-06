@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests the engine."""
 
-import os
 import unittest
 
 try:
