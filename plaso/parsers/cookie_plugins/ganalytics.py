@@ -244,8 +244,6 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
       except ValueError:
         last_visit_posix_time = None
 
-      number_of_sessions = None
-
     if last_visit_posix_time is not None:
       timestamp_description = eventdata.EventTimestamp.LAST_VISITED_TIME
     else:
