@@ -151,6 +151,7 @@ class BaseEngine(object):
           the sources to process.
       resolver_context (dfvfs.Context): resolver context.
     """
+    platform = None
     for source_path_spec in source_path_specs:
       try:
         file_system, mount_point = self.GetSourceFileSystem(
@@ -168,13 +169,14 @@ class BaseEngine(object):
         if platform:
           self.knowledge_base.platform = platform
 
+        platform = self._GuessOS(searcher)
+
         preprocess_manager.PreprocessPluginsManager.RunPlugins(
             file_system, mount_point, self.knowledge_base)
 
       finally:
         file_system.Close()
 
-      platform = self._GuessOS(searcher)
       if platform:
         self.knowledge_base.platform = platform
         break

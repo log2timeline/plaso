@@ -25,12 +25,12 @@ class TestWindowsRegistryKeyPreprocessPlugin(
     interface.WindowsRegistryKeyPreprocessPlugin):
   """Test Windows Registry key preprocess plugin."""
 
-  def Run(self, unused_searcher, unused_knowledge_base):
-    """Runs the plugin to determine the value of the preprocessing attribute.
+  def _ParseKey(self, unused_knowledge_base, unused_registry_key):
+    """Parses a Windows Registry key for a preprocessing attribute.
 
     Args:
-      searcher (dfvfs.FileSystemSearcher): file system searcher.
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      registry_key (WinRegistryKey): Windows Registry key.
     """
     return
 
