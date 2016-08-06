@@ -7,6 +7,7 @@ import unittest
 
 from plaso.analysis import chrome_extension
 
+from tests import test_lib as shared_test_lib
 from tests.analysis import test_lib
 
 
@@ -14,8 +15,6 @@ class MockChromeExtensionPlugin(chrome_extension.ChromeExtensionPlugin):
   """Chrome extension analysis plugin used for testing."""
 
   NAME = 'chrome_extension_test'
-
-  _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
 
   def _GetChromeWebStorePage(self, extension_identifier):
     """Retrieves the page for the extension from the Chrome store website.
@@ -26,7 +25,7 @@ class MockChromeExtensionPlugin(chrome_extension.ChromeExtensionPlugin):
     Returns:
       str: page content or None.
     """
-    chrome_web_store_file = self._GetTestFilePath([
+    chrome_web_store_file = shared_test_lib.GetTestFilePath([
         u'chrome_extensions', extension_identifier])
     if not os.path.exists(chrome_web_store_file):
       return

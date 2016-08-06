@@ -33,6 +33,20 @@ def skipUnlessHasTestFile(path_segments):
   return unittest.skip('missing test file: {0:s}'.format(path))
 
 
+def GetTestFilePath(self, path_segments):
+  """Retrieves the path of a test file in the test data directory.
+
+  Args:
+    path_segments (list[str]): path segments inside the test data directory.
+
+  Returns:
+    str: path of the test file.
+  """
+  # Note that we need to pass the individual path segments to os.path.join
+  # and not a list.
+  return os.path.join(os.getcwd(), u'test_data', *path_segments)
+
+
 class BaseTestCase(unittest.TestCase):
   """The base test case."""
 
