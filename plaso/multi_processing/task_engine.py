@@ -587,13 +587,20 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       # If we want to utilize all CPUs on the system we therefore need to start
       # up workers that amounts to the total number of CPUs - the other
       # processes.
-      cpu_count = multiprocessing.cpu_count() - 1
+      try:
+        cpu_count = multiprocessing.cpu_count() - 1
 
-      if cpu_count <= self._WORKER_PROCESSES_MINIMUM:
+        if cpu_count <= self._WORKER_PROCESSES_MINIMUM:
+          cpu_count = self._WORKER_PROCESSES_MINIMUM
+
+        elif cpu_count >= self._WORKER_PROCESSES_MAXIMUM:
+          cpu_count = self._WORKER_PROCESSES_MAXIMUM
+
+      except NotImplementedError:
+        logging.error((
+            u'Unable to determine number of CPUs defaulting to {0:d} worker '
+            u'processes.').format(self._WORKER_PROCESSES_MINIMUM))
         cpu_count = self._WORKER_PROCESSES_MINIMUM
-
-      elif cpu_count >= self._WORKER_PROCESSES_MAXIMUM:
-        cpu_count = self._WORKER_PROCESSES_MAXIMUM
 
       number_of_worker_processes = cpu_count
 
