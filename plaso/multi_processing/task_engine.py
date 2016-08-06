@@ -589,14 +589,18 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       # processes.
       try:
         cpu_count = multiprocessing.cpu_count() - 1
+
+        if cpu_count <= self._WORKER_PROCESSES_MINIMUM:
+          cpu_count = self._WORKER_PROCESSES_MINIMUM
+
+        elif cpu_count >= self._WORKER_PROCESSES_MAXIMUM:
+          cpu_count = self._WORKER_PROCESSES_MAXIMUM
+
       except NotImplementedError:
-        cpu_count = 0
-
-      if cpu_count <= self._WORKER_PROCESSES_MINIMUM:
+        logging.error((
+            u'Unable to determine number of CPUs defaulting to {0:d} worker '
+            u'processes.').format(self._WORKER_PROCESSES_MINIMUM))
         cpu_count = self._WORKER_PROCESSES_MINIMUM
-
-      elif cpu_count >= self._WORKER_PROCESSES_MAXIMUM:
-        cpu_count = self._WORKER_PROCESSES_MAXIMUM
 
       number_of_worker_processes = cpu_count
 
