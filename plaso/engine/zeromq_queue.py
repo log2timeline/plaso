@@ -4,14 +4,14 @@
 import abc
 import errno
 import logging
+import threading
+import time
+
 # The 'Queue' module was renamed to 'queue' in Python 3
 try:
   import Queue
 except ImportError:
   import queue as Queue  # pylint: disable=import-error
-# pylint: disable=wrong-import-order
-import threading
-import time
 
 import zmq
 
@@ -26,15 +26,19 @@ class ZeroMQQueue(plaso_queue.Queue):
     name (str): name to identify the queue.
     port (int): TCP port that the queue is connected or bound to. If the queue
         is not yet bound or connected to a port, this value will be None.
+    timeout_seconds (int): number of seconds that calls to PopItem and PushItem
+        may block for, before returning queue.QueueEmpty.
   """
 
   _SOCKET_ADDRESS = u'tcp://127.0.0.1'
   _SOCKET_TYPE = None
+
+  _ZMQ_SOCKET_SEND_TIMEOUT_MILLISECONDS = 1500
+  _ZMQ_SOCKET_RECEIVE_TIMEOUT_MILLISECONDS = 1500
+
   SOCKET_CONNECTION_BIND = 1
   SOCKET_CONNECTION_CONNECT = 2
   SOCKET_CONNECTION_TYPE = None
-  _ZMQ_SOCKET_SEND_TIMEOUT_MILLISECONDS = 1500
-  _ZMQ_SOCKET_RECEIVE_TIMEOUT_MILLISECONDS = 1500
 
   def __init__(
       self, delay_open=True, linger_seconds=10, maximum_items=1000,
@@ -67,15 +71,19 @@ class ZeroMQQueue(plaso_queue.Queue):
     if (self.SOCKET_CONNECTION_TYPE == self.SOCKET_CONNECTION_CONNECT
         and not port):
       raise ValueError(u'No port specified to connect to.')
+
+    super(ZeroMQQueue, self).__init__()
     self._closed_event = None
     self._high_water_mark = maximum_items
     self._linger_seconds = linger_seconds
     self._terminate_event = None
     self._zmq_context = None
     self._zmq_socket = None
+
     self.name = name
     self.port = port
     self.timeout_seconds = timeout_seconds
+
     if not delay_open:
       self._CreateZMQSocket()
 
@@ -147,11 +155,13 @@ class ZeroMQQueue(plaso_queue.Queue):
   def _SetSocketTimeouts(self):
     """Sets the timeouts for socket send and receive."""
     receive_timeout = min(
-        self._ZMQ_SOCKET_RECEIVE_TIMEOUT_MILLISECONDS, divmod(
-            self.timeout_seconds, 1000))
+        self._ZMQ_SOCKET_RECEIVE_TIMEOUT_MILLISECONDS,
+        self.timeout_seconds * 1000)
+
     send_timeout = min(
-        self._ZMQ_SOCKET_SEND_TIMEOUT_MILLISECONDS, divmod(
-            self.timeout_seconds, 1000))
+        self._ZMQ_SOCKET_SEND_TIMEOUT_MILLISECONDS,
+        self.timeout_seconds * 1000)
+
     self._zmq_socket.setsockopt(zmq.RCVTIMEO, receive_timeout)
     self._zmq_socket.setsockopt(zmq.SNDTIMEO, send_timeout)
 
@@ -170,9 +180,10 @@ class ZeroMQQueue(plaso_queue.Queue):
     if not self._zmq_context:
       self._zmq_context = zmq.Context()
 
-    # The these two events need to be created when the socket is opened, so that
-    # these unpickleable objects aren't passed through multiprocessing when the
-    # queue is created.
+    # The terminate and close threading events need to be created when the
+    # socket is opened. Threading events are unpickleable objects and cannot
+    # passed in multiprocessing on Windows.
+
     if not self._terminate_event:
       self._terminate_event = threading.Event()
 
@@ -183,6 +194,7 @@ class ZeroMQQueue(plaso_queue.Queue):
       logging.debug(u'Closing old socket for {0:s}'.format(self.name))
       self._zmq_socket.close()
       self._zmq_socket = None
+
     self._zmq_socket = self._zmq_context.socket(self._SOCKET_TYPE)
     self._SetSocketTimeouts()
     self._SetSocketHighWaterMark()
@@ -223,8 +235,12 @@ class ZeroMQQueue(plaso_queue.Queue):
     Raises:
       QueueAlreadyClosed: If the queue is not started, or has already been
           closed.
+      RuntimeError: if closed or terminate event is missing.
     """
-    if self._closed_event.isSet() and not abort:
+    if not self._closed_event or not self._terminate_event:
+      raise RuntimeError(u'Missing closed or terminate event.')
+
+    if not abort and self._closed_event.is_set():
       raise errors.QueueAlreadyClosed()
 
     self._closed_event.set()
@@ -233,6 +249,7 @@ class ZeroMQQueue(plaso_queue.Queue):
       logging.warning(
           u'{0:s} queue aborting. Contents may be lost.'.format(self.name))
       self._linger_seconds = 0
+
       # We can't determine whether a there might be an operation being performed
       # on the socket in a separate method or thread, so we'll signal that any
       # such operation should cease.
@@ -245,17 +262,13 @@ class ZeroMQQueue(plaso_queue.Queue):
 
   def IsBound(self):
     """Checks if the queue is bound to a port."""
-    if (self.SOCKET_CONNECTION_TYPE == self.SOCKET_CONNECTION_BIND and
-        self.port is not None):
-      return True
-    return False
+    return (self.SOCKET_CONNECTION_TYPE == self.SOCKET_CONNECTION_BIND and
+            self.port is not None)
 
   def IsConnected(self):
     """Checks if the queue is connected to a port."""
-    if (self.SOCKET_CONNECTION_TYPE == self.SOCKET_CONNECTION_CONNECT and
-        self.port is not None):
-      return True
-    return False
+    return (self.SOCKET_CONNECTION_TYPE == self.SOCKET_CONNECTION_CONNECT and
+            self.port is not None)
 
   def IsEmpty(self):
     """Checks if the queue is empty.
@@ -322,15 +335,20 @@ class ZeroMQPullQueue(ZeroMQQueue):
     Raises:
       QueueEmpty: If the queue is empty, and no item could be popped within the
           queue timeout.
+      RuntimeError: if closed or terminate event is missing.
       zmq.error.ZMQError: If a ZeroMQ error occurs.
     """
-    logging.debug(
-        u'Pop on {0:s} queue, port {1:d}'.format(self.name, self.port))
     if not self._zmq_socket:
       self._CreateZMQSocket()
 
+    if not self._closed_event or not self._terminate_event:
+      raise RuntimeError(u'Missing closed or terminate event.')
+
+    logging.debug(
+        u'Pop on {0:s} queue, port {1:d}'.format(self.name, self.port))
+
     last_retry_timestamp = time.time() + self.timeout_seconds
-    while not self._terminate_event.isSet() and not self._closed_event.isSet():
+    while not self._closed_event.is_set() or not self._terminate_event.is_set():
       try:
         return self._ReceiveItemOnActivity(self._zmq_socket)
 
@@ -356,14 +374,6 @@ class ZeroMQPullQueue(ZeroMQQueue):
       WrongQueueType: As Push is not supported this queue.
     """
     raise errors.WrongQueueType()
-
-
-class ZeroMQPullBindQueue(ZeroMQPullQueue):
-  """A Plaso queue backed by a ZeroMQ PULL socket that binds to a port.
-
-  This queue may only be used to pop items, not to push.
-  """
-  SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_BIND
 
 
 class ZeroMQPullConnectQueue(ZeroMQPullQueue):
@@ -408,19 +418,24 @@ class ZeroMQPushQueue(ZeroMQQueue):
           or non-block mode.
 
     Raises:
-      KeyboardInterrupt: If the process is sent a KeyboardInterrupt while
+      KeyboardInterrupt: if the process is sent a KeyboardInterrupt while
           pushing an item.
-      errors.QueueFull: If it was not possible to push the item to the queue
+      QueueFull: if it was not possible to push the item to the queue
           within the timeout.
-      zmq.error.ZMQError: If a ZeroMQ specific error occurs.
+      RuntimeError: if terminate event is missing.
+      zmq.error.ZMQError: if a ZeroMQ specific error occurs.
     """
-    logging.debug(
-        u'Push on {0:s} queue, port {1:d}'.format(self.name, self.port))
     if not self._zmq_socket:
       self._CreateZMQSocket()
 
+    if not self._terminate_event:
+      raise RuntimeError(u'Missing terminate event.')
+
+    logging.debug(
+        u'Push on {0:s} queue, port {1:d}'.format(self.name, self.port))
+
     last_retry_timestamp = time.time() + self.timeout_seconds
-    while not self._terminate_event.isSet():
+    while not self._terminate_event.is_set():
       try:
         send_successful = self._SendItem(self._zmq_socket, item, block)
         if send_successful:
@@ -430,7 +445,6 @@ class ZeroMQPushQueue(ZeroMQQueue):
           logging.error(u'{0:s} unable to push item, raising.'.format(
               self.name))
           raise errors.QueueFull
-
 
       except KeyboardInterrupt:
         self.Close(abort=True)
@@ -443,14 +457,6 @@ class ZeroMQPushBindQueue(ZeroMQPushQueue):
   This queue may only be used to push items, not to pop.
   """
   SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_BIND
-
-
-class ZeroMQPushConnectQueue(ZeroMQPushQueue):
-  """A Plaso queue backed by a ZeroMQ PUSH socket that connects to a port.
-
-  This queue may only be used to push items, not to pop.
-  """
-  SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_CONNECT
 
 
 class ZeroMQRequestQueue(ZeroMQQueue):
@@ -475,20 +481,24 @@ class ZeroMQRequestQueue(ZeroMQQueue):
       object: item from the queue.
 
     Raises:
-      KeyboardInterrupt: If the process is sent a KeyboardInterrupt while
+      KeyboardInterrupt: if the process is sent a KeyboardInterrupt while
           popping an item.
-      QueueEmpty: If the queue is empty, and no item could be popped within the
+      QueueEmpty: if the queue is empty, and no item could be popped within the
           queue timeout.
-      zmq.error.ZMQError: If an error occurs in ZeroMQ.
+      RuntimeError: if terminate event is missing.
+      zmq.error.ZMQError: if an error occurs in ZeroMQ.
     """
-    logging.debug(
-        u'Pop on {0:s} queue, port {1:d}'.format(self.name, self.port))
-
     if not self._zmq_socket:
       self._CreateZMQSocket()
 
+    if not self._terminate_event:
+      raise RuntimeError(u'Missing terminate event.')
+
+    logging.debug(u'Pop on {0:s} queue, port {1:d}'.format(
+        self.name, self.port))
+
     last_retry_time = time.time() + self.timeout_seconds
-    while not self._terminate_event.isSet():
+    while not self._terminate_event.is_set():
       try:
         self._zmq_socket.send_pyobj(None)
         break
@@ -502,7 +512,7 @@ class ZeroMQRequestQueue(ZeroMQQueue):
 
         continue
 
-    while not self._terminate_event.isSet():
+    while not self._terminate_event.is_set():
       try:
         return self._ReceiveItemOnActivity(self._zmq_socket)
       except errors.QueueEmpty:
@@ -526,14 +536,6 @@ class ZeroMQRequestQueue(ZeroMQQueue):
       WrongQueueType: As Push is not supported this queue.
     """
     raise errors.WrongQueueType
-
-
-class ZeroMQRequestBindQueue(ZeroMQRequestQueue):
-  """A Plaso queue backed by a ZeroMQ REQ socket that binds to a port.
-
-  This queue may only be used to pop items, not to push.
-  """
-  SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_BIND
 
 
 class ZeroMQRequestConnectQueue(ZeroMQRequestQueue):
@@ -585,6 +587,7 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
     self._buffer_timeout_seconds = buffer_timeout_seconds
     self._queue = Queue.Queue(maxsize=buffer_max_size)
     self._zmq_thread = None
+
     # We need to set up the internal buffer queue before we call super, so that
     # if the call to super opens the ZMQSocket, the backing thread will work.
     super(ZeroMQBufferedQueue, self).__init__(
@@ -619,8 +622,12 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
     Raises:
       QueueAlreadyClosed: If the queue is not started, or has already been
           closed.
+      RuntimeError: if closed or terminate event is missing.
     """
-    if self._closed_event.isSet() and not abort:
+    if not self._closed_event or not self._terminate_event:
+      raise RuntimeError(u'Missing closed or terminate event.')
+
+    if not abort and self._closed_event.is_set():
       raise errors.QueueAlreadyClosed()
 
     self._closed_event.set()
@@ -628,10 +635,12 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
     if abort:
       logging.warning(
           u'{0:s} queue aborting. Contents may be lost.'.format(self.name))
+
       # We can't determine whether a there might be an operation being performed
       # on the socket in a separate method or thread, so we'll signal that any
       # such operation should cease.
       self._terminate_event.set()
+
       self._linger_seconds = 0
 
       if self._zmq_thread:
@@ -667,20 +676,26 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
 
     Args:
       source_queue (Queue.queue): queue to use to pull items from.
+
+    Raises:
+      RuntimeError: if closed or terminate event is missing.
     """
+    if not self._closed_event or not self._terminate_event:
+      raise RuntimeError(u'Missing closed or terminate event.')
+
     logging.debug(u'{0:s} responder thread started'.format(self.name))
 
     item = None
-    while not self._terminate_event.isSet():
+    while not self._terminate_event.is_set():
       if not item:
         try:
-          if self ._closed_event.isSet():
+          if self._closed_event.is_set():
             item = source_queue.get_nowait()
           else:
             item = source_queue.get(True, self._buffer_timeout_seconds)
 
         except Queue.Empty:
-          if self._closed_event.isSet():
+          if self._closed_event.is_set():
             break
 
           continue
@@ -691,7 +706,7 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
 
       except errors.QueueEmpty:
         logging.warn(u'{0:s} timeout waiting for a request.'.format(self.name))
-        if self._closed_event.isSet() and self._queue.empty():
+        if self._closed_event.is_set() and self._queue.empty():
           break
 
         continue
@@ -728,8 +743,12 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
 
     Raises:
       QueueAlreadyClosed: If the queue is closed.
+      RuntimeError: if closed event is missing.
     """
-    if self._closed_event.isSet():
+    if not self._closed_event:
+      raise RuntimeError(u'Missing closed event.')
+
+    if self._closed_event.is_set():
       raise errors.QueueAlreadyClosed()
 
     if not self._zmq_socket:
@@ -747,224 +766,3 @@ class ZeroMQBufferedReplyBindQueue(ZeroMQBufferedReplyQueue):
   This queue may only be used to pop items, not to push.
   """
   SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_BIND
-
-
-class ZeroMQBufferedReplyConnectQueue(ZeroMQBufferedReplyQueue):
-  """A Plaso queue backed by a ZeroMQ REP socket that connects to a port.
-
-  This queue may only be used to pop items, not to push.
-  """
-  SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_CONNECT
-
-
-class ZeroMQBufferedPushQueue(ZeroMQBufferedQueue):
-  """Parent class for buffered Plaso queues backed by ZeroMQ PUSH sockets.
-
-  This class should not be instantiated directly, a subclass should be
-  instantiated instead.
-
-  Instances of this class or subclasses may only be used to push items, not to
-  pop.
-  """
-
-  _SOCKET_TYPE = zmq.PUSH
-
-  def _ZeroMQResponder(self, source_queue):
-    """Listens for requests and replies to clients.
-
-    Args:
-      source_queue (Queue.queue):  queue to use to pull items from.
-
-    Raises:
-      QueueEmpty: If the queue encountered a timeout trying to push an item.
-    """
-    logging.debug(u'{0:s} responder thread started'.format(self.name))
-    while not self._terminate_event.isSet():
-      try:
-        if self._closed_event.isSet():
-          # No further items can be added be added to the queue, so we don't
-          # need to block.
-          item = source_queue.get_nowait()
-        else:
-          item = source_queue.get(True, timeout=self._buffer_timeout_seconds)
-
-      except Queue.Empty:
-        logging.debug(u'{0:s} queue was empty'.format(self.name))
-        # Signal to any downstream queues that they should abort.
-        item = plaso_queue.QueueAbort()
-        # Exit after an attempt to inform downstream queues that there are no
-        # more events.
-        self._terminate_event.set()
-
-      sent_successfully = self._SendItem(self._zmq_socket, item)
-      if not sent_successfully:
-        logging.error(u'Queue {0:s} error sending item.'.format(self.name))
-        break
-
-    logging.info(u'Queue {0:s} responder exiting.'.format(self.name))
-    self._zmq_socket.close(self._linger_seconds)
-
-  def PushItem(self, item, block=True):
-    """Push an item on to the queue.
-
-    If no ZeroMQ socket has been created, one will be created the first time
-    this method is called.
-
-    Args:
-      item (object): item to push on the queue.
-      block (Optional[bool]): whether the push should be performed in blocking
-          or non-block mode.
-
-    Raises:
-      QueueAlreadyClosed: If there is an attempt to push to a queue that's
-          already closed.
-    """
-    if self._closed_event.isSet():
-      raise errors.QueueAlreadyClosed()
-
-    if not self._zmq_socket:
-      self._CreateZMQSocket()
-
-    self._queue.put(item, block=block, timeout=self._buffer_timeout_seconds)
-
-  def PopItem(self):
-    """Pops an item off the queue.
-
-    Provided for compatibility with the API, but doesn't actually work.
-
-    Raises:
-      WrongQueueType: As Pop is not supported by this queue.
-    """
-    raise errors.WrongQueueType()
-
-
-class ZeroMQBufferedPushBindQueue(ZeroMQBufferedPushQueue):
-  """A Plaso queue backed by a ZeroMQ PUSH socket that binds to a port.
-
-  This queue may only be used to push items, not to pop.
-  """
-  SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_BIND
-
-
-class ZeroMQBufferedPushConnectQueue(ZeroMQBufferedPushQueue):
-  """A Plaso queue backed by a ZeroMQ PUSH socket that connects to a port.
-
-  This queue may only be used to push items, not to pop.
-  """
-
-  SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_CONNECT
-
-
-class ZeroMQBufferedPullQueue(ZeroMQBufferedQueue):
-  """Parent class for buffered Plaso queues backed by ZeroMQ PULL sockets.
-
-  This class should not be instantiated directly, a subclass should be
-  instantiated instead.
-
-  Instances of this class or subclasses may only be used to pop items, not to
-  push.
-  """
-
-  _SOCKET_TYPE = zmq.PULL
-  _DOWNSTREAM_QUEUE_MAX_TRIES = 10
-  _DOWNSTREAM_QUEUE_SLEEP_TIME = 0.2
-
-  def _ZeroMQResponder(self, source_queue):
-    """Listens for requests and replies to clients.
-
-    Args:
-      source_queue (Queue.queue): queue to use to pull items from.
-
-    Raises:
-      QueueFull: if it was not possible to put an item into the buffer queue.
-    """
-    logging.debug(u'{0:s} responder thread started'.format(self.name))
-    while not self._terminate_event.isSet() and not self._closed_event.isSet():
-      try:
-        item = self._ReceiveItemOnActivity(self._zmq_socket)
-
-      except errors.QueueEmpty:
-        # Timeout receiving an item, we just retry until the terminate event
-        # is set.
-        continue
-
-      retries = 0
-      while retries < self._DOWNSTREAM_QUEUE_MAX_TRIES:
-        try:
-          self._queue.put(item, timeout=self._buffer_timeout_seconds)
-          break
-        except Queue.Full:
-          logging.debug(u'Queue {0:s} buffer limit hit.'.format(self.name))
-          retries += 1
-          if retries >= self._DOWNSTREAM_QUEUE_MAX_TRIES:
-            logging.error(
-                u'{0:s} buffer queue full for too long, aborting'.format(
-                    self.name))
-            raise errors.QueueFull
-          else:
-            time.sleep(self._DOWNSTREAM_QUEUE_SLEEP_TIME)
-            continue
-
-    logging.info(u'Queue {0:s} responder exiting.'.format(self.name))
-    self._zmq_socket.close(self._linger_seconds)
-
-  def PopItem(self):
-    """Pops an item off the queue.
-
-    If no ZeroMQ socket has been created, one will be created the first
-    time this method is called.
-
-    Returns:
-      object: item from the queue.
-
-    Raises:
-      QueueEmpty: If the queue is empty, and no item could be popped within the
-          queue timeout.
-      zmq.error.ZMQError: If an error is encountered by ZeroMQ.
-    """
-    logging.debug(
-        u'Pop on {0:s} queue, port {1:d}'.format(self.name, self.port))
-    if not self._zmq_socket:
-      self._CreateZMQSocket()
-    try:
-      return self._queue.get(timeout=self._buffer_timeout_seconds)
-
-    except Queue.Empty:
-      raise errors.QueueEmpty
-
-    except KeyboardInterrupt:
-      self.Close(abort=True)
-      raise
-
-  def PushItem(self, item, block=True):
-    """Pushes an item on to the queue.
-
-    Provided for compatibility with the API, but doesn't actually work.
-
-    Args:
-      item (object): item to push on the queue.
-      block (Optional[bool]): whether the push should be performed in blocking
-          or non-blocking mode.
-
-    Raises:
-      WrongQueueType: As Push is not supported this queue.
-    """
-    raise errors.WrongQueueType()
-
-
-class ZeroMQBufferedPullBindQueue(ZeroMQBufferedPullQueue):
-  """A Plaso queue backed by a ZeroMQ PULL socket that binds to a port.
-
-  This queue may only be used to pop items, not to push.
-  """
-
-  SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_BIND
-
-
-class ZeroMQBufferedPullConnectQueue(ZeroMQBufferedPullQueue):
-  """A Plaso queue backed by a ZeroMQ PULL socket that connects to a port.
-
-  This queue may only be used to pop items, not to push.
-  """
-
-  SOCKET_CONNECTION_TYPE = ZeroMQQueue.SOCKET_CONNECTION_CONNECT

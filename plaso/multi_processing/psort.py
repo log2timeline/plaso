@@ -513,9 +513,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     self._status_update_callback = status_update_callback
 
-    storage_writer.Open()
-    storage_writer.ReadPreprocessingInformation(knowledge_base_object)
-
     # Set up the storage writer before the analysis processes.
     storage_writer.StartTaskStorage()
 
@@ -527,24 +524,31 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     # so we don't have to clean up the thread if the open fails.
     self._StartStatusUpdateThread()
 
-    storage_writer.WriteSessionStart()
-
     try:
-      self._AnalyzeEvents(
-          storage_writer, analysis_plugins, event_filter=event_filter)
+      # Open the storage file after creating the worker processes otherwise
+      # the ZIP storage file will remain locked as long as the worker processes
+      # are alive.
+      storage_writer.Open()
+      storage_writer.ReadPreprocessingInformation(knowledge_base_object)
+      storage_writer.WriteSessionStart()
 
-    except KeyboardInterrupt:
-      self._abort = True
+      try:
+        self._AnalyzeEvents(
+            storage_writer, analysis_plugins, event_filter=event_filter)
 
-      self._processing_status.aborted = True
-      if self._status_update_callback:
-        self._status_update_callback(self._processing_status)
+      except KeyboardInterrupt:
+        self._abort = True
+
+        self._processing_status.aborted = True
+        if self._status_update_callback:
+          self._status_update_callback(self._processing_status)
+
+      finally:
+        storage_writer.WriteSessionCompletion(aborted=self._abort)
+
+        storage_writer.Close()
 
     finally:
-      storage_writer.WriteSessionCompletion(aborted=self._abort)
-
-      storage_writer.Close()
-
       # Stop the status update thread after close of the storage writer
       # so we include the storage sync to disk in the status updates.
       self._StopStatusUpdateThread()
