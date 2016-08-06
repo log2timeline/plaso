@@ -9,7 +9,6 @@ from plaso.engine import plaso_queue
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_processing import base_process
-from plaso.multi_processing import multi_process_queue
 
 
 class AnalysisProcess(base_process.MultiProcessBaseProcess):
@@ -152,13 +151,10 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
       storage_writer.Close()
 
-      if self._serializers_profiler:
-        storage_writer.SetSerializersProfiler(None)
-
-    self._analysis_mediator = None
-
     self._storage_writer.PrepareMergeTaskStorage(task.identifier)
 
+    self._analysis_mediator = None
+    self._storage_writer = None
     self._task_identifier = u''
 
     if self._abort:
@@ -169,10 +165,10 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     logging.debug(u'Analysis plugin: {0!s} (PID: {1:d}) stopped'.format(
         self._name, self._pid))
 
-    if isinstance(self._event_queue, multi_process_queue.MultiProcessingQueue):
-      self._event_queue.Close(abort=True)
-    else:
-      self._event_queue.Close()
+    try:
+      self._task_queue.Close(abort=self._abort)
+    except errors.QueueAlreadyClosed:
+      logging.error(u'Queue for {0:s} was already closed.'.format(self.name))
 
   def _ProcessEvent(self, mediator, event):
     """Processes an event.

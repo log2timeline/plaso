@@ -10,17 +10,46 @@ from plaso.lib import errors
 from tests import test_lib as shared_test_lib
 
 
+class ZeroMQPullBindQueue(zeromq_queue.ZeroMQPullQueue):
+  """A Plaso queue backed by a ZeroMQ PULL socket that binds to a port.
+
+  This queue may only be used to pop items, not to push.
+  """
+  SOCKET_CONNECTION_TYPE = zeromq_queue.ZeroMQQueue.SOCKET_CONNECTION_BIND
+
+
+class ZeroMQPushConnectQueue(zeromq_queue.ZeroMQPushQueue):
+  """A Plaso queue backed by a ZeroMQ PUSH socket that connects to a port.
+
+  This queue may only be used to push items, not to pop.
+  """
+  SOCKET_CONNECTION_TYPE = zeromq_queue.ZeroMQQueue.SOCKET_CONNECTION_CONNECT
+
+
+class ZeroMQRequestBindQueue(zeromq_queue.ZeroMQRequestQueue):
+  """A Plaso queue backed by a ZeroMQ REQ socket that binds to a port.
+
+  This queue may only be used to pop items, not to push.
+  """
+  SOCKET_CONNECTION_TYPE = zeromq_queue.ZeroMQQueue.SOCKET_CONNECTION_BIND
+
+
+class ZeroMQBufferedReplyConnectQueue(zeromq_queue.ZeroMQBufferedReplyQueue):
+  """A Plaso queue backed by a ZeroMQ REP socket that connects to a port.
+
+  This queue may only be used to pop items, not to push.
+  """
+  SOCKET_CONNECTION_TYPE = zeromq_queue.ZeroMQQueue.SOCKET_CONNECTION_CONNECT
+
+
 class testZeroMQQueues(shared_test_lib.BaseTestCase):
   """Tests for ZeroMQ queues."""
 
   # pylint: disable=protected-access
 
   _QUEUE_CLASSES = frozenset([
-      zeromq_queue.ZeroMQPushBindQueue,
-      zeromq_queue.ZeroMQPullBindQueue,
-      zeromq_queue.ZeroMQRequestBindQueue,
-      zeromq_queue.ZeroMQBufferedPullBindQueue,
-      zeromq_queue.ZeroMQBufferedPushBindQueue])
+      zeromq_queue.ZeroMQPushBindQueue, ZeroMQPullBindQueue,
+      ZeroMQRequestBindQueue])
 
   def _testItemTransferred(self, push_queue, pop_queue):
     """Tests than item can be transferred between two queues."""
@@ -49,9 +78,9 @@ class testZeroMQQueues(shared_test_lib.BaseTestCase):
     self._testItemTransferred(push_queue, pull_queue)
     push_queue.Close()
     pull_queue.Close()
-    pull_queue = zeromq_queue.ZeroMQPullBindQueue(
+    pull_queue = ZeroMQPullBindQueue(
         name=u'pushpull_pullbind', delay_open=False, linger_seconds=1)
-    push_queue = zeromq_queue.ZeroMQPushConnectQueue(
+    push_queue = ZeroMQPushConnectQueue(
         name=u'pushpull_pushconnect', delay_open=False, port=pull_queue.port,
         linger_seconds=1)
     self._testItemTransferred(push_queue, pull_queue)
@@ -81,10 +110,10 @@ class testZeroMQQueues(shared_test_lib.BaseTestCase):
     self._testItemTransferred(reply_queue, request_queue)
     reply_queue.Close()
     request_queue.Close()
-    request_queue = zeromq_queue.ZeroMQRequestBindQueue(
+    request_queue = ZeroMQRequestBindQueue(
         name=u'requestbufferedreply_requestbind', delay_open=False,
         linger_seconds=1)
-    reply_queue = zeromq_queue.ZeroMQBufferedReplyConnectQueue(
+    reply_queue = ZeroMQBufferedReplyConnectQueue(
         name=u'requestbufferedreply_replyconnect', delay_open=False,
         port=request_queue.port, linger_seconds=0)
     self._testItemTransferred(reply_queue, request_queue)
@@ -99,6 +128,7 @@ class testZeroMQQueues(shared_test_lib.BaseTestCase):
           name=queue_name, delay_open=False, linger_seconds=1)
       self.assertIsNotNone(test_queue._zmq_socket)
       test_queue.Close()
+
 
 if __name__ == '__main__':
   unittest.main()
