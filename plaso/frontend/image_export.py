@@ -23,7 +23,6 @@ from plaso.frontend import frontend
 from plaso.lib import py2to3
 from plaso.lib import specification
 from plaso.lib import timelib
-from plaso.preprocessors import interface as preprocess_interface
 from plaso.preprocessors import manager as preprocess_manager
 
 
@@ -736,7 +735,7 @@ class ImageExportFrontend(frontend.Frontend):
     logging.debug(u'operating system: {0:s}'.format(platform))
 
     preprocess_manager.PreprocessPluginsManager.RunPlugins(
-        platform, file_system, mount_point, self._knowledge_base)
+        file_system, mount_point, self._knowledge_base)
 
   def _WriteFileEntry(self, file_entry, data_stream_name, destination_file):
     """Writes the contents of the source file entry to a destination file.

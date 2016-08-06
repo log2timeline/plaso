@@ -49,11 +49,11 @@ class BinaryCookieParser(interface.FileObjectParser):
   DESCRIPTION = u'Parser for Safari Binary Cookie files.'
 
   _FILE_HEADER = construct.Struct(
-      u'binary_cookie_header',
+      u'file_header',
       construct.Bytes(u'signature', 4),
-      construct.UBInt32(u'pages'),
+      construct.UBInt32(u'number_of_pages'),
       construct.Array(
-          lambda ctx: ctx.pages,
+          lambda ctx: ctx.number_of_pages,
           construct.UBInt32(u'page_sizes')))
 
   _COOKIE_RECORD = construct.Struct(
@@ -73,9 +73,9 @@ class BinaryCookieParser(interface.FileObjectParser):
   _PAGE_HEADER = construct.Struct(
       u'page_header',
       construct.Bytes(u'header', 4),
-      construct.ULInt32(u'number_of_cookies'),
+      construct.ULInt32(u'number_of_records'),
       construct.Array(
-          lambda ctx: ctx.number_of_cookies,
+          lambda ctx: ctx.number_of_records,
           construct.ULInt32(u'offsets')))
 
   def __init__(self):

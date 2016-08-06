@@ -528,7 +528,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
       file_system, mount_point = self._GetSourceFileSystem(
           self._source_path_specs[0])
       preprocess_manager.PreprocessPluginsManager.RunPlugins(
-          u'Windows', file_system, mount_point, self.knowledge_base_object)
+          file_system, mount_point, self.knowledge_base_object)
       self._preprocess_completed = True
       file_system.Close()
 
