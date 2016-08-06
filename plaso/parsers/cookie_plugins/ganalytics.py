@@ -63,7 +63,7 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
   """A browser cookie plugin for __utma Google Analytics cookies.
 
   The structure of the cookie data:
-  <domain hash>.<visitor ID>.<first visit>.<previous>.<last visit>.
+  <domain hash>.<visitor ID>.<first visit>.<previous visit>.<last visit>.
   <number of sessions>
 
   For example:
@@ -110,7 +110,7 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
       previous_visit_posix_time = None
 
       try:
-        # TODO: fix that we're losing precission here use dfdatetime.
+        # TODO: fix that we're losing precision here use dfdatetime.
         last_visit_posix_time = int(fields[0], 10) / 10000000
       except ValueError:
         last_visit_posix_time = None
@@ -176,10 +176,11 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
   """A browser cookie plugin for __utmb Google Analytics cookies.
 
   The structure of the cookie data:
-  <domain hash>.<pages viewed>.10.<last time>
+  <domain hash>.<pages viewed>.<unknown>.<last time>
 
   For example:
   137167072.1.10.1383170166
+  173272373.6.8.1440489514899
 
   Or:
   <last time>
@@ -219,7 +220,7 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
       domain_hash = None
 
       try:
-        # TODO: fix that we're losing precission here use dfdatetime.
+        # TODO: fix that we're losing precision here use dfdatetime.
         last_visit_posix_time = int(fields[0], 10) / 10000000
       except ValueError:
         last_visit_posix_time = None
@@ -235,9 +236,15 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
         number_of_pages_viewed = None
 
       try:
-        last_visit_posix_time = int(fields[3], 10)
+        if fields[2] == u'8':
+          # TODO: fix that we're losing precision here use dfdatetime.
+          last_visit_posix_time = int(fields[3], 10) / 1000
+        elif fields[2] == u'10':
+          last_visit_posix_time = int(fields[3], 10)
       except ValueError:
         last_visit_posix_time = None
+
+      number_of_sessions = None
 
     if last_visit_posix_time is not None:
       timestamp_description = eventdata.EventTimestamp.LAST_VISITED_TIME
@@ -285,7 +292,7 @@ class GoogleAnalyticsUtmtPlugin(interface.BaseCookiePlugin):
       return
 
     try:
-      # TODO: fix that we're losing precission here use dfdatetime.
+      # TODO: fix that we're losing precision here use dfdatetime.
       last_visit_posix_time = int(fields[0], 10) / 10000000
     except ValueError:
       last_visit_posix_time = None
@@ -355,7 +362,7 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
       domain_hash = None
 
       try:
-        # TODO: fix that we're losing precission here use dfdatetime.
+        # TODO: fix that we're losing precision here use dfdatetime.
         last_visit_posix_time = int(fields[0], 10) / 10000000
       except ValueError:
         last_visit_posix_time = None

@@ -51,7 +51,9 @@ class BinaryCookieParser(interface.FileObjectParser):
       u'binary_cookie_header',
       construct.Bytes(u'signature', 4),
       construct.UBInt32(u'pages'),
-      construct.Array(lambda ctx: ctx.pages, construct.UBInt32(u'page_sizes')))
+      construct.Array(
+          lambda ctx: ctx.pages,
+          construct.UBInt32(u'page_sizes')))
 
   _COOKIE_RECORD = construct.Struct(
       u'cookie_record',
@@ -72,7 +74,8 @@ class BinaryCookieParser(interface.FileObjectParser):
       construct.Bytes(u'header', 4),
       construct.ULInt32(u'number_of_cookies'),
       construct.Array(
-          lambda ctx: ctx.number_of_cookies, construct.ULInt32(u'offsets')))
+          lambda ctx: ctx.number_of_cookies,
+          construct.ULInt32(u'offsets')))
 
   def __init__(self):
     """Initializes a parser object."""
