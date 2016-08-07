@@ -103,7 +103,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       for identifier, value in iter(knowledge_base_values.items()):
         knowledge_base_object.SetValue(identifier, value)
 
-    knowledge_base_object.SetTimezone(timezone)
+    knowledge_base_object.SetTimeZone(timezone)
 
     parser_mediator = mediator.ParserMediator(
         storage_writer, knowledge_base_object)

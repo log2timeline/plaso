@@ -278,8 +278,9 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
     storage.ReadPreprocessingInformation(knowledge_base_object)
 
+    # TODO: replace session_number by session_identifier.
     system_configuration = knowledge_base_object.GetSystemConfigurationArtifact(
-        session_number)
+        session_identifier=session_number)
     if not system_configuration:
       return
 

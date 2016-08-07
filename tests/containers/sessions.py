@@ -31,6 +31,7 @@ class SessionTest(shared_test_lib.BaseTestCase):
         u'identifier': session.identifier,
         u'parsers_counter': session.parsers_counter,
         u'preferred_encoding': u'utf-8',
+        u'preferred_time_zone': u'UTC',
         u'product_name': u'plaso',
         u'product_version': plaso.GetVersion(),
         u'start_time': session.start_time}

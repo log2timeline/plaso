@@ -47,14 +47,11 @@ class LinuxTimeZonePreprocessPluginTest(test_lib.PreprocessPluginTestCase):
     knowledge_base = self._RunFileSystemPlugin(
         file_system_builder.file_system, mount_point, plugin)
 
-    time_zone_str = knowledge_base.GetValue(u'time_zone_str')
-    self.assertEqual(time_zone_str, u'Europe/Zurich')
+    self.assertEqual(knowledge_base.timezone.zone, u'Europe/Zurich')
 
 
 class LinuxUserAccountsPreprocessPluginTest(test_lib.PreprocessPluginTestCase):
   """Tests for the Linux usernames preprocess plug-in object."""
-
-  # pylint: disable=protected-access
 
   _FILE_DATA = (
       'root:x:0:0:root:/root:/bin/bash\n'
@@ -83,7 +80,7 @@ class LinuxUserAccountsPreprocessPluginTest(test_lib.PreprocessPluginTestCase):
         file_system_builder.file_system, mount_point, plugin)
 
     users = sorted(
-        knowledge_base._user_accounts[0].values(),
+        knowledge_base.user_accounts,
         key=lambda user_account: user_account.identifier)
     self.assertEqual(len(users), 13)
 

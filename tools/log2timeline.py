@@ -518,6 +518,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         command_line_arguments=self._command_line_arguments,
         filter_file=self._filter_file,
         preferred_encoding=self.preferred_encoding,
+        preferred_time_zone=self._preferred_time_zone,
         preferred_year=self._preferred_year)
 
     storage_writer = self._front_end.CreateStorageWriter(session, self._output)
