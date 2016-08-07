@@ -13,31 +13,48 @@ from dfwinreg import registry as dfwinreg_registry
 class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
   """A file system-based Windows Registry file reader."""
 
-  def __init__(self, file_system, mount_point, path_attributes=None):
+  def __init__(self, file_system, mount_point, environment_variables=None):
     """Initializes a Windows Registry file reader object.
 
     Args:
       file_system (dfvfs.FileSytem): file system.
       mount_point (dfvfs.PathSpec): mount point path specification.
-      path_attributes (Optional[dict[str, str]]): path attributes e.g.
-          {'SystemRoot': '\\Windows'}
+      environment_variables (Optional[list[EnvironmentVariableArtifact]]):
+          environment variables.
     """
     super(FileSystemWinRegistryFileReader, self).__init__()
     self._file_system = file_system
-    self._path_resolver = windows_path_resolver.WindowsPathResolver(
+    self._path_resolver = self._CreateWindowsPathResolver(
+        file_system, mount_point, environment_variables=environment_variables)
+
+  def _CreateWindowsPathResolver(
+      self, file_system, mount_point, environment_variables):
+    """Create a Windows path resolver and sets the evironment variables.
+
+    Args:
+      file_system (dfvfs.FileSytem): file system.
+      mount_point (dfvfs.PathSpec): mount point path specification.
+      environment_variables (list[EnvironmentVariableArtifact]): environment
+          variables.
+
+    Returns:
+      dfvfs.WindowsPathResolver: Windows path resolver.
+    """
+    if environment_variables is None:
+      environment_variables = []
+
+    path_resolver = windows_path_resolver.WindowsPathResolver(
         file_system, mount_point)
 
-    if path_attributes:
-      for attribute_name, attribute_value in iter(path_attributes.items()):
-        # TODO: fix the call to this class and make sure only relevant
-        # values are passed.
-        if attribute_name == u'systemroot':
-          self._path_resolver.SetEnvironmentVariable(
-              u'SystemRoot', attribute_value)
+    for environment_variable in environment_variables:
+      name = environment_variable.name.lower()
+      if name not in (u'systemroot', u'userprofile'):
+        continue
 
-        elif attribute_name == u'userprofile':
-          self._path_resolver.SetEnvironmentVariable(
-              u'UserProfile', attribute_value)
+      path_resolver.SetEnvironmentVariable(
+          environment_variable.name, environment_variable.value)
+
+    return path_resolver
 
   def _OpenPathSpec(self, path_specification, ascii_codepage=u'cp1252'):
     """Opens the Windows Registry file specified by the path specification.
@@ -196,12 +213,12 @@ class PreprocessPluginsManager(object):
     # Run the Registry plugins separately so we do not have to open
     # Registry files in every plugin.
 
-    path_attributes = None
+    environment_variables = None
     if knowledge_base:
-      path_attributes = knowledge_base.GetPathAttributes()
+      environment_variables = knowledge_base.GetEnvironmentVariables()
 
     registry_file_reader = FileSystemWinRegistryFileReader(
-        file_system, mount_point, path_attributes=path_attributes)
+        file_system, mount_point, environment_variables=environment_variables)
     win_registry = dfwinreg_registry.WinRegistry(
         registry_file_reader=registry_file_reader)
 

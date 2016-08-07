@@ -19,7 +19,7 @@ class KnowledgeBase(object):
   """Class that implements the artifact knowledge base."""
 
   def __init__(self):
-    """Initializes a knowledge base object."""
+    """Initializes a knowledge base."""
     super(KnowledgeBase, self).__init__()
     self._default_codepage = u'cp1252'
     self._environment_variables = {}
@@ -76,6 +76,14 @@ class KnowledgeBase(object):
     name = name.upper()
     return self._environment_variables.get(name, None)
 
+  def GetEnvironmentVariables(self):
+    """Retrieves the environment variables.
+
+    Returns:
+      list[EnvironmentVariableArtifact]: environment variable artifacts.
+    """
+    return self._environment_variables.values()
+
   # TODO: refactor.
   def GetHostname(self, store_number, default_hostname=u'-'):
     """Retrieves the hostname related to the event.
@@ -91,17 +99,6 @@ class KnowledgeBase(object):
       str: hostname.
     """
     return self._hostnames.get(store_number, default_hostname)
-
-  def GetPathAttributes(self):
-    """Retrieves the path attributes.
-
-    Returns:
-      dict[str, str]: path attributes, typically environment variables
-          that are expanded e.g. $HOME or %SystemRoot%.
-    """
-    return {
-        environment_variable.name: environment_variable.value
-        for environment_variable in iter(self._environment_variables.values())}
 
   # TODO: remove this function it is incorrect.
   def GetStoredHostname(self):

@@ -7,6 +7,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfwinreg import registry as dfwinreg_registry
 
+from plaso.containers import artifacts
 from plaso.engine import knowledge_base
 from plaso.preprocessors import manager
 
@@ -47,10 +48,11 @@ class PreprocessPluginTestCase(shared_test_lib.BaseTestCase):
     Return:
       KnowledgeBase: knowledge base filled with preprocessing information.
     """
-    path_attributes = {u'systemroot': u'\\Windows'}
+    environment_variable = artifacts.EnvironmentVariableArtifact(
+        case_sensitive=False, name=u'SystemRoot', value=u'C:\\Windows')
 
     registry_file_reader = manager.FileSystemWinRegistryFileReader(
-        file_system, mount_point, path_attributes=path_attributes)
+        file_system, mount_point, environment_variables=[environment_variable])
     win_registry = dfwinreg_registry.WinRegistry(
         registry_file_reader=registry_file_reader)
 

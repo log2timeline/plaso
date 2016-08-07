@@ -51,7 +51,7 @@ class WindowsProgramFilesEnvironmentVariableTest(
     environment_variable = knowledge_base.GetEnvironmentVariable(
         u'ProgramFiles')
     self.assertIsNotNone(environment_variable)
-    self.assertEqual(environment_variable.value, u'\\Program Files')
+    self.assertEqual(environment_variable.value, u'C:\\Program Files')
 
 
 class WindowsProgramFilesX86EnvironmentVariableTest(
