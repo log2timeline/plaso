@@ -166,7 +166,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
         self._name, self._pid))
 
     try:
-      self._task_queue.Close(abort=self._abort)
+      self._event_queue.Close(abort=self._abort)
     except errors.QueueAlreadyClosed:
       logging.error(u'Queue for {0:s} was already closed.'.format(self.name))
 
