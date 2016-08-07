@@ -37,6 +37,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     self._analysis_mediator = None
     self._analysis_plugin = analysis_plugin
     self._data_location = data_location
+    self._debug_output = False
     self._event_filter_expression = event_filter_expression
     self._event_queue = event_queue
     self._knowledge_base = knowledge_base
