@@ -10,6 +10,7 @@ PLASO_DEPENDENCIES="ipython
                     libevtx-python
                     libewf-python
                     libfsntfs-python
+                    libfvde-python
                     libfwsi-python
                     liblnk-python
                     libmsiecf-python
