@@ -26,6 +26,7 @@ LIBYAL_DEPENDENCIES = {
     u'pyevtx': 20141112,
     u'pyewf': 20131210,
     u'pyfsntfs': 20151130,
+    u'pyfvde': 20160719,
     u'pyfwsi': 20150606,
     u'pylnk': 20150830,
     u'pymsiecf': 20150314,
@@ -50,7 +51,7 @@ PYTHON_DEPENDENCIES = [
     (u'construct', u'__version__', u'2.5.2', None),
     (u'dateutil', u'__version__', u'1.5', None),
     (u'dfdatetime', u'__version__', u'20160319', None),
-    (u'dfvfs', u'__version__', u'20160510', None),
+    (u'dfvfs', u'__version__', u'20160803', None),
     (u'dfwinreg', u'__version__', u'20160320', None),
     (u'dpkt', u'__version__', u'1.8', None),
     # TODO: determine the version of efilter.
