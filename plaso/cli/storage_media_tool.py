@@ -6,6 +6,8 @@ import logging
 import os
 import sys
 
+from dfvfs.analyzer import analyzer as dfvfs_analyzer
+from dfvfs.analyzer import fvde_analyzer_helper
 from dfvfs.credentials import manager as credentials_manager
 from dfvfs.helpers import source_scanner
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -18,6 +20,14 @@ from plaso.cli import tools
 from plaso.lib import errors
 from plaso.lib import py2to3
 from plaso.lib import timelib
+
+
+try:
+  # Disable experimental FVDE support.
+  dfvfs_analyzer.Analyzer.DeregisterHelper(
+      fvde_analyzer_helper.FVDEAnalyzerHelper())
+except KeyError:
+  pass
 
 
 class StorageMediaTool(tools.CLITool):
@@ -1076,9 +1086,9 @@ class StorageMediaTool(tools.CLITool):
       raise errors.SourceScannerError(
           u'Unable to scan source with error: {0:s}.'.format(exception))
 
-    if scan_context.source_type not in [
+    if scan_context.source_type not in (
         scan_context.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
-        scan_context.SOURCE_TYPE_STORAGE_MEDIA_IMAGE]:
+        scan_context.SOURCE_TYPE_STORAGE_MEDIA_IMAGE):
       scan_node = scan_context.GetRootScanNode()
       self._source_path_specs.append(scan_node.path_spec)
       return scan_context
@@ -1090,8 +1100,8 @@ class StorageMediaTool(tools.CLITool):
 
     # The source scanner found a partition table and we need to determine
     # which partition needs to be processed.
-    if scan_node.type_indicator not in [
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION]:
+    if scan_node.type_indicator != (
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
       partition_identifiers = None
 
     else:
