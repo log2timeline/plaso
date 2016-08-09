@@ -59,7 +59,6 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
   # TODO: add test for _ParseProcessingOptions.
   # TODO: add test for _PrintStatusUpdate.
   # TODO: add test for _PrintStatusUpdateStream.
-  # TODO: add test for AddExperimentalOptions.
 
   def testAddExperimentalOptions(self):
     """Tests the AddExperimentalOptions function."""
