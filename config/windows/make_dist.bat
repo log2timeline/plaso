@@ -19,3 +19,5 @@ xcopy /q /y /s dist\pinfo\* dist\plaso
 xcopy /q /y /s dist\preg\* dist\plaso
 xcopy /q /y /s dist\psort\* dist\plaso
 xcopy /q /y data\* dist\plaso\data
+
+xcopy /q /y C:\Python27\Lib\site-packages\zmq\libzqm.pyd dist\plaso
