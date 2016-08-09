@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*-
 """Tests for the log2timeline CLI tool."""
 
+import argparse
 import os
 import unittest
 
+from plaso.lib import errors
 from plaso.storage import zip_file as storage_zip_file
 
 from tests import test_lib as shared_test_lib
@@ -18,6 +20,38 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
   _BDE_PASSWORD = u'bde-TEST'
 
+  _EXPECTED_EXPERIMENTAL_OPTIONS = u'\n'.join([
+      u'usage: log2timeline_test.py [--use_zeromq CHOICE]',
+      u'',
+      u'Test argument parser.',
+      u'',
+      u'optional arguments:',
+      u'  --use_zeromq CHOICE  Enables or disables queueing using ZeroMQ',
+      u''])
+
+  _EXPECTED_PROCESSING_OPTIONS = u'\n'.join([
+      u'usage: log2timeline_test.py [--single_process] [--show_memory_usage]',
+      u'                            [--workers WORKERS]',
+      u'',
+      u'Test argument parser.',
+      u'',
+      u'optional arguments:',
+      u'  --single_process, --single-process',
+      (u'                        Indicate that the tool should run in a '
+       u'single process.'),
+      u'  --show_memory_usage, --show-memory-usage',
+      (u'                        Indicates that basic memory usage should '
+       u'be included'),
+      (u'                        in the output of the process monitor. If '
+       u'this option'),
+      (u'                        is not set the tool only displays basic '
+       u'status and'),
+      u'                        counter information.',
+      (u'  --workers WORKERS     The number of worker threads [defaults to '
+       u'available'),
+      u'                        system CPUs minus three].',
+      u''])
+
   # TODO: add test for _FormatStatusTableRow.
   # TODO: add test for _GetMatcher.
   # TODO: add test for _ParseExperimentalOptions.
@@ -26,8 +60,57 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
   # TODO: add test for _PrintStatusUpdate.
   # TODO: add test for _PrintStatusUpdateStream.
   # TODO: add test for AddExperimentalOptions.
-  # TODO: add test for AddProcessingOptions.
-  # TODO: add test for ListHashers.
+
+  def testAddExperimentalOptions(self):
+    """Tests the AddExperimentalOptions function."""
+    argument_parser = argparse.ArgumentParser(
+        prog=u'log2timeline_test.py',
+        description=u'Test argument parser.', add_help=False,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    test_tool = log2timeline.Log2TimelineTool()
+    test_tool.AddExperimentalOptions(argument_parser)
+
+    output = self._RunArgparseFormatHelp(argument_parser)
+    self.assertEqual(output, self._EXPECTED_EXPERIMENTAL_OPTIONS)
+
+  def testAddProcessingOptions(self):
+    """Tests the AddProcessingOptions function."""
+    argument_parser = argparse.ArgumentParser(
+        prog=u'log2timeline_test.py',
+        description=u'Test argument parser.', add_help=False,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    test_tool = log2timeline.Log2TimelineTool()
+    test_tool.AddProcessingOptions(argument_parser)
+
+    output = self._RunArgparseFormatHelp(argument_parser)
+    self.assertEqual(output, self._EXPECTED_PROCESSING_OPTIONS)
+
+  def testListHashers(self):
+    """Tests the ListHashers function."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = log2timeline.Log2TimelineTool(output_writer=output_writer)
+
+    test_tool.ListHashers()
+
+    output = output_writer.ReadOutput()
+
+    number_of_tables = 0
+    lines = []
+    for line in output.split(b'\n'):
+      line = line.strip()
+      lines.append(line)
+
+      if line.startswith(b'*****') and line.endswith(b'*****'):
+        number_of_tables += 1
+
+    lines = frozenset(lines)
+
+    self.assertEqual(number_of_tables, 1)
+
+    expected_line = b'md5 : Calculates an MD5 digest hash over input data.'
+    self.assertIn(expected_line, lines)
 
   def testListOutputModules(self):
     """Tests the ListOutputModules function."""
@@ -38,12 +121,21 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
     output = output_writer.ReadOutput()
 
-    expected_output = b''
+    number_of_tables = 0
+    lines = []
+    for line in output.split(b'\n'):
+      line = line.strip()
+      lines.append(line)
 
-    # Compare the output as list of lines which makes it easier to spot
-    # differences.
+      if line.startswith(b'*****') and line.endswith(b'*****'):
+        number_of_tables += 1
 
-    self.assertEqual(output.split(b'\n'), expected_output.split(b'\n'))
+    lines = frozenset(lines)
+
+    self.assertEqual(number_of_tables, 2)
+
+    expected_line = b'rawpy : "raw" (or native) Python output.'
+    self.assertIn(expected_line, lines)
 
   def testListParsersAndPlugins(self):
     """Tests the ListParsersAndPlugins function."""
@@ -94,7 +186,30 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     self.assertIn(expected_line, lines)
 
   # TODO: add test for ParseArguments.
-  # TODO: add test for ParseOptions.
+
+  def testParseOptions(self):
+    """Tests the ParseOptions function."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = log2timeline.Log2TimelineTool(output_writer=output_writer)
+
+    options = cli_test_lib.TestOptions()
+    options.source = self._GetTestFilePath([u'testdir'])
+    options.output = u'storage.plaso'
+
+    test_tool.ParseOptions(options)
+
+    options = cli_test_lib.TestOptions()
+
+    with self.assertRaises(errors.BadConfigOption):
+      test_tool.ParseOptions(options)
+
+    options = cli_test_lib.TestOptions()
+    options.source = self._GetTestFilePath([u'testdir'])
+
+    with self.assertRaises(errors.BadConfigOption):
+      test_tool.ParseOptions(options)
+
+    # TODO: improve test coverage.
 
   def testProcessSourcesDirectory(self):
     """Tests the ProcessSources function on a directory."""

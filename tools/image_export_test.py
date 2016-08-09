@@ -42,10 +42,26 @@ class ImageExportToolTest(cli_test_lib.CLIToolTestCase):
     with self.assertRaises(errors.BadConfigOption):
       test_tool.ListSignatureIdentifiers()
 
-    # TODO: add test for ParseArguments
-    # TODO: add test for ParseOptions
-    # TODO: add test for PrintFilterCollection
-    # TODO: add test for ProcessSources
+  # TODO: add test for ParseArguments
+
+  def testParseOptions(self):
+    """Tests the ParseOptions function."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = image_export.ImageExportTool(output_writer=output_writer)
+
+    options = cli_test_lib.TestOptions()
+
+    test_tool.ParseOptions(options)
+
+    options = cli_test_lib.TestOptions()
+
+    with self.assertRaises(errors.BadConfigOption):
+      test_tool.ParseOptions(options)
+
+    # TODO: improve test coverage.
+
+  # TODO: add test for PrintFilterCollection
+  # TODO: add test for ProcessSources
 
 
 if __name__ == '__main__':

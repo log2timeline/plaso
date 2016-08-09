@@ -6,17 +6,13 @@ import unittest
 
 from plaso.cli import views as cli_views
 from tests.cli import test_lib as cli_test_lib
+from plaso.lib import errors
 
 from tools import pinfo
 
 
 class PinfoToolTest(cli_test_lib.CLIToolTestCase):
   """Tests for the pinfo CLI tool."""
-
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    self._output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    self._test_tool = pinfo.PinfoTool(output_writer=self._output_writer)
 
   # TODO: add test for _CalculateStorageCounters.
   # TODO: add test for _CompareStorages.
@@ -33,6 +29,9 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
 
   def testCompareStorages(self):
     """Tests the CompareStorages function."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = pinfo.PinfoTool(output_writer=output_writer)
+
     test_file1 = self._GetTestFilePath([u'psort_test.json.plaso'])
     test_file2 = self._GetTestFilePath([u'pinfo_test.json.plaso'])
 
@@ -40,29 +39,42 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
     options.compare_storage_file = test_file1
     options.storage_file = test_file1
 
-    self._test_tool.ParseOptions(options)
+    test_tool.ParseOptions(options)
 
-    self.assertTrue(self._test_tool.CompareStorages())
+    self.assertTrue(test_tool.CompareStorages())
 
-    output = self._output_writer.ReadOutput()
+    output = output_writer.ReadOutput()
     self.assertEqual(output, b'Storages are identical.\n')
 
     options = cli_test_lib.TestOptions()
     options.compare_storage_file = test_file1
     options.storage_file = test_file2
 
-    self._test_tool.ParseOptions(options)
+    test_tool.ParseOptions(options)
 
-    self.assertFalse(self._test_tool.CompareStorages())
+    self.assertFalse(test_tool.CompareStorages())
 
-    output = self._output_writer.ReadOutput()
+    output = output_writer.ReadOutput()
     self.assertEqual(output, b'Storages are different.\n')
 
   # TODO: add test for ParseArguments.
-  # TODO: add test for ParseOptions.
+
+  def testParseOptions(self):
+    """Tests the ParseOptions function."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = pinfo.PinfoTool(output_writer=output_writer)
+
+    options = cli_test_lib.TestOptions()
+
+    test_tool.ParseOptions(options)
+
+    # TODO: improve test coverage.
 
   def testPrintStorageInformation(self):
     """Tests the PrintStorageInformation function."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = pinfo.PinfoTool(output_writer=output_writer)
+
     test_filename = u'pinfo_test.json.plaso'
     session_identifier = u'65e59b3a-afa5-4aee-8d55-735cbd7b8686'
     session_start_time = u'2016-07-18T05:37:58.992319+00:00'
@@ -123,12 +135,12 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
     table_view.AddRow([u'Filename', test_filename])
     table_view.AddRow([u'Format version', u'20160715'])
     table_view.AddRow([u'Serialization format', u'json'])
-    table_view.Write(self._output_writer)
+    table_view.Write(output_writer)
 
     table_view = cli_views.ViewsFactory.GetTableView(
         cli_views.ViewsFactory.FORMAT_TYPE_CLI, title=u'Sessions')
     table_view.AddRow([session_identifier, session_start_time])
-    table_view.Write(self._output_writer)
+    table_view.Write(output_writer)
 
     title = u'Session: {0!s}'.format(session_identifier)
     table_view = cli_views.ViewsFactory.GetTableView(
@@ -144,7 +156,7 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
     table_view.AddRow([u'Debug mode', u'False'])
     table_view.AddRow([u'Filter file', u'N/A'])
     table_view.AddRow([u'Filter expression', u'N/A'])
-    table_view.Write(self._output_writer)
+    table_view.Write(output_writer)
 
     table_view = cli_views.ViewsFactory.GetTableView(
         cli_views.ViewsFactory.FORMAT_TYPE_CLI,
@@ -152,9 +164,9 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
         title=u'Events generated per parser')
     table_view.AddRow([u'filestat', u'3'])
     table_view.AddRow([u'Total', u'3'])
-    table_view.Write(self._output_writer)
+    table_view.Write(output_writer)
 
-    expected_output = self._output_writer.ReadOutput()
+    expected_output = output_writer.ReadOutput()
 
     expected_output = (
         b'{0:s}'
@@ -168,11 +180,11 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
     options = cli_test_lib.TestOptions()
     options.storage_file = test_file
 
-    self._test_tool.ParseOptions(options)
+    test_tool.ParseOptions(options)
 
-    self._test_tool.PrintStorageInformation()
+    test_tool.PrintStorageInformation()
 
-    output = self._output_writer.ReadOutput()
+    output = output_writer.ReadOutput()
 
     # Compare the output as list of lines which makes it easier to spot
     # differences.
