@@ -26,7 +26,7 @@ class SSHOpenedConnectionEvent(syslog.SyslogLineEvent):
 class SSHPlugin(interface.SyslogPlugin):
   """A plugin for creating events from syslog message produced by SSH."""
   NAME = u'ssh'
-  DESCRIPTION = u'Parser for SSH syslog entries'
+  DESCRIPTION = u'Parser for SSH syslog entries.'
   REPORTER = u'sshd'
 
   _PYPARSING_COMPONENTS = {

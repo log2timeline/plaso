@@ -18,6 +18,19 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
     self._output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     self._test_tool = pinfo.PinfoTool(output_writer=self._output_writer)
 
+  # TODO: add test for _CalculateStorageCounters.
+  # TODO: add test for _CompareStorages.
+  # TODO: add test for _PrintAnalysisReportCounter.
+  # TODO: add test for _PrintAnalysisReportsDetails.
+  # TODO: add test for _PrintErrorsDetails.
+  # TODO: add test for _PrintEventLabelsCounter.
+  # TODO: add test for _PrintParsersCounter.
+  # TODO: add test for _PrintPreprocessingInformation.
+  # TODO: add test for _PrintSessionsDetails.
+  # TODO: add test for _PrintSessionsOverview.
+  # TODO: add test for _PrintStorageInformation.
+  # TODO: add test for _PrintTasksInformation.
+
   def testCompareStorages(self):
     """Tests the CompareStorages function."""
     test_file1 = self._GetTestFilePath([u'psort_test.json.plaso'])
@@ -44,6 +57,9 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
 
     output = self._output_writer.ReadOutput()
     self.assertEqual(output, b'Storages are different.\n')
+
+  # TODO: add test for ParseArguments.
+  # TODO: add test for ParseOptions.
 
   def testPrintStorageInformation(self):
     """Tests the PrintStorageInformation function."""

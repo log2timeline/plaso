@@ -50,6 +50,62 @@ class PinfoTool(analysis_tool.AnalysisTool):
     self._verbose = False
     self.compare_storage_information = False
 
+  def _CalculateStorageCounters(self, storage):
+    """Calculates the counters of the entire storage.
+
+    Args:
+      storage (BaseStorage): storage.
+
+    Returns:
+      dict[str,collections.Counter]: storage counters.
+    """
+    analysis_reports_counter = collections.Counter()
+    analysis_reports_counter_error = False
+    event_labels_counter = collections.Counter()
+    event_labels_counter_error = False
+    parsers_counter = collections.Counter()
+    parsers_counter_error = False
+
+    for session in storage.GetSessions():
+      # Check for a dict for backwards compatibility.
+      if isinstance(session.analysis_reports_counter, dict):
+        analysis_reports_counter += collections.Counter(
+            session.analysis_reports_counter)
+      elif isinstance(session.analysis_reports_counter, collections.Counter):
+        analysis_reports_counter += session.analysis_reports_counter
+      else:
+        analysis_reports_counter_error = True
+
+      # Check for a dict for backwards compatibility.
+      if isinstance(session.event_labels_counter, dict):
+        event_labels_counter += collections.Counter(
+            session.event_labels_counter)
+      elif isinstance(session.event_labels_counter, collections.Counter):
+        event_labels_counter += session.event_labels_counter
+      else:
+        event_labels_counter_error = True
+
+      # Check for a dict for backwards compatibility.
+      if isinstance(session.parsers_counter, dict):
+        parsers_counter += collections.Counter(session.parsers_counter)
+      elif isinstance(session.parsers_counter, collections.Counter):
+        parsers_counter += session.parsers_counter
+      else:
+        parsers_counter_error = True
+
+    storage_counters = {}
+
+    if not analysis_reports_counter_error:
+      storage_counters[u'analysis_reports'] = analysis_reports_counter
+
+    if not event_labels_counter_error:
+      storage_counters[u'event_labels'] = event_labels_counter
+
+    if not parsers_counter_error:
+      storage_counters[u'parsers'] = parsers_counter
+
+    return storage_counters
+
   def _CompareStorages(self, storage, compare_storage):
     """Compares the contents of two storages.
 
@@ -340,62 +396,6 @@ class PinfoTool(analysis_tool.AnalysisTool):
       table_view.AddRow([str(session_identifier), start_time])
 
     table_view.Write(self._output_writer)
-
-  def _CalculateStorageCounters(self, storage):
-    """Calculates the counters of the entire storage.
-
-    Args:
-      storage (BaseStorage): storage.
-
-    Returns:
-      dict[str,collections.Counter]: storage counters.
-    """
-    analysis_reports_counter = collections.Counter()
-    analysis_reports_counter_error = False
-    event_labels_counter = collections.Counter()
-    event_labels_counter_error = False
-    parsers_counter = collections.Counter()
-    parsers_counter_error = False
-
-    for session in storage.GetSessions():
-      # Check for a dict for backwards compatibility.
-      if isinstance(session.analysis_reports_counter, dict):
-        analysis_reports_counter += collections.Counter(
-            session.analysis_reports_counter)
-      elif isinstance(session.analysis_reports_counter, collections.Counter):
-        analysis_reports_counter += session.analysis_reports_counter
-      else:
-        analysis_reports_counter_error = True
-
-      # Check for a dict for backwards compatibility.
-      if isinstance(session.event_labels_counter, dict):
-        event_labels_counter += collections.Counter(
-            session.event_labels_counter)
-      elif isinstance(session.event_labels_counter, collections.Counter):
-        event_labels_counter += session.event_labels_counter
-      else:
-        event_labels_counter_error = True
-
-      # Check for a dict for backwards compatibility.
-      if isinstance(session.parsers_counter, dict):
-        parsers_counter += collections.Counter(session.parsers_counter)
-      elif isinstance(session.parsers_counter, collections.Counter):
-        parsers_counter += session.parsers_counter
-      else:
-        parsers_counter_error = True
-
-    storage_counters = {}
-
-    if not analysis_reports_counter_error:
-      storage_counters[u'analysis_reports'] = analysis_reports_counter
-
-    if not event_labels_counter_error:
-      storage_counters[u'event_labels'] = event_labels_counter
-
-    if not parsers_counter_error:
-      storage_counters[u'parsers'] = parsers_counter
-
-    return storage_counters
 
   def _PrintStorageInformation(self, storage):
     """Prints information about the storage.
