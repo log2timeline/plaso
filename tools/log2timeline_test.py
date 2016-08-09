@@ -184,7 +184,16 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     expected_line = b'winreg_default : Parser for Registry data.'
     self.assertIn(expected_line, lines)
 
-  # TODO: add test for ParseArguments.
+  def testParseArguments(self):
+    """Tests the ParseArguments function."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = log2timeline.Log2TimelineTool(output_writer=output_writer)
+
+    result = test_tool.ParseArguments()
+    self.assertFalse(result)
+
+    # TODO: check output.
+    # TODO: improve test coverage.
 
   def testParseOptions(self):
     """Tests the ParseOptions function."""
