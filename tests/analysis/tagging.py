@@ -53,9 +53,16 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
            u'source_name': u'Security',
            u'event_identifier': 538}
       },
+    {u'event_type': u'evt',
+      u'timestamp': timelib.Timestamp.CopyFromString(u'2016-05-25 13:00:06'),
+      u'attributes': {
+        u'source_name': u'Messaging',
+        u'event_identifier': 16,
+        u'body': u'this is a message'}
+    },
   ]
 
-  def _CreateTestEventObject(self, test_event_dict):
+  def _CreateTestEventObject(self, event_dictionary):
     """Create a test event with a set of attributes.
 
     Args:
@@ -65,33 +72,19 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
     Returns:
       EventObject: event with the appropriate attributes for testing.
     """
-    if test_event_dict[u'event_type'] == u'prefetch':
+    if event_dictionary[u'event_type'] == u'prefetch':
       event_object = TestPrefetchEvent()
-    elif test_event_dict[u'event_type'] == u'chrome_download':
+    elif event_dictionary[u'event_type'] == u'chrome_download':
       event_object = TestChromeDownloadEvent()
-    elif test_event_dict[u'event_type'] == u'evt':
+    elif event_dictionary[u'event_type'] == u'evt':
       event_object = TestEvtRecordEvent()
     else:
       event_object = events.EventObject()
 
-    event_object.timestamp = test_event_dict[u'timestamp']
-    for key, value in iter(test_event_dict[u'attributes'].items()):
+    event_object.timestamp = event_dictionary[u'timestamp']
+    for key, value in iter(event_dictionary[u'attributes'].items()):
       setattr(event_object, key, value)
     return event_object
-
-  def testParseTaggingFile(self):
-    """Tests the _ParseTaggingFile function."""
-    plugin = tagging.TaggingPlugin()
-    test_path = self._GetTestFilePath([self._TEST_TAG_FILE_NAME])
-
-    tag_expression = plugin._ParseTaggingFile(test_path)
-    self.assertEqual(len(tag_expression.children), 4)
-
-    plugin = tagging.TaggingPlugin()
-    test_path = self._GetTestFilePath([self._INVALID_TEST_TAG_FILE_NAME])
-
-    tag_expression = plugin._ParseTaggingFile(test_path)
-    self.assertEqual(len(tag_expression.children), 2)
 
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
@@ -111,7 +104,7 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
     analysis_report = storage_writer.analysis_reports[0]
 
     tags = analysis_report.GetTags()
-    self.assertEqual(len(tags), 3)
+    self.assertEqual(len(tags), 4)
 
     labels = []
     for tag in tags:
@@ -127,6 +120,20 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
     self.assertIn(u'application_execution', labels)
     # This is from a tag rule declared in dotty syntax.
     self.assertIn(u'login_attempt', labels)
+
+  def testParseTaggingFile(self):
+    """Tests the _ParseTaggingFile function."""
+    plugin = tagging.TaggingPlugin()
+    test_path = self._GetTestFilePath([self._TEST_TAG_FILE_NAME])
+
+    tag_expression = plugin._ParseTaggingFile(test_path)
+    self.assertEqual(len(tag_expression.children), 5)
+
+    plugin = tagging.TaggingPlugin()
+    test_path = self._GetTestFilePath([self._INVALID_TEST_TAG_FILE_NAME])
+
+    tag_expression = plugin._ParseTaggingFile(test_path)
+    self.assertEqual(len(tag_expression.children), 2)
 
 
 if __name__ == '__main__':
