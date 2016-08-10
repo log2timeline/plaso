@@ -244,7 +244,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     self._TestProcessPathSpec(
         storage_writer, path_spec, extraction_worker=extraction_worker)
 
-    expected_yara_match = u'PEfile'
+    expected_yara_match = u'PEfileBasic,PEfile'
     for event in storage_writer.events:
       yara_match = getattr(event, u'yara_match', None)
       self.assertEqual(yara_match, expected_yara_match)
