@@ -125,7 +125,7 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
       list[str]: list of labels to apply to events.
     """
     if not hash_information:
-      return u'File not present in Viper.'
+      return [u'viper_not_present']
 
     projects = []
     tags = []
