@@ -217,7 +217,7 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     # Check if the day, month and time is valid taking a random year.
     month = timelib.MONTH_DICT.get(line.month.lower())
     if not month:
-      logging.debug(u'Unsuported month value: {0:s}'.format(line.month))
+      logging.debug(u'Unsupported month value: {0:s}'.format(line.month))
       return False
 
     try:
