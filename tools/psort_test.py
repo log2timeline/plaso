@@ -87,18 +87,33 @@ class TestOutputModuleMissingParameters(psort_test.TestOutputModule):
 class PsortToolTest(test_lib.ToolTestCase):
   """Tests for the psort tool."""
 
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    self._input_reader = TestInputReader()
-    self._output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-
-    self._test_tool = psort.PsortTool(
-        input_reader=self._input_reader, output_writer=self._output_writer)
+  # TODO: add test for _FormatStatusTableRow.
+  # TODO: add test for _ParseAnalysisPluginOptions.
+  # TODO: add test for _ParseExperimentalOptions.
+  # TODO: add test for _ParseFilterOptions.
+  # TODO: add test for _ParseInformationalOptions.
+  # TODO: add test for _ParseLanguageOptions.
+  # TODO: add test for _PrintStatusHeader.
+  # TODO: add test for _PrintStatusUpdate.
+  # TODO: add test for _PrintStatusUpdateStream.
+  # TODO: add test for _PromptUserForInput.
+  # TODO: add test for AddAnalysisPluginOptions.
+  # TODO: add test for AddExperimentalOptions.
+  # TODO: add test for AddFilterOptions.
+  # TODO: add test for AddLanguageOptions.
+  # TODO: add test for AddOutputModuleOptions.
+  # TODO: add test for ListAnalysisPlugins.
+  # TODO: add test for ListLanguageIdentifiers.
 
   def testListOutputModules(self):
     """Test the listing of output modules."""
-    self._test_tool.ListOutputModules()
-    raw_data = self._output_writer.ReadOutput()
+    input_reader = TestInputReader()
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = psort.PsortTool(
+        input_reader=input_reader, output_writer=output_writer)
+
+    test_tool.ListOutputModules()
+    raw_data = output_writer.ReadOutput()
 
     # Since the printed output varies depending on which output modules are
     # enabled we cannot test the complete string but rather test substrings.
@@ -115,8 +130,52 @@ class PsortToolTest(test_lib.ToolTestCase):
       expected_string, _, _ = expected_string[0:80].rpartition(b' ')
       self.assertTrue(expected_string in raw_data)
 
+  def testParseArguments(self):
+    """Tests the ParseArguments function."""
+    input_reader = TestInputReader()
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = psort.PsortTool(
+        input_reader=input_reader, output_writer=output_writer)
+
+    result = test_tool.ParseArguments()
+    self.assertFalse(result)
+
+    # TODO: check output.
+    # TODO: improve test coverage.
+
+  def testParseOptions(self):
+    """Tests the ParseOptions function."""
+    input_reader = TestInputReader()
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = psort.PsortTool(
+        input_reader=input_reader, output_writer=output_writer)
+
+    options = cli_test_lib.TestOptions()
+    options.output_format = u'null'
+    options.storage_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+
+    test_tool.ParseOptions(options)
+
+    options = cli_test_lib.TestOptions()
+
+    with self.assertRaises(errors.BadConfigOption):
+      test_tool.ParseOptions(options)
+
+    options = cli_test_lib.TestOptions()
+    options.storage_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+
+    with self.assertRaises(errors.BadConfigOption):
+      test_tool.ParseOptions(options)
+
+    # TODO: improve test coverage.
+
   def testProcessStorageWithMissingParameters(self):
     """Test the ProcessStorage function with half-configured output module."""
+    input_reader = TestInputReader()
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = psort.PsortTool(
+        input_reader=input_reader, output_writer=output_writer)
+
     options = cli_test_lib.TestOptions()
     options.storage_file = self._GetTestFilePath([u'psort_test.json.plaso'])
     options.output_format = u'test_missing'
@@ -131,14 +190,14 @@ class PsortToolTest(test_lib.ToolTestCase):
       temp_file_name = os.path.join(temp_directory, u'output.txt')
       options.write = temp_file_name
 
-      self._test_tool.ParseOptions(options)
-      self._test_tool.ProcessStorage()
+      test_tool.ParseOptions(options)
+      test_tool.ProcessStorage()
 
       with open(temp_file_name, 'rb') as file_object:
         for line in file_object.readlines():
           lines.append(line.strip())
 
-    self.assertTrue(self._input_reader.read_called)
+    self.assertTrue(input_reader.read_called)
     self.assertEqual(TestOutputModuleMissingParameters.missing, u'foobar')
     self.assertEqual(TestOutputModuleMissingParameters.parameters, u'foobar')
 
