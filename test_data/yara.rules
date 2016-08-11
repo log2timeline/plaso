@@ -1,3 +1,11 @@
+rule PEfileBasic {
+  strings:
+    $mz = "MZ"
+
+  condition:
+    ($mz at 0)
+}
+
 rule PEfile {
   strings:
     $mz = "MZ"

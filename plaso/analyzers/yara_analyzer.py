@@ -21,6 +21,7 @@ class YaraAnalyzer(interface.BaseAnalyzer):
 
   INCREMENTAL_ANALYZER = False
 
+  _ATTRIBUTE_NAME = u'yara_match'
   _MATCH_TIMEOUT = 60
 
   def __init__(self):
@@ -52,14 +53,12 @@ class YaraAnalyzer(interface.BaseAnalyzer):
     Returns:
       list[AnalyzerResult]: results.
     """
-    results = []
-    for match in self._matches:
-      result = analyzer_result.AnalyzerResult()
-      result.analyzer_name = self.NAME
-      result.attribute_name = u'yara_match'
-      result.attribute_value = match.rule
-      results.append(result)
-    return results
+    result = analyzer_result.AnalyzerResult()
+    result.analyzer_name = self.NAME
+    result.attribute_name = self._ATTRIBUTE_NAME
+    rule_names = [match.rule for match in self._matches]
+    result.attribute_value = u','.join(rule_names)
+    return [result]
 
   def Reset(self):
     """Resets the internal state of the analyzer."""
