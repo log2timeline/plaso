@@ -12,30 +12,42 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.frontend import image_export
+from plaso.lib import specification
 
 from tests import test_lib as shared_test_lib
+from tests.cli import test_lib as cli_test_lib
 from tests.frontend import test_lib
 
 
 class DateTimeFileEntryFilterTest(shared_test_lib.BaseTestCase):
   """Tests for the date time file entry filter."""
 
+  # pylint: disable=protected-access
+
   def testAddDateTimeRange(self):
     """Tests the AddDateTimeRange function."""
-    date_filter = image_export.DateTimeFileEntryFilter()
+    test_filter = image_export.DateTimeFileEntryFilter()
 
-    date_filter.AddDateTimeRange(
-        u'ctime', start_time_string=u'2012-05-25 15:59:20',
-        end_time_string=u'2012-05-25 15:59:25')
+    test_filter.AddDateTimeRange(
+        u'ctime', end_time_string=u'2012-05-25 15:59:25',
+        start_time_string=u'2012-05-25 15:59:20')
+
+    with self.assertRaises(ValueError):
+      test_filter.AddDateTimeRange(None)
 
     # Testing adding a badly formatter filter.
     with self.assertRaises(ValueError):
-      date_filter.AddDateTimeRange(
+      test_filter.AddDateTimeRange(
           u'foobar', start_time_string=u'2012-02-01 01:01:01')
+
+    with self.assertRaises(ValueError):
+      test_filter.AddDateTimeRange(
+          u'ctime', end_time_string=u'2012-05-25 15:59:20',
+          start_time_string=u'2012-05-25 15:59:25')
 
     # Testing adding a badly formatter filter, no date set.
     with self.assertRaises(ValueError):
-      date_filter.AddDateTimeRange(u'atime')
+      test_filter.AddDateTimeRange(u'atime')
 
   def testMatches(self):
     """Tests the Matches function."""
@@ -53,62 +65,235 @@ class DateTimeFileEntryFilterTest(shared_test_lib.BaseTestCase):
     #   Accessed: 2012-05-25T15:59:23+00:00
     #    Created: 2012-05-25T15:59:23+00:00
 
-    date_filter = image_export.DateTimeFileEntryFilter()
+    test_filter = image_export.DateTimeFileEntryFilter()
 
     # When no date time ranges are specified the filter returns None.
-    self.assertIsNone(date_filter.Matches(file_entry))
+    self.assertIsNone(test_filter.Matches(file_entry))
 
     # Add a date to the date filter.
-    date_filter.AddDateTimeRange(
+    test_filter.AddDateTimeRange(
         u'ctime', start_time_string=u'2012-05-25 15:59:20',
         end_time_string=u'2012-05-25 15:59:25')
-    self.assertTrue(date_filter.Matches(file_entry))
+    self.assertTrue(test_filter.Matches(file_entry))
 
-    date_filter = image_export.DateTimeFileEntryFilter()
-    date_filter.AddDateTimeRange(
+    test_filter = image_export.DateTimeFileEntryFilter()
+    test_filter.AddDateTimeRange(
         u'ctime', start_time_string=u'2012-05-25 15:59:24',
         end_time_string=u'2012-05-25 15:59:55')
-    self.assertFalse(date_filter.Matches(file_entry))
+    self.assertFalse(test_filter.Matches(file_entry))
 
     # Testing a timestamp that does not exist in the stat object.
-    date_filter = image_export.DateTimeFileEntryFilter()
-    date_filter.AddDateTimeRange(
+    test_filter = image_export.DateTimeFileEntryFilter()
+    test_filter.AddDateTimeRange(
         u'bkup', start_time_string=u'2012-02-02 12:12:12')
-    self.assertTrue(date_filter.Matches(file_entry))
+    self.assertTrue(test_filter.Matches(file_entry))
 
     # Just end date set.
-    date_filter = image_export.DateTimeFileEntryFilter()
-    date_filter.AddDateTimeRange(
+    test_filter = image_export.DateTimeFileEntryFilter()
+    test_filter.AddDateTimeRange(
         u'mtime', end_time_string=u'2012-05-25 15:59:55')
-    self.assertTrue(date_filter.Matches(file_entry))
+    self.assertTrue(test_filter.Matches(file_entry))
 
     # Just with a start date but within range.
-    date_filter = image_export.DateTimeFileEntryFilter()
-    date_filter.AddDateTimeRange(
+    test_filter = image_export.DateTimeFileEntryFilter()
+    test_filter.AddDateTimeRange(
         u'atime', start_time_string=u'2012-03-25 15:59:55')
-    self.assertTrue(date_filter.Matches(file_entry))
+    self.assertTrue(test_filter.Matches(file_entry))
 
     # And now with a start date, but out of range.
-    date_filter = image_export.DateTimeFileEntryFilter()
-    date_filter.AddDateTimeRange(
+    test_filter = image_export.DateTimeFileEntryFilter()
+    test_filter.AddDateTimeRange(
         u'ctime', start_time_string=u'2012-05-25 15:59:55')
-    self.assertFalse(date_filter.Matches(file_entry))
+    self.assertFalse(test_filter.Matches(file_entry))
 
     # Test with more than one date filter.
-    date_filter = image_export.DateTimeFileEntryFilter()
-    date_filter.AddDateTimeRange(
+    test_filter = image_export.DateTimeFileEntryFilter()
+    test_filter.AddDateTimeRange(
         u'ctime', start_time_string=u'2012-05-25 15:59:55',
         end_time_string=u'2012-05-25 17:34:12')
-    date_filter.AddDateTimeRange(
+    test_filter.AddDateTimeRange(
         u'atime', start_time_string=u'2012-05-25 15:59:20',
         end_time_string=u'2012-05-25 15:59:25')
-    date_filter.AddDateTimeRange(
+    test_filter.AddDateTimeRange(
         u'mtime', start_time_string=u'2012-05-25 15:59:24',
         end_time_string=u'2012-05-25 15:59:55')
 
-    self.assertFalse(date_filter.Matches(file_entry))
-    # pylint: disable=protected-access
-    self.assertEqual(len(date_filter._date_time_ranges), 3)
+    self.assertFalse(test_filter.Matches(file_entry))
+    self.assertEqual(len(test_filter._date_time_ranges), 3)
+
+  def testPrint(self):
+    """Tests the Print function."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_filter = image_export.DateTimeFileEntryFilter()
+
+    test_filter.AddDateTimeRange(
+        u'ctime', end_time_string=u'2012-05-25 15:59:25',
+        start_time_string=u'2012-05-25 15:59:20')
+
+    test_filter.AddDateTimeRange(
+        u'atime', end_time_string=u'2012-05-25 15:59:25')
+
+    test_filter.AddDateTimeRange(
+        u'mtime', start_time_string=u'2012-05-25 15:59:20')
+
+    test_filter.Print(output_writer)
+
+    expected_output = [
+        (b'\tctime between 2012-05-25T15:59:20+00:00 and '
+         b'2012-05-25T15:59:25+00:00'),
+        b'\tatime after 2012-05-25T15:59:25+00:00',
+        b'\tmtime before 2012-05-25T15:59:20+00:00',
+        b'']
+
+    output = output_writer.ReadOutput()
+
+    # Compare the output as list of lines which makes it easier to spot
+    # differences.
+    self.assertEqual(output.split(b'\n'), expected_output)
+
+
+class ExtensionsFileEntryFilterTest(shared_test_lib.BaseTestCase):
+  """Tests for the extensions file entry filter."""
+
+  def testMatches(self):
+    """Tests the Matches function."""
+    test_path = self._GetTestFilePath([u'ímynd.dd'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+
+    test_filter = image_export.ExtensionsFileEntryFilter([u'txt'])
+
+    # Test a filter match.
+    tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=15,
+        location=u'/passwords.txt', parent=os_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+
+    self.assertTrue(test_filter.Matches(file_entry))
+
+    # Test a filter non-match.
+    tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=16,
+        location=u'/a_directory/another_file', parent=os_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+
+    self.assertFalse(test_filter.Matches(file_entry))
+
+    # TODO: implement test with a path spec without location.
+
+  def testPrint(self):
+    """Tests the Print function."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_filter = image_export.ExtensionsFileEntryFilter([u'exe', u'pdf'])
+
+    test_filter.Print(output_writer)
+
+    expected_output = [
+        b'\textensions: exe, pdf',
+        b'']
+
+    output = output_writer.ReadOutput()
+
+    # Compare the output as list of lines which makes it easier to spot
+    # differences.
+    self.assertEqual(output.split(b'\n'), expected_output)
+
+
+class NamesFileEntryFilterTest(shared_test_lib.BaseTestCase):
+  """Tests for the names file entry filter."""
+
+  def testMatches(self):
+    """Tests the Matches function."""
+    test_path = self._GetTestFilePath([u'ímynd.dd'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+
+    test_filter = image_export.NamesFileEntryFilter([u'passwords.txt'])
+
+    # Test a filter non-match.
+    tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=16,
+        location=u'/a_directory/another_file', parent=os_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+
+    self.assertFalse(test_filter.Matches(file_entry))
+
+    # Test a filter on a directory.
+    tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=12,
+        location=u'/a_directory', parent=os_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+
+    self.assertFalse(test_filter.Matches(file_entry))
+
+    # Test a filter match.
+    tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=15,
+        location=u'/passwords.txt', parent=os_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+
+    self.assertTrue(test_filter.Matches(file_entry))
+
+    # Test a filter without names.
+    test_filter = image_export.NamesFileEntryFilter([])
+
+    self.assertFalse(test_filter.Matches(file_entry))
+
+  def testPrint(self):
+    """Tests the Print function."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_filter = image_export.NamesFileEntryFilter([u'myfile'])
+
+    test_filter.Print(output_writer)
+
+    expected_output = [
+        b'\tnames: myfile',
+        b'']
+
+    output = output_writer.ReadOutput()
+
+    # Compare the output as list of lines which makes it easier to spot
+    # differences.
+    self.assertEqual(output.split(b'\n'), expected_output)
+
+
+class SignaturesFileEntryFilterTest(shared_test_lib.BaseTestCase):
+  """Tests for the signatures file entry filter."""
+
+  # TODO: add test for _GetScanner.
+
+  def testMatches(self):
+    """Tests the Matches function."""
+    # TODO: implement.
+
+  def testPrint(self):
+    """Tests the Print function."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    sepcification_store = specification.FormatSpecificationStore()
+    sepcification_store.AddNewSpecification(u'7z')
+    test_filter = image_export.SignaturesFileEntryFilter(
+        sepcification_store, [u'7z', u'bzip2'])
+
+    test_filter.Print(output_writer)
+
+    expected_output = [
+        b'\tsignature identifiers: 7z',
+        b'']
+
+    output = output_writer.ReadOutput()
+
+    # Compare the output as list of lines which makes it easier to spot
+    # differences.
+    self.assertEqual(output.split(b'\n'), expected_output)
+
+
+# TODO: add tests for FileEntryFilterCollection.
+# TODO: add tests for FileSaver.
 
 
 class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
@@ -163,6 +348,18 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
       scan_node = scan_node.sub_nodes[0]
 
     return scan_node
+
+  # TODO: add test for _Extract.
+  # TODO: add test for _ExtractFile.
+  # TODO: add test for _ExtractWithFilter.
+  # TODO: add test for _GetSourceFileSystem.
+  # TODO: add test for _Preprocess.
+  # TODO: add test for HasFilters.
+  # TODO: add test for ParseDateFilters.
+  # TODO: add test for ParseExtensionsString.
+  # TODO: add test for ParseNamesString.
+  # TODO: add test for ParseSignatureIdentifiers.
+  # TODO: add test for PrintFilterCollection.
 
   def testProcessSourcesExtractWithDateTimeFilter(self):
     """Tests the ProcessSources function with a date time filter."""
@@ -300,6 +497,7 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
   # TODO: add test with remove duplicates disabled.
+  # TODO: add test for ReadSpecificationFile.
 
 
 if __name__ == '__main__':

@@ -162,16 +162,16 @@ class DateTimeFileEntryFilter(FileEntryFilter):
     if self._date_time_ranges:
       for date_time_range in self._date_time_ranges:
         if date_time_range.start_timestamp is None:
-          start_time_string = timelib.Timestamp.CopyToIsoFormat(
-              date_time_range.start_timestamp)
-          output_writer.Write(u'\t{0:s} before {1:s}\n'.format(
-              date_time_range.time_value, start_time_string))
-
-        elif date_time_range.end_timestamp is None:
           end_time_string = timelib.Timestamp.CopyToIsoFormat(
               date_time_range.end_timestamp)
           output_writer.Write(u'\t{0:s} after {1:s}\n'.format(
               date_time_range.time_value, end_time_string))
+
+        elif date_time_range.end_timestamp is None:
+          start_time_string = timelib.Timestamp.CopyToIsoFormat(
+              date_time_range.start_timestamp)
+          output_writer.Write(u'\t{0:s} before {1:s}\n'.format(
+              date_time_range.time_value, start_time_string))
 
         else:
           start_time_string = timelib.Timestamp.CopyToIsoFormat(
@@ -704,52 +704,6 @@ class ImageExportFrontend(frontend.Frontend):
 
     logging.info(u'Preprocess done, saving files from image.')
 
-  def ReadSpecificationFile(self, path):
-    """Reads the format specification file.
-
-    Args:
-      path (str): path of the format specification file.
-
-    Returns:
-      FormatSpecificationStore: format specification store.
-    """
-    specification_store = specification.FormatSpecificationStore()
-
-    with open(path, 'rb') as file_object:
-      for line in file_object.readlines():
-        line = line.strip()
-        if not line or line.startswith(b'#'):
-          continue
-
-        try:
-          identifier, offset, pattern = line.split()
-        except ValueError:
-          logging.error(u'[skipping] invalid line: {0:s}'.format(
-              line.decode(u'utf-8')))
-          continue
-
-        try:
-          offset = int(offset, 10)
-        except ValueError:
-          logging.error(u'[skipping] invalid offset in line: {0:s}'.format(
-              line.decode(u'utf-8')))
-          continue
-
-        try:
-          pattern = pattern.decode(u'string_escape')
-        # ValueError is raised e.g. when the patterns contains "\xg1".
-        except ValueError:
-          logging.error(
-              u'[skipping] invalid pattern in line: {0:s}'.format(
-                  line.decode(u'utf-8')))
-          continue
-
-        format_specification = specification.FormatSpecification(identifier)
-        format_specification.AddNewSignature(pattern, offset=offset)
-        specification_store.AddSpecification(format_specification)
-
-    return specification_store
-
   def HasFilters(self):
     """Determines if filters are defined.
 
@@ -899,3 +853,49 @@ class ImageExportFrontend(frontend.Frontend):
       self._Extract(
           source_path_specs, destination_path,
           remove_duplicates=remove_duplicates)
+
+  def ReadSpecificationFile(self, path):
+    """Reads the format specification file.
+
+    Args:
+      path (str): path of the format specification file.
+
+    Returns:
+      FormatSpecificationStore: format specification store.
+    """
+    specification_store = specification.FormatSpecificationStore()
+
+    with open(path, 'rb') as file_object:
+      for line in file_object.readlines():
+        line = line.strip()
+        if not line or line.startswith(b'#'):
+          continue
+
+        try:
+          identifier, offset, pattern = line.split()
+        except ValueError:
+          logging.error(u'[skipping] invalid line: {0:s}'.format(
+              line.decode(u'utf-8')))
+          continue
+
+        try:
+          offset = int(offset, 10)
+        except ValueError:
+          logging.error(u'[skipping] invalid offset in line: {0:s}'.format(
+              line.decode(u'utf-8')))
+          continue
+
+        try:
+          pattern = pattern.decode(u'string_escape')
+        # ValueError is raised e.g. when the patterns contains "\xg1".
+        except ValueError:
+          logging.error(
+              u'[skipping] invalid pattern in line: {0:s}'.format(
+                  line.decode(u'utf-8')))
+          continue
+
+        format_specification = specification.FormatSpecification(identifier)
+        format_specification.AddNewSignature(pattern, offset=offset)
+        specification_store.AddSpecification(format_specification)
+
+    return specification_store

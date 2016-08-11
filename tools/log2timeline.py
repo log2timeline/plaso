@@ -526,8 +526,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     try:
       self.ParseOptions(options)
     except errors.BadConfigOption as exception:
-      logging.error(u'{0:s}'.format(exception))
-
+      self._output_writer.Write(u'ERROR: {0:s}'.format(exception))
       self._output_writer.Write(u'\n')
       self._output_writer.Write(argument_parser.format_usage())
       return False
@@ -693,6 +692,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           processing_status.foreman_status.number_of_produced_errors)
       if number_of_errors:
         output_text = u'\n'.join([
+            u'',
             (u'Number of errors encountered while extracting events: '
              u'{0:d}.').format(number_of_errors),
             u'',
