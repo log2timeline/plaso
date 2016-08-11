@@ -5,6 +5,8 @@
 import unittest
 
 from plaso.lib import errors
+
+from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 
 from tools import image_export
@@ -71,7 +73,31 @@ class ImageExportToolTest(cli_test_lib.CLIToolTestCase):
     # TODO: improve test coverage.
 
   # TODO: add test for PrintFilterCollection
-  # TODO: add test for ProcessSources
+
+  def testProcessSourcesImage(self):
+    """Tests the ProcessSources function on a single partition image."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = image_export.ImageExportTool(output_writer=output_writer)
+
+    options = cli_test_lib.TestOptions()
+    options.image = self._GetTestFilePath([u'ímynd.dd'])
+    options.quiet = True
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      options.path = temp_directory
+
+      test_tool.ParseOptions(options)
+
+      test_tool.ProcessSources()
+
+      expected_output = b'\n'.join([
+          b'Export started.',
+          b'Export completed.',
+          b'',
+          b''])
+
+      output = output_writer.ReadOutput()
+      self.assertEqual(output, expected_output)
 
 
 if __name__ == '__main__':

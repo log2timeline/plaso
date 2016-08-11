@@ -267,12 +267,15 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     """
     self.ScanSource()
 
-    logging.info(u'Processing started.')
+    self._output_writer.Write(u'Export started.\n')
+
     self._front_end.ProcessSources(
         self._source_path_specs, self._destination_path,
         filter_file=self._filter_file,
         remove_duplicates=self._remove_duplicates)
-    logging.info(u'Processing completed.')
+
+    self._output_writer.Write(u'Export completed.\n')
+    self._output_writer.Write(u'\n')
 
 
 def Main():
