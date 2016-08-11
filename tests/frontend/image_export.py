@@ -157,11 +157,13 @@ class ExtensionsFileEntryFilterTest(shared_test_lib.BaseTestCase):
 
   def testMatches(self):
     """Tests the Matches function."""
-    test_filter = image_export.ExtensionsFileEntryFilter([u'txt'])
-
     test_path = self._GetTestFilePath([u'ímynd.dd'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+
+    test_filter = image_export.ExtensionsFileEntryFilter([u'txt'])
+
+    # Test a filter match.
     tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, inode=15,
         location=u'/passwords.txt', parent=os_path_spec)
@@ -170,9 +172,7 @@ class ExtensionsFileEntryFilterTest(shared_test_lib.BaseTestCase):
 
     self.assertTrue(test_filter.Matches(file_entry))
 
-    test_path = self._GetTestFilePath([u'ímynd.dd'])
-    os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+    # Test a filter non-match.
     tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK, inode=16,
         location=u'/a_directory/another_file', parent=os_path_spec)
@@ -206,7 +206,43 @@ class NamesFileEntryFilterTest(shared_test_lib.BaseTestCase):
 
   def testMatches(self):
     """Tests the Matches function."""
-    # TODO: implement.
+    test_path = self._GetTestFilePath([u'ímynd.dd'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+
+    test_filter = image_export.NamesFileEntryFilter([u'passwords.txt'])
+
+    # Test a filter non-match.
+    tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=16,
+        location=u'/a_directory/another_file', parent=os_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+
+    self.assertFalse(test_filter.Matches(file_entry))
+
+    # Test a filter on a directory.
+    tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=12,
+        location=u'/a_directory', parent=os_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+
+    self.assertFalse(test_filter.Matches(file_entry))
+
+    # Test a filter match.
+    tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=15,
+        location=u'/passwords.txt', parent=os_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+
+    self.assertTrue(test_filter.Matches(file_entry))
+
+    # Test a filter without names.
+    test_filter = image_export.NamesFileEntryFilter([])
+
+    self.assertFalse(test_filter.Matches(file_entry))
 
   def testPrint(self):
     """Tests the Print function."""
