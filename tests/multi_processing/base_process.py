@@ -9,7 +9,7 @@ from plaso.multi_processing import base_process
 from tests import test_lib as shared_test_lib
 
 
-class TestProcess(base_process.MultiProcessBaseProcessTest):
+class TestProcess(base_process.MultiProcessBaseProcess):
   """Implementation of the multi-processing base process for testing."""
 
 
