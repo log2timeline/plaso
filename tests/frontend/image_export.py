@@ -157,14 +157,36 @@ class ExtensionsFileEntryFilterTest(shared_test_lib.BaseTestCase):
 
   def testMatches(self):
     """Tests the Matches function."""
-    # TODO: implement.
+    test_filter = image_export.ExtensionsFileEntryFilter([u'txt'])
+
+    test_path = self._GetTestFilePath([u'ímynd.dd'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+    tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=15,
+        location=u'/passwords.txt', parent=os_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+
+    self.assertTrue(test_filter.Matches(file_entry))
+
+    test_path = self._GetTestFilePath([u'ímynd.dd'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+    tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=16,
+        location=u'/a_directory/another_file', parent=os_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+
+    self.assertFalse(test_filter.Matches(file_entry))
+
+    # TODO: implement test with a path spec without location.
 
   def testPrint(self):
     """Tests the Print function."""
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_filter = image_export.ExtensionsFileEntryFilter([u'exe', u'pdf'])
-
-    # TODO: implement.
 
     test_filter.Print(output_writer)
 
@@ -190,8 +212,6 @@ class NamesFileEntryFilterTest(shared_test_lib.BaseTestCase):
     """Tests the Print function."""
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_filter = image_export.NamesFileEntryFilter([u'myfile'])
-
-    # TODO: implement.
 
     test_filter.Print(output_writer)
 
@@ -222,8 +242,6 @@ class SignaturesFileEntryFilterTest(shared_test_lib.BaseTestCase):
     sepcification_store.AddNewSpecification(u'7z')
     test_filter = image_export.SignaturesFileEntryFilter(
         sepcification_store, [u'7z', u'bzip2'])
-
-    # TODO: implement.
 
     test_filter.Print(output_writer)
 
