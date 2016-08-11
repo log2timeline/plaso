@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The psort front-end."""
+"""The psort multi-processing engine."""
 
 from __future__ import print_function
 import collections

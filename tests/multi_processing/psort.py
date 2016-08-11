@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the psort front-end."""
+"""Tests for the psort multi-processing engine."""
 
 import os
 import shutil
@@ -136,6 +136,10 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
+  # TODO: add test for _AnalyzeEvent.
+  # TODO: add test for _AnalyzeEvents.
+  # TODO: add test for _CheckStatusAnalysisProcess.
+
   def testInternalExportEvents(self):
     """Tests the _ExportEvents function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
@@ -196,6 +200,11 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
         b'date,time,timezone,MACB,source,sourcetype,type,user,host,short,desc,'
         b'version,filename,inode,notes,format,extra'))
 
+  # TODO: add test for _StartAnalysisProcesses.
+  # TODO: add test for _StatusUpdateThreadMain.
+  # TODO: add test for _StopAnalysisProcesses.
+  # TODO: add test for _UpdateProcessingStatus.
+
   def testAnalyzeEvents(self):
     """Tests the AnalyzeEvents function."""
     storage_file_path = self._GetTestFilePath([u'psort_test.json.plaso'])
@@ -230,6 +239,8 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     # TODO: assert if tests were successful.
     _ = counter
+
+    # TODO: add bogus data location test.
 
   def testExportEvents(self):
     """Tests the ExportEvents function."""
@@ -272,8 +283,6 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
         u'filestat,'
         u'OS:/tmp/test/test_data/syslog,-')
     self.assertEquals(lines[14], expected_line)
-
-  # TODO: add bogus data location test.
 
 
 if __name__ == '__main__':

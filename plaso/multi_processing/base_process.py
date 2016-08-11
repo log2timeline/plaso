@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Base class for a process used in multi processing."""
+"""Base class for a process used in multi-processing."""
 
 import abc
 import logging
