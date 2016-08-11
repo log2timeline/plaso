@@ -237,9 +237,18 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
       test_tool.ProcessSources()
 
+      expected_output = [
+          b'',
+          b'Source path\t: {0:s}'.format(options.source.encode(u'utf-8')),
+          b'Source type\t: directory',
+          b'',
+          b'Processing started.',
+          b'Processing completed.',
+          b'',
+          b'']
+
       output = output_writer.ReadOutput()
-      # TODO: print summary and compare that against output.
-      _ = output
+      self.assertEqual(output.split(b'\n'), expected_output)
 
   def testProcessSourcesBDEImage(self):
     """Tests the ProcessSources function on an image containing BDE."""
@@ -260,9 +269,18 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
       test_tool.ProcessSources()
 
+      expected_output = [
+          b'',
+          b'Source path\t: {0:s}'.format(options.source.encode(u'utf-8')),
+          b'Source type\t: storage media image',
+          b'',
+          b'Processing started.',
+          b'Processing completed.',
+          b'',
+          b'']
+
       output = output_writer.ReadOutput()
-      # TODO: print summary and compare that against output.
-      _ = output
+      self.assertEqual(output.split(b'\n'), expected_output)
 
   def testProcessSourcesImage(self):
     """Tests the ProcessSources function on a single partition image."""
@@ -282,9 +300,18 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
       test_tool.ProcessSources()
 
+      expected_output = [
+          b'',
+          b'Source path\t: {0:s}'.format(options.source.encode(u'utf-8')),
+          b'Source type\t: storage media image',
+          b'',
+          b'Processing started.',
+          b'Processing completed.',
+          b'',
+          b'']
+
       output = output_writer.ReadOutput()
-      # TODO: print summary and compare that against output.
-      _ = output
+      self.assertEqual(output.split(b'\n'), expected_output)
 
   def testProcessSourcesPartitionedImage(self):
     """Tests the ProcessSources function on a multi partition image."""
@@ -307,9 +334,18 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
       test_tool.ProcessSources()
 
+      expected_output = [
+          b'',
+          b'Source path\t: {0:s}'.format(options.source.encode(u'utf-8')),
+          b'Source type\t: storage media image',
+          b'',
+          b'Processing started.',
+          b'Processing completed.',
+          b'',
+          b'']
+
       output = output_writer.ReadOutput()
-      # TODO: print summary and compare that against output.
-      _ = output
+      self.assertEqual(output.split(b'\n'), expected_output)
 
   def testProcessSourcesVSSImage(self):
     """Tests the ProcessSources function on an image containing VSS."""
@@ -330,9 +366,22 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
       test_tool.ProcessSources()
 
+      expected_output = [
+          b'',
+          b'Source path\t: {0:s}'.format(options.source.encode(u'utf-8')),
+          b'Source type\t: storage media image',
+          b'',
+          b'Processing started.',
+          b'Processing completed.',
+          b'',
+          b'Number of errors encountered while extracting events: 1.',
+          b'',
+          b'Use pinfo to inspect errors in more detail.',
+          b'',
+          b'']
+
       output = output_writer.ReadOutput()
-      # TODO: print summary and compare that against output.
-      _ = output
+      self.assertEqual(output.split(b'\n'), expected_output)
 
   def testProcessSourcesSingleFile(self):
     """Tests the ProcessSources function on a single file."""
@@ -352,9 +401,18 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
       test_tool.ProcessSources()
 
+      expected_output = [
+          b'',
+          b'Source path\t: {0:s}'.format(options.source.encode(u'utf-8')),
+          b'Source type\t: single file',
+          b'',
+          b'Processing started.',
+          b'Processing completed.',
+          b'',
+          b'']
+
       output = output_writer.ReadOutput()
-      # TODO: print summary and compare that against output.
-      _ = output
+      self.assertEqual(output.split(b'\n'), expected_output)
 
   def testProcessSourcesFilestat(self):
     """Test if the filestat and other parsers ran."""
