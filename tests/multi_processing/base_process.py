@@ -12,7 +12,28 @@ from tests import test_lib as shared_test_lib
 class TestProcess(base_process.MultiProcessBaseProcess):
   """Implementation of the multi-processing base process for testing."""
 
-  # pylint: disable=abstract-method
+  def _GetStatus(self):
+    """Returns status information.
+
+    Returns:
+      dict [str, object]: status attributes, indexed by name.
+    """
+    # TODO: implement.
+    return
+
+  def _Main(self):
+    """The process main loop.
+
+    This method is called when the process is ready to start. A sub class
+    should override this method to do the necessary actions in the main loop.
+    """
+    # TODO: implement.
+    return
+
+  def SignalAbort(self):
+    """Signals the process to abort."""
+    # TODO: implement.
+    return
 
 
 class MultiProcessBaseProcessTest(shared_test_lib.BaseTestCase):
