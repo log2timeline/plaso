@@ -15,6 +15,8 @@ from tools import image_export
 class ImageExportToolTest(cli_test_lib.CLIToolTestCase):
   """Tests for the image export CLI tool."""
 
+  # pylint: disable=protected-access
+
   def testListSignatureIdentifiers(self):
     """Tests the ListSignatureIdentifiers function."""
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
