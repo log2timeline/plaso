@@ -301,31 +301,6 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       if line.startswith(b'*****') and line.endswith(b'*****'):
         number_of_tables += 1
 
-    lines = frozenset(lines)
-
-    self.assertEqual(number_of_tables, 2)
-
-    expected_line = b'rawpy : "raw" (or native) Python output.'
-    self.assertIn(expected_line, lines)
-
-  def testListAnalysisPlugins(self):
-    """Tests the ListAnalysisPlugins function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = psort.PsortTool(output_writer=output_writer)
-
-    test_tool.ListAnalysisPlugins()
-
-    output = output_writer.ReadOutput()
-
-    number_of_tables = 0
-    lines = []
-    for line in output.split(b'\n'):
-      line = line.strip()
-      lines.append(line)
-
-      if line.startswith(b'*****') and line.endswith(b'*****'):
-        number_of_tables += 1
-
     self.assertIn(u'Analysis Plugins', lines[1])
 
     lines = frozenset(lines)
