@@ -31,7 +31,7 @@ from plaso.multi_processing import worker_process
 class _EventSourceHeap(object):
   """Class that defines an event source heap."""
 
-  def __init__(self, maximum_number_of_items=5000):
+  def __init__(self, maximum_number_of_items=50000):
     """Initializes an event source heap.
 
     Args:
