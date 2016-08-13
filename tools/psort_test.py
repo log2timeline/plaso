@@ -210,7 +210,8 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      u'  --fields FIELDS  Defines which fields should be included in the output.',
+      (u'  --fields FIELDS  Defines which fields should be included in '
+       u'the output.'),
       u''])
 
   # TODO: add test for _FormatStatusTableRow.
