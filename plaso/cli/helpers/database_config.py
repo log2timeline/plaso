@@ -24,8 +24,8 @@ class DatabaseConfigHelper(interface.ArgumentsHelper):
     to it all the command line arguments this helper supports.
 
     Args:
-      argument_group: the argparse group (instance of argparse._ArgumentGroup or
-                      or argparse.ArgumentParser).
+      argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
+          argparse group.
     """
     argument_group.add_argument(
         u'--user', dest=u'username', type=str, action=u'store',
@@ -47,8 +47,8 @@ class DatabaseConfigHelper(interface.ArgumentsHelper):
     """Parses and validates options.
 
     Args:
-      options: the parser option object (instance of argparse.Namespace).
-      output_module: an output module (instance of OutputModule).
+      options (argparse.Namespace): parser options.
+      output_module (OutputModule): output module to configure.
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.

@@ -205,6 +205,12 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       u''])
 
   _EXPECTED_OUTPUT_MODULE_OPTIONS = u'\n'.join([
+      u'usage: psort_test.py [--fields FIELDS]',
+      u'',
+      u'Test argument parser.',
+      u'',
+      u'optional arguments:',
+      u'  --fields FIELDS  Defines which fields should be included in the output.',
       u''])
 
   # TODO: add test for _FormatStatusTableRow.
@@ -278,7 +284,7 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     test_tool = psort.PsortTool()
-    test_tool.AddOutputModuleOptions(argument_parser, [])
+    test_tool.AddOutputModuleOptions(argument_parser, [u'dynamic'])
 
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT_MODULE_OPTIONS)
