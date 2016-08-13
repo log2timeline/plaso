@@ -210,8 +210,9 @@ class CupsIppParser(interface.FileObjectParser):
     """Parses a CUPS IPP file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -251,41 +252,41 @@ class CupsIppParser(interface.FileObjectParser):
         time_dict[key] = value
         del data_dict[key]
 
-    if u'date-time-at-creation' in time_dict:
+    time_value = time_dict.get(u'date-time-at-creation', None)
+    if time_value is not None:
       event_object = CupsIppEvent(
-          time_dict[u'date-time-at-creation'][0],
-          eventdata.EventTimestamp.CREATION_TIME, data_dict)
+          time_value[0], eventdata.EventTimestamp.CREATION_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
 
-    if u'date-time-at-processing' in time_dict:
+    time_value = time_dict.get(u'date-time-at-processing', None)
+    if time_value is not None:
       event_object = CupsIppEvent(
-          time_dict[u'date-time-at-processing'][0],
-          eventdata.EventTimestamp.START_TIME, data_dict)
+          time_value[0], eventdata.EventTimestamp.START_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
 
-    if u'date-time-at-completed' in time_dict:
+    time_value = time_dict.get(u'date-time-at-completed', None)
+    if time_value is not None:
       event_object = CupsIppEvent(
-          time_dict[u'date-time-at-completed'][0],
-          eventdata.EventTimestamp.END_TIME, data_dict)
+          time_value[0], eventdata.EventTimestamp.END_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
 
-    if u'time-at-creation' in time_dict:
-      time_value = time_dict[u'time-at-creation'][0]
-      timestamp = timelib.Timestamp.FromPosixTime(time_value)
+    time_value = time_dict.get(u'time-at-creation', None)
+    if time_value is not None:
+      timestamp = timelib.Timestamp.FromPosixTime(time_value[0])
       event_object = CupsIppEvent(
           timestamp, eventdata.EventTimestamp.CREATION_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
 
-    if u'time-at-processing' in time_dict:
-      time_value = time_dict[u'time-at-processing'][0]
-      timestamp = timelib.Timestamp.FromPosixTime(time_value)
+    time_value = time_dict.get(u'time-at-processing', None)
+    if time_value is not None:
+      timestamp = timelib.Timestamp.FromPosixTime(time_value[0])
       event_object = CupsIppEvent(
           timestamp, eventdata.EventTimestamp.START_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
 
-    if u'time-at-completed' in time_dict:
-      time_value = time_dict[u'time-at-completed'][0]
-      timestamp = timelib.Timestamp.FromPosixTime(time_value)
+    time_value = time_dict.get(u'time-at-completed', None)
+    if time_value is not None:
+      timestamp = timelib.Timestamp.FromPosixTime(time_value[0])
       event_object = CupsIppEvent(
           timestamp, eventdata.EventTimestamp.END_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
@@ -294,12 +295,15 @@ class CupsIppParser(interface.FileObjectParser):
     """Reads an attribute name and value pair from a CUPS IPP event.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: a file-like object that points to a file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
 
     Returns:
-      A list of name and value. If name and value cannot be read both are
-      set to None.
+      tuple: contains:
+
+        str: name or None.
+        str: value or None.
     """
     # Pair = Type ID + Name + Value.
     try:
@@ -316,21 +320,20 @@ class CupsIppParser(interface.FileObjectParser):
         type_id = self.INTEGER_8.parse_stream(file_object)
 
       # 0x00 separator character.
-      _ = self.INTEGER_8.parse_stream(file_object)
+      self.INTEGER_8.parse_stream(file_object)
 
-    except (IOError, construct.FieldError):
-      logging.warning(
-          u'[{0:s}] Unsupported identifier in file: {1:s}.'.format(
-              self.NAME, parser_mediator.GetDisplayName()))
+    except (IOError, construct.FieldError) as exception:
+      parser_mediator.ProduceExtractionError(
+          u'unable to parse pair identifier with error: {0:s}'.format(
+              exception))
       return None, None
 
     # Name = Length name + name + 0x00
     try:
       name = self.PAIR_NAME.parse_stream(file_object).text
-    except (IOError, UnicodeDecodeError, construct.FieldError):
-      logging.warning(
-          u'[{0:s}] Unsupported name in file: {1:s}.'.format(
-              self.NAME, parser_mediator.GetDisplayName()))
+    except (IOError, UnicodeDecodeError, construct.FieldError) as exception:
+      parser_mediator.ProduceExtractionError(
+          u'unable to parse pair name with error: {0:s}'.format(exception))
       return None, None
 
     # Value: can be integer, boolean or text select by Type ID.
@@ -353,10 +356,9 @@ class CupsIppParser(interface.FileObjectParser):
       else:
         value = self.TEXT.parse_stream(file_object)
 
-    except (IOError, UnicodeDecodeError, construct.FieldError):
-      logging.warning(
-          u'[{0:s}] Unsupported value in file: {1:s}.'.format(
-              self.NAME, parser_mediator.GetDisplayName()))
+    except (IOError, UnicodeDecodeError, construct.FieldError) as exception:
+      parser_mediator.ProduceExtractionError(
+          u'unable to parse pair value with error: {0:s}'.format(exception))
       return None, None
 
     return name, value

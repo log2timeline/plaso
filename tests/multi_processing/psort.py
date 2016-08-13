@@ -209,6 +209,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       storage_writer.Open()
       storage_writer.ReadPreprocessingInformation(knowledge_base_object)
 
+      # TODO: implement, this currently loops infinite.
       # test_engine._AnalyzeEvents(storage_writer, [test_plugin])
       storage_writer.Close()
 
@@ -226,6 +227,10 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       storage_writer.Open()
       storage_writer.ReadPreprocessingInformation(knowledge_base_object)
 
+      # TODO: implement, this currently loops infinite.
+      _ = test_engine
+      _ = test_plugin
+      _ = test_filter
       # test_engine._AnalyzeEvents(
       #    storage_writer, [test_plugin], event_filter=test_filter)
       storage_writer.Close()
