@@ -388,7 +388,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
         self._FillEventSourceHeap(storage_writer, event_source_heap)
 
-        event_source = event_source_heap.PopEventSource()
+        if not event_source and not task:
+          event_source = event_source_heap.PopEventSource()
 
       except KeyboardInterrupt:
         self._abort = True
