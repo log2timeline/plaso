@@ -27,7 +27,6 @@ class ElasticOutputHelper(interface.ArgumentsHelper):
   _DEFAULT_INDEX_NAME = uuid4().hex
   _DEFAULT_DOC_TYPE = u'plaso_event'
   _DEFAULT_FLUSH_INTERVAL = 1000
-  # Raw fields are string fields that are not not analyzed by Lucene.
   _DEFAULT_RAW_FIELDS = False
 
   @classmethod
@@ -38,8 +37,8 @@ class ElasticOutputHelper(interface.ArgumentsHelper):
     to it all the command line arguments this helper supports.
 
     Args:
-      argument_group: the argparse group (instance of argparse._ArgumentGroup or
-                      or argparse.ArgumentParser).
+      argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
+          argparse group.
     """
     argument_group.add_argument(
         u'--index_name', dest=u'index_name', type=str, action=u'store',
@@ -54,9 +53,9 @@ class ElasticOutputHelper(interface.ArgumentsHelper):
         action=u'store', default=cls._DEFAULT_FLUSH_INTERVAL, help=(
             u'Events to queue up before bulk insert to ElasticSearch.'))
     argument_group.add_argument(
-        u'--raw_fields', dest=u'raw_fields', type=bool,
-        action=u'store', default=cls._DEFAULT_RAW_FIELDS, help=(
-            u'For all string fields add attribute that are not analyzed.'))
+        u'--raw_fields', dest=u'raw_fields', action=u'store_true',
+        default=cls._DEFAULT_RAW_FIELDS, help=(
+            u'Export string fields that will not be analyzed by Lucene.'))
 
     ElasticServer.AddArguments(argument_group)
 
@@ -65,8 +64,8 @@ class ElasticOutputHelper(interface.ArgumentsHelper):
     """Parses and validates options.
 
     Args:
-      options: the parser option object (instance of argparse.Namespace).
-      output_module: an output module (instance of OutputModule).
+      options (argparse.Namespace): parser options.
+      output_module (OutputModule): output module.
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
