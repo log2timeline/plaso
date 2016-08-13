@@ -92,8 +92,7 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       u'usage: psort_test.py [--nsrlsvr-host NSRLSVR_HOST]',
       u'                     [--nsrlsvr-port NSRLVR_PORT]',
       u'                     [--virustotal-api-key VIRUSTOTAL_API_KEY]',
-      (u'                     [--virustotal-free-rate-limit '
-       u'VIRUSTOTAL_RATE_LIMIT]'),
+      u'                     [--virustotal-free-rate-limit]',
       u'                     [--windows-services-output {text,yaml}]',
       (u'                     [--viper-host VIPER_HOST] [--viper-protocol '
        u'{http,https}]'),
@@ -108,7 +107,7 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       u'                        Port to use to query Nsrlsvr.',
       u'  --virustotal-api-key VIRUSTOTAL_API_KEY',
       u'                        Specify the API key for use with VirusTotal.',
-      u'  --virustotal-free-rate-limit VIRUSTOTAL_RATE_LIMIT',
+      u'  --virustotal-free-rate-limit',
       (u'                        Limit Virustotal requests to the default '
        u'free API key'),
       (u'                        rate of 4 requests per minute. Set this to '
