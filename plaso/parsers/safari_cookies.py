@@ -190,7 +190,7 @@ class BinaryCookieParser(interface.FileObjectParser):
       FormatSpecification: format specification.
     """
     format_specification = specification.FormatSpecification(cls.NAME)
-    format_specification.AddNewSignature(b'cook', offset=0)
+    format_specification.AddNewSignature(b'cook\x00', offset=0)
     return format_specification
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
