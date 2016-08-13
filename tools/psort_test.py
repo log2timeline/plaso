@@ -286,7 +286,7 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
   def testListAnalysisPlugins(self):
     """Tests the ListAnalysisPlugins function."""
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = log2timeline.Log2TimelineTool(output_writer=output_writer)
+    test_tool = psort.PsortTool(output_writer=output_writer)
 
     test_tool.ListAnalysisPlugins()
 
