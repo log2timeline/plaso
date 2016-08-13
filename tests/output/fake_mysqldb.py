@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """Fake implementation of MySQLdb module for testing."""
 
-import unittest
-
 
 class Error(object):
   """Fake implementation of MySQLdb Error class for testing."""
@@ -50,7 +48,7 @@ class FakeMySQLdbCursor(object):
     self._result_index = 0
     self.expected_query = None
     self.expected_query_args = None
-    self.query_results = None
+    self.query_results = []
 
   def close(self):
     """Closes the cursor."""
@@ -76,7 +74,6 @@ class FakeMySQLdbCursor(object):
 
     if (self.expected_query_args is not None and
         self.expected_query_args != args):
-      print args
       raise ValueError(u'Query arguments mismatch.')
 
     self._result_index = 0
@@ -97,8 +94,7 @@ class FakeMySQLdbCursor(object):
 
 
 def connect(
-    self, unused_hostname, unused_username, unused_password,
-    unused_database_name):
+    unused_hostname, unused_username, unused_password, unused_database_name):
   """Connects to the MySQL database server.
 
   Args:

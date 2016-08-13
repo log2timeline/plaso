@@ -68,7 +68,7 @@ class MySQL4n6TimeOutputModuleTest(test_lib.OutputModuleTestCase):
 
     expected_unique_values = {u'one': 1, u'two': 2, u'three': 3}
     unique_values = output_module._GetUniqueValues(u'source')
-    self.assertEqual(unique_values, unique_values)
+    self.assertEqual(unique_values, expected_unique_values)
 
   # TODO: add test for Open and Close
 

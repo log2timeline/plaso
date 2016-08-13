@@ -53,7 +53,7 @@ class ElasticSearchHelperTest(test_lib.OutputModuleTestCase):
     event_tag.AddLabel(label)
     event.tag = event_tag
 
-    output_mediator = CreateOutputMediator()
+    output_mediator = self._CreateOutputMediator()
 
     elasticsearch_helper = elastic.ElasticSearchHelper(
         output_mediator, u'127.0.0.1', 9200, 1000, u'test', {}, u'test_type')
