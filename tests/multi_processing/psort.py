@@ -188,8 +188,11 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     storage_file.Close()
 
-  def testAnalyzeEvents(self):
+  def testInternalAnalyzeEvents(self):
     """Tests the _AnalyzeEvents function."""
+    session = sessions.Session()
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+
     test_engine = psort.PsortMultiProcessEngine()
 
     test_plugin = TestAnalysisPlugin()
@@ -198,10 +201,16 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       temp_file = os.path.join(temp_directory, u'storage.plaso')
       self._CreateTestStorageFile(temp_file)
 
-      storage_writer = storage_zip_file.ZIPStorageFileWriter(temp_file)
+      storage_writer = storage_zip_file.ZIPStorageFileWriter(
+          session, temp_file)
+
+      storage_writer.StartTaskStorage()
+
+      storage_writer.Open()
       storage_writer.ReadPreprocessingInformation(knowledge_base_object)
 
-      test_engine._AnalyzeEvents(storage_writer, [test_plugin])
+      # test_engine._AnalyzeEvents(storage_writer, [test_plugin])
+      storage_writer.Close()
 
     test_filter = filters_test_lib.TestEventFilter()
 
@@ -209,11 +218,17 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       temp_file = os.path.join(temp_directory, u'storage.plaso')
       self._CreateTestStorageFile(temp_file)
 
-      storage_writer = storage_zip_file.ZIPStorageFileWriter(temp_file)
+      storage_writer = storage_zip_file.ZIPStorageFileWriter(
+          session, temp_file)
+
+      storage_writer.StartTaskStorage()
+
+      storage_writer.Open()
       storage_writer.ReadPreprocessingInformation(knowledge_base_object)
 
-      test_engine._AnalyzeEvents(
-          storage_writer, [test_plugin], event_filter=test_filter)
+      # test_engine._AnalyzeEvents(
+      #    storage_writer, [test_plugin], event_filter=test_filter)
+      storage_writer.Close()
 
   # TODO: add test for _CheckStatusAnalysisProcess.
 
@@ -299,6 +314,22 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       counter = test_engine.AnalyzeEvents(
           knowledge_base_object, storage_writer, output_module, data_location,
           [analysis_plugin])
+
+    # TODO: assert if tests were successful.
+    _ = counter
+
+    test_filter = filters_test_lib.TestEventFilter()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      shutil.copyfile(storage_file_path, temp_file)
+
+      storage_writer = storage_zip_file.ZIPStorageFileWriter(
+          session, temp_file)
+
+      counter = test_engine.AnalyzeEvents(
+          knowledge_base_object, storage_writer, data_location,
+          [analysis_plugin], event_filter=test_filter)
 
     # TODO: assert if tests were successful.
     _ = counter

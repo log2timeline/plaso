@@ -205,7 +205,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       logging.error((
           u'Process {0:s} (PID: {1:d}) is not functioning correctly. '
           u'Status code: {2!s}.').format(
-               process.name, pid, status_indicator))
+              process.name, pid, status_indicator))
 
       self._TerminateProcess(pid)
 
