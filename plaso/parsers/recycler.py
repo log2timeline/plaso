@@ -75,7 +75,7 @@ class WinRecycleBinParser(interface.FileObjectParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      file_object (FileIO): file-like object.
+      file_object (dfvfs.FileIO): file-like object.
     """
     # We may have to rely on filenames since this header is very generic.
 
@@ -148,7 +148,7 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers
           and other components, such as storage and dfvfs.
-      file_object (FileIO): file-like object.
+      file_object (dfvfs.FileIO): file-like object.
     """
     # Since this header value is really generic it is hard not to use filename
     # as an indicator too.

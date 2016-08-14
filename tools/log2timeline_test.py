@@ -104,6 +104,8 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       if line.startswith(b'*****') and line.endswith(b'*****'):
         number_of_tables += 1
 
+    self.assertIn(u'Hashers', lines[1])
+
     lines = frozenset(lines)
 
     self.assertEqual(number_of_tables, 1)
@@ -129,6 +131,8 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       if line.startswith(b'*****') and line.endswith(b'*****'):
         number_of_tables += 1
 
+    self.assertIn(u'Output Modules', lines[1])
+
     lines = frozenset(lines)
 
     self.assertEqual(number_of_tables, 2)
@@ -153,6 +157,8 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
       if line.startswith(b'*****') and line.endswith(b'*****'):
         number_of_tables += 1
+
+    self.assertIn(u'Parsers', lines[1])
 
     lines = frozenset(lines)
 

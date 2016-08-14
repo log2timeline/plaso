@@ -246,8 +246,10 @@ class ZeroMQQueue(plaso_queue.Queue):
     self._closed_event.set()
 
     if abort:
-      logging.warning(
-          u'{0:s} queue aborting. Contents may be lost.'.format(self.name))
+      if not self._closed_event.is_set():
+        logging.warning(
+            u'{0:s} queue aborting. Contents may be lost.'.format(self.name))
+
       self._linger_seconds = 0
 
       # We can't determine whether a there might be an operation being performed
@@ -633,8 +635,9 @@ class ZeroMQBufferedQueue(ZeroMQQueue):
     self._closed_event.set()
 
     if abort:
-      logging.warning(
-          u'{0:s} queue aborting. Contents may be lost.'.format(self.name))
+      if not self._closed_event.is_set():
+        logging.warning(
+            u'{0:s} queue aborting. Contents may be lost.'.format(self.name))
 
       # We can't determine whether a there might be an operation being performed
       # on the socket in a separate method or thread, so we'll signal that any
