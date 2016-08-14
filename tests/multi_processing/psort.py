@@ -42,7 +42,7 @@ class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
           analysis plugins and other components, such as storage and dfvfs.
 
     Returns:
-      AnalysisReport: report.
+      AnalysisReport: report, which will be None for testing.
     """
     return
 
@@ -54,7 +54,7 @@ class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
           analysis plugins and other components, such as storage and dfvfs.
       event (EventObject): event.
     """
-    return
+    pass
 
 
 class TestEvent(events.EventObject):
