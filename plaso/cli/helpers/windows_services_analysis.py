@@ -40,7 +40,7 @@ class WindowsServicesAnalysisHelper(interface.ArgumentsHelper):
 
     Args:
       options (argparse.Namespace): parser options.
-      analysis_plugin (AnalysisPlugin): analysis plugin to configure.
+      analysis_plugin (WindowsServicePlugin): analysis plugin to configure.
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.

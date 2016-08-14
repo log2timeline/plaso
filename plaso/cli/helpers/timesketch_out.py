@@ -70,7 +70,7 @@ class TimesketchOutputHelper(interface.ArgumentsHelper):
 
     Args:
       options (argparse.Namespace): parser options.
-      output_module (OutputModule): output module to configure.
+      output_module (TimesketchOutputModule): output module to configure.
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.

@@ -231,7 +231,7 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
     """Set the database credentials.
 
     Args:
-      password (Optional[str]): passwor to access the database.
+      password (Optional[str]): password to access the database.
       username (Optional[str]): username to access the database.
     """
     if password:

@@ -44,7 +44,7 @@ class ViperAnalysisHelper(interface.ArgumentsHelper):
 
     Args:
       options (argparse.Namespace): parser options.
-      analysis_plugin (AnalysisPlugin): analysis plugin to configure.
+      analysis_plugin (ViperAnalysisPlugin): analysis plugin to configure.
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.

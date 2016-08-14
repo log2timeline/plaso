@@ -43,7 +43,7 @@ class NsrlsvrAnalysisHelper(interface.ArgumentsHelper):
 
     Args:
       options (argparse.Namespace): parser options object.
-      analysis_plugin (AnalysisPlugin): analysis plugin to configure.
+      analysis_plugin (NsrlsvrAnalysisPlugin): analysis plugin to configure.
 
     Raises:
       BadConfigObject: when the analysis plugin is the wrong type.
