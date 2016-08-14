@@ -72,17 +72,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._status_update_callback = None
     self._use_zeromq = use_zeromq
 
-  def _AnalyzeEvent(self, event):
-    """Analyzes an event by pushing it to the event queues.
-
-    Args:
-      event (EventObject): event.
-    """
-    for event_queue in self._event_queues:
-      event_queue.PushItem(event)
-
-    self._number_of_consumed_events += 1
-
   def _AnalyzeEvents(self, storage_writer, analysis_plugins, event_filter=None):
     """Analyzes events in a plaso storage.
 
@@ -122,7 +111,10 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         number_of_filtered_events += 1
         continue
 
-      self._AnalyzeEvent(event)
+      for event_queue in self._event_queues:
+        event_queue.PushItem(event)
+
+      self._number_of_consumed_events += 1
 
       if (event_filter and filter_limit and
           filter_limit == self._number_of_consumed_events):
@@ -210,10 +202,10 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._UpdateProcessingStatus(pid, process_status)
 
     if status_indicator in definitions.PROCESSING_ERROR_STATUS:
-      logging.error(
-          (u'Process {0:s} (PID: {1:d}) is not functioning correctly. '
-           u'Status code: {2!s}.').format(
-               process.name, pid, status_indicator))
+      logging.error((
+          u'Process {0:s} (PID: {1:d}) is not functioning correctly. '
+          u'Status code: {2!s}.').format(
+              process.name, pid, status_indicator))
 
       self._TerminateProcess(pid)
 

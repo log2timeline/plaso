@@ -44,7 +44,7 @@ class VirusTotalAnalysisHelper(interface.ArgumentsHelper):
 
     Args:
       options (argparse.Namespace): parser options.
-      analysis_plugin (AnalysisPlugin): analysis plugin.
+      analysis_plugin (VirusTotalAnalysisPlugin): analysis plugin to configure.
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.

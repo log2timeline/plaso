@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """The filters shared test library."""
 
-import unittest
-
 from plaso.filters import interface
+
+from tests import test_lib as shared_test_lib
 
 
 class TestEventFilter(interface.FilterObject):
@@ -21,5 +21,5 @@ class TestEventFilter(interface.FilterObject):
     pass
 
 
-class FilterTestCase(unittest.TestCase):
+class FilterTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for an event filter."""

@@ -65,7 +65,7 @@ class ElasticOutputHelper(interface.ArgumentsHelper):
 
     Args:
       options (argparse.Namespace): parser options.
-      output_module (OutputModule): output module.
+      output_module (OutputModule): output module to configure.
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.

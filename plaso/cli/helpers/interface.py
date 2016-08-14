@@ -24,13 +24,13 @@ class ArgumentsHelper(object):
     """Parses an integer command line argument.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
-      argument_name: the name of the command line argument.
-      default_value: optional default value of the command line argument.
+      options (argparse.Namespace): parser options.
+      argument_name (str): name of the command line argument.
+      default_value (Optional[int]): default value of the command line argument.
 
     Returns:
-      An integer containing the command line argument value. If the command
-      line argument is not set the default value will be returned.
+      int: command line argument value or the default value if the command line
+          argument is not set
 
     Raises:
       BadConfigOption: if the command line argument value cannot be converted
@@ -52,13 +52,13 @@ class ArgumentsHelper(object):
     """Parses a string command line argument.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
-      argument_name: the name of the command line argument.
-      default_value: optional default value of the command line argument.
+      options (argparse.Namespace): parser options.
+      argument_name (str): name of the command line argument.
+      default_value (Optional[str]): default value of the command line argument.
 
     Returns:
-      A string containing the command line argument value. If the command
-      line argument is not set the default value will be returned.
+      str: command line argument value or the default value if the command line
+          argument is not set
 
     Raises:
       BadConfigOption: if the command line argument value cannot be converted
@@ -93,14 +93,14 @@ class ArgumentsHelper(object):
 
   @classmethod
   def AddArguments(cls, argument_group):
-    """Add command line arguments the helper supports to an argument group.
+    """Adds command line arguments to an argument group.
 
     This function takes an argument parser or an argument group object and adds
     to it all the command line arguments this helper supports.
 
     Args:
-      argument_group: the argparse group (instance of argparse._ArgumentGroup or
-                      or argparse.ArgumentParser).
+      argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
+          argparse group.
     """
 
   @classmethod
@@ -108,8 +108,8 @@ class ArgumentsHelper(object):
     """Parses and validates options.
 
     Args:
-      options: the parser option object (instance of argparse.Namespace).
-      config_object: an object that is configured by this helper.
+      options (argparse.Namespace): parser options.
+      config_object (object): object to be configured by an argument helper.
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
