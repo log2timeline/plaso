@@ -12,4 +12,5 @@ Mar 23 23:01:18.123 myhostname.myhost.com somrandomexe[19]: This syslog message 
 Dec 31 17:54:32 myhostname.myhost.com anacron[1234]: Another one just like this (124 job run)
 Nov 18 01:15:20 myhostname.myhost.com aprocess[10100]: This is a multi-line message that screws up
 	many syslog parsers.
+Feb  6 15:16:30 victoria process[2085]: Test message with single character day
 Nov 18 01:15:43: --- last message repeated 5 times ---

@@ -27,13 +27,14 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
 
   DESCRIPTION = u'Syslog Parser'
 
-  _VERIFICATION_REGEX = re.compile(r'^\w{3}\s\d{2}\s\d{2}:\d{2}:\d{2}\s')
+  _VERIFICATION_REGEX = re.compile(r'^\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2}\s')
 
   _plugin_classes = {}
 
   _PYPARSING_COMPONENTS = {
       u'month': text_parser.PyparsingConstants.MONTH.setResultsName(u'month'),
-      u'day': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(u'day'),
+      u'day': text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(
+          u'day'),
       u'hour': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
           u'hour'),
       u'minute': text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
@@ -50,7 +51,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       u'facility': pyparsing.Word(pyparsing.alphanums).setResultsName(
           u'facility'),
       u'body': pyparsing.Regex(
-          r'.*?(?=($|\n\w{3}\s\d{2}\s\d{2}:\d{2}:\d{2}))', re.DOTALL).
+          r'.*?(?=($|\n\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2}))', re.DOTALL).
                setResultsName(u'body'),
       u'comment_body': pyparsing.SkipTo(u' ---').setResultsName(
           u'body')
@@ -65,7 +66,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
           pyparsing.Suppress(u'.') +
           _PYPARSING_COMPONENTS[u'fractional_seconds']))
 
-  _LINE_GRAMMAR = (
+  _SYSLOG_LINE = (
       _PYPARSING_COMPONENTS[u'date'] +
       _PYPARSING_COMPONENTS[u'hostname'] +
       _PYPARSING_COMPONENTS[u'reporter'] +
@@ -84,7 +85,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.Suppress(u'---') + pyparsing.LineEnd())
 
   LINE_STRUCTURES = [
-      (u'syslog_line', _LINE_GRAMMAR),
+      (u'syslog_line', _SYSLOG_LINE),
       (u'syslog_comment', _SYSLOG_COMMENT)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
