@@ -27,7 +27,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
 
   DESCRIPTION = u'Syslog Parser'
 
-  _VERIFICATION_REGEX = re.compile(r'^\w{3}\s\d{2}\s\d{2}:\d{2}:\d{2}\s')
+  _VERIFICATION_REGEX = re.compile(r'^\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2}\s')
 
   _plugin_classes = {}
 
@@ -51,7 +51,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       u'facility': pyparsing.Word(pyparsing.alphanums).setResultsName(
           u'facility'),
       u'body': pyparsing.Regex(
-          r'.*?(?=($|\n\w{3}\s\d{2}\s\d{2}:\d{2}:\d{2}))', re.DOTALL).
+          r'.*?(?=($|\n\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2}))', re.DOTALL).
                setResultsName(u'body'),
       u'comment_body': pyparsing.SkipTo(u' ---').setResultsName(
           u'body')
