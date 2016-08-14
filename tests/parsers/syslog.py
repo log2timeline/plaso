@@ -11,7 +11,7 @@ from plaso.parsers import syslog
 from tests.parsers import test_lib
 
 
-class NewSyslogUnitTest(test_lib.ParserTestCase):
+class SyslogParserTest(test_lib.ParserTestCase):
   """Tests for the syslog parser."""
 
   def setUp(self):
@@ -52,7 +52,7 @@ class NewSyslogUnitTest(test_lib.ParserTestCase):
         [u'syslog'], parser_object,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(len(storage_writer.events), 13)
+    self.assertEqual(len(storage_writer.events), 14)
 
     event_object = storage_writer.events[0]
     event_timestamp = timelib.Timestamp.CopyToIsoFormat(
