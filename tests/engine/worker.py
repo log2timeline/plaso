@@ -128,7 +128,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(storage_writer, path_spec)
 
-    self.assertEqual(storage_writer.number_of_events, 16)
+    self.assertEqual(storage_writer.number_of_events, 17)
 
     # Process a compressed file.
     path_spec = self._GetTestFilePathSpec([u'syslog.gz'])
