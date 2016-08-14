@@ -206,12 +206,85 @@ class CupsIppParser(interface.FileObjectParser):
       u'com.apple.print.JobInfo.PMApplicationName': u'application',
       u'com.apple.print.JobInfo.PMJobOwner': u'owner'}
 
+  def _ReadPair(self, parser_mediator, file_object):
+    """Reads an attribute name and value pair from a CUPS IPP event.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
+
+    Returns:
+      tuple: contains:
+
+        str: name or None.
+        str: value or None.
+    """
+    # Pair = Type ID + Name + Value.
+    try:
+      # Can be:
+      #   Group ID + IDtag = Group ID (1byte) + Tag ID (1byte) + '0x00'.
+      #   IDtag = Tag ID (1byte) + '0x00'.
+      type_id = self.INTEGER_8.parse_stream(file_object)
+      if type_id == self.GROUP_END:
+        return None, None
+
+      elif type_id in self.GROUP_LIST:
+        # If it is a group ID we must read the next byte that contains
+        # the first TagID.
+        type_id = self.INTEGER_8.parse_stream(file_object)
+
+      # 0x00 separator character.
+      self.INTEGER_8.parse_stream(file_object)
+
+    except (IOError, construct.FieldError) as exception:
+      parser_mediator.ProduceExtractionError(
+          u'unable to parse pair identifier with error: {0:s}'.format(
+              exception))
+      return None, None
+
+    # Name = Length name + name + 0x00
+    try:
+      name = self.PAIR_NAME.parse_stream(file_object).text
+    except (IOError, UnicodeDecodeError, construct.FieldError) as exception:
+      parser_mediator.ProduceExtractionError(
+          u'unable to parse pair name with error: {0:s}'.format(exception))
+      return None, None
+
+    # Value: can be integer, boolean or text select by Type ID.
+    try:
+      if type_id in [
+          self.TYPE_GENERAL_INTEGER, self.TYPE_INTEGER, self.TYPE_ENUMERATION]:
+        value = self.INTEGER.parse_stream(file_object).integer
+
+      elif type_id == self.TYPE_BOOL:
+        value = bool(self.BOOLEAN.parse_stream(file_object).integer)
+
+      elif type_id == self.TYPE_DATETIME:
+        datetime = self.DATETIME.parse_stream(file_object)
+        value = timelib.Timestamp.FromRFC2579Datetime(
+            datetime.year, datetime.month, datetime.day, datetime.hour,
+            datetime.minutes, datetime.seconds, datetime.deciseconds,
+            datetime.direction_from_utc, datetime.hours_from_utc,
+            datetime.minutes_from_utc)
+
+      else:
+        value = self.TEXT.parse_stream(file_object)
+
+    except (IOError, UnicodeDecodeError, construct.FieldError) as exception:
+      parser_mediator.ProduceExtractionError(
+          u'unable to parse pair value with error: {0:s}'.format(exception))
+      return None, None
+
+    return name, value
+
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a CUPS IPP file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -237,12 +310,12 @@ class CupsIppParser(interface.FileObjectParser):
 
     # Read the pairs extracting the name and the value.
     data_dict = {}
-    name, value = self.ReadPair(parser_mediator, file_object)
+    name, value = self._ReadPair(parser_mediator, file_object)
     while name or value:
       # Translate the known "name" CUPS IPP to a generic name value.
       pretty_name = self.NAME_PAIR_TRANSLATION.get(name, name)
       data_dict.setdefault(pretty_name, []).append(value)
-      name, value = self.ReadPair(parser_mediator, file_object)
+      name, value = self._ReadPair(parser_mediator, file_object)
 
     # TODO: Refactor to use a lookup table to do event production.
     time_dict = {}
@@ -251,115 +324,44 @@ class CupsIppParser(interface.FileObjectParser):
         time_dict[key] = value
         del data_dict[key]
 
-    if u'date-time-at-creation' in time_dict:
+    time_value = time_dict.get(u'date-time-at-creation', None)
+    if time_value is not None:
       event_object = CupsIppEvent(
-          time_dict[u'date-time-at-creation'][0],
-          eventdata.EventTimestamp.CREATION_TIME, data_dict)
+          time_value[0], eventdata.EventTimestamp.CREATION_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
 
-    if u'date-time-at-processing' in time_dict:
+    time_value = time_dict.get(u'date-time-at-processing', None)
+    if time_value is not None:
       event_object = CupsIppEvent(
-          time_dict[u'date-time-at-processing'][0],
-          eventdata.EventTimestamp.START_TIME, data_dict)
+          time_value[0], eventdata.EventTimestamp.START_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
 
-    if u'date-time-at-completed' in time_dict:
+    time_value = time_dict.get(u'date-time-at-completed', None)
+    if time_value is not None:
       event_object = CupsIppEvent(
-          time_dict[u'date-time-at-completed'][0],
-          eventdata.EventTimestamp.END_TIME, data_dict)
+          time_value[0], eventdata.EventTimestamp.END_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
 
-    if u'time-at-creation' in time_dict:
-      time_value = time_dict[u'time-at-creation'][0]
-      timestamp = timelib.Timestamp.FromPosixTime(time_value)
+    time_value = time_dict.get(u'time-at-creation', None)
+    if time_value is not None:
+      timestamp = timelib.Timestamp.FromPosixTime(time_value[0])
       event_object = CupsIppEvent(
           timestamp, eventdata.EventTimestamp.CREATION_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
 
-    if u'time-at-processing' in time_dict:
-      time_value = time_dict[u'time-at-processing'][0]
-      timestamp = timelib.Timestamp.FromPosixTime(time_value)
+    time_value = time_dict.get(u'time-at-processing', None)
+    if time_value is not None:
+      timestamp = timelib.Timestamp.FromPosixTime(time_value[0])
       event_object = CupsIppEvent(
           timestamp, eventdata.EventTimestamp.START_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
 
-    if u'time-at-completed' in time_dict:
-      time_value = time_dict[u'time-at-completed'][0]
-      timestamp = timelib.Timestamp.FromPosixTime(time_value)
+    time_value = time_dict.get(u'time-at-completed', None)
+    if time_value is not None:
+      timestamp = timelib.Timestamp.FromPosixTime(time_value[0])
       event_object = CupsIppEvent(
           timestamp, eventdata.EventTimestamp.END_TIME, data_dict)
       parser_mediator.ProduceEvent(event_object)
-
-  def ReadPair(self, parser_mediator, file_object):
-    """Reads an attribute name and value pair from a CUPS IPP event.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: a file-like object that points to a file.
-
-    Returns:
-      A list of name and value. If name and value cannot be read both are
-      set to None.
-    """
-    # Pair = Type ID + Name + Value.
-    try:
-      # Can be:
-      #   Group ID + IDtag = Group ID (1byte) + Tag ID (1byte) + '0x00'.
-      #   IDtag = Tag ID (1byte) + '0x00'.
-      type_id = self.INTEGER_8.parse_stream(file_object)
-      if type_id == self.GROUP_END:
-        return None, None
-
-      elif type_id in self.GROUP_LIST:
-        # If it is a group ID we must read the next byte that contains
-        # the first TagID.
-        type_id = self.INTEGER_8.parse_stream(file_object)
-
-      # 0x00 separator character.
-      _ = self.INTEGER_8.parse_stream(file_object)
-
-    except (IOError, construct.FieldError):
-      logging.warning(
-          u'[{0:s}] Unsupported identifier in file: {1:s}.'.format(
-              self.NAME, parser_mediator.GetDisplayName()))
-      return None, None
-
-    # Name = Length name + name + 0x00
-    try:
-      name = self.PAIR_NAME.parse_stream(file_object).text
-    except (IOError, UnicodeDecodeError, construct.FieldError):
-      logging.warning(
-          u'[{0:s}] Unsupported name in file: {1:s}.'.format(
-              self.NAME, parser_mediator.GetDisplayName()))
-      return None, None
-
-    # Value: can be integer, boolean or text select by Type ID.
-    try:
-      if type_id in [
-          self.TYPE_GENERAL_INTEGER, self.TYPE_INTEGER, self.TYPE_ENUMERATION]:
-        value = self.INTEGER.parse_stream(file_object).integer
-
-      elif type_id == self.TYPE_BOOL:
-        value = bool(self.BOOLEAN.parse_stream(file_object).integer)
-
-      elif type_id == self.TYPE_DATETIME:
-        datetime = self.DATETIME.parse_stream(file_object)
-        value = timelib.Timestamp.FromRFC2579Datetime(
-            datetime.year, datetime.month, datetime.day, datetime.hour,
-            datetime.minutes, datetime.seconds, datetime.deciseconds,
-            datetime.direction_from_utc, datetime.hours_from_utc,
-            datetime.minutes_from_utc)
-
-      else:
-        value = self.TEXT.parse_stream(file_object)
-
-    except (IOError, UnicodeDecodeError, construct.FieldError):
-      logging.warning(
-          u'[{0:s}] Unsupported value in file: {1:s}.'.format(
-              self.NAME, parser_mediator.GetDisplayName()))
-      return None, None
-
-    return name, value
 
 
 manager.ParsersManager.RegisterParser(CupsIppParser)

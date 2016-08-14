@@ -6,6 +6,7 @@ import os
 import shutil
 import unittest
 
+from plaso.analysis import interface as analysis_interface
 from plaso.analysis import tagging
 from plaso.containers import events
 from plaso.containers import sessions
@@ -23,6 +24,37 @@ from plaso.storage import zip_file as storage_zip_file
 
 from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
+from tests.filters import test_lib as filters_test_lib
+
+
+class TestAnalysisPlugin(analysis_interface.AnalysisPlugin):
+  """Class that defines an analysis plugin for testing."""
+
+  def CompileReport(self, mediator):
+    """Compiles a report of the analysis.
+
+    After the plugin has received every copy of an event to
+    analyze this function will be called so that the report
+    can be assembled.
+
+    Args:
+      mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
+
+    Returns:
+      AnalysisReport: report, which will be None for testing.
+    """
+    return
+
+  def ExamineEvent(self, mediator, event):
+    """Analyzes an event object.
+
+    Args:
+      mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
+      event (EventObject): event.
+    """
+    pass
 
 
 class TestEvent(events.EventObject):
@@ -136,8 +168,73 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
-  # TODO: add test for _AnalyzeEvent.
-  # TODO: add test for _AnalyzeEvents.
+  def _CreateTestStorageFile(self, path):
+    """Creates a storage file for testing.
+
+    Args:
+      path (str): path.
+    """
+    storage_file = storage_zip_file.ZIPStorageFile()
+    storage_file.Open(path=path, read_only=False)
+
+    # TODO: add preprocessing information.
+
+    storage_file.AddEvent(TestEvent(5134324321))
+    storage_file.AddEvent(TestEvent(2134324321))
+    storage_file.AddEvent(TestEvent(9134324321))
+    storage_file.AddEvent(TestEvent(15134324321))
+    storage_file.AddEvent(TestEvent(5134324322))
+    storage_file.AddEvent(TestEvent(5134024321))
+
+    storage_file.Close()
+
+  def testInternalAnalyzeEvents(self):
+    """Tests the _AnalyzeEvents function."""
+    session = sessions.Session()
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+
+    test_engine = psort.PsortMultiProcessEngine()
+
+    test_plugin = TestAnalysisPlugin()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      self._CreateTestStorageFile(temp_file)
+
+      storage_writer = storage_zip_file.ZIPStorageFileWriter(
+          session, temp_file)
+
+      storage_writer.StartTaskStorage()
+
+      storage_writer.Open()
+      storage_writer.ReadPreprocessingInformation(knowledge_base_object)
+
+      # TODO: implement, this currently loops infinite.
+      # test_engine._AnalyzeEvents(storage_writer, [test_plugin])
+      storage_writer.Close()
+
+    test_filter = filters_test_lib.TestEventFilter()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      self._CreateTestStorageFile(temp_file)
+
+      storage_writer = storage_zip_file.ZIPStorageFileWriter(
+          session, temp_file)
+
+      storage_writer.StartTaskStorage()
+
+      storage_writer.Open()
+      storage_writer.ReadPreprocessingInformation(knowledge_base_object)
+
+      # TODO: implement, this currently loops infinite.
+      _ = test_engine
+      _ = test_plugin
+      _ = test_filter
+      # test_engine._AnalyzeEvents(
+      #    storage_writer, [test_plugin], event_filter=test_filter)
+      storage_writer.Close()
+
   # TODO: add test for _CheckStatusAnalysisProcess.
 
   def testInternalExportEvents(self):
@@ -155,25 +252,11 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     test_engine = psort.PsortMultiProcessEngine()
 
-    event_objects = [
-        TestEvent(5134324321),
-        TestEvent(2134324321),
-        TestEvent(9134324321),
-        TestEvent(15134324321),
-        TestEvent(5134324322),
-        TestEvent(5134024321)]
-
     formatters_manager.FormattersManager.RegisterFormatter(TestEventFormatter)
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'storage.plaso')
-
-      storage_file = storage_zip_file.ZIPStorageFile()
-      storage_file.Open(path=temp_file, read_only=False)
-      # TODO: add preprocessing information.
-      for event in event_objects:
-        storage_file.AddEvent(event)
-      storage_file.Close()
+      self._CreateTestStorageFile(temp_file)
 
       storage_reader = storage_zip_file.ZIPStorageFileReader(temp_file)
       storage_reader.ReadPreprocessingInformation(knowledge_base_object)
@@ -236,6 +319,22 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
       counter = test_engine.AnalyzeEvents(
           knowledge_base_object, storage_writer, output_module, data_location,
           [analysis_plugin])
+
+    # TODO: assert if tests were successful.
+    _ = counter
+
+    test_filter = filters_test_lib.TestEventFilter()
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'storage.plaso')
+      shutil.copyfile(storage_file_path, temp_file)
+
+      storage_writer = storage_zip_file.ZIPStorageFileWriter(
+          session, temp_file)
+
+      counter = test_engine.AnalyzeEvents(
+          knowledge_base_object, storage_writer, data_location,
+          [analysis_plugin], event_filter=test_filter)
 
     # TODO: assert if tests were successful.
     _ = counter

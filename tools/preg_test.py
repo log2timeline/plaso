@@ -6,13 +6,13 @@ import unittest
 
 from plaso.frontend import preg as preg_frontend
 from plaso.lib import errors
+
 from tests.cli import test_lib as cli_test_lib
 
 from tools import preg
-from tools import test_lib
 
 
-class PregToolTest(test_lib.ToolTestCase):
+class PregToolTest(cli_test_lib.CLIToolTestCase):
   """Tests for the preg tool."""
 
   def _ExtractPluginsAndKey(self, string):
@@ -217,7 +217,7 @@ class PregToolTest(test_lib.ToolTestCase):
     self.assertGreater(line_count, 1400)
 
 
-class PregConsoleTest(test_lib.ToolTestCase):
+class PregConsoleTest(cli_test_lib.CLIToolTestCase):
   """Tests for the preg console."""
 
   # pylint: disable=protected-access
@@ -351,7 +351,7 @@ class PregConsoleTest(test_lib.ToolTestCase):
         u'http://javadl.sun.com/webapps/download/AutoDL?BundleId=33742')
 
 
-class PregMagicClassTest(test_lib.ToolTestCase):
+class PregMagicClassTest(cli_test_lib.CLIToolTestCase):
   """Tests for the IPython magic class."""
 
   # pylint: disable=protected-access

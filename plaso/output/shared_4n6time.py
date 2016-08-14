@@ -21,7 +21,8 @@ class Base4n6TimeOutputModule(interface.OutputModule):
     """Initializes the output module object.
 
     Args:
-      output_mediator: The output mediator object (instance of OutputMediator).
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfvfs.
 
     Raises:
       ValueError: when there are unused keyword arguments.
@@ -32,11 +33,11 @@ class Base4n6TimeOutputModule(interface.OutputModule):
     self._fields = self._DEFAULT_FIELDS
     self._set_status = None
 
-  def _GetSanitizedEventValues(self, event_object):
+  def _GetSanitizedEventValues(self, event):
     """Sanitizes the event object for use in 4n6time.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
       A dictionary object containing the sanitized values.
@@ -45,41 +46,40 @@ class Base4n6TimeOutputModule(interface.OutputModule):
       NoFormatterFound: If no event formatter can be found to match the data
                         type in the event object.
     """
-    data_type = getattr(event_object, u'data_type', u'UNKNOWN')
+    data_type = getattr(event, u'data_type', u'UNKNOWN')
 
-    event_formatter = self._output_mediator.GetEventFormatter(event_object)
+    event_formatter = self._output_mediator.GetEventFormatter(event)
     if not event_formatter:
       raise errors.NoFormatterFound(
           u'Unable to find event formatter for: {0:s}.'.format(data_type))
 
-    message, _ = self._output_mediator.GetFormattedMessages(event_object)
+    message, _ = self._output_mediator.GetFormattedMessages(event)
     if message is None:
       raise errors.NoFormatterFound(
           u'Unable to find event formatter for: {0:s}.'.format(data_type))
 
-    source_short, source = self._output_mediator.GetFormattedSources(
-        event_object)
+    source_short, source = self._output_mediator.GetFormattedSources(event)
     if source is None or source_short is None:
       raise errors.NoFormatterFound(
           u'Unable to find event formatter for: {0:s}.'.format(data_type))
 
     datetime_object = None
-    if event_object.timestamp is not None:
+    if event.timestamp is not None:
       datetime_object = timelib.Timestamp.CopyToDatetime(
-          event_object.timestamp, self._output_mediator.timezone)
+          event.timestamp, self._output_mediator.timezone)
       if not datetime_object:
-        self._ReportEventError(event_object, (
+        self._ReportEventError(event, (
             u'unable to copy timestamp: {0:d} to datetime object.'))
         return
 
     format_variables = self._output_mediator.GetFormatStringAttributeNames(
-        event_object)
+        event)
     if format_variables is None:
       raise errors.NoFormatterFound(
           u'Unable to find event formatter for: {0:s}.'.format(data_type))
 
     extra_attributes = []
-    for attribute_name, attribute_value in event_object.GetAttributes():
+    for attribute_name, attribute_value in event.GetAttributes():
       if (attribute_name in definitions.RESERVED_VARIABLE_NAMES or
           attribute_name in format_variables):
         continue
@@ -88,9 +88,9 @@ class Base4n6TimeOutputModule(interface.OutputModule):
 
     extra_attributes = u' '.join(extra_attributes)
 
-    inode = event_object.inode
-    if inode is None and hasattr(event_object, u'pathspec'):
-      inode = getattr(event_object.pathspec, u'inode', u'-')
+    inode = event.inode
+    if inode is None and hasattr(event, u'pathspec'):
+      inode = getattr(event.pathspec, u'inode', u'-')
     if inode is None:
       inode = u'-'
 
@@ -103,61 +103,61 @@ class Base4n6TimeOutputModule(interface.OutputModule):
               datetime_object.second))
 
     tags = None
-    if getattr(event_object, u'tag', None):
-      tags = getattr(event_object.tag, u'tags', None)
+    if getattr(event, u'tag', None):
+      tags = getattr(event.tag, u'tags', None)
 
     taglist = u''
     if isinstance(tags, (list, tuple)):
       taglist = u','.join(tags)
 
-    offset = event_object.offset
+    offset = event.offset
     if offset is None:
       offset = 0
 
     row = {
         u'timezone': u'{0!s}'.format(self._output_mediator.timezone),
-        u'MACB': self._output_mediator.GetMACBRepresentation(event_object),
+        u'MACB': self._output_mediator.GetMACBRepresentation(event),
         u'source': source_short,
         u'sourcetype': source,
-        u'type': getattr(event_object, u'timestamp_desc', u'-'),
-        u'user': getattr(event_object, u'username', u'-'),
-        u'host': getattr(event_object, u'hostname', u'-'),
+        u'type': getattr(event, u'timestamp_desc', u'-'),
+        u'user': getattr(event, u'username', u'-'),
+        u'host': getattr(event, u'hostname', u'-'),
         u'description': message,
-        u'filename': getattr(event_object, u'filename', u'-'),
+        u'filename': getattr(event, u'filename', u'-'),
         u'inode': inode,
-        u'notes': getattr(event_object, u'notes', u'-'),
-        u'format': getattr(event_object, u'parser', u'-'),
+        u'notes': getattr(event, u'notes', u'-'),
+        u'format': getattr(event, u'parser', u'-'),
         u'extra': extra_attributes,
         u'datetime': datetime_string,
         u'reportnotes': u'',
         u'inreport': u'',
         u'tag': taglist,
         u'offset': offset,
-        u'vss_store_number': self._GetVSSNumber(event_object),
-        u'URL': getattr(event_object, u'url', u'-'),
-        u'record_number': getattr(event_object, u'record_number', 0),
-        u'event_identifier': getattr(event_object, u'event_identifier', u'-'),
-        u'event_type': getattr(event_object, u'event_type', u'-'),
-        u'source_name': getattr(event_object, u'source_name', u'-'),
-        u'user_sid': getattr(event_object, u'user_sid', u'-'),
-        u'computer_name': getattr(event_object, u'computer_name', u'-'),
+        u'vss_store_number': self._GetVSSNumber(event),
+        u'URL': getattr(event, u'url', u'-'),
+        u'record_number': getattr(event, u'record_number', 0),
+        u'event_identifier': getattr(event, u'event_identifier', u'-'),
+        u'event_type': getattr(event, u'event_type', u'-'),
+        u'source_name': getattr(event, u'source_name', u'-'),
+        u'user_sid': getattr(event, u'user_sid', u'-'),
+        u'computer_name': getattr(event, u'computer_name', u'-'),
         u'evidence': self._evidence}
 
     return row
 
-  def _GetVSSNumber(self, event_object):
+  def _GetVSSNumber(self, event):
     """Retrieves the VSS store number related to the event.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
 
     Returns:
       The VSS store number or -1 if not available.
     """
-    if not hasattr(event_object, u'pathspec'):
+    if not hasattr(event, u'pathspec'):
       return -1
 
-    return getattr(event_object.pathspec, u'vss_store_number', -1)
+    return getattr(event.pathspec, u'vss_store_number', -1)
 
   def SetAppendMode(self, append):
     """Set the append status.
