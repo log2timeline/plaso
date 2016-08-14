@@ -25,12 +25,13 @@ class WindowsCodepagePreprocessPlugin(
       value_data (object): Windows Registry value data.
 
     Raises:
-      errors.PreProcessFail: if the value data is not supported.
+      errors.PreProcessFail: if the value data is not a string type.
     """
     if not isinstance(value_data, py2to3.UNICODE_TYPE):
       raise errors.PreProcessFail(
-          u'Unsupported Registry key: {0:s}, value: {1:s} type.'.format(
-              self._REGISTRY_KEY_PATH, self._REGISTRY_VALUE_NAME))
+          u'Unsupported Registry key: {0:s}, value: {1:s} type: {2:s}.'.format(
+              self._REGISTRY_KEY_PATH, self._REGISTRY_VALUE_NAME,
+              type(value_data)))
 
     # Map the Windows code page name to a Python equivalent name.
     codepage = u'cp{0:s}'.format(value_data)
@@ -56,12 +57,13 @@ class WindowsHostnamePreprocessPlugin(
       value_data (object): Windows Registry value data.
 
     Raises:
-      errors.PreProcessFail: if the value data is not supported.
+      errors.PreProcessFail: if the value data is not a string type.
     """
     if not isinstance(value_data, py2to3.UNICODE_TYPE):
       raise errors.PreProcessFail(
-          u'Unsupported Registry key: {0:s}, value: {1:s} type.'.format(
-              self._REGISTRY_KEY_PATH, self._REGISTRY_VALUE_NAME))
+          u'Unsupported Registry key: {0:s}, value: {1:s} type: {2:s}.'.format(
+              self._REGISTRY_KEY_PATH, self._REGISTRY_VALUE_NAME,
+              type(value_data)))
 
     hostname_artifact = artifacts.HostnameArtifact(name=value_data)
     # TODO: refactor the use of store number.
@@ -105,12 +107,13 @@ class WindowsSystemProductPlugin(
       value_data (object): Windows Registry value data.
 
     Raises:
-      errors.PreProcessFail: if the value data is not supported.
+      errors.PreProcessFail: if the value data is not a string type.
     """
     if not isinstance(value_data, py2to3.UNICODE_TYPE):
       raise errors.PreProcessFail(
-          u'Unsupported Registry key: {0:s}, value: {1:s} type.'.format(
-              self._REGISTRY_KEY_PATH, self._REGISTRY_VALUE_NAME))
+          u'Unsupported Registry key: {0:s}, value: {1:s} type: {2:s}.'.format(
+              self._REGISTRY_KEY_PATH, self._REGISTRY_VALUE_NAME,
+              type(value_data)))
 
     knowledge_base.SetValue(u'operating_system_product', value_data)
 
@@ -139,12 +142,13 @@ class WindowsSystemVersionPlugin(
       value_data (object): Windows Registry value data.
 
     Raises:
-      errors.PreProcessFail: if the value data is not supported.
+      errors.PreProcessFail: if the value data is not a string type.
     """
     if not isinstance(value_data, py2to3.UNICODE_TYPE):
       raise errors.PreProcessFail(
-          u'Unsupported Registry key: {0:s}, value: {1:s} type.'.format(
-              self._REGISTRY_KEY_PATH, self._REGISTRY_VALUE_NAME))
+          u'Unsupported Registry key: {0:s}, value: {1:s} type: {2:s}.'.format(
+              self._REGISTRY_KEY_PATH, self._REGISTRY_VALUE_NAME,
+              type(value_data)))
 
     knowledge_base.SetValue(u'operating_system_version', value_data)
 
@@ -166,12 +170,13 @@ class WindowsTimeZonePreprocessPlugin(
       value_data (object): Windows Registry value data.
 
     Raises:
-      errors.PreProcessFail: if the value data is not supported.
+      errors.PreProcessFail: if the value data is not a string type.
     """
     if not isinstance(value_data, py2to3.UNICODE_TYPE):
       raise errors.PreProcessFail(
-          u'Unsupported Registry key: {0:s}, value: {1:s} type.'.format(
-              self._REGISTRY_KEY_PATH, self._REGISTRY_VALUE_NAME))
+          u'Unsupported Registry key: {0:s}, value: {1:s} type: {2:s}.'.format(
+              self._REGISTRY_KEY_PATH, self._REGISTRY_VALUE_NAME,
+              type(value_data)))
 
     # Map the Windows time zone name to a Python equivalent name.
     lookup_key = value_data.replace(u' ', u'')
@@ -213,9 +218,6 @@ class WindowsUserAccountsPreprocessPlugin(
     Args:
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
       registry_key (WinRegistryKey): Windows Registry key.
-
-    Raises:
-      errors.PreProcessFail: if the preprocessing fails.
     """
     for subkey in registry_key.GetSubkeys():
       if not subkey.name:
