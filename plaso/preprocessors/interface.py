@@ -11,7 +11,7 @@ from plaso.lib import py2to3
 
 
 class PreprocessPlugin(object):
-  """Class that defines the preprocess plugin interface."""
+  """The preprocess plugin interface."""
 
   @property
   def plugin_name(self):
@@ -20,7 +20,7 @@ class PreprocessPlugin(object):
 
 
 class FileSystemPreprocessPlugin(PreprocessPlugin):
-  """Class that defines the file system preprocess plugin interface."""
+  """The file system preprocess plugin interface."""
 
   def _FindFileEntry(self, searcher, path):
     """Searches for a file entry that matches the path.
@@ -64,7 +64,7 @@ class FileSystemPreprocessPlugin(PreprocessPlugin):
 
   @abc.abstractmethod
   def Run(self, searcher, knowledge_base):
-    """Runs the plugin to determine the value of the preprocessing attribute.
+    """Determines the value of the preprocessing attributes.
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
@@ -73,7 +73,7 @@ class FileSystemPreprocessPlugin(PreprocessPlugin):
 
 
 class FilePreprocessPlugin(FileSystemPreprocessPlugin):
-  """Class that defines the file preprocess plugin interface."""
+  """The file preprocess plugin interface."""
 
   _PATH = None
 
@@ -87,7 +87,7 @@ class FilePreprocessPlugin(FileSystemPreprocessPlugin):
     """
 
   def Run(self, searcher, knowledge_base):
-    """Runs the plugin to determine the value of the preprocessing attribute.
+    """Determines the value of the preprocessing attributes.
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
@@ -111,7 +111,7 @@ class WindowsPathEnvironmentVariablePlugin(FileSystemPreprocessPlugin):
   _PATH_REGEX = None
 
   def Run(self, searcher, knowledge_base):
-    """Runs the plugin to determine the value of the preprocessing attribute.
+    """Determines the value of the preprocessing attributes.
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
@@ -152,7 +152,7 @@ class WindowsRegistryKeyPreprocessPlugin(PreprocessPlugin):
     """
 
   def Run(self, win_registry, knowledge_base):
-    """Runs the plugin to determine the value of the preprocessing attribute.
+    """Determines the value of the preprocessing attributes.
 
     Args:
       win_registry (WinRegistry): Windows Registry.
@@ -174,7 +174,7 @@ class WindowsRegistryKeyPreprocessPlugin(PreprocessPlugin):
 
 
 class WindowsRegistryValuePreprocessPlugin(WindowsRegistryKeyPreprocessPlugin):
-  """Windows Registry value preproces plugin interface."""
+  """Windows Registry value preprocess plugin interface."""
 
   _REGISTRY_VALUE_NAME = u''
 

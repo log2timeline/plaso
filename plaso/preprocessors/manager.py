@@ -190,7 +190,7 @@ class PreprocessPluginsManager(object):
       # from being killed by an uncaught exception.
       except Exception as exception:  # pylint: disable=broad-except
         logging.warning(
-            u'Unable to run preproces plugin: {0:s} with error: {1:s}'.format(
+            u'Unable to run preprocess plugin: {0:s} with error: {1:s}'.format(
                 plugin_object.plugin_name, exception))
 
     # Run the Registry plugins separately so we do not have to open
@@ -213,7 +213,7 @@ class PreprocessPluginsManager(object):
       # from being killed by an uncaught exception.
       except Exception as exception:  # pylint: disable=broad-except
         logging.warning(
-            u'Unable to run preproces plugin: {0:s} with error: {1:s}'.format(
+            u'Unable to run preprocess plugin: {0:s} with error: {1:s}'.format(
                 plugin_object.plugin_name, exception))
 
     if not knowledge_base.HasUserAccounts():

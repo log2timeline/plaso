@@ -13,7 +13,7 @@ from plaso.preprocessors import manager
 
 
 class PlistPreprocessPlugin(interface.FileSystemPreprocessPlugin):
-  """Class that defines the plist preprocess plugin interface."""
+  """The plist preprocess plugin interface."""
 
   _PLIST_PATH = u''
 
@@ -48,7 +48,7 @@ class PlistPreprocessPlugin(interface.FileSystemPreprocessPlugin):
 
   @abc.abstractmethod
   def Run(self, searcher, knowledge_base):
-    """Runs the plugin to determine the value of the preprocessing attribute.
+    """Determines the value of the preprocessing attributes.
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
@@ -57,7 +57,7 @@ class PlistPreprocessPlugin(interface.FileSystemPreprocessPlugin):
 
 
 class PlistKeyPreprocessPlugin(PlistPreprocessPlugin):
-  """Class that defines the plist key preprocess plugin interface.
+  """The plist key preprocess plugin interface.
 
   The plist key preprocess plugin retieves values from key names,
   defined in _PLIST_KEYS, from a specific plist file, defined in
@@ -99,7 +99,7 @@ class PlistKeyPreprocessPlugin(PlistPreprocessPlugin):
     """
 
   def Run(self, searcher, knowledge_base):
-    """Runs the plugin to determine the value of the preprocessing attribute.
+    """Determines the value of the preprocessing attributes.
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
@@ -212,7 +212,7 @@ class MacOSXTimeZonePreprocessPlugin(interface.FileSystemPreprocessPlugin):
   _PATH = u'/private/etc/localtime'
 
   def Run(self, searcher, knowledge_base):
-    """Runs the plugin to determine the value of the preprocessing attribute.
+    """Determines the value of the preprocessing attributes.
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
@@ -322,7 +322,7 @@ class MacOSXUserAccountsPreprocessPlugin(PlistPreprocessPlugin):
     knowledge_base.SetUserAccount(user_account)
 
   def Run(self, searcher, knowledge_base):
-    """Runs the plugin to determine the value of the preprocessing attribute.
+    """Determines the value of the preprocessing attributes.
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
