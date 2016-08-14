@@ -24,8 +24,8 @@ class VirusTotalAnalysisHelper(interface.ArgumentsHelper):
     to it all the command line arguments this helper supports.
 
     Args:
-      argument_group: the argparse group (instance of argparse._ArgumentGroup or
-                      or argparse.ArgumentParser).
+      argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
+          argparse group.
     """
     argument_group.add_argument(
         u'--virustotal-api-key', dest=u'virustotal_api_key',
@@ -33,7 +33,7 @@ class VirusTotalAnalysisHelper(interface.ArgumentsHelper):
         u'for use with VirusTotal.')
     argument_group.add_argument(
         u'--virustotal-free-rate-limit', dest=u'virustotal_rate_limit',
-        type=bool, action='store', default=cls._DEFAULT_RATE_LIMIT, help=(
+        action='store_false', default=cls._DEFAULT_RATE_LIMIT, help=(
             u'Limit Virustotal requests to the default free API key rate of '
             u'4 requests per minute. Set this to false if you have an key '
             u'for the private API.'))
@@ -43,8 +43,8 @@ class VirusTotalAnalysisHelper(interface.ArgumentsHelper):
     """Parses and validates options.
 
     Args:
-      options: the parser option object (instance of argparse.Namespace).
-      analysis_plugin: an analysis plugin (instance of AnalysisPlugin).
+      options (argparse.Namespace): parser options.
+      analysis_plugin (AnalysisPlugin): analysis plugin.
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
