@@ -369,6 +369,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
       if self._verbose:
         # TODO: disabled for now seeing the output is not yet complete.
         # self._PrintPreprocessingInformation(storage, session_number + 1)
+        _ = session_number
 
         self._PrintParsersCounter(
             session.parsers_counter, session_identifier=session_identifier)
