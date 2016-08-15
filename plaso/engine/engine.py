@@ -114,6 +114,8 @@ class BaseEngine(object):
         searcher = file_system_searcher.FileSystemSearcher(
             file_system, mount_point)
         platform = preprocess_interface.GuessOS(searcher)
+
+        logging.info(u'Preprocessing detected platform: {0:s}'.format(platform))
         if platform:
           self.knowledge_base.platform = platform
 
