@@ -75,8 +75,8 @@ class KnowledgeBase(object):
 
     Args:
       user_account (UserAccountArtifact): user account artifact.
-      session_identifier (Optional[str])): session identifier, where "current"
-          represents the active session.
+      session_identifier (Optional[str])): session identifier, where
+          CURRENT_SESSION represents the active session.
 
     Raises:
       KeyError: if the user account already exists.
@@ -136,8 +136,8 @@ class KnowledgeBase(object):
     on the preprocessing information that is stored inside the storage file.
 
     Args:
-      session_identifier (Optional[str])): session identifier, where "current"
-          represents the active session.
+      session_identifier (Optional[str])): session identifier, where
+          CURRENT_SESSION represents the active session.
 
     Returns:
       str: hostname.
@@ -165,8 +165,8 @@ class KnowledgeBase(object):
     """Retrieves the knowledge base as a system configuration artifact.
 
     Args:
-      session_identifier (Optional[str])): session identifier, where "current"
-          represents the active session.
+      session_identifier (Optional[str])): session identifier, where
+          CURRENT_SESSION represents the active session.
 
     Returns:
       SystemConfigurationArtifact: system configuration artifact.
@@ -200,8 +200,8 @@ class KnowledgeBase(object):
 
     Args:
       user_identifier (str): user identifier, either a UID or SID.
-      session_identifier (Optional[str])): session identifier, where "current"
-          represents the active session.
+      session_identifier (Optional[str])): session identifier, where
+          CURRENT_SESSION represents the active session.
 
     Returns:
       str: username.
@@ -273,8 +273,8 @@ class KnowledgeBase(object):
     Args:
       system_configuration (SystemConfigurationArtifact): system configuration
           artifact.
-      session_identifier (Optional[str])): session identifier, where "current"
-          represents the active session.
+      session_identifier (Optional[str])): session identifier, where
+          CURRENT_SESSION represents the active session.
     """
     self._hostnames[session_identifier] = system_configuration.hostname
 
@@ -316,8 +316,8 @@ class KnowledgeBase(object):
 
     Args:
       hostname (HostnameArtifact): hostname artifact.
-      session_identifier (Optional[str])): session identifier, where "current"
-          represents the active session.
+      session_identifier (Optional[str])): session identifier, where
+          CURRENT_SESSION represents the active session.
     """
     self._hostnames[session_identifier] = hostname
 

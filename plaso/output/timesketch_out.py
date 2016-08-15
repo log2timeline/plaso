@@ -70,7 +70,7 @@ class TimesketchOutputModule(interface.OutputModule):
     """Return a list of arguments that are missing from the input.
 
     Returns:
-      list[str]: names of argument that are required by the module and have
+      list[str]: names of arguments that are required by the module and have
           not been specified.
     """
     if not self._timeline_name:
