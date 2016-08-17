@@ -655,7 +655,7 @@ class EventExtractionWorker(object):
       self.processing_status = definitions.PROCESSING_STATUS_IDLE
       return
 
-    if (not (file_entry.IsDirectory() and file_entry.IsFile()) or
+    if (not (file_entry.IsDirectory() or file_entry.IsFile()) or
         not has_data_stream):
       return
 
