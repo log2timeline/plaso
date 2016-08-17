@@ -655,7 +655,8 @@ class EventExtractionWorker(object):
       self.processing_status = definitions.PROCESSING_STATUS_IDLE
       return
 
-    if (file_entry.IsLink() and not data_stream_name) or not has_data_stream:
+    if (not (file_entry.IsDirectory() and file_entry.IsFile()) or
+        not has_data_stream):
       return
 
     path_spec = copy.deepcopy(file_entry.path_spec)
