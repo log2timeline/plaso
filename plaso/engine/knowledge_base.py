@@ -139,7 +139,7 @@ class KnowledgeBase(object):
         u'operating_system_product', None)
     system_configuration.operating_system_version = self._values.get(
         u'operating_system_version', None)
-    system_configuration.time_zone = self._values.get(u'timezone', u'UTC')
+    system_configuration.time_zone = self._values.get(u'time_zone_str', u'UTC')
 
     user_accounts = self._user_accounts.get(session_number, {})
     system_configuration.user_accounts = user_accounts.values()
@@ -241,6 +241,8 @@ class KnowledgeBase(object):
     self._user_accounts[store_number] = {
         user_account.username: user_account
         for user_account in system_configuration.user_accounts}
+
+    self.SetTimezone(system_configuration.time_zone)
 
   def SetDefaultCodepage(self, codepage):
     """Sets the default codepage.
