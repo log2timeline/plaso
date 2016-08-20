@@ -771,7 +771,7 @@ def Main():
     logging.warning(u'Aborted by user.')
     return False
 
-  except errors.SourceScannerError as exception:
+  except (errors.BadConfigOption, errors.SourceScannerError) as exception:
     logging.warning(exception)
     return False
 

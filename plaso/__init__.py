@@ -9,7 +9,7 @@ of log2timeline.
 __version__ = '1.4.1'
 
 VERSION_DEV = True
-VERSION_DATE = '20160818'
+VERSION_DATE = '20160820'
 
 
 def GetVersion():
