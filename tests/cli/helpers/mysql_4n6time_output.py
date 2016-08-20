@@ -5,9 +5,8 @@
 import argparse
 import unittest
 
-from plaso.lib import errors
-
 from plaso.cli.helpers import mysql_4n6time_output
+from plaso.lib import errors
 from plaso.output import mysql_4n6time
 
 from tests.cli import test_lib as cli_test_lib

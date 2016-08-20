@@ -35,7 +35,8 @@ class MySQL4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
       argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
           argparse group.
     """
-    shared_4n6time_output.Shared4n6TimeOutputHelper.AddArguments(argument_group)
+    shared_4n6time_output.Shared4n6TimeOutputArgumentsHelper.AddArguments(
+        argument_group)
     MySQL4n6TimeDatabaseArgumentsHelper.AddArguments(argument_group)
 
   @classmethod
@@ -54,7 +55,7 @@ class MySQL4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
           u'Output module is not an instance of MySQL4n6TimeOutputModule')
 
     MySQL4n6TimeDatabaseArgumentsHelper.ParseOptions(options, output_module)
-    shared_4n6time_output.Shared4n6TimeOutputHelper.ParseOptions(
+    shared_4n6time_output.Shared4n6TimeOutputArgumentsHelper.ParseOptions(
         options, output_module)
 
 

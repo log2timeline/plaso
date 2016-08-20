@@ -5,9 +5,8 @@
 import argparse
 import unittest
 
-from plaso.lib import errors
-
 from plaso.analysis import viper
+from plaso.lib import errors
 from plaso.cli.helpers import viper_analysis
 
 from tests.cli import test_lib as cli_test_lib

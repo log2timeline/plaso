@@ -1,21 +1,21 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the 4n6time SQLite database output module CLI arguments helper."""
+"""Tests for the 4n6time output modules shared CLI arguments helper."""
 
 import argparse
 import unittest
 
-from plaso.cli.helpers import sqlite_4n6time_output
+from plaso.cli.helpers import shared_4n6time_output
 from plaso.lib import errors
-from plaso.output import sqlite_4n6time
+from plaso.output import shared_4n6time
 
 from tests.cli import test_lib as cli_test_lib
 from tests.cli.helpers import test_lib
 
 
-class SQLite4n6TimeOutputArgumentsHelperTEst(
+class Shared4n6TimeOutputArgumentsHelperTest(
     test_lib.OutputModuleArgumentsHelperTest):
-  """Tests the 4n6time SQLite database output module CLI arguments helper."""
+  """Tests the 4n6time output modules shared CLI arguments helper."""
 
   _EXPECTED_OUTPUT = u'\n'.join([
       (u'usage: cli_helper.py [--append] [--evidence EVIDENCE] '
@@ -43,7 +43,7 @@ class SQLite4n6TimeOutputArgumentsHelperTEst(
         description=u'Test argument parser.', add_help=False,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    sqlite_4n6time_output.SQLite4n6TimeOutputArgumentsHelper.AddArguments(
+    shared_4n6time_output.Shared4n6TimeOutputArgumentsHelper.AddArguments(
         argument_parser)
 
     output = self._RunArgparseFormatHelp(argument_parser)
@@ -52,19 +52,14 @@ class SQLite4n6TimeOutputArgumentsHelperTEst(
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
+
     output_mediator = self._CreateOutputMediator()
-    output_module = sqlite_4n6time.SQLite4n6TimeOutputModule(output_mediator)
-
-    with self.assertRaises(errors.BadConfigOption):
-      sqlite_4n6time_output.SQLite4n6TimeOutputArgumentsHelper.ParseOptions(
-          options, output_module)
-
-    options.write = u'4n6time.sqlite'
-    sqlite_4n6time_output.SQLite4n6TimeOutputArgumentsHelper.ParseOptions(
+    output_module = shared_4n6time.Base4n6TimeOutputModule(output_mediator)
+    shared_4n6time_output.Shared4n6TimeOutputArgumentsHelper.ParseOptions(
         options, output_module)
 
     with self.assertRaises(errors.BadConfigObject):
-      sqlite_4n6time_output.SQLite4n6TimeOutputArgumentsHelper.ParseOptions(
+      shared_4n6time_output.Shared4n6TimeOutputArgumentsHelper.ParseOptions(
           options, None)
 
 

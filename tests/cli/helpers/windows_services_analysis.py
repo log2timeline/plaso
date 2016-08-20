@@ -5,9 +5,8 @@
 import argparse
 import unittest
 
-from plaso.lib import errors
-
 from plaso.analysis import windows_services
+from plaso.lib import errors
 from plaso.cli.helpers import windows_services_analysis as arguments_helper
 
 from tests.cli import test_lib as cli_test_lib

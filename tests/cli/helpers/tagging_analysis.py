@@ -5,9 +5,8 @@
 import argparse
 import unittest
 
-from plaso.lib import errors
-
 from plaso.analysis import tagging
+from plaso.lib import errors
 from plaso.cli.helpers import tagging_analysis
 
 from tests.cli import test_lib as cli_test_lib

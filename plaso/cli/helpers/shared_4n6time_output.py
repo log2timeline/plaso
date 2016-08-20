@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Arguments helper for information shared between 4n6time output modules."""
+"""The 4n6time output modules shared CLI arguments helper."""
 
 from plaso.lib import errors
 from plaso.cli.helpers import interface
 from plaso.output import shared_4n6time
 
 
-class Shared4n6TimeOutputHelper(interface.ArgumentsHelper):
-  """CLI arguments helper class for 4n6time output modules."""
+class Shared4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
+  """4n6time output modules shared CLI arguments helper."""
 
   NAME = u'4n6time'
   CATEGORY = u'output'

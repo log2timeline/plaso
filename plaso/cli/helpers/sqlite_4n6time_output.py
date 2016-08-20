@@ -26,7 +26,8 @@ class SQLite4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
       argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
           argparse group.
     """
-    shared_4n6time_output.Shared4n6TimeOutputHelper.AddArguments(argument_group)
+    shared_4n6time_output.Shared4n6TimeOutputArgumentsHelper.AddArguments(
+        argument_group)
 
   @classmethod
   def ParseOptions(cls, options, output_module):
@@ -44,7 +45,7 @@ class SQLite4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           u'Output module is not an instance of SQLite4n6TimeOutputModule')
 
-    shared_4n6time_output.Shared4n6TimeOutputHelper.ParseOptions(
+    shared_4n6time_output.Shared4n6TimeOutputArgumentsHelper.ParseOptions(
         options, output_module)
 
     filename = getattr(options, u'write', None)

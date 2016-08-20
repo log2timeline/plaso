@@ -12,7 +12,7 @@ from plaso.output import manager
 from plaso.output import shared_4n6time
 
 
-class MySQL4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
+class MySQL4n6TimeOutputModule(shared_4n6time.Shared4n6TimeOutputModule):
   """Class defining the MySQL database output module for 4n6time."""
 
   NAME = '4n6time_mysql'

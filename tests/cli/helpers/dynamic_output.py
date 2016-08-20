@@ -5,9 +5,8 @@
 import argparse
 import unittest
 
-from plaso.lib import errors
-
 from plaso.cli.helpers import dynamic_output
+from plaso.lib import errors
 from plaso.output import dynamic
 
 from tests.cli import test_lib as cli_test_lib
