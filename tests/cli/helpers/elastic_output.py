@@ -14,7 +14,8 @@ from tests.cli import test_lib as cli_test_lib
 from tests.cli.helpers import test_lib
 
 
-class ElasticSearchOutputArgumentsHelperTest(test_lib.OutputModuleArgumentsHelperTest):
+class ElasticSearchOutputArgumentsHelperTest(
+    test_lib.OutputModuleArgumentsHelperTest):
   """Tests for the Elastic Search output module CLI arguments helper."""
 
   _EXPECTED_OUTPUT = u'\n'.join([
@@ -47,7 +48,8 @@ class ElasticSearchOutputArgumentsHelperTest(test_lib.OutputModuleArgumentsHelpe
         description=u'Test argument parser.', add_help=False,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    elastic_output.ElasticSearchOutputArgumentsHelper.AddArguments(argument_parser)
+    elastic_output.ElasticSearchOutputArgumentsHelper.AddArguments(
+        argument_parser)
 
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT)

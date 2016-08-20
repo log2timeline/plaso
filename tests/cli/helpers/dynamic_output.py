@@ -14,7 +14,8 @@ from tests.cli import test_lib as cli_test_lib
 from tests.cli.helpers import test_lib
 
 
-class DynamicOutputArgumentsHelperTest(test_lib.OutputModuleArgumentsHelperTest):
+class DynamicOutputArgumentsHelperTest(
+    test_lib.OutputModuleArgumentsHelperTest):
   """Tests for the dynamic output module CLI arguments helper."""
 
   _EXPECTED_OUTPUT = u'\n'.join([
