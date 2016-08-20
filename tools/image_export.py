@@ -302,6 +302,10 @@ def Main():
     logging.warning(u'Aborted by user.')
     return False
 
+  except errors.BadConfigOption as exception:
+    logging.warning(exception)
+    return False
+
   except errors.SourceScannerError as exception:
     logging.warning((
         u'Unable to scan for a supported filesystem with error: {0:s}\n'
