@@ -17,6 +17,10 @@ class ConnectionError(Error):
   """Class that defines errors encountered connecting to a service."""
 
 
+class HeapFull(Error):
+  """Class that implements a heap full exception."""
+
+
 class MaximumRecursionDepth(Error):
   """Raised when the maximum recursion depth is reached."""
 
