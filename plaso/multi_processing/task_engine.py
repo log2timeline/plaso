@@ -63,7 +63,7 @@ class _EventSourceHeap(object):
       event_source (EventSource): event source.
 
     Raises:
-      HeapFull: if the heap contains the maximum number of item. Note that
+      HeapFull: if the heap contains the maximum number of items. Note that
           this exception is raised after the item is added to the heap.
     """
     if event_source.file_entry_type == (
