@@ -271,6 +271,8 @@ class NamesFileEntryFilterTest(shared_test_lib.BaseTestCase):
 class SignaturesFileEntryFilterTest(shared_test_lib.BaseTestCase):
   """Tests for the signatures file entry filter."""
 
+  # pylint: disable=protected-access
+
   def testGetScanner(self):
     """Tests the _GetScanner function."""
     test_filter = image_export.SignaturesFileEntryFilter(None, [])
