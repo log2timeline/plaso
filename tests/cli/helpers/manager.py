@@ -6,29 +6,10 @@ import argparse
 import unittest
 
 from plaso.cli.helpers import interface
+from plaso.cli.helpers import manager
 from plaso.lib import errors
 
-from plaso.cli.helpers import manager
-
-
-class TestHelper(interface.ArgumentsHelper):
-  """Test CLI argument helper."""
-
-  NAME = 'test_helper'
-  DESCRIPTION = u'Test helper that does nothing.'
-
-  @classmethod
-  def AddArguments(cls, argument_group):
-    """Add command line arguments to an argument group."""
-    argument_group.add_argument(
-        u'-d', u'--dynamic', action='store', default=u'', type=str,
-        help=u'Stuff to insert into the arguments.', dest=u'dynamic')
-
-  @classmethod
-  def ParseOptions(cls, options, unused_config_object):
-    """Parse and validate the configuration options."""
-    if not getattr(options, 'dynamic', u''):
-      raise errors.BadConfigOption(u'Always set this.')
+from tests.cli.helpers import test_lib
 
 
 class AnotherTestHelper(interface.ArgumentsHelper):
@@ -62,30 +43,30 @@ class HelperManagerTest(unittest.TestCase):
     # pylint: disable=protected-access
     number_of_helpers = len(manager.ArgumentHelperManager._helper_classes)
 
-    manager.ArgumentHelperManager.RegisterHelper(TestHelper)
+    manager.ArgumentHelperManager.RegisterHelper(test_lib.TestHelper)
     self.assertEqual(
         len(manager.ArgumentHelperManager._helper_classes),
         number_of_helpers + 1)
 
     with self.assertRaises(KeyError):
-      manager.ArgumentHelperManager.RegisterHelper(TestHelper)
+      manager.ArgumentHelperManager.RegisterHelper(test_lib.TestHelper)
 
-    manager.ArgumentHelperManager.DeregisterHelper(TestHelper)
+    manager.ArgumentHelperManager.DeregisterHelper(test_lib.TestHelper)
     self.assertEqual(
         len(manager.ArgumentHelperManager._helper_classes),
         number_of_helpers)
 
   def testGetHelperNames(self):
     """Tests the GetHelperNames function."""
-    manager.ArgumentHelperManager.RegisterHelper(TestHelper)
-    self.assertIn(
-        TestHelper.NAME, manager.ArgumentHelperManager.GetHelperNames())
-    manager.ArgumentHelperManager.DeregisterHelper(TestHelper)
+    manager.ArgumentHelperManager.RegisterHelper(test_lib.TestHelper)
+    helper_names = manager.ArgumentHelperManager.GetHelperNames()
+    self.assertIn(test_lib.TestHelper.NAME, helper_names)
+    manager.ArgumentHelperManager.DeregisterHelper(test_lib.TestHelper)
 
   def testCommandLineArguments(self):
     """Test the AddCommandLineArguments and function."""
     manager.ArgumentHelperManager.RegisterHelpers([
-        TestHelper, AnotherTestHelper])
+        test_lib.TestHelper, AnotherTestHelper])
 
     arg_parser = argparse.ArgumentParser(conflict_handler=u'resolve')
     manager.ArgumentHelperManager.AddCommandLineArguments(arg_parser)
@@ -107,7 +88,7 @@ class HelperManagerTest(unittest.TestCase):
     options.dynamic = 'now stuff'
     manager.ArgumentHelperManager.ParseOptions(options, None)
 
-    manager.ArgumentHelperManager.DeregisterHelper(TestHelper)
+    manager.ArgumentHelperManager.DeregisterHelper(test_lib.TestHelper)
     manager.ArgumentHelperManager.DeregisterHelper(AnotherTestHelper)
 
 
