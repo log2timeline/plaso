@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """The task multi-process processing engine."""
 
+import heapq
 import logging
 import multiprocessing
 import os
@@ -11,6 +12,7 @@ except ImportError:
   import queue as Queue  # pylint: disable=import-error
 import time
 
+from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 
 from plaso.containers import event_sources
@@ -19,10 +21,62 @@ from plaso.engine import plaso_queue
 from plaso.engine import profiler
 from plaso.engine import zeromq_queue
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.multi_processing import engine
 from plaso.multi_processing import multi_process_queue
 from plaso.multi_processing import task_manager
 from plaso.multi_processing import worker_process
+
+
+class _EventSourceHeap(object):
+  """Class that defines an event source heap."""
+
+  def __init__(self, maximum_number_of_items=50000):
+    """Initializes an event source heap.
+
+    Args:
+      maximum_number_of_items (Optional[int]): maximum number of items
+          in the heap.
+    """
+    super(_EventSourceHeap, self).__init__()
+    self._heap = []
+    self._maximum_number_of_items = maximum_number_of_items
+
+  def PopEventSource(self):
+    """Pops an event source from the heap.
+
+    Returns:
+      EventSource: event source.
+    """
+    try:
+      _, event_source = heapq.heappop(self._heap)
+
+    except IndexError:
+      return
+
+    return event_source
+
+  def PushEventSource(self, event_source):
+    """Pushes an event source onto the heap.
+
+    Args:
+      event_source (EventSource): event source.
+
+    Raises:
+      HeapFull: if the heap contains the maximum number of items. Note that
+          this exception is raised after the item is added to the heap.
+    """
+    if event_source.file_entry_type == (
+        dfvfs_definitions.FILE_ENTRY_TYPE_DIRECTORY):
+      weight = 1
+    else:
+      weight = 100
+
+    heap_values = (weight, event_source)
+    heapq.heappush(self._heap, heap_values)
+
+    if len(self._heap) >= self._maximum_number_of_items:
+      raise errors.HeapFull()
 
 
 class TaskMultiProcessEngine(engine.MultiProcessEngine):
@@ -252,6 +306,41 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     return is_scheduled
 
+  def _FillEventSourceHeap(
+      self, storage_writer, event_source_heap, start_with_first=False):
+    """Fills the event source heap with the available written event sources.
+
+    Args:
+      storage_writer (StorageWriter): storage writer for a session storage.
+      event_source_heap (_EventSourceHeap): event source heap.
+      start_with_first (Optional[bool]): True if the function should start
+          with the first written event source.
+    """
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'get_event_source')
+
+    if start_with_first:
+      event_source = storage_writer.GetFirstWrittenEventSource()
+    else:
+      event_source = storage_writer.GetNextWrittenEventSource()
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'get_event_source')
+
+    while event_source:
+      try:
+        event_source_heap.PushEventSource(event_source)
+      except errors.HeapFull:
+        break
+
+      if self._processing_profiler:
+        self._processing_profiler.StartTiming(u'get_event_source')
+
+      event_source = storage_writer.GetNextWrittenEventSource()
+
+      if self._processing_profiler:
+        self._processing_profiler.StopTiming(u'get_event_source')
+
   def _ScheduleTasks(self, storage_writer):
     """Schedules tasks.
 
@@ -269,13 +358,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     task = None
 
-    if self._processing_profiler:
-      self._processing_profiler.StartTiming(u'get_event_source')
+    event_source_heap = _EventSourceHeap()
 
-    event_source = storage_writer.GetFirstWrittenEventSource()
+    self._FillEventSourceHeap(
+        storage_writer, event_source_heap, start_with_first=True)
 
-    if self._processing_profiler:
-      self._processing_profiler.StopTiming(u'get_event_source')
+    event_source = event_source_heap.PopEventSource()
 
     while event_source or self._task_manager.HasScheduledTasks():
       if self._abort:
@@ -298,14 +386,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
         self._MergeTaskStorage(storage_writer)
 
+        self._FillEventSourceHeap(storage_writer, event_source_heap)
+
         if not event_source and not task:
-          if self._processing_profiler:
-            self._processing_profiler.StartTiming(u'get_event_source')
-
-          event_source = storage_writer.GetNextWrittenEventSource()
-
-          if self._processing_profiler:
-            self._processing_profiler.StopTiming(u'get_event_source')
+          event_source = event_source_heap.PopEventSource()
 
       except KeyboardInterrupt:
         self._abort = True
