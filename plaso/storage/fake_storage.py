@@ -207,10 +207,6 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._is_open = True
 
-    self._first_written_analysis_report_index = len(self.analysis_reports)
-    self._written_analysis_report_index = (
-        self._first_written_analysis_report_index)
-
     self._first_written_event_source_index = len(self.event_sources)
     self._written_event_source_index = self._first_written_event_source_index
 

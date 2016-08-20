@@ -3159,11 +3159,6 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     self._storage_file.Open(path=self._output_file, read_only=False)
 
-    self._first_written_analysis_report_index = (
-        self._storage_file.GetNumberOfEventSources())
-    self._written_analysis_report_index = (
-        self._first_written_analysis_report_index)
-
     self._first_written_event_source_index = (
         self._storage_file.GetNumberOfEventSources())
     self._written_event_source_index = self._first_written_event_source_index
