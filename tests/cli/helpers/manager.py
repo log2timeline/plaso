@@ -5,11 +5,53 @@
 import argparse
 import unittest
 
+from plaso.cli.helpers import interface
 from plaso.lib import errors
 
 from plaso.cli.helpers import manager
 
-from tests.cli.helpers import test_lib
+
+class TestHelper(interface.ArgumentsHelper):
+  """Test CLI argument helper."""
+
+  NAME = 'test_helper'
+  DESCRIPTION = u'Test helper that does nothing.'
+
+  @classmethod
+  def AddArguments(cls, argument_group):
+    """Add command line arguments to an argument group."""
+    argument_group.add_argument(
+        u'-d', u'--dynamic', action='store', default=u'', type=str,
+        help=u'Stuff to insert into the arguments.', dest=u'dynamic')
+
+  @classmethod
+  def ParseOptions(cls, options, unused_config_object):
+    """Parse and validate the configuration options."""
+    if not getattr(options, 'dynamic', u''):
+      raise errors.BadConfigOption(u'Always set this.')
+
+
+class AnotherTestHelper(interface.ArgumentsHelper):
+  """Another test CLI argument helper."""
+
+  NAME = 'another_test_helper'
+  DESCRIPTION = u'Another test helper that does nothing.'
+
+  @classmethod
+  def AddArguments(cls, argument_group):
+    """Add command line arguments to an argument group."""
+    argument_group.add_argument(
+        u'-c', u'--correcto', dest=u'correcto', action='store_true',
+        default=False, help=u'The correcto option.')
+
+  @classmethod
+  def ParseOptions(cls, options, unused_config_object):
+    """Parse and validate the configurational options."""
+    if not hasattr(options, 'correcto'):
+      raise errors.BadConfigOption(u'Correcto not set.')
+
+    if not isinstance(getattr(options, u'correcto', None), bool):
+      raise errors.BadConfigOption(u'Correcto wrongly formatted.')
 
 
 class HelperManagerTest(unittest.TestCase):
@@ -20,31 +62,30 @@ class HelperManagerTest(unittest.TestCase):
     # pylint: disable=protected-access
     number_of_helpers = len(manager.ArgumentHelperManager._helper_classes)
 
-    manager.ArgumentHelperManager.RegisterHelper(test_lib.TestHelper)
+    manager.ArgumentHelperManager.RegisterHelper(TestHelper)
     self.assertEqual(
         len(manager.ArgumentHelperManager._helper_classes),
         number_of_helpers + 1)
 
     with self.assertRaises(KeyError):
-      manager.ArgumentHelperManager.RegisterHelper(test_lib.TestHelper)
+      manager.ArgumentHelperManager.RegisterHelper(TestHelper)
 
-    manager.ArgumentHelperManager.DeregisterHelper(test_lib.TestHelper)
+    manager.ArgumentHelperManager.DeregisterHelper(TestHelper)
     self.assertEqual(
         len(manager.ArgumentHelperManager._helper_classes),
         number_of_helpers)
 
   def testGetHelperNames(self):
     """Tests the GetHelperNames function."""
-    manager.ArgumentHelperManager.RegisterHelper(test_lib.TestHelper)
+    manager.ArgumentHelperManager.RegisterHelper(TestHelper)
     self.assertIn(
-        test_lib.TestHelper.NAME,
-        manager.ArgumentHelperManager.GetHelperNames())
-    manager.ArgumentHelperManager.DeregisterHelper(test_lib.TestHelper)
+        TestHelper.NAME, manager.ArgumentHelperManager.GetHelperNames())
+    manager.ArgumentHelperManager.DeregisterHelper(TestHelper)
 
   def testCommandLineArguments(self):
     """Test the AddCommandLineArguments and function."""
     manager.ArgumentHelperManager.RegisterHelpers([
-        test_lib.TestHelper, test_lib.AnotherTestHelper])
+        TestHelper, AnotherTestHelper])
 
     arg_parser = argparse.ArgumentParser(conflict_handler=u'resolve')
     manager.ArgumentHelperManager.AddCommandLineArguments(arg_parser)
@@ -66,8 +107,8 @@ class HelperManagerTest(unittest.TestCase):
     options.dynamic = 'now stuff'
     manager.ArgumentHelperManager.ParseOptions(options, None)
 
-    manager.ArgumentHelperManager.DeregisterHelper(test_lib.TestHelper)
-    manager.ArgumentHelperManager.DeregisterHelper(test_lib.AnotherTestHelper)
+    manager.ArgumentHelperManager.DeregisterHelper(TestHelper)
+    manager.ArgumentHelperManager.DeregisterHelper(AnotherTestHelper)
 
 
 if __name__ == '__main__':

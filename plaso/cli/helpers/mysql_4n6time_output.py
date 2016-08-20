@@ -9,7 +9,7 @@ from plaso.cli.helpers import manager
 from plaso.output import mysql_4n6time
 
 
-class MySQL4n6TimeHelper(database_config.DatabaseConfigHelper):
+class MySQL4n6TimeHelper(database_config.DatabaseArgumentsHelper):
   """CLI argument helper for a 4n6Time MySQL database server."""
 
   _DEFAULT_USERNAME = u'root'
@@ -25,7 +25,7 @@ class MySQL4n6TimeOutputHelper(interface.ArgumentsHelper):
 
   @classmethod
   def AddArguments(cls, argument_group):
-    """Add command line arguments the helper supports to an argument group.
+    """Adds command line arguments the helper supports to an argument group.
 
     This function takes an argument parser or an argument group object and adds
     to it all the command line arguments this helper supports.
