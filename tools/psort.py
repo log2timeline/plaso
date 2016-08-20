@@ -813,7 +813,17 @@ def Main():
   if have_list_option:
     return True
 
-  tool.ProcessStorage()
+  try:
+    tool.ProcessStorage()
+
+  except (KeyboardInterrupt, errors.UserAbort):
+    logging.warning(u'Aborted by user.')
+    return False
+
+  except errors.BadConfigOption as exception:
+    logging.warning(exception)
+    return False
+
   return True
 
 
