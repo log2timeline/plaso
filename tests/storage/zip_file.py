@@ -1138,6 +1138,17 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     self.assertEqual(event_object.tag.labels[0], u'Interesting')
     self.assertEqual(event_object.tag.labels[1], u'Malware')
 
+  def testGetNumberOfAnalysisReports(self):
+    """Tests the GetNumberOfAnalysisReports function."""
+    test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
+    storage_file = zip_file.ZIPStorageFile()
+    storage_file.Open(path=test_file)
+
+    number_of_event_sources = storage_file.GetNumberOfAnalysisReports()
+    self.assertEqual(number_of_event_sources, 2)
+
+    storage_file.Close()
+
   def testGetNumberOfEventSources(self):
     """Tests the GetNumberOfEventSources function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
@@ -1482,7 +1493,8 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
       storage_writer.Open()
       storage_writer.Close()
 
-  # TODO: add test for GetEventSources.
+  # TODO: add test for GetEvents.
+  # TODO: add test for GetFirstWrittenEventSource and GetNextWrittenEventSource.
 
   def testMergeFromStorage(self):
     """Tests the MergeFromStorage function."""
