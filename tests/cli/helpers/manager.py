@@ -36,7 +36,7 @@ class AnotherTestHelper(interface.ArgumentsHelper):
 
 
 class HelperManagerTest(unittest.TestCase):
-  """Tests for the parsers manager."""
+  """Tests the parsers manager."""
 
   def testHelperRegistration(self):
     """Tests the RegisterHelper and DeregisterHelper functions."""

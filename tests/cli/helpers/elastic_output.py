@@ -16,7 +16,7 @@ from tests.cli.helpers import test_lib
 
 class ElasticSearchOutputArgumentsHelperTest(
     test_lib.OutputModuleArgumentsHelperTest):
-  """Tests for the Elastic Search output module CLI arguments helper."""
+  """Tests the Elastic Search output module CLI arguments helper."""
 
   _EXPECTED_OUTPUT = u'\n'.join([
       u'usage: cli_helper.py [--index_name INDEX_NAME] [--doc_type DOC_TYPE]',

@@ -31,8 +31,12 @@ class TestHelper(interface.ArgumentsHelper):
       raise errors.BadConfigOption(u'Always set this.')
 
 
+class AnalysisPluginArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
+  """Tests an analysis plugin CLI arguments helper."""
+
+
 class OutputModuleArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
-  """Tests for an output module CLI arguments helper."""
+  """Tests an output module CLI arguments helper."""
 
   def _CreateOutputMediator(self):
     """Creates a test output mediator.

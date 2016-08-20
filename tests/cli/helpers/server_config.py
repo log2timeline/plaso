@@ -38,7 +38,7 @@ class MockOutputModule(object):
 
 
 class ServerArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
-  """Tests for the server configuration CLI arguments helper."""
+  """Tests the server configuration CLI arguments helper."""
 
   _EXPECTED_OUTPUT = u'\n'.join([
       u'usage: cli_helper.py [--server HOSTNAME] [--port PORT]',

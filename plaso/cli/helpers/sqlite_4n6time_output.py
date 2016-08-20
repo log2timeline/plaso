@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The arguments helper for the 4n6time SQLite database output module."""
+"""The 4n6time SQLite database output module CLI arguments helper."""
 
 from plaso.lib import errors
 from plaso.cli.helpers import interface
@@ -8,8 +8,8 @@ from plaso.cli.helpers import manager
 from plaso.output import sqlite_4n6time
 
 
-class SQLite4n6TimeOutputHelper(interface.ArgumentsHelper):
-  """CLI arguments helper class for a SQLite 4n6time output module."""
+class SQLite4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
+  """4n6time SQLite database output module CLI arguments helper."""
 
   NAME = u'4n6time_sqlite'
   CATEGORY = u'output'
@@ -55,4 +55,4 @@ class SQLite4n6TimeOutputHelper(interface.ArgumentsHelper):
     output_module.SetFilename(filename)
 
 
-manager.ArgumentHelperManager.RegisterHelper(SQLite4n6TimeOutputHelper)
+manager.ArgumentHelperManager.RegisterHelper(SQLite4n6TimeOutputArgumentsHelper)

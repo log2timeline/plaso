@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The arguments helper for the timesketch output module."""
+"""The Timesketch output module CLI arguments helper."""
 
 import uuid
 
@@ -9,8 +9,8 @@ from plaso.cli.helpers import manager
 from plaso.output import timesketch_out
 
 
-class TimesketchOutputHelper(interface.ArgumentsHelper):
-  """CLI arguments helper class for a timesketch output module."""
+class TimesketchOutputArgumentsHelper(interface.ArgumentsHelper):
+  """Timesketch output module CLI arguments helper."""
 
   NAME = u'timesketch'
   CATEGORY = u'output'
@@ -80,10 +80,6 @@ class TimesketchOutputHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           u'Output module is not an instance of TimesketchOutputModule')
 
-    output_format = getattr(options, u'output_format', None)
-    if output_format != u'timesketch':
-      raise errors.BadConfigOption(u'Only works on Timesketch output module.')
-
     doc_type = cls._ParseStringOption(
         options, u'doc_time', default_value=cls._DEFAULT_DOC_TYPE)
     output_module.SetDocType(doc_type)
@@ -105,4 +101,4 @@ class TimesketchOutputHelper(interface.ArgumentsHelper):
     output_module.SetUserName(username)
 
 
-manager.ArgumentHelperManager.RegisterHelper(TimesketchOutputHelper)
+manager.ArgumentHelperManager.RegisterHelper(TimesketchOutputArgumentsHelper)

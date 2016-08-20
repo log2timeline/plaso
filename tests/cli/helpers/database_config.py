@@ -73,7 +73,7 @@ class MockOutputModule(MockPartialOutputModule):
 
 
 class DatabaseArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
-  """Tests for the database configuration CLI arguments helper."""
+  """Tests the database configuration CLI arguments helper."""
 
   _EXPECTED_OUTPUT = u'\n'.join([
       u'usage: cli_helper.py [--user USERNAME] [--password PASSWORD]',
