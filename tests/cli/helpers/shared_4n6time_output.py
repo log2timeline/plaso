@@ -54,7 +54,7 @@ class Shared4n6TimeOutputArgumentsHelperTest(
     options = cli_test_lib.TestOptions()
 
     output_mediator = self._CreateOutputMediator()
-    output_module = shared_4n6time.Base4n6TimeOutputModule(output_mediator)
+    output_module = shared_4n6time.Shared4n6TimeOutputModule(output_mediator)
     shared_4n6time_output.Shared4n6TimeOutputArgumentsHelper.ParseOptions(
         options, output_module)
 

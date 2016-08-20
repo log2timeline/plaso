@@ -54,9 +54,9 @@ class Shared4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
     """
-    if not isinstance(output_module, shared_4n6time.Base4n6TimeOutputModule):
+    if not isinstance(output_module, shared_4n6time.Shared4n6TimeOutputModule):
       raise errors.BadConfigObject(
-          u'Output module is not an instance of Base4n6TimeOutputModule')
+          u'Output module is not an instance of Shared4n6TimeOutputModule')
 
     append = getattr(options, u'append', cls._DEFAULT_APPEND)
     evidence = cls._ParseStringOption(
