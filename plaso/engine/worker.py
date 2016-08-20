@@ -34,8 +34,8 @@ class EventExtractionWorker(object):
   Attributes:
     last_activity_timestamp (int): timestamp received that indicates the last
         time activity was observed.
-    processing_status (str): human readable status indication e.g. 'Hashing',
-        'Extracting'.
+    processing_status (str): human readable status indication such as:
+        'Extracting', 'Hashing'.
   """
 
   _DEFAULT_HASH_READ_SIZE = 4096
@@ -339,7 +339,7 @@ class EventExtractionWorker(object):
     self.processing_status = definitions.PROCESSING_STATUS_RUNNING
 
   def _GetArchiveTypes(self, mediator, path_spec):
-    """Determines if a data stream contains an archive e.g. TAR or ZIP.
+    """Determines if a data stream contains an archive such as: TAR or ZIP.
 
     Args:
       mediator (ParserMediator): mediates the interactions between
@@ -363,7 +363,7 @@ class EventExtractionWorker(object):
     return type_indicators
 
   def _GetCompressedStreamTypes(self, mediator, path_spec):
-    """Determines if a data stream contains a compressed stream e.g. gzip.
+    """Determines if a data stream contains a compressed stream such as: gzip.
 
     Args:
       mediator (ParserMediator): mediates the interactions between
@@ -403,7 +403,7 @@ class EventExtractionWorker(object):
     return False
 
   def _ProcessArchiveTypes(self, mediator, path_spec, type_indicators):
-    """Processes a data stream containing archive types e.g. TAR or ZIP.
+    """Processes a data stream containing archive types such as: TAR or ZIP.
 
     Args:
       mediator (ParserMediator): mediates the interactions between
@@ -470,7 +470,7 @@ class EventExtractionWorker(object):
               error_message, path_spec=path_spec)
 
   def _ProcessCompressedStreamTypes(self, mediator, path_spec, type_indicators):
-    """Processes a data stream containing compressed stream types e.g. bz2.
+    """Processes a data stream containing compressed stream types such as: bz2.
 
     Args:
       mediator (ParserMediator): mediates the interactions between

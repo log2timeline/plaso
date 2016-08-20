@@ -601,10 +601,16 @@ def Main():
     return False
 
   result = True
-  if tool.compare_storage_information:
-    result = tool.CompareStorages()
-  else:
-    tool.PrintStorageInformation()
+  try:
+    if tool.compare_storage_information:
+      result = tool.CompareStorages()
+    else:
+      tool.PrintStorageInformation()
+
+  except errors.BadConfigOption as exception:
+    logging.warning(exception)
+    return False
+
   return result
 
 
