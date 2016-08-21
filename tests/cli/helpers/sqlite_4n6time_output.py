@@ -20,7 +20,7 @@ class SQLite4n6TimeOutputArgumentsHelperTEst(
   _EXPECTED_OUTPUT = u'\n'.join([
       (u'usage: cli_helper.py [--append] [--evidence EVIDENCE] '
        u'[--fields FIELDS]'),
-       u'                     [--additional_fields ADDITIONAL_FIELDS]',
+      u'                     [--additional_fields ADDITIONAL_FIELDS]',
       u'',
       u'Test argument parser.',
       u'',
