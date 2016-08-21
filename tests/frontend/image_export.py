@@ -540,22 +540,26 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
     """Tests the ParseExtensionsString function."""
     test_front_end = image_export.ImageExportFrontend()
 
-    test_front_end = image_export.ImageExportFrontend()
     test_front_end.ParseExtensionsString(u'txt')
 
   def testParseNamesString(self):
     """Tests the ParseNamesString function."""
     test_front_end = image_export.ImageExportFrontend()
 
-    test_front_end = image_export.ImageExportFrontend()
     test_front_end.ParseNamesString(u'another_file')
 
   def testParseSignatureIdentifiers(self):
     """Tests the ParseSignatureIdentifiers function."""
     test_front_end = image_export.ImageExportFrontend()
 
-    test_front_end = image_export.ImageExportFrontend()
     test_front_end.ParseSignatureIdentifiers(self._DATA_PATH, u'gzip')
+
+    with self.assertRaises(ValueError):
+      test_front_end.ParseSignatureIdentifiers(None, u'gzip')
+
+    with self.assertRaises(IOError):
+      test_path = os.path.join(os.sep, u'bogus')
+      test_front_end.ParseSignatureIdentifiers(test_path, u'gzip')
 
   # TODO: add test for PrintFilterCollection.
 
