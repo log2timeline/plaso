@@ -543,10 +543,13 @@ class ImageExportFrontend(frontend.Frontend):
     target_directory, target_filename = self._GetSanitizedDestination(
         file_entry, file_entry.path_spec, destination_path)
 
-    vss_store_number = getattr(file_entry.path_spec, u'vss_store_number', None)
-    if vss_store_number is not None:
-      target_filename = u'vss_{0:d}_{1:s}'.format(
-          vss_store_number + 1, target_filename)
+    parent_path_spec = getattr(file_entry.path_spec, u'parent', None)
+    if parent_path_spec:
+      vss_store_number = getattr(parent_path_spec, u'store_index', None)
+      if vss_store_number is not None:
+        target_filename = u'vss{0:d}_{1:s}'.format(
+            vss_store_number + 1, target_filename)
+
     if data_stream_name:
       target_filename = u'{0:s}_{1:s}'.format(target_filename, data_stream_name)
 
