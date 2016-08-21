@@ -181,7 +181,13 @@ class ExtensionsFileEntryFilterTest(shared_test_lib.BaseTestCase):
 
     self.assertFalse(test_filter.Matches(file_entry))
 
-    # TODO: implement test with a path spec without location.
+    # Test that fails because path specification has no location.
+    tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=15, parent=os_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+
+    self.assertFalse(test_filter.Matches(file_entry))
 
   def testPrint(self):
     """Tests the Print function."""
@@ -265,7 +271,39 @@ class NamesFileEntryFilterTest(shared_test_lib.BaseTestCase):
 class SignaturesFileEntryFilterTest(shared_test_lib.BaseTestCase):
   """Tests for the signatures file entry filter."""
 
-  # TODO: add test for _GetScanner.
+  # pylint: disable=protected-access
+
+  def testGetScanner(self):
+    """Tests the _GetScanner function."""
+    test_filter = image_export.SignaturesFileEntryFilter(None, [])
+
+    test_filter._GetScanner(None, [])
+    self.assertIsNone(test_filter._file_scanner)
+
+    specification_store = specification.FormatSpecificationStore()
+    format_specification = specification.FormatSpecification(u'no_offset')
+    format_specification.AddNewSignature(b'test1')
+    specification_store.AddSpecification(format_specification)
+
+    format_specification = specification.FormatSpecification(u'negative_offset')
+    format_specification.AddNewSignature(b'test2', offset=-4)
+    specification_store.AddSpecification(format_specification)
+
+    format_specification = specification.FormatSpecification(u'positive_offset')
+    format_specification.AddNewSignature(b'test3', offset=4)
+    specification_store.AddSpecification(format_specification)
+
+    with self.assertRaises(TypeError):
+      # Currently pysigscan does not support patterns without an offset.
+      test_filter._GetScanner(specification_store, [u'no_offset'])
+
+    file_scanner = test_filter._GetScanner(
+        specification_store, [u'negative_offset'])
+    self.assertIsNotNone(file_scanner)
+
+    file_scanner = test_filter._GetScanner(
+        specification_store, [u'positive_offset'])
+    self.assertIsNotNone(file_scanner)
 
   def testMatches(self):
     """Tests the Matches function."""
@@ -274,10 +312,12 @@ class SignaturesFileEntryFilterTest(shared_test_lib.BaseTestCase):
   def testPrint(self):
     """Tests the Print function."""
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    sepcification_store = specification.FormatSpecificationStore()
-    sepcification_store.AddNewSpecification(u'7z')
+
+    specification_store = specification.FormatSpecificationStore()
+    specification_store.AddNewSpecification(u'7z')
+
     test_filter = image_export.SignaturesFileEntryFilter(
-        sepcification_store, [u'7z', u'bzip2'])
+        specification_store, [u'7z', u'bzip2'])
 
     test_filter.Print(output_writer)
 
