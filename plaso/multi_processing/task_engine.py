@@ -615,11 +615,16 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         number_of_consumed_reports, number_of_produced_reports)
 
     task_identifier = process_status.get(u'task_identifier', u'')
-    if task_identifier:
+    if not task_identifier:
+      return
+
+    try:
+      self._task_manager.UpdateTask(task_identifier)
+    except KeyError:
       try:
-        self._task_manager.UpdateTask(task_identifier)
+        self._task_manager.RescheduleTask(task_identifier)
       except KeyError:
-        logging.error(u'Worker processing untracked task: {0:s}.'.format(
+        logging.error(u'Worker processing unknown task: {0:s}.'.format(
             task_identifier))
 
   def ProcessSources(
