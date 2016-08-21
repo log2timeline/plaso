@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The arguments helper for the dynamic output module."""
+"""The dynamic output module CLI arguments helper."""
 
 from plaso.lib import errors
 from plaso.cli.helpers import interface
@@ -7,8 +7,8 @@ from plaso.cli.helpers import manager
 from plaso.output import dynamic
 
 
-class DynamicOutputHelper(interface.ArgumentsHelper):
-  """CLI arguments helper class for the dynamic output module."""
+class DynamicOutputArgumentsHelper(interface.ArgumentsHelper):
+  """Dynamic output module CLI arguments helper."""
 
   NAME = u'dynamic'
   CATEGORY = u'output'
@@ -20,7 +20,7 @@ class DynamicOutputHelper(interface.ArgumentsHelper):
 
   @classmethod
   def AddArguments(cls, argument_group):
-    """Add command line arguments the helper supports to an argument group.
+    """Adds command line arguments the helper supports to an argument group.
 
     This function takes an argument parser or an argument group object and adds
     to it all the command line arguments this helper supports.
@@ -57,4 +57,4 @@ class DynamicOutputHelper(interface.ArgumentsHelper):
         field_name.strip() for field_name in fields.split(u',')])
 
 
-manager.ArgumentHelperManager.RegisterHelper(DynamicOutputHelper)
+manager.ArgumentHelperManager.RegisterHelper(DynamicOutputArgumentsHelper)

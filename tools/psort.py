@@ -73,6 +73,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._event_filter = None
     self._event_filter_expression = None
     self._front_end = psort.PsortFrontend()
+    self._number_of_analysis_reports = 0
     self._options = None
     self._output_filename = None
     self._output_format = None
@@ -237,6 +238,24 @@ class PsortTool(analysis_tool.AnalysisTool):
       self.list_language_identifiers = True
     else:
       self._front_end.SetPreferredLanguageIdentifier(preferred_language)
+
+  def _PrintAnalysisReportsDetails(self, storage):
+    """Prints the details of the analysis reports.
+
+    Args:
+      storage (BaseStorage): storage writer.
+    """
+    for index, analysis_report in enumerate(storage.GetAnalysisReports()):
+      if index + 1 <= self._number_of_analysis_reports:
+        continue
+
+      title = u'Analysis report: {0:d}'.format(index)
+      table_view = cli_views.ViewsFactory.GetTableView(
+          self._views_format_type, title=title)
+
+      table_view.AddRow([u'String', analysis_report.GetString()])
+
+      table_view.Write(self._output_writer)
 
   def _PrintStatusHeader(self):
     """Prints the processing status header."""
@@ -743,6 +762,11 @@ class PsortTool(analysis_tool.AnalysisTool):
         command_line_arguments=self._command_line_arguments,
         preferred_encoding=self.preferred_encoding)
 
+    storage_reader = self._front_end.CreateStorageReader(
+        self._storage_file_path)
+    self._number_of_analysis_reports = (
+        storage_reader.GetNumberOfAnalysisReports())
+
     if analysis_plugins:
       storage_writer = self._front_end.CreateStorageWriter(
           session, self._storage_file_path)
@@ -780,7 +804,9 @@ class PsortTool(analysis_tool.AnalysisTool):
       table_view.AddRow([element, count])
     table_view.Write(self._output_writer)
 
-    # TODO: print analysis reports.
+    storage_reader = self._front_end.CreateStorageReader(
+        self._storage_file_path)
+    self._PrintAnalysisReportsDetails(storage_reader)
 
 
 def Main():

@@ -211,10 +211,10 @@ class ExtensionsFileEntryFilter(FileEntryFilter):
     if not location:
       return
 
-    _, _, extension = location.rpartition(u'.')
-    if not extension:
+    if u'.' not in location:
       return False
 
+    _, _, extension = location.rpartition(u'.')
     return extension.lower() in self._extensions
 
   def Print(self, output_writer):
@@ -276,13 +276,11 @@ class SignaturesFileEntryFilter(FileEntryFilter):
       signature_identifiers (list[str]): signature identifiers.
     """
     super(SignaturesFileEntryFilter, self).__init__()
+    self._file_scanner = None
     self._signature_identifiers = []
 
-    if specification_store:
-      self._file_scanner = self._GetScanner(
-          specification_store, signature_identifiers)
-    else:
-      self._file_scanner = None
+    self._file_scanner = self._GetScanner(
+        specification_store, signature_identifiers)
 
   def _GetScanner(self, specification_store, signature_identifiers):
     """Initializes the scanner object form the specification store.
@@ -292,8 +290,11 @@ class SignaturesFileEntryFilter(FileEntryFilter):
       signature_identifiers (list[str]): signature identifiers.
 
     Returns:
-      pysigscan.scanner: signature scanner.
+      pysigscan.scanner: signature scanner or None.
     """
+    if not specification_store:
+      return
+
     scanner_object = pysigscan.scanner()
 
     for format_specification in specification_store.specifications:

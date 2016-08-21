@@ -9,7 +9,7 @@ from plaso.output import interface
 
 # pylint: disable=abstract-method
 
-class Base4n6TimeOutputModule(interface.OutputModule):
+class Shared4n6TimeOutputModule(interface.OutputModule):
   """Class defining the base 4n6time output module."""
 
   NAME = '4n6time_shared'
@@ -27,7 +27,7 @@ class Base4n6TimeOutputModule(interface.OutputModule):
     Raises:
       ValueError: when there are unused keyword arguments.
     """
-    super(Base4n6TimeOutputModule, self).__init__(output_mediator)
+    super(Shared4n6TimeOutputModule, self).__init__(output_mediator)
     self._append = False
     self._evidence = u'-'
     self._fields = self._DEFAULT_FIELDS

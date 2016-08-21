@@ -12,7 +12,7 @@ from plaso.output import manager
 from plaso.output import shared_4n6time
 
 
-class SQLite4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
+class SQLite4n6TimeOutputModule(shared_4n6time.Shared4n6TimeOutputModule):
   """Saves the data in a SQLite database, used by the tool 4n6time."""
 
   NAME = u'4n6time_sqlite'

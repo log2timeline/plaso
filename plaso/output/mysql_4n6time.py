@@ -12,7 +12,7 @@ from plaso.output import manager
 from plaso.output import shared_4n6time
 
 
-class MySQL4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
+class MySQL4n6TimeOutputModule(shared_4n6time.Shared4n6TimeOutputModule):
   """Class defining the MySQL database output module for 4n6time."""
 
   NAME = '4n6time_mysql'
@@ -228,7 +228,7 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
     self._count = 0
 
   def SetCredentials(self, password=None, username=None):
-    """Set the database credentials.
+    """Sets the database credentials.
 
     Args:
       password (Optional[str]): password to access the database.
@@ -240,7 +240,7 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
       self._user = username
 
   def SetDatabaseName(self, name):
-    """Set the database name.
+    """Sets the database name.
 
     Args:
       name (str): name of the database.
@@ -248,7 +248,7 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
     self._dbname = name
 
   def SetServerInformation(self, server, port):
-    """Set the server information.
+    """Sets the server information.
 
     Args:
       server (str): hostname or IP address of the databse server.

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Arguments helper for the nsrlsvr analysis plugin."""
+"""The nsrlsvr analysis plugin CLI arguments helper."""
 
 from plaso.analysis import nsrlsvr
 from plaso.cli.helpers import interface
@@ -7,8 +7,8 @@ from plaso.cli.helpers import manager
 from plaso.lib import errors
 
 
-class NsrlsvrAnalysisHelper(interface.ArgumentsHelper):
-  """CLI arguments helper class for the nsrlsvr analysis plugin."""
+class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
+  """Nsrlsvr analysis plugin CLI arguments helper."""
 
   NAME = u'nsrlsvr_analysis'
   CATEGORY = u'analysis'
@@ -19,7 +19,7 @@ class NsrlsvrAnalysisHelper(interface.ArgumentsHelper):
 
   @classmethod
   def AddArguments(cls, argument_group):
-    """Add command line arguments the helper supports to an argument group.
+    """Adds command line arguments the helper supports to an argument group.
 
     This function takes an argument parser or an argument group object and adds
     to it all the command line arguments this helper supports.
@@ -61,4 +61,4 @@ class NsrlsvrAnalysisHelper(interface.ArgumentsHelper):
     analysis_plugin.SetPort(port)
 
 
-manager.ArgumentHelperManager.RegisterHelper(NsrlsvrAnalysisHelper)
+manager.ArgumentHelperManager.RegisterHelper(NsrlsvrAnalysisArgumentsHelper)
