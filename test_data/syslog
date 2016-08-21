@@ -14,3 +14,5 @@ Nov 18 01:15:20 myhostname.myhost.com aprocess[10100]: This is a multi-line mess
 	many syslog parsers.
 Feb  6 15:16:30 victoria process[2085]: Test message with single character day
 Nov 18 01:15:43: --- last message repeated 5 times ---
+Nov 18 08:30:20 kernel: [997.390602] sda2: rw=0, want=65, limit=2
+Nov 18 08:31:20 victoria kernel: [998.390602] sda2: rw=0, want=66, limit=2
