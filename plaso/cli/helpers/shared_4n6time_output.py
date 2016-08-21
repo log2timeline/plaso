@@ -30,6 +30,12 @@ class Shared4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
+        u'--additional-fields', dest=u'additional_fields', type=str,
+        action=u'store', default=u'', help=(
+            u'Defines extra fields to be included in the output, in addition to'
+            u' the default fields, which are {0:s}.'.format(
+                cls._DEFAULT_FIELDS)))
+    argument_group.add_argument(
         u'--append', dest=u'append', action=u'store_true', default=False,
         required=cls._DEFAULT_APPEND, help=(
             u'Defines whether the intention is to append to an already '
@@ -63,6 +69,10 @@ class Shared4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
         options, u'evidence', default_value=cls._DEFAULT_EVIDENCE)
     fields = cls._ParseStringOption(
         options, u'fields', default_value=cls._DEFAULT_FIELDS)
+    additional_fields = cls._ParseStringOption(
+        options, u'additional_fields')
+
+    fields = u'{0:s},{1:s}'.format(fields,additional_fields)
 
     output_module.SetAppendMode(append)
     output_module.SetEvidence(evidence)
