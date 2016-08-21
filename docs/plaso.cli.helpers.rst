@@ -92,10 +92,10 @@ plaso.cli.helpers.tagging_analysis module
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.helpers.timesketch_out module
----------------------------------------
+plaso.cli.helpers.timesketch_output module
+------------------------------------------
 
-.. automodule:: plaso.cli.helpers.timesketch_out
+.. automodule:: plaso.cli.helpers.timesketch_output
     :members:
     :undoc-members:
     :show-inheritance:

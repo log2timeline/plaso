@@ -63,7 +63,7 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
       event = self._CreateTestEventObject(event_dictionary)
       events.append(event)
 
-    plugin = windows_services.WindowsServicesPlugin()
+    plugin = windows_services.WindowsServicesAnalysisPlugin()
     storage_writer = self._AnalyzeEvents(events, plugin)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
@@ -93,7 +93,7 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     # performance gain is negligible.
 
     parser = winreg.WinRegistryParser()
-    plugin = windows_services.WindowsServicesPlugin()
+    plugin = windows_services.WindowsServicesAnalysisPlugin()
 
     storage_writer = self._ParseAndAnalyzeFile([u'SYSTEM'], parser, plugin)
 
@@ -122,7 +122,7 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     # performance gain is negligible.
 
     parser = winreg.WinRegistryParser()
-    plugin = windows_services.WindowsServicesPlugin()
+    plugin = windows_services.WindowsServicesAnalysisPlugin()
     plugin.SetOutputFormat(u'yaml')
 
     storage_writer = self._ParseAndAnalyzeFile([u'SYSTEM'], parser, plugin)

@@ -304,7 +304,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     output_module = null.NullOutputModule(output_mediator_object)
 
     data_location = u''
-    analysis_plugin = tagging.TaggingPlugin()
+    analysis_plugin = tagging.TaggingAnalysisPlugin()
     # TODO: set tag file.
 
     test_engine = psort.PsortMultiProcessEngine()
