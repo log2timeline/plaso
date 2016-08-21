@@ -316,6 +316,14 @@ class StorageReader(object):
     """
 
   @abc.abstractmethod
+  def GetNumberOfAnalysisReports(self):
+    """Retrieves the number analysis reports.
+
+    Returns:
+      int: number of analysis reports.
+    """
+
+  @abc.abstractmethod
   def ReadPreprocessingInformation(self, knowledge_base):
     """Reads preprocessing information.
 
@@ -391,6 +399,14 @@ class FileStorageReader(StorageReader):
       generator(EventTag): event tag generator.
     """
     return self._storage_file.GetEventTags()
+
+  def GetNumberOfAnalysisReports(self):
+    """Retrieves the number analysis reports.
+
+    Returns:
+      int: number of analysis reports.
+    """
+    return self._storage_file.GetNumberOfAnalysisReports()
 
   def ReadPreprocessingInformation(self, knowledge_base):
     """Reads preprocessing information.

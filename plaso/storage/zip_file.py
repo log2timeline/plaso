@@ -993,6 +993,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       maximum_buffer_size = self._MAXIMUM_BUFFER_SIZE
 
     super(ZIPStorageFile, self).__init__()
+    self._analysis_report_stream_number = 0
     self._error_stream_number = 1
     self._errors_list = _AttributeContainersList()
     self._event_offset_tables = {}
@@ -1010,7 +1011,6 @@ class ZIPStorageFile(interface.BaseFileStorage):
     self._event_timestamp_tables = {}
     self._event_timestamp_tables_lfu = []
     self._event_heap = None
-    self._last_analysis_report = 0
     self._last_preprocess = 0
     self._last_session = 0
     self._last_task = 0
@@ -1609,7 +1609,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     self._event_tag_stream_number = self._GetLastStreamNumber(
         u'event_tag_data.')
 
-    self._last_analysis_report = self._GetLastStreamNumber(
+    self._analysis_report_stream_number = self._GetLastStreamNumber(
         u'analysis_report_data.')
     self._last_preprocess = self._GetLastStreamNumber(u'preprocess.')
 
@@ -2179,7 +2179,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       raise IOError(u'Unable to write to read-only storage file.')
 
     stream_name = u'analysis_report_data.{0:06}'.format(
-        self._last_analysis_report)
+        self._analysis_report_stream_number)
 
     serialized_report = self._SerializeAttributeContainer(analysis_report)
 
@@ -2189,7 +2189,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     data_stream.WriteEntry(serialized_report)
     data_stream.WriteFinalize()
 
-    self._last_analysis_report += 1
+    self._analysis_report_stream_number += 1
 
   def AddError(self, error):
     """Adds an error.
@@ -2573,6 +2573,14 @@ class ZIPStorageFile(interface.BaseFileStorage):
       for event_tag in self._ReadAttributeContainersFromStream(
           data_stream, u'event_tag'):
         yield event_tag
+
+  def GetNumberOfAnalysisReports(self):
+    """Retrieves the number analysis reports.
+
+    Returns:
+      int: number of analysis reports.
+    """
+    return self._analysis_report_stream_number - 1
 
   def GetNumberOfEventSources(self):
     """Retrieves the number event sources.
