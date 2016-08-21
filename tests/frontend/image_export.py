@@ -6,7 +6,6 @@ import os
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
