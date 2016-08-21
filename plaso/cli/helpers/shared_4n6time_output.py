@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Arguments helper for information shared between 4n6time output modules."""
+"""The 4n6time output modules shared CLI arguments helper."""
 
 from plaso.lib import errors
 from plaso.cli.helpers import interface
 from plaso.output import shared_4n6time
 
 
-class Shared4n6TimeOutputHelper(interface.ArgumentsHelper):
-  """CLI arguments helper class for 4n6time output modules."""
+class Shared4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
+  """4n6time output modules shared CLI arguments helper."""
 
   NAME = u'4n6time'
   CATEGORY = u'output'
@@ -20,7 +20,7 @@ class Shared4n6TimeOutputHelper(interface.ArgumentsHelper):
 
   @classmethod
   def AddArguments(cls, argument_group):
-    """Add command line arguments the helper supports to an argument group.
+    """Adds command line arguments the helper supports to an argument group.
 
     This function takes an argument parser or an argument group object and adds
     to it all the command line arguments this helper supports.
@@ -54,9 +54,9 @@ class Shared4n6TimeOutputHelper(interface.ArgumentsHelper):
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
     """
-    if not isinstance(output_module, shared_4n6time.Base4n6TimeOutputModule):
+    if not isinstance(output_module, shared_4n6time.Shared4n6TimeOutputModule):
       raise errors.BadConfigObject(
-          u'Output module is not an instance of Base4n6TimeOutputModule')
+          u'Output module is not an instance of Shared4n6TimeOutputModule')
 
     append = getattr(options, u'append', cls._DEFAULT_APPEND)
     evidence = cls._ParseStringOption(

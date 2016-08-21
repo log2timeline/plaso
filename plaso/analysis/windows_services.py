@@ -189,7 +189,7 @@ class WindowsServiceCollection(object):
     return self._services
 
 
-class WindowsServicesPlugin(interface.AnalysisPlugin):
+class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
   """Provides a single list of for Windows services found in the Registry."""
 
   NAME = u'windows_services'
@@ -199,7 +199,7 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
 
   def __init__(self):
     """Initializes the Windows Services plugin."""
-    super(WindowsServicesPlugin, self).__init__()
+    super(WindowsServicesAnalysisPlugin, self).__init__()
     self._output_format = u'text'
     self._service_collection = WindowsServiceCollection()
 
@@ -278,4 +278,4 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
     self._output_format = output_format
 
 
-manager.AnalysisPluginManager.RegisterPlugin(WindowsServicesPlugin)
+manager.AnalysisPluginManager.RegisterPlugin(WindowsServicesAnalysisPlugin)

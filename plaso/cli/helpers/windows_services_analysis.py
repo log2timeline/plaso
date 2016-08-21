@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The arguments helper for the Windows Services analysis plugin."""
+"""The Windows Services analysis plugin CLI arguments helper."""
 
 from plaso.lib import errors
 from plaso.cli.helpers import interface
@@ -7,8 +7,8 @@ from plaso.cli.helpers import manager
 from plaso.analysis import windows_services
 
 
-class WindowsServicesAnalysisHelper(interface.ArgumentsHelper):
-  """CLI arguments helper class for the WindowsServices analysis plugin."""
+class WindowsServicesAnalysisArgumentsHelper(interface.ArgumentsHelper):
+  """Windows Services analysis plugin CLI arguments helper."""
 
   NAME = u'windows_services'
   CATEGORY = u'analysis'
@@ -18,7 +18,7 @@ class WindowsServicesAnalysisHelper(interface.ArgumentsHelper):
 
   @classmethod
   def AddArguments(cls, argument_group):
-    """Add command line arguments the helper supports to an argument group.
+    """Adds command line arguments the helper supports to an argument group.
 
     This function takes an argument parser or an argument group object and adds
     to it all the command line arguments this helper supports.
@@ -45,13 +45,16 @@ class WindowsServicesAnalysisHelper(interface.ArgumentsHelper):
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
     """
-    if not isinstance(analysis_plugin, windows_services.WindowsServicesPlugin):
-      raise errors.BadConfigObject(
-          u'Analysis plugin is not an instance of WindowsServicesPlugin')
+    if not isinstance(
+        analysis_plugin, windows_services.WindowsServicesAnalysisPlugin):
+      raise errors.BadConfigObject((
+          u'Analysis plugin is not an instance of '
+          u'WindowsServicesAnalysisPlugin'))
 
     output_format = cls._ParseStringOption(
         options, u'windows_services_output', default_value=cls._DEFAULT_OUTPUT)
     analysis_plugin.SetOutputFormat(output_format)
 
 
-manager.ArgumentHelperManager.RegisterHelper(WindowsServicesAnalysisHelper)
+manager.ArgumentHelperManager.RegisterHelper(
+    WindowsServicesAnalysisArgumentsHelper)

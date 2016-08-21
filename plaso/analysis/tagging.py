@@ -21,7 +21,7 @@ from plaso.containers import events
 from plaso.containers import reports
 
 
-class TaggingPlugin(interface.AnalysisPlugin):
+class TaggingAnalysisPlugin(interface.AnalysisPlugin):
   """Analysis plugin that tags events according to rules in a tag file."""
 
   NAME = u'tagging'
@@ -42,7 +42,7 @@ class TaggingPlugin(interface.AnalysisPlugin):
 
   def __init__(self):
     """Initializes the tagging analysis plugin."""
-    super(TaggingPlugin, self).__init__()
+    super(TaggingAnalysisPlugin, self).__init__()
     self._autodetect_tag_file_attempt = False
     self._tag_rules = None
     self._tagging_file_name = None
@@ -233,4 +233,4 @@ class TaggingPlugin(interface.AnalysisPlugin):
     self._tag_rules = self._ParseTaggingFile(self._tagging_file_name)
 
 
-manager.AnalysisPluginManager.RegisterPlugin(TaggingPlugin)
+manager.AnalysisPluginManager.RegisterPlugin(TaggingAnalysisPlugin)
