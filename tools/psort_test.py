@@ -204,13 +204,18 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       u''])
 
   _EXPECTED_OUTPUT_MODULE_OPTIONS = u'\n'.join([
-      u'usage: psort_test.py [--fields FIELDS]',
+      u'usage: psort_test.py [--fields FIELDS] [--additional_fields ADDITIONAL_FIELDS]',
       u'',
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      (u'  --fields FIELDS  Defines which fields should be included in '
+      (u'  --fields FIELDS       Defines which fields should be included in '
        u'the output.'),
+      u'  --additional_fields ADDITIONAL_FIELDS',
+      u'                        Defines extra fields to be included in the output, in',
+      u'                        addition to the default fields, which are datetime,tim',
+      u'                        estamp_desc,source,source_long,message,parser,display_',
+      u'                        name,tag.',
       u''])
 
   # TODO: add test for _FormatStatusTableRow.
