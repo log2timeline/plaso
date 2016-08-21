@@ -522,10 +522,41 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
     test_front_end.ParseSignatureIdentifiers(self._DATA_PATH, u'gzip')
     self.assertTrue(test_front_end.HasFilters())
 
-  # TODO: add test for ParseDateFilters.
-  # TODO: add test for ParseExtensionsString.
-  # TODO: add test for ParseNamesString.
-  # TODO: add test for ParseSignatureIdentifiers.
+  def testParseDateFilters(self):
+    """Tests the ParseDateFilters function."""
+    test_front_end = image_export.ImageExportFrontend()
+
+    test_front_end.ParseDateFilters([
+        u'ctime, 2012-05-25 15:59:00, 2012-05-25 15:59:20'])
+
+    with self.assertRaises(ValueError):
+      test_front_end.ParseDateFilters([u'ctime, 2012-05-25 15:59:00'])
+
+    with self.assertRaises(ValueError):
+      test_front_end.ParseDateFilters([
+          u'ctime, 2012-05-25 15:59:00, 2012-05-A5 15:59:20'])
+
+  def testParseExtensionsString(self):
+    """Tests the ParseExtensionsString function."""
+    test_front_end = image_export.ImageExportFrontend()
+
+    test_front_end = image_export.ImageExportFrontend()
+    test_front_end.ParseExtensionsString(u'txt')
+
+  def testParseNamesString(self):
+    """Tests the ParseNamesString function."""
+    test_front_end = image_export.ImageExportFrontend()
+
+    test_front_end = image_export.ImageExportFrontend()
+    test_front_end.ParseNamesString(u'another_file')
+
+  def testParseSignatureIdentifiers(self):
+    """Tests the ParseSignatureIdentifiers function."""
+    test_front_end = image_export.ImageExportFrontend()
+
+    test_front_end = image_export.ImageExportFrontend()
+    test_front_end.ParseSignatureIdentifiers(self._DATA_PATH, u'gzip')
+
   # TODO: add test for PrintFilterCollection.
 
   def testProcessSourcesExtractWithDateTimeFilter(self):
