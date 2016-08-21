@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The arguments helper for the xlsx output module."""
+"""The XLSX output module CLI arguments helper."""
 
 from plaso.lib import errors
 from plaso.cli.helpers import interface
@@ -7,8 +7,8 @@ from plaso.cli.helpers import manager
 from plaso.output import xlsx
 
 
-class XLSXOutputHelper(interface.ArgumentsHelper):
-  """CLI arguments helper class for the XLSX output module."""
+class XLSXOutputArgumentsHelper(interface.ArgumentsHelper):
+  """XLSX output module CLI arguments helper."""
 
   NAME = u'xlsx'
   CATEGORY = u'output'
@@ -22,7 +22,7 @@ class XLSXOutputHelper(interface.ArgumentsHelper):
 
   @classmethod
   def AddArguments(cls, argument_group):
-    """Add command line arguments the helper supports to an argument group.
+    """Adds command line arguments the helper supports to an argument group.
 
     This function takes an argument parser or an argument group object and adds
     to it all the command line arguments this helper supports.
@@ -75,4 +75,4 @@ class XLSXOutputHelper(interface.ArgumentsHelper):
     output_module.SetTimestampFormat(timestamp_format)
 
 
-manager.ArgumentHelperManager.RegisterHelper(XLSXOutputHelper)
+manager.ArgumentHelperManager.RegisterHelper(XLSXOutputArgumentsHelper)

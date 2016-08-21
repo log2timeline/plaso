@@ -1,9 +1,14 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""CLI argument helper related functions and classes for testing."""
-
-from plaso.lib import errors
+"""CLI arguments helper related functions and classes for testing."""
 
 from plaso.cli.helpers import interface
+from plaso.engine import knowledge_base
+from plaso.formatters import mediator as formatters_mediator
+from plaso.lib import errors
+from plaso.output import mediator as output_mediator
+
+from tests.cli import test_lib as cli_test_lib
 
 
 class TestHelper(interface.ArgumentsHelper):
@@ -26,24 +31,20 @@ class TestHelper(interface.ArgumentsHelper):
       raise errors.BadConfigOption(u'Always set this.')
 
 
-class AnotherTestHelper(interface.ArgumentsHelper):
-  """Another test CLI argument helper."""
+class AnalysisPluginArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
+  """Tests an analysis plugin CLI arguments helper."""
 
-  NAME = 'another_test_helper'
-  DESCRIPTION = u'Another test helper that does nothing.'
 
-  @classmethod
-  def AddArguments(cls, argument_group):
-    """Add command line arguments to an argument group."""
-    argument_group.add_argument(
-        u'-c', u'--correcto', dest=u'correcto', action='store_true',
-        default=False, help=u'The correcto option.')
+class OutputModuleArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
+  """Tests an output module CLI arguments helper."""
 
-  @classmethod
-  def ParseOptions(cls, options, unused_config_object):
-    """Parse and validate the configurational options."""
-    if not hasattr(options, 'correcto'):
-      raise errors.BadConfigOption(u'Correcto not set.')
+  def _CreateOutputMediator(self):
+    """Creates a test output mediator.
 
-    if not isinstance(getattr(options, u'correcto', None), bool):
-      raise errors.BadConfigOption(u'Correcto wrongly formatted.')
+    Returns:
+      OutputMediator: output mediator.
+    """
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    formatter_mediator = formatters_mediator.FormatterMediator()
+    return output_mediator.OutputMediator(
+        knowledge_base_object, formatter_mediator)

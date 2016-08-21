@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The arguments helper for the VirusTotal analysis plugin."""
+"""The VirusTotal analysis plugin CLI arguments helper."""
 
 from plaso.lib import errors
 from plaso.cli.helpers import interface
@@ -7,8 +7,8 @@ from plaso.cli.helpers import manager
 from plaso.analysis import virustotal
 
 
-class VirusTotalAnalysisHelper(interface.ArgumentsHelper):
-  """CLI arguments helper class for the VirusTotal analysis plugin."""
+class VirusTotalAnalysisArgumentsHelper(interface.ArgumentsHelper):
+  """VirusTotal analysis plugin CLI arguments helper."""
 
   NAME = u'virustotal_analysis'
   CATEGORY = u'analysis'
@@ -18,7 +18,7 @@ class VirusTotalAnalysisHelper(interface.ArgumentsHelper):
 
   @classmethod
   def AddArguments(cls, argument_group):
-    """Add command line arguments the helper supports to an argument group.
+    """Adds command line arguments the helper supports to an argument group.
 
     This function takes an argument parser or an argument group object and adds
     to it all the command line arguments this helper supports.
@@ -67,4 +67,4 @@ class VirusTotalAnalysisHelper(interface.ArgumentsHelper):
     analysis_plugin.EnableFreeAPIKeyRateLimit(rate_limit)
 
 
-manager.ArgumentHelperManager.RegisterHelper(VirusTotalAnalysisHelper)
+manager.ArgumentHelperManager.RegisterHelper(VirusTotalAnalysisArgumentsHelper)

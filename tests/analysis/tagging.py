@@ -26,8 +26,8 @@ class TestEvtRecordEvent(events.EventObject):
   DATA_TYPE = u'windows:evt:record'
 
 
-class TaggingTest(test_lib.AnalysisPluginTestCase):
-  """Test for the tagging analysis plugin."""
+class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
+  """Tests the tagging analysis plugin."""
 
   # pylint: disable=protected-access
 
@@ -94,7 +94,7 @@ class TaggingTest(test_lib.AnalysisPluginTestCase):
       event_objects.append(event)
 
     test_file = self._GetTestFilePath([self._TEST_TAG_FILE_NAME])
-    plugin = tagging.TaggingPlugin()
+    plugin = tagging.TaggingAnalysisPlugin()
     plugin.SetAndLoadTagFile(test_file)
 
     storage_writer = self._AnalyzeEvents(event_objects, plugin)

@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-"""The arguments helper for a database configuration."""
+"""The database configuration CLI arguments helper."""
 
 from plaso.lib import errors
 from plaso.cli.helpers import interface
 from plaso.cli.helpers import server_config
 
 
-class DatabaseConfigHelper(interface.ArgumentsHelper):
-  """CLI arguments helper class for database configuration."""
+class DatabaseArgumentsHelper(interface.ArgumentsHelper):
+  """Database configuration CLI arguments helper."""
 
   NAME = u'database_config'
   DESCRIPTION = u'Argument helper for a database configuration.'
@@ -18,7 +18,7 @@ class DatabaseConfigHelper(interface.ArgumentsHelper):
 
   @classmethod
   def AddArguments(cls, argument_group):
-    """Add command line arguments the helper supports to an argument group.
+    """Adds command line arguments the helper supports to an argument group.
 
     This function takes an argument parser or an argument group object and adds
     to it all the command line arguments this helper supports.
@@ -40,7 +40,7 @@ class DatabaseConfigHelper(interface.ArgumentsHelper):
         type=str, default=cls._DEFAULT_NAME, required=False, help=(
             u'The name of the database to connect to.'))
 
-    server_config.BaseServerConfigHelper.AddArguments(argument_group)
+    server_config.ServerArgumentsHelper.AddArguments(argument_group)
 
   @classmethod
   def ParseOptions(cls, options, output_module):
@@ -51,10 +51,14 @@ class DatabaseConfigHelper(interface.ArgumentsHelper):
       output_module (OutputModule): output module to configure.
 
     Raises:
-      BadConfigObject: when the output module object is of the wrong type.
+      BadConfigObject: when the output module object does not have the
+          SetCredentials or SetDatabaseName methods.
     """
     if not hasattr(output_module, u'SetCredentials'):
       raise errors.BadConfigObject(u'Unable to set username information.')
+
+    if not hasattr(output_module, u'SetDatabaseName'):
+      raise errors.BadConfigObject(u'Unable to set database information.')
 
     username = cls._ParseStringOption(
         options, u'username', default_value=cls._DEFAULT_USERNAME)
@@ -65,4 +69,4 @@ class DatabaseConfigHelper(interface.ArgumentsHelper):
 
     output_module.SetCredentials(username=username, password=password)
     output_module.SetDatabaseName(name)
-    server_config.BaseServerConfigHelper.ParseOptions(options, output_module)
+    server_config.ServerArgumentsHelper.ParseOptions(options, output_module)
