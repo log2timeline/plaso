@@ -442,8 +442,6 @@ class PinfoTool(analysis_tool.AnalysisTool):
     elif storage.storage_type == definitions.STORAGE_TYPE_TASK:
       self._PrintTasksInformation(storage)
 
-    return
-
   def _PrintTasksInformation(self, storage):
     """Prints information about the tasks.
 
