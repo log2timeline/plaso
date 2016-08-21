@@ -3,11 +3,10 @@
 """Tests for the image export front-end."""
 
 import os
-import shutil
-import tempfile
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
@@ -20,7 +19,7 @@ from tests.frontend import test_lib
 
 
 class DateTimeFileEntryFilterTest(shared_test_lib.BaseTestCase):
-  """Tests for the date time file entry filter."""
+  """Tests the date time file entry filter."""
 
   # pylint: disable=protected-access
 
@@ -153,7 +152,7 @@ class DateTimeFileEntryFilterTest(shared_test_lib.BaseTestCase):
 
 
 class ExtensionsFileEntryFilterTest(shared_test_lib.BaseTestCase):
-  """Tests for the extensions file entry filter."""
+  """Tests the extensions file entry filter."""
 
   def testMatches(self):
     """Tests the Matches function."""
@@ -169,7 +168,6 @@ class ExtensionsFileEntryFilterTest(shared_test_lib.BaseTestCase):
         location=u'/passwords.txt', parent=os_path_spec)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
-
     self.assertTrue(test_filter.Matches(file_entry))
 
     # Test a filter non-match.
@@ -178,7 +176,6 @@ class ExtensionsFileEntryFilterTest(shared_test_lib.BaseTestCase):
         location=u'/a_directory/another_file', parent=os_path_spec)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
-
     self.assertFalse(test_filter.Matches(file_entry))
 
     # Test that fails because path specification has no location.
@@ -186,7 +183,6 @@ class ExtensionsFileEntryFilterTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, inode=15, parent=os_path_spec)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
-
     self.assertFalse(test_filter.Matches(file_entry))
 
   def testPrint(self):
@@ -208,7 +204,7 @@ class ExtensionsFileEntryFilterTest(shared_test_lib.BaseTestCase):
 
 
 class NamesFileEntryFilterTest(shared_test_lib.BaseTestCase):
-  """Tests for the names file entry filter."""
+  """Tests the names file entry filter."""
 
   def testMatches(self):
     """Tests the Matches function."""
@@ -224,7 +220,6 @@ class NamesFileEntryFilterTest(shared_test_lib.BaseTestCase):
         location=u'/a_directory/another_file', parent=os_path_spec)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
-
     self.assertFalse(test_filter.Matches(file_entry))
 
     # Test a filter on a directory.
@@ -233,7 +228,6 @@ class NamesFileEntryFilterTest(shared_test_lib.BaseTestCase):
         location=u'/a_directory', parent=os_path_spec)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
-
     self.assertFalse(test_filter.Matches(file_entry))
 
     # Test a filter match.
@@ -242,12 +236,10 @@ class NamesFileEntryFilterTest(shared_test_lib.BaseTestCase):
         location=u'/passwords.txt', parent=os_path_spec)
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
-
     self.assertTrue(test_filter.Matches(file_entry))
 
     # Test a filter without names.
     test_filter = image_export.NamesFileEntryFilter([])
-
     self.assertFalse(test_filter.Matches(file_entry))
 
   def testPrint(self):
@@ -269,7 +261,7 @@ class NamesFileEntryFilterTest(shared_test_lib.BaseTestCase):
 
 
 class SignaturesFileEntryFilterTest(shared_test_lib.BaseTestCase):
-  """Tests for the signatures file entry filter."""
+  """Tests the signatures file entry filter."""
 
   # pylint: disable=protected-access
 
@@ -307,7 +299,29 @@ class SignaturesFileEntryFilterTest(shared_test_lib.BaseTestCase):
 
   def testMatches(self):
     """Tests the Matches function."""
-    # TODO: implement.
+    specification_store = specification.FormatSpecificationStore()
+    format_specification = specification.FormatSpecification(u'regf')
+    format_specification.AddNewSignature(b'regf', offset=0)
+    specification_store.AddSpecification(format_specification)
+
+    test_filter = image_export.SignaturesFileEntryFilter(
+        specification_store, [u'regf'])
+
+    # Test a filter match.
+    test_path = self._GetTestFilePath([u'NTUSER.DAT'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
+    self.assertTrue(test_filter.Matches(file_entry))
+
+    # Test a filter non-match.
+    test_path = self._GetTestFilePath([u'test_pe.exe'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(os_path_spec)
+    self.assertFalse(test_filter.Matches(file_entry))
 
   def testPrint(self):
     """Tests the Print function."""
@@ -332,21 +346,66 @@ class SignaturesFileEntryFilterTest(shared_test_lib.BaseTestCase):
     self.assertEqual(output.split(b'\n'), expected_output)
 
 
-# TODO: add tests for FileEntryFilterCollection.
-# TODO: add tests for FileSaver.
+class FileEntryFilterCollectionTest(shared_test_lib.BaseTestCase):
+  """Tests the file entry filter collection."""
+
+  # pylint: disable=protected-access
+
+  def testAddFilter(self):
+    """Tests the AddFilter function."""
+    test_filter_collection = image_export.FileEntryFilterCollection()
+
+    self.assertEqual(len(test_filter_collection._filters), 0)
+
+    file_entry_filter = image_export.NamesFileEntryFilter([u'name'])
+    test_filter_collection.AddFilter(file_entry_filter)
+    self.assertEqual(len(test_filter_collection._filters), 1)
+
+  def testHasFilters(self):
+    """Tests the HasFilters function."""
+    test_filter_collection = image_export.FileEntryFilterCollection()
+    self.assertFalse(test_filter_collection.HasFilters())
+
+    test_filter_collection = image_export.FileEntryFilterCollection()
+    file_entry_filter = image_export.NamesFileEntryFilter([u'name'])
+    test_filter_collection.AddFilter(file_entry_filter)
+    self.assertTrue(test_filter_collection.HasFilters())
+
+  # TODO: add test for Matches.
+  # TODO: add test for Print.
 
 
 class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
-  """Tests for the image export front-end."""
+  """Tests the image export front-end."""
+
+  # pylint: disable=protected-access
+
+  def _GetTestScanNode(self, scan_context):
+    """Retrieves the scan node for testing.
+
+    Retrieves the first scan node, from the root upwards, with more or less
+    than 1 sub node.
+
+    Args:
+      scan_context (dfvfs.SourceScanContext): scan context.
+
+    Returns:
+      dfvfs.SourceScanNode: scan node.
+    """
+    scan_node = scan_context.GetRootScanNode()
+    while len(scan_node.sub_nodes) == 1:
+      scan_node = scan_node.sub_nodes[0]
+
+    return scan_node
 
   def _RecursiveList(self, path):
     """Recursively lists a file or directory.
 
     Args:
-      path: the path of the file or directory to list.
+      path (str): path of the file or directory to list.
 
     Returns:
-      A list of files and sub directories within the path.
+      list[str]: names of files and sub directories within the path.
     """
     results = []
     for sub_path, _, files in os.walk(path):
@@ -358,43 +417,112 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
 
     return results
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._temp_directory = tempfile.mkdtemp()
+  def testCalculateDigestHash(self):
+    """Tests the _CalculateDigestHash function."""
+    test_front_end = image_export.ImageExportFrontend()
 
-    # TODO: do not use a class attribute here.
-    # We need to flush the MD5 dict in FileSaver before each test.
-    image_export.FileSaver.md5_dict = {}
+    test_path = self._GetTestFilePath([u'ímynd.dd'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+    tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=16,
+        location=u'/a_directory/another_file', parent=os_path_spec)
 
-  def tearDown(self):
-    """Cleans up after running an individual test."""
-    shutil.rmtree(self._temp_directory, True)
-    self._temp_directory = None
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+    digest_hash = test_front_end._CalculateDigestHash(file_entry, u'')
+    expected_digest_hash = (
+        u'c7fbc0e821c0871805a99584c6a384533909f68a6bbe9a2a687d28d9f3b10c16')
+    self.assertEqual(digest_hash, expected_digest_hash)
 
-  def _GetTestScanNode(self, scan_context):
-    """Retrieves the scan node for testing.
+    test_path = self._GetTestFilePath([u'ímynd.dd'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+    tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=12,
+        location=u'/a_directory', parent=os_path_spec)
 
-    Retrieves the first scan node, from the root upwards, with more or less
-    than 1 sub node.
-
-    Args:
-      scan_context: scan context (instance of dfvfs.ScanContext).
-
-    Returns:
-      A scan node (instance of dfvfs.ScanNode).
-    """
-    scan_node = scan_context.GetRootScanNode()
-    while len(scan_node.sub_nodes) == 1:
-      scan_node = scan_node.sub_nodes[0]
-
-    return scan_node
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+    with self.assertRaises(IOError):
+      test_front_end._CalculateDigestHash(file_entry, u'')
 
   # TODO: add test for _Extract.
-  # TODO: add test for _ExtractFile.
+
+  def testExtractDataStream(self):
+    """Tests the _ExtractDataStream function."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_front_end = image_export.ImageExportFrontend()
+
+    test_path = self._GetTestFilePath([u'ímynd.dd'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+    tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=16,
+        location=u'/a_directory/another_file', parent=os_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+    with shared_test_lib.TempDirectory() as temp_directory:
+      test_front_end._ExtractDataStream(
+          file_entry, u'', temp_directory, output_writer)
+
+  def testExtractFileEntry(self):
+    """Tests the _ExtractFileEntry function."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_front_end = image_export.ImageExportFrontend()
+
+    test_path = self._GetTestFilePath([u'ímynd.dd'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+    tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=16,
+        location=u'/a_directory/another_file', parent=os_path_spec)
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      test_front_end._ExtractFileEntry(
+          tsk_path_spec, temp_directory, output_writer)
+
   # TODO: add test for _ExtractWithFilter.
+  # TODO: add test for _GetSanitizedDestinationDirectory.
   # TODO: add test for _GetSourceFileSystem.
   # TODO: add test for _Preprocess.
-  # TODO: add test for HasFilters.
+
+  def testWriteFileEntry(self):
+    """Tests the _WriteFileEntry function."""
+    test_front_end = image_export.ImageExportFrontend()
+
+    test_path = self._GetTestFilePath([u'ímynd.dd'])
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
+    tsk_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK, inode=16,
+        location=u'/a_directory/another_file', parent=os_path_spec)
+
+    file_entry = path_spec_resolver.Resolver.OpenFileEntry(tsk_path_spec)
+    with shared_test_lib.TempDirectory() as temp_directory:
+      destination_path = os.path.join(temp_directory, u'another_file')
+      test_front_end._WriteFileEntry(file_entry, u'', destination_path)
+
+  def testHasFilters(self):
+    """Tests the HasFilters function."""
+    test_front_end = image_export.ImageExportFrontend()
+    self.assertFalse(test_front_end.HasFilters())
+
+    test_front_end = image_export.ImageExportFrontend()
+    test_front_end.ParseDateFilters([
+        u'ctime, 2012-05-25 15:59:00, 2012-05-25 15:59:20'])
+    self.assertTrue(test_front_end.HasFilters())
+
+    test_front_end = image_export.ImageExportFrontend()
+    test_front_end.ParseExtensionsString(u'txt')
+    self.assertTrue(test_front_end.HasFilters())
+
+    test_front_end = image_export.ImageExportFrontend()
+    test_front_end.ParseNamesString(u'another_file')
+    self.assertTrue(test_front_end.HasFilters())
+
+    test_front_end = image_export.ImageExportFrontend()
+    test_front_end.ParseSignatureIdentifiers(self._DATA_PATH, u'gzip')
+    self.assertTrue(test_front_end.HasFilters())
+
   # TODO: add test for ParseDateFilters.
   # TODO: add test for ParseExtensionsString.
   # TODO: add test for ParseNamesString.
@@ -403,6 +531,7 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
 
   def testProcessSourcesExtractWithDateTimeFilter(self):
     """Tests the ProcessSources function with a date time filter."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_front_end = image_export.ImageExportFrontend()
     test_front_end.ParseDateFilters([
         u'ctime, 2012-05-25 15:59:00, 2012-05-25 15:59:20'])
@@ -427,18 +556,20 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=qcow_path_spec)
 
-    test_front_end.ProcessSources([path_spec], self._temp_directory)
+    with shared_test_lib.TempDirectory() as temp_directory:
+      test_front_end.ProcessSources([path_spec], temp_directory, output_writer)
 
-    expected_extracted_files = sorted([
-        os.path.join(self._temp_directory, u'a_directory'),
-        os.path.join(self._temp_directory, u'a_directory', u'a_file')])
+      expected_extracted_files = sorted([
+          os.path.join(temp_directory, u'a_directory'),
+          os.path.join(temp_directory, u'a_directory', u'a_file')])
 
-    extracted_files = self._RecursiveList(self._temp_directory)
+      extracted_files = self._RecursiveList(temp_directory)
 
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
   def testProcessSourcesExtractWithExtensionsFilter(self):
     """Tests the ProcessSources function with an extensions filter."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_front_end = image_export.ImageExportFrontend()
     test_front_end.ParseExtensionsString(u'txt')
 
@@ -451,17 +582,19 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=qcow_path_spec)
 
-    test_front_end.ProcessSources([path_spec], self._temp_directory)
+    with shared_test_lib.TempDirectory() as temp_directory:
+      test_front_end.ProcessSources([path_spec], temp_directory, output_writer)
 
-    expected_extracted_files = sorted([
-        os.path.join(self._temp_directory, u'passwords.txt')])
+      expected_extracted_files = sorted([
+          os.path.join(temp_directory, u'passwords.txt')])
 
-    extracted_files = self._RecursiveList(self._temp_directory)
+      extracted_files = self._RecursiveList(temp_directory)
 
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
   def testProcessSourcesExtractWithNamesFilter(self):
     """Tests the ProcessSources function with a names filter."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_front_end = image_export.ImageExportFrontend()
     test_front_end.ParseNamesString(u'another_file')
 
@@ -474,23 +607,21 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=qcow_path_spec)
 
-    test_front_end.ProcessSources([path_spec], self._temp_directory)
+    with shared_test_lib.TempDirectory() as temp_directory:
+      test_front_end.ProcessSources([path_spec], temp_directory, output_writer)
 
-    expected_extracted_files = sorted([
-        os.path.join(self._temp_directory, u'a_directory'),
-        os.path.join(self._temp_directory, u'a_directory', u'another_file')])
+      expected_extracted_files = sorted([
+          os.path.join(temp_directory, u'a_directory'),
+          os.path.join(temp_directory, u'a_directory', u'another_file')])
 
-    extracted_files = self._RecursiveList(self._temp_directory)
+      extracted_files = self._RecursiveList(temp_directory)
 
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
   def testProcessSourcesExtractWithFilter(self):
     """Tests the ProcessSources function with a filter file."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_front_end = image_export.ImageExportFrontend()
-
-    filter_file = os.path.join(self._temp_directory, u'filter.txt')
-    with open(filter_file, 'wb') as file_object:
-      file_object.write(b'/a_directory/.+_file\n')
 
     test_path = self._GetTestFilePath([u'image.qcow2'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -501,21 +632,27 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=qcow_path_spec)
 
-    test_front_end.ProcessSources(
-        [path_spec], self._temp_directory, filter_file=filter_file)
+    with shared_test_lib.TempDirectory() as temp_directory:
+      filter_file = os.path.join(temp_directory, u'filter.txt')
+      with open(filter_file, 'wb') as file_object:
+        file_object.write(b'/a_directory/.+_file\n')
 
-    expected_extracted_files = sorted([
-        os.path.join(self._temp_directory, u'filter.txt'),
-        os.path.join(self._temp_directory, u'a_directory'),
-        os.path.join(self._temp_directory, u'a_directory', u'another_file'),
-        os.path.join(self._temp_directory, u'a_directory', u'a_file')])
+      test_front_end.ProcessSources(
+          [path_spec], temp_directory, output_writer, filter_file=filter_file)
 
-    extracted_files = self._RecursiveList(self._temp_directory)
+      expected_extracted_files = sorted([
+          os.path.join(temp_directory, u'filter.txt'),
+          os.path.join(temp_directory, u'a_directory'),
+          os.path.join(temp_directory, u'a_directory', u'another_file'),
+          os.path.join(temp_directory, u'a_directory', u'a_file')])
+
+      extracted_files = self._RecursiveList(temp_directory)
 
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
   def testProcessSourcesExtractWithSignaturesFilter(self):
     """Tests the ProcessSources function with a signatures filter."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_front_end = image_export.ImageExportFrontend()
     test_front_end.ParseSignatureIdentifiers(self._DATA_PATH, u'gzip')
 
@@ -526,13 +663,14 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=os_path_spec)
 
-    test_front_end.ProcessSources([path_spec], self._temp_directory)
+    with shared_test_lib.TempDirectory() as temp_directory:
+      test_front_end.ProcessSources([path_spec], temp_directory, output_writer)
 
-    expected_extracted_files = sorted([
-        os.path.join(self._temp_directory, u'logs'),
-        os.path.join(self._temp_directory, u'logs', u'sys.tgz')])
+      expected_extracted_files = sorted([
+          os.path.join(temp_directory, u'logs'),
+          os.path.join(temp_directory, u'logs', u'sys.tgz')])
 
-    extracted_files = self._RecursiveList(self._temp_directory)
+      extracted_files = self._RecursiveList(temp_directory)
 
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
