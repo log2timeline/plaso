@@ -97,13 +97,13 @@ class TaskManager(object):
     return has_active_tasks
 
   def RescheduleTask(self, task_identifier):
-    """Reschedules a previous abondoned task.
+    """Reschedules a previous abandoned task.
 
     Args:
       task_identifier (str): unique identifier of the task.
 
     Raises:
-      KeyError: if the task ws not abandoned.
+      KeyError: if the task was not abandoned.
     """
     if task_identifier not in self._abandoned_tasks:
       raise KeyError(u'Task not abandoned')
