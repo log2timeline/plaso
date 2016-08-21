@@ -35,8 +35,8 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(len(storage_writer.events), 8)
 
-  def testParseOSX(self):
-    """Tests the Parse function on an Ubuntu-style syslog file"""
+  def testParseDarwin(self):
+    """Tests the Parse function on an Darwin-style syslog file"""
     knowledge_base_values = {u'year': 2016}
     storage_writer = self._ParseFile(
         [u'syslog_osx'], self._parser,
@@ -52,39 +52,49 @@ class SyslogParserTest(test_lib.ParserTestCase):
         [u'syslog'], parser_object,
         knowledge_base_values=knowledge_base_values)
 
-    self.assertEqual(len(storage_writer.events), 14)
+    self.assertEqual(len(storage_writer.events), 16)
 
-    event_object = storage_writer.events[0]
+    event = storage_writer.events[0]
     event_timestamp = timelib.Timestamp.CopyToIsoFormat(
-        event_object.timestamp)
+        event.timestamp)
     self.assertEqual(event_timestamp, u'2012-01-22T07:52:33+00:00')
-    self.assertEqual(event_object.hostname, u'myhostname.myhost.com')
+    self.assertEqual(event.hostname, u'myhostname.myhost.com')
 
     expected_string = (
         u'[client, pid: 30840] INFO No new content.')
     self._TestGetMessageStrings(
-        event_object, expected_string, expected_string)
+        event, expected_string, expected_string)
 
-    event_object = storage_writer.events[6]
+    event = storage_writer.events[6]
     event_timestamp = timelib.Timestamp.CopyToIsoFormat(
-        event_object.timestamp)
+        event.timestamp)
     self.assertEqual(event_timestamp, u'2012-02-29T01:15:43+00:00')
 
     # Testing year increment.
-    event_object = storage_writer.events[8]
+    event = storage_writer.events[8]
     event_timestamp = timelib.Timestamp.CopyToIsoFormat(
-        event_object.timestamp)
+        event.timestamp)
     self.assertEqual(event_timestamp, u'2013-03-23T23:01:18+00:00')
 
-    event_object = storage_writer.events[11]
-    expected_msg = (
+    event = storage_writer.events[11]
+    expected_message = (
         u'[aprocess, pid: 10100] This is a multi-line message that screws up'
         u'\tmany syslog parsers.')
-    expected_msg_short = (
+    expected_message_short = (
         u'[aprocess, pid: 10100] This is a multi-line message that screws up'
         u'\tmany syslo...')
     self._TestGetMessageStrings(
-        event_object, expected_msg, expected_msg_short)
+        event, expected_message, expected_message_short)
+
+    event = storage_writer.events[14]
+    self.assertEqual(event.reporter, u'kernel')
+    self.assertIsNone(event.hostname)
+    expected_message = (
+        u'[kernel] [997.390602] sda2: rw=0, want=65, limit=2')
+    expected_message_short = (
+        u'[kernel] [997.390602] sda2: rw=0, want=65, limit=2')
+    self._TestGetMessageStrings(
+        event, expected_message, expected_message_short)
 
 
 if __name__ == '__main__':

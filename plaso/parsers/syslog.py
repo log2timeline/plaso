@@ -84,8 +84,15 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.Suppress(u'---') + _PYPARSING_COMPONENTS[u'comment_body'] +
       pyparsing.Suppress(u'---') + pyparsing.LineEnd())
 
+  _KERNEL_SYSLOG_LINE = (
+      _PYPARSING_COMPONENTS[u'date'] +
+      pyparsing.Literal(u'kernel').setResultsName(u'reporter') +
+      pyparsing.Suppress(u':') + _PYPARSING_COMPONENTS[u'body'] +
+      pyparsing.lineEnd())
+
   LINE_STRUCTURES = [
       (u'syslog_line', _SYSLOG_LINE),
+      (u'syslog_line', _KERNEL_SYSLOG_LINE),
       (u'syslog_comment', _SYSLOG_COMMENT)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
@@ -98,18 +105,18 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     self._plugin_objects_by_reporter = {}
     self._year_use = 0
 
-  def _UpdateYear(self, parser_mediator, month):
+  def _UpdateYear(self, mediator, month):
     """Updates the year to use for events, based on last observed month.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      month: an integer containing the month observed by the parser, where
-             January is 1.
+      mediator (ParserMediator): mediates the interactions between
+          parsers and other components, such as storage and abort signals.
+      month (int): month observed by the parser, where January is 1.
     """
     if not self._year_use:
-      self._year_use = parser_mediator.GetEstimatedYear()
+      self._year_use = mediator.GetEstimatedYear()
     if not self._maximum_year:
-      self._maximum_year = parser_mediator.GetLatestYear()
+      self._maximum_year = mediator.GetLatestYear()
 
     if not self._last_month:
       self._last_month = month
@@ -127,10 +134,9 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     """Enables parser plugins.
 
     Args:
-      plugin_includes: a list of strings containing the names of the plugins
-                       to enable, where None or an empty list represents all
-                       plugins. Not that the default plugin is handled
-                       separately.
+      plugin_includes (list[str]): names of the plugins to enable, where None
+          or an empty list represents all plugins. Note that the default plugin
+          is handled separately.
     """
     super(SyslogParser, self).EnablePlugins(plugin_includes)
 
@@ -138,14 +144,14 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     for plugin_object in self._plugin_objects:
       self._plugin_objects_by_reporter[plugin_object.REPORTER] = plugin_object
 
-  def ParseRecord(self, parser_mediator, key, structure):
+  def ParseRecord(self, mediator, key, structure):
     """Parses a matching entry.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      key: a string containing the name of the parsed structure.
-      structure: the elements parsed from the file (instance of
-                 pyparsing.ParseResults).
+      mediator (ParserMediator): mediates the interactions between
+          parsers and other components, such as storage and abort signals.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): elements parsed from the file.
 
     Raises:
       UnableToParseFile: if an unsupported key is provided.
@@ -155,20 +161,20 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
 
     month = timelib.MONTH_DICT.get(structure.month.lower(), None)
     if not month:
-      parser_mediator.ProduceParserError(
+      mediator.ProduceParserError(
           u'Invalid month value: {0:s}'.format(month))
       return
 
-    self._UpdateYear(parser_mediator, month)
+    self._UpdateYear(mediator, month)
     timestamp = timelib.Timestamp.FromTimeParts(
         year=self._year_use, month=month, day=structure.day,
         hour=structure.hour, minutes=structure.minute,
-        seconds=structure.second, timezone=parser_mediator.timezone)
+        seconds=structure.second, timezone=mediator.timezone)
 
     if key == u'syslog_comment':
       comment_attributes = {u'body': structure.body}
       event = SyslogCommentEvent(timestamp, 0, comment_attributes)
-      parser_mediator.ProduceEvent(event)
+      mediator.ProduceEvent(event)
       return
 
     reporter = structure.reporter
@@ -181,28 +187,28 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     plugin_object = self._plugin_objects_by_reporter.get(reporter, None)
     if not plugin_object:
       event_object = SyslogLineEvent(timestamp, 0, attributes)
-      parser_mediator.ProduceEvent(event_object)
+      mediator.ProduceEvent(event_object)
 
     else:
       try:
-        plugin_object.Process(parser_mediator, timestamp, attributes)
+        plugin_object.Process(mediator, timestamp, attributes)
 
       except errors.WrongPlugin:
         event_object = SyslogLineEvent(timestamp, 0, attributes)
-        parser_mediator.ProduceEvent(event_object)
+        mediator.ProduceEvent(event_object)
 
-  def VerifyStructure(self, parser_mediator, lines):
+  def VerifyStructure(self, unused_mediator, line):
     """Verifies that this is a syslog-formatted file.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      lines: a buffer that contains content from the file.
+      mediator (ParserMediator): mediates the interactions between
+          parsers and other components, such as storage and abort signals.
+      line (str): single line from the text file.
 
     Returns:
-      A boolean value to indicate that passed buffer appears to contain syslog
-      content.
+      bool: whether the line appears to contain syslog content.
     """
-    return re.match(self._VERIFICATION_REGEX, lines) is not None
+    return re.match(self._VERIFICATION_REGEX, line) is not None
 
 
 manager.ParsersManager.RegisterParser(SyslogParser)
