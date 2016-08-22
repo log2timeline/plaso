@@ -18,13 +18,20 @@ class XLSXOutputArgumentsHelperTest(test_lib.OutputModuleArgumentsHelperTest):
 
   _EXPECTED_OUTPUT = u'\n'.join([
       (u'usage: cli_helper.py [--fields FIELDS] '
-       u'[--timestamp_format TIMESTAMP_FORMAT]'),
+       u'[--additional_fields ADDITIONAL_FIELDS]'),
+      u'                     [--timestamp_format TIMESTAMP_FORMAT]',
       u'',
       u'Test argument parser.',
       u'',
       u'optional arguments:',
       (u'  --fields FIELDS       Defines which fields should be included in '
-       u'the output.'),
+       u'the output.'), u'  --additional_fields ADDITIONAL_FIELDS',
+      (u'                        Defines extra fields to be included in the '
+       u'output, in'),
+      (u'                        addition to the default fields, which are '
+       u'datetime,tim'),
+      (u'                        estamp_desc,source,source_long,message,parser,'
+       u'display_'), u'                        name,tag.',
       u'  --timestamp_format TIMESTAMP_FORMAT',
       (u'                        Set the timestamp format that will be used '
        u'in the'),
