@@ -449,7 +449,7 @@ class ImageExportFrontend(frontend.Frontend):
     """Calculates a SHA-256 digest of the contents of the file entry.
 
     Args:
-      file_entry (dfvfs.FileEntry): file entry to hash its content.
+      file_entry (dfvfs.FileEntry): file entry whose content will be hashed.
       data_stream_name (str): name of the data stream whose content is to be
           hashed.
 
@@ -481,7 +481,7 @@ class ImageExportFrontend(frontend.Frontend):
     """Creates a sanitized path of both destination directory and filename.
 
     This function replaces non-printable and other characters defined in
-     _DIRTY_CHARACTERS are replaced by and underscore "_".
+     _DIRTY_CHARACTERS with an underscore "_".
 
     Args:
       source_file_entry (dfvfs.FileEntry): file entry of the source file.
@@ -549,14 +549,14 @@ class ImageExportFrontend(frontend.Frontend):
         digest = self._CalculateDigestHash(file_entry, data_stream_name)
       except (IOError, dfvfs_errors.BackEndError) as exception:
         output_writer.Write((
-            u'[skipping] unable to read content digest of file entry: {0:s} '
+            u'[skipping] unable to read content of file entry: {0:s} '
             u'with error: {1:s}\n').format(display_name, exception))
         return
 
       if not digest:
-        output_writer.Write((
-            u'[skipping] unable to read content digest of file entry: '
-            u'{0:s}\n').format(display_name))
+        output_writer.Write(
+            u'[skipping] unable to read content of file entry: {0:s}\n'.format(
+                display_name))
         return
 
       duplicate_display_name = self._digests.get(digest, None)
@@ -741,8 +741,10 @@ class ImageExportFrontend(frontend.Frontend):
   def _WriteFileEntry(self, file_entry, data_stream_name, destination_file):
     """Writes the contents of the source file entry to a destination file.
 
+    Note that this function will overwrite an existing file.
+
     Args:
-      file_entry (dfvfs.FileEntry): file entry to write its content.
+      file_entry (dfvfs.FileEntry): file entry whose content is to be written.
       data_stream_name (str): name of the data stream whose content is to be
           written.
       destination_file (str): path of the destination file.
