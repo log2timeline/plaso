@@ -33,6 +33,12 @@ class DynamicOutputArgumentsHelper(interface.ArgumentsHelper):
         u'--fields', dest=u'fields', type=str, action=u'store',
         default=cls._DEFAULT_FIELDS, help=(
             u'Defines which fields should be included in the output.'))
+    argument_group.add_argument(
+        u'--additional_fields', dest=u'additional_fields', type=str,
+        action=u'store', default=u'', help=(
+            u'Defines extra fields to be included in the output, in addition to'
+            u' the default fields, which are {0:s}.'.format(
+                cls._DEFAULT_FIELDS)))
 
   @classmethod
   def ParseOptions(cls, options, output_module):
@@ -52,6 +58,11 @@ class DynamicOutputArgumentsHelper(interface.ArgumentsHelper):
 
     fields = cls._ParseStringOption(
         options, u'fields', default_value=cls._DEFAULT_FIELDS)
+
+    additional_fields = cls._ParseStringOption(
+        options, u'additional_fields')
+
+    fields = u'{0:s},{1:s}'.format(fields, additional_fields)
 
     output_module.SetFields([
         field_name.strip() for field_name in fields.split(u',')])
