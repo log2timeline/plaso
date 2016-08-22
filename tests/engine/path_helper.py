@@ -33,14 +33,14 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
         u'%Bogus%\\System32', [environment_variable])
     self.assertEqual(expanded_path, u'%Bogus%\\System32')
 
-  def testGetDisplayNameFromPathSpec(self):
-    """Tests the GetDisplayNameFromPathSpec function."""
+  def testGetDisplayNameForPathSpec(self):
+    """Tests the GetDisplayNameForPathSpec function."""
     test_path = self._GetTestFilePath([u'syslog.gz'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
 
     expected_display_name = u'OS:{0:s}'.format(test_path)
-    display_name = path_helper.PathHelper.GetDisplayNameFromPathSpec(
+    display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
         os_path_spec)
     self.assertEqual(display_name, expected_display_name)
 
@@ -48,7 +48,7 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_GZIP, parent=os_path_spec)
 
     expected_display_name = u'GZIP:{0:s}'.format(test_path)
-    display_name = path_helper.PathHelper.GetDisplayNameFromPathSpec(
+    display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
         gzip_path_spec)
     self.assertEqual(display_name, expected_display_name)
 
@@ -65,12 +65,12 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
         parent=vshadow_path_spec)
 
     expected_display_name = u'VSS2:TSK:/syslog.gz'
-    display_name = path_helper.PathHelper.GetDisplayNameFromPathSpec(
+    display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
         tsk_path_spec)
     self.assertEqual(display_name, expected_display_name)
 
     expected_display_name = u'VSS2:TSK:C:/syslog.gz'
-    display_name = path_helper.PathHelper.GetDisplayNameFromPathSpec(
+    display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
         tsk_path_spec, text_prepend=u'C:')
     self.assertEqual(display_name, expected_display_name)
 

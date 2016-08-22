@@ -122,7 +122,7 @@ class EventExtractionWorker(object):
     Args:
       mediator (ParserMediator): mediates the interactions between
           parsers and other components, such as storage and abort signals.
-      file_entry (dfvfs.FileEntry): file entry which data stream is to be
+      file_entry (dfvfs.FileEntry): file entry whose data stream is to be
           analyzed.
       data_stream_name (str): name of the data stream.
 
@@ -301,7 +301,8 @@ class EventExtractionWorker(object):
       mediator (ParserMediator): mediates the interactions between
           parsers and other components, such as storage and abort signals.
       file_entry (dfvfs.FileEntry): file entry to extract its content.
-      data_stream_name (str): name of the data stream to extract its content.
+      data_stream_name (str): name of the data stream whose content is to be
+          extracted.
     """
     self.processing_status = definitions.PROCESSING_STATUS_EXTRACTING
 
@@ -727,7 +728,7 @@ class EventExtractionWorker(object):
         path_spec, resolver_context=self._resolver_context)
 
     if file_entry is None:
-      display_name = mediator.GetDisplayNameFromPathSpec(path_spec)
+      display_name = mediator.GetDisplayNameForPathSpec(path_spec)
       logging.warning(
           u'Unable to open file entry with path spec: {0:s}'.format(
               display_name))

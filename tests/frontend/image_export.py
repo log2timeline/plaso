@@ -444,6 +444,7 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
     with self.assertRaises(IOError):
       test_front_end._CalculateDigestHash(file_entry, u'')
 
+  # TODO: add test for _CreateSanitizedDestinationDirectory.
   # TODO: add test for _Extract.
 
   def testExtractDataStream(self):
@@ -480,7 +481,6 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
           tsk_path_spec, temp_directory, output_writer)
 
   # TODO: add test for _ExtractWithFilter.
-  # TODO: add test for _GetSanitizedDestinationDirectory.
   # TODO: add test for _GetSourceFileSystem.
   # TODO: add test for _Preprocess.
 

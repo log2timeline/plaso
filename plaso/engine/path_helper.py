@@ -46,7 +46,7 @@ class PathHelper(object):
     return u'\\'.join(path_segments)
 
   @classmethod
-  def GetDisplayNameFromPathSpec(
+  def GetDisplayNameForPathSpec(
       cls, path_spec, mount_path=None, text_prepend=None):
     """Retrieves the display name of a path specification.
 

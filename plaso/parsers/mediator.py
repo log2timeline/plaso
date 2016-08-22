@@ -283,9 +283,9 @@ class ParserMediator(object):
     if not relative_path:
       return file_entry.name
 
-    return self.GetDisplayNameFromPathSpec(path_spec)
+    return self.GetDisplayNameForPathSpec(path_spec)
 
-  def GetDisplayNameFromPathSpec(self, path_spec):
+  def GetDisplayNameForPathSpec(self, path_spec):
     """Retrieves the display name for a path specification.
 
     Args:
