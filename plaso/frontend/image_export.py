@@ -9,6 +9,7 @@ import os
 import pysigscan
 
 from dfvfs.helpers import file_system_searcher
+from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -16,6 +17,7 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.engine import extractors
 from plaso.engine import knowledge_base
+from plaso.engine import path_helper
 from plaso.engine import utils as engine_utils
 from plaso.frontend import frontend
 from plaso.lib import py2to3
@@ -420,10 +422,10 @@ class FileEntryFilterCollection(object):
         file_entry_filter.Print(output_writer)
 
 
-class FileSaver(object):
-  """Class that is used to save files."""
+class ImageExportFrontend(frontend.Frontend):
+  """Class that implements the image export front-end."""
 
-  _BAD_CHARACTERS = frozenset([
+  _DIRTY_CHARACTERS = frozenset([
       u'\x00', u'\x01', u'\x02', u'\x03', u'\x04', u'\x05', u'\x06', u'\x07',
       u'\x08', u'\x09', u'\x0a', u'\x0b', u'\x0c', u'\x0d', u'\x0e', u'\x0f',
       u'\x10', u'\x11', u'\x12', u'\x13', u'\x14', u'\x15', u'\x16', u'\x17',
@@ -434,79 +436,151 @@ class FileSaver(object):
   _COPY_BUFFER_SIZE = 32768
   _READ_BUFFER_SIZE = 4096
 
-  def __init__(self, skip_duplicates=False):
-    """Initializes the file saver object.
+  def __init__(self):
+    """Initializes the front-end object."""
+    super(ImageExportFrontend, self).__init__()
+    self._abort = False
+    self._digests = {}
+    self._filter_collection = FileEntryFilterCollection()
+    self._knowledge_base = None
+    self._resolver_context = context.Context()
+
+  def _CalculateDigestHash(self, file_entry, data_stream_name):
+    """Calculates a SHA-256 digest of the contents of the file entry.
 
     Args:
-      skip_duplicates (bool): True if duplicate file content should be skipped.
-    """
-    super(FileSaver, self).__init__()
-    self._digest_hashes = {}
-    self._skip_duplicates = skip_duplicates
-
-  def _CalculateHash(self, file_object):
-    """Calculates a MD5 hash of the contents of given file object.
-
-    Args:
-      file_object (file): file-like object.
+      file_entry (dfvfs.FileEntry): file entry whose content will be hashed.
+      data_stream_name (str): name of the data stream whose content is to be
+          hashed.
 
     Returns:
-      str: hexadecimal representation of the MD5 hash.
+      str: hexadecimal representation of the SHA-256 hash or None if the digest
+          cannot be determined.
     """
-    hasher_object = hashers_manager.HashersManager.GetHasher(u'sha256')
-    file_object.seek(0, os.SEEK_SET)
+    file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
+    if not file_object:
+      return
 
-    data = file_object.read(self._READ_BUFFER_SIZE)
-    while data:
-      hasher_object.Update(data)
+    try:
+      file_object.seek(0, os.SEEK_SET)
+
+      hasher_object = hashers_manager.HashersManager.GetHasher(u'sha256')
+
       data = file_object.read(self._READ_BUFFER_SIZE)
+      while data:
+        hasher_object.Update(data)
+        data = file_object.read(self._READ_BUFFER_SIZE)
+
+    finally:
+      file_object.close()
 
     return hasher_object.GetStringDigest()
 
-  def _CopyFileObject(self, input_file_object, output_path):
-    """Copies the content of a file-like object to a file.
+  def _CreateSanitizedDestination(
+      self, source_file_entry, source_path_spec, destination_path):
+    """Creates a sanitized path of both destination directory and filename.
+
+    This function replaces non-printable and other characters defined in
+     _DIRTY_CHARACTERS with an underscore "_".
 
     Args:
-      input_file_object (file): input file-like object.
-      output_path (str): path of the output file.
-    """
-    with open(output_path, 'wb') as output_file_object:
-      input_file_object.seek(0, os.SEEK_SET)
-
-      data = input_file_object.read(self._COPY_BUFFER_SIZE)
-      while data:
-        output_file_object.write(data)
-        data = input_file_object.read(self._COPY_BUFFER_SIZE)
-
-  def WriteFile(self, source_path_spec, destination_path, filename_prefix=u''):
-    """Writes the contents of the source to the destination file.
-
-    Args:
+      source_file_entry (dfvfs.FileEntry): file entry of the source file.
       source_path_spec (dfvfs.PathSpec): path specification of the source file.
-      destination_path (str): path of the destination file.
-      filename_prefix (Optional[str]): filename prefix.
-    """
-    file_entry = path_spec_resolver.Resolver.OpenFileEntry(source_path_spec)
-    if not file_entry.IsFile():
-      return
+      destination_path (str): path of the destination directory.
 
-    file_system = file_entry.GetFileSystem()
+    Returns:
+      tuple[str, str]: sanitized paths of both destination directory and
+          filename.
+    """
+    file_system = source_file_entry.GetFileSystem()
     path = getattr(source_path_spec, u'location', None)
     path_segments = file_system.SplitPath(path)
 
     # Sanitize each path segment.
     for index, path_segment in enumerate(path_segments):
       path_segments[index] = u''.join([
-          character if character not in self._BAD_CHARACTERS else u'_'
+          character if character not in self._DIRTY_CHARACTERS else u'_'
           for character in path_segment])
 
-    target_directory = os.path.join(destination_path, *path_segments[:-1])
+    return (
+        os.path.join(destination_path, *path_segments[:-1]), path_segments[-1])
 
-    if filename_prefix:
-      target_filename = u'{0:s}_{1:s}'.format(
-          filename_prefix, path_segments[-1])
-    else:
-      target_filename = path_segments[-1]
+  # TODO: merge with collector and/or engine.
+  def _Extract(
+      self, source_path_specs, destination_path, output_writer,
+      skip_duplicates=True):
+    """Extracts files.
+
+    Args:
+      source_path_specs (list[dfvfs.PathSpec]): path specifications to extract.
+      destination_path (str): path where the extracted files should be stored.
+      output_writer (CLIOutputWriter): output writer.
+      skip_duplicates (Optional[bool]): True if files with duplicate content
+          should be skipped.
+    """
+    output_writer.Write(u'Extracting file entries.\n')
+    path_spec_extractor = extractors.PathSpecExtractor(self._resolver_context)
+    for path_spec in path_spec_extractor.ExtractPathSpecs(source_path_specs):
+      self._ExtractFileEntry(
+          path_spec, destination_path, output_writer,
+          skip_duplicates=skip_duplicates)
+
+  def _ExtractDataStream(
+      self, file_entry, data_stream_name, destination_path, output_writer,
+      skip_duplicates=True):
+    """Extracts a data stream.
+
+    Args:
+      file_entry (dfvfs.FileEntry): file entry containing the data stream.
+      data_stream_name (str): name of the data stream.
+      destination_path (str): path where the extracted files should be stored.
+      output_writer (CLIOutputWriter): output writer.
+      skip_duplicates (Optional[bool]): True if files with duplicate content
+          should be skipped.
+    """
+    if not data_stream_name and not file_entry.IsFile():
+      return
+
+    display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
+        file_entry.path_spec)
+
+    if skip_duplicates:
+      try:
+        digest = self._CalculateDigestHash(file_entry, data_stream_name)
+      except (IOError, dfvfs_errors.BackEndError) as exception:
+        output_writer.Write((
+            u'[skipping] unable to read content of file entry: {0:s} '
+            u'with error: {1:s}\n').format(display_name, exception))
+        return
+
+      if not digest:
+        output_writer.Write(
+            u'[skipping] unable to read content of file entry: {0:s}\n'.format(
+                display_name))
+        return
+
+      duplicate_display_name = self._digests.get(digest, None)
+      if duplicate_display_name:
+        output_writer.Write((
+            u'[skipping] file entry: {0:s} is a duplicate of: {1:s} with '
+            u'digest: {2:s}\n').format(
+                display_name, duplicate_display_name, digest))
+        return
+
+      self._digests[digest] = display_name
+
+    target_directory, target_filename = self._CreateSanitizedDestination(
+        file_entry, file_entry.path_spec, destination_path)
+
+    parent_path_spec = getattr(file_entry.path_spec, u'parent', None)
+    if parent_path_spec:
+      vss_store_number = getattr(parent_path_spec, u'store_index', None)
+      if vss_store_number is not None:
+        target_filename = u'vss{0:d}_{1:s}'.format(
+            vss_store_number + 1, target_filename)
+
+    if data_stream_name:
+      target_filename = u'{0:s}_{1:s}'.format(target_filename, data_stream_name)
 
     if not target_directory:
       target_directory = destination_path
@@ -514,113 +588,75 @@ class FileSaver(object):
     elif not os.path.isdir(target_directory):
       os.makedirs(target_directory)
 
-    if self._skip_duplicates and file_entry.IsFile():
-      file_object = file_entry.GetFileObject()
-      if not file_object:
-        return
+    target_path = os.path.join(target_directory, target_filename)
 
-      try:
-        digest_hash = self._CalculateHash(file_object)
-      except IOError as exception:
-        logging.error((
-            u'[skipping] unable to calculate MD5 of file: {0:s} '
-            u'with error: {1:s}').format(path, exception))
-        return
-      finally:
-        file_object.close()
-
-      stat = file_entry.GetStat()
-      inode = getattr(stat, u'ino', 0)
-
-      if inode in self._digest_hashes:
-        if digest_hash in self._digest_hashes[inode]:
-          return
-        self._digest_hashes[inode].append(digest_hash)
-      else:
-        self._digest_hashes[inode] = [digest_hash]
-
-    file_object = file_entry.GetFileObject()
-    if not file_object:
+    if os.path.exists(target_path):
+      output_writer.Write((
+          u'[skipping] unable to export contents of file entry: {0:s} '
+          u'because exported file: {1:s} already exists.\n').format(
+              display_name, target_path))
       return
 
     try:
-      target_path = os.path.join(target_directory, target_filename)
-      self._CopyFileObject(file_object, target_path)
-    except IOError as exception:
-      logging.error(
-          u'[skipping] unable to export file: {0:s} with error: {1:s}'.format(
-              path, exception))
-    finally:
-      file_object.close()
+      self._WriteFileEntry(file_entry, data_stream_name, target_path)
+    except (IOError, dfvfs_errors.BackEndError) as exception:
+      output_writer.Write((
+          u'[skipping] unable to export contents of file entry: {0:s} '
+          u'with error: {1:s}\n').format(display_name, exception))
 
+      try:
+        os.remove(target_path)
+      except (IOError, OSError):
+        pass
 
-class ImageExportFrontend(frontend.Frontend):
-  """Class that implements the image export front-end."""
-
-  def __init__(self):
-    """Initializes the front-end object."""
-    super(ImageExportFrontend, self).__init__()
-    self._filter_collection = FileEntryFilterCollection()
-    self._knowledge_base = None
-    self._resolver_context = context.Context()
-
-  # TODO: merge with collector and/or engine.
-  def _Extract(
-      self, source_path_specs, destination_path, remove_duplicates=True):
-    """Extracts files.
+  def _ExtractFileEntry(
+      self, path_spec, destination_path, output_writer, skip_duplicates=True):
+    """Extracts a file entry.
 
     Args:
-      source_path_specs (list[dfvfs.PathSpec]): path specifications to process.
+      path_spec (dfvfs.PathSpec): path specification of the source file.
       destination_path (str): path where the extracted files should be stored.
-      remove_duplicates (Optional[bool]): True if files with duplicate content
-          should be removed.
-    """
-    if not os.path.isdir(destination_path):
-      os.makedirs(destination_path)
-
-    path_spec_extractor = extractors.PathSpecExtractor(self._resolver_context)
-    file_saver = FileSaver(skip_duplicates=remove_duplicates)
-
-    for path_spec in path_spec_extractor.ExtractPathSpecs(source_path_specs):
-      self._ExtractFile(file_saver, path_spec, destination_path)
-
-  def _ExtractFile(self, file_saver, path_spec, destination_path):
-    """Extracts a file.
-
-    Args:
-      file_saver (FileSaver): file saver.
-      path_spec (dfvfs.PathSpec): path specification.
-      destination_path (str): path where the extracted files should be stored.
+      output_writer (CLIOutputWriter): output writer.
+      skip_duplicates (Optional[bool]): True if files with duplicate content
+          should be skipped.
     """
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     if not self._filter_collection.Matches(file_entry):
       return
 
-    vss_store_number = getattr(path_spec, u'vss_store_number', None)
-    if vss_store_number is not None:
-      filename_prefix = u'vss_{0:d}'.format(vss_store_number + 1)
-    else:
-      filename_prefix = u''
+    file_entry_processed = False
+    for data_stream in file_entry.data_streams:
+      if self._abort:
+        break
 
-    file_saver.WriteFile(
-        path_spec, destination_path, filename_prefix=filename_prefix)
+      self._ExtractDataStream(
+          file_entry, data_stream.name, destination_path, output_writer,
+          skip_duplicates=skip_duplicates)
+
+      file_entry_processed = True
+
+    if not file_entry_processed:
+      self._ExtractDataStream(
+          file_entry, u'', destination_path, output_writer,
+          skip_duplicates=skip_duplicates)
 
   # TODO: merge with collector and/or engine.
   def _ExtractWithFilter(
-      self, source_path_specs, destination_path, filter_file_path,
-      remove_duplicates=True):
+      self, source_path_specs, destination_path, output_writer,
+      filter_file_path, skip_duplicates=True):
     """Extracts files using a filter expression.
 
     This method runs the file extraction process on the image and
     potentially on every VSS if that is wanted.
 
     Args:
-      source_path_specs (list[dfvfs.PathSpec]): path specifications to process.
+      source_path_specs (list[dfvfs.PathSpec]): path specifications to extract.
       destination_path (str): path where the extracted files should be stored.
+      output_writer (CLIOutputWriter): output writer.
       filter_file_path (str): path of the file that contains the filter
           expressions.
-      remove_duplicates (Optional[bool]): True if files with duplicate content
-          should be removed.
+      skip_duplicates (Optional[bool]): True if files with duplicate content
+          should be skipped.
     """
     for source_path_spec in source_path_specs:
       file_system, mount_point = self._GetSourceFileSystem(
@@ -629,20 +665,21 @@ class ImageExportFrontend(frontend.Frontend):
       if self._knowledge_base is None:
         self._Preprocess(file_system, mount_point)
 
-      if not os.path.isdir(destination_path):
-        os.makedirs(destination_path)
+      display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
+          source_path_spec)
+      output_writer.Write(
+          u'Extracting file entries from: {0:s}\n'.format(display_name))
 
       path_attributes = self._knowledge_base.GetPathAttributes()
       find_specs = engine_utils.BuildFindSpecsFromFile(
           filter_file_path, path_attributes=path_attributes)
 
-      # Save the regular files.
-      file_saver = FileSaver(skip_duplicates=remove_duplicates)
-
       searcher = file_system_searcher.FileSystemSearcher(
           file_system, mount_point)
       for path_spec in searcher.Find(find_specs=find_specs):
-        self._ExtractFile(file_saver, path_spec, destination_path)
+        self._ExtractFileEntry(
+            path_spec, destination_path, output_writer,
+            skip_duplicates=skip_duplicates)
 
       file_system.Close()
 
@@ -692,18 +729,42 @@ class ImageExportFrontend(frontend.Frontend):
 
     self._knowledge_base = knowledge_base.KnowledgeBase()
 
-    logging.info(u'Guessing OS')
+    logging.debug(u'Preprocessing.')
 
     searcher = file_system_searcher.FileSystemSearcher(file_system, mount_point)
     platform = preprocess_interface.GuessOS(searcher)
-    logging.info(u'OS: {0:s}'.format(platform))
-
-    logging.info(u'Running preprocess.')
+    logging.debug(u'operating system: {0:s}'.format(platform))
 
     preprocess_manager.PreprocessPluginsManager.RunPlugins(
         platform, file_system, mount_point, self._knowledge_base)
 
-    logging.info(u'Preprocess done, saving files from image.')
+  def _WriteFileEntry(self, file_entry, data_stream_name, destination_file):
+    """Writes the contents of the source file entry to a destination file.
+
+    Note that this function will overwrite an existing file.
+
+    Args:
+      file_entry (dfvfs.FileEntry): file entry whose content is to be written.
+      data_stream_name (str): name of the data stream whose content is to be
+          written.
+      destination_file (str): path of the destination file.
+    """
+    source_file_object = file_entry.GetFileObject(
+        data_stream_name=data_stream_name)
+    if not source_file_object:
+      return
+
+    try:
+      with open(destination_file, 'wb') as destination_file_object:
+        source_file_object.seek(0, os.SEEK_SET)
+
+        data = source_file_object.read(self._COPY_BUFFER_SIZE)
+        while data:
+          destination_file_object.write(data)
+          data = source_file_object.read(self._COPY_BUFFER_SIZE)
+
+    finally:
+      source_file_object.close()
 
   def HasFilters(self):
     """Determines if filters are defined.
@@ -835,25 +896,29 @@ class ImageExportFrontend(frontend.Frontend):
     self._filter_collection.Print(output_writer)
 
   def ProcessSources(
-      self, source_path_specs, destination_path, filter_file=None,
-      remove_duplicates=True):
+      self, source_path_specs, destination_path, output_writer,
+      filter_file=None, skip_duplicates=True):
     """Processes the sources.
 
     Args:
-      source_path_specs (list[dfvfs.PathSpec]): path specifications to process.
+      source_path_specs (list[dfvfs.PathSpec]): path specifications to extract.
       destination_path (str): path where the extracted files should be stored.
+      output_writer (CLIOutputWriter): output writer.
       filter_file (Optional[str]): name of of the filter file.
-      remove_duplicates (Optional[bool]): True if files with duplicate content
-          should be removed.
+      skip_duplicates (Optional[bool]): True if files with duplicate content
+          should be skipped.
     """
+    if not os.path.isdir(destination_path):
+      os.makedirs(destination_path)
+
     if filter_file:
       self._ExtractWithFilter(
-          source_path_specs, destination_path, filter_file,
-          remove_duplicates=remove_duplicates)
+          source_path_specs, destination_path, output_writer, filter_file,
+          skip_duplicates=skip_duplicates)
     else:
       self._Extract(
-          source_path_specs, destination_path,
-          remove_duplicates=remove_duplicates)
+          source_path_specs, destination_path, output_writer,
+          skip_duplicates=skip_duplicates)
 
   def ReadSpecificationFile(self, path):
     """Reads the format specification file.

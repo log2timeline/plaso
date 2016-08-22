@@ -239,7 +239,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       parser_mediator (ParserMediator): parser mediator.
       path_spec (dfvfs.PathSpec): path specification.
     """
-    self._current_display_name = parser_mediator.GetDisplayNameFromPathSpec(
+    self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
         path_spec)
 
     try:
