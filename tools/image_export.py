@@ -47,7 +47,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self._destination_path = None
     self._filter_file = None
     self._front_end = image_export.ImageExportFrontend()
-    self._remove_duplicates = True
+    self._skip_duplicates = True
     self.has_filters = False
     self.list_signature_identifiers = False
 
@@ -224,7 +224,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     if (getattr(options, u'no_vss', False) or
         getattr(options, u'include_duplicates', False)):
-      self._remove_duplicates = False
+      self._skip_duplicates = False
 
     date_filters = getattr(options, u'date_filters', None)
     try:
@@ -272,7 +272,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     self._front_end.ProcessSources(
         self._source_path_specs, self._destination_path, self._output_writer,
         filter_file=self._filter_file,
-        remove_duplicates=self._remove_duplicates)
+        skip_duplicates=self._skip_duplicates)
 
     self._output_writer.Write(u'Export completed.\n')
     self._output_writer.Write(u'\n')
