@@ -67,7 +67,7 @@ class SingleProcessEngine(engine.BaseEngine):
       parser_mediator (ParserMediator): parser mediator.
       path_spec (dfvfs.PathSpec): path specification.
     """
-    self._current_display_name = parser_mediator.GetDisplayNameFromPathSpec(
+    self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
         path_spec)
 
     try:
@@ -137,7 +137,7 @@ class SingleProcessEngine(engine.BaseEngine):
       if self._abort:
         break
 
-      display_name = parser_mediator.GetDisplayNameFromPathSpec(path_spec)
+      display_name = parser_mediator.GetDisplayNameForPathSpec(path_spec)
 
       # TODO: determine if event sources should be DataStream or FileEntry
       # or both.
