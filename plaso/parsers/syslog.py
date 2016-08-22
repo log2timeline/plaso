@@ -84,7 +84,6 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       pyparsing.Suppress(u'---') + _PYPARSING_COMPONENTS[u'comment_body'] +
       pyparsing.Suppress(u'---') + pyparsing.LineEnd())
 
-
   LINE_STRUCTURES = [
       (u'syslog_line', _SYSLOG_LINE),
       (u'syslog_comment', _SYSLOG_COMMENT)]

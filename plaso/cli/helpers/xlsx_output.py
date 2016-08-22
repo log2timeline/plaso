@@ -71,7 +71,6 @@ class XLSXOutputArgumentsHelper(interface.ArgumentsHelper):
 
     fields = u'{0:s},{1:s}'.format(fields, additional_fields)
 
-
     filename = getattr(options, u'write', None)
     if not filename:
       raise errors.BadConfigOption(
