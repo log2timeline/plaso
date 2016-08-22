@@ -20,9 +20,10 @@ class MySQL4n6TimeOutputArgumentsHelperTest(
   _EXPECTED_OUTPUT = u'\n'.join([
       (u'usage: cli_helper.py [--append] [--evidence EVIDENCE] '
        u'[--fields FIELDS]'),
-      u'                     [--user USERNAME] [--password PASSWORD]',
-      (u'                     [--db_name DB_NAME] [--server HOSTNAME] '
-       u'[--port PORT]'),
+      (u'                     [--additional_fields ADDITIONAL_FIELDS] '
+       u'[--user USERNAME]'),
+      u'                     [--password PASSWORD] [--db_name DB_NAME]',
+      u'                     [--server HOSTNAME] [--port PORT]',
       u'',
       u'Test argument parser.',
       u'',
@@ -35,8 +36,13 @@ class MySQL4n6TimeOutputArgumentsHelperTest(
       (u'  --evidence EVIDENCE   Set the evidence field to a specific value, '
        u'defaults'),
       u'                        to empty.',
-      u'  --fields FIELDS       Defines which fields should be indexed in the',
-      u'                        database.',
+      (u'  --fields FIELDS       Defines which fields should be indexed in '
+       u'the'), u'                        database.',
+      u'  --additional_fields ADDITIONAL_FIELDS',
+      (u'                        Defines extra fields to be included in the '
+       u'output, in'),
+      u'                        addition to the default fields, which are',
+      u'                        datetime,host,source,sourcetype,user,type.',
       u'  --user USERNAME       The username used to connect to the database.',
       u'  --password PASSWORD   The password for the database user.',
       u'  --db_name DB_NAME, --db-name DB_NAME',
