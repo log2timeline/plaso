@@ -3185,7 +3185,12 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     merge_storage_file_path = os.path.join(
         self._merge_task_storage_path, u'{0:s}.plaso'.format(task_name))
 
-    os.rename(storage_file_path, merge_storage_file_path)
+    try:
+      os.rename(storage_file_path, merge_storage_file_path)
+    except OSError as exception:
+      raise IOError((
+          u'Unable to rename task storage file: {0:s} with error: '
+          u'{1:s}').format(storage_file_path, exception))
 
   def ReadPreprocessingInformation(self, knowledge_base):
     """Reads preprocessing information.
