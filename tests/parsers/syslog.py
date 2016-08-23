@@ -76,6 +76,10 @@ class SyslogParserTest(test_lib.ParserTestCase):
         event.timestamp)
     self.assertEqual(event_timestamp, u'2013-03-23T23:01:18+00:00')
 
+    event = storage_writer.events[10]
+    expected_reporter = u'/sbin/anacron'
+    self.assertEqual(event.reporter, expected_reporter)
+
     event = storage_writer.events[11]
     expected_message = (
         u'[aprocess, pid: 10100] This is a multi-line message that screws up'
