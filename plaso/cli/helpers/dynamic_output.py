@@ -62,7 +62,8 @@ class DynamicOutputArgumentsHelper(interface.ArgumentsHelper):
     additional_fields = cls._ParseStringOption(
         options, u'additional_fields')
 
-    fields = u'{0:s},{1:s}'.format(fields, additional_fields)
+    if additional_fields:
+      fields = u'{0:s},{1:s}'.format(fields, additional_fields)
 
     output_module.SetFields([
         field_name.strip() for field_name in fields.split(u',')])
