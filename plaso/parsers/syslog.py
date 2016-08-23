@@ -33,10 +33,13 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
 
   _plugin_classes = {}
 
-  _reporter_characters = u''.join(
+  # The reporter and facility fields can contain any printable character, but
+  # to allow for processing of syslog formats that delimit the reporter and
+  # facility with printable characters, we remove certain common delimiters
+  # from the set of printable characters.
+  _REPORTER_CHARACTERS = u''.join(
       [c for c in pyparsing.printables if c not in [u':', u'[', u'<']])
-
-  _facility_characters = u''.join(
+  _FACILITY_CHARACTERS = u''.join(
       [c for c in pyparsing.printables if c not in [u':', u'>']])
 
   _PYPARSING_COMPONENTS = {
@@ -53,10 +56,10 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
           u'fractional_seconds'),
       u'hostname': pyparsing.Word(pyparsing.printables).setResultsName(
           u'hostname'),
-      u'reporter': pyparsing.Word(_reporter_characters).setResultsName(
+      u'reporter': pyparsing.Word(_REPORTER_CHARACTERS).setResultsName(
           u'reporter'),
       u'pid': text_parser.PyparsingConstants.PID.setResultsName(u'pid'),
-      u'facility': pyparsing.Word(_facility_characters).setResultsName(
+      u'facility': pyparsing.Word(_FACILITY_CHARACTERS).setResultsName(
           u'facility'),
       u'body': pyparsing.Regex(
           r'.*?(?=($|\n\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2}))', re.DOTALL).
