@@ -72,7 +72,8 @@ class Shared4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
     additional_fields = cls._ParseStringOption(
         options, u'additional_fields')
 
-    fields = u'{0:s},{1:s}'.format(fields, additional_fields)
+    if additional_fields:
+      fields = u'{0:s},{1:s}'.format(fields, additional_fields)
 
     output_module.SetAppendMode(append)
     output_module.SetEvidence(evidence)
