@@ -61,7 +61,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.hostname, u'myhostname.myhost.com')
 
     expected_string = (
-        u'[client, pid: 30840] INFO No new content.')
+        u'[client, pid: 30840] INFO No new content in ímynd.dd.')
     self._TestGetMessageStrings(
         event, expected_string, expected_string)
 

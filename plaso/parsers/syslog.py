@@ -27,9 +27,17 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
 
   DESCRIPTION = u'Syslog Parser'
 
+  _ENCODING = u'utf-8'
+
   _VERIFICATION_REGEX = re.compile(r'^\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2}\s')
 
   _plugin_classes = {}
+
+  _reporter_characters = u''.join(
+      [c for c in pyparsing.printables if c not in [u':', u'[', u'<']])
+
+  _facility_characters = u''.join(
+      [c for c in pyparsing.printables if c not in [u':', u'>']])
 
   _PYPARSING_COMPONENTS = {
       u'month': text_parser.PyparsingConstants.MONTH.setResultsName(u'month'),
@@ -45,10 +53,10 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
           u'fractional_seconds'),
       u'hostname': pyparsing.Word(pyparsing.printables).setResultsName(
           u'hostname'),
-      u'reporter': pyparsing.Word(pyparsing.alphanums + u'.').setResultsName(
+      u'reporter': pyparsing.Word(_reporter_characters).setResultsName(
           u'reporter'),
       u'pid': text_parser.PyparsingConstants.PID.setResultsName(u'pid'),
-      u'facility': pyparsing.Word(pyparsing.alphanums).setResultsName(
+      u'facility': pyparsing.Word(_facility_characters).setResultsName(
           u'facility'),
       u'body': pyparsing.Regex(
           r'.*?(?=($|\n\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2}))', re.DOTALL).
