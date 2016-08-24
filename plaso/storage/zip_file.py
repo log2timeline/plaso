@@ -228,13 +228,30 @@ class _EventsHeap(object):
     """int: number of serialized events on the heap."""
     return len(self._heap)
 
-  def PopEvent(self):
-    """Pops an event from the heap.
+  def PeakEvent(self):
+    """Retrieves the first event from the heap.
 
     Returns:
-      A tuple containing an event (instance of EventObject),
-      an integer containing the number of the stream.
-      If the heap is empty the values in the tuple will be None.
+      tuple: contains:
+
+        EventObject: event or None.
+        int: number of the stream or None.
+    """
+    try:
+      _, stream_number, _, event = self._heap[0]
+      return event, stream_number
+
+    except IndexError:
+      return None, None
+
+  def PopEvent(self):
+    """Pops the first event from the heap.
+
+    Returns:
+      tuple: contains:
+
+        EventObject: event or None.
+        int: number of the stream or None.
     """
     try:
       _, stream_number, _, event = heapq.heappop(self._heap)
@@ -1547,19 +1564,24 @@ class ZIPStorageFile(interface.BaseFileStorage):
     if time_range and event.timestamp > time_range.end_timestamp:
       return
 
-    next_event = self._GetEvent(stream_number)
-    if next_event:
-      self._event_heap.PushEvent(
-          next_event, stream_number, event.store_index)
-
-      reference_timestamp = next_event.timestamp
-      while next_event.timestamp == reference_timestamp:
-        next_event = self._GetEvent(stream_number)
-        if not next_event:
-          break
-
+    # Peak at the next event and determine if we need fill the heap
+    # with the next events from the stream.
+    next_event, next_stream_number = self._event_heap.PeakEvent()
+    if (not next_event or next_stream_number != stream_number or
+        next_event.timestamp != event.timestamp):
+      next_event = self._GetEvent(stream_number)
+      if next_event:
         self._event_heap.PushEvent(
             next_event, stream_number, event.store_index)
+
+        reference_timestamp = next_event.timestamp
+        while next_event.timestamp == reference_timestamp:
+          next_event = self._GetEvent(stream_number)
+          if not next_event:
+            break
+
+          self._event_heap.PushEvent(
+              next_event, stream_number, event.store_index)
 
     event.tag = self._ReadEventTagByIdentifier(
         event.store_number, event.store_index, event.uuid)
