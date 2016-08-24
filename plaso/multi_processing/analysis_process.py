@@ -152,7 +152,10 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
       storage_writer.Close()
 
-    self._storage_writer.PrepareMergeTaskStorage(task.identifier)
+    try:
+      self._storage_writer.PrepareMergeTaskStorage(task.identifier)
+    except IOError:
+      pass
 
     self._analysis_mediator = None
     self._storage_writer = None

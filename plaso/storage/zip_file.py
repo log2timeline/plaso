@@ -228,8 +228,8 @@ class _EventsHeap(object):
     """int: number of serialized events on the heap."""
     return len(self._heap)
 
-  def PeakEvent(self):
-    """Retrieves the first event from the heap.
+  def PeekEvent(self):
+    """Retrieves the first event from the heap without removing it.
 
     Returns:
       tuple: contains:
@@ -245,7 +245,7 @@ class _EventsHeap(object):
       return None, None
 
   def PopEvent(self):
-    """Pops the first event from the heap.
+    """Retrieves and removed the first event from the heap.
 
     Returns:
       tuple: contains:
@@ -1063,6 +1063,26 @@ class ZIPStorageFile(interface.BaseFileStorage):
         tag_index_value = event_tag_index_table.GetEventTagIndex(entry_index)
         self._event_tag_index[tag_index_value.identifier] = tag_index_value
 
+  def _FillEventHeapFromStream(self, stream_number):
+    """Fills the event heap with the next event from the stream.
+
+    Args:
+      stream_number (int): serialized data stream number.
+    """
+    event = self._GetEvent(stream_number)
+    if not event:
+      return
+
+    self._event_heap.PushEvent(event, stream_number, event.store_index)
+
+    reference_timestamp = event.timestamp
+    while event.timestamp == reference_timestamp:
+      event = self._GetEvent(stream_number)
+      if not event:
+        break
+
+      self._event_heap.PushEvent(event, stream_number, event.store_index)
+
   def _GetEvent(self, stream_number, entry_index=-1):
     """Reads an event from a specific stream.
 
@@ -1264,66 +1284,6 @@ class ZIPStorageFile(interface.BaseFileStorage):
           last_stream_number = stream_number
 
     return last_stream_number + 1
-
-  def _InitializeMergeBuffer(self, time_range=None):
-    """Initializes the events into the merge buffer.
-
-    This function fills the merge buffer with the first relevant event
-    from each stream.
-
-    Args:
-      time_range (Optional[TimeRange]): time range used to filter events
-          that fall in a specific period.
-    """
-    self._event_heap = _EventsHeap()
-
-    number_range = self._GetSerializedEventStreamNumbers()
-    for stream_number in number_range:
-      entry_index = -1
-      if time_range:
-        stream_name = u'event_timestamps.{0:06d}'.format(stream_number)
-        if self._HasStream(stream_name):
-          try:
-            timestamp_table = self._GetSerializedEventTimestampTable(
-                stream_number)
-          except IOError as exception:
-            logging.error((
-                u'Unable to read timestamp table from stream: {0:s} '
-                u'with error: {1:s}.').format(stream_name, exception))
-
-          # If the start timestamp of the time range filter is larger than the
-          # last timestamp in the timestamp table skip this stream.
-          timestamp_compare = timestamp_table.GetTimestamp(-1)
-          if time_range.start_timestamp > timestamp_compare:
-            continue
-
-          for table_index in range(timestamp_table.number_of_timestamps - 1):
-            timestamp_compare = timestamp_table.GetTimestamp(table_index)
-            if time_range.start_timestamp >= timestamp_compare:
-              entry_index = table_index
-              break
-
-      event = self._GetEvent(stream_number, entry_index=entry_index)
-      # Check the lower bound in case no timestamp table was available.
-      while (event and time_range and
-             event.timestamp < time_range.start_timestamp):
-        event = self._GetEvent(stream_number)
-
-      if event:
-        if time_range and event.timestamp > time_range.end_timestamp:
-          continue
-
-        self._event_heap.PushEvent(
-            event, stream_number, event.store_number)
-
-        reference_timestamp = event.timestamp
-        while event.timestamp == reference_timestamp:
-          event = self._GetEvent(stream_number)
-          if not event:
-            break
-
-          self._event_heap.PushEvent(
-              event, stream_number, event.store_number)
 
   def _GetSerializedDataStream(
       self, streams_cache, stream_name_prefix, stream_number):
@@ -1564,24 +1524,12 @@ class ZIPStorageFile(interface.BaseFileStorage):
     if time_range and event.timestamp > time_range.end_timestamp:
       return
 
-    # Peak at the next event and determine if we need fill the heap
+    # Peek at the next event and determine if we need fill the heap
     # with the next events from the stream.
-    next_event, next_stream_number = self._event_heap.PeakEvent()
+    next_event, next_stream_number = self._event_heap.PeekEvent()
     if (not next_event or next_stream_number != stream_number or
         next_event.timestamp != event.timestamp):
-      next_event = self._GetEvent(stream_number)
-      if next_event:
-        self._event_heap.PushEvent(
-            next_event, stream_number, event.store_index)
-
-        reference_timestamp = next_event.timestamp
-        while next_event.timestamp == reference_timestamp:
-          next_event = self._GetEvent(stream_number)
-          if not next_event:
-            break
-
-          self._event_heap.PushEvent(
-              next_event, stream_number, event.store_index)
+      self._FillEventHeapFromStream(stream_number)
 
     event.tag = self._ReadEventTagByIdentifier(
         event.store_number, event.store_index, event.uuid)
@@ -1604,6 +1552,66 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     file_object.close()
     return True
+
+  def _InitializeMergeBuffer(self, time_range=None):
+    """Initializes the events into the merge buffer.
+
+    This function fills the merge buffer with the first relevant event
+    from each stream.
+
+    Args:
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
+    """
+    self._event_heap = _EventsHeap()
+
+    number_range = self._GetSerializedEventStreamNumbers()
+    for stream_number in number_range:
+      entry_index = -1
+      if time_range:
+        stream_name = u'event_timestamps.{0:06d}'.format(stream_number)
+        if self._HasStream(stream_name):
+          try:
+            timestamp_table = self._GetSerializedEventTimestampTable(
+                stream_number)
+          except IOError as exception:
+            logging.error((
+                u'Unable to read timestamp table from stream: {0:s} '
+                u'with error: {1:s}.').format(stream_name, exception))
+
+          # If the start timestamp of the time range filter is larger than the
+          # last timestamp in the timestamp table skip this stream.
+          timestamp_compare = timestamp_table.GetTimestamp(-1)
+          if time_range.start_timestamp > timestamp_compare:
+            continue
+
+          for table_index in range(timestamp_table.number_of_timestamps - 1):
+            timestamp_compare = timestamp_table.GetTimestamp(table_index)
+            if time_range.start_timestamp >= timestamp_compare:
+              entry_index = table_index
+              break
+
+      event = self._GetEvent(stream_number, entry_index=entry_index)
+      # Check the lower bound in case no timestamp table was available.
+      while (event and time_range and
+             event.timestamp < time_range.start_timestamp):
+        event = self._GetEvent(stream_number)
+
+      if event:
+        if time_range and event.timestamp > time_range.end_timestamp:
+          continue
+
+        self._event_heap.PushEvent(
+            event, stream_number, event.store_number)
+
+        reference_timestamp = event.timestamp
+        while event.timestamp == reference_timestamp:
+          event = self._GetEvent(stream_number)
+          if not event:
+            break
+
+          self._event_heap.PushEvent(
+              event, stream_number, event.store_number)
 
   def _OpenRead(self):
     """Opens the storage file for reading."""
