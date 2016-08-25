@@ -271,8 +271,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     self._front_end.ProcessSources(
         self._source_path_specs, self._destination_path, self._output_writer,
-        filter_file=self._filter_file,
-        skip_duplicates=self._skip_duplicates)
+        filter_file=self._filter_file, skip_duplicates=self._skip_duplicates)
 
     self._output_writer.Write(u'Export completed.\n')
     self._output_writer.Write(u'\n')
