@@ -153,19 +153,11 @@ class PsortTool(analysis_tool.AnalysisTool):
     difference = requested_plugin_names.difference(analysis_plugin_names)
     if difference:
       raise errors.BadConfigOption(
-          u'Non-existing analysis plugins specified: {0:s}'.format(
+          u'Non-existent analysis plugins specified: {0:s}'.format(
               u' '.join(difference)))
 
     self._analysis_plugins = analysis_plugin_string
 
-  def _ParseExperimentalOptions(self, options):
-    """Parses the experimental plugin options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-    """
-    use_zeromq = getattr(options, u'use_zeromq', u'false')
-    self._front_end.SetUseZeroMQ(use_zeromq == u'true')
 
   def _ParseFilterOptions(self, options):
     """Parses the filter options.
@@ -240,6 +232,15 @@ class PsortTool(analysis_tool.AnalysisTool):
       self.list_language_identifiers = True
     else:
       self._front_end.SetPreferredLanguageIdentifier(preferred_language)
+
+  def _ParseProcessingOptions(self, options):
+    """Parses the processing options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+    """
+    use_zeromq = getattr(options, u'use_zeromq', u'false')
+    self._front_end.SetUseZeroMQ(use_zeromq == u'true')
 
   def _PrintAnalysisReportsDetails(self, storage):
     """Prints the details of the analysis reports.
@@ -355,18 +356,6 @@ class PsortTool(analysis_tool.AnalysisTool):
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         argument_group, u'analysis')
 
-  def AddExperimentalOptions(self, argument_group):
-    """Adds experimental options to the argument group
-
-    Args:
-      argument_group (argparse._ArgumentGroup): argparse argument group.
-    """
-    # TODO: make default True when issue #822 is fixed.
-    argument_group.add_argument(
-        u'--use_zeromq', action=u'store', dest=u'use_zeromq',
-        metavar=u'CHOICE', choices=[u'false', u'true'], default=u'false',
-        help=(u'Enables or disables queueing using ZeroMQ'))
-
   def AddFilterOptions(self, argument_group):
     """Adds the filter options to the argument group.
 
@@ -434,6 +423,17 @@ class PsortTool(analysis_tool.AnalysisTool):
 
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         argument_group, argument_category=u'output', module_list=module_names)
+
+  def AddProcessingOptions(self, argument_group):
+    """Adds experimental options to the argument group
+
+    Args:
+      argument_group (argparse._ArgumentGroup): argparse argument group.
+    """
+    argument_group.add_argument(
+        u'--use_zeromq', action=u'store', dest=u'use_zeromq',
+        metavar=u'CHOICE', choices=[u'false', u'true'], default=u'true',
+        help=u'Enables or disables queueing using ZeroMQ')
 
   def ListAnalysisPlugins(self):
     """Lists the analysis modules."""
@@ -507,8 +507,8 @@ class PsortTool(analysis_tool.AnalysisTool):
             u'A comma separated list of analysis plugin names to be loaded '
             u'or "--analysis list" to see a list of available plugins.'))
 
-    experimental_group = argument_parser.add_argument_group(u'Experimental')
-    self.AddExperimentalOptions(experimental_group)
+    processing_group = argument_parser.add_argument_group(u'Processing')
+    self.AddProcessingOptions(processing_group)
 
     info_group = argument_parser.add_argument_group(u'Informational Arguments')
 
@@ -555,7 +555,7 @@ class PsortTool(analysis_tool.AnalysisTool):
 
     output_group.add_argument(
         u'-w', u'--write', metavar=u'OUTPUTFILE', dest=u'write',
-        help=u'Output filename, defaults to stdout.')
+        help=u'Output filename.')
 
     self.AddTimezoneOption(output_group)
 
@@ -657,7 +657,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     super(PsortTool, self).ParseOptions(options)
     self._ParseDataLocationOption(options)
     self._ParseAnalysisPluginOptions(options)
-    self._ParseExperimentalOptions(options)
+    self._ParseProcessingOptions(options)
     self._ParseFilterOptions(options)
 
     if self._debug_mode:
@@ -707,14 +707,15 @@ class PsortTool(analysis_tool.AnalysisTool):
 
     if isinstance(output_module, output_interface.LinearOutputModule):
       if not self._output_filename:
+        # TODO: Remove "no longer supported" after 1.5 release.
         raise errors.BadConfigOption((
             u'Output format: {0:s} requires an output file, output to stdout '
             u'is no longer supported.').format(self._output_format))
 
       if self._output_filename and os.path.exists(self._output_filename):
         raise errors.BadConfigOption((
-            u'Output file already exists: {0:s} and will be '
-            u'overwritten.').format(self._output_filename))
+            u'Output file already exists: {0:s}. Aborting.').format(
+                self._output_filename))
 
       output_file_object = open(self._output_filename, u'wb')
       output_writer = cli_tools.FileObjectOutputWriter(output_file_object)

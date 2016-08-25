@@ -154,15 +154,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           u'Unable to create filter: {0:s} with error: {1:s}'.format(
               filter_expression, exception))
 
-  def _ParseExperimentalOptions(self, options):
-    """Parses the experimental plugin options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-    """
-    use_zeromq = getattr(options, u'use_zeromq', u'true')
-    self._front_end.SetUseZeroMQ(use_zeromq == u'true')
-
   def _ParseOutputOptions(self, options):
     """Parses the output options.
 
@@ -192,6 +183,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._single_process_mode = getattr(options, u'single_process', False)
 
     self._foreman_verbose = getattr(options, u'foreman_verbose', False)
+
+    use_zeromq = getattr(options, u'use_zeromq', u'true')
+    self._front_end.SetUseZeroMQ(use_zeromq == u'true')
 
     self._number_of_extraction_workers = getattr(options, u'workers', 0)
 
@@ -272,17 +266,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
               worker_status.status not in definitions.PROCESSING_ERROR_STATUS)
       self._output_writer.Write(status_line)
 
-  def AddExperimentalOptions(self, argument_group):
-    """Adds experimental options to the argument group
-
-    Args:
-      argument_group (argparse._ArgumentGroup): argparse argument group.
-    """
-    argument_group.add_argument(
-        u'--use_zeromq', action=u'store', dest=u'use_zeromq',
-        metavar=u'CHOICE', choices=[u'false', u'true'], default=u'true',
-        help=(u'Enables or disables queueing using ZeroMQ'))
-
   def AddOutputOptions(self, argument_group):
     """Adds the output options to the argument group.
 
@@ -323,6 +306,11 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             u'Indicates that basic memory usage should be included in the '
             u'output of the process monitor. If this option is not set the '
             u'tool only displays basic status and counter information.'))
+
+    argument_group.add_argument(
+        u'--use_zeromq', action=u'store', dest=u'use_zeromq',
+        metavar=u'CHOICE', choices=[u'false', u'true'], default=u'true',
+        help=u'Enables or disables queueing using ZeroMQ')
 
     argument_group.add_argument(
         u'--workers', dest=u'workers', action=u'store', type=int, default=0,
@@ -407,9 +395,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     self.AddBasicOptions(argument_parser)
-
-    experimental_group = argument_parser.add_argument_group(u'Experimental')
-    self.AddExperimentalOptions(experimental_group)
 
     extraction_group = argument_parser.add_argument_group(
         u'Extraction Arguments')
@@ -548,7 +533,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._ParseExtractionOptions(options)
     self._ParseOutputOptions(options)
     self._ParseTimezoneOption(options)
-    self._ParseExperimentalOptions(options)
 
     self.show_info = getattr(options, u'show_info', False)
 
