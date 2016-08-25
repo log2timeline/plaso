@@ -672,7 +672,9 @@ class PsortTool(analysis_tool.AnalysisTool):
       logging_level = logging.INFO
 
     self.ParseLogFileOptions(options)
-    self._ConfigureLogging(filename=self._log_file, log_level=logging_level)
+    self._ConfigureLogging(
+        filename=self._log_file, format_string=format_string,
+        log_level=logging_level)
 
     self._deduplicate_events = getattr(options, u'dedup', True)
 
