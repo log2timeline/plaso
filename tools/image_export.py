@@ -205,12 +205,16 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     super(ImageExportTool, self).ParseOptions(options)
 
-    format_string = u'%(asctime)s [%(levelname)s] %(message)s'
+    format_string = (
+        u'%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
+        u'<%(module)s> %(message)s')
 
     if self._debug_mode:
-      log_level = logging.DEBUG
+      logging_level = logging.DEBUG
+    elif self._quiet_mode:
+      logging_level = logging.WARNING
     else:
-      log_level = logging.INFO
+      logging_level = logging.INFO
 
     self.ParseLogFileOptions(options)
     self._ConfigureLogging(
