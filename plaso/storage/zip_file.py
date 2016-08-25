@@ -2907,7 +2907,6 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self._output_file = output_file
     self._storage_file = None
     self._serializers_profiler = None
-    self._tasks_pending_merge = []
     self._task_storage_path = None
 
   def _UpdateCounters(self, event):
@@ -3030,15 +3029,10 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     if not self._merge_task_storage_path:
       raise IOError(u'Missing merge task storage path.')
 
-    if task_name in self._tasks_pending_merge:
-      return True
-
     storage_file_path = os.path.join(
         self._merge_task_storage_path, u'{0:s}.plaso'.format(task_name))
 
-    if os.path.isfile(storage_file_path):
-      self._tasks_pending_merge.append(task_name)
-      return True
+    return os.path.isfile(storage_file_path)
 
   def Close(self):
     """Closes the storage writer.
