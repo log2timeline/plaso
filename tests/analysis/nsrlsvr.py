@@ -104,18 +104,12 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
     analysis_report = storage_writer.analysis_reports[0]
 
     tags = analysis_report.GetTags()
-    self.assertEqual(len(tags), 2)
+    self.assertEqual(len(tags), 1)
 
     tag = tags[0]
     self.assertEqual(tag.event_uuid, u'8')
 
     expected_labels = [u'nsrl_present']
-    self.assertEqual(tag.labels, expected_labels)
-
-    tag = tags[1]
-    self.assertEqual(tag.event_uuid, u'9')
-
-    expected_labels = [u'nsrl_not_present']
     self.assertEqual(tag.labels, expected_labels)
 
 
