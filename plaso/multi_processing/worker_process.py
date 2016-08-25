@@ -298,7 +298,10 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
       storage_writer.Close()
 
-    self._storage_writer.PrepareMergeTaskStorage(task.identifier)
+    try:
+      self._storage_writer.PrepareMergeTaskStorage(task.identifier)
+    except IOError:
+      pass
 
     self._task_identifier = u''
 
