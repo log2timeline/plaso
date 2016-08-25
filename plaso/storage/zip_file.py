@@ -245,7 +245,7 @@ class _EventsHeap(object):
       return None, None
 
   def PopEvent(self):
-    """Retrieves and removed the first event from the heap.
+    """Retrieves and removes the first event from the heap.
 
     Returns:
       tuple: contains:
@@ -1064,7 +1064,14 @@ class ZIPStorageFile(interface.BaseFileStorage):
         self._event_tag_index[tag_index_value.identifier] = tag_index_value
 
   def _FillEventHeapFromStream(self, stream_number):
-    """Fills the event heap with the next event from the stream.
+    """Fills the event heap with the next events from the stream.
+
+    This function will read events starting at the current stream entry that
+    have the same timestamp and adds them to the heap. This ensures that the
+    sorting order of events with the same timestamp is consistent.
+
+    Except for the last event, all newly added events will have the same
+    timestamp.
 
     Args:
       stream_number (int): serialized data stream number.
@@ -1502,7 +1509,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
         yield stream_name
 
   def _GetSortedEvent(self, time_range=None):
-    """Retrieves the events in increasing chronological order.
+    """Retrieves the next event in increasing chronological order.
 
     Args:
       time_range (Optional[TimeRange]): time range used to filter events
