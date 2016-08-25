@@ -28,6 +28,14 @@ plaso.engine.knowledge_base module
     :undoc-members:
     :show-inheritance:
 
+plaso.engine.path_helper module
+-------------------------------
+
+.. automodule:: plaso.engine.path_helper
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.engine.plaso_queue module
 -------------------------------
 

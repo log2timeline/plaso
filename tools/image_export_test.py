@@ -94,6 +94,7 @@ class ImageExportToolTest(cli_test_lib.CLIToolTestCase):
 
       expected_output = b'\n'.join([
           b'Export started.',
+          b'Extracting file entries.',
           b'Export completed.',
           b'',
           b''])

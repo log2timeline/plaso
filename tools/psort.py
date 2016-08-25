@@ -96,6 +96,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     # This check makes sure the columns are tab aligned.
     identifier = process_status.identifier
     if len(identifier) < 8:
+      identifier = u'{0:s}\t\t'.format(identifier)
+    elif len(identifier) < 16:
       identifier = u'{0:s}\t'.format(identifier)
 
     status = process_status.status
@@ -282,7 +284,7 @@ class PsortTool(analysis_tool.AnalysisTool):
 
     # TODO: for win32console get current color and set intensity,
     # write the header separately then reset intensity.
-    status_header = u'Identifier\tPID\tStatus\t\tEvents\t\tReports'
+    status_header = u'Identifier\t\tPID\tStatus\t\tEvents\t\tReports'
     if not win32console:
       status_header = u'\x1b[1m{0:s}\x1b[0m'.format(status_header)
 
