@@ -206,6 +206,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       if self._processing_profiler:
         self._processing_profiler.StopTiming(u'merge')
 
+      self._task_manager.CompleteTask(task_identifier)
+
       self._status = definitions.PROCESSING_STATUS_RUNNING
       self._merge_task_identifier = u''
       self._number_of_produced_errors = storage_writer.number_of_errors
