@@ -162,7 +162,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._task_queue_port = None
     self._task_manager = task_manager.TaskManager(
         maximum_number_of_tasks=maximum_number_of_tasks)
-    self._tasks_pending_merge = set()
     self._temporary_directory = None
     self._text_prepend = None
     self._use_zeromq = use_zeromq
@@ -182,26 +181,19 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if self._processing_profiler:
       self._processing_profiler.StartTiming(u'merge_check')
 
-    # GetScheduledTaskIdentifiers makes a copy of the keys since we are
-    # changing the dictionary inside the loop.
-    task_storage_merged = False
     for task_identifier in self._task_manager.GetScheduledTaskIdentifiers():
       if self._abort:
         break
 
-      # Make sure tasks waiting to be merged are not considered idle when not
-      # yet merged.
-      if task_identifier in self._tasks_pending_merge:
-        self._task_manager.UpdateTask(task_identifier)
-      elif storage_writer.CheckTaskStorageReadyForMerge(
-          task_identifier):
-        self._tasks_pending_merge.add(task_identifier)
-        self._task_manager.UpdateTask(task_identifier)
-
-      # Merge only one task-based storage file per loop to keep tasks flowing.
-      if task_storage_merged:
+      if self._task_manager.IsPendingMerge(task_identifier):
         continue
 
+      if storage_writer.CheckTaskStorageReadyForMerge(task_identifier):
+        self._task_manager.MarkAsPendingMerge(task_identifier)
+
+    # Merge only one task-based storage file per loop to keep tasks flowing.
+    task_identifier = self._task_manager.GetPendingMerge()
+    if task_identifier:
       self._status = definitions.PROCESSING_STATUS_MERGING
       self._merge_task_identifier = task_identifier
 
@@ -209,11 +201,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         self._processing_profiler.StartTiming(u'merge')
 
       # TODO: look into time slicing merge.
-      if storage_writer.MergeTaskStorage(task_identifier):
-        if task_identifier in self._tasks_pending_merge:
-          self._tasks_pending_merge.remove(task_identifier)
-        self._task_manager.CompleteTask(task_identifier)
-        task_storage_merged = True
+      storage_writer.MergeTaskStorage(task_identifier)
 
       if self._processing_profiler:
         self._processing_profiler.StopTiming(u'merge')
@@ -222,8 +210,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._merge_task_identifier = u''
       self._number_of_produced_errors = storage_writer.number_of_errors
       self._number_of_produced_events = storage_writer.number_of_events
-      self._number_of_produced_sources = (
-          storage_writer.number_of_event_sources)
+      self._number_of_produced_sources = storage_writer.number_of_event_sources
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming(u'merge_check')
