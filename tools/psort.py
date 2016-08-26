@@ -660,6 +660,10 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._ParseExperimentalOptions(options)
     self._ParseFilterOptions(options)
 
+    format_string = (
+        u'%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
+        u'<%(module)s> %(message)s')
+
     if self._debug_mode:
       logging_level = logging.DEBUG
     elif self._quiet_mode:
@@ -668,7 +672,9 @@ class PsortTool(analysis_tool.AnalysisTool):
       logging_level = logging.INFO
 
     self.ParseLogFileOptions(options)
-    self._ConfigureLogging(filename=self._log_file, log_level=logging_level)
+    self._ConfigureLogging(
+        filename=self._log_file, format_string=format_string,
+        log_level=logging_level)
 
     self._deduplicate_events = getattr(options, u'dedup', True)
 
