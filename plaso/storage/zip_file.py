@@ -3011,7 +3011,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       self._session.event_labels_counter[label] += 1
 
   def CheckTaskStorageReadyForMerge(self, task_name):
-    """Checks if a task storage is ready for with the session storage.
+    """Checks if a task storage is ready for merging with this session storage.
 
     Args:
       task_name (str): unique name of the task.
