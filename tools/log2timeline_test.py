@@ -20,14 +20,6 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
   _BDE_PASSWORD = u'bde-TEST'
 
-  _EXPECTED_EXPERIMENTAL_OPTIONS = u'\n'.join([
-      u'usage: log2timeline_test.py [--use_zeromq CHOICE]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u''])
-
   _EXPECTED_PROCESSING_OPTIONS = u'\n'.join([
       u'usage: log2timeline_test.py [--single_process] [--show_memory_usage]',
       u'                            [--disable_zeromq] [--workers WORKERS]',
@@ -47,7 +39,9 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
        u'status and'),
       u'                        counter information.',
       u'  --disable_zeromq, --disable-zeromq',
-      u'                        Disable queueing using ZeroMQ',
+      u'                        Disable queueing using ZeroMQ. A',
+      u'                        Multiprocessing queue will be',
+      u'                        used instead.',
       (u'  --workers WORKERS     The number of worker threads [defaults to '
        u'available'),
       u'                        system CPUs minus three].',

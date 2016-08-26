@@ -184,8 +184,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     self._foreman_verbose = getattr(options, u'foreman_verbose', False)
 
-    use_zeromq = getattr(options, u'use_zeromq', u'true')
-    self._front_end.SetUseZeroMQ(use_zeromq == u'true')
+    use_zeromq = getattr(options, u'use_zeromq', True)
+    self._front_end.SetUseZeroMQ(use_zeromq)
 
     self._number_of_extraction_workers = getattr(options, u'workers', 0)
 
@@ -309,7 +309,9 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     argument_group.add_argument(
         u'--disable_zeromq', u'--disable-zeromq', action=u'store_false',
-        dest=u'use_zeromq', default=True, help=u'Disable queueing using ZeroMQ')
+        dest=u'use_zeromq', default=True, help=(
+          u'Disable queueing using ZeroMQ. A Multiprocessing queue will be used'
+          u'instead.'))
 
     argument_group.add_argument(
         u'--workers', dest=u'workers', action=u'store', type=int, default=0,

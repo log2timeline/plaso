@@ -239,8 +239,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     Args:
       options (argparse.Namespace): command line arguments.
     """
-    use_zeromq = getattr(options, u'use_zeromq', u'false')
-    self._front_end.SetUseZeroMQ(use_zeromq == u'true')
+    use_zeromq = getattr(options, u'use_zeromq', True)
+    self._front_end.SetUseZeroMQ(use_zeromq)
 
   def _PrintAnalysisReportsDetails(self, storage):
     """Prints the details of the analysis reports.
@@ -432,7 +432,9 @@ class PsortTool(analysis_tool.AnalysisTool):
     """
     argument_group.add_argument(
         u'--disable_zeromq', u'--disable-zeromq', action=u'store_false',
-        dest=u'use_zeromq', default=True, help=u'Disable queueing using ZeroMQ')
+        dest=u'use_zeromq', default=True, help=(
+          u'Disable queueing using ZeroMQ. A Multiprocessing queue will be used'
+          u'instead.'))
 
   def ListAnalysisPlugins(self):
     """Lists the analysis modules."""
