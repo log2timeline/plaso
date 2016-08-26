@@ -23,10 +23,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
   _PROCESS_JOIN_TIMEOUT = 5.0
 
-  _QUEUE_TIMEOUT = 5
+  _QUEUE_TIMEOUT = 10 * 60
 
-  # The number of seconds to wait for analysis plugins to compile their reports.
-  _ANALYSIS_PLUGIN_TIMEOUT = 60
 
   def __init__(
       self, debug_output=False, enable_profiling=False,
@@ -112,6 +110,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         continue
 
       for event_queue in self._event_queues:
+        # TODO: Check for premature exit of analysis plugins.
         event_queue.PushItem(event)
 
       self._number_of_consumed_events += 1
@@ -119,6 +118,11 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       if (event_filter and filter_limit and
           filter_limit == self._number_of_consumed_events):
         break
+
+    logging.debug(u'Finished pushing events to analysis plugins.')
+    # Signal that we have finished adding events.
+    for event_queue in self._event_queues:
+      event_queue.PushItem(plaso_queue.QueueAbort(), block=False)
 
     logging.debug(u'Processing analysis plugin results.')
 
@@ -133,7 +137,10 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         task_identifier = plugin_name
 
         if storage_writer.CheckTaskStorageReadyForMerge(task_identifier):
-          storage_writer.MergeTaskStorage(task_identifier)
+          merge_success = storage_writer.MergeTaskStorage(task_identifier)
+          if not merge_success:
+            raise RuntimeError(u'Unable to merge task: {0:s}'.format(
+                task_identifier))
 
           # TODO: temporary solution.
           plugin_names.remove(plugin_name)
@@ -323,7 +330,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     for analysis_plugin in analysis_plugins:
       if self._use_zeromq:
-        output_event_queue = zeromq_queue.ZeroMQPushBindQueue()
+        output_event_queue = zeromq_queue.ZeroMQPushBindQueue(
+            name=u'{0:s} output event queue'.format(analysis_plugin.NAME))
         # Open the queue so it can bind to a random port, and we can get the
         # port number to use in the input queue.
         output_event_queue.Open()
@@ -336,6 +344,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
       if self._use_zeromq:
         input_event_queue = zeromq_queue.ZeroMQPullConnectQueue(
+            name=u'{0:s} input event queue'.format(analysis_plugin.NAME),
+            timeout_seconds=self._QUEUE_TIMEOUT,
             delay_open=True, port=output_event_queue.port)
 
       else:

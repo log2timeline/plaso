@@ -22,8 +22,6 @@ from plaso.storage import zip_file as storage_zip_file
 class PsortFrontend(analysis_frontend.AnalysisFrontend):
   """Class that implements the psort front-end."""
 
-  _QUEUE_TIMEOUT = 5
-
   _DEFAULT_PROFILING_SAMPLE_RATE = 1000
 
   def __init__(self):

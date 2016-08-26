@@ -219,7 +219,8 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      u'  --disable_zeromq         Enables or disables queueing using ZeroMQ',
+      u'  --disable_zeromq, --disable-zeromq',
+      u'                        Disable queueing using ZeroMQ',
       u''])
 
   # TODO: add test for _FormatStatusTableRow.

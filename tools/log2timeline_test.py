@@ -30,7 +30,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
   _EXPECTED_PROCESSING_OPTIONS = u'\n'.join([
       u'usage: log2timeline_test.py [--single_process] [--show_memory_usage]',
-      u'                            [--use_zeromq CHOICE] [--workers WORKERS]',
+      u'                            [--disable_zeromq] [--workers WORKERS]',
       u'',
       u'Test argument parser.',
       u'',
@@ -46,8 +46,8 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       (u'                        is not set the tool only displays basic '
        u'status and'),
       u'                        counter information.',
-      (u'  --use_zeromq CHOICE   Enables or disables '
-       u'queueing using ZeroMQ'),
+      u'  --disable_zeromq, --disable-zeromq',
+      u'                        Disable queueing using ZeroMQ',
       (u'  --workers WORKERS     The number of worker threads [defaults to '
        u'available'),
       u'                        system CPUs minus three].',
