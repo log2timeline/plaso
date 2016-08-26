@@ -192,7 +192,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         self._task_manager.UpdateTaskAsPendingMerge(task_identifier)
 
     # Merge only one task-based storage file per loop to keep tasks flowing.
-    task_identifier = self._task_manager.GetPendingMerge()
+    task_identifier = self._task_manager.GetTaskPendingMerge()
     if task_identifier:
       self._status = definitions.PROCESSING_STATUS_MERGING
       self._merge_task_identifier = task_identifier
@@ -205,8 +205,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
       if self._processing_profiler:
         self._processing_profiler.StopTiming(u'merge')
-
-      self._task_manager.UpdateTaskAsMerged(task_identifier)
 
       self._status = definitions.PROCESSING_STATUS_RUNNING
       self._merge_task_identifier = u''

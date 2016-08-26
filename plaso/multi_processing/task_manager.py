@@ -67,12 +67,16 @@ class TaskManager(object):
     Returns:
       bool: True if there are scheduled active tasks.
     """
-    if not self._scheduled_tasks:
+    if not self._scheduled_tasks and not self._pending_merge_tasks:
       return False
 
     inactive_time = int(time.time() * 1000000) - self._TASK_INACTIVE_TIME
 
-    has_active_tasks = False
+    if self._pending_merge_tasks:
+      has_active_tasks = True
+    else:
+      has_active_tasks = False
+
     for task_identifier, last_update in iter(self._scheduled_tasks.items()):
       if last_update > inactive_time:
         has_active_tasks = True
@@ -84,7 +88,7 @@ class TaskManager(object):
 
     return has_active_tasks
 
-  def GetPendingMerge(self):
+  def GetTaskPendingMerge(self):
     """Retrieves the first task that is pending merge.
 
     Returns:
@@ -94,6 +98,8 @@ class TaskManager(object):
       return
 
     _, task_identifier = self._pending_merge_tasks.popitem(last=False)
+
+    del self._active_tasks[task_identifier]
     return task_identifier
 
   def IsPendingMerge(self, task_identifier):
@@ -160,21 +166,6 @@ class TaskManager(object):
       raise KeyError(u'Task not scheduled')
 
     self._scheduled_tasks[task_identifier] = int(time.time() * 1000000)
-
-  def UpdateTaskAsMerged(self, task_identifier):
-    """Updates the task manager to reflect the task is merged.
-
-    Args:
-      task_identifier (str): unique identifier of the task.
-
-    Raises:
-      KeyError: if the task is not pending for merge.
-    """
-    if task_identifier not in self._pending_merge_tasks:
-      raise KeyError(u'Task not pending for merge')
-
-    del self._active_tasks[task_identifier]
-    del self._pending_merge_tasks[task_identifier]
 
   def UpdateTaskAsPendingMerge(self, task_identifier):
     """Updates the task manager to reflect the is ready to be merged.
