@@ -217,9 +217,9 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
         default=self._DEFAULT_HASHER_STRING, metavar=u'HASHER_LIST', help=(
             u'Define a list of hashers to use by the tool. This is a comma '
             u'separated list where each entry is the name of a hasher, such as '
-            u'"md5,sha256", where "all" indicates that all hashers should be '
-            u'enabled and "none" to disable all hashers. Use "--hashers list" '
-            u'or "--info" to list the available hashers.'))
+            u'"md5,sha256". "all" indicates that all hashers should be '
+            u'enabled. "none" disables all hashers. Use "--hashers list" or '
+            u'"--info" to list the available hashers.'))
 
     argument_group.add_argument(
         u'--yara_rules', u'--yara-rules', dest=u'yara_rules_path',

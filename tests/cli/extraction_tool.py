@@ -30,13 +30,13 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
        u'This is a'),
       (u'                        comma separated list where each entry is the '
        u'name of a'),
-      (u'                        hasher, such as "md5,sha256", where "all" '
-       u'indicates'),
-      (u'                        that all hashers should be enabled and '
-       u'"none" to'),
-      (u'                        disable all hashers. Use "--hashers list" or '
-       u'"--info"'),
-      u'                        to list the available hashers.',
+      (u'                        hasher, such as "md5,sha256". "all" '
+       u'indicates that all'),
+      (u'                        hashers should be enabled. "none" '
+       u'disables all'),
+      (u'                        hashers. Use "--hashers list" or '
+       u'"--info" to list the'),
+      u'                        available hashers.',
       u'  --yara_rules PATH, --yara-rules PATH',
       (u'                        Path to a file containing Yara rules '
        u'definitions.'),
