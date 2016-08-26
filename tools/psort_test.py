@@ -214,12 +214,12 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       u''])
 
   _EXPECTED_PROCESSING_OPTIONS = u'\n'.join([
-      u'usage: psort_test.py [--use_zeromq CHOICE]',
+      u'usage: psort_test.py [--disable_zeromq]',
       u'',
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      u'  --use_zeromq CHOICE  Enables or disables queueing using ZeroMQ',
+      u'  --disable_zeromq         Enables or disables queueing using ZeroMQ',
       u''])
 
   # TODO: add test for _FormatStatusTableRow.

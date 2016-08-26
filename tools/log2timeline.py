@@ -308,9 +308,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             u'tool only displays basic status and counter information.'))
 
     argument_group.add_argument(
-        u'--use_zeromq', action=u'store', dest=u'use_zeromq',
-        metavar=u'CHOICE', choices=[u'false', u'true'], default=u'true',
-        help=u'Enables or disables queueing using ZeroMQ')
+        u'--disable_zeromq', u'--disable-zeromq', action=u'store_false',
+        dest=u'use_zeromq', default=True, help=u'Disable queueing using ZeroMQ')
 
     argument_group.add_argument(
         u'--workers', dest=u'workers', action=u'store', type=int, default=0,

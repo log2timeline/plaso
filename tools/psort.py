@@ -425,15 +425,14 @@ class PsortTool(analysis_tool.AnalysisTool):
         argument_group, argument_category=u'output', module_list=module_names)
 
   def AddProcessingOptions(self, argument_group):
-    """Adds experimental options to the argument group
+    """Adds processing options to the argument group
 
     Args:
       argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
-        u'--use_zeromq', action=u'store', dest=u'use_zeromq',
-        metavar=u'CHOICE', choices=[u'false', u'true'], default=u'true',
-        help=u'Enables or disables queueing using ZeroMQ')
+        u'--disable_zeromq', u'--disable-zeromq', action=u'store_false',
+        dest=u'use_zeromq', default=True, help=u'Disable queueing using ZeroMQ')
 
   def ListAnalysisPlugins(self):
     """Lists the analysis modules."""
