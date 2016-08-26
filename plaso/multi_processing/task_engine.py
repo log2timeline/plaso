@@ -191,6 +191,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       if storage_writer.CheckTaskStorageReadyForMerge(task_identifier):
         self._task_manager.UpdateTaskAsPendingMerge(task_identifier)
 
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'merge_check')
+
     # Merge only one task-based storage file per loop to keep tasks flowing.
     task_identifier = self._task_manager.GetTaskPendingMerge()
     if task_identifier:
@@ -211,9 +214,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._number_of_produced_errors = storage_writer.number_of_errors
       self._number_of_produced_events = storage_writer.number_of_events
       self._number_of_produced_sources = storage_writer.number_of_event_sources
-
-    if self._processing_profiler:
-      self._processing_profiler.StopTiming(u'merge_check')
 
   def _ProcessSources(
       self, source_path_specs, storage_writer, filter_find_specs=None):
