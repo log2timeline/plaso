@@ -102,17 +102,6 @@ class TaskManager(object):
     del self._active_tasks[task_identifier]
     return task_identifier
 
-  def IsPendingMerge(self, task_identifier):
-    """Determines if a task is marked as pending merge.
-
-    Args:
-      task_identifier (str): unique identifier of the task.
-
-    Returns:
-      bool: True if the task is pending for merge.
-    """
-    return task_identifier in self._pending_merge_tasks
-
   def RescheduleTask(self, task_identifier):
     """Reschedules a previous abandoned task.
 

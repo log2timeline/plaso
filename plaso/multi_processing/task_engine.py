@@ -185,9 +185,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       if self._abort:
         break
 
-      if self._task_manager.IsPendingMerge(task_identifier):
-        continue
-
       if storage_writer.CheckTaskStorageReadyForMerge(task_identifier):
         self._task_manager.UpdateTaskAsPendingMerge(task_identifier)
 
