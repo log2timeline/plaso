@@ -189,7 +189,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         continue
 
       if storage_writer.CheckTaskStorageReadyForMerge(task_identifier):
-        self._task_manager.MarkAsPendingMerge(task_identifier)
+        self._task_manager.UpdateTaskAsPendingMerge(task_identifier)
 
     # Merge only one task-based storage file per loop to keep tasks flowing.
     task_identifier = self._task_manager.GetPendingMerge()
@@ -206,7 +206,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       if self._processing_profiler:
         self._processing_profiler.StopTiming(u'merge')
 
-      self._task_manager.CompleteTask(task_identifier)
+      self._task_manager.UpdateTaskAsMerged(task_identifier)
 
       self._status = definitions.PROCESSING_STATUS_RUNNING
       self._merge_task_identifier = u''
@@ -476,6 +476,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     while self._status_update_active:
       # Make a local copy of the PIDs in case the dict is changed by
       # the main thread.
+      # pylint: disable=consider-iterating-dictionary
       for pid in list(self._process_information_per_pid.keys()):
         self._CheckStatusWorkerProcess(pid)
 

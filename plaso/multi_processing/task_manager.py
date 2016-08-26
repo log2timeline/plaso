@@ -24,26 +24,9 @@ class TaskManager(object):
     self._abandoned_tasks = {}
     self._active_tasks = {}
     self._maximum_number_of_tasks = maximum_number_of_tasks
-    self._scheduled_tasks = {}
-    self._tasks_pending_merge = collections.OrderedDict()
-
-  def CompleteTask(self, task_identifier):
-    """Completes a task.
-
-    Args:
-      task_identifier (str): unique identifier of the task.
-
-    Raises:
-      KeyError: if the task is not scheduled.
-    """
-    if task_identifier not in self._scheduled_tasks:
-      raise KeyError(u'Task not scheduled')
-
-    del self._active_tasks[task_identifier]
-    del self._scheduled_tasks[task_identifier]
-
-    if task_identifier in self._tasks_pending_merge:
-      del self._tasks_pending_merge
+    # Use ordered dictionaries to preserve the order in which tasks were added.
+    self._scheduled_tasks = collections.OrderedDict()
+    self._pending_merge_tasks = collections.OrderedDict()
 
   # TODO: add support for task types.
   def CreateTask(self, session_identifier):
@@ -107,10 +90,10 @@ class TaskManager(object):
     Returns:
       str: unique identifier of the task or None.
     """
-    if not self._tasks_pending_merge:
+    if not self._pending_merge_tasks:
       return
 
-    _, task_identifier = self._tasks_pending_merge.popitem(last=False)
+    _, task_identifier = self._pending_merge_tasks.popitem(last=False)
     return task_identifier
 
   def IsPendingMerge(self, task_identifier):
@@ -122,7 +105,7 @@ class TaskManager(object):
     Returns:
       bool: True if the task is pending for merge.
     """
-    if task_identifier not in self._tasks_pending_merge:
+    if task_identifier not in self._pending_merge_tasks:
       return False
 
     # Make sure tasks waiting to be merged are not considered idle when
@@ -130,18 +113,6 @@ class TaskManager(object):
     self.UpdateTask(task_identifier)
 
     return True
-
-  def MarkAsPendingMerge(self, task_identifier):
-    """Marks a task as pending merge.
-
-    Args:
-      task_identifier (str): unique identifier of the task.
-
-    Raises:
-      KeyError: if the task was not schduled.
-    """
-    self._tasks_pending_merge[task_identifier] = task_identifier
-    self.UpdateTask(task_identifier)
 
   def RescheduleTask(self, task_identifier):
     """Reschedules a previous abandoned task.
@@ -189,3 +160,33 @@ class TaskManager(object):
       raise KeyError(u'Task not scheduled')
 
     self._scheduled_tasks[task_identifier] = int(time.time() * 1000000)
+
+  def UpdateTaskAsMerged(self, task_identifier):
+    """Updates the task manager to reflect the task is merged.
+
+    Args:
+      task_identifier (str): unique identifier of the task.
+
+    Raises:
+      KeyError: if the task is not pending for merge.
+    """
+    if task_identifier not in self._pending_merge_tasks:
+      raise KeyError(u'Task not pending for merge')
+
+    del self._active_tasks[task_identifier]
+    del self._pending_merge_tasks[task_identifier]
+
+  def UpdateTaskAsPendingMerge(self, task_identifier):
+    """Updates the task manager to reflect the is ready to be merged.
+
+    Args:
+      task_identifier (str): unique identifier of the task.
+
+    Raises:
+      KeyError: if the task was not scheduled.
+    """
+    if task_identifier not in self._scheduled_tasks:
+      raise KeyError(u'Task not scheduled')
+
+    self._pending_merge_tasks[task_identifier] = task_identifier
+    del self._scheduled_tasks[task_identifier]
