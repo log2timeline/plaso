@@ -731,7 +731,7 @@ class ImageExportFrontend(frontend.Frontend):
     logging.debug(u'Preprocessing.')
 
     searcher = file_system_searcher.FileSystemSearcher(file_system, mount_point)
-    platform = preprocess_interface.GuessOS(searcher)
+    platform = self._engine.GuessOS(searcher)
     logging.debug(u'operating system: {0:s}'.format(platform))
 
     preprocess_manager.PreprocessPluginsManager.RunPlugins(
