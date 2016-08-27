@@ -181,7 +181,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if self._processing_profiler:
       self._processing_profiler.StartTiming(u'merge_check')
 
-    for task_identifier in self._task_manager.GetScheduledTaskIdentifiers():
+    for task_identifier in self._task_manager.GetTasksProcessing():
       if self._abort:
         break
 
@@ -285,7 +285,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     try:
       self._task_queue.PushItem(task, block=False)
-      self._task_manager.ScheduleTask(task.identifier)
+      self._task_manager.UpdateTaskAsProcessing(task.identifier)
       is_scheduled = True
 
     except Queue.Full:
@@ -355,7 +355,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     event_source = event_source_heap.PopEventSource()
 
-    while event_source or self._task_manager.HasScheduledTasks():
+    while event_source or self._task_manager.HasActiveTasks():
       if self._abort:
         break
 
