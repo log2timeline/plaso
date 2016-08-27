@@ -217,14 +217,15 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     self.assertIn(u'hashing', extraction_worker.GetAnalyzerNames())
 
     session = sessions.Session()
-    empty_file_md5 = u'd41d8cd98f00b204e9800998ecf8427e'
     path_spec = self._GetTestFilePathSpec([u'empty_file'])
     storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(
         storage_writer, path_spec, extraction_worker=extraction_worker)
 
+    empty_file_md5 = u'd41d8cd98f00b204e9800998ecf8427e'
     for event in storage_writer.events:
-      self.assertEqual(getattr(event, u'md5_hash', None), empty_file_md5)
+      md5_hash = getattr(event, u'md5_hash', None)
+      self.assertEqual(md5_hash, empty_file_md5)
 
   def testExtractionWorkerYara(self):
     """Tests that the worker applies Yara matching code correctly."""
