@@ -433,8 +433,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     argument_group.add_argument(
         u'--disable_zeromq', u'--disable-zeromq', action=u'store_false',
         dest=u'use_zeromq', default=True, help=(
-          u'Disable queueing using ZeroMQ. A Multiprocessing queue will be used'
-          u'instead.'))
+            u'Disable queueing using ZeroMQ. A Multiprocessing queue will be '
+            u'used instead.'))
 
   def ListAnalysisPlugins(self):
     """Lists the analysis modules."""

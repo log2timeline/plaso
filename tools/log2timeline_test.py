@@ -39,9 +39,9 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
        u'status and'),
       u'                        counter information.',
       u'  --disable_zeromq, --disable-zeromq',
-      u'                        Disable queueing using ZeroMQ. A',
-      u'                        Multiprocessing queue will be',
-      u'                        used instead.',
+      (u'                        Disable queueing using ZeroMQ. A '
+       u'Multiprocessing queue'),
+      u'                        will be used instead.',
       (u'  --workers WORKERS     The number of worker threads [defaults to '
        u'available'),
       u'                        system CPUs minus three].',
