@@ -132,7 +132,9 @@ class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     """
     if hash_information:
       return [u'nsrl_present']
-    return [u'nsrl_not_present']
+    # TODO: Renable when tagging is removed from the analysis report.
+    # return [u'nsrl_not_present']
+    return []
 
   def SetHost(self, host):
     """Sets the address or hostname of the server running nsrlsvr.

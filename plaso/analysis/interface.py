@@ -163,7 +163,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     return event_tag
 
   def _HandleHashAnalysis(self, hash_analysis):
-    """Deals with a the results of the analysis of a hash.
+    """Deals with the results of the analysis of a hash.
 
     This method ensures that labels are generated for the hash,
     then tags all events derived from files with that hash.
@@ -182,11 +182,13 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     """
     tags = []
     labels = self.GenerateLabels(hash_analysis.hash_information)
-    pathspecs = self._hash_pathspecs[hash_analysis.subject_hash]
+    pathspecs = self._hash_pathspecs.pop(hash_analysis.subject_hash)
     for pathspec in pathspecs:
-      for event_uuid in self._event_uuids_by_pathspec[pathspec]:
-        tag = self._CreateTag(event_uuid, labels)
-        tags.append(tag)
+      event_uuids = self._event_uuids_by_pathspec.pop(pathspec)
+      if labels:
+        for event_uuid in event_uuids:
+          tag = self._CreateTag(event_uuid, labels)
+          tags.append(tag)
     return pathspecs, labels, tags
 
   def _EnsureRequesterStarted(self):
@@ -274,12 +276,13 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
         # The result queue is empty, but there could still be items that need
         # to be processed by the analyzer.
         continue
-      pathspecs, tag_strings, new_tags = self._HandleHashAnalysis(
+      pathspecs, labels, new_tags = self._HandleHashAnalysis(
           hash_analysis)
       tags.extend(new_tags)
-      for pathspec in pathspecs:
-        text_line = self._GenerateTextLine(mediator, pathspec, tag_strings)
-        lines_of_text.append(text_line)
+      if labels:
+        for pathspec in pathspecs:
+          text_line = self._GenerateTextLine(mediator, pathspec, labels)
+          lines_of_text.append(text_line)
 
     self._analyzer.SignalAbort()
 
