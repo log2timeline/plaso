@@ -184,8 +184,9 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     labels = self.GenerateLabels(hash_analysis.hash_information)
     pathspecs = self._hash_pathspecs.pop(hash_analysis.subject_hash)
     for pathspec in pathspecs:
-      for event_uuid in self._event_uuids_by_pathspec.pop(pathspec):
-        if labels:
+      event_uuids = self._event_uuids_by_pathspec.pop(pathspec)
+      if labels:
+        for event_uuid in event_uuids:
           tag = self._CreateTag(event_uuid, labels)
           tags.append(tag)
     return pathspecs, labels, tags
