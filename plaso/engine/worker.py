@@ -140,22 +140,21 @@ class EventExtractionWorker(object):
     if self._processing_profiler:
       self._processing_profiler.StartTiming(u'analyzing')
 
-    file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
-    if not file_object:
-      raise RuntimeError(
-          u'Unable to retrieve file-like object for file entry: {0:s}.'.format(
-              display_name))
-
-    # Make sure frame.f_locals does not keep a reference to file_entry.
-    file_entry = None
-
     try:
-      self._AnalyzeFileObject(mediator, file_object)
-    finally:
-      file_object.close()
+      file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
+      if not file_object:
+        raise RuntimeError((
+            u'Unable to retrieve file-like object for file entry: '
+            u'{0:s}.').format(display_name))
 
-    if self._processing_profiler:
-      self._processing_profiler.StopTiming(u'analyzing')
+      try:
+        self._AnalyzeFileObject(mediator, file_object)
+      finally:
+        file_object.close()
+
+    finally:
+      if self._processing_profiler:
+        self._processing_profiler.StopTiming(u'analyzing')
 
     logging.debug(
         u'[AnalyzeDataStream] completed analyzing file: {0:s}'.format(
@@ -206,11 +205,10 @@ class EventExtractionWorker(object):
         break
 
       for result in analyzer_object.GetResults():
-        logging.debug(
-            (u'[AnalyzeFileObject] attribute {0:s}:{1:s} calculated for '
-             u'file: {2:s}.').format(
-                 result.attribute_name, result.attribute_value,
-                 display_name))
+        logging.debug((
+            u'[AnalyzeFileObject] attribute {0:s}:{1:s} calculated for '
+            u'file: {2:s}.').format(
+                result.attribute_name, result.attribute_value, display_name))
 
         mediator.AddEventAttribute(
             result.attribute_name, result.attribute_value)
@@ -616,9 +614,6 @@ class EventExtractionWorker(object):
               u'File-object not explicitly closed for file: {0:s}'.format(
                   display_name))
 
-      # Make sure frame.f_locals does not keep a reference to file_entry.
-      file_entry = None
-
     logging.debug(
         u'[ProcessFileEntry] done processing file entry: {0:s}'.format(
             display_name))
@@ -636,7 +631,12 @@ class EventExtractionWorker(object):
     # Not every file entry has a data stream. In such cases we want to
     # extract the metadata only.
     has_data_stream = file_entry.HasDataStream(data_stream_name)
+    if not data_stream_name and not file_entry.IsFile():
+      has_data_stream = False
+
     if has_data_stream:
+      # Since AnalyzeDataStream generates event attributes it needs to be
+      # called before producing events.
       self._AnalyzeDataStream(mediator, file_entry, data_stream_name)
 
     # We always want to extract the file entry metadata but we only want
@@ -647,6 +647,9 @@ class EventExtractionWorker(object):
         file_entry.type_indicator in self._TYPES_WITH_ROOT_METADATA)):
       self._ExtractMetadataFromFileEntry(mediator, file_entry)
 
+    if not has_data_stream:
+      return
+
     # Determine if the content of the file entry should not be extracted.
     skip_content_extraction = self._CanSkipContentExtraction(file_entry)
     if skip_content_extraction:
@@ -654,10 +657,6 @@ class EventExtractionWorker(object):
       logging.debug(
           u'Skipping content extraction of: {0:s}'.format(display_name))
       self.processing_status = definitions.PROCESSING_STATUS_IDLE
-      return
-
-    if (not has_data_stream or (not data_stream_name and not (
-        file_entry.IsDirectory() or file_entry.IsFile()))):
       return
 
     path_spec = copy.deepcopy(file_entry.path_spec)
@@ -744,9 +743,6 @@ class EventExtractionWorker(object):
 
     finally:
       mediator.ResetFileEntry()
-
-      # Make sure frame.f_locals does not keep a reference to file_entry.
-      file_entry = None
 
       self.last_activity_timestamp = time.time()
       self.processing_status = definitions.PROCESSING_STATUS_IDLE
