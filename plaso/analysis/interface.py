@@ -278,9 +278,8 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
       pathspecs, labels, new_tags = self._HandleHashAnalysis(
           hash_analysis)
       tags.extend(new_tags)
-      for pathspec in pathspecs:
-
-        if labels:
+      if labels:
+        for pathspec in pathspecs:
           text_line = self._GenerateTextLine(mediator, pathspec, labels)
           lines_of_text.append(text_line)
 
