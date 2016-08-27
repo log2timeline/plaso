@@ -18,6 +18,7 @@ class TaskManager(object):
       have been merged with the session storage.
   * pending_merge: a worker has completed processing the task and the results
       are ready to be merged with the session storage.
+  * procesisng: a worker is processing the task.
   """
 
   # Consider a task inactive after 5 minutes of no activity.
@@ -89,7 +90,7 @@ class TaskManager(object):
     A task will be abandoned if it last update exceeds the inactive time.
 
     Returns:
-      bool: True if there are scheduled active tasks.
+      bool: True if there are active tasks.
     """
     if not self._tasks_processing and not self._tasks_pending_merge:
       return False
@@ -137,10 +138,10 @@ class TaskManager(object):
       task_identifier (str): unique identifier of the task.
 
     Raises:
-      KeyError: if the task is not scheduled.
+      KeyError: if the task is not processing.
     """
     if task_identifier not in self._tasks_processing:
-      raise KeyError(u'Task not scheduled')
+      raise KeyError(u'Task not processing')
 
     self._tasks_processing[task_identifier] = int(time.time() * 1000000)
 
@@ -151,10 +152,10 @@ class TaskManager(object):
       task_identifier (str): unique identifier of the task.
 
     Raises:
-      KeyError: if the task was not scheduled.
+      KeyError: if the task was not processing.
     """
     if task_identifier not in self._tasks_processing:
-      raise KeyError(u'Task not scheduled')
+      raise KeyError(u'Task not processing')
 
     self._tasks_pending_merge[task_identifier] = task_identifier
     del self._tasks_processing[task_identifier]
@@ -166,10 +167,10 @@ class TaskManager(object):
       task_identifier (str): unique identifier of the task.
 
     Raises:
-      KeyError: if the task is already scheduled.
+      KeyError: if the task is already processing.
     """
     if task_identifier in self._tasks_processing:
-      raise KeyError(u'Task already scheduled')
+      raise KeyError(u'Task already processing')
 
     # TODO: add check for maximum_number_of_tasks.
     self._tasks_processing[task_identifier] = int(time.time() * 1000000)
