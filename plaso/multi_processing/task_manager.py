@@ -18,7 +18,7 @@ class TaskManager(object):
       have been merged with the session storage.
   * pending_merge: a worker has completed processing the task and the results
       are ready to be merged with the session storage.
-  * procesisng: a worker is processing the task.
+  * processing: a worker is processing the task.
   """
 
   # Consider a task inactive after 5 minutes of no activity.
