@@ -59,42 +59,7 @@ class BaseEngine(object):
 
     self.knowledge_base = knowledge_base.KnowledgeBase()
 
-  def GetSourceFileSystem(self, source_path_spec, resolver_context=None):
-    """Retrieves the file system of the source.
-
-    Args:
-      source_path_spec (dfvfs.PathSpec): path specifications of the sources
-          to process.
-      resolver_context (dfvfs.Context): resolver context.
-
-    Returns:
-      tuple: containing:
-
-        dfvfs.FileSystem: file system
-        path.PathSpec: mount point path specification. The mount point path
-            specification refers to either a directory or a volume on a storage
-            media device or image. It is needed by the dfVFS file system
-            searcher (FileSystemSearcher) to indicate the base location of
-            the file system.
-
-    Raises:
-      RuntimeError: if source file system path specification is not set.
-    """
-    if not source_path_spec:
-      raise RuntimeError(u'Missing source path specification.')
-
-    file_system = path_spec_resolver.Resolver.OpenFileSystem(
-        source_path_spec, resolver_context=resolver_context)
-
-    type_indicator = source_path_spec.type_indicator
-    if path_spec_factory.Factory.IsSystemLevelTypeIndicator(type_indicator):
-      mount_point = source_path_spec
-    else:
-      mount_point = source_path_spec.parent
-
-    return file_system, mount_point
-
-  def GuessOS(self, searcher):
+  def _GuessOS(self, searcher):
     """Returns a string representing what we think the underlying OS is.
 
     Args:
@@ -143,6 +108,41 @@ class BaseEngine(object):
 
     return definitions.OPERATING_SYSTEM_UNKNOWN
 
+  def GetSourceFileSystem(self, source_path_spec, resolver_context=None):
+    """Retrieves the file system of the source.
+
+    Args:
+      source_path_spec (dfvfs.PathSpec): path specifications of the sources
+          to process.
+      resolver_context (dfvfs.Context): resolver context.
+
+    Returns:
+      tuple: containing:
+
+        dfvfs.FileSystem: file system
+        path.PathSpec: mount point path specification. The mount point path
+            specification refers to either a directory or a volume on a storage
+            media device or image. It is needed by the dfVFS file system
+            searcher (FileSystemSearcher) to indicate the base location of
+            the file system.
+
+    Raises:
+      RuntimeError: if source file system path specification is not set.
+    """
+    if not source_path_spec:
+      raise RuntimeError(u'Missing source path specification.')
+
+    file_system = path_spec_resolver.Resolver.OpenFileSystem(
+        source_path_spec, resolver_context=resolver_context)
+
+    type_indicator = source_path_spec.type_indicator
+    if path_spec_factory.Factory.IsSystemLevelTypeIndicator(type_indicator):
+      mount_point = source_path_spec
+    else:
+      mount_point = source_path_spec.parent
+
+    return file_system, mount_point
+
   def PreprocessSources(self, source_path_specs, resolver_context=None):
     """Preprocesses the sources.
 
@@ -164,7 +164,7 @@ class BaseEngine(object):
         searcher = file_system_searcher.FileSystemSearcher(
             file_system, mount_point)
 
-        platform = self.GuessOS(searcher)
+        platform = self._GuessOS(searcher)
         logging.info(u'Preprocessing detected platform: {0:s}'.format(platform))
         if platform:
           self.knowledge_base.platform = platform
