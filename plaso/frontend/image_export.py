@@ -18,7 +18,6 @@ from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.engine import extractors
 from plaso.engine import knowledge_base
 from plaso.engine import path_helper
-from plaso.engine import utils as engine_utils
 from plaso.frontend import frontend
 from plaso.frontend import utils
 from plaso.lib import py2to3
@@ -730,6 +729,10 @@ class ImageExportFrontend(frontend.Frontend):
     self._knowledge_base = knowledge_base.KnowledgeBase()
 
     logging.debug(u'Preprocessing.')
+
+    searcher = file_system_searcher.FileSystemSearcher(file_system, mount_point)
+    platform = self._engine._GuessOS(searcher)
+    logging.debug(u'operating system: {0:s}'.format(platform))
 
     preprocess_manager.PreprocessPluginsManager.RunPlugins(
         file_system, mount_point, self._knowledge_base)
