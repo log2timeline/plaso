@@ -1,13 +1,25 @@
 # -*- coding: utf-8 -*-
 """The task manager."""
 
+import collections
 import time
 
 from plaso.containers import tasks
 
 
 class TaskManager(object):
-  """Class that manages tasks and tracks their completion and status."""
+  """Class that manages tasks and tracks their completion and status.
+
+  Currently a task can have the following status:
+  * abandoned: since no status information has been recently received from
+      the worker about the task, we assume it was abandoned.
+  * active: a task managed by the task manager that has not been abandoned.
+  * completed: a worker has completed processing the task and the results
+      have been merged with the session storage.
+  * pending_merge: a worker has completed processing the task and the results
+      are ready to be merged with the session storage.
+  * processing: a worker is processing the task.
+  """
 
   # Consider a task inactive after 5 minutes of no activity.
   _TASK_INACTIVE_TIME = 5 * 60 * 1000000
@@ -23,22 +35,9 @@ class TaskManager(object):
     self._abandoned_tasks = {}
     self._active_tasks = {}
     self._maximum_number_of_tasks = maximum_number_of_tasks
-    self._scheduled_tasks = {}
-
-  def CompleteTask(self, task_identifier):
-    """Completes a task.
-
-    Args:
-      task_identifier (str): unique identifier of the task.
-
-    Raises:
-      KeyError: if the task is not scheduled.
-    """
-    if task_identifier not in self._scheduled_tasks:
-      raise KeyError(u'Task not scheduled')
-
-    del self._active_tasks[task_identifier]
-    del self._scheduled_tasks[task_identifier]
+    # Use ordered dictionaries to preserve the order in which tasks were added.
+    self._tasks_pending_merge = collections.OrderedDict()
+    self._tasks_processing = collections.OrderedDict()
 
   # TODO: add support for task types.
   def CreateTask(self, session_identifier):
@@ -63,33 +62,51 @@ class TaskManager(object):
     """
     return self._abandoned_tasks.values()
 
-  def GetScheduledTaskIdentifiers(self):
-    """Retrieves all scheduled task identifiers.
+  def GetTasksProcessing(self):
+    """Retrieves the tasks that are processing.
 
     Returns:
       list[str]: unique identifiers of the tasks.
     """
-    return list(self._scheduled_tasks.keys())
+    return self._tasks_processing.keys()
 
-  def HasScheduledTasks(self):
-    """Determines if there are scheduled tasks.
+  def GetTaskPendingMerge(self):
+    """Retrieves the first task that is pending merge.
+
+    Returns:
+      str: unique identifier of the task or None.
+    """
+    if not self._tasks_pending_merge:
+      return
+
+    _, task_identifier = self._tasks_pending_merge.popitem(last=False)
+
+    del self._active_tasks[task_identifier]
+    return task_identifier
+
+  def HasActiveTasks(self):
+    """Determines if there are active tasks.
 
     A task will be abandoned if it last update exceeds the inactive time.
 
     Returns:
-      bool: True if there are scheduled active tasks.
+      bool: True if there are active tasks.
     """
-    if not self._scheduled_tasks:
+    if not self._tasks_processing and not self._tasks_pending_merge:
       return False
 
     inactive_time = int(time.time() * 1000000) - self._TASK_INACTIVE_TIME
 
-    has_active_tasks = False
-    for task_identifier, last_update in iter(self._scheduled_tasks.items()):
+    if self._tasks_pending_merge:
+      has_active_tasks = True
+    else:
+      has_active_tasks = False
+
+    for task_identifier, last_update in iter(self._tasks_processing.items()):
       if last_update > inactive_time:
         has_active_tasks = True
       else:
-        del self._scheduled_tasks[task_identifier]
+        del self._tasks_processing[task_identifier]
         task = self._active_tasks[task_identifier]
         self._abandoned_tasks[task_identifier] = task
         del self._active_tasks[task_identifier]
@@ -112,22 +129,7 @@ class TaskManager(object):
     self._active_tasks[task_identifier] = task
     del self._abandoned_tasks[task_identifier]
 
-    self._scheduled_tasks[task_identifier] = int(time.time() * 1000000)
-
-  def ScheduleTask(self, task_identifier):
-    """Schedules a task.
-
-    Args:
-      task_identifier (str): unique identifier of the task.
-
-    Raises:
-      KeyError: if the task is already scheduled.
-    """
-    if task_identifier in self._scheduled_tasks:
-      raise KeyError(u'Task already scheduled')
-
-    # TODO: add check for maximum_number_of_tasks.
-    self._scheduled_tasks[task_identifier] = int(time.time() * 1000000)
+    self._tasks_processing[task_identifier] = int(time.time() * 1000000)
 
   def UpdateTask(self, task_identifier):
     """Updates a task.
@@ -136,9 +138,39 @@ class TaskManager(object):
       task_identifier (str): unique identifier of the task.
 
     Raises:
-      KeyError: if the task is not scheduled.
+      KeyError: if the task is not processing.
     """
-    if task_identifier not in self._scheduled_tasks:
-      raise KeyError(u'Task not scheduled')
+    if task_identifier not in self._tasks_processing:
+      raise KeyError(u'Task not processing')
 
-    self._scheduled_tasks[task_identifier] = int(time.time() * 1000000)
+    self._tasks_processing[task_identifier] = int(time.time() * 1000000)
+
+  def UpdateTaskAsPendingMerge(self, task_identifier):
+    """Updates the task manager to reflect the task is ready to be merged.
+
+    Args:
+      task_identifier (str): unique identifier of the task.
+
+    Raises:
+      KeyError: if the task was not processing.
+    """
+    if task_identifier not in self._tasks_processing:
+      raise KeyError(u'Task not processing')
+
+    self._tasks_pending_merge[task_identifier] = task_identifier
+    del self._tasks_processing[task_identifier]
+
+  def UpdateTaskAsProcessing(self, task_identifier):
+    """Updates the task manager to reflect the task is processing.
+
+    Args:
+      task_identifier (str): unique identifier of the task.
+
+    Raises:
+      KeyError: if the task is already processing.
+    """
+    if task_identifier in self._tasks_processing:
+      raise KeyError(u'Task already processing')
+
+    # TODO: add check for maximum_number_of_tasks.
+    self._tasks_processing[task_identifier] = int(time.time() * 1000000)
