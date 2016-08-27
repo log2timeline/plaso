@@ -636,6 +636,8 @@ class EventExtractionWorker(object):
       has_data_stream = False
 
     if has_data_stream:
+      # Since AnalyzeDataStream generates event attributes it needs to be
+      # called before producing events.
       self._AnalyzeDataStream(mediator, file_entry, data_stream_name)
 
     # We always want to extract the file entry metadata but we only want
