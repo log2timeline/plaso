@@ -20,7 +20,7 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'SAM'])
+    test_file_entry = self._GetTestFileEntry([u'SAM'])
     key_path = u'HKEY_LOCAL_MACHINE\\SAM\\SAM\\Domains\\Account\\Users'
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)

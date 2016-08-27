@@ -57,7 +57,7 @@ class BaseTestCase(unittest.TestCase):
   # conventions.
   maxDiff = None
 
-  def _GetTestFileEntryFromPath(self, path_segments):
+  def _GetTestFileEntry(self, path_segments):
     """Creates a file entry that references a file in the test data directory.
 
     Args:
