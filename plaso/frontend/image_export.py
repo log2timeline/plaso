@@ -730,7 +730,6 @@ class ImageExportFrontend(frontend.Frontend):
 
     logging.debug(u'Preprocessing.')
 
-    searcher = file_system_searcher.FileSystemSearcher(file_system, mount_point)
     preprocess_manager.PreprocessPluginsManager.RunPlugins(
         file_system, mount_point, self._knowledge_base)
 
