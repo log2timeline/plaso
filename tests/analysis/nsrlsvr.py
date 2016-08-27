@@ -104,7 +104,7 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
     analysis_report = storage_writer.analysis_reports[0]
 
     tags = analysis_report.GetTags()
-    self.assertEqual(len(tags), 2)
+    self.assertEqual(len(tags), 1)
 
     tag = tags[0]
     self.assertEqual(tag.event_uuid, u'8')
@@ -112,11 +112,12 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
     expected_labels = [u'nsrl_present']
     self.assertEqual(tag.labels, expected_labels)
 
-    tag = tags[1]
-    self.assertEqual(tag.event_uuid, u'9')
+    # TODO: Renable when tagging is removed from the analysis report.
+    # tag = tags[1]
+    # self.assertEqual(tag.event_uuid, u'9')
 
-    expected_labels = [u'nsrl_not_present']
-    self.assertEqual(tag.labels, expected_labels)
+    # expected_labels = [u'nsrl_not_present']
+    # self.assertEqual(tag.labels, expected_labels)
 
 
 if __name__ == '__main__':
