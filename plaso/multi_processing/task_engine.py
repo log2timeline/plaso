@@ -471,7 +471,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     while self._status_update_active:
       # Make a local copy of the PIDs in case the dict is changed by
       # the main thread.
-      # pylint: disable=consider-iterating-dictionary
       for pid in list(self._process_information_per_pid.keys()):
         self._CheckStatusWorkerProcess(pid)
 
