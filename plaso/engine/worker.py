@@ -631,8 +631,7 @@ class EventExtractionWorker(object):
     # Not every file entry has a data stream. In such cases we want to
     # extract the metadata only.
     has_data_stream = file_entry.HasDataStream(data_stream_name)
-    if (not data_stream_name and not (
-        file_entry.IsDirectory() or file_entry.IsFile())):
+    if not data_stream_name and not file_entry.IsFile():
       has_data_stream = False
 
     if has_data_stream:
