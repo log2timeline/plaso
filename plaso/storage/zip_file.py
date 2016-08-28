@@ -359,6 +359,26 @@ class _EventTagIndexValue(object):
     self.store_index = store_index
     self.tag_type = tag_type
 
+  def __getitem__(self, key):
+    """Retrieves a specific instance attribute.
+
+    This function is needed to support construct._build() as used
+    as of version 2.5.3.
+
+    Args:
+      key (str): attribute name.
+
+    Returns:
+      object: attribute value.
+
+    Raises:
+      KeyError: if the instance does not have the attribute.
+    """
+    if not hasattr(self, key):
+      raise KeyError(u'No such attribute: {0:s}'.format(key))
+
+    return getattr(self, key)
+
   def __str__(self):
     """str: string representation of the event tag identifier."""
     string = u'tag_type: {0:d} offset: 0x{1:08x}'.format(
