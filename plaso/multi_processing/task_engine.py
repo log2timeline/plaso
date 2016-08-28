@@ -784,7 +784,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       task_storage_abort = self._abort
 
     try:
-      storage_writer.StopTaskStorage(abort=self._abort)
+      storage_writer.StopTaskStorage(abort=task_storage_abort)
     except (IOError, OSError) as exception:
       logging.error(u'Unable to stop task storage with error: {0:s}'.format(
           exception))
