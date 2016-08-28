@@ -142,8 +142,8 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
 
       event_object = event_objects[0]
 
-      self.assertGreaterEqual(event_object.data_type, u'fs:stat')
-      self.assertGreaterEqual(event_object.filename, u'/lost+found')
+      self.assertEqual(event_object.data_type, u'fs:stat')
+      self.assertEqual(event_object.filename, u'/lost+found')
 
   def testSetDebugMode(self):
     """Tests the SetDebugMode function."""
