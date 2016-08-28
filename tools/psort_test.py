@@ -125,15 +125,6 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       u'                        Specify a file to read tagging criteria from.',
       u''])
 
-  _EXPECTED_EXPERIMENTAL_OPTIONS = u'\n'.join([
-      u'usage: psort_test.py [--use_zeromq CHOICE]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --use_zeromq CHOICE  Enables or disables queueing using ZeroMQ',
-      u''])
-
   _EXPECTED_FILTER_OPTIONS = u'\n'.join([
       (u'usage: psort_test.py [--slice DATE] [--slice_size SLICE_SIZE] '
        u'[--slicer]'),
@@ -222,9 +213,21 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       u'                        name,tag.',
       u''])
 
+  _EXPECTED_PROCESSING_OPTIONS = u'\n'.join([
+      u'usage: psort_test.py [--disable_zeromq]',
+      u'',
+      u'Test argument parser.',
+      u'',
+      u'optional arguments:',
+      u'  --disable_zeromq, --disable-zeromq',
+      (u'                        Disable queueing using ZeroMQ. A '
+       u'Multiprocessing queue'),
+      u'                        will be used instead.',
+      u''])
+
   # TODO: add test for _FormatStatusTableRow.
   # TODO: add test for _ParseAnalysisPluginOptions.
-  # TODO: add test for _ParseExperimentalOptions.
+  # TODO: add test for _ParseProcessingOptions.
   # TODO: add test for _ParseFilterOptions.
   # TODO: add test for _ParseInformationalOptions.
   # TODO: add test for _ParseLanguageOptions.
@@ -245,19 +248,6 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
 
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_ANALYSIS_PLUGIN_OPTIONS)
-
-  def testAddExperimentalOptions(self):
-    """Tests the AddExperimentalOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog=u'psort_test.py',
-        description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-
-    test_tool = psort.PsortTool()
-    test_tool.AddExperimentalOptions(argument_parser)
-
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_EXPERIMENTAL_OPTIONS)
 
   def testAddFilterOptions(self):
     """Tests the AddFilterOptions function."""
@@ -297,6 +287,19 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
 
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT_MODULE_OPTIONS)
+
+  def testAddProcessingOptions(self):
+    """Tests the AddProcessingOptions function."""
+    argument_parser = argparse.ArgumentParser(
+        prog=u'psort_test.py',
+        description=u'Test argument parser.', add_help=False,
+        formatter_class=argparse.RawDescriptionHelpFormatter)
+
+    test_tool = psort.PsortTool()
+    test_tool.AddProcessingOptions(argument_parser)
+
+    output = self._RunArgparseFormatHelp(argument_parser)
+    self.assertEqual(output, self._EXPECTED_PROCESSING_OPTIONS)
 
   def testListAnalysisPlugins(self):
     """Tests the ListAnalysisPlugins function."""
