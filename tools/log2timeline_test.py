@@ -20,18 +20,9 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
   _BDE_PASSWORD = u'bde-TEST'
 
-  _EXPECTED_EXPERIMENTAL_OPTIONS = u'\n'.join([
-      u'usage: log2timeline_test.py [--use_zeromq CHOICE]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --use_zeromq CHOICE  Enables or disables queueing using ZeroMQ',
-      u''])
-
   _EXPECTED_PROCESSING_OPTIONS = u'\n'.join([
       u'usage: log2timeline_test.py [--single_process] [--show_memory_usage]',
-      u'                            [--workers WORKERS]',
+      u'                            [--disable_zeromq] [--workers WORKERS]',
       u'',
       u'Test argument parser.',
       u'',
@@ -47,6 +38,10 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       (u'                        is not set the tool only displays basic '
        u'status and'),
       u'                        counter information.',
+      u'  --disable_zeromq, --disable-zeromq',
+      (u'                        Disable queueing using ZeroMQ. A '
+       u'Multiprocessing queue'),
+      u'                        will be used instead.',
       (u'  --workers WORKERS     The number of worker threads [defaults to '
        u'available'),
       u'                        system CPUs minus three].',
@@ -54,24 +49,10 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
   # TODO: add test for _FormatStatusTableRow.
   # TODO: add test for _GetMatcher.
-  # TODO: add test for _ParseExperimentalOptions.
   # TODO: add test for _ParseOutputOptions.
   # TODO: add test for _ParseProcessingOptions.
   # TODO: add test for _PrintStatusUpdate.
   # TODO: add test for _PrintStatusUpdateStream.
-
-  def testAddExperimentalOptions(self):
-    """Tests the AddExperimentalOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog=u'log2timeline_test.py',
-        description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
-
-    test_tool = log2timeline.Log2TimelineTool()
-    test_tool.AddExperimentalOptions(argument_parser)
-
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_EXPERIMENTAL_OPTIONS)
 
   def testAddProcessingOptions(self):
     """Tests the AddProcessingOptions function."""
