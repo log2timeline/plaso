@@ -162,7 +162,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._task_queue_port = None
     self._task_manager = task_manager.TaskManager(
         maximum_number_of_tasks=maximum_number_of_tasks)
-    self._tasks_pending_merge = set()
     self._temporary_directory = None
     self._text_prepend = None
     self._use_zeromq = use_zeromq
@@ -182,26 +181,19 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if self._processing_profiler:
       self._processing_profiler.StartTiming(u'merge_check')
 
-    # GetScheduledTaskIdentifiers makes a copy of the keys since we are
-    # changing the dictionary inside the loop.
-    task_storage_merged = False
-    for task_identifier in self._task_manager.GetScheduledTaskIdentifiers():
+    for task_identifier in self._task_manager.GetTasksProcessing():
       if self._abort:
         break
 
-      # Make sure tasks waiting to be merged are not considered idle when not
-      # yet merged.
-      if task_identifier in self._tasks_pending_merge:
-        self._task_manager.UpdateTask(task_identifier)
-      elif storage_writer.CheckTaskStorageReadyForMerge(
-          task_identifier):
-        self._tasks_pending_merge.add(task_identifier)
-        self._task_manager.UpdateTask(task_identifier)
+      if storage_writer.CheckTaskStorageReadyForMerge(task_identifier):
+        self._task_manager.UpdateTaskAsPendingMerge(task_identifier)
 
-      # Merge only one task-based storage file per loop to keep tasks flowing.
-      if task_storage_merged:
-        continue
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'merge_check')
 
+    # Merge only one task-based storage file per loop to keep tasks flowing.
+    task_identifier = self._task_manager.GetTaskPendingMerge()
+    if task_identifier:
       self._status = definitions.PROCESSING_STATUS_MERGING
       self._merge_task_identifier = task_identifier
 
@@ -209,11 +201,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         self._processing_profiler.StartTiming(u'merge')
 
       # TODO: look into time slicing merge.
-      if storage_writer.MergeTaskStorage(task_identifier):
-        if task_identifier in self._tasks_pending_merge:
-          self._tasks_pending_merge.remove(task_identifier)
-        self._task_manager.CompleteTask(task_identifier)
-        task_storage_merged = True
+      storage_writer.MergeTaskStorage(task_identifier)
 
       if self._processing_profiler:
         self._processing_profiler.StopTiming(u'merge')
@@ -222,11 +210,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._merge_task_identifier = u''
       self._number_of_produced_errors = storage_writer.number_of_errors
       self._number_of_produced_events = storage_writer.number_of_events
-      self._number_of_produced_sources = (
-          storage_writer.number_of_event_sources)
-
-    if self._processing_profiler:
-      self._processing_profiler.StopTiming(u'merge_check')
+      self._number_of_produced_sources = storage_writer.number_of_event_sources
 
   def _ProcessSources(
       self, source_path_specs, storage_writer, filter_find_specs=None):
@@ -301,7 +285,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     try:
       self._task_queue.PushItem(task, block=False)
-      self._task_manager.ScheduleTask(task.identifier)
+      self._task_manager.UpdateTaskAsProcessing(task.identifier)
       is_scheduled = True
 
     except Queue.Full:
@@ -371,7 +355,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     event_source = event_source_heap.PopEventSource()
 
-    while event_source or self._task_manager.HasScheduledTasks():
+    while event_source or self._task_manager.HasActiveTasks():
       if self._abort:
         break
 
@@ -799,7 +783,11 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     else:
       task_storage_abort = self._abort
 
-    storage_writer.StopTaskStorage(abort=task_storage_abort)
+    try:
+      storage_writer.StopTaskStorage(abort=task_storage_abort)
+    except (IOError, OSError) as exception:
+      logging.error(u'Unable to stop task storage with error: {0:s}'.format(
+          exception))
 
     if self._abort:
       logging.debug(u'Processing aborted.')

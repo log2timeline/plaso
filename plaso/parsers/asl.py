@@ -9,6 +9,7 @@ from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import py2to3
+from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -90,10 +91,10 @@ class ASLParser(interface.FileObjectParser):
   NAME = u'asl_log'
   DESCRIPTION = u'Parser for ASL log files.'
 
-  _ASL_MAGIC = b'ASL DB\x00\x00\x00\x00\x00\x00'
+  _ASL_SIGNATURE = b'ASL DB\x00\x00\x00\x00\x00\x00'
 
   # ASL File header.
-  # magic: magic number that identify ASL files.
+  # signature: sequence of bytes that identifies an ASL file.
   # version: version of the file.
   # offset: first record in the file.
   # timestamp: time when the first entry was written.
@@ -101,7 +102,7 @@ class ASLParser(interface.FileObjectParser):
   # last_offset: last record in the file.
   _ASL_HEADER_STRUCT = construct.Struct(
       u'asl_header_struct',
-      construct.String(u'magic', 12),
+      construct.String(u'signature', 12),
       construct.UBInt32(u'version'),
       construct.UBInt64(u'offset'),
       construct.UBInt64(u'timestamp'),
@@ -183,6 +184,13 @@ class ASLParser(interface.FileObjectParser):
       construct.UBInt32(u'size'),
       construct.Bytes(u'value', lambda ctx: ctx.size))
 
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification."""
+    format_specification = specification.FormatSpecification(cls.NAME)
+    format_specification.AddNewSignature(cls._ASL_SIGNATURE, offset=0)
+    return format_specification
+
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses an ALS file-like object.
 
@@ -201,7 +209,7 @@ class ASLParser(interface.FileObjectParser):
       raise errors.UnableToParseFile(
           u'Unable to parse ASL Header with error: {0:s}.'.format(exception))
 
-    if header.magic != self._ASL_MAGIC:
+    if header.signature != self._ASL_SIGNATURE:
       raise errors.UnableToParseFile(u'Not an ASL Header, unable to parse.')
 
     offset = header.offset

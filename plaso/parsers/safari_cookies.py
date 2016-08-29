@@ -4,6 +4,7 @@
 import construct
 
 from plaso.containers import time_events
+from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import specification
 # Need to register cookie plugins.
@@ -190,7 +191,7 @@ class BinaryCookieParser(interface.FileObjectParser):
       FormatSpecification: format specification.
     """
     format_specification = specification.FormatSpecification(cls.NAME)
-    format_specification.AddNewSignature(b'cook', offset=0)
+    format_specification.AddNewSignature(b'cook\x00', offset=0)
     return format_specification
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
@@ -201,18 +202,19 @@ class BinaryCookieParser(interface.FileObjectParser):
       file_object (dfvfs.FileIO): file-like object to be parsed.
 
     Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      UnableToParseFile: when the file cannot be parsed, this will signal
+          the event extractor to apply other parsers.
     """
     try:
       file_header = self._FILE_HEADER.parse_stream(file_object)
     except (IOError, construct.ArrayError, construct.FieldError) as exception:
       parser_mediator.ProduceExtractionError(
           u'unable to read file header with error: {0:s}.'.format(exception))
-      return
+      raise errors.UnableToParseFile()
 
     if file_header.signature != b'cook':
       parser_mediator.ProduceExtractionError(u'unsupported file signature.')
-      return
+      raise errors.UnableToParseFile()
 
     for index, page_size in enumerate(file_header.page_sizes):
       if parser_mediator.abort:
