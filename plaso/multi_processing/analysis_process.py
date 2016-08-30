@@ -23,7 +23,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     multiprocessing.Process.
 
     Args:
-      event_queue (Queue): event queue.
+      event_queue (plaso_queue.Queue): event queue.
       storage_writer (StorageWriter): storage writer for a session storage.
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for analysis.
