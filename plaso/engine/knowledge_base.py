@@ -267,15 +267,15 @@ class KnowledgeBase(object):
     except pytz.UnknownTimeZoneError:
       raise ValueError(u'Unsupported timezone: {0:s}'.format(timezone))
 
-  def SetEnvironmentVariable(self, enviroment_variable):
+  def SetEnvironmentVariable(self, environment_variable):
     """Sets an environment variable.
 
     Args:
-      enviroment_variable (EnvironmentVariableArtifact): environment variable
+      environment_variable (EnvironmentVariableArtifact): environment variable
           artifact.
     """
-    name = enviroment_variable.name.upper()
-    self._environment_variables[name] = enviroment_variable
+    name = environment_variable.name.upper()
+    self._environment_variables[name] = environment_variable
 
   def SetHostname(self, hostname):
     """Sets a hostname.
