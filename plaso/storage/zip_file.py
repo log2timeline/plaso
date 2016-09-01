@@ -1737,7 +1737,18 @@ class ZIPStorageFile(interface.BaseFileStorage):
       zipfile_path = os.path.join(directory_name, basename)
 
       if os.path.exists(path):
-        os.rename(path, zipfile_path)
+        attempts = 1
+        # On Windows the file can sometimes be in use and we have to wait.
+        while attempts <= self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+          try:
+            os.rename(path, zipfile_path)
+            break
+
+          except OSError:
+            if attempts == self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+              raise
+            time.sleep(self._LOCKED_FILE_SLEEP_TIME)
+            attempts += 1
 
     try:
       self._zipfile = zipfile.ZipFile(
