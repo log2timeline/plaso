@@ -7,6 +7,8 @@ analysis phases, with essential information like e.g. the timezone and
 codepage of the source data.
 """
 
+import logging
+
 from plaso.containers import artifacts
 from plaso.lib import py2to3
 
@@ -242,7 +244,12 @@ class KnowledgeBase(object):
         user_account.username: user_account
         for user_account in system_configuration.user_accounts}
 
-    self.SetTimezone(system_configuration.time_zone)
+    try:
+      self.SetTimezone(system_configuration.time_zone)
+    except ValueError:
+      logging.warning(
+          u'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
+              system_configuration.time_zone, self.timezone.zone))
 
   def SetDefaultCodepage(self, codepage):
     """Sets the default codepage.
