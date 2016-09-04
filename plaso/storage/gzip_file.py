@@ -142,8 +142,9 @@ class GZIPStorageFile(interface.BaseFileStorage):
     if not self._is_open:
       raise IOError(u'Storage file already closed.')
 
-    self._gzip_file.close()
-    self._gzip_file = None
+    if self._gzip_file:
+      self._gzip_file.close()
+      self._gzip_file = None
     self._is_open = False
 
   def GetAnalysisReports(self):
