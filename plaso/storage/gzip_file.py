@@ -61,6 +61,8 @@ class GZIPStorageFile(interface.BaseFileStorage):
 
   def _OpenRead(self):
     """Opens the storage file for reading."""
+    # Do not use gzip.readlines() here since it can consume a large amount
+    # of memory.
     data_buffer = self._gzip_file.read(self._DATA_BUFFER_SIZE)
     while data_buffer:
       while b'\n' in data_buffer:
