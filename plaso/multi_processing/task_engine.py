@@ -595,7 +595,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           logging.error((
               u'Process {0:s} (PID: {1:d}) has not reported activity within '
               u'the timeout period.').format(process.name, pid))
-          processing_status = definitions.PROCESSING_ERROR_STATUS
+          processing_status = definitions.PROCESSING_STATUS_NOT_RESPONDING
 
     self._processing_status.UpdateWorkerStatus(
         process.name, processing_status, pid, display_name,
