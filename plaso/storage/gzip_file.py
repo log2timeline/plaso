@@ -17,6 +17,8 @@ class GZIPStorageFile(interface.BaseFileStorage):
 
   _COMPRESSION_LEVEL = 9
 
+  _DATA_BUFFER_SIZE = 16 * 1024 * 1024
+
   def __init__(self, storage_type=definitions.STORAGE_TYPE_TASK):
     """Initializes a storage.
 
@@ -59,11 +61,19 @@ class GZIPStorageFile(interface.BaseFileStorage):
 
   def _OpenRead(self):
     """Opens the storage file for reading."""
-    for line in self._gzip_file.readlines():
-      attribute_container = self._DeserializeAttributeContainer(
-          line, u'attribute_container')
+    # Do not use gzip.readlines() here since it can consume a large amount
+    # of memory.
+    data_buffer = self._gzip_file.read(self._DATA_BUFFER_SIZE)
+    while data_buffer:
+      while b'\n' in data_buffer:
+        line, _, data_buffer = data_buffer.partition(b'\n')
+        attribute_container = self._DeserializeAttributeContainer(
+            line, u'attribute_container')
 
-      self._AddAttributeContainer(attribute_container)
+        self._AddAttributeContainer(attribute_container)
+
+      additional_data_buffer = self._gzip_file.read(self._DATA_BUFFER_SIZE)
+      data_buffer = b''.join([data_buffer, additional_data_buffer])
 
   def _WriteAttributeContainer(self, attribute_container):
     """Writes an attribute container.
@@ -134,8 +144,9 @@ class GZIPStorageFile(interface.BaseFileStorage):
     if not self._is_open:
       raise IOError(u'Storage file already closed.')
 
-    self._gzip_file.close()
-    self._gzip_file = None
+    if self._gzip_file:
+      self._gzip_file.close()
+      self._gzip_file = None
     self._is_open = False
 
   def GetAnalysisReports(self):
