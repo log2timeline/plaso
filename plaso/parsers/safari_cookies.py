@@ -49,34 +49,34 @@ class BinaryCookieParser(interface.FileObjectParser):
   DESCRIPTION = u'Parser for Safari Binary Cookie files.'
 
   _FILE_HEADER = construct.Struct(
-      u'binary_cookie_header',
-      construct.Bytes(u'signature', 4),
-      construct.UBInt32(u'pages'),
+      'binary_cookie_header',
+      construct.Bytes('signature', 4),
+      construct.UBInt32('pages'),
       construct.Array(
           lambda ctx: ctx.pages,
-          construct.UBInt32(u'page_sizes')))
+          construct.UBInt32('page_sizes')))
 
   _COOKIE_RECORD = construct.Struct(
-      u'cookie_record',
-      construct.ULInt32(u'size'),
-      construct.Bytes(u'unknown_1', 4),
-      construct.ULInt32(u'flags'),
-      construct.Bytes(u'unknown_2', 4),
-      construct.ULInt32(u'url_offset'),
-      construct.ULInt32(u'name_offset'),
-      construct.ULInt32(u'path_offset'),
-      construct.ULInt32(u'value_offset'),
-      construct.Bytes(u'end_of_cookie', 8),
-      construct.LFloat64(u'expiration_date'),
-      construct.LFloat64(u'creation_date'))
+      'cookie_record',
+      construct.ULInt32('size'),
+      construct.Bytes('unknown_1', 4),
+      construct.ULInt32('flags'),
+      construct.Bytes('unknown_2', 4),
+      construct.ULInt32('url_offset'),
+      construct.ULInt32('name_offset'),
+      construct.ULInt32('path_offset'),
+      construct.ULInt32('value_offset'),
+      construct.Bytes('end_of_cookie', 8),
+      construct.LFloat64('expiration_date'),
+      construct.LFloat64('creation_date'))
 
   _PAGE_HEADER = construct.Struct(
-      u'page_header',
-      construct.Bytes(u'header', 4),
-      construct.ULInt32(u'number_of_cookies'),
+      'page_header',
+      construct.Bytes('header', 4),
+      construct.ULInt32('number_of_cookies'),
       construct.Array(
           lambda ctx: ctx.number_of_cookies,
-          construct.ULInt32(u'offsets')))
+          construct.ULInt32('offsets')))
 
   def __init__(self):
     """Initializes a parser object."""

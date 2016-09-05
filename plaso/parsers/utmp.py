@@ -63,22 +63,22 @@ class UtmpParser(interface.FileObjectParser):
   DESCRIPTION = u'Parser for Linux/Unix UTMP files.'
 
   LINUX_UTMP_ENTRY = construct.Struct(
-      u'utmp_linux',
-      construct.ULInt32(u'type'),
-      construct.ULInt32(u'pid'),
-      construct.String(u'terminal', 32),
-      construct.ULInt32(u'terminal_id'),
-      construct.String(u'username', 32),
-      construct.String(u'hostname', 256),
-      construct.ULInt16(u'termination'),
-      construct.ULInt16(u'exit'),
-      construct.ULInt32(u'session'),
-      construct.ULInt32(u'timestamp'),
-      construct.ULInt32(u'microsecond'),
-      construct.ULInt32(u'address_a'),
-      construct.ULInt32(u'address_b'),
-      construct.ULInt32(u'address_c'),
-      construct.ULInt32(u'address_d'),
+      'utmp_linux',
+      construct.ULInt32('type'),
+      construct.ULInt32('pid'),
+      construct.String('terminal', 32),
+      construct.ULInt32('terminal_id'),
+      construct.String('username', 32),
+      construct.String('hostname', 256),
+      construct.ULInt16('termination'),
+      construct.ULInt16('exit'),
+      construct.ULInt32('session'),
+      construct.ULInt32('timestamp'),
+      construct.ULInt32('microsecond'),
+      construct.ULInt32('address_a'),
+      construct.ULInt32('address_b'),
+      construct.ULInt32('address_c'),
+      construct.ULInt32('address_d'),
       construct.Padding(20))
 
   LINUX_UTMP_ENTRY_SIZE = LINUX_UTMP_ENTRY.sizeof()
@@ -207,7 +207,7 @@ class UtmpParser(interface.FileObjectParser):
     if not entry.address_b:
       try:
         ip_address = socket.inet_ntoa(
-            construct.ULInt32(u'int').build(entry.address_a))
+            construct.ULInt32('int').build(entry.address_a))
         if ip_address == u'0.0.0.0':
           ip_address = u'localhost'
       except (IOError, construct.FieldError, socket.error):

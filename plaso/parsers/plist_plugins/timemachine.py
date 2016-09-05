@@ -32,10 +32,10 @@ class TimeMachinePlugin(interface.PlistPlugin):
   PLIST_KEYS = frozenset([u'Destinations', u'RootVolumeUUID'])
 
   TM_BACKUP_ALIAS = construct.Struct(
-      u'tm_backup_alias',
+      'tm_backup_alias',
       construct.Padding(10),
       construct.PascalString(
-          u'value', length_field=construct.UBInt8(u'length')))
+          u'value', length_field=construct.UBInt8('length')))
 
   def GetEntries(self, parser_mediator, match=None, **unused_kwargs):
     """Extracts relevant TimeMachine entries.

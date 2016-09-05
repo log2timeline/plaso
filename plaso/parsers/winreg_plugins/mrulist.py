@@ -48,7 +48,7 @@ class MRUListStringRegistryKeyFilter(
 class BaseMRUListPlugin(interface.WindowsRegistryPlugin):
   """Class for common MRUList Windows Registry plugin functionality."""
 
-  _MRULIST_STRUCT = construct.Range(1, 500, construct.ULInt16(u'entry_letter'))
+  _MRULIST_STRUCT = construct.Range(1, 500, construct.ULInt16('entry_letter'))
 
   _SOURCE_APPEND = u': MRU List'
 

@@ -49,17 +49,17 @@ class RestorePointLogParser(interface.FileObjectParser):
       interface.FileNameFileEntryFilter(u'rp.log')])
 
   _FILE_HEADER_STRUCT = construct.Struct(
-      u'file_header',
-      construct.ULInt32(u'event_type'),
-      construct.ULInt32(u'restore_point_type'),
-      construct.ULInt64(u'sequence_number'),
+      'file_header',
+      construct.ULInt32('event_type'),
+      construct.ULInt32('restore_point_type'),
+      construct.ULInt64('sequence_number'),
       construct.RepeatUntil(
           lambda character, ctx: character == b'\x00\x00',
-          construct.Field(u'description', 2)))
+          construct.Field('description', 2)))
 
   _FILE_FOOTER_STRUCT = construct.Struct(
-      u'file_footer',
-      construct.ULInt64(u'creation_time'))
+      'file_footer',
+      construct.ULInt64('creation_time'))
 
   def _ParseFileHeader(self, file_object):
     """Parses the file header.

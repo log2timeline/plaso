@@ -32,7 +32,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
       (u'https://github.com/libyal/winreg-kb/blob/master/documentation/'
        u'MRU%20keys.asciidoc#bagmru-key')]
 
-  _MRULISTEX_ENTRY = construct.ULInt32(u'entry_number')
+  _MRULISTEX_ENTRY = construct.ULInt32('entry_number')
 
   _SOURCE_APPEND = u': BagMRU'
 

@@ -122,22 +122,22 @@ class BsmParser(interface.FileObjectParser):
   AU_IPv4 = 4
   AU_IPv6 = 16
 
-  IPV4_STRUCT = construct.UBInt32(u'ipv4')
+  IPV4_STRUCT = construct.UBInt32('ipv4')
 
   IPV6_STRUCT = construct.Struct(
-      u'ipv6', construct.UBInt64(u'high'), construct.UBInt64(u'low'))
+      'ipv6', construct.UBInt64('high'), construct.UBInt64('low'))
 
   # Tested structures.
   # INFO: I have ommited the ID in the structures declaration.
   #       I used the BSM_TYPE first to read the ID, and then, the structure.
   # Tokens always start with an ID value that identifies their token
   # type and subsequent structure.
-  BSM_TYPE = construct.UBInt8(u'token_id')
+  BSM_TYPE = construct.UBInt8('token_id')
 
   # Data type structures.
-  BSM_TOKEN_DATA_CHAR = construct.String(u'value', 1)
-  BSM_TOKEN_DATA_SHORT = construct.UBInt16(u'value')
-  BSM_TOKEN_DATA_INTEGER = construct.UBInt32(u'value')
+  BSM_TOKEN_DATA_CHAR = construct.String('value', 1)
+  BSM_TOKEN_DATA_SHORT = construct.UBInt16('value')
+  BSM_TOKEN_DATA_INTEGER = construct.UBInt32('value')
 
   # Common structure used by other structures.
   # audit_uid: integer, uid that generates the entry.
@@ -148,21 +148,21 @@ class BsmParser(interface.FileObjectParser):
   # pid: integer, identification number of the process.
   # session_id: unknown, need research.
   BSM_TOKEN_SUBJECT_SHORT = construct.Struct(
-      u'subject_data',
-      construct.UBInt32(u'audit_uid'),
-      construct.UBInt32(u'effective_uid'),
-      construct.UBInt32(u'effective_gid'),
-      construct.UBInt32(u'real_uid'),
-      construct.UBInt32(u'real_gid'),
-      construct.UBInt32(u'pid'),
-      construct.UBInt32(u'session_id'))
+      'subject_data',
+      construct.UBInt32('audit_uid'),
+      construct.UBInt32('effective_uid'),
+      construct.UBInt32('effective_gid'),
+      construct.UBInt32('real_uid'),
+      construct.UBInt32('real_gid'),
+      construct.UBInt32('pid'),
+      construct.UBInt32('session_id'))
 
   # Common structure used by other structures.
   # Identify the kind of inet (IPv4 or IPv6)
   # TODO: instead of 16, AU_IPv6 must be used.
   BSM_IP_TYPE_SHORT = construct.Struct(
-      u'bsm_ip_type_short',
-      construct.UBInt32(u'net_type'),
+      'bsm_ip_type_short',
+      construct.UBInt32('net_type'),
       construct.Switch(
           u'ip_addr',
           _BsmTokenGetNetType,
@@ -175,40 +175,40 @@ class BsmParser(interface.FileObjectParser):
   # event_type: integer, the type of event (/etc/security/audit_event).
   # modifier: integer, unknown, need research (It is always 0).
   BSM_HEADER = construct.Struct(
-      u'bsm_header',
-      construct.UBInt32(u'length'),
-      construct.UBInt8(u'version'),
-      construct.UBInt16(u'event_type'),
-      construct.UBInt16(u'modifier'))
+      'bsm_header',
+      construct.UBInt32('length'),
+      construct.UBInt8('version'),
+      construct.UBInt16('event_type'),
+      construct.UBInt16('modifier'))
 
   # First token of one entry.
   # timestamp: unsigned integer, number of seconds since
   #            January 1, 1970 00:00:00 UTC.
   # microsecond: unsigned integer, number of micro seconds.
   BSM_HEADER32 = construct.Struct(
-      u'bsm_header32',
+      'bsm_header32',
       BSM_HEADER,
-      construct.UBInt32(u'timestamp'),
-      construct.UBInt32(u'microsecond'))
+      construct.UBInt32('timestamp'),
+      construct.UBInt32('microsecond'))
 
   BSM_HEADER64 = construct.Struct(
-      u'bsm_header64',
+      'bsm_header64',
       BSM_HEADER,
-      construct.UBInt64(u'timestamp'),
-      construct.UBInt64(u'microsecond'))
+      construct.UBInt64('timestamp'),
+      construct.UBInt64('microsecond'))
 
   BSM_HEADER32_EX = construct.Struct(
-      u'bsm_header32_ex',
+      'bsm_header32_ex',
       BSM_HEADER,
       BSM_IP_TYPE_SHORT,
-      construct.UBInt32(u'timestamp'),
-      construct.UBInt32(u'microsecond'))
+      construct.UBInt32('timestamp'),
+      construct.UBInt32('microsecond'))
 
   # Token TEXT, provides extra information.
   BSM_TOKEN_TEXT = construct.Struct(
-      u'bsm_token_text',
-      construct.UBInt16(u'length'),
-      construct.Array(_BsmTokenGetLength, construct.UBInt8(u'text')))
+      'bsm_token_text',
+      construct.UBInt16('length'),
+      construct.Array(_BsmTokenGetLength, construct.UBInt8('text')))
 
   # Path of the executable.
   BSM_TOKEN_PATH = BSM_TOKEN_TEXT
@@ -217,61 +217,61 @@ class BsmParser(interface.FileObjectParser):
   # status: integer that identifies the status of the exit (BSM_ERRORS).
   # return: returned value from the operation.
   BSM_TOKEN_RETURN32 = construct.Struct(
-      u'bsm_token_return32',
-      construct.UBInt8(u'status'),
-      construct.UBInt32(u'return_value'))
+      'bsm_token_return32',
+      construct.UBInt8('status'),
+      construct.UBInt32('return_value'))
 
   BSM_TOKEN_RETURN64 = construct.Struct(
-      u'bsm_token_return64',
-      construct.UBInt8(u'status'),
-      construct.UBInt64(u'return_value'))
+      'bsm_token_return64',
+      construct.UBInt8('status'),
+      construct.UBInt64('return_value'))
 
   # Identified the number of bytes that was written.
   # magic: 2 bytes that identifies the TRAILER (BSM_TOKEN_TRAILER_MAGIC).
   # length: integer that has the number of bytes from the entry size.
   BSM_TOKEN_TRAILER = construct.Struct(
-      u'bsm_token_trailer',
-      construct.UBInt16(u'magic'),
-      construct.UBInt32(u'record_length'))
+      'bsm_token_trailer',
+      construct.UBInt16('magic'),
+      construct.UBInt32('record_length'))
 
   # A 32-bits argument.
   # num_arg: the number of the argument.
   # name_arg: the argument's name.
   # text: the string value of the argument.
   BSM_TOKEN_ARGUMENT32 = construct.Struct(
-      u'bsm_token_argument32',
-      construct.UBInt8(u'num_arg'),
-      construct.UBInt32(u'name_arg'),
-      construct.UBInt16(u'length'),
-      construct.Array(_BsmTokenGetLength, construct.UBInt8(u'text')))
+      'bsm_token_argument32',
+      construct.UBInt8('num_arg'),
+      construct.UBInt32('name_arg'),
+      construct.UBInt16('length'),
+      construct.Array(_BsmTokenGetLength, construct.UBInt8('text')))
 
   # A 64-bits argument.
   # num_arg: integer, the number of the argument.
   # name_arg: text, the argument's name.
   # text: the string value of the argument.
   BSM_TOKEN_ARGUMENT64 = construct.Struct(
-      u'bsm_token_argument64',
-      construct.UBInt8(u'num_arg'),
-      construct.UBInt64(u'name_arg'),
-      construct.UBInt16(u'length'),
-      construct.Array(_BsmTokenGetLength, construct.UBInt8(u'text')))
+      'bsm_token_argument64',
+      construct.UBInt8('num_arg'),
+      construct.UBInt64('name_arg'),
+      construct.UBInt16('length'),
+      construct.Array(_BsmTokenGetLength, construct.UBInt8('text')))
 
   # Identify an user.
   # terminal_id: unknown, research needed.
   # terminal_addr: unknown, research needed.
   BSM_TOKEN_SUBJECT32 = construct.Struct(
-      u'bsm_token_subject32',
+      'bsm_token_subject32',
       BSM_TOKEN_SUBJECT_SHORT,
-      construct.UBInt32(u'terminal_port'),
+      construct.UBInt32('terminal_port'),
       IPV4_STRUCT)
 
   # Identify an user using a extended Token.
   # terminal_port: unknown, need research.
   # net_type: unknown, need research.
   BSM_TOKEN_SUBJECT32_EX = construct.Struct(
-      u'bsm_token_subject32_ex',
+      'bsm_token_subject32_ex',
       BSM_TOKEN_SUBJECT_SHORT,
-      construct.UBInt32(u'terminal_port'),
+      construct.UBInt32('terminal_port'),
       BSM_IP_TYPE_SHORT)
 
   # au_to_opaque // AUT_OPAQUE
@@ -284,10 +284,10 @@ class BsmParser(interface.FileObjectParser):
   # For each argument we are going to have a string+ "\x00".
   # Example: [00 00 00 02][41 42 43 00 42 42 00]
   #          2 Arguments, Arg1: [414243] Arg2: [4242].
-  BSM_TOKEN_EXEC_ARGUMENTS = construct.UBInt32(u'number_arguments')
+  BSM_TOKEN_EXEC_ARGUMENTS = construct.UBInt32('number_arguments')
 
   BSM_TOKEN_EXEC_ARGUMENT = construct.Struct(
-      u'bsm_token_exec_argument',
+      'bsm_token_exec_argument',
       construct.RepeatUntil(
           _BsmTokenIsEndOfString, construct.StaticField("text", 1)))
 
@@ -296,124 +296,124 @@ class BsmParser(interface.FileObjectParser):
 
   # au_to_in_addr_ext // AUT_IN_ADDR_EX:
   BSM_TOKEN_ADDR_EXT = construct.Struct(
-      u'bsm_token_addr_ext',
-      construct.UBInt32(u'net_type'),
+      'bsm_token_addr_ext',
+      construct.UBInt32('net_type'),
       IPV6_STRUCT)
 
   # au_to_ip // AUT_IP:
   # TODO: parse this header in the correct way.
-  BSM_TOKEN_IP = construct.String(u'binary_ipv4_add', 20)
+  BSM_TOKEN_IP = construct.String('binary_ipv4_add', 20)
 
   # au_to_ipc // AUT_IPC:
   BSM_TOKEN_IPC = construct.Struct(
-      u'bsm_token_ipc',
-      construct.UBInt8(u'object_type'),
-      construct.UBInt32(u'object_id'))
+      'bsm_token_ipc',
+      construct.UBInt8('object_type'),
+      construct.UBInt32('object_id'))
 
   # au_to_ipc_perm // au_to_ipc_perm
   BSM_TOKEN_IPC_PERM = construct.Struct(
-      u'bsm_token_ipc_perm',
-      construct.UBInt32(u'user_id'),
-      construct.UBInt32(u'group_id'),
-      construct.UBInt32(u'creator_user_id'),
-      construct.UBInt32(u'creator_group_id'),
-      construct.UBInt32(u'access_mode'),
-      construct.UBInt32(u'slot_seq'),
-      construct.UBInt32(u'key'))
+      'bsm_token_ipc_perm',
+      construct.UBInt32('user_id'),
+      construct.UBInt32('group_id'),
+      construct.UBInt32('creator_user_id'),
+      construct.UBInt32('creator_group_id'),
+      construct.UBInt32('access_mode'),
+      construct.UBInt32('slot_seq'),
+      construct.UBInt32('key'))
 
   # au_to_iport // AUT_IPORT:
-  BSM_TOKEN_PORT = construct.UBInt16(u'port_number')
+  BSM_TOKEN_PORT = construct.UBInt16('port_number')
 
   # au_to_file // AUT_OTHER_FILE32:
   BSM_TOKEN_FILE = construct.Struct(
-      u'bsm_token_file',
-      construct.UBInt32(u'timestamp'),
-      construct.UBInt32(u'microsecond'),
-      construct.UBInt16(u'length'),
-      construct.Array(_BsmTokenGetLength, construct.UBInt8(u'text')))
+      'bsm_token_file',
+      construct.UBInt32('timestamp'),
+      construct.UBInt32('microsecond'),
+      construct.UBInt16('length'),
+      construct.Array(_BsmTokenGetLength, construct.UBInt8('text')))
 
   # au_to_subject64 // AUT_SUBJECT64:
   BSM_TOKEN_SUBJECT64 = construct.Struct(
-      u'bsm_token_subject64',
+      'bsm_token_subject64',
       BSM_TOKEN_SUBJECT_SHORT,
-      construct.UBInt64(u'terminal_port'),
+      construct.UBInt64('terminal_port'),
       IPV4_STRUCT)
 
   # au_to_subject64_ex // AU_IPv4:
   BSM_TOKEN_SUBJECT64_EX = construct.Struct(
-      u'bsm_token_subject64_ex',
+      'bsm_token_subject64_ex',
       BSM_TOKEN_SUBJECT_SHORT,
-      construct.UBInt32(u'terminal_port'),
-      construct.UBInt32(u'terminal_type'),
+      construct.UBInt32('terminal_port'),
+      construct.UBInt32('terminal_type'),
       BSM_IP_TYPE_SHORT)
 
   # au_to_process32 // AUT_PROCESS32:
   BSM_TOKEN_PROCESS32 = construct.Struct(
-      u'bsm_token_process32',
+      'bsm_token_process32',
       BSM_TOKEN_SUBJECT_SHORT,
-      construct.UBInt32(u'terminal_port'),
+      construct.UBInt32('terminal_port'),
       IPV4_STRUCT)
 
   # au_to_process64 // AUT_PROCESS32:
   BSM_TOKEN_PROCESS64 = construct.Struct(
-      u'bsm_token_process64',
+      'bsm_token_process64',
       BSM_TOKEN_SUBJECT_SHORT,
-      construct.UBInt64(u'terminal_port'),
+      construct.UBInt64('terminal_port'),
       IPV4_STRUCT)
 
   # au_to_process32_ex // AUT_PROCESS32_EX:
   BSM_TOKEN_PROCESS32_EX = construct.Struct(
-      u'bsm_token_process32_ex',
+      'bsm_token_process32_ex',
       BSM_TOKEN_SUBJECT_SHORT,
-      construct.UBInt32(u'terminal_port'),
+      construct.UBInt32('terminal_port'),
       BSM_IP_TYPE_SHORT)
 
   # au_to_process64_ex // AUT_PROCESS64_EX:
   BSM_TOKEN_PROCESS64_EX = construct.Struct(
-      u'bsm_token_process64_ex',
+      'bsm_token_process64_ex',
       BSM_TOKEN_SUBJECT_SHORT,
-      construct.UBInt64(u'terminal_port'),
+      construct.UBInt64('terminal_port'),
       BSM_IP_TYPE_SHORT)
 
   # au_to_sock_inet32 // AUT_SOCKINET32:
   BSM_TOKEN_AUT_SOCKINET32 = construct.Struct(
-      u'bsm_token_aut_sockinet32',
-      construct.UBInt16(u'net_type'),
-      construct.UBInt16(u'port_number'),
+      'bsm_token_aut_sockinet32',
+      construct.UBInt16('net_type'),
+      construct.UBInt16('port_number'),
       IPV4_STRUCT)
 
   # Info: checked against the source code of XNU, but not against
   #       real BSM file.
   BSM_TOKEN_AUT_SOCKINET128 = construct.Struct(
-      u'bsm_token_aut_sockinet128',
-      construct.UBInt16(u'net_type'),
-      construct.UBInt16(u'port_number'),
+      'bsm_token_aut_sockinet128',
+      construct.UBInt16('net_type'),
+      construct.UBInt16('port_number'),
       IPV6_STRUCT)
 
   INET6_ADDR_TYPE = construct.Struct(
-      u'addr_type',
-      construct.UBInt16(u'ip_type'),
-      construct.UBInt16(u'source_port'),
-      construct.UBInt64(u'saddr_high'),
-      construct.UBInt64(u'saddr_low'),
-      construct.UBInt16(u'destination_port'),
-      construct.UBInt64(u'daddr_high'),
-      construct.UBInt64(u'daddr_low'))
+      'addr_type',
+      construct.UBInt16('ip_type'),
+      construct.UBInt16('source_port'),
+      construct.UBInt64('saddr_high'),
+      construct.UBInt64('saddr_low'),
+      construct.UBInt16('destination_port'),
+      construct.UBInt64('daddr_high'),
+      construct.UBInt64('daddr_low'))
 
   INET4_ADDR_TYPE = construct.Struct(
-      u'addr_type',
-      construct.UBInt16(u'ip_type'),
-      construct.UBInt16(u'source_port'),
-      construct.UBInt32(u'source_address'),
-      construct.UBInt16(u'destination_port'),
-      construct.UBInt32(u'destination_address'))
+      'addr_type',
+      construct.UBInt16('ip_type'),
+      construct.UBInt16('source_port'),
+      construct.UBInt32('source_address'),
+      construct.UBInt16('destination_port'),
+      construct.UBInt32('destination_address'))
 
   # au_to_socket_ex // AUT_SOCKET_EX
   # TODO: Change the 26 for unixbsm.BSM_PROTOCOLS.INET6.
   BSM_TOKEN_AUT_SOCKINET32_EX = construct.Struct(
-      u'bsm_token_aut_sockinet32_ex',
-      construct.UBInt16(u'socket_domain'),
-      construct.UBInt16(u'socket_type'),
+      'bsm_token_aut_sockinet32_ex',
+      construct.UBInt16('socket_domain'),
+      construct.UBInt16('socket_type'),
       construct.Switch(
           u'structure_addr_port',
           _BsmTokenGetSocketDomain,
@@ -422,8 +422,8 @@ class BsmParser(interface.FileObjectParser):
 
   # au_to_sock_unix // AUT_SOCKUNIX
   BSM_TOKEN_SOCKET_UNIX = construct.Struct(
-      u'bsm_token_au_to_sock_unix',
-      construct.UBInt16(u'family'),
+      'bsm_token_au_to_sock_unix',
+      construct.UBInt16('family'),
       construct.RepeatUntil(
           _BsmTokenIsEndOfString,
           construct.StaticField("path", 1)))
@@ -434,40 +434,40 @@ class BsmParser(interface.FileObjectParser):
   # unit_count: number of type values.
   # BSM_TOKEN_DATA has a end field = type * unit_count
   BSM_TOKEN_DATA = construct.Struct(
-      u'bsm_token_data',
-      construct.UBInt8(u'how_to_print'),
-      construct.UBInt8(u'data_type'),
-      construct.UBInt8(u'unit_count'))
+      'bsm_token_data',
+      construct.UBInt8('how_to_print'),
+      construct.UBInt8('data_type'),
+      construct.UBInt8('unit_count'))
 
   # au_to_attr32 // AUT_ATTR32
   BSM_TOKEN_ATTR32 = construct.Struct(
-      u'bsm_token_attr32',
-      construct.UBInt32(u'file_mode'),
-      construct.UBInt32(u'uid'),
-      construct.UBInt32(u'gid'),
-      construct.UBInt32(u'file_system_id'),
-      construct.UBInt64(u'file_system_node_id'),
-      construct.UBInt32(u'device'))
+      'bsm_token_attr32',
+      construct.UBInt32('file_mode'),
+      construct.UBInt32('uid'),
+      construct.UBInt32('gid'),
+      construct.UBInt32('file_system_id'),
+      construct.UBInt64('file_system_node_id'),
+      construct.UBInt32('device'))
 
   # au_to_attr64 // AUT_ATTR64
   BSM_TOKEN_ATTR64 = construct.Struct(
-      u'bsm_token_attr64',
-      construct.UBInt32(u'file_mode'),
-      construct.UBInt32(u'uid'),
-      construct.UBInt32(u'gid'),
-      construct.UBInt32(u'file_system_id'),
-      construct.UBInt64(u'file_system_node_id'),
-      construct.UBInt64(u'device'))
+      'bsm_token_attr64',
+      construct.UBInt32('file_mode'),
+      construct.UBInt32('uid'),
+      construct.UBInt32('gid'),
+      construct.UBInt32('file_system_id'),
+      construct.UBInt64('file_system_node_id'),
+      construct.UBInt64('device'))
 
   # au_to_exit // AUT_EXIT
   BSM_TOKEN_EXIT = construct.Struct(
-      u'bsm_token_exit',
-      construct.UBInt32(u'status'),
-      construct.UBInt32(u'return_value'))
+      'bsm_token_exit',
+      construct.UBInt32('status'),
+      construct.UBInt32('return_value'))
 
   # au_to_newgroups // AUT_NEWGROUPS
   # INFO: we must read BSM_TOKEN_DATA_INTEGER for each group.
-  BSM_TOKEN_GROUPS = construct.UBInt16(u'group_number')
+  BSM_TOKEN_GROUPS = construct.UBInt16('group_number')
 
   # au_to_exec_env == au_to_exec_args
   BSM_TOKEN_EXEC_ENV = BSM_TOKEN_EXEC_ARGUMENTS

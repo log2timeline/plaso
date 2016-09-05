@@ -93,113 +93,113 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
 
   # AppCompatCache format used in Windows XP.
   _HEADER_XP_32BIT_STRUCT = construct.Struct(
-      u'appcompatcache_header_xp',
-      construct.ULInt32(u'signature'),
-      construct.ULInt32(u'number_of_cached_entries'),
-      construct.ULInt32(u'unknown1'),
-      construct.ULInt32(u'unknown2'),
+      'appcompatcache_header_xp',
+      construct.ULInt32('signature'),
+      construct.ULInt32('number_of_cached_entries'),
+      construct.ULInt32('unknown1'),
+      construct.ULInt32('unknown2'),
       construct.Padding(384))
 
   _CACHED_ENTRY_XP_32BIT_STRUCT = construct.Struct(
-      u'appcompatcache_cached_entry_xp_32bit',
-      construct.Array(528, construct.Byte(u'path')),
-      construct.ULInt64(u'last_modification_time'),
-      construct.ULInt64(u'file_size'),
-      construct.ULInt64(u'last_update_time'))
+      'appcompatcache_cached_entry_xp_32bit',
+      construct.Array(528, construct.Byte('path')),
+      construct.ULInt64('last_modification_time'),
+      construct.ULInt64('file_size'),
+      construct.ULInt64('last_update_time'))
 
   # AppCompatCache format signature used in Windows 2003, Vista and 2008.
   _HEADER_SIGNATURE_2003 = 0xbadc0ffe
 
   # AppCompatCache format used in Windows 2003.
   _HEADER_2003_STRUCT = construct.Struct(
-      u'appcompatcache_header_2003',
-      construct.ULInt32(u'signature'),
-      construct.ULInt32(u'number_of_cached_entries'))
+      'appcompatcache_header_2003',
+      construct.ULInt32('signature'),
+      construct.ULInt32('number_of_cached_entries'))
 
   _CACHED_ENTRY_2003_32BIT_STRUCT = construct.Struct(
-      u'appcompatcache_cached_entry_2003_32bit',
-      construct.ULInt16(u'path_size'),
-      construct.ULInt16(u'maximum_path_size'),
-      construct.ULInt32(u'path_offset'),
-      construct.ULInt64(u'last_modification_time'),
-      construct.ULInt64(u'file_size'))
+      'appcompatcache_cached_entry_2003_32bit',
+      construct.ULInt16('path_size'),
+      construct.ULInt16('maximum_path_size'),
+      construct.ULInt32('path_offset'),
+      construct.ULInt64('last_modification_time'),
+      construct.ULInt64('file_size'))
 
   _CACHED_ENTRY_2003_64BIT_STRUCT = construct.Struct(
-      u'appcompatcache_cached_entry_2003_64bit',
-      construct.ULInt16(u'path_size'),
-      construct.ULInt16(u'maximum_path_size'),
-      construct.ULInt32(u'unknown1'),
-      construct.ULInt64(u'path_offset'),
-      construct.ULInt64(u'last_modification_time'),
-      construct.ULInt64(u'file_size'))
+      'appcompatcache_cached_entry_2003_64bit',
+      construct.ULInt16('path_size'),
+      construct.ULInt16('maximum_path_size'),
+      construct.ULInt32('unknown1'),
+      construct.ULInt64('path_offset'),
+      construct.ULInt64('last_modification_time'),
+      construct.ULInt64('file_size'))
 
   # AppCompatCache format used in Windows Vista and 2008.
   _CACHED_ENTRY_VISTA_32BIT_STRUCT = construct.Struct(
-      u'appcompatcache_cached_entry_vista_32bit',
-      construct.ULInt16(u'path_size'),
-      construct.ULInt16(u'maximum_path_size'),
-      construct.ULInt32(u'path_offset'),
-      construct.ULInt64(u'last_modification_time'),
-      construct.ULInt32(u'insertion_flags'),
-      construct.ULInt32(u'shim_flags'))
+      'appcompatcache_cached_entry_vista_32bit',
+      construct.ULInt16('path_size'),
+      construct.ULInt16('maximum_path_size'),
+      construct.ULInt32('path_offset'),
+      construct.ULInt64('last_modification_time'),
+      construct.ULInt32('insertion_flags'),
+      construct.ULInt32('shim_flags'))
 
   _CACHED_ENTRY_VISTA_64BIT_STRUCT = construct.Struct(
-      u'appcompatcache_cached_entry_vista_64bit',
-      construct.ULInt16(u'path_size'),
-      construct.ULInt16(u'maximum_path_size'),
-      construct.ULInt32(u'unknown1'),
-      construct.ULInt64(u'path_offset'),
-      construct.ULInt64(u'last_modification_time'),
-      construct.ULInt32(u'insertion_flags'),
-      construct.ULInt32(u'shim_flags'))
+      'appcompatcache_cached_entry_vista_64bit',
+      construct.ULInt16('path_size'),
+      construct.ULInt16('maximum_path_size'),
+      construct.ULInt32('unknown1'),
+      construct.ULInt64('path_offset'),
+      construct.ULInt64('last_modification_time'),
+      construct.ULInt32('insertion_flags'),
+      construct.ULInt32('shim_flags'))
 
   # AppCompatCache format signature used in Windows 7 and 2008 R2.
   _HEADER_SIGNATURE_7 = 0xbadc0fee
 
   # AppCompatCache format used in Windows 7 and 2008 R2.
   _HEADER_7_STRUCT = construct.Struct(
-      u'appcompatcache_header_7',
-      construct.ULInt32(u'signature'),
-      construct.ULInt32(u'number_of_cached_entries'),
+      'appcompatcache_header_7',
+      construct.ULInt32('signature'),
+      construct.ULInt32('number_of_cached_entries'),
       construct.Padding(120))
 
   _CACHED_ENTRY_7_32BIT_STRUCT = construct.Struct(
-      u'appcompatcache_cached_entry_7_32bit',
-      construct.ULInt16(u'path_size'),
-      construct.ULInt16(u'maximum_path_size'),
-      construct.ULInt32(u'path_offset'),
-      construct.ULInt64(u'last_modification_time'),
-      construct.ULInt32(u'insertion_flags'),
-      construct.ULInt32(u'shim_flags'),
-      construct.ULInt32(u'data_size'),
-      construct.ULInt32(u'data_offset'))
+      'appcompatcache_cached_entry_7_32bit',
+      construct.ULInt16('path_size'),
+      construct.ULInt16('maximum_path_size'),
+      construct.ULInt32('path_offset'),
+      construct.ULInt64('last_modification_time'),
+      construct.ULInt32('insertion_flags'),
+      construct.ULInt32('shim_flags'),
+      construct.ULInt32('data_size'),
+      construct.ULInt32('data_offset'))
 
   _CACHED_ENTRY_7_64BIT_STRUCT = construct.Struct(
-      u'appcompatcache_cached_entry_7_64bit',
-      construct.ULInt16(u'path_size'),
-      construct.ULInt16(u'maximum_path_size'),
-      construct.ULInt32(u'unknown1'),
-      construct.ULInt64(u'path_offset'),
-      construct.ULInt64(u'last_modification_time'),
-      construct.ULInt32(u'insertion_flags'),
-      construct.ULInt32(u'shim_flags'),
-      construct.ULInt64(u'data_size'),
-      construct.ULInt64(u'data_offset'))
+      'appcompatcache_cached_entry_7_64bit',
+      construct.ULInt16('path_size'),
+      construct.ULInt16('maximum_path_size'),
+      construct.ULInt32('unknown1'),
+      construct.ULInt64('path_offset'),
+      construct.ULInt64('last_modification_time'),
+      construct.ULInt32('insertion_flags'),
+      construct.ULInt32('shim_flags'),
+      construct.ULInt64('data_size'),
+      construct.ULInt64('data_offset'))
 
   # AppCompatCache format used in Windows 8.0 and 8.1.
   _HEADER_SIGNATURE_8 = 0x00000080
 
   _HEADER_8_STRUCT = construct.Struct(
-      u'appcompatcache_header_8',
-      construct.ULInt32(u'signature'),
+      'appcompatcache_header_8',
+      construct.ULInt32('signature'),
       construct.Padding(124))
 
   _CACHED_ENTRY_HEADER_8_STRUCT = construct.Struct(
-      u'appcompatcache_cached_entry_header_8',
-      construct.ULInt32(u'signature'),
-      construct.ULInt32(u'unknown1'),
-      construct.ULInt32(u'cached_entry_data_size'),
-      construct.ULInt16(u'path_size'))
+      'appcompatcache_cached_entry_header_8',
+      construct.ULInt32('signature'),
+      construct.ULInt32('unknown1'),
+      construct.ULInt32('cached_entry_data_size'),
+      construct.ULInt16('path_size'))
 
   # AppCompatCache format used in Windows 8.0.
   _CACHED_ENTRY_SIGNATURE_8_0 = b'00ts'
@@ -211,11 +211,11 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
   _HEADER_SIGNATURE_10 = 0x00000030
 
   _HEADER_10_STRUCT = construct.Struct(
-      u'appcompatcache_header_8',
-      construct.ULInt32(u'signature'),
-      construct.ULInt32(u'unknown1'),
+      'appcompatcache_header_8',
+      construct.ULInt32('signature'),
+      construct.ULInt32('unknown1'),
       construct.Padding(28),
-      construct.ULInt32(u'number_of_cached_entries'),
+      construct.ULInt32('number_of_cached_entries'),
       construct.Padding(8))
 
   def _CheckSignature(self, value_data):
@@ -227,7 +227,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
     Returns:
       The format type if successful or None otherwise.
     """
-    signature = construct.ULInt32(u'signature').parse(value_data)
+    signature = construct.ULInt32('signature').parse(value_data)
     if signature == self._HEADER_SIGNATURE_XP:
       return self._FORMAT_TYPE_XP
 
@@ -281,12 +281,12 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
 
     elif format_type in [
         self._FORMAT_TYPE_2003, self._FORMAT_TYPE_VISTA, self._FORMAT_TYPE_7]:
-      path_size = construct.ULInt16(u'path_size').parse(cached_entry_data[0:2])
-      maximum_path_size = construct.ULInt16(u'maximum_path_size').parse(
+      path_size = construct.ULInt16('path_size').parse(cached_entry_data[0:2])
+      maximum_path_size = construct.ULInt16('maximum_path_size').parse(
           cached_entry_data[2:4])
-      path_offset_32bit = construct.ULInt32(u'path_offset').parse(
+      path_offset_32bit = construct.ULInt32('path_offset').parse(
           cached_entry_data[4:8])
-      path_offset_64bit = construct.ULInt32(u'path_offset').parse(
+      path_offset_64bit = construct.ULInt32('path_offset').parse(
           cached_entry_data[8:16])
 
       if maximum_path_size < path_size:
@@ -536,7 +536,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
 
     elif format_type in [self._FORMAT_TYPE_8, self._FORMAT_TYPE_10]:
       data_offset = cached_entry_offset + cached_entry_data_offset + 12
-      data_size = construct.ULInt32(u'data_size').parse(remaining_data[8:12])
+      data_size = construct.ULInt32('data_size').parse(remaining_data[8:12])
 
     if path_offset > 0 and path_size > 0:
       path_size += path_offset

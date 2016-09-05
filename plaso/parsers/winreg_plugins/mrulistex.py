@@ -59,7 +59,7 @@ class BaseMRUListExPlugin(interface.WindowsRegistryPlugin):
   """Class for common MRUListEx Windows Registry plugin functionality."""
 
   _MRULISTEX_STRUCT = construct.Range(
-      1, 500, construct.ULInt32(u'entry_number'))
+      1, 500, construct.ULInt32('entry_number'))
 
   _SOURCE_APPEND = u': MRUListEx'
 
@@ -147,9 +147,9 @@ class MRUListExStringPlugin(BaseMRUListExPlugin):
       u'https://github.com/libyal/winreg-kb/wiki/MRU-keys']
 
   _STRING_STRUCT = construct.Struct(
-      u'string_and_shell_item',
+      'string_and_shell_item',
       construct.RepeatUntil(
-          lambda obj, ctx: obj == b'\x00\x00', construct.Field(u'string', 2)))
+          lambda obj, ctx: obj == b'\x00\x00', construct.Field('string', 2)))
 
   def _ParseMRUListExEntryValue(
       self, parser_mediator, key, entry_index, entry_number, **unused_kwargs):
@@ -291,10 +291,10 @@ class MRUListExStringAndShellItemPlugin(BaseMRUListExPlugin):
           u'Explorer\\RecentDocs')])
 
   _STRING_AND_SHELL_ITEM_STRUCT = construct.Struct(
-      u'string_and_shell_item',
+      'string_and_shell_item',
       construct.RepeatUntil(
-          lambda obj, ctx: obj == b'\x00\x00', construct.Field(u'string', 2)),
-      construct.Anchor(u'shell_item'))
+          lambda obj, ctx: obj == b'\x00\x00', construct.Field('string', 2)),
+      construct.Anchor('shell_item'))
 
   def _ParseMRUListExEntryValue(
       self, parser_mediator, key, entry_index, entry_number, codepage=u'cp1252',
@@ -388,10 +388,10 @@ class MRUListExStringAndShellItemListPlugin(BaseMRUListExPlugin):
           u'Explorer\\ComDlg32\\LastVisitedPidlMRU')])
 
   _STRING_AND_SHELL_ITEM_LIST_STRUCT = construct.Struct(
-      u'string_and_shell_item',
+      'string_and_shell_item',
       construct.RepeatUntil(
-          lambda obj, ctx: obj == b'\x00\x00', construct.Field(u'string', 2)),
-      construct.Anchor(u'shell_item_list'))
+          lambda obj, ctx: obj == b'\x00\x00', construct.Field('string', 2)),
+      construct.Anchor('shell_item_list'))
 
   def _ParseMRUListExEntryValue(
       self, parser_mediator, key, entry_index, entry_number, codepage=u'cp1252',

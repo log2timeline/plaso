@@ -28,16 +28,16 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
        u'Programs%20Cache%20values.asciidoc')]
 
   _HEADER_STRUCT = construct.Struct(
-      u'programscache_header',
-      construct.ULInt32(u'format_version'))
+      'programscache_header',
+      construct.ULInt32('format_version'))
 
   _ENTRY_HEADER_STRUCT = construct.Struct(
-      u'programscache_entry_header',
-      construct.ULInt32(u'data_size'))
+      'programscache_entry_header',
+      construct.ULInt32('data_size'))
 
   _ENTRY_FOOTER_STRUCT = construct.Struct(
-      u'programscache_entry_footer',
-      construct.Byte(u'sentinel'))
+      'programscache_entry_footer',
+      construct.Byte('sentinel'))
 
   def _ParseValueData(self, parser_mediator, registry_key, registry_value):
     """Extracts event objects from a Explorer ProgramsCache value data.

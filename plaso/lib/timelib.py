@@ -105,15 +105,15 @@ class Timestamp(object):
 
   # The Windows SYSTEMTIME structure.
   SYSTEMTIME_STRUCT = construct.Struct(
-      u'timestamp',
-      construct.ULInt16(u'year'),
-      construct.ULInt16(u'month'),
-      construct.ULInt16(u'weekday'),
-      construct.ULInt16(u'day'),
-      construct.ULInt16(u'hour'),
-      construct.ULInt16(u'minutes'),
-      construct.ULInt16(u'seconds'),
-      construct.ULInt16(u'milliseconds'))
+      'timestamp',
+      construct.ULInt16('year'),
+      construct.ULInt16('month'),
+      construct.ULInt16('weekday'),
+      construct.ULInt16('day'),
+      construct.ULInt16('hour'),
+      construct.ULInt16('minutes'),
+      construct.ULInt16('seconds'),
+      construct.ULInt16('milliseconds'))
 
   @classmethod
   def CopyFromString(cls, time_string):

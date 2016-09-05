@@ -62,16 +62,16 @@ class UtmpxParser(interface.FileObjectParser):
   # however if we analyze the file it is always
   # byte follow by 3 bytes with \x00 value.
   _UTMPX_ENTRY = construct.Struct(
-      u'utmpx_mac',
-      construct.String(u'user', 256),
-      construct.ULInt32(u'id'),
-      construct.String(u'tty_name', 32),
-      construct.ULInt32(u'pid'),
-      construct.ULInt16(u'status_type'),
-      construct.ULInt16(u'unknown'),
-      construct.ULInt32(u'timestamp'),
-      construct.ULInt32(u'microsecond'),
-      construct.String(u'hostname', 256),
+      'utmpx_mac',
+      construct.String('user', 256),
+      construct.ULInt32('id'),
+      construct.String('tty_name', 32),
+      construct.ULInt32('pid'),
+      construct.ULInt16('status_type'),
+      construct.ULInt16('unknown'),
+      construct.ULInt32('timestamp'),
+      construct.ULInt32('microsecond'),
+      construct.String('hostname', 256),
       construct.Padding(64))
 
   _UTMPX_ENTRY_SIZE = _UTMPX_ENTRY.sizeof()

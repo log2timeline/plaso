@@ -51,7 +51,7 @@ class ShutdownPlugin(interface.WindowsRegistryPlugin):
       interface.WindowsRegistryKeyPathFilter(
           u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Windows')])
 
-  _UINT64_STRUCT = construct.ULInt64(u'value')
+  _UINT64_STRUCT = construct.ULInt64('value')
 
   def GetEntries(self, parser_mediator, registry_key, **kwargs):
     """Collect ShutdownTime value under Windows and produce an event object.
