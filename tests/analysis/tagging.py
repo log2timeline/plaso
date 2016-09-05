@@ -53,13 +53,13 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
            u'source_name': u'Security',
            u'event_identifier': 538}
       },
-    {u'event_type': u'evt',
-      u'timestamp': timelib.Timestamp.CopyFromString(u'2016-05-25 13:00:06'),
-      u'attributes': {
-        u'source_name': u'Messaging',
-        u'event_identifier': 16,
-        u'body': u'this is a message'}
-    },
+      {u'event_type': u'evt',
+       u'timestamp': timelib.Timestamp.CopyFromString(u'2016-05-25 13:00:06'),
+       u'attributes': {
+           u'source_name': u'Messaging',
+           u'event_identifier': 16,
+           u'body': u'this is a message'}
+      },
   ]
 
   def _CreateTestEventObject(self, event_dictionary):
@@ -110,11 +110,6 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
     for tag in tags:
       labels.extend(tag.labels)
     self.assertEqual(len(labels), 5)
-
-    labels = []
-    for tag in tags:
-      for label in tag.labels:
-        labels.append(label)
 
     # This is from a tag rule declared in objectfilter syntax.
     self.assertIn(u'application_execution', labels)
