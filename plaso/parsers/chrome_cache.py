@@ -58,7 +58,7 @@ class CacheAddress(object):
       self.is_initialized = u'False'
 
     self.file_type = (cache_address & 0x70000000) >> 28
-    if not cache_address == 0x00000000:
+    if cache_address != 0x00000000:
       if self.file_type == self.FILE_TYPE_SEPARATE:
         file_selector = cache_address & 0x0fffffff
         self.filename = u'f_{0:06x}'.format(file_selector)

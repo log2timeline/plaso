@@ -136,7 +136,7 @@ class JavaIDXParser(interface.FileObjectParser):
     if magic.busy > 1 or magic.incomplete > 1:
       raise errors.UnableToParseFile(u'Not a valid Java IDX file')
 
-    if not magic.idx_version in [602, 603, 604, 605]:
+    if magic.idx_version not in [602, 603, 604, 605]:
       raise errors.UnableToParseFile(u'Not a valid Java IDX file')
 
     # Obtain the relevant values from the file. The last modified date

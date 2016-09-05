@@ -230,12 +230,12 @@ class WinJobParser(interface.FileObjectParser):
           u'Unable to parse fixed-length section with error: {0:s}'.format(
               exception))
 
-    if not header_struct.product_version in self._PRODUCT_VERSIONS:
+    if  header_struct.product_version not in self._PRODUCT_VERSIONS:
       raise errors.UnableToParseFile(
           u'Unsupported product version in: 0x{0:04x}'.format(
               header_struct.product_version))
 
-    if not header_struct.format_version == 1:
+    if header_struct.format_version != 1:
       raise errors.UnableToParseFile(
           u'Unsupported format version in: {0:d}'.format(
               header_struct.format_version))
