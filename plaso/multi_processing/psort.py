@@ -334,7 +334,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       if self._use_zeromq:
         queue_name = u'{0:s} output event queue'.format(analysis_plugin.NAME)
         output_event_queue = zeromq_queue.ZeroMQPushBindQueue(
-            name=queue_name)
+            name=queue_name, timeout_seconds=self._QUEUE_TIMEOUT)
         # Open the queue so it can bind to a random port, and we can get the
         # port number to use in the input queue.
         output_event_queue.Open()
@@ -348,8 +348,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       if self._use_zeromq:
         queue_name = u'{0:s} input event queue'.format(analysis_plugin.NAME)
         input_event_queue = zeromq_queue.ZeroMQPullConnectQueue(
-            name=queue_name, timeout_seconds=self._QUEUE_TIMEOUT,
-            delay_open=True, port=output_event_queue.port)
+            name=queue_name, delay_open=True, port=output_event_queue.port,
+            timeout_seconds=self._QUEUE_TIMEOUT)
 
       else:
         input_event_queue = output_event_queue
@@ -485,7 +485,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           logging.error((
               u'Process {0:s} (PID: {1:d}) has not reported activity within '
               u'the timeout period.').format(process.name, pid))
-          processing_status = definitions.PROCESSING_ERROR_STATUS
+          processing_status = definitions.PROCESSING_STATUS_NOT_RESPONDING
 
     self._processing_status.UpdateWorkerStatus(
         process.name, processing_status, pid, display_name,

@@ -107,7 +107,7 @@ class ZeroMQQueue(plaso_queue.Queue):
       return True
 
     except zmq.error.Again:
-      logging.warn(u'{0:s} could not send an item'.format(self.name))
+      logging.debug(u'{0:s} could not send an item'.format(self.name))
 
     except zmq.error.ZMQError as exception:
       if exception.errno == errno.EINTR:
