@@ -103,20 +103,20 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
 
   # UserAssist format version used in Windows 2000, XP, 2003, Vista.
   _USERASSIST_V3_STRUCT = construct.Struct(
-      u'userassist_entry',
+      'userassist_entry',
       construct.Padding(4),
-      construct.ULInt32(u'count'),
-      construct.ULInt64(u'timestamp'))
+      construct.ULInt32('count'),
+      construct.ULInt64('timestamp'))
 
   # UserAssist format version used in Windows 2008, 7, 8.
   _USERASSIST_V5_STRUCT = construct.Struct(
-      u'userassist_entry',
+      'userassist_entry',
       construct.Padding(4),
-      construct.ULInt32(u'count'),
-      construct.ULInt32(u'app_focus_count'),
-      construct.ULInt32(u'focus_duration'),
+      construct.ULInt32('count'),
+      construct.ULInt32('app_focus_count'),
+      construct.ULInt32('focus_duration'),
       construct.Padding(44),
-      construct.ULInt64(u'timestamp'),
+      construct.ULInt64('timestamp'),
       construct.Padding(4))
 
   def GetEntries(self, parser_mediator, registry_key, **kwargs):

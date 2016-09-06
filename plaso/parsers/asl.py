@@ -101,13 +101,13 @@ class ASLParser(interface.FileObjectParser):
   #     Contains the number of seconds since January 1, 1970 00:00:00 UTC.
   # last_offset: last record in the file.
   _ASL_HEADER_STRUCT = construct.Struct(
-      u'asl_header_struct',
-      construct.String(u'signature', 12),
-      construct.UBInt32(u'version'),
-      construct.UBInt64(u'offset'),
-      construct.UBInt64(u'timestamp'),
-      construct.UBInt32(u'cache_size'),
-      construct.UBInt64(u'last_offset'),
+      'asl_header_struct',
+      construct.String('signature', 12),
+      construct.UBInt32('version'),
+      construct.UBInt64('offset'),
+      construct.UBInt64('timestamp'),
+      construct.UBInt32('cache_size'),
+      construct.UBInt64('last_offset'),
       construct.Padding(36))
 
   # The record structure is:
@@ -128,21 +128,21 @@ class ASLParser(interface.FileObjectParser):
   #           Only root and this user can read the entry.
   # read_gid: the same than read_uid, but for the group.
   _ASL_RECORD_STRUCT = construct.Struct(
-      u'asl_record_struct',
+      'asl_record_struct',
       construct.Padding(2),
-      construct.UBInt32(u'tam_entry'),
-      construct.UBInt64(u'next_offset'),
-      construct.UBInt64(u'asl_message_id'),
-      construct.UBInt64(u'timestamp'),
-      construct.UBInt32(u'nanosec'),
-      construct.UBInt16(u'level'),
-      construct.UBInt16(u'flags'),
-      construct.UBInt32(u'pid'),
-      construct.UBInt32(u'uid'),
-      construct.UBInt32(u'gid'),
-      construct.UBInt32(u'read_uid'),
-      construct.UBInt32(u'read_gid'),
-      construct.UBInt64(u'ref_pid'))
+      construct.UBInt32('tam_entry'),
+      construct.UBInt64('next_offset'),
+      construct.UBInt64('asl_message_id'),
+      construct.UBInt64('timestamp'),
+      construct.UBInt32('nanosec'),
+      construct.UBInt16('level'),
+      construct.UBInt16('flags'),
+      construct.UBInt32('pid'),
+      construct.UBInt32('uid'),
+      construct.UBInt32('gid'),
+      construct.UBInt32('read_uid'),
+      construct.UBInt32('read_gid'),
+      construct.UBInt64('ref_pid'))
 
   _ASL_RECORD_STRUCT_SIZE = _ASL_RECORD_STRUCT.sizeof()
 
@@ -155,7 +155,7 @@ class ASLParser(interface.FileObjectParser):
   # If the field is a String, we use this structure to decode each
   # integer byte in the corresponding character (ASCII Char).
   _ASL_OCTET_STRING = construct.ExprAdapter(
-      construct.Octet(u'string'),
+      construct.Octet('string'),
       encoder=lambda obj, ctx: ord(obj),
       decoder=lambda obj, ctx: chr(obj))
 
@@ -164,25 +164,25 @@ class ASLParser(interface.FileObjectParser):
   # characters. The last 7 bytes are the number of bytes.
   _ASL_STRING = construct.BitStruct(
       u'string',
-      construct.Flag(u'type'),
-      construct.Bits(u'filler', 3),
+      construct.Flag('type'),
+      construct.Bits('filler', 3),
       construct.If(
           lambda ctx: ctx.type,
-          construct.Nibble(u'string_length')),
+          construct.Nibble('string_length')),
       construct.If(
           lambda ctx: ctx.type,
           construct.Array(7, _ASL_OCTET_STRING)))
 
   # 8-byte pointer to a byte position in the file.
-  _ASL_POINTER = construct.UBInt64(u'pointer')
+  _ASL_POINTER = construct.UBInt64('pointer')
 
   # Dynamic data structure pointed by a pointer that contains a String:
   # [2 bytes padding][4 bytes size of String][String].
   _ASL_RECORD_DYN_VALUE = construct.Struct(
-      u'asl_record_dyn_value',
+      'asl_record_dyn_value',
       construct.Padding(2),
-      construct.UBInt32(u'size'),
-      construct.Bytes(u'value', lambda ctx: ctx.size))
+      construct.UBInt32('size'),
+      construct.Bytes('value', lambda ctx: ctx.size))
 
   @classmethod
   def GetFormatSpecification(cls):

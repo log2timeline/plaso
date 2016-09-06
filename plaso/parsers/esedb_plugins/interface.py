@@ -36,8 +36,8 @@ class ESEDBPlugin(plugins.BasePlugin):
       pyesedb.column_types.TEXT,
       pyesedb.column_types.LARGE_TEXT])
 
-  _UINT64_BIG_ENDIAN = construct.UBInt64(u'value')
-  _UINT64_LITTLE_ENDIAN = construct.ULInt64(u'value')
+  _UINT64_BIG_ENDIAN = construct.UBInt64('value')
+  _UINT64_LITTLE_ENDIAN = construct.ULInt64('value')
 
   # Dictionary containing a callback method per table name.
   # E.g. 'SystemIndex_0A': 'ParseSystemIndex_0A'

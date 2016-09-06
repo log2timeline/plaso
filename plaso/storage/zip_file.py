@@ -135,12 +135,12 @@ import time
 import warnings
 import zipfile
 
+import construct
+
 try:
   import ConfigParser as configparser
 except ImportError:
   import configparser  # pylint: disable=import-error
-
-import construct
 
 from plaso.containers import sessions
 from plaso.lib import definitions
@@ -416,8 +416,8 @@ class _SerializedDataStream(object):
   """Class that defines a serialized data stream."""
 
   _DATA_ENTRY = construct.Struct(
-      u'data_entry',
-      construct.ULInt32(u'size'))
+      'data_entry',
+      construct.ULInt32('size'))
   _DATA_ENTRY_SIZE = _DATA_ENTRY.sizeof()
 
   # The maximum serialized data size (40 MiB).
@@ -550,7 +550,7 @@ class _SerializedDataStream(object):
     Raises:
       IOError: if the entry cannot be written.
     """
-    data_size = construct.ULInt32(u'size').build(len(data))
+    data_size = construct.ULInt32('size').build(len(data))
     self._file_object.write(data_size)
     self._file_object.write(data)
 
@@ -601,11 +601,11 @@ class _SerializedDataOffsetTable(object):
   """Class that defines a serialized data offset table."""
 
   _TABLE = construct.GreedyRange(
-      construct.ULInt32(u'offset'))
+      construct.ULInt32('offset'))
 
   _TABLE_ENTRY = construct.Struct(
-      u'table_entry',
-      construct.ULInt32(u'offset'))
+      'table_entry',
+      construct.ULInt32('offset'))
   _TABLE_ENTRY_SIZE = _TABLE_ENTRY.sizeof()
 
   def __init__(self, zip_file, stream_name):
@@ -688,11 +688,11 @@ class _SerializedDataTimestampTable(object):
   """Class that defines a serialized data timestamp table."""
 
   _TABLE = construct.GreedyRange(
-      construct.SLInt64(u'timestamp'))
+      construct.SLInt64('timestamp'))
 
   _TABLE_ENTRY = construct.Struct(
-      u'table_entry',
-      construct.SLInt64(u'timestamp'))
+      'table_entry',
+      construct.SLInt64('timestamp'))
   _TABLE_ENTRY_SIZE = _TABLE_ENTRY.sizeof()
 
   def __init__(self, zip_file, stream_name):
@@ -777,18 +777,18 @@ class _SerializedEventTagIndexTable(object):
   """Class that defines a serialized event tag index table."""
 
   _TAG_STORE_STRUCT = construct.Struct(
-      u'tag_store',
-      construct.ULInt32(u'store_number'),
-      construct.ULInt32(u'store_index'))
+      'tag_store',
+      construct.ULInt32('store_number'),
+      construct.ULInt32('store_index'))
 
   _TAG_UUID_STRUCT = construct.Struct(
-      u'tag_uuid',
-      construct.PascalString(u'event_uuid'))
+      'tag_uuid',
+      construct.PascalString('event_uuid'))
 
   _TAG_INDEX_STRUCT = construct.Struct(
-      u'tag_index',
-      construct.Byte(u'tag_type'),
-      construct.ULInt32(u'offset'),
+      'tag_index',
+      construct.Byte('tag_type'),
+      construct.ULInt32('offset'),
       construct.IfThenElse(
           u'tag',
           lambda ctx: ctx[u'tag_type'] == 1,

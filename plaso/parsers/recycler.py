@@ -58,14 +58,14 @@ class WinRecycleBinParser(interface.FileObjectParser):
   DESCRIPTION = u'Parser for Windows $Recycle.Bin $I files.'
 
   _FILE_HEADER_STRUCT = construct.Struct(
-      u'file_header',
-      construct.ULInt64(u'format_version'),
-      construct.ULInt64(u'file_size'),
-      construct.ULInt64(u'deletion_time'))
+      'file_header',
+      construct.ULInt64('format_version'),
+      construct.ULInt64('file_size'),
+      construct.ULInt64('deletion_time'))
 
   _FILENAME_V2_STRUCT = construct.Struct(
-      u'filename_v2',
-      construct.ULInt32(u'number_of_characters'),
+      'filename_v2',
+      construct.ULInt32('number_of_characters'),
       construct.String(
           u'string', lambda ctx: ctx.number_of_characters * 2))
 
@@ -123,21 +123,21 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
   DESCRIPTION = u'Parser for Windows Recycler INFO2 files.'
 
   _FILE_HEADER_STRUCT = construct.Struct(
-      u'file_header',
-      construct.ULInt32(u'unknown1'),
-      construct.ULInt32(u'unknown2'),
-      construct.ULInt32(u'unknown3'),
-      construct.ULInt32(u'record_size'),
-      construct.ULInt32(u'unknown4'))
+      'file_header',
+      construct.ULInt32('unknown1'),
+      construct.ULInt32('unknown2'),
+      construct.ULInt32('unknown3'),
+      construct.ULInt32('record_size'),
+      construct.ULInt32('unknown4'))
 
   _RECYCLER_RECORD_STRUCT = construct.Struct(
-      u'recycler_record',
-      construct.ULInt32(u'index'),
-      construct.ULInt32(u'drive_number'),
-      construct.ULInt64(u'deletion_time'),
-      construct.ULInt32(u'file_size'))
+      'recycler_record',
+      construct.ULInt32('index'),
+      construct.ULInt32('drive_number'),
+      construct.ULInt64('deletion_time'),
+      construct.ULInt32('file_size'))
 
-  _ASCII_STRING = construct.CString(u'string')
+  _ASCII_STRING = construct.CString('string')
 
   _RECORD_INDEX_OFFSET = 0x104
   _UNICODE_FILENAME_OFFSET = 0x118

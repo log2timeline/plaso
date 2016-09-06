@@ -222,21 +222,21 @@ class NTFSUsnJrnlParser(interface.FileObjectParser):
   DESCRIPTION = u'Parser for NTFS USN change journal ($UsnJrnl).'
 
   _USN_RECORD_V2 = construct.Struct(
-      u'usn_record_v2',
-      construct.ULInt32(u'size'),
-      construct.ULInt16(u'major_version'),
-      construct.ULInt16(u'minor_version'),
-      construct.ULInt64(u'file_reference'),
-      construct.ULInt64(u'parent_file_reference'),
-      construct.ULInt64(u'update_sequence_number'),
-      construct.ULInt64(u'update_date_time'),
-      construct.ULInt32(u'update_reason_flags'),
-      construct.ULInt32(u'update_source_flags'),
-      construct.ULInt32(u'security_descriptor_identifier'),
-      construct.ULInt32(u'file_attribute_flags'),
-      construct.ULInt16(u'name_size'),
-      construct.ULInt16(u'name_offset'),
-      construct.String(u'name', lambda ctx: ctx.size - 60))
+      'usn_record_v2',
+      construct.ULInt32('size'),
+      construct.ULInt16('major_version'),
+      construct.ULInt16('minor_version'),
+      construct.ULInt64('file_reference'),
+      construct.ULInt64('parent_file_reference'),
+      construct.ULInt64('update_sequence_number'),
+      construct.ULInt64('update_date_time'),
+      construct.ULInt32('update_reason_flags'),
+      construct.ULInt32('update_source_flags'),
+      construct.ULInt32('security_descriptor_identifier'),
+      construct.ULInt32('file_attribute_flags'),
+      construct.ULInt16('name_size'),
+      construct.ULInt16('name_offset'),
+      construct.String('name', lambda ctx: ctx.size - 60))
 
   # TODO: add support for USN_RECORD_V3 when actually seen to be used.
 

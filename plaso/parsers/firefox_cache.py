@@ -142,17 +142,17 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
   _MINUMUM_BLOCK_SIZE = 256
 
   _CACHE_RECORD_HEADER_STRUCT = construct.Struct(
-      u'record_header',
-      construct.UBInt16(u'major'),
-      construct.UBInt16(u'minor'),
-      construct.UBInt32(u'location'),
-      construct.UBInt32(u'fetch_count'),
-      construct.UBInt32(u'last_fetched'),
-      construct.UBInt32(u'last_modified'),
-      construct.UBInt32(u'expire_time'),
-      construct.UBInt32(u'data_size'),
-      construct.UBInt32(u'request_size'),
-      construct.UBInt32(u'info_size'))
+      'record_header',
+      construct.UBInt16('major'),
+      construct.UBInt16('minor'),
+      construct.UBInt32('location'),
+      construct.UBInt32('fetch_count'),
+      construct.UBInt32('last_fetched'),
+      construct.UBInt32('last_modified'),
+      construct.UBInt32('expire_time'),
+      construct.UBInt32('data_size'),
+      construct.UBInt32('request_size'),
+      construct.UBInt32('info_size'))
 
   _CACHE_RECORD_HEADER_SIZE = _CACHE_RECORD_HEADER_STRUCT.sizeof()
 
@@ -345,17 +345,17 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
   _CACHE_FILENAME = pyparsing.Word(pyparsing.hexnums, exact=40)
 
   # The last four bytes of a file gives the size of the cached content.
-  _LENGTH = construct.UBInt32(u'length')
+  _LENGTH = construct.UBInt32('length')
 
   _CACHE_RECORD_HEADER_STRUCT = construct.Struct(
-      u'record_header',
-      construct.UBInt32(u'major'),
-      construct.UBInt32(u'fetch_count'),
-      construct.UBInt32(u'last_fetched'),
-      construct.UBInt32(u'last_modified'),
-      construct.UBInt32(u'frequency'),
-      construct.UBInt32(u'expire_time'),
-      construct.UBInt32(u'request_size'))
+      'record_header',
+      construct.UBInt32('major'),
+      construct.UBInt32('fetch_count'),
+      construct.UBInt32('last_fetched'),
+      construct.UBInt32('last_modified'),
+      construct.UBInt32('frequency'),
+      construct.UBInt32('expire_time'),
+      construct.UBInt32('request_size'))
 
   _CHUNK_SIZE = 512 * 1024
 

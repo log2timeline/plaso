@@ -58,7 +58,7 @@ class CacheAddress(object):
       self.is_initialized = u'False'
 
     self.file_type = (cache_address & 0x70000000) >> 28
-    if not cache_address == 0x00000000:
+    if cache_address != 0x00000000:
       if self.file_type == self.FILE_TYPE_SEPARATE:
         file_selector = cache_address & 0x0fffffff
         self.filename = u'f_{0:06x}'.format(file_selector)
@@ -103,19 +103,19 @@ class IndexFile(object):
   SIGNATURE = 0xc103cac3
 
   _FILE_HEADER = construct.Struct(
-      u'chrome_cache_index_file_header',
-      construct.ULInt32(u'signature'),
-      construct.ULInt16(u'minor_version'),
-      construct.ULInt16(u'major_version'),
-      construct.ULInt32(u'number_of_entries'),
-      construct.ULInt32(u'stored_data_size'),
-      construct.ULInt32(u'last_created_file_number'),
-      construct.ULInt32(u'unknown1'),
-      construct.ULInt32(u'unknown2'),
-      construct.ULInt32(u'table_size'),
-      construct.ULInt32(u'unknown3'),
-      construct.ULInt32(u'unknown4'),
-      construct.ULInt64(u'creation_time'),
+      'chrome_cache_index_file_header',
+      construct.ULInt32('signature'),
+      construct.ULInt16('minor_version'),
+      construct.ULInt16('major_version'),
+      construct.ULInt32('number_of_entries'),
+      construct.ULInt32('stored_data_size'),
+      construct.ULInt32('last_created_file_number'),
+      construct.ULInt32('unknown1'),
+      construct.ULInt32('unknown2'),
+      construct.ULInt32('table_size'),
+      construct.ULInt32('unknown3'),
+      construct.ULInt32('unknown4'),
+      construct.ULInt64('creation_time'),
       construct.Padding(208))
 
   def __init__(self):
@@ -160,7 +160,7 @@ class IndexFile(object):
     cache_address_data = self._file_object.read(4)
 
     while len(cache_address_data) == 4:
-      value = construct.ULInt32(u'cache_address').parse(cache_address_data)
+      value = construct.ULInt32('cache_address').parse(cache_address_data)
 
       if value:
         cache_address = CacheAddress(value)
@@ -193,37 +193,37 @@ class DataBlockFile(object):
   SIGNATURE = 0xc104cac3
 
   _FILE_HEADER = construct.Struct(
-      u'chrome_cache_data_file_header',
-      construct.ULInt32(u'signature'),
-      construct.ULInt16(u'minor_version'),
-      construct.ULInt16(u'major_version'),
-      construct.ULInt16(u'file_number'),
-      construct.ULInt16(u'next_file_number'),
-      construct.ULInt32(u'block_size'),
-      construct.ULInt32(u'number_of_entries'),
-      construct.ULInt32(u'maximum_number_of_entries'),
-      construct.Array(4, construct.ULInt32(u'emtpy')),
-      construct.Array(4, construct.ULInt32(u'hints')),
-      construct.ULInt32(u'updating'),
-      construct.Array(5, construct.ULInt32(u'user')))
+      'chrome_cache_data_file_header',
+      construct.ULInt32('signature'),
+      construct.ULInt16('minor_version'),
+      construct.ULInt16('major_version'),
+      construct.ULInt16('file_number'),
+      construct.ULInt16('next_file_number'),
+      construct.ULInt32('block_size'),
+      construct.ULInt32('number_of_entries'),
+      construct.ULInt32('maximum_number_of_entries'),
+      construct.Array(4, construct.ULInt32('emtpy')),
+      construct.Array(4, construct.ULInt32('hints')),
+      construct.ULInt32('updating'),
+      construct.Array(5, construct.ULInt32('user')))
 
   _CACHE_ENTRY = construct.Struct(
-      u'chrome_cache_entry',
-      construct.ULInt32(u'hash'),
-      construct.ULInt32(u'next_address'),
-      construct.ULInt32(u'rankings_node_address'),
-      construct.ULInt32(u'reuse_count'),
-      construct.ULInt32(u'refetch_count'),
-      construct.ULInt32(u'state'),
-      construct.ULInt64(u'creation_time'),
-      construct.ULInt32(u'key_size'),
-      construct.ULInt32(u'long_key_address'),
-      construct.Array(4, construct.ULInt32(u'data_stream_sizes')),
-      construct.Array(4, construct.ULInt32(u'data_stream_addresses')),
-      construct.ULInt32(u'flags'),
+      'chrome_cache_entry',
+      construct.ULInt32('hash'),
+      construct.ULInt32('next_address'),
+      construct.ULInt32('rankings_node_address'),
+      construct.ULInt32('reuse_count'),
+      construct.ULInt32('refetch_count'),
+      construct.ULInt32('state'),
+      construct.ULInt64('creation_time'),
+      construct.ULInt32('key_size'),
+      construct.ULInt32('long_key_address'),
+      construct.Array(4, construct.ULInt32('data_stream_sizes')),
+      construct.Array(4, construct.ULInt32('data_stream_addresses')),
+      construct.ULInt32('flags'),
       construct.Padding(16),
-      construct.ULInt32(u'self_hash'),
-      construct.Array(160, construct.UBInt8(u'key')))
+      construct.ULInt32('self_hash'),
+      construct.Array(160, construct.UBInt8('key')))
 
   def __init__(self):
     """Initializes the data block file object."""

@@ -47,23 +47,23 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
       u'Task%20Scheduler%20Keys.asciidoc')]
 
   _DYNAMIC_INFO_STRUCT = construct.Struct(
-      u'dynamic_info_record',
-      construct.ULInt32(u'unknown1'),
-      construct.ULInt64(u'last_registered_time'),
-      construct.ULInt64(u'launch_time'),
-      construct.ULInt32(u'unknown2'),
-      construct.ULInt32(u'unknown3'))
+      'dynamic_info_record',
+      construct.ULInt32('unknown1'),
+      construct.ULInt64('last_registered_time'),
+      construct.ULInt64('launch_time'),
+      construct.ULInt32('unknown2'),
+      construct.ULInt32('unknown3'))
 
   _DYNAMIC_INFO_STRUCT_SIZE = _DYNAMIC_INFO_STRUCT.sizeof()
 
   _DYNAMIC_INFO2_STRUCT = construct.Struct(
-      u'dynamic_info2_record',
-      construct.ULInt32(u'unknown1'),
-      construct.ULInt64(u'last_registered_time'),
-      construct.ULInt64(u'launch_time'),
-      construct.ULInt32(u'unknown2'),
-      construct.ULInt32(u'unknown3'),
-      construct.ULInt64(u'unknown_time'))
+      'dynamic_info2_record',
+      construct.ULInt32('unknown1'),
+      construct.ULInt64('last_registered_time'),
+      construct.ULInt64('launch_time'),
+      construct.ULInt32('unknown2'),
+      construct.ULInt32('unknown3'),
+      construct.ULInt64('unknown_time'))
 
   _DYNAMIC_INFO2_STRUCT_SIZE = _DYNAMIC_INFO2_STRUCT.sizeof()
 

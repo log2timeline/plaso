@@ -72,14 +72,14 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
   _WINLNK_PARSER = winlnk.WinLnkParser()
 
   _DEST_LIST_STREAM_HEADER = construct.Struct(
-      u'dest_list_stream_header',
-      construct.ULInt32(u'format_version'),
-      construct.ULInt32(u'number_of_entries'),
-      construct.ULInt32(u'number_of_pinned_entries'),
+      'dest_list_stream_header',
+      construct.ULInt32('format_version'),
+      construct.ULInt32('number_of_entries'),
+      construct.ULInt32('number_of_pinned_entries'),
       construct.Padding(4),
-      construct.ULInt32(u'last_entry_number'),
+      construct.ULInt32('last_entry_number'),
       construct.Padding(4),
-      construct.ULInt32(u'last_revision_number'),
+      construct.ULInt32('last_revision_number'),
       construct.Padding(4))
 
   _DEST_LIST_STREAM_HEADER_SIZE = _DEST_LIST_STREAM_HEADER.sizeof()
@@ -88,35 +88,35 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
   # end-of-string characters exposed. Instead the strings are read as
   # binary strings and converted using ReadUTF16().
   _DEST_LIST_STREAM_ENTRY_V1 = construct.Struct(
-      u'dest_list_stream_entry_v1',
+      'dest_list_stream_entry_v1',
       construct.Padding(8),
-      construct.Bytes(u'droid_volume_identifier', 16),
-      construct.Bytes(u'droid_file_identifier', 16),
-      construct.Bytes(u'birth_droid_volume_identifier', 16),
-      construct.Bytes(u'birth_droid_file_identifier', 16),
-      construct.String(u'hostname', 16),
-      construct.ULInt32(u'entry_number'),
+      construct.Bytes('droid_volume_identifier', 16),
+      construct.Bytes('droid_file_identifier', 16),
+      construct.Bytes('birth_droid_volume_identifier', 16),
+      construct.Bytes('birth_droid_file_identifier', 16),
+      construct.String('hostname', 16),
+      construct.ULInt32('entry_number'),
       construct.Padding(8),
-      construct.ULInt64(u'last_modification_time'),
-      construct.ULInt32(u'pin_status'),
-      construct.ULInt16(u'path_size'),
-      construct.String(u'path', lambda ctx: ctx.path_size * 2))
+      construct.ULInt64('last_modification_time'),
+      construct.ULInt32('pin_status'),
+      construct.ULInt16('path_size'),
+      construct.String('path', lambda ctx: ctx.path_size * 2))
 
   _DEST_LIST_STREAM_ENTRY_V3 = construct.Struct(
-      u'dest_list_stream_entry_v3',
+      'dest_list_stream_entry_v3',
       construct.Padding(8),
-      construct.Bytes(u'droid_volume_identifier', 16),
-      construct.Bytes(u'droid_file_identifier', 16),
-      construct.Bytes(u'birth_droid_volume_identifier', 16),
-      construct.Bytes(u'birth_droid_file_identifier', 16),
-      construct.String(u'hostname', 16),
-      construct.ULInt32(u'entry_number'),
+      construct.Bytes('droid_volume_identifier', 16),
+      construct.Bytes('droid_file_identifier', 16),
+      construct.Bytes('birth_droid_volume_identifier', 16),
+      construct.Bytes('birth_droid_file_identifier', 16),
+      construct.String('hostname', 16),
+      construct.ULInt32('entry_number'),
       construct.Padding(8),
-      construct.ULInt64(u'last_modification_time'),
-      construct.ULInt32(u'pin_status'),
+      construct.ULInt64('last_modification_time'),
+      construct.ULInt32('pin_status'),
       construct.Padding(16),
-      construct.ULInt16(u'path_size'),
-      construct.String(u'path', lambda ctx: ctx.path_size * 2),
+      construct.ULInt16('path_size'),
+      construct.String('path', lambda ctx: ctx.path_size * 2),
       construct.Padding(4))
 
   def ParseDestList(self, parser_mediator, olecf_item):

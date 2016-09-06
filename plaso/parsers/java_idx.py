@@ -60,55 +60,55 @@ class JavaIDXParser(interface.FileObjectParser):
   DESCRIPTION = u'Parser for Java WebStart Cache IDX files.'
 
   IDX_SHORT_STRUCT = construct.Struct(
-      u'magic',
-      construct.UBInt8(u'busy'),
-      construct.UBInt8(u'incomplete'),
-      construct.UBInt32(u'idx_version'))
+      'magic',
+      construct.UBInt8('busy'),
+      construct.UBInt8('incomplete'),
+      construct.UBInt32('idx_version'))
 
   IDX_602_STRUCT = construct.Struct(
-      u'IDX_602_Full',
-      construct.UBInt16(u'null_space'),
-      construct.UBInt8(u'shortcut'),
-      construct.UBInt32(u'content_length'),
-      construct.UBInt64(u'last_modified_date'),
-      construct.UBInt64(u'expiration_date'),
+      'IDX_602_Full',
+      construct.UBInt16('null_space'),
+      construct.UBInt8('shortcut'),
+      construct.UBInt32('content_length'),
+      construct.UBInt64('last_modified_date'),
+      construct.UBInt64('expiration_date'),
       construct.PascalString(
-          u'version_string', length_field=construct.UBInt16(u'length')),
+          u'version_string', length_field=construct.UBInt16('length')),
       construct.PascalString(
-          u'url', length_field=construct.UBInt16(u'length')),
+          u'url', length_field=construct.UBInt16('length')),
       construct.PascalString(
-          u'namespace', length_field=construct.UBInt16(u'length')),
-      construct.UBInt32(u'FieldCount'))
+          u'namespace', length_field=construct.UBInt16('length')),
+      construct.UBInt32('FieldCount'))
 
   IDX_605_SECTION_ONE_STRUCT = construct.Struct(
-      u'IDX_605_Section1',
-      construct.UBInt8(u'shortcut'),
-      construct.UBInt32(u'content_length'),
-      construct.UBInt64(u'last_modified_date'),
-      construct.UBInt64(u'expiration_date'),
-      construct.UBInt64(u'validation_date'),
-      construct.UBInt8(u'signed'),
-      construct.UBInt32(u'sec2len'),
-      construct.UBInt32(u'sec3len'),
-      construct.UBInt32(u'sec4len'))
+      'IDX_605_Section1',
+      construct.UBInt8('shortcut'),
+      construct.UBInt32('content_length'),
+      construct.UBInt64('last_modified_date'),
+      construct.UBInt64('expiration_date'),
+      construct.UBInt64('validation_date'),
+      construct.UBInt8('signed'),
+      construct.UBInt32('sec2len'),
+      construct.UBInt32('sec3len'),
+      construct.UBInt32('sec4len'))
 
   IDX_605_SECTION_TWO_STRUCT = construct.Struct(
-      u'IDX_605_Section2',
+      'IDX_605_Section2',
       construct.PascalString(
-          u'version', length_field=construct.UBInt16(u'length')),
+          u'version', length_field=construct.UBInt16('length')),
       construct.PascalString(
-          u'url', length_field=construct.UBInt16(u'length')),
+          u'url', length_field=construct.UBInt16('length')),
       construct.PascalString(
-          u'namespec', length_field=construct.UBInt16(u'length')),
+          u'namespec', length_field=construct.UBInt16('length')),
       construct.PascalString(
-          u'ip_address', length_field=construct.UBInt16(u'length')),
-      construct.UBInt32(u'FieldCount'))
+          u'ip_address', length_field=construct.UBInt16('length')),
+      construct.UBInt32('FieldCount'))
 
   # Java uses Pascal-style strings, but with a 2-byte length field.
   JAVA_READUTF_STRING = construct.Struct(
-      u'Java.ReadUTF',
+      'Java.ReadUTF',
       construct.PascalString(
-          u'string', length_field=construct.UBInt16(u'length')))
+          u'string', length_field=construct.UBInt16('length')))
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Java WebStart Cache IDX file-like object.
@@ -136,7 +136,7 @@ class JavaIDXParser(interface.FileObjectParser):
     if magic.busy > 1 or magic.incomplete > 1:
       raise errors.UnableToParseFile(u'Not a valid Java IDX file')
 
-    if not magic.idx_version in [602, 603, 604, 605]:
+    if magic.idx_version not in [602, 603, 604, 605]:
       raise errors.UnableToParseFile(u'Not a valid Java IDX file')
 
     # Obtain the relevant values from the file. The last modified date
