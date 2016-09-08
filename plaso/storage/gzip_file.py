@@ -7,6 +7,7 @@ Only supports task storage at the moment.
 import gzip
 
 from plaso.lib import definitions
+from plaso.serializer import json_serializer
 from plaso.storage import interface
 
 
@@ -281,6 +282,100 @@ class GZIPStorageFile(interface.BaseFileStorage):
       task_start (TaskStart): task start information.
     """
     self._WriteAttributeContainer(task_start)
+
+
+class GZIPStorageMergeReader(object):
+  """Class that implements a gzip-based storage file reader for merging."""
+
+  _DATA_BUFFER_SIZE = 16 * 1024 * 1024
+
+  def __init__(self, storage_type=definitions.STORAGE_TYPE_TASK):
+    """Initializes a storage merge reader.
+
+    Args:
+      storage_type (Optional[str]): storage type.
+
+    Raises:
+      ValueError: if the storage type is not supported.
+    """
+    if storage_type != definitions.STORAGE_TYPE_TASK:
+      raise ValueError(u'Unsupported storage type: {0:s}.'.format(
+          storage_type))
+
+    super(GZIPStorageMergeReader, self).__init__()
+    self._serializer = json_serializer.JSONAttributeContainerSerializer
+    self._serializers_profiler = None
+
+  def _DeserializeAttributeContainer(self, container_data, container_type):
+    """Deserializes an attribute container.
+
+    Args:
+      container_data (bytes): serialized attribute container data.
+      container_type (str): attribute container type.
+
+    Returns:
+      AttributeContainer: attribute container or None.
+    """
+    if not container_data:
+      return
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(container_type)
+
+    attribute_container = self._serializer.ReadSerialized(container_data)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StopTiming(container_type)
+
+    return attribute_container
+
+  def WriteToStorage(self, storage_writer, path=None):
+    """Reads data from the storage file into the writer.
+
+    Args:
+      storage_writer (StorageWriter): storage writer.
+      path (Optional[str]): path of the storage file.
+
+    Raises:
+      ValueError: if path is missing.
+    """
+    if not path:
+      raise ValueError(u'Missing path.')
+
+    gzip_file = gzip.open(path, 'rb')
+
+    try:
+      # Do not use gzip.readlines() here since it can consume a large amount
+      # of memory.
+      data_buffer = gzip_file.read(self._DATA_BUFFER_SIZE)
+      while data_buffer:
+        while b'\n' in data_buffer:
+          line, _, data_buffer = data_buffer.partition(b'\n')
+          attribute_container = self._DeserializeAttributeContainer(
+              line, u'attribute_container')
+
+          container_type = attribute_container.CONTAINER_TYPE
+          if container_type == 'analysis_report':
+            storage_writer.AddAnalysisReport(attribute_container)
+
+          elif container_type == 'event_source':
+            storage_writer.AddEventSource(attribute_container)
+
+          elif container_type == 'event':
+            storage_writer.AddEvent(attribute_container)
+
+          elif container_type == 'event_tag':
+            storage_writer.AddEventTag(attribute_container)
+
+          elif container_type == 'error':
+            storage_writer.AddError(attribute_container)
+
+        additional_data_buffer = gzip_file.read(self._DATA_BUFFER_SIZE)
+        data_buffer = b''.join([data_buffer, additional_data_buffer])
+
+    finally:
+      gzip_file.close()
+      gzip_file = None
 
 
 class GZIPStorageFileReader(interface.FileStorageReader):
