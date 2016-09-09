@@ -157,6 +157,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._serializers_profiler = None
     self._session_identifier = None
     self._status = definitions.PROCESSING_STATUS_IDLE
+    self._storage_merge_reader = None
     self._storage_writer = None
     self._task_queue = None
     self._task_queue_port = None
@@ -191,20 +192,31 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if self._processing_profiler:
       self._processing_profiler.StopTiming(u'merge_check')
 
-    # Merge only one task-based storage file per loop to keep tasks flowing.
-    task_identifier = self._task_manager.GetTaskPendingMerge()
-    if task_identifier:
+    task_identifier = None
+    if not self._storage_merge_reader:
+      task_identifier = self._task_manager.GetTaskPendingMerge()
+
+    # Merge only 10000 attributes from a single task-based storage file
+    # per loop to keep tasks flowing.
+    if task_identifier or self._storage_merge_reader:
       self._status = definitions.PROCESSING_STATUS_MERGING
       self._merge_task_identifier = task_identifier
 
       if self._processing_profiler:
         self._processing_profiler.StartTiming(u'merge')
 
-      # TODO: look into time slicing merge.
-      storage_writer.MergeTaskStorage(task_identifier)
+      if not self._storage_merge_reader:
+        self._storage_merge_reader = storage_writer.StartMergeTaskStorage(
+            task_identifier)
+
+      fully_merged = self._storage_merge_reader.MergeAttributeContainers(
+          maximum_number_of_containers=10000)
 
       if self._processing_profiler:
         self._processing_profiler.StopTiming(u'merge')
+
+      if fully_merged:
+        self._storage_merge_reader = None
 
       self._status = definitions.PROCESSING_STATUS_RUNNING
       self._merge_task_identifier = u''

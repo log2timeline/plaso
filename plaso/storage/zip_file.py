@@ -3164,43 +3164,6 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       self._written_event_source_index += 1
     return event_source
 
-  def MergeTaskStorage(self, task_name):
-    """Merges a task storage with the session storage.
-
-    Args:
-      task_name (str): unique name of the task.
-
-    Returns:
-      bool: True if the task storage was merged.
-
-    Raises:
-      IOError: if the storage type is not supported or
-               if the temporary path for the task storage does not exist.
-    """
-    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
-      raise IOError(u'Unsupported storage type.')
-
-    if not self._merge_task_storage_path:
-      raise IOError(u'Missing merge task storage path.')
-
-    storage_file_path = os.path.join(
-        self._merge_task_storage_path, u'{0:s}.plaso'.format(task_name))
-
-    if not os.path.isfile(storage_file_path):
-      return False
-
-    storage_merge_reader = gzip_file.GZIPStorageMergeReader()
-
-    try:
-      # In Windows the file could be inaccessible while it is being moved.
-      # storage_reader = ZIPStorageFileReader(storage_file_path)
-      storage_merge_reader.WriteToStorage(self, path=storage_file_path)
-    except IOError:
-      return False
-
-    os.remove(storage_file_path)
-    return True
-
   def Open(self):
     """Opens the storage writer.
 
@@ -3284,6 +3247,35 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self._serializers_profiler = serializers_profiler
     if self._storage_file:
       self._storage_file.SetSerializersProfiler(serializers_profiler)
+
+  def StartMergeTaskStorage(self, task_name):
+    """Starts a merge of a task storage with the session storage.
+
+    Args:
+      task_name (str): unique name of the task.
+
+    Returns:
+      StorageMergeReader: storage merge reader of the task storage.
+
+    Raises:
+      IOError: if the storage type is not supported or
+               if the temporary path for the task storage does not exist or
+               if the temporary path for the task storage doe not refers to
+               a file.
+    """
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Unsupported storage type.')
+
+    if not self._merge_task_storage_path:
+      raise IOError(u'Missing merge task storage path.')
+
+    storage_file_path = os.path.join(
+        self._merge_task_storage_path, u'{0:s}.plaso'.format(task_name))
+
+    if not os.path.isfile(storage_file_path):
+      raise IOError(u'Merge task storage path is not a file.')
+
+    return gzip_file.GZIPStorageMergeReader(self, storage_file_path)
 
   def StartTaskStorage(self):
     """Creates a temporary path for the task storage.
