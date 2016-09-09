@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The arguments helper for the xlsx output module."""
+"""The XLSX output module CLI arguments helper."""
 
 from plaso.lib import errors
 from plaso.cli.helpers import interface
@@ -7,8 +7,8 @@ from plaso.cli.helpers import manager
 from plaso.output import xlsx
 
 
-class XLSXOutputHelper(interface.ArgumentsHelper):
-  """CLI arguments helper class for the XLSX output module."""
+class XLSXOutputArgumentsHelper(interface.ArgumentsHelper):
+  """XLSX output module CLI arguments helper."""
 
   NAME = u'xlsx'
   CATEGORY = u'output'
@@ -22,19 +22,25 @@ class XLSXOutputHelper(interface.ArgumentsHelper):
 
   @classmethod
   def AddArguments(cls, argument_group):
-    """Add command line arguments the helper supports to an argument group.
+    """Adds command line arguments the helper supports to an argument group.
 
     This function takes an argument parser or an argument group object and adds
     to it all the command line arguments this helper supports.
 
     Args:
-      argument_group: the argparse group (instance of argparse._ArgumentGroup or
-                      or argparse.ArgumentParser).
+      argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
+          argparse group.
     """
     argument_group.add_argument(
         u'--fields', dest=u'fields', type=str, action=u'store',
         default=cls._DEFAULT_FIELDS, help=(
             u'Defines which fields should be included in the output.'))
+    argument_group.add_argument(
+        u'--additional_fields', dest=u'additional_fields', type=str,
+        action=u'store', default=u'', help=(
+            u'Defines extra fields to be included in the output, in addition to'
+            u' the default fields, which are {0:s}.'.format(
+                cls._DEFAULT_FIELDS)))
     argument_group.add_argument(
         u'--timestamp_format', dest=u'timestamp_format', type=str,
         action=u'store', default=cls._DEFAULT_TIMESTAMP_FORMAT, help=(
@@ -46,8 +52,8 @@ class XLSXOutputHelper(interface.ArgumentsHelper):
     """Parses and validates options.
 
     Args:
-      options: the parser option object (instance of argparse.Namespace).
-      output_module: an output module (instance of OutputModule).
+      options (argparse.Namespace): parser options.
+      output_module (XLSXOutputModule): output module to configure.
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
@@ -59,6 +65,11 @@ class XLSXOutputHelper(interface.ArgumentsHelper):
 
     fields = cls._ParseStringOption(
         options, u'fields', default_value=cls._DEFAULT_FIELDS)
+
+    additional_fields = cls._ParseStringOption(options, u'additional_fields')
+
+    if additional_fields:
+      fields = u'{0:s},{1:s}'.format(fields, additional_fields)
 
     filename = getattr(options, u'write', None)
     if not filename:
@@ -75,4 +86,4 @@ class XLSXOutputHelper(interface.ArgumentsHelper):
     output_module.SetTimestampFormat(timestamp_format)
 
 
-manager.ArgumentHelperManager.RegisterHelper(XLSXOutputHelper)
+manager.ArgumentHelperManager.RegisterHelper(XLSXOutputArgumentsHelper)

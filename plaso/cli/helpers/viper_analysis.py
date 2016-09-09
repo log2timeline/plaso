@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The arguments helper for the Viper analysis plugin."""
+"""The Viper analysis plugin CLI arguments helper."""
 
 from plaso.analysis import viper
 from plaso.cli.helpers import interface
@@ -7,8 +7,8 @@ from plaso.cli.helpers import manager
 from plaso.lib import errors
 
 
-class ViperAnalysisHelper(interface.ArgumentsHelper):
-  """CLI arguments helper class for the Viper analysis plugin."""
+class ViperAnalysisArgumentsHelper(interface.ArgumentsHelper):
+  """Viper analysis plugin CLI arguments helper."""
 
   NAME = u'viper_analysis'
   CATEGORY = u'analysis'
@@ -19,14 +19,14 @@ class ViperAnalysisHelper(interface.ArgumentsHelper):
 
   @classmethod
   def AddArguments(cls, argument_group):
-    """Add command line arguments the helper supports to an argument group.
+    """Adds command line arguments the helper supports to an argument group.
 
     This function takes an argument parser or an argument group object and adds
     to it all the command line arguments this helper supports.
 
     Args:
-      argument_group: the argparse group (instance of argparse._ArgumentGroup or
-                      or argparse.ArgumentParser).
+      argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
+          argparse group.
     """
     argument_group.add_argument(
         u'--viper-host', dest=u'viper_host',
@@ -43,8 +43,8 @@ class ViperAnalysisHelper(interface.ArgumentsHelper):
     """Parses and validates options.
 
     Args:
-      options: the parser option object (instance of argparse.Namespace).
-      analysis_plugin: an analysis plugin (instance of AnalysisPlugin).
+      options (argparse.Namespace): parser options.
+      analysis_plugin (ViperAnalysisPlugin): analysis plugin to configure.
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
@@ -62,4 +62,4 @@ class ViperAnalysisHelper(interface.ArgumentsHelper):
     analysis_plugin.SetProtocol(protocol)
 
 
-manager.ArgumentHelperManager.RegisterHelper(ViperAnalysisHelper)
+manager.ArgumentHelperManager.RegisterHelper(ViperAnalysisArgumentsHelper)

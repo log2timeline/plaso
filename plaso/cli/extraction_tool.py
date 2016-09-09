@@ -3,6 +3,8 @@
 
 import os
 
+import yara
+
 from plaso.cli import storage_media_tool
 from plaso.engine import engine
 from plaso.lib import definitions
@@ -59,7 +61,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
     self._temporary_directory = None
     self._text_prepend = None
-    self._use_old_preprocess = False
+    self._yara_rules_string = None
 
     self.list_hashers = False
     self.list_parsers_and_plugins = False
@@ -78,6 +80,25 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     if isinstance(self._hasher_names_string, py2to3.STRING_TYPES):
       if self._hasher_names_string.lower() == u'list':
         self.list_hashers = True
+
+    yara_rules_path = getattr(options, u'yara_rules_path', None)
+    if yara_rules_path:
+      try:
+        with open(yara_rules_path, 'rb') as rules_file:
+          yara_rules_string = rules_file.read()
+        # We try to parse the rules here, to check that the definitions are
+        # valid. We then pass the string definitions along to the workers, so
+        # that they don't need read access to the rules file.
+        yara.compile(source=yara_rules_string)
+        self._yara_rules_string = yara_rules_string
+      except IOError as exception:
+        raise errors.BadConfigObject(
+            u'Unable to read Yara rules file: {0:s}, error was: {1!s}'.format(
+                yara_rules_path, exception))
+      except yara.Error as exception:
+        raise errors.BadConfigObject(
+            u'Unable to parse Yara rules in: {0:s}, error was: {1!s}'.format(
+                yara_rules_path, exception))
 
     parser_filter_expression = self.ParseStringOption(
         options, u'parsers', default_value=u'')
@@ -106,8 +127,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
       raise errors.BadConfigOption(
           u'No such temporary directory: {0:s}'.format(
               self._temporary_directory))
-
-    self._use_old_preprocess = getattr(options, u'use_old_preprocess', False)
 
   def _ParsePerformanceOptions(self, options):
     """Parses the performance options.
@@ -197,11 +216,15 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
         u'--hashers', dest=u'hashers', type=str, action=u'store',
         default=self._DEFAULT_HASHER_STRING, metavar=u'HASHER_LIST', help=(
             u'Define a list of hashers to use by the tool. This is a comma '
-            u'separated list where each entry is the name of a hasher. E.g. '
-            u'"md5,sha256", "all" to indicate that all hashers should be '
-            u'enabled or "none" to disable all hashers. Use "--hashers list" '
-            u'or "--info" to list the available '
-            u'hashers.'))
+            u'separated list where each entry is the name of a hasher, such as '
+            u'"md5,sha256". "all" indicates that all hashers should be '
+            u'enabled. "none" disables all hashers. Use "--hashers list" or '
+            u'"--info" to list the available hashers.'))
+
+    argument_group.add_argument(
+        u'--yara_rules', u'--yara-rules', dest=u'yara_rules_path',
+        type=str, metavar=u'PATH', action=u'store', help=(
+            u'Path to a file containing Yara rules definitions.'))
 
     # TODO: rename option name to parser_filter_expression.
     argument_group.add_argument(
@@ -245,15 +268,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
         metavar=u'DIRECTORY', help=(
             u'Path to the directory that should be used to store temporary '
             u'files created during extraction.'))
-
-    argument_group.add_argument(
-        u'--use_old_preprocess', u'--use-old-preprocess',
-        dest='use_old_preprocess', action='store_true', default=False, help=(
-            u'Only used in conjunction when appending to a previous storage '
-            u'file. When this option is used then a new preprocessing object '
-            u'is not calculated and instead the last one that got added to '
-            u'the storage file is used. This can be handy when parsing an '
-            u'image that contains more than a single partition.'))
 
   def AddPerformanceOptions(self, argument_group):
     """Adds the performance options to the argument group.

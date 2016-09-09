@@ -23,7 +23,7 @@ from plaso.parsers import manager as parsers_manager
 class EventExtractor(object):
   """Class that implements an event extractor object.
 
-  The event extractor extracts events from event sources.
+  An event extractor extracts events from event sources.
   """
 
   def __init__(self, resolver_context, parser_filter_expression=None):
@@ -84,7 +84,7 @@ class EventExtractor(object):
       list[str]: parser names for which the contents of the file-like object
                  matches their known signatures.
     """
-    parser_name_list = []
+    parser_names = []
     scan_state = pysigscan.scan_state()
     self._file_scanner.scan_file_object(scan_state, file_object)
 
@@ -93,10 +93,10 @@ class EventExtractor(object):
           self._specification_store.GetSpecificationBySignature(
               scan_result.identifier))
 
-      if format_specification.identifier not in parser_name_list:
-        parser_name_list.append(format_specification.identifier)
+      if format_specification.identifier not in parser_names:
+        parser_names.append(format_specification.identifier)
 
-    return parser_name_list
+    return parser_names
 
   def _InitializeParserObjects(self):
     """Initializes the parser objects."""
@@ -163,6 +163,10 @@ class EventExtractor(object):
           If not set the parser will use the parser mediator to open
           the file entry's default data stream as a file-like object.
 
+    Returns:
+      bool: False if the file could not be parsed and UnableToParseFile
+          was raised.
+
     Raises:
       TypeError: if parser object is not a supported parser type.
     """
@@ -178,6 +182,7 @@ class EventExtractor(object):
     if self._parsers_profiler:
       self._parsers_profiler.StartTiming(parser.NAME)
 
+    result = True
     try:
       if isinstance(parser, parsers_interface.FileEntryParser):
         parser.Parse(parser_mediator)
@@ -196,6 +201,7 @@ class EventExtractor(object):
       logging.debug(
           u'{0:s} unable to parse file: {1:s} with error: {2:s}'.format(
               parser.NAME, display_name, exception))
+      result = False
 
     finally:
       if self._parsers_profiler:
@@ -207,6 +213,45 @@ class EventExtractor(object):
         logging.warning((
             u'[{0:s}] did not explicitly close file-object for file: '
             u'{1:s}.').format(parser.NAME, display_name))
+
+    return result
+
+  def _ParserFileEntryWithParsers(
+      self, parser_mediator, parser_names, file_entry, file_object=None):
+    """Parses a file entry with a specific parsers.
+
+    Args:
+      parser_mediator (ParserMediator): parser mediator.
+      parser_names (list[str]): names of parsers.
+      file_entry (dfvfs.FileEntry): file entry.
+      file_object (Optional[file]): file-like object to parse.
+          If not set the parser will use the parser mediator to open
+          the file entry's default data stream as a file-like object.
+
+    Returns:
+      bool: False if the file could not be parsed and UnableToParseFile
+          was raised.
+
+    Raises:
+      RuntimeError: if the parser object is missing.
+    """
+    for parser_name in parser_names:
+      parser = self._parsers.get(parser_name, None)
+      if not parser:
+        raise RuntimeError(
+            u'Parser object missing for parser: {0:s}'.format(parser_name))
+
+      if parser.FILTERS:
+        if not self._CheckParserCanProcessFileEntry(parser, file_entry):
+          continue
+
+      display_name = parser_mediator.GetDisplayName(file_entry)
+      logging.debug((
+          u'[ParseDataStream] parsing file: {0:s} with parser: '
+          u'{1:s}').format(display_name, parser_name))
+
+      self._ParseFileEntryWithParser(
+          parser_mediator, parser, file_entry, file_object=file_object)
 
   def ParseDataStream(self, parser_mediator, file_entry, data_stream_name):
     """Parses a data stream of a file entry with the enabled parsers.
@@ -225,28 +270,17 @@ class EventExtractor(object):
           u'Unable to retrieve file-like object from file entry.')
 
     try:
-      parser_name_list = self._GetSignatureMatchParserNames(file_object)
-      if not parser_name_list:
-        parser_name_list = self._non_sigscan_parser_names
+      parser_names = self._GetSignatureMatchParserNames(file_object)
+      if not parser_names:
+        result = False
+      else:
+        result = self._ParserFileEntryWithParsers(
+            parser_mediator, parser_names, file_entry, file_object=file_object)
 
-      for parser_name in parser_name_list:
-        parser = self._parsers.get(parser_name, None)
-        if not parser:
-          raise RuntimeError(
-              u'Parser object missing for parser: {0:s}'.format(parser_name))
-
-        if parser.FILTERS:
-          if not self._CheckParserCanProcessFileEntry(
-              parser, file_entry):
-            continue
-
-        display_name = parser_mediator.GetDisplayName(file_entry)
-        logging.debug((
-            u'[ParseDataStream] parsing file: {0:s} with parser: '
-            u'{1:s}').format(display_name, parser_name))
-
-        self._ParseFileEntryWithParser(
-            parser_mediator, parser, file_entry, file_object=file_object)
+      if not result:
+        self._ParserFileEntryWithParsers(
+            parser_mediator, self._non_sigscan_parser_names, file_entry,
+            file_object=file_object)
 
     finally:
       file_object.close()
@@ -304,7 +338,7 @@ class EventExtractor(object):
 class PathSpecExtractor(object):
   """Class that implements a path specification extractor object.
 
-  The path specification extractor extracts path specification from a source
+  A path specification extractor extracts path specification from a source
   directory, file or storage media device or image.
   """
 
@@ -472,7 +506,7 @@ class PathSpecExtractor(object):
           yield path_spec
 
       except (
-          dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
+          IOError, dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
           dfvfs_errors.PathSpecError) as exception:
         logging.warning(u'{0:s}'.format(exception))
 

@@ -13,10 +13,10 @@ class WinJobFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_PIECES = [
       u'Application: {application}',
-      u'{parameter}',
+      u'{parameters}',
       u'Scheduled by: {username}',
-      u'Working Directory: {working_dir}',
-      u'Run Iteration: {trigger}']
+      u'Working directory: {working_directory}',
+      u'Trigger type: {trigger_type}']
 
   SOURCE_LONG = u'Windows Scheduled Task Job'
   SOURCE_SHORT = u'JOB'
@@ -32,30 +32,31 @@ class WinJobFormatter(interface.ConditionalEventFormatter):
       0x0007: u'EVENT_AT_LOGON'
   }
 
-  def GetMessages(self, unused_formatter_mediator, event_object):
+  def GetMessages(self, unused_formatter_mediator, event):
     """Determines the formatted message strings for an event object.
 
     Args:
-      formatter_mediator: the formatter mediator object (instance of
-                          FormatterMediator).
-      event_object: the event object (instance of EventObject).
+      formatter_mediator (FormatterMediator): mediates the interactions between
+          formatters and other components, such as storage and Windows EventLog
+          resources.
+      event (EventObject): event.
 
     Returns:
-      A tuple containing the formatted message string and short message string.
+      tuple(str, str): formatted message string and short message string.
 
     Raises:
       WrongFormatter: if the event object cannot be formatted by the formatter.
     """
-    if self.DATA_TYPE != event_object.data_type:
+    if self.DATA_TYPE != event.data_type:
       raise errors.WrongFormatter(u'Unsupported data type: {0:s}.'.format(
-          event_object.data_type))
+          event.data_type))
 
-    event_values = event_object.CopyToDict()
+    event_values = event.CopyToDict()
 
-    trigger = event_values.get(u'trigger', None)
-    if trigger is not None:
-      event_values[u'trigger'] = self._TRIGGER_TYPES.get(
-          trigger, u'0x{0:04x}'.format(trigger))
+    trigger_type = event_values.get(u'trigger_type', None)
+    if trigger_type is not None:
+      event_values[u'trigger_type'] = self._TRIGGER_TYPES.get(
+          trigger_type, u'0x{0:04x}'.format(trigger_type))
 
     return self._ConditionalFormatMessages(event_values)
 

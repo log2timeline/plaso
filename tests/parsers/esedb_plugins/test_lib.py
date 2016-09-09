@@ -10,17 +10,17 @@ from plaso.storage import fake_storage
 from tests.parsers import test_lib
 
 
-class EseDbPluginTestCase(test_lib.ParserTestCase):
+class ESEDBPluginTestCase(test_lib.ParserTestCase):
   """The unit test case for ESE database based plugins."""
 
-  def _ParseEseDbFileWithPlugin(
+  def _ParseESEDBFileWithPlugin(
       self, path_segments, plugin_object, knowledge_base_values=None):
     """Parses a file as an ESE database file and returns an event generator.
 
     Args:
       path_segments: a list of strings containinge the path segments inside
                      the test data directory.
-      plugin_object: an ESE database plugin object (instance of EseDbPlugin).
+      plugin_object: an ESE database plugin object (instance of ESEDBPlugin).
       knowledge_base_values: optional dictionary containing the knowledge base
                              values.
 
@@ -41,7 +41,7 @@ class EseDbPluginTestCase(test_lib.ParserTestCase):
     try:
       esedb_file = pyesedb.file()
       esedb_file.open_file_object(file_object)
-      cache = esedb.EseDbCache()
+      cache = esedb.ESEDBCache()
       plugin_object.Process(parser_mediator, cache=cache, database=esedb_file)
       esedb_file.close()
 

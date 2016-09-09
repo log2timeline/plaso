@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""This file contains the tests for the report attribute container objects."""
+"""This file contains the tests for the report attribute containers."""
 
 import unittest
 
@@ -10,7 +10,7 @@ from tests.containers import test_lib
 
 
 class AnalysisReportTest(test_lib.AttributeContainerTestCase):
-  """Tests for the analysis report attributes container object."""
+  """Tests for the analysis report attributes container."""
 
   def testCopyToDict(self):
     """Tests the CopyToDict function."""

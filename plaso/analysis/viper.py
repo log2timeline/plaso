@@ -11,6 +11,7 @@ from plaso.lib import errors
 
 class ViperAnalyzer(interface.HTTPHashAnalyzer):
   """Class that analyzes file hashes by consulting Viper."""
+
   _VIPER_API_PATH = u'file/find'
   _SUPPORTED_PROTOCOLS = frozenset([u'http', u'https'])
 
@@ -47,7 +48,7 @@ class ViperAnalyzer(interface.HTTPHashAnalyzer):
       ValueError: If an invalid protocol is specified.
     """
     protocol = protocol.lower().strip()
-    if not protocol in self._SUPPORTED_PROTOCOLS:
+    if protocol not in self._SUPPORTED_PROTOCOLS:
       raise ValueError(u'Invalid protocol specified for Viper lookup')
     self._protocol = protocol
 
@@ -108,14 +109,50 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
 
   NAME = u'viper'
 
-  def __init__(self, event_queue):
-    """Initializes a Viper analysis plugin.
+  def __init__(self):
+    """Initializes a Viper analysis plugin."""
+    super(ViperAnalysisPlugin, self).__init__(ViperAnalyzer)
+    self._host = None
+
+  def GenerateLabels(self, hash_information):
+    """Generates a list of strings that will be used in the event tag.
 
     Args:
-      event_queue: A queue that is used to listen for incoming events.
+      hash_information (dict[str, object]): JSON decoded contents of the result
+          of a Viper lookup, as produced by the ViperAnalyzer.
+
+    Returns:
+      list[str]: list of labels to apply to events.
     """
-    super(ViperAnalysisPlugin, self).__init__(event_queue, ViperAnalyzer)
-    self._host = None
+    if not hash_information:
+      return [u'viper_not_present']
+
+    projects = []
+    tags = []
+    for project, entries in iter(hash_information.items()):
+      if not entries:
+        continue
+
+      projects.append(project)
+
+      for entry in entries:
+        if entry[u'tags']:
+          tags.extend(entry[u'tags'])
+
+    if not projects:
+      return [u'viper_not_present']
+    strings = [u'viper_present']
+
+    for project_name in projects:
+      label = events.EventTag.CopyTextToLabel(
+          project_name, prefix=u'viper_project_')
+      strings.append(label)
+
+    for tag_name in tags:
+      label = events.EventTag.CopyTextToLabel(tag_name, prefix=u'viper_tag_')
+      strings.append(label)
+
+    return strings
 
   def SetHost(self, host):
     """Sets the Viper host that will be queried.
@@ -135,47 +172,9 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
       ValueError: If an invalid protocol is selected.
     """
     protocol = protocol.lower().strip()
-    if not protocol in [u'http', u'https']:
+    if protocol not in [u'http', u'https']:
       raise ValueError(u'Invalid protocol specified for Viper lookup')
     self._analyzer.SetProtocol(protocol)
-
-  def GenerateTagStrings(self, hash_information):
-    """Generates a list of strings that will be used in the event tag.
-
-    Args:
-      hash_information: A dictionary containing the JSON decoded contents of the
-                        result of a Viper lookup, as produced by the
-                        ViperAnalyzer.
-
-    Returns:
-      A list of strings describing the results from Viper.
-    """
-    if not hash_information:
-      return u'File not present in Viper.'
-
-    projects = []
-    tags = []
-    for project, entries in iter(hash_information.items()):
-      if not entries:
-        continue
-      projects.append(project)
-      for entry in entries:
-        if entry[u'tags']:
-          tags.extend(entry[u'tags'])
-    if not projects:
-      return [u'viper_not_present']
-    strings = [u'viper_present']
-
-    for project_name in projects:
-      label = events.EventTag.CopyTextToLabel(
-          project_name, prefix=u'viper_project_')
-      strings.append(label)
-
-    for tag_name in tags:
-      label = events.EventTag.CopyTextToLabel(tag_name, prefix=u'viper_tag_')
-      strings.append(label)
-
-    return strings
 
 
 manager.AnalysisPluginManager.RegisterPlugin(ViperAnalysisPlugin)

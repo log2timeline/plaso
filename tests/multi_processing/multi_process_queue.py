@@ -4,9 +4,51 @@
 
 import unittest
 
+from plaso.engine import plaso_queue
+from plaso.lib import errors
 from plaso.multi_processing import multi_process_queue
+
 from tests import test_lib as shared_test_lib
-from tests.engine import test_lib as engine_test_lib
+
+
+class TestQueueConsumer(object):
+  """Class that implements the test queue consumer.
+
+  The queue consumer subscribes to updates on the queue.
+
+  Attributes:
+    items (list[object]): queued items.
+  """
+
+  def __init__(self, queue):
+    """Initializes the queue consumer.
+
+    Args:
+      queue (Queue): queue.
+    """
+    super(TestQueueConsumer, self).__init__()
+    self._abort = False
+    self._queue = queue
+    self.items = []
+
+  @property
+  def number_of_items(self):
+    """The number of items."""
+    return len(self.items)
+
+  def ConsumeItems(self):
+    """Consumes the items that are pushed on the queue."""
+    while not self._abort:
+      try:
+        item = self._queue.PopItem()
+
+      except (errors.QueueClose, errors.QueueEmpty):
+        break
+
+      if isinstance(item, plaso_queue.QueueAbort):
+        break
+
+      self.items.append(item)
 
 
 class MultiProcessingQueueTest(shared_test_lib.BaseTestCase):
@@ -23,7 +65,7 @@ class MultiProcessingQueueTest(shared_test_lib.BaseTestCase):
     for item in self._ITEMS:
       test_queue.PushItem(item)
 
-    test_queue_consumer = engine_test_lib.TestQueueConsumer(test_queue)
+    test_queue_consumer = TestQueueConsumer(test_queue)
     test_queue_consumer.ConsumeItems()
 
     self.assertEqual(test_queue_consumer.number_of_items, len(self._ITEMS))

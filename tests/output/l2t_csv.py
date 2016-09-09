@@ -17,7 +17,7 @@ from tests.output import test_lib
 
 class L2TTestEvent(events.EventObject):
   """Test event object."""
-  DATA_TYPE = 'test:l2t_csv'
+  DATA_TYPE = u'test:l2t_csv'
 
   def __init__(self):
     """Initializes an event object."""
@@ -36,7 +36,7 @@ class L2TTestEvent(events.EventObject):
 
 class L2TTestEventFormatter(formatters_interface.EventFormatter):
   """Test event formatter."""
-  DATA_TYPE = 'test:l2t_csv'
+  DATA_TYPE = u'test:l2t_csv'
   FORMAT_STRING = u'{text}'
 
   SOURCE_SHORT = 'LOG'

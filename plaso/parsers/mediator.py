@@ -17,12 +17,12 @@ class ParserMediator(object):
   def __init__(
       self, storage_writer, knowledge_base, preferred_year=None,
       temporary_directory=None):
-    """Initializes a parser mediator object.
+    """Initializes a parser mediator.
 
     Args:
       storage_writer (StorageWriter): storage writer.
-      knowledge_base (KnowledgeBase): knowledge base, which contains
-          information from the source data needed for parsing.
+      knowledge_base (KnowledgeBase): contains information from the source
+          data needed for parsing.
       preferred_year (Optional[int]): preferred year.
       temporary_directory (Optional[str]): path of the directory for temporary
           files.
@@ -283,9 +283,9 @@ class ParserMediator(object):
     if not relative_path:
       return file_entry.name
 
-    return self.GetDisplayNameFromPathSpec(path_spec)
+    return self.GetDisplayNameForPathSpec(path_spec)
 
-  def GetDisplayNameFromPathSpec(self, path_spec):
+  def GetDisplayNameForPathSpec(self, path_spec):
     """Retrieves the display name for a path specification.
 
     Args:
@@ -527,7 +527,7 @@ class ParserMediator(object):
     if not self._storage_writer:
       raise RuntimeError(u'Storage writer not set.')
 
-    if not path_spec:
+    if not path_spec and self._file_entry:
       path_spec = self._file_entry.path_spec
 
     parser_chain = self.GetParserChain()

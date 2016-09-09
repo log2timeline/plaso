@@ -26,11 +26,13 @@ class BaseEngine(object):
   _STATUS_UPDATE_INTERVAL = 0.5
 
   def __init__(
-      self, enable_profiling=False, profiling_directory=None,
-      profiling_sample_rate=1000, profiling_type=u'all'):
+      self, debug_output=False, enable_profiling=False,
+      profiling_directory=None, profiling_sample_rate=1000,
+      profiling_type=u'all'):
     """Initializes an engine object.
 
     Args:
+      debug_output (Optional[bool]): True if debug output should be enabled.
       enable_profiling (Optional[bool]): True if profiling should be enabled.
       profiling_directory (Optional[str]): path to the directory where
           the profiling sample files should be stored.
@@ -48,7 +50,7 @@ class BaseEngine(object):
     """
     super(BaseEngine, self).__init__()
     self._abort = False
-    self._enable_debug_output = False
+    self._debug_output = debug_output
     self._enable_profiling = enable_profiling
     self._processing_status = processing_status.ProcessingStatus()
     self._profiling_directory = profiling_directory
@@ -61,20 +63,19 @@ class BaseEngine(object):
     """Retrieves the file system of the source.
 
     Args:
-      source_path_spec: the source path specification (instance of
-                        dfvfs.PathSpec) of the file system.
-      resolver_context: optional resolver context (instance of dfvfs.Context).
-                        The default is None which will use the built in context
-                        which is not multi process safe. Note that every thread
-                        or process must have its own resolver context.
+      source_path_spec (dfvfs.PathSpec): path specifications of the sources
+          to process.
+      resolver_context (dfvfs.Context): resolver context.
 
     Returns:
-      A tuple of the file system (instance of dfvfs.FileSystem) and
-      the mount point path specification (instance of path.PathSpec).
-      The mount point path specification refers to either a directory or
-      a volume on a storage media device or image. It is needed by the dfVFS
-      file system searcher (instance of FileSystemSearcher) to indicate
-      the base location of the file system.
+      tuple: containing:
+
+        dfvfs.FileSystem: file system
+        path.PathSpec: mount point path specification. The mount point path
+            specification refers to either a directory or a volume on a storage
+            media device or image. It is needed by the dfVFS file system
+            searcher (FileSystemSearcher) to indicate the base location of
+            the file system.
 
     Raises:
       RuntimeError: if source file system path specification is not set.
@@ -97,12 +98,9 @@ class BaseEngine(object):
     """Preprocesses the sources.
 
     Args:
-      source_path_specs: list of path specifications (instances of
-                         dfvfs.PathSpec) to process.
-      resolver_context: optional resolver context (instance of dfvfs.Context).
-                        The default is None which will use the built in context
-                        which is not multi process safe. Note that every thread
-                        or process must have its own resolver context.
+      source_path_specs (list[dfvfs.PathSpec]): path specifications of
+          the sources to process.
+      resolver_context (dfvfs.Context): resolver context.
     """
     for source_path_spec in source_path_specs:
       try:
@@ -116,6 +114,8 @@ class BaseEngine(object):
         searcher = file_system_searcher.FileSystemSearcher(
             file_system, mount_point)
         platform = preprocess_interface.GuessOS(searcher)
+
+        logging.info(u'Preprocessing detected platform: {0:s}'.format(platform))
         if platform:
           self.knowledge_base.platform = platform
 
@@ -128,21 +128,11 @@ class BaseEngine(object):
       if platform:
         break
 
-  def SetEnableDebugOutput(self, enable_debug_output):
-    """Enables or disables debug output.
-
-    Args:
-      enable_debug_output: boolean value to indicate if the debug output
-                           should be enabled.
-    """
-    self._enable_debug_output = enable_debug_output
-
-  def SignalAbort(self):
-    """Signals the engine to abort."""
-    logging.warning(u'Aborted by user.')
-    self._abort = True
-
   @classmethod
   def SupportsMemoryProfiling(cls):
-    """Returns a boolean value to indicate if memory profiling is supported."""
+    """Determines if memory profiling is supported.
+
+    Returns:
+      bool: True if memory profiling is supported.
+    """
     return profiler.GuppyMemoryProfiler.IsSupported()

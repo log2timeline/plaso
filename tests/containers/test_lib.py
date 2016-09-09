@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""This file contains the tests for the event attribute container objects."""
+"""This file contains the tests for the event attribute containers."""
 
 import unittest
 
@@ -21,7 +21,7 @@ def CreateTestEventObjects():
   """
   test_events = []
   hostname = u'MYHOSTNAME'
-  data_type = 'test:event'
+  data_type = u'test:event'
 
   event_object = events.EventObject()
   event_object.username = u'joesmith'
@@ -112,7 +112,7 @@ class TestAttributeContainer(interface.AttributeContainer):
 
 class TestEvent(events.EventObject):
   """Class to define a test event."""
-  DATA_TYPE = 'test:event'
+  DATA_TYPE = u'test:event'
 
   def __init__(self, timestamp, attributes):
     """Initializes an event object."""
@@ -124,7 +124,7 @@ class TestEvent(events.EventObject):
 
 
 class AttributeContainerTestCase(unittest.TestCase):
-  """The unit test case for an attribute container object."""
+  """The unit test case for an attribute container."""
 
   # Show full diff results, part of TestCase so does not follow our naming
   # conventions.

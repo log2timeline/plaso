@@ -5,6 +5,7 @@ For documentation on the TLN format see: http://forensicswiki.org/wiki/TLN
 """
 
 from plaso.lib import errors
+from plaso.lib import py2to3
 from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import manager
@@ -20,69 +21,69 @@ class TLNBaseOutputModule(interface.LinearOutputModule):
 
   _HEADER = u''
 
-  def _FormatDescription(self, event_object):
+  def _FormatDescription(self, event):
     """Formats the description.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
 
-     Returns:
-       A string containing the value for the description field.
+    Returns:
+      str: formatted description field.
     """
     date_time_string = timelib.Timestamp.CopyToIsoFormat(
-        event_object.timestamp, timezone=self._output_mediator.timezone)
-    timestamp_description = getattr(event_object, u'timestamp_desc', u'UNKNOWN')
+        event.timestamp, timezone=self._output_mediator.timezone)
+    timestamp_description = getattr(event, u'timestamp_desc', u'UNKNOWN')
 
-    message, _ = self._output_mediator.GetFormattedMessages(event_object)
+    message, _ = self._output_mediator.GetFormattedMessages(event)
     if message is None:
+      data_type = getattr(event, u'data_type', u'UNKNOWN')
       raise errors.NoFormatterFound(
-          u'Unable to find event formatter for: {0:s}.'.format(
-              getattr(event_object, u'data_type', u'UNKNOWN')))
+          u'Unable to find event formatter for: {0:s}.'.format(data_type))
 
     description = u'{0:s}; {1:s}; {2:s}'.format(
         date_time_string, timestamp_description,
         message.replace(self._DESCRIPTION_FIELD_DELIMITER, u' '))
     return self._SanitizeField(description)
 
-  def _FormatHostname(self, event_object):
+  def _FormatHostname(self, event):
     """Formats the hostname.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
 
      Returns:
-       A string containing the value for the hostname field.
+       str: formatted hostname field.
     """
-    hostname = self._output_mediator.GetHostname(event_object)
+    hostname = self._output_mediator.GetHostname(event)
     return self._SanitizeField(hostname)
 
-  def _FormatSource(self, event_object):
+  def _FormatSource(self, event):
     """Formats the source.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
 
      Returns:
-       A string containing the value for the source field.
+       str: formatted source field.
     """
-    source_short, _ = self._output_mediator.GetFormattedSources(event_object)
+    source_short, _ = self._output_mediator.GetFormattedSources(event)
     if source_short is None:
+      data_type = getattr(event, u'data_type', u'UNKNOWN')
       raise errors.NoFormatterFound(
-          u'Unable to find event formatter for: {0:s}.'.format(
-              getattr(event_object, u'data_type', u'UNKNOWN')))
+          u'Unable to find event formatter for: {0:s}.'.format(data_type))
 
     return self._SanitizeField(source_short)
 
-  def _FormatUsername(self, event_object):
+  def _FormatUsername(self, event):
     """Formats the username.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
 
      Returns:
-       A string containing the value for the username field.
+       str: formatted username field.
     """
-    username = self._output_mediator.GetUsername(event_object)
+    username = self._output_mediator.GetUsername(event)
     return self._SanitizeField(username)
 
   def _SanitizeField(self, field):
@@ -91,12 +92,12 @@ class TLNBaseOutputModule(interface.LinearOutputModule):
     This method removes the field delimiter from the field string.
 
     Args:
-      field: the string that makes up the field.
+      field (str): field value.
 
      Returns:
-       A string containing the value for the field.
+       str: formatted field value.
     """
-    if self._FIELD_DELIMITER:
+    if self._FIELD_DELIMITER and isinstance(field, py2to3.STRING_TYPES):
       return field.replace(self._FIELD_DELIMITER, u' ')
     return field
 
@@ -120,20 +121,20 @@ class TLNOutputModule(TLNBaseOutputModule):
 
   _HEADER = u'Time|Source|Host|User|Description\n'
 
-  def WriteEventBody(self, event_object):
+  def WriteEventBody(self, event):
     """Writes the body of an event object to the output.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
     """
-    if not hasattr(event_object, u'timestamp'):
+    if not hasattr(event, u'timestamp'):
       return
 
-    posix_timestamp = timelib.Timestamp.CopyToPosix(event_object.timestamp)
-    source = self._FormatSource(event_object)
-    hostname = self._FormatHostname(event_object)
-    username = self._FormatUsername(event_object)
-    description = self._FormatDescription(event_object)
+    posix_timestamp = timelib.Timestamp.CopyToPosix(event.timestamp)
+    source = self._FormatSource(event)
+    hostname = self._FormatHostname(event)
+    username = self._FormatUsername(event)
+    description = self._FormatDescription(event)
 
     out_write = u'{0:d}|{1:s}|{2:s}|{3:s}|{4!s}\n'.format(
         posix_timestamp, source, hostname, username, description)
@@ -159,40 +160,40 @@ class L2TTLNOutputModule(TLNBaseOutputModule):
 
   _HEADER = u'Time|Source|Host|User|Description|TZ|Notes\n'
 
-  def _FormatNotes(self, event_object):
+  def _FormatNotes(self, event):
     """Formats the notes.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
 
      Returns:
-       A string containing the value for the notes field.
+       str: formatted notes field.
     """
-    inode = event_object.inode
+    inode = event.inode
     if inode is None:
       inode = u'-'
 
-    notes = getattr(event_object, u'notes', u'')
+    notes = getattr(event, u'notes', u'')
     if not notes:
-      notes = u'File: {0:s} inode: {1!s}'.format(
-          getattr(event_object, u'display_name', u''), inode)
+      display_name = getattr(event, u'display_name', u'')
+      notes = u'File: {0:s} inode: {1!s}'.format(display_name, inode)
     return self._SanitizeField(notes)
 
-  def WriteEventBody(self, event_object):
+  def WriteEventBody(self, event):
     """Writes the body of an event object to the output.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
     """
-    if not hasattr(event_object, u'timestamp'):
+    if not hasattr(event, u'timestamp'):
       return
 
-    posix_timestamp = timelib.Timestamp.CopyToPosix(event_object.timestamp)
-    source = self._FormatSource(event_object)
-    hostname = self._FormatHostname(event_object)
-    username = self._FormatUsername(event_object)
-    description = self._FormatDescription(event_object)
-    notes = self._FormatNotes(event_object)
+    posix_timestamp = timelib.Timestamp.CopyToPosix(event.timestamp)
+    source = self._FormatSource(event)
+    hostname = self._FormatHostname(event)
+    username = self._FormatUsername(event)
+    description = self._FormatDescription(event)
+    notes = self._FormatNotes(event)
 
     out_write = u'{0:d}|{1:s}|{2:s}|{3:s}|{4:s}|{5!s}|{6!s}\n'.format(
         posix_timestamp, source, hostname, username, description,

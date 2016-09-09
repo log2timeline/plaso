@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The arguments helper for the 4n6time SQLite database output module."""
+"""The 4n6time SQLite database output module CLI arguments helper."""
 
 from plaso.lib import errors
 from plaso.cli.helpers import interface
@@ -8,8 +8,8 @@ from plaso.cli.helpers import manager
 from plaso.output import sqlite_4n6time
 
 
-class SQLite4n6TimeOutputHelper(interface.ArgumentsHelper):
-  """CLI arguments helper class for a SQLite 4n6time output module."""
+class SQLite4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
+  """4n6time SQLite database output module CLI arguments helper."""
 
   NAME = u'4n6time_sqlite'
   CATEGORY = u'output'
@@ -17,24 +17,25 @@ class SQLite4n6TimeOutputHelper(interface.ArgumentsHelper):
 
   @classmethod
   def AddArguments(cls, argument_group):
-    """Add command line arguments the helper supports to an argument group.
+    """Adds command line arguments the helper supports to an argument group.
 
     This function takes an argument parser or an argument group object and adds
     to it all the command line arguments this helper supports.
 
     Args:
-      argument_group: the argparse group (instance of argparse._ArgumentGroup or
-                      or argparse.ArgumentParser).
+      argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
+          argparse group.
     """
-    shared_4n6time_output.Shared4n6TimeOutputHelper.AddArguments(argument_group)
+    shared_4n6time_output.Shared4n6TimeOutputArgumentsHelper.AddArguments(
+        argument_group)
 
   @classmethod
   def ParseOptions(cls, options, output_module):
     """Parses and validates options.
 
     Args:
-      options: the parser option object (instance of argparse.Namespace).
-      output_module: an output module (instance of OutputModule).
+      options (argparse.Namespace): parser options.
+      output_module (OutputModule): output module to configure.
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
@@ -44,7 +45,7 @@ class SQLite4n6TimeOutputHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           u'Output module is not an instance of SQLite4n6TimeOutputModule')
 
-    shared_4n6time_output.Shared4n6TimeOutputHelper.ParseOptions(
+    shared_4n6time_output.Shared4n6TimeOutputArgumentsHelper.ParseOptions(
         options, output_module)
 
     filename = getattr(options, u'write', None)
@@ -55,4 +56,4 @@ class SQLite4n6TimeOutputHelper(interface.ArgumentsHelper):
     output_module.SetFilename(filename)
 
 
-manager.ArgumentHelperManager.RegisterHelper(SQLite4n6TimeOutputHelper)
+manager.ArgumentHelperManager.RegisterHelper(SQLite4n6TimeOutputArgumentsHelper)

@@ -10,12 +10,19 @@ See additional details here:
 """
 
 import argparse
+import collections
 import multiprocessing
 import logging
-import pdb
+import os
 import sys
 import time
 
+try:
+  import win32console
+except ImportError:
+  win32console = None
+
+import plaso
 # The following import makes sure the filters are registered.
 from plaso import filters  # pylint: disable=unused-import
 from plaso.cli import analysis_tool
@@ -26,9 +33,12 @@ from plaso.filters import manager as filters_manager
 from plaso.frontend import frontend
 from plaso.frontend import psort
 from plaso.output import interface as output_interface
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.winnt import language_ids
+
+import pytz  # pylint: disable=wrong-import-order
 
 
 class PsortOptions(object):
@@ -49,12 +59,10 @@ class PsortTool(analysis_tool.AnalysisTool):
     """Initializes the CLI tool object.
 
     Args:
-      input_reader: the input reader (instance of InputReader).
-                    The default is None which indicates the use of the stdin
-                    input reader.
-      output_writer: the output writer (instance of OutputWriter).
-                     The default is None which indicates the use of the stdout
-                     output writer.
+      input_reader (Optional[InputReader]): input reader, where None indicates
+          that the stdin input reader should be used.
+      output_writer (Optional[OutputWriter]): output writer, where None
+          indicates that the stdout output writer should be used.
     """
     super(PsortTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
@@ -62,12 +70,16 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._analysis_plugins_output_format = None
     self._command_line_arguments = None
     self._deduplicate_events = True
-    self._filter_expression = None
-    self._filter_object = None
+    self._event_filter = None
+    self._event_filter_expression = None
     self._front_end = psort.PsortFrontend()
+    self._number_of_analysis_reports = 0
     self._options = None
     self._output_filename = None
     self._output_format = None
+    self._status_view_mode = u'linear'
+    self._stdout_output_writer = isinstance(
+        self._output_writer, cli_tools.StdoutOutputWriter)
     self._time_slice = None
     self._use_time_slicer = False
 
@@ -75,11 +87,54 @@ class PsortTool(analysis_tool.AnalysisTool):
     self.list_language_identifiers = False
     self.list_output_modules = False
 
+  def _FormatStatusTableRow(self, process_status):
+    """Formats a status table row.
+
+    Args:
+      process_status (ProcessStatus): processing status.
+    """
+    # This check makes sure the columns are tab aligned.
+    identifier = process_status.identifier
+    if len(identifier) < 8:
+      identifier = u'{0:s}\t\t'.format(identifier)
+    elif len(identifier) < 16:
+      identifier = u'{0:s}\t'.format(identifier)
+
+    status = process_status.status
+    if len(status) < 8:
+      status = u'{0:s}\t'.format(status)
+
+    events = u''
+    if (process_status.number_of_consumed_events is not None and
+        process_status.number_of_consumed_events_delta is not None):
+      events = u'{0:d} ({1:d})'.format(
+          process_status.number_of_consumed_events,
+          process_status.number_of_consumed_events_delta)
+
+    # This check makes sure the columns are tab aligned.
+    if len(events) < 8:
+      events = u'{0:s}\t'.format(events)
+
+    reports = u''
+    if (process_status.number_of_produced_reports is not None and
+        process_status.number_of_produced_reports_delta is not None):
+      reports = u'{0:d} ({1:d})'.format(
+          process_status.number_of_produced_reports,
+          process_status.number_of_produced_reports_delta)
+
+    # This check makes sure the columns are tab aligned.
+    if len(reports) < 8:
+      reports = u'{0:s}\t'.format(reports)
+
+    # TODO: shorten display name to fit in 80 chars and show the filename.
+    return u'{0:s}\t{1:d}\t{2:s}\t{3:s}\t{4:s}'.format(
+        identifier, process_status.pid, status, events, reports)
+
   def _ParseAnalysisPluginOptions(self, options):
     """Parses the analysis plugin options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
     """
     # Get a list of all available plugins.
     analysis_plugin_info = self._front_end.GetAnalysisPluginInfo()
@@ -98,43 +153,35 @@ class PsortTool(analysis_tool.AnalysisTool):
     difference = requested_plugin_names.difference(analysis_plugin_names)
     if difference:
       raise errors.BadConfigOption(
-          u'Non-existing analysis plugins specified: {0:s}'.format(
+          u'Non-existent analysis plugins specified: {0:s}'.format(
               u' '.join(difference)))
 
     self._analysis_plugins = analysis_plugin_string
 
-  def _ParseExperimentalOptions(self, options):
-    """Parses the experimental plugin options.
-
-    Args:
-      options: the command line arguments (instance of argparse.Namespace).
-    """
-    use_zeromq = getattr(options, u'use_zeromq', False)
-    if use_zeromq:
-      self._front_end.SetUseZeroMQ(use_zeromq)
 
   def _ParseFilterOptions(self, options):
     """Parses the filter options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    self._filter_expression = self.ParseStringOption(options, u'filter')
-    if self._filter_expression:
-      self._filter_object = filters_manager.FiltersManager.GetFilterObject(
-          self._filter_expression)
-      if not self._filter_object:
-        raise errors.BadConfigOption(
-            u'Invalid filter expression: {0:s}'.format(self._filter_expression))
+    self._event_filter_expression = self.ParseStringOption(options, u'filter')
+    if self._event_filter_expression:
+      self._event_filter = filters_manager.FiltersManager.GetFilterObject(
+          self._event_filter_expression)
+      if not self._event_filter:
+        raise errors.BadConfigOption(u'Invalid filter expression: {0:s}'.format(
+            self._event_filter_expression))
 
     time_slice_event_time_string = getattr(options, u'slice', None)
     time_slice_duration = getattr(options, u'slice_size', 5)
     self._use_time_slicer = getattr(options, u'slicer', False)
 
-    self._front_end.SetFilter(self._filter_object, self._filter_expression)
+    self._front_end.SetEventFilter(
+        self._event_filter, self._event_filter_expression)
 
     # The slice and slicer cannot be set at the same time.
     if time_slice_event_time_string and self._use_time_slicer:
@@ -143,8 +190,9 @@ class PsortTool(analysis_tool.AnalysisTool):
 
     time_slice_event_timestamp = None
     if time_slice_event_time_string:
+      timezone = pytz.timezone(self._timezone)
       time_slice_event_timestamp = timelib.Timestamp.FromTimeString(
-          time_slice_event_time_string, timezone=self._timezone)
+          time_slice_event_time_string, timezone=timezone)
       if time_slice_event_timestamp is None:
         raise errors.BadConfigOption(
             u'Unsupported time slice event date and time: {0:s}'.format(
@@ -159,7 +207,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     """Parses the informational options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
@@ -169,11 +217,13 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._quiet_mode = getattr(options, u'quiet', False)
     self._front_end.SetQuietMode(self._quiet_mode)
 
+    self._status_view_mode = getattr(options, u'status_view_mode', u'linear')
+
   def _ParseLanguageOptions(self, options):
     """Parses the language options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
     """
     preferred_language = self.ParseStringOption(
         options, u'preferred_language', default_value=u'en-US')
@@ -183,86 +233,109 @@ class PsortTool(analysis_tool.AnalysisTool):
     else:
       self._front_end.SetPreferredLanguageIdentifier(preferred_language)
 
-  def _ProcessStorage(self):
-    """Processes a plaso storage file.
+  def _ParseProcessingOptions(self, options):
+    """Parses the processing options.
 
-    Raises:
-      BadConfigOption: when a configuration parameter fails validation.
-      RuntimeError: if a non-recoverable situation is encountered.
+    Args:
+      options (argparse.Namespace): command line arguments.
     """
-    output_module = self._front_end.CreateOutputModule(
-        preferred_encoding=self.preferred_encoding, timezone=self._timezone)
+    use_zeromq = getattr(options, u'use_zeromq', True)
+    self._front_end.SetUseZeroMQ(use_zeromq)
 
-    if isinstance(output_module, output_interface.LinearOutputModule):
-      if self._output_filename:
-        output_file_object = open(self._output_filename, u'wb')
-        output_writer = cli_tools.FileObjectOutputWriter(output_file_object)
-      else:
-        output_writer = cli_tools.StdoutOutputWriter()
-      output_module.SetOutputWriter(output_writer)
+  def _PrintAnalysisReportsDetails(self, storage):
+    """Prints the details of the analysis reports.
 
-    helpers_manager.ArgumentHelperManager.ParseOptions(
-        self._options, output_module)
+    Args:
+      storage (BaseStorage): storage writer.
+    """
+    for index, analysis_report in enumerate(storage.GetAnalysisReports()):
+      if index + 1 <= self._number_of_analysis_reports:
+        continue
 
-    # Check if there are parameters that have not been defined and need to
-    # in order for the output module to continue. Prompt user to supply
-    # those that may be missing.
-    missing_parameters = output_module.GetMissingArguments()
-    while missing_parameters:
-      # TODO: refactor this.
-      configuration_object = PsortOptions()
-      setattr(configuration_object, u'output_format', output_module.NAME)
-      for parameter in missing_parameters:
-        value = self._PromptUserForInput(
-            u'Missing parameter {0:s} for output module'.format(parameter))
-        if value is None:
-          logging.warning(
-              u'Unable to set the missing parameter for: {0:s}'.format(
-                  parameter))
-          continue
-
-        setattr(configuration_object, parameter, value)
-
-      helpers_manager.ArgumentHelperManager.ParseOptions(
-          configuration_object, output_module)
-      missing_parameters = output_module.GetMissingArguments()
-
-    # TODO: fix or remove this comment.
-    # Get ANALYSIS PLUGINS AND CONFIGURE!
-    get_plugins_and_producers = self._front_end.GetAnalysisPluginsAndEventQueues
-    analysis_plugins, event_queue_producers = get_plugins_and_producers(
-        self._analysis_plugins)
-
-    for analysis_plugin in analysis_plugins:
-      helpers_manager.ArgumentHelperManager.ParseOptions(
-          self._options, analysis_plugin)
-
-    self._front_end.SetStorageFile(self._storage_file_path)
-
-    counter = self._front_end.ProcessStorage(
-        output_module, analysis_plugins, event_queue_producers,
-        command_line_arguments=self._command_line_arguments,
-        deduplicate_events=self._deduplicate_events,
-        preferred_encoding=self.preferred_encoding,
-        time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
-
-    if not self._quiet_mode:
-      self._output_writer.Write(u'Processing completed.\n')
-
+      title = u'Analysis report: {0:d}'.format(index)
       table_view = cli_views.ViewsFactory.GetTableView(
-          self._views_format_type, title=u'Counter')
-      for element, count in counter.most_common():
-        table_view.AddRow([element, count])
+          self._views_format_type, title=title)
+
+      table_view.AddRow([u'String', analysis_report.GetString()])
+
       table_view.Write(self._output_writer)
+
+  def _PrintStatusHeader(self):
+    """Prints the processing status header."""
+    self._output_writer.Write(
+        u'Storage file\t: {0:s}\n'.format(self._storage_file_path))
+
+    self._output_writer.Write(u'\n')
+
+  def _PrintStatusUpdate(self, processing_status):
+    """Prints the processing status.
+
+    Args:
+      processing_status (ProcessingStatus): processing status.
+    """
+    if self._stdout_output_writer:
+      self._ClearScreen()
+
+    self._output_writer.Write(
+        u'plaso - {0:s} version {1:s}\n'.format(
+            self.NAME, plaso.GetVersion()))
+    self._output_writer.Write(u'\n')
+
+    self._PrintStatusHeader()
+
+    # TODO: for win32console get current color and set intensity,
+    # write the header separately then reset intensity.
+    status_header = u'Identifier\t\tPID\tStatus\t\tEvents\t\tReports'
+    if not win32console:
+      status_header = u'\x1b[1m{0:s}\x1b[0m'.format(status_header)
+
+    status_table = [status_header]
+
+    status_row = self._FormatStatusTableRow(processing_status.foreman_status)
+    status_table.append(status_row)
+
+    for worker_status in processing_status.workers_status:
+      status_row = self._FormatStatusTableRow(worker_status)
+      status_table.append(status_row)
+
+    status_table.append(u'')
+    self._output_writer.Write(u'\n'.join(status_table))
+    self._output_writer.Write(u'\n')
+
+    if processing_status.aborted:
+      self._output_writer.Write(
+          u'Processing aborted - waiting for clean up.\n\n')
+
+    # TODO: remove update flicker. For win32console we could set the cursor
+    # top left, write the table, clean the remainder of the screen buffer
+    # and set the cursor at the end of the table.
+    if self._stdout_output_writer:
+      # We need to explicitly flush stdout to prevent partial status updates.
+      sys.stdout.flush()
+
+  def _PrintStatusUpdateStream(self, processing_status):
+    """Prints the processing status as a stream of output.
+
+    Args:
+      processing_status (ProcessingStatus): processing status.
+    """
+    for worker_status in processing_status.workers_status:
+      status_line = (
+          u'{0:s} (PID: {1:d}) - events consumed: {2:d} - running: '
+          u'{3!s}\n').format(
+              worker_status.identifier, worker_status.pid,
+              worker_status.number_of_consumed_events,
+              worker_status.status not in definitions.PROCESSING_ERROR_STATUS)
+      self._output_writer.Write(status_line)
 
   def _PromptUserForInput(self, input_text):
     """Prompts user for an input and return back read data.
 
     Args:
-      input_text: the text used for prompting the user for input.
+      input_text (str): text used for prompting the user for input.
 
     Returns:
-      string containing the input read from the user.
+      str: input read from the user.
     """
     self._output_writer.Write(u'{0:s}: '.format(input_text))
     return self._input_reader.Read()
@@ -271,9 +344,8 @@ class PsortTool(analysis_tool.AnalysisTool):
     """Adds the analysis plugin options to the argument group
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
-      plugin_names: a string containing comma separated analysis plugin names.
+      argument_group (argparse._ArgumentGroup): argparse argument group.
+      plugin_names (str): comma separated analysis plugin names.
 
     Raises:
       BadConfigOption: if non-existing analysis plugin names are specified.
@@ -284,23 +356,11 @@ class PsortTool(analysis_tool.AnalysisTool):
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         argument_group, u'analysis')
 
-  def AddExperimentalOptions(self, argument_group):
-    """Adds experimental options to the argument group
-
-    Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
-    """
-    argument_group.add_argument(
-        u'--use_zeromq', u'--use-zeromq', action=u'store_true',
-        dest=u'use_zeromq', help=u'Enables experimental queueing using ZeroMQ')
-
   def AddFilterOptions(self, argument_group):
     """Adds the filter options to the argument group.
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
         u'--slice', metavar=u'DATE', dest=u'slice', type=str,
@@ -339,8 +399,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     """Adds the language options to the argument group.
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
         u'--language', metavar=u'LANGUAGE', dest=u'preferred_language',
@@ -356,15 +415,26 @@ class PsortTool(analysis_tool.AnalysisTool):
     """Adds the output module options to the argument group
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
-      module_names: a list of output module names.
+      argument_group (argparse._ArgumentGroup): argparse argument group.
+      module_names (list[str]): output module names.
     """
     if u'list' in module_names:
       return
 
     helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
         argument_group, argument_category=u'output', module_list=module_names)
+
+  def AddProcessingOptions(self, argument_group):
+    """Adds processing options to the argument group
+
+    Args:
+      argument_group (argparse._ArgumentGroup): argparse argument group.
+    """
+    argument_group.add_argument(
+        u'--disable_zeromq', u'--disable-zeromq', action=u'store_false',
+        dest=u'use_zeromq', default=True, help=(
+            u'Disable queueing using ZeroMQ. A Multiprocessing queue will be '
+            u'used instead.'))
 
   def ListAnalysisPlugins(self):
     """Lists the analysis modules."""
@@ -418,7 +488,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     """Parses the command line arguments.
 
     Returns:
-      A boolean value indicating the arguments were successfully parsed.
+      bool: True if the arguments were successfully parsed.
     """
     self._ConfigureLogging()
 
@@ -438,14 +508,26 @@ class PsortTool(analysis_tool.AnalysisTool):
             u'A comma separated list of analysis plugin names to be loaded '
             u'or "--analysis list" to see a list of available plugins.'))
 
-    experimental_group = argument_parser.add_argument_group(u'Experimental')
-    self.AddExperimentalOptions(experimental_group)
+    processing_group = argument_parser.add_argument_group(u'Processing')
+    self.AddProcessingOptions(processing_group)
 
     info_group = argument_parser.add_argument_group(u'Informational Arguments')
 
     self.AddLogFileOptions(info_group)
-
     self.AddInformationalOptions(info_group)
+
+    # The window status-view mode has an annoying flicker on Windows,
+    # hence we default to linear status-view mode instead.
+    if sys.platform.startswith(u'win'):
+      default_status_view = u'linear'
+    else:
+      default_status_view = u'window'
+
+    info_group.add_argument(
+        u'--status_view', u'--status-view', dest=u'status_view_mode',
+        choices=[u'linear', u'none', u'window'], action=u'store',
+        metavar=u'TYPE', default=default_status_view, help=(
+            u'The processing status view mode: "linear", "none" or "window".'))
 
     filter_group = argument_parser.add_argument_group(u'Filter Arguments')
 
@@ -474,7 +556,7 @@ class PsortTool(analysis_tool.AnalysisTool):
 
     output_group.add_argument(
         u'-w', u'--write', metavar=u'OUTPUTFILE', dest=u'write',
-        help=u'Output filename, defaults to stdout.')
+        help=u'Output filename.')
 
     self.AddTimezoneOption(output_group)
 
@@ -560,7 +642,7 @@ class PsortTool(analysis_tool.AnalysisTool):
     """Parses the options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
@@ -576,8 +658,12 @@ class PsortTool(analysis_tool.AnalysisTool):
     super(PsortTool, self).ParseOptions(options)
     self._ParseDataLocationOption(options)
     self._ParseAnalysisPluginOptions(options)
-    self._ParseExperimentalOptions(options)
+    self._ParseProcessingOptions(options)
     self._ParseFilterOptions(options)
+
+    format_string = (
+        u'%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
+        u'<%(module)s> %(message)s')
 
     if self._debug_mode:
       logging_level = logging.DEBUG
@@ -587,20 +673,21 @@ class PsortTool(analysis_tool.AnalysisTool):
       logging_level = logging.INFO
 
     self.ParseLogFileOptions(options)
-    self._ConfigureLogging(filename=self._log_file, log_level=logging_level)
-
-    self._output_format = getattr(options, u'output_format', None)
-    if not self._output_format:
-      raise errors.BadConfigOption(u'Missing output format.')
-    self._front_end.SetOutputFormat(self._output_format)
-
-    if not self._front_end.HasOutputClass(self._output_format):
-      raise errors.BadConfigOption(
-          u'Unsupported output format: {0:s}.'.format(self._output_format))
+    self._ConfigureLogging(
+        filename=self._log_file, format_string=format_string,
+        log_level=logging_level)
 
     self._deduplicate_events = getattr(options, u'dedup', True)
 
     self._output_filename = getattr(options, u'write', None)
+
+    self._output_format = getattr(options, u'output_format', None)
+    if not self._output_format:
+      raise errors.BadConfigOption(u'Missing output format.')
+
+    if not self._front_end.HasOutputClass(self._output_format):
+      raise errors.BadConfigOption(
+          u'Unsupported output format: {0:s}.'.format(self._output_format))
 
     if self._data_location:
       self._front_end.SetDataLocation(self._data_location)
@@ -615,27 +702,121 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._options = options
 
   def ProcessStorage(self):
-    """Processes a plaso storage."""
-    try:
-      self._ProcessStorage()
+    """Processes a plaso storage file.
 
-    except IOError as exception:
-      # Piping results to "|head" for instance causes an IOError.
-      if u'Broken pipe' not in exception:
-        logging.error(u'Processing stopped early: {0:s}.'.format(exception))
+    Raises:
+      BadConfigOption: when a configuration parameter fails validation.
+      RuntimeError: if a non-recoverable situation is encountered.
+    """
+    output_module = self._front_end.CreateOutputModule(
+        self._output_format, preferred_encoding=self.preferred_encoding,
+        timezone=self._timezone)
 
-    except KeyboardInterrupt:
-      pass
+    if isinstance(output_module, output_interface.LinearOutputModule):
+      if not self._output_filename:
+        # TODO: Remove "no longer supported" after 1.5 release.
+        raise errors.BadConfigOption((
+            u'Output format: {0:s} requires an output file, output to stdout '
+            u'is no longer supported.').format(self._output_format))
 
-    except errors.BadConfigOption as exception:
-      logging.error(u'{0:s}'.format(exception))
+      if self._output_filename and os.path.exists(self._output_filename):
+        raise errors.BadConfigOption((
+            u'Output file already exists: {0:s}. Aborting.').format(
+                self._output_filename))
 
-    # Catching every remaining exception in case we are debugging.
-    except Exception as exception:  # pylint: disable=broad-except
-      if not self._debug_mode:
-        raise
-      logging.error(u'{0:s}'.format(exception))
-      pdb.post_mortem()
+      output_file_object = open(self._output_filename, u'wb')
+      output_writer = cli_tools.FileObjectOutputWriter(output_file_object)
+
+      output_module.SetOutputWriter(output_writer)
+
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        self._options, output_module)
+
+    # Check if there are parameters that have not been defined and need to
+    # in order for the output module to continue. Prompt user to supply
+    # those that may be missing.
+    missing_parameters = output_module.GetMissingArguments()
+    while missing_parameters:
+      # TODO: refactor this.
+      configuration_object = PsortOptions()
+      setattr(configuration_object, u'output_format', output_module.NAME)
+      for parameter in missing_parameters:
+        value = self._PromptUserForInput(
+            u'Missing parameter {0:s} for output module'.format(parameter))
+        if value is None:
+          logging.warning(
+              u'Unable to set the missing parameter for: {0:s}'.format(
+                  parameter))
+          continue
+
+        setattr(configuration_object, parameter, value)
+
+      helpers_manager.ArgumentHelperManager.ParseOptions(
+          configuration_object, output_module)
+      missing_parameters = output_module.GetMissingArguments()
+
+    analysis_plugins = self._front_end.GetAnalysisPlugins(
+        self._analysis_plugins)
+    for analysis_plugin in analysis_plugins:
+      helpers_manager.ArgumentHelperManager.ParseOptions(
+          self._options, analysis_plugin)
+
+    if self._status_view_mode == u'linear':
+      status_update_callback = self._PrintStatusUpdateStream
+    elif self._status_view_mode == u'window':
+      status_update_callback = self._PrintStatusUpdate
+    else:
+      status_update_callback = None
+
+    session = self._front_end.CreateSession(
+        command_line_arguments=self._command_line_arguments,
+        preferred_encoding=self.preferred_encoding)
+
+    storage_reader = self._front_end.CreateStorageReader(
+        self._storage_file_path)
+    self._number_of_analysis_reports = (
+        storage_reader.GetNumberOfAnalysisReports())
+
+    if analysis_plugins:
+      storage_writer = self._front_end.CreateStorageWriter(
+          session, self._storage_file_path)
+      # TODO: handle errors.BadConfigOption
+
+      self._front_end.AnalyzeEvents(
+          storage_writer, analysis_plugins,
+          status_update_callback=status_update_callback)
+
+    counter = collections.Counter()
+    if self._output_format != u'null':
+      storage_reader = self._front_end.CreateStorageReader(
+          self._storage_file_path)
+
+      events_counter = self._front_end.ExportEvents(
+          storage_reader, output_module,
+          deduplicate_events=self._deduplicate_events,
+          time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
+
+      counter += events_counter
+
+    for item, value in iter(session.analysis_reports_counter.items()):
+      counter[item] = value
+
+    if self._quiet_mode:
+      return
+
+    self._output_writer.Write(u'Processing completed.\n')
+
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, title=u'Counter')
+    for element, count in counter.most_common():
+      if not element:
+        element = u'N/A'
+      table_view.AddRow([element, count])
+    table_view.Write(self._output_writer)
+
+    storage_reader = self._front_end.CreateStorageReader(
+        self._storage_file_path)
+    self._PrintAnalysisReportsDetails(storage_reader)
 
 
 def Main():
@@ -668,7 +849,17 @@ def Main():
   if have_list_option:
     return True
 
-  tool.ProcessStorage()
+  try:
+    tool.ProcessStorage()
+
+  except (KeyboardInterrupt, errors.UserAbort):
+    logging.warning(u'Aborted by user.')
+    return False
+
+  except errors.BadConfigOption as exception:
+    logging.warning(exception)
+    return False
+
   return True
 
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The arguments helper for the VirusTotal analysis plugin."""
+"""The VirusTotal analysis plugin CLI arguments helper."""
 
 from plaso.lib import errors
 from plaso.cli.helpers import interface
@@ -7,8 +7,8 @@ from plaso.cli.helpers import manager
 from plaso.analysis import virustotal
 
 
-class VirusTotalAnalysisHelper(interface.ArgumentsHelper):
-  """CLI arguments helper class for the VirusTotal analysis plugin."""
+class VirusTotalAnalysisArgumentsHelper(interface.ArgumentsHelper):
+  """VirusTotal analysis plugin CLI arguments helper."""
 
   NAME = u'virustotal_analysis'
   CATEGORY = u'analysis'
@@ -18,14 +18,14 @@ class VirusTotalAnalysisHelper(interface.ArgumentsHelper):
 
   @classmethod
   def AddArguments(cls, argument_group):
-    """Add command line arguments the helper supports to an argument group.
+    """Adds command line arguments the helper supports to an argument group.
 
     This function takes an argument parser or an argument group object and adds
     to it all the command line arguments this helper supports.
 
     Args:
-      argument_group: the argparse group (instance of argparse._ArgumentGroup or
-                      or argparse.ArgumentParser).
+      argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
+          argparse group.
     """
     argument_group.add_argument(
         u'--virustotal-api-key', dest=u'virustotal_api_key',
@@ -33,7 +33,7 @@ class VirusTotalAnalysisHelper(interface.ArgumentsHelper):
         u'for use with VirusTotal.')
     argument_group.add_argument(
         u'--virustotal-free-rate-limit', dest=u'virustotal_rate_limit',
-        type=bool, action='store', default=cls._DEFAULT_RATE_LIMIT, help=(
+        action='store_false', default=cls._DEFAULT_RATE_LIMIT, help=(
             u'Limit Virustotal requests to the default free API key rate of '
             u'4 requests per minute. Set this to false if you have an key '
             u'for the private API.'))
@@ -43,8 +43,8 @@ class VirusTotalAnalysisHelper(interface.ArgumentsHelper):
     """Parses and validates options.
 
     Args:
-      options: the parser option object (instance of argparse.Namespace).
-      analysis_plugin: an analysis plugin (instance of AnalysisPlugin).
+      options (argparse.Namespace): parser options.
+      analysis_plugin (VirusTotalAnalysisPlugin): analysis plugin to configure.
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
@@ -67,4 +67,4 @@ class VirusTotalAnalysisHelper(interface.ArgumentsHelper):
     analysis_plugin.EnableFreeAPIKeyRateLimit(rate_limit)
 
 
-manager.ArgumentHelperManager.RegisterHelper(VirusTotalAnalysisHelper)
+manager.ArgumentHelperManager.RegisterHelper(VirusTotalAnalysisArgumentsHelper)

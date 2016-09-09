@@ -8,7 +8,7 @@ from plaso.lib import eventdata
 class PlistEvent(time_events.PythonDatetimeEvent):
   """Convenience class for a plist events."""
 
-  DATA_TYPE = 'plist:key'
+  DATA_TYPE = u'plist:key'
 
   def __init__(self, root, key, timestamp, desc=None, host=None, user=None):
     """Template for creating a Plist EventObject for returning data to Plaso.
@@ -43,7 +43,7 @@ class PlistEvent(time_events.PythonDatetimeEvent):
 class PlistTimeEvent(time_events.TimestampEvent):
   """Convenience class for a plist event that does not use datetime objects."""
 
-  DATA_TYPE = 'plist:key'
+  DATA_TYPE = u'plist:key'
 
   def __init__(self, root, key, timestamp, desc=None, host=None, user=None):
     """Template for creating a Plist EventObject for returning data to Plaso.

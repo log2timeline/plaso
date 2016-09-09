@@ -8,6 +8,12 @@ import logging
 import os
 import sys
 
+try:
+  import win32api
+  import win32console
+except ImportError:
+  win32console = None
+
 import plaso
 from plaso.cli import views
 from plaso.lib import errors
@@ -20,10 +26,9 @@ class CLITool(object):
   """Class that implements a CLI tool.
 
   Attributes:
-    list_timezones: boolean value to indicate the time zones should be listed.
-    preferred_encoding: string containing the preferred encoding of single-byte
-                        or multi-byte character strings (sometimes referred to
-                        as extended ASCII).
+    list_timezones (bool): True if the time zones should be listed.
+    preferred_encoding (str): preferred encoding of single-byte or multi-byte
+        character strings, sometimes referred to as extended ASCII.
   """
   # The maximum number of characters of a line written to the output writer.
   _LINE_LENGTH = 80
@@ -37,12 +42,10 @@ class CLITool(object):
     """Initializes the CLI tool object.
 
     Args:
-      input_reader: optional input reader (instance of InputReader).
-                    The default is None which indicates the use of the stdin
-                    input reader.
-      output_writer: optional output writer (instance of OutputWriter).
-                     The default is None which indicates the use of the stdout
-                     output writer.
+      input_reader (Optional[InputReader]): input reader, where None indicates
+          that the stdin input reader should be used.
+      output_writer (Optional[OutputWriter]): output writer, where None
+          indicates that the stdout output writer should be used.
     """
     super(CLITool, self).__init__()
 
@@ -62,11 +65,36 @@ class CLITool(object):
     self._log_file = None
     self._output_writer = output_writer
     self._quiet_mode = False
-    self._timezone = pytz.UTC
+    self._timezone = u'UTC'
     self._views_format_type = views.ViewsFactory.FORMAT_TYPE_CLI
 
     self.list_timezones = False
     self.preferred_encoding = preferred_encoding
+
+  def _ClearScreen(self):
+    """Clears the terminal/console screen."""
+    if not win32console:
+      # ANSI escape sequence to clear screen.
+      self._output_writer.Write(b'\033[2J')
+      # ANSI escape sequence to move cursor to top left.
+      self._output_writer.Write(b'\033[H')
+
+    else:
+      # Windows cmd.exe does not support ANSI escape codes, thus instead we
+      # fill the console screen buffer with spaces.
+      top_left_coordinate = win32console.PyCOORDType(0, 0)
+      screen_buffer = win32console.GetStdHandle(win32api.STD_OUTPUT_HANDLE)
+      screen_buffer_information = screen_buffer.GetConsoleScreenBufferInfo()
+
+      screen_buffer_attributes = screen_buffer_information[u'Attributes']
+      screen_buffer_size = screen_buffer_information[u'Size']
+      console_size = screen_buffer_size.X * screen_buffer_size.Y
+
+      screen_buffer.FillConsoleOutputCharacter(
+          u' ', console_size, top_left_coordinate)
+      screen_buffer.FillConsoleOutputAttribute(
+          screen_buffer_attributes, console_size, top_left_coordinate)
+      screen_buffer.SetConsoleCursorPosition(top_left_coordinate)
 
   def _ConfigureLogging(
       self, filename=None, format_string=None, log_level=None):
@@ -76,14 +104,12 @@ class CLITool(object):
     the file is truncated.
 
     Args:
-      filename: optional path to a filename to append logs to. Defaults to None,
-                which means logs will not be redirected to a file.
-      format_string: optional format string for the logs. Defaults to None,
-                     which in turn configures the logger to use a default format
-                     string.
-      log_level: optional integer representing the log level, eg. logging.DEBUG.
-                 Defaults to None, which configures the logger to use INFO
-                 level.
+      filename (Optional[str]): path to a filename to append logs to, where
+          None means logs will not be redirected to a file.
+      format_string (Optional[str]): format string for the logs, where None
+           configures the logger to use a default format string.
+      log_level (Optional[int]): integer representing the log level, for
+          example logging.DEBUG, where None represents logging.INFO.
     """
     # Remove all possible log handlers.
     for handler in logging.root.handlers:
@@ -106,7 +132,7 @@ class CLITool(object):
     """Encodes a string in the preferred encoding.
 
     Returns:
-      A byte string containing the encoded string.
+      bytes: encoded string.
     """
     try:
       # Note that encode() will first convert string into a Unicode string
@@ -131,7 +157,7 @@ class CLITool(object):
     """Parses the data location option.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
     """
     data_location = self.ParseStringOption(options, u'data_location')
     if not data_location:
@@ -173,7 +199,7 @@ class CLITool(object):
     """Parses the informational options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
     """
     self._debug_mode = getattr(options, u'debug', False)
     self._quiet_mode = getattr(options, u'quiet', False)
@@ -187,7 +213,7 @@ class CLITool(object):
     """Parses the timezone options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
@@ -199,17 +225,18 @@ class CLITool(object):
 
       elif timezone_string:
         try:
-          self._timezone = pytz.timezone(timezone_string)
+          pytz.timezone(timezone_string)
         except pytz.UnknownTimeZoneError:
           raise errors.BadConfigOption(
               u'Unknown timezone: {0:s}'.format(timezone_string))
+
+        self._timezone = timezone_string
 
   def AddBasicOptions(self, argument_group):
     """Adds the basic options to the argument group.
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     version_string = u'plaso - {0:s} version {1:s}'.format(
         self.NAME, plaso.GetVersion())
@@ -227,8 +254,7 @@ class CLITool(object):
     """Adds the data location option to the argument group.
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
         u'--data', action=u'store', dest=u'data_location', type=str,
@@ -238,8 +264,7 @@ class CLITool(object):
     """Adds the informational options to the argument group.
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
         '-d', '--debug', dest='debug', action='store_true', default=False,
@@ -253,8 +278,7 @@ class CLITool(object):
     """Adds the log file option to the argument group.
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
         u'--logfile', u'--log_file', u'--log-file', action=u'store',
@@ -266,8 +290,7 @@ class CLITool(object):
     """Adds the timezone option to the argument group.
 
     Args:
-      argument_group: The argparse argument group (instance of
-                      argparse._ArgumentGroup).
+      argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
         u'-z', u'--zone', u'--timezone', dest=u'timezone', action=u'store',
@@ -280,7 +303,7 @@ class CLITool(object):
     """Retrieves the command line arguments.
 
     Returns:
-      A string containing the command line arguments.
+      str: command line arguments.
     """
     command_line_arguments = sys.argv
     if not command_line_arguments:
@@ -341,7 +364,7 @@ class CLITool(object):
     """Parses tool specific options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
     """
     self._ParseInformationalOptions(options)
 
@@ -349,7 +372,7 @@ class CLITool(object):
     """Parses the log file options.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
+      options (argparse.Namespace): command line arguments.
     """
     self._log_file = self.ParseStringOption(options, u'log_file')
 
@@ -357,13 +380,14 @@ class CLITool(object):
     """Parses a string command line argument.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
-      argument_name: the name of the command line argument.
-      default_value: optional default value of the command line argument.
+      options (argparse.Namespace): command line arguments.
+      argument_name (str): name of the command line argument.
+      default_value (Optional[object]): default value of the command line
+          argument.
 
     Returns:
-      A string containing the command line argument value. If the command
-      line argument is not set the default value will be returned.
+      object: command line argument value. If the command line argument is
+          not set the default value will be returned.
 
     Raises:
       BadConfigOption: if the command line argument value cannot be converted
@@ -407,7 +431,7 @@ class CLIInputReader(object):
     """Initializes the input reader object.
 
     Args:
-      encoding: optional input encoding.
+      encoding (Optional[str]): input encoding.
     """
     super(CLIInputReader, self).__init__()
     self._encoding = encoding
@@ -417,7 +441,7 @@ class CLIInputReader(object):
     """Reads a string from the input.
 
     Returns:
-      A string containing the input.
+      str: input.
     """
 
 
@@ -428,7 +452,7 @@ class CLIOutputWriter(object):
     """Initializes the output writer object.
 
     Args:
-      encoding: optional output encoding.
+      encoding (Optional[str]): output encoding.
     """
     super(CLIOutputWriter, self).__init__()
     self._encoding = encoding
@@ -438,7 +462,7 @@ class CLIOutputWriter(object):
     """Writes a string to the output.
 
     Args:
-      string: A string containing the output.
+      string (str): output.
     """
 
 
@@ -452,8 +476,8 @@ class FileObjectInputReader(CLIInputReader):
     """Initializes the input reader object.
 
     Args:
-      file_object: the file-like object to read from.
-      encoding: optional input encoding.
+      file_object (file): file-like object to read from.
+      encoding (Optional[str]): input encoding.
     """
     super(FileObjectInputReader, self).__init__(encoding=encoding)
     self._errors = u'strict'
@@ -463,7 +487,7 @@ class FileObjectInputReader(CLIInputReader):
     """Reads a string from the input.
 
     Returns:
-      A string containing the input.
+      str: input.
     """
     encoded_string = self._file_object.readline()
 
@@ -490,7 +514,7 @@ class StdinInputReader(FileObjectInputReader):
     """Initializes the input reader object.
 
     Args:
-      encoding: optional input encoding.
+      encoding (Optional[str]): input encoding.
     """
     super(StdinInputReader, self).__init__(sys.stdin, encoding=encoding)
 
@@ -505,8 +529,8 @@ class FileObjectOutputWriter(CLIOutputWriter):
     """Initializes the output writer object.
 
     Args:
-      file_object: the file-like object to write to.
-      encoding: optional output encoding.
+      file_object (file): file-like object to read from.
+      encoding (Optional[str]): output encoding.
     """
     super(FileObjectOutputWriter, self).__init__(encoding=encoding)
     self._errors = u'strict'
@@ -516,7 +540,7 @@ class FileObjectOutputWriter(CLIOutputWriter):
     """Writes a string to the output.
 
     Args:
-      string: A string containing the output.
+      string (str): output.
     """
     try:
       # Note that encode() will first convert string into a Unicode string
@@ -543,6 +567,6 @@ class StdoutOutputWriter(FileObjectOutputWriter):
     """Initializes the output writer object.
 
     Args:
-      encoding: optional output encoding.
+      encoding (Optional[str]): output encoding.
     """
     super(StdoutOutputWriter, self).__init__(sys.stdout, encoding=encoding)

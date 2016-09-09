@@ -1,17 +1,25 @@
-sudo: required
-dist: trusty
 language: python
-python:
-  - "2.7"
+matrix:
+  include:
+  - os: linux
+    dist: trusty
+    sudo: required
+    python: 2.7
+  - os: osx
+    language: generic
+  exclude:
+  - os: linux
+    dist: trusty
+    sudo: required
+    python: 3.4
 before_install:
-  - sudo rm -f /etc/apt/sources.list.d/travis_ci_zeromq3-source.list
-  - if test `uname -s` = 'Linux'; then /bin/bash ./config/linux/install_gift_and_dependencies.sh include-test include-debug; fi
+  - ./config/travis/before_install.sh
 script:
   - if test `uname -s` = 'Linux' && test ${TRAVIS_PYTHON_VERSION} = "2.7"; then coverage run --source=plaso --omit="*_test*,*__init__*,*test_lib*" ./run_tests.py; else ./run_tests.py; fi
   - python setup.py build
   - python setup.py sdist
   - python setup.py bdist
-  - mkdir -p ${PWD}/tmp/lib/python${TRAVIS_PYTHON_VERSION}/site-packages/ && PYTHONPATH=${PWD}/tmp/lib/python${TRAVIS_PYTHON_VERSION}/site-packages/ python setup.py install --prefix=${PWD}/tmp/
+  - if test `uname -s` = 'Linux'; then mkdir -p ${PWD}/tmp/lib/python${TRAVIS_PYTHON_VERSION}/site-packages/ && PYTHONPATH=${PWD}/tmp/lib/python${TRAVIS_PYTHON_VERSION}/site-packages/ python setup.py install --prefix=${PWD}/tmp/; fi
   - PYTHONPATH=. ./tests/end-to-end.py --debug -c config/end-to-end.ini
 after_success:
   - if test `uname -s` = 'Linux' && test ${TRAVIS_PYTHON_VERSION} = "2.7"; then coveralls --verbose; fi

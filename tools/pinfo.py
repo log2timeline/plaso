@@ -9,12 +9,12 @@ import argparse
 import collections
 import logging
 import os
-import pprint
 import sys
 import uuid
 
 from plaso.cli import analysis_tool
 from plaso.cli import views as cli_views
+from plaso.engine import knowledge_base
 from plaso.frontend import analysis_frontend
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -27,28 +27,10 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
   NAME = u'pinfo'
   DESCRIPTION = (
-      u'Gives you information about the storage file, how it was '
-      u'collected, what information was gained from the image, etc.')
+      u'Shows information about a Plaso storage file, for example how it was '
+      u'collected, what information was extracted from a source, etc.')
 
   _INDENTATION_LEVEL = 8
-
-  _PREPROCESSING_VALUE_DESCRIPTIONS = {
-      u'code_page': u'Code page',
-      u'guessed_os': u'Operating system',
-      u'hostname': u'Hostname',
-      u'name': u'Name',
-      u'osversion': u'Operating system',
-      u'path': u'Profile path',
-      u'plugin_counter': u'Number of plugins',
-      u'programfiles': u'%ProgramFiles%',
-      u'sid': u'SID',
-      u'systemroot': u'%SystemRoot%',
-      u'sysregistry': u'Registry path',
-      u'users': u'Users information',
-      u'time_zone_str': u'Time zone',
-      u'windir': u'%WinDir%',
-      u'zone': u'Time zone',
-  }
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
@@ -68,361 +50,78 @@ class PinfoTool(analysis_tool.AnalysisTool):
     self._verbose = False
     self.compare_storage_information = False
 
-  def _CompareInformationDict(
-      self, identifier, storage_information, compare_storage_information,
-      ignore_values=None):
-    """Compares the information dictionaries.
+  def _CalculateStorageCounters(self, storage):
+    """Calculates the counters of the entire storage.
 
     Args:
-      identifier (str): identifier of the dictionary to compare.
-      storage_information (PreprocessObject): storage information.
-      compare_storage_information (PreprocessObject): storage information
-          to compare against.
-      ignore_values (Optional[list[str]]): value identifiers to ignore.
+      storage (BaseStorage): storage.
 
     Returns:
-      bool: True if the storage information are identical.
+      dict[str,collections.Counter]: storage counters.
     """
-    information = getattr(storage_information, identifier, None)
-    compare_information = getattr(compare_storage_information, identifier, None)
+    analysis_reports_counter = collections.Counter()
+    analysis_reports_counter_error = False
+    event_labels_counter = collections.Counter()
+    event_labels_counter_error = False
+    parsers_counter = collections.Counter()
+    parsers_counter_error = False
 
-    if not information and not compare_information:
-      return True
-
-    # Determine the union of the keys.
-    if not information:
-      keys = set(compare_information.keys())
-    elif not compare_information:
-      keys = set(information.keys())
-    else:
-      keys = set(information.keys()) | set(compare_information.keys())
-
-    result = True
-    for key in keys:
-      if ignore_values and key in ignore_values:
-        continue
-
-      description = u'{0:s}.{1:s}'.format(identifier, key)
-      if not self._CompareInformationValue(
-          key, description, information, compare_information):
-        result = False
-
-    return result
-
-  def _CompareInformationValue(
-      self, identifier, description, information, compare_information):
-    """Compares the information values.
-
-    Args:
-      identifier (str): identifier of the value to compare.
-      description (str): human readable description of the value.
-      information (dict): information dictionary.
-      compare_information (dict): information dictionary to compare against.
-
-    Returns:
-      bool: True if the information dictionaries are identical.
-    """
-    has_value = information.has_key(identifier)
-    compare_has_value = compare_information.has_key(identifier)
-
-    if not has_value and not compare_has_value:
-      return True
-
-    if not has_value:
-      self._output_writer.Write(u'{0:s} value not present in {1:s}.\n'.format(
-          description, self._storage_file_path))
-      return False
-
-    if not compare_has_value:
-      self._output_writer.Write(u'{0:s} value not present in {1:s}.\n'.format(
-          description, self._compare_storage_file_path))
-      return False
-
-    value = information.get(identifier, None)
-    compare_value = compare_information.get(identifier, None)
-    if value != compare_value:
-      self._output_writer.Write(
-          u'{0:s} value mismatch {1!s} != {2!s}.\n'.format(
-              description, value, compare_value))
-      return False
-
-    return True
-
-  def _CompareStorageInformationObjects(
-      self, storage_information, compare_storage_information):
-    """Compares the storage information objects.
-
-    Args:
-      storage_information (PreprocessObject): storage information.
-      compare_storage_information (PreprocessObject): storage information
-          to compare against.
-
-    Returns:
-      bool: True if the storage information are identical.
-    """
-    result = True
-    if not self._CompareInformationDict(
-        u'collection_information', storage_information,
-        compare_storage_information, ignore_values=[
-            u'cmd_line', u'output_file', u'time_of_run']):
-      result = False
-
-    if not self._CompareInformationDict(
-        u'counter', storage_information, compare_storage_information):
-      result = False
-
-    if not self._CompareInformationDict(
-        u'plugin_counter', storage_information, compare_storage_information):
-      result = False
-
-    # TODO: compare stores.
-    # TODO: compare remaining preprocess information.
-    # TODO: compare reports.
-
-    return result
-
-  def _CompareStorageInformation(self, storage_file, compare_storage_file):
-    """Compares the storage information.
-
-    Args:
-      storage_file (StorageFile): storage file.
-      compare_storage_file (StorageFile): storage file to compare against.
-
-    Returns:
-      bool: True if the contents of the storage files is identical.
-    """
-    storage_information_list = storage_file.GetStorageInformation()
-    compare_storage_information_list = (
-        compare_storage_file.GetStorageInformation())
-
-    if not storage_information_list and not compare_storage_information_list:
-      self._output_writer.Write(u'No storage information found.\n')
-      return True
-
-    storage_information_list_length = len(storage_information_list)
-    compare_storage_information_list_length = len(
-        compare_storage_information_list)
-    number_of_list_entries = min(
-        storage_information_list_length,
-        compare_storage_information_list_length)
-
-    result = True
-    for list_entry in range(0, number_of_list_entries):
-      if not self._CompareStorageInformationObjects(
-          storage_information_list[list_entry],
-          compare_storage_information_list[list_entry]):
-        result = False
-
-    if number_of_list_entries < storage_information_list_length:
-      self._output_writer.Write((
-          u'Storage file: {0:s} contains: {1:d} additional storage '
-          u'information entries.\n').format(
-              self._storage_file_path,
-              storage_information_list_length - number_of_list_entries))
-      result = False
-
-    if number_of_list_entries < compare_storage_information_list_length:
-      self._output_writer.Write((
-          u'Storage file: {0:s} contains: {1:d} additional storage '
-          u'information entries.\n').format(
-              self._compare_storage_file_path,
-              compare_storage_information_list_length - number_of_list_entries))
-      result = False
-
-    if result:
-      self._output_writer.Write(u'Storage files are identical.\n')
-
-    return result
-
-  def _FormatCollectionInformation(self, lines_of_text, storage_information):
-    """Formats the collection information.
-
-    Args:
-      lines_of_text (list[str]): lines of text.
-      storage_information (PreprocessObject): storage information.
-    """
-    collection_information = getattr(
-        storage_information, u'collection_information', None)
-    if not collection_information:
-      lines_of_text.append(u'Missing collection information.')
-      return
-
-    filename = collection_information.get(u'file_processed', u'N/A')
-    time_of_run = collection_information.get(u'time_of_run', 0)
-    time_of_run = timelib.Timestamp.CopyToIsoFormat(time_of_run)
-
-    lines_of_text.append(u'Source processed:\t{0:s}'.format(filename))
-    lines_of_text.append(u'Time of processing:\t{0:s}'.format(time_of_run))
-
-    lines_of_text.append(u'')
-    lines_of_text.append(u'Collection information:')
-
-    for key, value in collection_information.iteritems():
-      if key in (u'file_processed', u'time_of_run'):
-        continue
-      if key == u'parsers':
-        value = u', '.join(sorted(value))
-      lines_of_text.append(u'\t{0:s} = {1!s}'.format(key, value))
-
-  def _FormatCounterInformation(
-      self, lines_of_text, description, counter_information):
-    """Formats the counter information.
-
-    Args:
-      lines_of_text (list[str]): lines of text.
-      description: The counter information description.
-      counter_information: The counter information dict.
-    """
-    if not counter_information:
-      return
-
-    if lines_of_text:
-      lines_of_text.append(u'')
-
-    lines_of_text.append(u'{0:s}:'.format(description))
-
-    total_value = None
-    for key, value in sorted(counter_information.most_common()):
-      if key == u'total':
-        total_value = value
+    for session in storage.GetSessions():
+      # Check for a dict for backwards compatibility.
+      if isinstance(session.analysis_reports_counter, dict):
+        analysis_reports_counter += collections.Counter(
+            session.analysis_reports_counter)
+      elif isinstance(session.analysis_reports_counter, collections.Counter):
+        analysis_reports_counter += session.analysis_reports_counter
       else:
-        lines_of_text.append(u'\t{0:s} = {1:d}'.format(key, value))
+        analysis_reports_counter_error = True
 
-    if total_value is not None:
-      lines_of_text.append(u'\tTotal = {0:d}'.format(total_value))
+      # Check for a dict for backwards compatibility.
+      if isinstance(session.event_labels_counter, dict):
+        event_labels_counter += collections.Counter(
+            session.event_labels_counter)
+      elif isinstance(session.event_labels_counter, collections.Counter):
+        event_labels_counter += session.event_labels_counter
+      else:
+        event_labels_counter_error = True
 
-  def _FormatPreprocessingInformationValue(self, key, value):
-    """Formats a processing information value.
+      # Check for a dict for backwards compatibility.
+      if isinstance(session.parsers_counter, dict):
+        parsers_counter += collections.Counter(session.parsers_counter)
+      elif isinstance(session.parsers_counter, collections.Counter):
+        parsers_counter += session.parsers_counter
+      else:
+        parsers_counter_error = True
+
+    storage_counters = {}
+
+    if not analysis_reports_counter_error:
+      storage_counters[u'analysis_reports'] = analysis_reports_counter
+
+    if not event_labels_counter_error:
+      storage_counters[u'event_labels'] = event_labels_counter
+
+    if not parsers_counter_error:
+      storage_counters[u'parsers'] = parsers_counter
+
+    return storage_counters
+
+  def _CompareStorages(self, storage, compare_storage):
+    """Compares the contents of two storages.
 
     Args:
-      key (str): key of the value.
-      value (object): value.
+      storage (BaseStorage): storage.
+      compare_storage (BaseStorage): storage to compare against.
 
     Returns:
-      str: line of text containing the formatted processing information value.
+      bool: True if the content of the storages is identical.
     """
-    description = self._PREPROCESSING_VALUE_DESCRIPTIONS.get(key, key)
-    # Make sure we have the same tab alignment for all the values.
-    if len(description) < 7:
-      text = u'\t{0:s}\t\t\t: {1!s}'.format(description, value)
-    elif len(description) < 15:
-      text = u'\t{0:s}\t\t: {1!s}'.format(description, value)
-    else:
-      text = u'\t{0:s}\t: {1!s}'.format(description, value)
+    storage_counters = self._CalculateStorageCounters(storage)
+    compare_storage_counters = self._CalculateStorageCounters(compare_storage)
 
-    return text
+    # TODO: improve comparision, currently only total numbers are compared.
 
-  def _FormatPreprocessingInformation(self, lines_of_text, storage_information):
-    """Formats the processing information.
-
-    Args:
-      lines_of_text (list[str]): lines of text.
-      storage_information (PreprocessObject): storage information.
-    """
-    if lines_of_text:
-      lines_of_text.append(u'')
-
-    if not self._verbose:
-      lines_of_text.append(
-          u'Preprocessing information omitted (to see use: --verbose).')
-      return
-
-    lines_of_text.append(u'Preprocessing information:')
-
-    for key in (u'osversion', u'hostname', u'time_zone_str', u'codepage'):
-      value = getattr(storage_information, key, None)
-      if value:
-        text = self._FormatPreprocessingInformationValue(key, value)
-        lines_of_text.append(text)
-
-    for key in (u'programfiles', u'systemroot', u'windir'):
-      value = getattr(storage_information, key, None)
-      if value:
-        text = self._FormatPreprocessingInformationValue(key, value)
-        lines_of_text.append(text)
-
-    key = u'users'
-    users_list = getattr(storage_information, key, [])
-    if users_list:
-      description = self._PREPROCESSING_VALUE_DESCRIPTIONS.get(key, key)
-      lines_of_text.append(u'    {0:s}:'.format(description))
-      for user_dict in users_list:
-        for key in (u'name', u'sid', u'path'):
-          value = user_dict.get(key, None)
-          if value:
-            text = self._FormatPreprocessingInformationValue(key, value)
-            lines_of_text.append(text)
-
-    # TODO: clean this up after restructuring the preprocessing information.
-    lines_of_text.append(u'    Other:')
-    for key, value in storage_information.__dict__.iteritems():
-      if key in frozenset([
-          u'_user_ids_to_names', u'codepage', u'collection_information',
-          u'counter', u'hostname', u'osversion', u'plugin_counter',
-          u'programfiles', u'stores', u'systemroot', u'time_zone_str',
-          u'users', u'windir']):
-        continue
-
-      if value:
-        text = self._FormatPreprocessingInformationValue(key, value)
-        lines_of_text.append(text)
-
-  def _FormatStorageInformation(self, lines_of_text, storage_information):
-    """Formats the storage information.
-
-    Args:
-      lines_of_text (list[str]): lines of text.
-      storage_information (PreprocessObject): storage information.
-    """
-    self._FormatCollectionInformation(lines_of_text, storage_information)
-
-    counter_information = getattr(storage_information, u'counter', None)
-    self._FormatCounterInformation(
-        lines_of_text, u'Parser counter information', counter_information)
-
-    counter_information = getattr(storage_information, u'plugin_counter', None)
-    self._FormatCounterInformation(
-        lines_of_text, u'Plugin counter information', counter_information)
-
-    printer_object = pprint.PrettyPrinter(indent=self._INDENTATION_LEVEL)
-    self._FormatStoreInformation(
-        printer_object, lines_of_text, storage_information)
-
-    self._FormatPreprocessingInformation(lines_of_text, storage_information)
-
-    lines_of_text.append(u'')
-    lines_of_text.append(u'-+' * 40)
-    lines_of_text.append(u'')
-
-  def _FormatStoreInformation(
-      self, printer_object, lines_of_text, storage_information):
-    """Formats the store information.
-
-    Args:
-      printer_object (PrettyPrinter): pretty printer.
-      lines_of_text (list[str]): lines of text.
-      storage_information (PreprocessObject): storage information.
-    """
-    store_information = getattr(storage_information, u'stores', None)
-    if not store_information:
-      return
-
-    if lines_of_text:
-      lines_of_text.append(u'')
-
-    lines_of_text.append(u'Store information:')
-    lines_of_text.append(u'\tNumber of available stores: {0:d}'.format(
-        store_information[u'Number']))
-
-    if not self._verbose:
-      lines_of_text.append(
-          u'\tStore information details omitted (to see use: --verbose)')
-      return
-
-    for key, value in store_information.iteritems():
-      if key != u'Number':
-        lines_of_text.append(
-            u'\t{0:s} =\n{1!s}'.format(key, printer_object.pformat(value)))
+    return storage_counters == compare_storage_counters
 
   def _PrintAnalysisReportCounter(
       self, analysis_reports_counter, session_identifier=None):
@@ -431,7 +130,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     Args:
       analysis_reports_counter (collections.Counter): number of analysis
           reports per analysis plugin.
-      session_identifier (Optional[str]): sessio identifier.
+      session_identifier (Optional[str]): session identifier.
     """
     if not analysis_reports_counter:
       return
@@ -494,6 +193,14 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
       table_view.AddRow([u'Message', error.message])
       table_view.AddRow([u'Parser chain', error.parser_chain])
+      for index, line in enumerate(error.path_spec.comparable.split(u'\n')):
+        if not line:
+          continue
+
+        if index == 0:
+          table_view.AddRow([u'Path specification', line])
+        else:
+          table_view.AddRow([u'', line])
 
       table_view.Write(self._output_writer)
 
@@ -504,7 +211,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     Args:
       event_labels_counter (collections.Counter): number of event tags per
           label.
-      session_identifier (Optional[str]): sessio identifier.
+      session_identifier (Optional[str]): session identifier.
     """
     if not event_labels_counter:
       return
@@ -537,7 +244,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
     Args:
       parsers_counter (collections.Counter): number of events per parser or
           parser plugin.
-      session_identifier (Optional[str]): sessio identifier.
+      session_identifier (Optional[str]): session identifier.
     """
     if not parsers_counter:
       return
@@ -560,50 +267,86 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
     table_view.Write(self._output_writer)
 
+  def _PrintPreprocessingInformation(self, storage, session_number=None):
+    """Prints the details of the preprocessing information.
+
+    Args:
+      storage (BaseStorage): storage.
+      session_number (Optional[int]): session number.
+    """
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+
+    storage.ReadPreprocessingInformation(knowledge_base_object)
+
+    system_configuration = knowledge_base_object.GetSystemConfigurationArtifact(
+        session_number)
+    if not system_configuration:
+      return
+
+    title = u'System configuration'
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, title=title)
+
+    hostname = u'N/A'
+    if system_configuration.hostname:
+      hostname = system_configuration.hostname.name
+
+    operating_system = system_configuration.operating_system or u'N/A'
+    operating_system_product = (
+        system_configuration.operating_system_product or u'N/A')
+    operating_system_version = (
+        system_configuration.operating_system_version or u'N/A')
+    code_page = system_configuration.code_page or u'N/A'
+    keyboard_layout = system_configuration.keyboard_layout or u'N/A'
+    time_zone = system_configuration.time_zone or u'N/A'
+
+    table_view.AddRow([u'Hostname', hostname])
+    table_view.AddRow([u'Operating system', operating_system])
+    table_view.AddRow([u'Operating system product', operating_system_product])
+    table_view.AddRow([u'Operating system version', operating_system_version])
+    table_view.AddRow([u'Code page', code_page])
+    table_view.AddRow([u'Keyboard layout', keyboard_layout])
+    table_view.AddRow([u'Time zone', time_zone])
+
+    table_view.Write(self._output_writer)
+
+    title = u'User accounts'
+    table_view = cli_views.ViewsFactory.GetTableView(
+        self._views_format_type, title=title)
+
+    for user_account in system_configuration.user_accounts:
+      table_view.AddRow([
+          user_account.username, user_account.user_directory])
+
+    table_view.Write(self._output_writer)
+
   def _PrintSessionsDetails(self, storage):
     """Prints the details of the sessions.
 
     Args:
       storage (BaseStorage): storage.
     """
-    for session in storage.GetSessions():
+    for session_number, session in enumerate(storage.GetSessions()):
       session_identifier = uuid.UUID(hex=session.identifier)
 
+      start_time = u'N/A'
       if session.start_time is not None:
         start_time = timelib.Timestamp.CopyToIsoFormat(session.start_time)
-      else:
-        start_time = u'N/A'
 
+      completion_time = u'N/A'
       if session.completion_time is not None:
         completion_time = timelib.Timestamp.CopyToIsoFormat(
             session.completion_time)
-      else:
-        completion_time = u'N/A'
 
-      if session.command_line_arguments:
-        command_line_arguments = session.command_line_arguments
-      else:
-        command_line_arguments = u'N/A'
+      enabled_parser_names = u'N/A'
+      if session.enabled_parser_names:
+        enabled_parser_names = u', '.join(sorted(session.enabled_parser_names))
 
-      if session.parser_filter_expression:
-        parser_filter_expression = session.parser_filter_expression
-      else:
-        parser_filter_expression = u'N/A'
-
-      if session.preferred_encoding:
-        preferred_encoding = session.preferred_encoding
-      else:
-        preferred_encoding = u'N/A'
-
-      if session.filter_file:
-        filter_file = session.filter_file
-      else:
-        filter_file = u'N/A'
-
-      if session.filter_expression:
-        filter_expression = session.filter_expression
-      else:
-        filter_expression = u'N/A'
+      command_line_arguments = session.command_line_arguments or u'N/A'
+      parser_filter_expression = session.parser_filter_expression or u'N/A'
+      preferred_encoding = session.preferred_encoding or u'N/A'
+      filter_file = session.filter_file or u'N/A'
+      filter_expression = session.filter_expression or u'N/A'
 
       title = u'Session: {0!s}'.format(session_identifier)
       table_view = cli_views.ViewsFactory.GetTableView(
@@ -615,6 +358,7 @@ class PinfoTool(analysis_tool.AnalysisTool):
       table_view.AddRow([u'Product version', session.product_version])
       table_view.AddRow([u'Command line arguments', command_line_arguments])
       table_view.AddRow([u'Parser filter expression', parser_filter_expression])
+      table_view.AddRow([u'Enabled parser and plugins', enabled_parser_names])
       table_view.AddRow([u'Preferred encoding', preferred_encoding])
       table_view.AddRow([u'Debug mode', session.debug_mode])
       table_view.AddRow([u'Filter file', filter_file])
@@ -623,6 +367,10 @@ class PinfoTool(analysis_tool.AnalysisTool):
       table_view.Write(self._output_writer)
 
       if self._verbose:
+        # TODO: disabled for now seeing the output is not yet complete.
+        # self._PrintPreprocessingInformation(storage, session_number + 1)
+        _ = session_number
+
         self._PrintParsersCounter(
             session.parsers_counter, session_identifier=session_identifier)
 
@@ -668,65 +416,31 @@ class PinfoTool(analysis_tool.AnalysisTool):
       self._PrintSessionsOverview(storage)
       self._PrintSessionsDetails(storage)
 
-      analysis_reports_counter = collections.Counter()
-      analysis_reports_counter_error = False
-      event_labels_counter = collections.Counter()
-      event_labels_counter_error = False
-      parsers_counter = collections.Counter()
-      parsers_counter_error = False
+      storage_counters = self._CalculateStorageCounters(storage)
 
-      for session in storage.GetSessions():
-        # Check for a dict for backwards compatibility.
-        if isinstance(session.analysis_reports_counter, dict):
-          analysis_reports_counter += collections.Counter(
-              session.analysis_reports_counter)
-        elif isinstance(session.analysis_reports_counter, collections.Counter):
-          analysis_reports_counter += session.analysis_reports_counter
-        else:
-          analysis_reports_counter_error = True
-
-        # Check for a dict for backwards compatibility.
-        if isinstance(session.event_labels_counter, dict):
-          event_labels_counter += collections.Counter(
-              session.event_labels_counter)
-        elif isinstance(session.event_labels_counter, collections.Counter):
-          event_labels_counter += session.event_labels_counter
-        else:
-          event_labels_counter_error = True
-
-        # Check for a dict for backwards compatibility.
-        if isinstance(session.parsers_counter, dict):
-          parsers_counter += collections.Counter(session.parsers_counter)
-        elif isinstance(session.parsers_counter, collections.Counter):
-          parsers_counter += session.parsers_counter
-        else:
-          parsers_counter_error = True
-
-      if parsers_counter_error:
+      if u'parsers' not in storage_counters:
         self._output_writer.Write(
             u'Unable to determine number of events generated per parser.\n')
       else:
-        self._PrintParsersCounter(parsers_counter)
+        self._PrintParsersCounter(storage_counters[u'parsers'])
 
-      if analysis_reports_counter_error:
+      if u'analysis_reports' not in storage_counters:
         self._output_writer.Write(
             u'Unable to determine number of reports generated per plugin.\n')
       else:
-        self._PrintAnalysisReportCounter(analysis_reports_counter)
+        self._PrintAnalysisReportCounter(storage_counters[u'analysis_reports'])
 
-      if event_labels_counter_error:
+      if u'event_labels' not in storage_counters:
         self._output_writer.Write(
             u'Unable to determine number of event tags generated per label.\n')
       else:
-        self._PrintEventLabelsCounter(event_labels_counter)
+        self._PrintEventLabelsCounter(storage_counters[u'event_labels'])
 
       self._PrintErrorsDetails(storage)
       self._PrintAnalysisReportsDetails(storage)
 
     elif storage.storage_type == definitions.STORAGE_TYPE_TASK:
       self._PrintTasksInformation(storage)
-
-    return
 
   def _PrintTasksInformation(self, storage):
     """Prints information about the tasks.
@@ -745,24 +459,25 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
     table_view.Write(self._output_writer)
 
-  def CompareStorageInformation(self):
-    """Compares the storage information.
+  def CompareStorages(self):
+    """Compares the contents of two storages.
 
     Returns:
-      bool: True if the storage information are identical.
+      bool: True if the content of the storages is identical.
     """
+    storage_file = storage_zip_file.ZIPStorageFile()
     try:
-      storage_file = storage_zip_file.StorageFile(
-          self._storage_file_path, read_only=True)
+      storage_file.Open(path=self._storage_file_path, read_only=True)
     except IOError as exception:
       logging.error(
           u'Unable to open storage file: {0:s} with error: {1:s}'.format(
               self._storage_file_path, exception))
       return
 
+    compare_storage_file = storage_zip_file.ZIPStorageFile()
     try:
-      compare_storage_file = storage_zip_file.StorageFile(
-          self._compare_storage_file_path, read_only=True)
+      compare_storage_file.Open(
+          path=self._compare_storage_file_path, read_only=True)
     except IOError as exception:
       logging.error(
           u'Unable to open storage file: {0:s} with error: {1:s}'.format(
@@ -770,10 +485,17 @@ class PinfoTool(analysis_tool.AnalysisTool):
       storage_file.Close()
       return
 
-    result = self._CompareStorageInformation(storage_file, compare_storage_file)
+    try:
+      result = self._CompareStorages(storage_file, compare_storage_file)
 
-    storage_file.Close()
-    compare_storage_file.Close()
+    finally:
+      compare_storage_file.Close()
+      storage_file.Close()
+
+    if result:
+      self._output_writer.Write(u'Storages are identical.\n')
+    else:
+      self._output_writer.Write(u'Storages are different.\n')
 
     return result
 
@@ -813,11 +535,9 @@ class PinfoTool(analysis_tool.AnalysisTool):
     try:
       self.ParseOptions(options)
     except errors.BadConfigOption as exception:
-      logging.error(u'{0:s}'.format(exception))
-
+      self._output_writer.Write(u'ERROR: {0:s}'.format(exception))
       self._output_writer.Write(u'\n')
       self._output_writer.Write(argument_parser.format_usage())
-
       return False
 
     return True
@@ -856,18 +576,19 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
   def PrintStorageInformation(self):
     """Prints the storage information."""
+    storage_file = storage_zip_file.ZIPStorageFile()
     try:
-      storage_file = storage_zip_file.StorageFile(
-          self._storage_file_path, read_only=True)
+      storage_file.Open(path=self._storage_file_path, read_only=True)
     except IOError as exception:
       logging.error(
           u'Unable to open storage file: {0:s} with error: {1:s}'.format(
               self._storage_file_path, exception))
       return
 
-    self._PrintStorageInformation(storage_file)
-
-    storage_file.Close()
+    try:
+      self._PrintStorageInformation(storage_file)
+    finally:
+      storage_file.Close()
 
 
 def Main():
@@ -878,10 +599,16 @@ def Main():
     return False
 
   result = True
-  if tool.compare_storage_information:
-    result = tool.CompareStorageInformation()
-  else:
-    tool.PrintStorageInformation()
+  try:
+    if tool.compare_storage_information:
+      result = tool.CompareStorages()
+    else:
+      tool.PrintStorageInformation()
+
+  except errors.BadConfigOption as exception:
+    logging.warning(exception)
+    return False
+
   return result
 
 

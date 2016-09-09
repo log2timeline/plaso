@@ -8,6 +8,7 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.containers import sessions
 from plaso.frontend import extraction_frontend
 from plaso.storage import zip_file as storage_zip_file
 
@@ -41,7 +42,7 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
   # TODO: add test for _GetParserFilterPreset
   # TODO: add test for _PreprocessSource
   # TODO: add test for _PreprocessSetCollectionInformation
-  # TODO: add test for _PreprocessSetTimezone
+  # TODO: add test for _SetTimezone
 
   def testEnableAndDisableProfiling(self):
     """Tests the EnableProfiling and DisableProfiling functions."""
@@ -109,6 +110,7 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
   # the behavior of the multi processing queue.
   def testProcessSources(self):
     """Tests the ProcessSources function."""
+    session = sessions.Session()
     test_front_end = extraction_frontend.ExtractionFrontend()
 
     test_file = self._GetTestFilePath([u'ímynd.dd'])
@@ -122,13 +124,15 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
 
     with shared_test_lib.TempDirectory() as temp_directory:
       storage_file_path = os.path.join(temp_directory, u'storage.plaso')
-      test_front_end.SetStorageFile(storage_file_path)
 
-      test_front_end.ProcessSources([path_spec], source_type)
+      storage_writer = storage_zip_file.ZIPStorageFileWriter(
+          session, storage_file_path)
+      test_front_end.ProcessSources(
+          session, storage_writer, [path_spec], source_type)
 
+      storage_file = storage_zip_file.ZIPStorageFile()
       try:
-        storage_file = storage_zip_file.StorageFile(
-            storage_file_path, read_only=True)
+        storage_file.Open(path=storage_file_path)
       except IOError:
         self.fail(u'Unable to open storage file after processing.')
 
@@ -138,38 +142,23 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
 
       event_object = event_objects[0]
 
-      self.assertGreaterEqual(event_object.data_type, u'fs:stat')
-      self.assertGreaterEqual(event_object.filename, u'/lost+found')
+      self.assertEqual(event_object.data_type, u'fs:stat')
+      self.assertEqual(event_object.filename, u'/lost+found')
 
   def testSetDebugMode(self):
     """Tests the SetDebugMode function."""
     test_front_end = extraction_frontend.ExtractionFrontend()
     test_front_end.SetDebugMode(enable_debug=True)
 
-  def testSetEnablePreprocessing(self):
-    """Tests the SetEnablePreprocessing function."""
-    test_front_end = extraction_frontend.ExtractionFrontend()
-    test_front_end.SetEnablePreprocessing(True)
-
   def testSetShowMemoryInformation(self):
     """Tests the SetShowMemoryInformation function."""
     test_front_end = extraction_frontend.ExtractionFrontend()
     test_front_end.SetShowMemoryInformation(show_memory=False)
 
-  def testSetStorageFile(self):
-    """Tests the SetStorageFile function."""
-    test_front_end = extraction_frontend.ExtractionFrontend()
-    test_front_end.SetStorageFile(u'/tmp/storage.plaso')
-
   def testSetTextPrepend(self):
     """Tests the SetTextPrepend function."""
     test_front_end = extraction_frontend.ExtractionFrontend()
     test_front_end.SetTextPrepend(u'prepended text')
-
-  def testSetUseOldPreprocess(self):
-    """Tests the SetUseOldPreprocess function."""
-    test_front_end = extraction_frontend.ExtractionFrontend()
-    test_front_end.SetUseOldPreprocess(True)
 
   def testSetUseZeroMQ(self):
     """Tests the SetUseZeroMQ function."""

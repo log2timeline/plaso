@@ -129,7 +129,9 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
     with self.assertRaises(IOError):
       storage_writer.Close()
 
-  # TODO: add test for GetEventSources.
+  # TODO: add test for GetEvents.
+  # TODO: add test for GetFirstWrittenEventSource and
+  # GetNextWrittenEventSource.
 
   def testMergeFromStorage(self):
     """Tests the MergeFromStorage function."""

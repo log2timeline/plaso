@@ -28,10 +28,11 @@ class TimesketchOutputModule(interface.OutputModule):
   DESCRIPTION = u'Create a Timesketch timeline.'
 
   def __init__(self, output_mediator):
-    """Initializes the output module object.
+    """Initializes an output module object.
 
     Args:
-      output_mediator: The output mediator object (instance of OutputMediator).
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfvfs.
     """
     super(TimesketchOutputModule, self).__init__(output_mediator)
 
@@ -59,7 +60,7 @@ class TimesketchOutputModule(interface.OutputModule):
     Sends the remaining events for indexing and removes the processing status on
     the Timesketch search index object.
     """
-    self._elastic.AddEvent(event_object=None, force_flush=True)
+    self._elastic.AddEvent(None, force_flush=True)
     with self._timesketch.app_context():
       search_index = SearchIndex.query.filter_by(
           index_name=self._index_name).first()
@@ -69,66 +70,67 @@ class TimesketchOutputModule(interface.OutputModule):
 
   def GetMissingArguments(self):
     """Return a list of arguments that are missing from the input.
+
     Returns:
-      a list of argument names that are missing and necessary for the
-      module to continue to operate.
+      list[str]: argument names that are missing and necessary for the
+          module to continue to operate.
     """
     if not self._timeline_name:
       return [u'timeline_name']
     return []
 
   def SetDocType(self, doc_type):
-    """Set the Elasticsearch document type.
+    """Sets the Elasticsearch document type.
 
     Args:
-      doc_type: the document type.
+      doc_type (str): document type.
     """
     self._doc_type = doc_type
     logging.info(u'Document type: {0:s}'.format(self._doc_type))
 
   def SetFlushInterval(self, flush_interval):
-    """Set the flush interval.
+    """Sets the flush interval.
 
     Args:
-      flush_interval: the flush interval.
+      flush_interval (int): flush interval.
     """
     self._flush_interval = flush_interval
     logging.info(u'Flush interval: {0:d}'.format(self._flush_interval))
 
   def SetIndexName(self, index_name):
-    """Set the index name.
+    """Sets the index name.
 
     Args:
-      index_name: the index name.
+      index_name (str): index name.
     """
     self._index_name = index_name
     logging.info(u'Index name: {0:s}'.format(self._index_name))
 
   def SetTimelineName(self, timeline_name):
-    """Set the timeline name.
+    """Sets the timeline name.
 
     Args:
-      timeline_name: the timeline name.
+      timeline_name (str): timeline name.
     """
     self._timeline_name = timeline_name
     logging.info(u'Timeline name: {0:s}'.format(self._timeline_name))
 
   def SetUserName(self, username):
-    """Set the username of the user that should own the timeline.
+    """Sets the username of the user that should own the timeline.
 
     Args:
-      username: the username of the user.
+      username (str): username.
     """
     self._username = username
     logging.info(u'Owner of the timeline: {0:s}'.format(self._username))
 
-  def WriteEventBody(self, event_object):
+  def WriteEventBody(self, event):
     """Writes the body of an event object to the output.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
     """
-    self._elastic.AddEvent(event_object)
+    self._elastic.AddEvent(event)
 
   def WriteHeader(self):
     """Setup the Elasticsearch index and the Timesketch database object.
@@ -187,7 +189,7 @@ class TimesketchOutputModule(interface.OutputModule):
       db_session.add(search_index)
       db_session.commit()
 
-    logging.info(u'Adding events to Timesketch..')
+    logging.info(u'Adding events to Timesketch.')
 
 
 manager.OutputManager.RegisterOutput(

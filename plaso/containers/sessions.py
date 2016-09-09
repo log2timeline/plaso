@@ -14,12 +14,15 @@ class Session(interface.AttributeContainer):
   """Class to represent a session attribute container.
 
   Attributes:
+    aborted (bool): True if the session was aborted.
     analysis_reports_counter (collections.Counter): number of analysis reports
         per analysis plugin.
     command_line_arguments (str): command line arguments.
     completion_time (int): time that the session was completed. Contains the
         number of micro seconds since January 1, 1970, 00:00:00 UTC.
     debug_mode (bool): True if debug mode was enabled.
+    enabled_parser_names (list[str]): parser and parser plugin names that
+         were enabled.
     event_labels_counter (collections.Counter): number of event tags per label.
     filter_expression (str): expression to filter events.
     filter_file (str): path to a file with find specifications.
@@ -40,10 +43,12 @@ class Session(interface.AttributeContainer):
   def __init__(self):
     """Initializes a session attribute container."""
     super(Session, self).__init__()
+    self.aborted = False
     self.analysis_reports_counter = collections.Counter()
     self.command_line_arguments = None
     self.completion_time = None
     self.debug_mode = False
+    self.enabled_parser_names = None
     self.event_labels_counter = collections.Counter()
     self.filter_expression = None
     self.filter_file = None
@@ -60,7 +65,7 @@ class Session(interface.AttributeContainer):
     """Copies attributes from a session completion.
 
     Args:
-      sesssion_completion (SessionCompletion): session completion attribute
+      session_completion (SessionCompletion): session completion attribute
           container.
 
     Raises:
@@ -69,6 +74,8 @@ class Session(interface.AttributeContainer):
     """
     if self.identifier != session_completion.identifier:
       raise ValueError(u'Session identifier mismatch.')
+
+    self.aborted = session_completion.aborted
 
     if session_completion.analysis_reports_counter:
       self.analysis_reports_counter = (
@@ -86,10 +93,11 @@ class Session(interface.AttributeContainer):
     """Copies attributes from a session start.
 
     Args:
-      sesssion_start (SessionStart): session start attribute container.
+      session_start (SessionStart): session start attribute container.
     """
     self.command_line_arguments = session_start.command_line_arguments
     self.debug_mode = session_start.debug_mode
+    self.enabled_parser_names = session_start.enabled_parser_names
     self.filter_expression = session_start.filter_expression
     self.filter_file = session_start.filter_file
     self.identifier = session_start.identifier
@@ -108,6 +116,7 @@ class Session(interface.AttributeContainer):
     self.completion_time = int(time.time() * 1000000)
 
     session_completion = SessionCompletion()
+    session_completion.aborted = self.aborted
     session_completion.analysis_reports_counter = self.analysis_reports_counter
     session_completion.event_labels_counter = self.event_labels_counter
     session_completion.identifier = self.identifier
@@ -124,6 +133,7 @@ class Session(interface.AttributeContainer):
     session_start = SessionStart()
     session_start.command_line_arguments = self.command_line_arguments
     session_start.debug_mode = self.debug_mode
+    session_start.enabled_parser_names = self.enabled_parser_names
     session_start.filter_expression = self.filter_expression
     session_start.filter_file = self.filter_file
     session_start.identifier = self.identifier
@@ -139,6 +149,7 @@ class SessionCompletion(interface.AttributeContainer):
   """Class to represent a session completion attribute container.
 
   Attributes:
+    aborted (bool): True if the session was aborted.
     analysis_reports_counter (collections.Counter): number of analysis reports
         per analysis plugin.
     event_labels_counter (collections.Counter): number of event tags per label.
@@ -159,6 +170,7 @@ class SessionCompletion(interface.AttributeContainer):
           session start information.
     """
     super(SessionCompletion, self).__init__()
+    self.aborted = False
     self.analysis_reports_counter = None
     self.event_labels_counter = None
     self.identifier = identifier
@@ -172,6 +184,8 @@ class SessionStart(interface.AttributeContainer):
   Attributes:
     command_line_arguments (str): command line arguments.
     debug_mode (bool): True if debug mode was enabled.
+    enabled_parser_names (list[str]): parser and parser plugin names that
+         were enabled.
     filter_expression (str): expression to filter events.
     filter_file (str): path to a file with find specifications.
     identifier (str): unique identifier of the session.
@@ -197,6 +211,7 @@ class SessionStart(interface.AttributeContainer):
     super(SessionStart, self).__init__()
     self.command_line_arguments = None
     self.debug_mode = False
+    self.enabled_parser_names = None
     self.filter_expression = None
     self.filter_file = None
     self.identifier = identifier

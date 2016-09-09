@@ -13,8 +13,8 @@ class BaseTableView(object):
     """Initializes the table view object.
 
     Args:
-      column_names: optional list of strings containing the column names.
-      title: optional string containing the title.
+      column_names (Optional[str]): column names.
+      title (Optional[str]): title.
     """
     super(BaseTableView, self).__init__()
     self._columns = column_names or []
@@ -26,7 +26,7 @@ class BaseTableView(object):
     """Adds a row of values.
 
     Args:
-      values: a list of values.
+      values (list[object]): values.
 
     Raises:
       ValueError: if the number of values is out of bounds.
@@ -44,7 +44,7 @@ class BaseTableView(object):
     """Writes the table to the output writer.
 
     Args:
-      output_writer: the output writer (instance of OutputWriter).
+      output_writer (OutputWriter): output writer.
     """
 
 
@@ -64,8 +64,8 @@ class CLITableView(BaseTableView):
     """Initializes the command line table view object.
 
     Args:
-      column_names: optional list of strings containing the column names.
-      title: optional string containing the title.
+      column_names (Optional[str]): column names.
+      title (Optional[str]): title.
     """
     super(CLITableView, self).__init__(column_names=column_names, title=title)
     if self._columns:
@@ -77,8 +77,8 @@ class CLITableView(BaseTableView):
     """Writes a row of values aligned to the column width.
 
     Args:
-      output_writer: the output writer (instance of OutputWriter).
-      values: a list of values.
+      output_writer (OutputWriter): output writer.
+      values (list[object]): values.
     """
     maximum_row_width = self._MAXIMUM_WIDTH - self._column_width - 3
 
@@ -118,8 +118,8 @@ class CLITableView(BaseTableView):
     lines.append(u' '.join(word_buffer))
 
     # Split the column value across multiple lines.
-    output_writer.Write(primary_format_string.format(
-        values[0], lines[0]))
+    output_writer.Write(
+        primary_format_string.format(values[0], lines[0]))
     for line in lines[1:]:
       output_writer.Write(secondary_format_string.format(u'', line))
 
@@ -127,7 +127,7 @@ class CLITableView(BaseTableView):
     """Writes a separator line.
 
     Args:
-      output_writer: the output writer (instance of OutputWriter).
+      output_writer (OutputWriter): output writer.
     """
     output_writer.Write(u'-' * self._MAXIMUM_WIDTH)
     output_writer.Write(u'\n')
@@ -136,7 +136,7 @@ class CLITableView(BaseTableView):
     """Adds a row of values.
 
     Args:
-      values: a list of values.
+      values (list[object]): values.
 
     Raises:
       ValueError: if the number of values is out of bounds.
@@ -151,7 +151,7 @@ class CLITableView(BaseTableView):
     """Writes the table to the output writer.
 
     Args:
-      output_writer: the output writer (instance of OutputWriter).
+      output_writer (OutputWriter): output writer.
 
     Raises:
       RuntimeError: if the title exceeds the maximum width or
@@ -194,7 +194,7 @@ class MarkdownTableView(BaseTableView):
     """Writes the table to the output writer.
 
     Args:
-      output_writer: the output writer (instance of OutputWriter).
+      output_writer (OutputWriter): output writer.
     """
     if self._title:
       output_writer.Write(u'### {0:s}\n\n'.format(self._title))
@@ -231,12 +231,12 @@ class ViewsFactory(object):
     """Retrieves a table view.
 
     Args:
-      format_type: the table view format type.
-      column_names: optional list of strings containing the column names.
-      title: optional string containing the title.
+      format_type (str): table view format type.
+      column_names (Optional[str]): column names.
+      title (Optional[str]): title.
 
     Returns:
-      A table view (instance of BaseTableView).
+      BaseTableView: table view.
     """
     view_class = cls._TABLE_VIEW_FORMAT_CLASSES.get(format_type, None)
     if not view_class:

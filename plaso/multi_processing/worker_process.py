@@ -12,7 +12,6 @@ from plaso.engine import worker
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_processing import base_process
-from plaso.multi_processing import multi_process_queue
 from plaso.parsers import mediator as parsers_mediator
 
 
@@ -21,27 +20,24 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
   def __init__(
       self, task_queue, storage_writer, knowledge_base, session_identifier,
-      worker_number, enable_debug_output=False, enable_profiling=False,
-      filter_object=None, hasher_names_string=None, mount_path=None,
-      parser_filter_expression=None, preferred_year=None,
-      process_archive_files=False, profiling_directory=None,
-      profiling_sample_rate=1000, profiling_type=u'all',
-      temporary_directory=None, text_prepend=None,
-      **kwargs):
+      debug_output=False, enable_profiling=False, filter_object=None,
+      hasher_names_string=None, mount_path=None, parser_filter_expression=None,
+      preferred_year=None, process_archive_files=False,
+      profiling_directory=None, profiling_sample_rate=1000,
+      profiling_type=u'all', temporary_directory=None, text_prepend=None,
+      yara_rules_string=None, **kwargs):
     """Initializes a worker process.
 
     Non-specified keyword arguments (kwargs) are directly passed to
     multiprocessing.Process.
 
     Args:
-      task_queue (MultiProcessingQueue): task queue.
+      task_queue (PlasoQueue): task queue.
       storage_writer (StorageWriter): storage writer for a session storage.
       knowledge_base (KnowledgeBase): knowledge base which contains
           information from the source data needed for parsing.
       session_identifier (str): identifier of the session.
-      worker_number: a number that identifies the worker.
-      enable_debug_output (Optional[bool]): True if debug output should be
-          enabled.
+      debug_output (Optional[bool]): True if debug output should be enabled.
       enable_profiling (Optional[bool]): True if profiling should be enabled.
       filter_object (Optional[objectfilter.Filter]): filter object.
       hasher_names_string (Optional[str]): comma separated string of names
@@ -68,12 +64,14 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       temporary_directory (Optional[str]): path of the directory for temporary
           files.
       text_prepend (Optional[str]): text to prepend to every event.
+      yara_rules_string (Optional[str]): unparsed yara rule definitions.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
     super(WorkerProcess, self).__init__(**kwargs)
     self._abort = False
     self._buffer_size = 0
-    self._enable_debug_output = enable_debug_output
+    self._current_display_name = u''
+    self._debug_output = debug_output
     self._enable_profiling = enable_profiling
     self._extraction_worker = None
     self._filter_object = filter_object
@@ -100,13 +98,13 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._task_queue = task_queue
     self._temporary_directory = temporary_directory
     self._text_prepend = text_prepend
-    self._worker_number = worker_number
+    self._yara_rules_string = yara_rules_string
 
   def _GetStatus(self):
-    """Returns a status dictionary.
+    """Returns status information.
 
     Returns:
-      dict [str, object]: status attributes, indexed by name.
+      dict[str, object]: status attributes, indexed by name.
     """
     if self._parser_mediator:
       number_of_produced_errors = (
@@ -116,30 +114,30 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       number_of_produced_sources = (
           self._parser_mediator.number_of_produced_event_sources)
     else:
-      number_of_produced_errors = 0
-      number_of_produced_events = 0
-      number_of_produced_sources = 0
+      number_of_produced_errors = None
+      number_of_produced_events = None
+      number_of_produced_sources = None
 
     if self._extraction_worker:
-      current_display_name = self._extraction_worker.current_display_name
+      last_activity_timestamp = self._extraction_worker.last_activity_timestamp
       processing_status = self._extraction_worker.processing_status
     else:
-      current_display_name = u''
+      last_activity_timestamp = 0.0
       processing_status = self._status
 
     status = {
-        u'display_name': current_display_name,
+        u'display_name': self._current_display_name,
         u'identifier': self._name,
-        u'number_of_consumed_errors': 0,
+        u'number_of_consumed_errors': None,
         u'number_of_consumed_events': self._number_of_consumed_events,
         u'number_of_consumed_sources': self._number_of_consumed_sources,
         u'number_of_produced_errors': number_of_produced_errors,
         u'number_of_produced_events': number_of_produced_events,
         u'number_of_produced_sources': number_of_produced_sources,
+        u'last_activity_timestamp': last_activity_timestamp,
         u'processing_status': processing_status,
         u'task_identifier': self._task_identifier}
 
-    self._status_is_running = status.get(u'is_running', False)
     return status
 
   def _Main(self):
@@ -172,6 +170,9 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     if self._hasher_names_string:
       self._extraction_worker.SetHashers(self._hasher_names_string)
 
+    if self._yara_rules_string:
+      self._extraction_worker.SetYaraRules(self._yara_rules_string)
+
     self._StartProfiling()
 
     logging.debug(u'Worker: {0!s} (PID: {1:d}) started'.format(
@@ -202,9 +203,11 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
           u'{0!s} (PID: {1:d}) stopped monitoring task queue.'.format(
               self._name, self._pid))
 
+    # All exceptions need to be caught here to prevent the process
+    # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
       logging.warning(
-          u'Unhandled exception in worker: {0!s} (PID: {1:d}).'.format(
+          u'Unhandled exception in process: {0!s} (PID: {1:d}).'.format(
               self._name, self._pid))
       logging.exception(exception)
 
@@ -213,19 +216,20 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._StopProfiling()
     self._extraction_worker = None
     self._parser_mediator = None
+    self._storage_writer = None
 
     if self._abort:
       self._status = definitions.PROCESSING_STATUS_ABORTED
     else:
       self._status = definitions.PROCESSING_STATUS_COMPLETED
 
-    logging.debug(u'Extraction worker: {0!s} (PID: {1:d}) stopped'.format(
+    logging.debug(u'Worker: {0!s} (PID: {1:d}) stopped'.format(
         self._name, self._pid))
 
-    if isinstance(self._task_queue, multi_process_queue.MultiProcessingQueue):
-      self._task_queue.Close(abort=True)
-    else:
-      self._task_queue.Close()
+    try:
+      self._task_queue.Close(abort=self._abort)
+    except errors.QueueAlreadyClosed:
+      logging.error(u'Queue for {0:s} was already closed.'.format(self.name))
 
   def _ProcessPathSpec(self, extraction_worker, parser_mediator, path_spec):
     """Processes a path specification.
@@ -235,29 +239,29 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       parser_mediator (ParserMediator): parser mediator.
       path_spec (dfvfs.PathSpec): path specification.
     """
+    self._current_display_name = parser_mediator.GetDisplayNameForPathSpec(
+        path_spec)
+
     try:
       extraction_worker.ProcessPathSpec(parser_mediator, path_spec)
-
-    except IOError as exception:
-      logging.warning((
-          u'Unable to process path specification: {0:s} with error: '
-          u'{1:s}').format(extraction_worker.current_display_name, exception))
 
     except dfvfs_errors.CacheFullError:
       # TODO: signal engine of failure.
       self._abort = True
       logging.error((
           u'ABORT: detected cache full error while processing '
-          u'path spec: {0:s}').format(
-              extraction_worker.current_display_name))
+          u'path spec: {0:s}').format(self._current_display_name))
 
-    # All exceptions need to be caught here to prevent the worker
-    # from being killed by an uncaught exception.
     except Exception as exception:  # pylint: disable=broad-except
-      logging.warning(
-          u'Unhandled exception while processing path spec: {0:s}.'.format(
-              extraction_worker.current_display_name))
-      logging.exception(exception)
+      parser_mediator.ProduceExtractionError((
+          u'unable to process path specification with error: '
+          u'{0:s}').format(exception), path_spec=path_spec)
+
+      if self._debug_output:
+        logging.warning(
+            u'Unhandled exception while processing path spec: {0:s}.'.format(
+                self._current_display_name))
+        logging.exception(exception)
 
   def _ProcessTask(self, task):
     """Processes a task.
@@ -274,11 +278,11 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
     storage_writer.Open()
 
+    self._parser_mediator.SetStorageWriter(storage_writer)
+
+    storage_writer.WriteTaskStart()
+
     try:
-      self._parser_mediator.SetStorageWriter(storage_writer)
-
-      storage_writer.WriteTaskStart()
-
       # TODO: add support for more task types.
       self._ProcessPathSpec(
           self._extraction_worker, self._parser_mediator, task.path_spec)
@@ -287,18 +291,17 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       if self._memory_profiler:
         self._memory_profiler.Sample()
 
-      # TODO: on abort use WriteTaskAborted instead of completion?
-      storage_writer.WriteTaskCompletion()
-
     finally:
+      storage_writer.WriteTaskCompletion(aborted=self._abort)
+
       self._parser_mediator.SetStorageWriter(None)
 
       storage_writer.Close()
 
-      if self._serializers_profiler:
-        storage_writer.SetSerializersProfiler(None)
-
-    self._storage_writer.PrepareMergeTaskStorage(task.identifier)
+    try:
+      self._storage_writer.PrepareMergeTaskStorage(task.identifier)
+    except IOError:
+      pass
 
     self._task_identifier = u''
 
@@ -320,8 +323,8 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
           identifier, path=self._profiling_directory)
       self._extraction_worker.SetParsersProfiler(self._parsers_profiler)
 
-    if self._profiling_type in (u'all', u'processsing'):
-      identifier = u'{0:s}-processsing'.format(self._name)
+    if self._profiling_type in (u'all', u'processing'):
+      identifier = u'{0:s}-processing'.format(self._name)
       self._processing_profiler = profiler.ProcessingProfiler(
           identifier, path=self._profiling_directory)
       self._extraction_worker.SetProcessingProfiler(self._processing_profiler)
@@ -357,5 +360,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
   def SignalAbort(self):
     """Signals the process to abort."""
     self._abort = True
-    self._extraction_worker.SignalAbort()
-    self._parser_mediator.SignalAbort()
+    if self._extraction_worker:
+      self._extraction_worker.SignalAbort()
+    if self._parser_mediator:
+      self._parser_mediator.SignalAbort()

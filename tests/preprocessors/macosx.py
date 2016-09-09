@@ -14,8 +14,8 @@ from plaso.preprocessors import macosx
 from tests import test_lib as shared_test_lib
 
 
-class MacOSXBuildTest(shared_test_lib.BaseTestCase):
-  """Tests for the Mac OS X build information preprocess plug-in object."""
+class MacOSXSystemVersionPluginTest(shared_test_lib.BaseTestCase):
+  """Tests for the plugin to determine Mac OS X system version information."""
 
   _FILE_DATA = (
       '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -36,25 +36,23 @@ class MacOSXBuildTest(shared_test_lib.BaseTestCase):
       '</dict>\n'
       '</plist>\n')
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
+  def testGetValue(self):
+    """Tests the GetValue function."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFile(
         u'/System/Library/CoreServices/SystemVersion.plist',
         self._FILE_DATA)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
-    self._searcher = file_system_searcher.FileSystemSearcher(
+    searcher = file_system_searcher.FileSystemSearcher(
         file_system_builder.file_system, mount_point)
 
-  def testGetValue(self):
-    """Tests the GetValue function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    plugin = macosx.MacOSXBuild()
-    plugin.Run(self._searcher, knowledge_base_object)
+    plugin = macosx.MacOSXSystemVersionPlugin()
+    plugin.Run(searcher, knowledge_base_object)
 
-    build = knowledge_base_object.GetValue('build')
+    build = knowledge_base_object.GetValue(u'operating_system_version')
     self.assertEqual(build, u'10.9.2')
 
 
@@ -162,10 +160,12 @@ class MacOSXTimezone(shared_test_lib.BaseTestCase):
 class MacOSXUsersTest(shared_test_lib.BaseTestCase):
   """Tests for the Mac OS X usernames preprocess plug-in object."""
 
+  # pylint: disable=protected-access
+
   def setUp(self):
     """Makes preparations before running an individual test."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    test_file_path = self._GetTestFilePath([u'com.apple.HIToolbox.plist'])
+    test_file_path = self._GetTestFilePath([u'nobody.plist'])
     file_system_builder.AddFileReadData(
         u'/private/var/db/dslocal/nodes/Default/users/nobody.plist',
         test_file_path)
@@ -181,22 +181,17 @@ class MacOSXUsersTest(shared_test_lib.BaseTestCase):
     plugin = macosx.MacOSXUsers()
     plugin.Run(self._searcher, knowledge_base_object)
 
-    users = knowledge_base_object.GetValue('users')
+    users = sorted(
+        knowledge_base_object._user_accounts[0].values(),
+        key=lambda user_account: user_account.identifier)
     self.assertEqual(len(users), 1)
 
-    # TODO: fix the parsing of the following values to match the behavior on
-    # Mac OS X.
+    user_account = users[0]
 
-    # The string -2 is converted into the integer -1.
-    self.assertEqual(users[0].get('uid', None), -1)
-    # 'home' is 0 which represents: /var/empty but we convert it
-    # into u'<not set>'.
-    self.assertEqual(users[0].get('path', None), u'<not set>')
-    # 'name' is 0 which represents: nobody but we convert it into u'<not set>'.
-    self.assertEqual(users[0].get('name', None), u'<not set>')
-    # 'realname' is 0 which represents: 'Unprivileged User' but we convert it
-    # into u'N/A'.
-    self.assertEqual(users[0].get('realname', None), u'N/A')
+    self.assertEqual(user_account.identifier, u'-2')
+    self.assertEqual(user_account.full_name, u'Unprivileged User')
+    self.assertEqual(user_account.user_directory, u'/var/empty')
+    self.assertEqual(user_account.username, u'nobody')
 
 
 if __name__ == '__main__':

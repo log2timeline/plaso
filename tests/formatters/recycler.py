@@ -22,10 +22,10 @@ class WinRecyclerFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = recycler.WinRecyclerFormatter()
 
     expected_attribute_names = [
-        u'index',
-        u'orig_filename',
-        u'short_filename',
-        u'drive_letter']
+        u'drive_letter',
+        u'original_filename',
+        u'record_index',
+        u'short_filename']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

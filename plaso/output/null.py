@@ -1,17 +1,25 @@
 # -*- coding: utf-8 -*-
-"""An output module that doesn't output anything."""
+"""Null device output module."""
+
 from plaso.output import interface
 from plaso.output import manager
 
 
-# We don't need to implement any functionality here, so the methods in
-# the interface don't need to be overwritten.
-# pylint: disable=abstract-method
 class NullOutputModule(interface.OutputModule):
-  """An output module that doesn't output anything."""
+  """Null device output module."""
 
   NAME = u'null'
-  DESCRIPTION = u'An output module that doesn\'t output anything.'
+  DESCRIPTION = u'Output module that does not output anything.'
+
+  def WriteEventBody(self, unused_event_object):
+    """Writes the event object to the output.
+
+    Since this is the null output module nothing is actually written.
+
+    Args:
+      event_object: the event object (instance of EventObject).
+    """
+    pass
 
 
 manager.OutputManager.RegisterOutput(NullOutputModule)

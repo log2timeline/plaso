@@ -11,6 +11,7 @@ HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones
 
 TIME_ZONES = {
     u'AlaskanStandardTime': u'US/Alaska',
+    u'Arabic Standard Time': u'Asia/Baghdad',
     u'AtlanticStandardTime': u'Canada/Atlantic',
     u'AzoresStandardTime': u'Atlantic/Azores',
     u'CanadaCentralStandardTime': u'CST6CDT',

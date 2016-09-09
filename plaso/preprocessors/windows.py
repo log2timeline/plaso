@@ -4,6 +4,7 @@
 import abc
 import logging
 
+from plaso.containers import artifacts
 from plaso.lib import errors
 from plaso.lib import py2to3
 from plaso.preprocessors import interface
@@ -17,17 +18,14 @@ class WindowsPathPreprocessPlugin(interface.PreprocessPlugin):
   WEIGHT = 1
 
   def GetValue(self, searcher, unused_knowledge_base):
-    """Returns the path as found by the searcher.
+    """Searches a path on a file system for a preprocessing attribute.
 
     Args:
-      searcher: The file system searcher object (instance of
-                dfvfs.FileSystemSearcher).
-      knowledge_base: A knowledge base object (instance of KnowledgeBase),
-                      which contains information from the source data needed
-                      for parsing.
+      searcher (dfvfs.FileSystemSearcher): file system searcher.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
 
     Returns:
-      The first path location string.
+      str: first path location string that is found.
 
     Raises:
       PreProcessFail: if the path could not be found.
@@ -47,25 +45,31 @@ class WindowsPathPreprocessPlugin(interface.PreprocessPlugin):
     return relative_path
 
 
+class WindowsPathEnvironmentVariablePlugin(WindowsPathPreprocessPlugin):
+  """Plugin to determine the value of an environment variable."""
+
+  def GetValue(self, searcher, knowledge_base):
+    """Searches a path on a file system for a preprocessing attribute.
+
+    Args:
+      searcher (dfvfs.FileSystemSearcher): file system searcher.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+
+    Returns:
+      EnvironmentVariableArtifact: environment variable artifact or None.
+    """
+    relative_path = super(WindowsPathEnvironmentVariablePlugin, self).GetValue(
+        searcher, knowledge_base)
+    return artifacts.EnvironmentVariableArtifact(
+        case_sensitive=False, name=self.ATTRIBUTE, value=relative_path)
+
+
 class WindowsSystemRegistryPath(WindowsPathPreprocessPlugin):
   """Get the system registry path."""
+
   SUPPORTED_OS = [u'Windows']
   ATTRIBUTE = u'sysregistry'
   PATH = u'/(Windows|WinNT|WINNT35|WTSRV)/System32/config'
-
-
-class WindowsSystemRootPath(WindowsPathPreprocessPlugin):
-  """Get the system root path."""
-  SUPPORTED_OS = [u'Windows']
-  ATTRIBUTE = u'systemroot'
-  PATH = u'/(Windows|WinNT|WINNT35|WTSRV)'
-
-
-class WindowsWinDirPath(WindowsPathPreprocessPlugin):
-  """Get the system path."""
-  SUPPORTED_OS = [u'Windows']
-  ATTRIBUTE = u'windir'
-  PATH = u'/(Windows|WinNT|WINNT35|WTSRV)'
 
 
 class WindowsRegistryPreprocessPlugin(interface.PreprocessPlugin):
@@ -83,13 +87,13 @@ class WindowsRegistryPreprocessPlugin(interface.PreprocessPlugin):
 
   @abc.abstractmethod
   def _ParseKey(self, registry_key):
-    """Parses a Windows Registry key for the preprocessing attribute.
+    """Parses a Windows Registry key for a preprocessing attribute.
 
     Args:
-      registry_key: The Registry key (instance of WinRegistryKey).
+      registry_key (WinRegistryKey): Windows Registry key.
 
     Returns:
-      The preprocessing attribute value or None.
+      object: preprocess attribute value or None.
     """
 
   # TODO: remove after refactor interface.
@@ -97,18 +101,14 @@ class WindowsRegistryPreprocessPlugin(interface.PreprocessPlugin):
     pass
 
   def Run(self, win_registry, knowledge_base):
-    """Runs the plugins to determine the value of the preprocessing attribute.
-
-    The resulting preprocessing attribute value is stored in the knowledge base.
+    """Runs the plugins to determine the value of a preprocessing attribute.
 
     Args:
-      win_registry: The Windows Registry object (instance of WinRegistry).
-      knowledge_base: A knowledge base object (instance of KnowledgeBase),
-                      which contains information from the source data needed
-                      for parsing.
+      win_registry (WinRegistry): Windows Registry.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
 
     Raises:
-      PreProcessFail: If the preprocessing failed.
+      PreProcessFail: If a preprocessing failed.
     """
     try:
       registry_key = win_registry.GetKeyByPath(self.KEY_PATH)
@@ -125,13 +125,7 @@ class WindowsRegistryPreprocessPlugin(interface.PreprocessPlugin):
     if not attribute_value:
       return
 
-    knowledge_base.SetValue(self.ATTRIBUTE, attribute_value)
-
-    # TODO: remove.
-    attribute_value = knowledge_base.GetValue(
-        self.ATTRIBUTE, default_value=u'N/A')
-    logging.info(u'[PreProcess] Set attribute: {0:s} to {1:s}'.format(
-        self.ATTRIBUTE, attribute_value))
+    self._SetAttributeValue(attribute_value, knowledge_base)
 
 
 class WindowsUsers(WindowsRegistryPreprocessPlugin):
@@ -148,10 +142,10 @@ class WindowsUsers(WindowsRegistryPreprocessPlugin):
     Trailing path path segment are igored.
 
     Args:
-      path: a Windows path with \\ as the path segment separator.
+      path (str): a Windows path with '\\' as path segment separator.
 
     Returns:
-      The basename (or last path segment).
+      str: basename which is the last path segment.
     """
     # Strip trailing key separators.
     while path and path[-1] == u'\\':
@@ -162,26 +156,38 @@ class WindowsUsers(WindowsRegistryPreprocessPlugin):
     return path
 
   def _ParseKey(self, registry_key):
-    """Parses a Windows Registry key for the preprocessing attribute.
+    """Parses a Windows Registry key for a preprocessing attribute.
 
     Args:
-      registry_key: The Registry key (instance of WinRegistryKey).
+      registry_key (WinRegistryKey): Windows Registry key.
 
     Returns:
-      The preprocessing attribute value or None.
+      list[UserAccountArtifact]: user account artifacts.
+
+    Raises:
+      errors.PreProcessFail: if the preprocessing fails.
     """
     users = []
     for subkey in registry_key.GetSubkeys():
-      # TODO: create a proper object for this.
-      user = {}
-      user[u'sid'] = subkey.name
+      if not subkey.name:
+        # TODO: add and store preprocessing errors.
+        continue
+
+      user_account_artifact = artifacts.UserAccountArtifact(
+          identifier=subkey.name)
+
       registry_value = subkey.GetValueByName(u'ProfileImagePath')
       if registry_value:
-        user[u'path'] = registry_value.GetDataAsObject()
-        user[u'name'] = self._GetUsernameFromPath(user[u'path'])
+        profile_path = registry_value.GetDataAsObject()
+        username = self._GetUsernameFromPath(profile_path)
 
-      users.append(user)
+        user_account_artifact.user_directory = profile_path or None
+        user_account_artifact.username = username or None
 
+      users.append(user_account_artifact)
+
+    if not users:
+      raise errors.PreProcessFail(u'Unable to find any users on the system.')
     return users
 
 
@@ -192,13 +198,13 @@ class WindowsRegistryValuePreprocessPlugin(WindowsRegistryPreprocessPlugin):
   VALUE_NAME = u''
 
   def _ParseKey(self, registry_key):
-    """Parses a Windows Registry key for the preprocessing attribute.
+    """Parses a Windows Registry key for a preprocessing attribute.
 
     Args:
-      registry_key: The Registry key (instance of WinRegistryKey).
+      registry_key (WinRegistryKey): Windows Registry key.
 
     Returns:
-      The preprocessing attribute value or None.
+      object: preprocess attribute value or None.
     """
     if not registry_key:
       logging.warning(
@@ -214,13 +220,13 @@ class WindowsRegistryValuePreprocessPlugin(WindowsRegistryPreprocessPlugin):
     return self._ParseValue(registry_value)
 
   def _ParseValue(self, registry_value):
-    """Parses a Windows Registry value for the preprocessing attribute.
+    """Parses a Windows Registry value for a preprocessing attribute.
 
     Args:
-      registry_value: The Registry value (instance of WinRegistryValue).
+      registry_value (WinRegistryValue): Windows Registry value.
 
     Returns:
-      The preprocessing attribute value or None.
+      object: preprocess attribute value or None.
     """
     return registry_value.GetDataAsObject()
 
@@ -235,13 +241,13 @@ class WindowsCodepage(WindowsRegistryValuePreprocessPlugin):
   VALUE_NAME = u'ACP'
 
   def _ParseValue(self, registry_value):
-    """Parses a Windows Registry value for the preprocessing attribute.
+    """Parses a Windows Registry value for a preprocessing attribute.
 
     Args:
-      registry_value: The Registry value (instance of WinRegistryValue).
+      registry_value (WinRegistryValue): Windows Registry value.
 
     Returns:
-      The preprocessing attribute value or None.
+      object: preprocess attribute value or None.
     """
     value_data = registry_value.GetDataAsObject()
     if not isinstance(value_data, py2to3.UNICODE_TYPE):
@@ -255,15 +261,31 @@ class WindowsCodepage(WindowsRegistryValuePreprocessPlugin):
     return u'cp{0:s}'.format(value_data)
 
 
-class WindowsHostname(WindowsRegistryValuePreprocessPlugin):
-  """Windows preprocess plugin to determine the hostname."""
+class WindowsSystemProductPlugin(WindowsRegistryValuePreprocessPlugin):
+  """Plugin to determine Windows system product information."""
 
-  ATTRIBUTE = u'hostname'
-  DEFAULT_ATTRIBUTE_VALUE = u'HOSTNAME'
+  ATTRIBUTE = u'operating_system_product'
   KEY_PATH = (
-      u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\ComputerName\\'
-      u'ComputerName')
-  VALUE_NAME = u'ComputerName'
+      u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
+  VALUE_NAME = u'ProductName'
+
+
+class WindowsSystemRootEnvironmentVariable(
+    WindowsPathEnvironmentVariablePlugin):
+  """Plugin to determine the value of the %SystemRoot% environment variable."""
+
+  SUPPORTED_OS = [u'Windows']
+  ATTRIBUTE = u'systemroot'
+  PATH = u'/(Windows|WinNT|WINNT35|WTSRV)'
+
+
+class WindowsSystemVersionPlugin(WindowsRegistryValuePreprocessPlugin):
+  """Plugin to determine Windows system version information."""
+
+  ATTRIBUTE = u'operating_system_version'
+  KEY_PATH = (
+      u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
+  VALUE_NAME = u'CurrentVersion'
 
 
 class WindowsTimeZone(WindowsRegistryValuePreprocessPlugin):
@@ -277,13 +299,13 @@ class WindowsTimeZone(WindowsRegistryValuePreprocessPlugin):
   VALUE_NAME = u'StandardName'
 
   def _ParseValue(self, registry_value):
-    """Parses a Windows Registry value for the preprocessing attribute.
+    """Parses a Windows Registry value for a preprocessing attribute.
 
     Args:
-      registry_value: The Registry value (instance of WinRegistryValue).
+      registry_value (WinRegistryValue): Windows Registry value.
 
     Returns:
-      The preprocessing attribute value or None.
+      object: preprocess attribute value or None.
     """
     value_data = registry_value.GetDataAsObject()
     if not isinstance(value_data, py2to3.UNICODE_TYPE):
@@ -297,26 +319,17 @@ class WindowsTimeZone(WindowsRegistryValuePreprocessPlugin):
     return time_zones.TIME_ZONES.get(lookup_key, value_data)
 
 
-class WindowsVersion(WindowsRegistryValuePreprocessPlugin):
-  """Fetch information about the current Windows version."""
-
-  ATTRIBUTE = u'osversion'
-  KEY_PATH = (
-      u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
-  VALUE_NAME = u'ProductName'
-
-
-class WindowsRegistryPathEnvironmentValue(WindowsRegistryValuePreprocessPlugin):
-  """Windows preprocess plugin to determine a path environment variable."""
+class WindowsRegistryEnvironmentVariable(WindowsRegistryValuePreprocessPlugin):
+  """Preprocess plugin to determine the value of an environment variable."""
 
   def _ParseValue(self, registry_value):
-    """Parses a Windows Registry value for the preprocessing attribute.
+    """Parses a Windows Registry value for a preprocessing attribute.
 
     Args:
-      registry_value: The Registry value (instance of WinRegistryValue).
+      registry_value (WinRegistryValue): Windows Registry value.
 
     Returns:
-      The preprocessing attribute value or None.
+      EnvironmentVariableArtifact: environment variable artifact or None.
     """
     value_data = registry_value.GetDataAsObject()
     if not isinstance(value_data, py2to3.UNICODE_TYPE):
@@ -327,27 +340,63 @@ class WindowsRegistryPathEnvironmentValue(WindowsRegistryValuePreprocessPlugin):
 
     # Here we remove the drive letter, e.g. "C:\Program Files".
     _, _, path = value_data.rpartition(u':')
-    return path
+    return artifacts.EnvironmentVariableArtifact(
+        case_sensitive=False, name=self.ATTRIBUTE, value=path)
 
 
-class WindowsProgramFilesPath(WindowsRegistryPathEnvironmentValue):
-  """Windows preprocess plugin to determine the location of Program Files."""
+class WindowsWinDirEnvironmentVariable(WindowsPathEnvironmentVariablePlugin):
+  """Plugin to determine the value of the %WinDir% environment variable."""
+
+  SUPPORTED_OS = [u'Windows']
+  ATTRIBUTE = u'windir'
+  PATH = u'/(Windows|WinNT|WINNT35|WTSRV)'
+
+
+class WindowsProgramFilesEnvironmentVariable(
+    WindowsRegistryEnvironmentVariable):
+  """Preprocess plugin to determine the value of %ProgramFiles%."""
 
   ATTRIBUTE = u'programfiles'
   KEY_PATH = u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion'
   VALUE_NAME = u'ProgramFilesDir'
 
 
-class WindowsProgramFilesX86Path(WindowsRegistryPathEnvironmentValue):
-  """Windows preprocess plugin to determine the location of Program Files."""
+class WindowsProgramFilesX86EnvironmentVariable(
+    WindowsRegistryEnvironmentVariable):
+  """Preprocess plugin to determine the value of %ProgramFilesX86%."""
 
   ATTRIBUTE = u'programfilesx86'
   KEY_PATH = u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion'
   VALUE_NAME = u'ProgramFilesDir (x86)'
 
 
+class WindowsHostname(WindowsRegistryValuePreprocessPlugin):
+  """Windows preprocess plugin to determine the hostname."""
+
+  ATTRIBUTE = u'hostname'
+  DEFAULT_ATTRIBUTE_VALUE = u'HOSTNAME'
+  KEY_PATH = (
+      u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\ComputerName\\'
+      u'ComputerName')
+  VALUE_NAME = u'ComputerName'
+
+  def _ParseValue(self, registry_value):
+    """Parses a Windows Registry value for a preprocessing attribute.
+
+    Args:
+      registry_value (WinRegistryValue): Windows Registry value.
+
+    Returns:
+      HostnameArtifact: hostname artifact or None.
+    """
+    name = registry_value.GetDataAsObject()
+    if name:
+      return artifacts.HostnameArtifact(name=name)
+
+
 manager.PreprocessPluginsManager.RegisterPlugins([
-    WindowsCodepage, WindowsHostname, WindowsProgramFilesPath,
-    WindowsProgramFilesX86Path, WindowsSystemRegistryPath,
-    WindowsSystemRootPath, WindowsTimeZone, WindowsUsers, WindowsVersion,
-    WindowsWinDirPath])
+    WindowsCodepage, WindowsHostname, WindowsProgramFilesEnvironmentVariable,
+    WindowsProgramFilesX86EnvironmentVariable, WindowsSystemRegistryPath,
+    WindowsSystemProductPlugin, WindowsSystemRootEnvironmentVariable,
+    WindowsSystemVersionPlugin, WindowsTimeZone, WindowsUsers,
+    WindowsWinDirEnvironmentVariable])

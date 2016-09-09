@@ -12,7 +12,7 @@ from plaso.output import manager
 from plaso.output import shared_4n6time
 
 
-class MySQL4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
+class MySQL4n6TimeOutputModule(shared_4n6time.Shared4n6TimeOutputModule):
   """Class defining the MySQL database output module for 4n6time."""
 
   NAME = '4n6time_mysql'
@@ -54,10 +54,10 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
     """Initializes the output module object.
 
     Args:
-      output_mediator: The output mediator object (instance of OutputMediator).
+      output_mediator (OutputMediator): mediates interactions between output
+          modules and other components, such as storage and dfvfs.
     """
     super(MySQL4n6TimeOutputModule, self).__init__(output_mediator)
-
     self._connection = None
     self._count = None
     self._cursor = None
@@ -67,32 +67,14 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
     self._port = None
     self._user = u'root'
 
-  def _GetDistinctValues(self, field_name):
-    """Query database for unique field types.
-
-    Args:
-      field_name: name of the fieled to retrieve.
+  def _GetTags(self):
+    """Retrieves tags from the database.
 
     Returns:
-      A dictionary containing fields from META_FIELDS.
+      list[str]: tags.
     """
-    self._cursor.execute(
-        u'SELECT {0:s}, COUNT({0:s}) FROM log2timeline GROUP BY {0:s}'.format(
-            field_name))
-
-    result = {}
-    row = self._cursor.fetchone()
-    while row:
-      if row[0]:
-        result[row[0]] = row[1]
-      row = self._cursor.fetchone()
-    return result
-
-  def _ListTags(self):
-    """Query database for unique tag types."""
     all_tags = []
-    self._cursor.execute(
-        u'SELECT DISTINCT tag FROM log2timeline')
+    self._cursor.execute(u'SELECT DISTINCT tag FROM log2timeline')
 
     # This cleans up the messy SQL return.
     tag_row = self._cursor.fetchone()
@@ -104,8 +86,32 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
           if tag not in all_tags:
             all_tags.append(tag)
       tag_row = self._cursor.fetchone()
+
     # TODO: make this method an iterator.
     return all_tags
+
+  def _GetUniqueValues(self, field_name):
+    """Retrieves the unique values fo a specific field from the database.
+
+    Args:
+      field_name (str): name of the field.
+
+    Returns:
+      dict[str, int]: number of instances of the field value per field name.
+    """
+    self._cursor.execute(
+        u'SELECT {0:s}, COUNT({0:s}) FROM log2timeline GROUP BY {0:s}'.format(
+            field_name))
+
+    result = {}
+    row = self._cursor.fetchone()
+    while row:
+      if row[0]:
+        result[row[0]] = row[1]
+
+      row = self._cursor.fetchone()
+
+    return result
 
   def Close(self):
     """Disconnects from the database.
@@ -128,7 +134,7 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
       self._set_status(u'Creating metadata...')
 
     for field in self._META_FIELDS:
-      values = self._GetDistinctValues(field)
+      values = self._GetUniqueValues(field)
       self._cursor.execute(u'DELETE FROM l2t_{0:s}s'.format(field))
       for name, frequency in iter(values.items()):
         self._cursor.execute((
@@ -136,7 +142,7 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
             u'VALUES("{2:s}", {3:d}) ').format(field, field, name, frequency))
 
     self._cursor.execute(u'DELETE FROM l2t_tags')
-    for tag in self._ListTags():
+    for tag in self._GetTags():
       self._cursor.execute(
           u'INSERT INTO l2t_tags (tag) VALUES ("{0:s}")'.format(tag))
 
@@ -221,46 +227,46 @@ class MySQL4n6TimeOutputModule(shared_4n6time.Base4n6TimeOutputModule):
 
     self._count = 0
 
-  def SetCredentials(self, username=None, password=None):
-    """Set the database credentials.
+  def SetCredentials(self, password=None, username=None):
+    """Sets the database credentials.
 
     Args:
-      username: an optional username field. Defaults to None.
-      password: an optional password field. Defaults to None.
+      password (Optional[str]): password to access the database.
+      username (Optional[str]): username to access the database.
     """
-    if username:
-      self._user = username
     if password:
       self._password = password
+    if username:
+      self._user = username
 
   def SetDatabaseName(self, name):
-    """Set the database name.
+    """Sets the database name.
 
     Args:
-      name: the database name.
+      name (str): name of the database.
     """
     self._dbname = name
 
   def SetServerInformation(self, server, port):
-    """Set the server information.
+    """Sets the server information.
 
     Args:
-      server: the server name or IP address.
-      port: the port number the database listens on.
+      server (str): hostname or IP address of the databse server.
+      port (int): port number of the database server.
     """
     self._host = server
     self._port = port
 
-  def WriteEventBody(self, event_object):
+  def WriteEventBody(self, event):
     """Writes the body of an event object to the output.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
     """
-    if not hasattr(event_object, u'timestamp'):
+    if not hasattr(event, u'timestamp'):
       return
 
-    row = self._GetSanitizedEventValues(event_object)
+    row = self._GetSanitizedEventValues(event)
     try:
       self._cursor.execute(self._INSERT_QUERY, row)
     except MySQLdb.Error as exception:

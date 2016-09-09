@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-"""The arguments helper for a server configuration."""
+"""The server configuration CLI arguments helper."""
 
 from plaso.lib import errors
 from plaso.cli.helpers import interface
 
 
-class BaseServerConfigHelper(interface.ArgumentsHelper):
-  """CLI arguments helper class for server configuration."""
+class ServerArgumentsHelper(interface.ArgumentsHelper):
+  """Server configuration CLI arguments helper."""
 
   NAME = u'server_config'
   DESCRIPTION = u'Argument helper for a server configuration.'
@@ -16,14 +16,14 @@ class BaseServerConfigHelper(interface.ArgumentsHelper):
 
   @classmethod
   def AddArguments(cls, argument_group):
-    """Add command line arguments the helper supports to an argument group.
+    """Adds command line arguments the helper supports to an argument group.
 
     This function takes an argument parser or an argument group object and adds
     to it all the command line arguments this helper supports.
 
     Args:
-      argument_group: the argparse group (instance of argparse._ArgumentGroup or
-                      or argparse.ArgumentParser).
+      argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
+          argparse group.
     """
     argument_group.add_argument(
         u'--server', dest=u'server', type=str, action=u'store',
@@ -39,11 +39,12 @@ class BaseServerConfigHelper(interface.ArgumentsHelper):
     """Parses and validates options.
 
     Args:
-      options: the parser option object (instance of argparse.Namespace).
-      output_module: an output module (instance of OutputModule).
+      options (argparse.Namespace): parser options.
+      output_module (OutputModule): output module to configure.
 
     Raises:
-      BadConfigObject: when the output module object is of the wrong type.
+      BadConfigObject: when the output module object does not have the
+          SetServerInformation method.
     """
     if not hasattr(output_module, u'SetServerInformation'):
       raise errors.BadConfigObject(u'Unable to set server information.')

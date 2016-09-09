@@ -53,6 +53,27 @@ class AnalyticsUtmbCookieFormatterTest(test_lib.EventFormatterTestCase):
   # TODO: add test for GetSources.
 
 
+class AnalyticsUtmtCookieFormatterTest(test_lib.EventFormatterTestCase):
+  """Tests for the UTMT Google Analytics cookie event formatter."""
+
+  def testInitialization(self):
+    """Tests the initialization."""
+    event_formatter = ganalytics.AnalyticsUtmtCookieFormatter()
+    self.assertIsNotNone(event_formatter)
+
+  def testGetFormatStringAttributeNames(self):
+    """Tests the GetFormatStringAttributeNames function."""
+    event_formatter = ganalytics.AnalyticsUtmtCookieFormatter()
+
+    expected_attribute_names = [u'url', u'cookie_name']
+
+    self._TestGetFormatStringAttributeNames(
+        event_formatter, expected_attribute_names)
+
+  # TODO: add test for GetMessages.
+  # TODO: add test for GetSources.
+
+
 class AnalyticsUtmzCookieFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the UTMZ Google Analytics cookie event formatter."""
 

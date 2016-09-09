@@ -2,7 +2,6 @@
 """Output related functions and classes for testing."""
 
 import os
-import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
@@ -15,17 +14,19 @@ from plaso.lib import timelib
 from plaso.output import interface
 from plaso.output import mediator
 
+from tests import test_lib as shared_test_lib
+
 
 class TestConfig(object):
-  """Test config value object."""
+  """Test configuration."""
 
 
 class TestEventObject(events.EventObject):
-  """Test event object."""
+  """Test event."""
   DATA_TYPE = u'test:output'
 
   def __init__(self):
-    """Initialize an event object."""
+    """Initialize a test event."""
     super(TestEventObject, self).__init__()
     self.timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
     self.hostname = u'ubuntu'
@@ -60,16 +61,16 @@ class TestOutputModule(interface.LinearOutputModule):
   NAME = u'test_xml'
   DESCRIPTION = u'Test output that provides a simple mocked XML.'
 
-  def WriteEventBody(self, event_object):
+  def WriteEventBody(self, event):
     """Writes the body of an event object to the output.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
     """
     self._WriteLine((
         u'\t<Date>{0:s}</Date>\n\t<Time>{1:d}</Time>\n'
         u'\t<Entry>{2:s}</Entry>\n').format(
-            event_object.date, event_object.timestamp, event_object.entry))
+            event.date, event.timestamp, event.entry))
 
   def WriteEventEnd(self):
     """Writes the end of an event object to the output."""
@@ -88,26 +89,22 @@ class TestOutputModule(interface.LinearOutputModule):
     self._WriteLine(u'<EventFile>\n')
 
 
-class OutputModuleTestCase(unittest.TestCase):
+class OutputModuleTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for a output module."""
-
-  # Show full diff results, part of TestCase so does not follow our naming
-  # conventions.
-  maxDiff = None
 
   def _CreateOutputMediator(self, storage_file=None):
     """Creates a test output mediator.
 
     Args:
-      storage_file: optional storage file object (instance of StorageFile).
+      storage_file (Optional[StorageFile]): storage file.
 
     Returns:
-      An output mediator (instance of OutputMediator).
+      OutputMediator: output mediator.
     """
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
     if storage_file:
-      knowledge_base_object.InitializeLookupDictionaries(storage_file)
+      storage_file.ReadPreprocessingInformation(knowledge_base_object)
 
     formatter_mediator = formatters_mediator.FormatterMediator()
     output_mediator = mediator.OutputMediator(

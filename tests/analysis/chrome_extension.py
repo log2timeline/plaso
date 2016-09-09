@@ -6,18 +6,11 @@ import os
 import unittest
 
 from plaso.analysis import chrome_extension
-from plaso.containers import events
-from plaso.engine import plaso_queue
-from plaso.engine import single_process
 
 from tests.analysis import test_lib
 
-# We are accessing quite a lot of protected members in this test file.
-# Suppressing that message test file wide.
-# pylint: disable=protected-access
 
-
-class TestChromeExtensionPlugin(chrome_extension.ChromeExtensionPlugin):
+class MockChromeExtensionPlugin(chrome_extension.ChromeExtensionPlugin):
   """Chrome extension analysis plugin used for testing."""
 
   NAME = 'chrome_extension_test'
@@ -25,96 +18,98 @@ class TestChromeExtensionPlugin(chrome_extension.ChromeExtensionPlugin):
   _TEST_DATA_PATH = os.path.join(
       os.getcwd(), u'test_data', u'chrome_extensions')
 
-  def _GetChromeWebStorePage(self, extension_id):
-    """Retrieves the page for the extension from the Chrome store test data.
+  def _GetChromeWebStorePage(self, extension_identifier):
+    """Retrieves the page for the extension from the Chrome store website.
 
     Args:
-      extension_id: string containing the extension identifier.
+      extension_identifier (str): Chrome extension identifier.
 
     Returns:
-      A binary string containing the page content or None.
+      str: page content or None.
     """
-    chrome_web_store_file = os.path.join(self._TEST_DATA_PATH, extension_id)
+    chrome_web_store_file = os.path.join(
+        self._TEST_DATA_PATH, extension_identifier)
     if not os.path.exists(chrome_web_store_file):
       return
 
-    file_object = open(chrome_web_store_file, 'rb')
-    return file_object.read()
+    with open(chrome_web_store_file, 'rb') as file_object:
+      page_content = file_object.read()
+
+    return page_content.decode(u'utf-8')
 
 
 class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
   """Tests for the chrome extension analysis plugin."""
 
-  # Few config options here.
-  MAC_PATHS = [
-      '/Users/dude/Libary/Application Data/Google/Chrome/Default/Extensions',
-      ('/Users/dude/Libary/Application Data/Google/Chrome/Default/Extensions/'
-       'apdfllckaahabafndbhieahigkjlhalf'),
-      '/private/var/log/system.log',
-      '/Users/frank/Library/Application Data/Google/Chrome/Default',
-      '/Users/hans/Library/Application Data/Google/Chrome/Default',
-      ('/Users/frank/Library/Application Data/Google/Chrome/Default/'
-       'Extensions/pjkljhegncpnkpknbcohdijeoejaedia'),
-      '/Users/frank/Library/Application Data/Google/Chrome/Default/Extensions',]
+  # pylint: disable=protected-access
 
-  WIN_PATHS = [
-      'C:\\Users\\Dude\\SomeFolder\\Chrome\\Default\\Extensions',
-      ('C:\\Users\\Dude\\SomeNoneStandardFolder\\Chrome\\Default\\Extensions\\'
-       'hmjkmjkepdijhoojdojkdfohbdgmmhki'),
-      ('\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions\\'
-       'blpcfgokakmgnkcojhhkbfbldkacnbeo'),
-      '\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions',
-      ('\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions\\'
-       'icppfcnhkcmnfdhfhphakoifcfokfdhg'),
-      'C:\\Windows\\System32',
-      '\\Stuff/with path separator\\Folder']
+  _MACOSX_PATHS = [
+      u'/Users/dude/Libary/Application Data/Google/Chrome/Default/Extensions',
+      (u'/Users/dude/Libary/Application Data/Google/Chrome/Default/Extensions/'
+       u'apdfllckaahabafndbhieahigkjlhalf'),
+      u'/private/var/log/system.log',
+      u'/Users/frank/Library/Application Data/Google/Chrome/Default',
+      u'/Users/hans/Library/Application Data/Google/Chrome/Default',
+      (u'/Users/frank/Library/Application Data/Google/Chrome/Default/'
+       u'Extensions/pjkljhegncpnkpknbcohdijeoejaedia'),
+      u'/Users/frank/Library/Application Data/Google/Chrome/Default/Extensions']
 
-  MAC_USERS = [
+  _WINDOWS_PATHS = [
+      u'C:\\Users\\Dude\\SomeFolder\\Chrome\\Default\\Extensions',
+      (u'C:\\Users\\Dude\\SomeNoneStandardFolder\\Chrome\\Default\\Extensions\\'
+       u'hmjkmjkepdijhoojdojkdfohbdgmmhki'),
+      (u'C:\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions\\'
+       u'blpcfgokakmgnkcojhhkbfbldkacnbeo'),
+      u'C:\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions',
+      (u'C:\\Users\\frank\\AppData\\Local\\Google\\Chrome\\Extensions\\'
+       u'icppfcnhkcmnfdhfhphakoifcfokfdhg'),
+      u'C:\\Windows\\System32',
+      u'C:\\Stuff/with path separator\\Folder']
+
+  _MACOSX_USERS = [
       {u'name': u'root', u'path': u'/var/root', u'sid': u'0'},
       {u'name': u'frank', u'path': u'/Users/frank', u'sid': u'4052'},
       {u'name': u'hans', u'path': u'/Users/hans', u'sid': u'4352'},
       {u'name': u'dude', u'path': u'/Users/dude', u'sid': u'1123'}]
 
-  WIN_USERS = [
+  _WINDOWS_USERS = [
       {u'name': u'dude', u'path': u'C:\\Users\\dude', u'sid': u'S-1'},
       {u'name': u'frank', u'path': u'C:\\Users\\frank', u'sid': u'S-2'}]
 
-  def _CreateTestEventObject(self, path):
-    """Create a test event object with a particular path."""
-    event_object = events.EventObject()
-    event_object.data_type = 'fs:stat'
-    event_object.timestamp = 12345
-    event_object.timestamp_desc = u'Some stuff'
-    event_object.filename = path
+  def testGetPathSegmentSeparator(self):
+    """Tests the _GetPathSegmentSeparator function."""
+    plugin = MockChromeExtensionPlugin()
 
-    return event_object
+    for path in self._MACOSX_PATHS:
+      path_segment_separator = plugin._GetPathSegmentSeparator(path)
+      self.assertEqual(path_segment_separator, u'/')
 
-  def testMacAnalyzerPlugin(self):
-    """Test the plugin against mock events."""
-    knowledge_base = self._SetUpKnowledgeBase(knowledge_base_values={
-        'users': self.MAC_USERS})
+    for path in self._WINDOWS_PATHS:
+      path_segment_separator = plugin._GetPathSegmentSeparator(path)
+      self.assertEqual(path_segment_separator, u'\\')
 
-    event_queue = single_process.SingleProcessQueue()
+  def testExamineEventAndCompileReportMacOSXPaths(self):
+    """Tests the ExamineEvent and CompileReport functions on Mac OS X paths."""
+    events = []
+    for path in self._MACOSX_PATHS:
+      event_dictionary = {
+          u'data_type': u'fs:stat',
+          u'filename': path,
+          u'timestamp': 12345,
+          u'timestamp_desc': u'Some stuff'}
 
-    # Fill the incoming queue with events.
-    test_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
-    test_queue_producer.ProduceItems([
-        self._CreateTestEventObject(path) for path in self.MAC_PATHS])
+      event = self._CreateTestEventObject(event_dictionary)
+      events.append(event)
 
-    # Initialize plugin.
-    analysis_plugin = TestChromeExtensionPlugin(event_queue)
+    plugin = MockChromeExtensionPlugin()
+    storage_writer = self._AnalyzeEvents(
+        events, plugin, knowledge_base_values={u'users': self._MACOSX_USERS})
 
-    # Run the analysis plugin.
-    analysis_report_queue_consumer = self._RunAnalysisPlugin(
-        analysis_plugin, knowledge_base)
-    analysis_reports = self._GetAnalysisReportsFromQueue(
-        analysis_report_queue_consumer)
+    self.assertEqual(len(storage_writer.analysis_reports), 1)
 
-    self.assertEqual(len(analysis_reports), 1)
+    analysis_report = storage_writer.analysis_reports[0]
 
-    analysis_report = analysis_reports[0]
-
-    self.assertEqual(analysis_plugin._sep, u'/')
+    self.assertEqual(plugin._sep, u'/')
 
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.
@@ -133,32 +128,28 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     expected_keys = set([u'frank', u'dude'])
     self.assertEqual(set(analysis_report.report_dict.keys()), expected_keys)
 
-  def testWinAnalyzePlugin(self):
-    """Test the plugin against mock events."""
-    knowledge_base = self._SetUpKnowledgeBase(knowledge_base_values={
-        'users': self.WIN_USERS})
+  def testExamineEventAndCompileReportWindowsPaths(self):
+    """Tests the ExamineEvent and CompileReport functions on Windows paths."""
+    events = []
+    for path in self._WINDOWS_PATHS:
+      event_dictionary = {
+          u'data_type': u'fs:stat',
+          u'filename': path,
+          u'timestamp': 12345,
+          u'timestamp_desc': u'Some stuff'}
 
-    event_queue = single_process.SingleProcessQueue()
+      event = self._CreateTestEventObject(event_dictionary)
+      events.append(event)
 
-    # Fill the incoming queue with events.
-    test_queue_producer = plaso_queue.ItemQueueProducer(event_queue)
-    test_queue_producer.ProduceItems([
-        self._CreateTestEventObject(path) for path in self.WIN_PATHS])
+    plugin = MockChromeExtensionPlugin()
+    storage_writer = self._AnalyzeEvents(
+        events, plugin, knowledge_base_values={u'users': self._WINDOWS_USERS})
 
-    # Initialize plugin.
-    analysis_plugin = TestChromeExtensionPlugin(event_queue)
+    self.assertEqual(len(storage_writer.analysis_reports), 1)
 
-    # Run the analysis plugin.
-    analysis_report_queue_consumer = self._RunAnalysisPlugin(
-        analysis_plugin, knowledge_base)
-    analysis_reports = self._GetAnalysisReportsFromQueue(
-        analysis_report_queue_consumer)
+    analysis_report = storage_writer.analysis_reports[0]
 
-    self.assertEqual(len(analysis_reports), 1)
-
-    analysis_report = analysis_reports[0]
-
-    self.assertEqual(analysis_plugin._sep, u'\\')
+    self.assertEqual(plugin._sep, u'\\')
 
     # Due to the behavior of the join one additional empty string at the end
     # is needed to create the last empty line.

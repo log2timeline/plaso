@@ -2,7 +2,6 @@
 """This file contains the analysis plugin manager class."""
 
 from plaso.analysis import definitions
-from plaso.lib import errors
 
 
 class AnalysisPluginManager(object):
@@ -29,10 +28,11 @@ class AnalysisPluginManager(object):
     The analysis plugin classes are identified by their lower case name.
 
     Args:
-      plugin_class: the class object of the analysis plugin.
+      plugin_class (type): class of the analysis plugin.
 
     Raises:
-      KeyError: if analysis plugin class is not set for the corresponding name.
+      KeyError: if an analysis plugin class is not set for the corresponding
+                name.
     """
     plugin_name = plugin_class.NAME.lower()
     if plugin_name not in cls._plugin_classes:
@@ -41,17 +41,7 @@ class AnalysisPluginManager(object):
 
     del cls._plugin_classes[plugin_name]
 
-  @classmethod
-  def GetPlugins(cls):
-    """Retrieves the registered analysis plugin classes.
-
-    Yields:
-      A tuple that contains the uniquely identifying name of the plugin
-      and the plugin class (subclass of AnalysisPlugin).
-    """
-    for plugin_name, plugin_class in cls._plugin_classes.iteritems():
-      yield plugin_name, plugin_class
-
+  # TODO: refactor to match parsers manager.
   @classmethod
   def GetAllPluginInformation(cls, show_all=True):
     """Retrieves a list of the registered analysis plugins.
@@ -66,7 +56,7 @@ class AnalysisPluginManager(object):
     """
     results = []
     for plugin_class in iter(cls._plugin_classes.values()):
-      plugin_object = plugin_class(None)
+      plugin_object = plugin_class()
       if not show_all and not plugin_class.ENABLE_IN_EXTRACTION:
         continue
 
@@ -79,42 +69,36 @@ class AnalysisPluginManager(object):
     return sorted(results)
 
   @classmethod
-  def LoadPlugins(cls, plugin_names, incoming_queues):
-    """Yield analysis plugins for a given list of plugin names.
-
-    Given a list of plugin names this method finds the analysis
-    plugins, initializes them and returns a generator.
+  def GetPluginObjects(cls, plugin_names):
+    """Retrieves the plugin objects.
 
     Args:
-      plugin_names: A list of plugin names that should be loaded up. This
-                    should be a list of strings.
-      incoming_queues: A list of queues (instances of QueueInterface) that
-                       the plugin uses to read in incoming events to analyse.
+      plugin_names (list[str]): names of plugins that should be retrieved.
+
+    Returns:
+      dict[str,AnalysisPlugin]: analysis plugins per name.
+    """
+    plugin_objects = {}
+    for plugin_name, plugin_class in iter(cls._plugin_classes.items()):
+      if plugin_name not in plugin_names:
+        continue
+
+      plugin_objects[plugin_name] = plugin_class()
+
+    return plugin_objects
+
+  @classmethod
+  def GetPlugins(cls):
+    """Retrieves the registered analysis plugin classes.
 
     Yields:
-      Analysis plugin objects (instances of AnalysisPlugin).
+      tuple: contains:
 
-    Raises:
-      errors.BadConfigOption: If plugins_names does not contain a list of
-                              strings.
+        str: name of the plugin
+        type: plugin class
     """
-    try:
-      plugin_names_lower = [word.lower() for word in plugin_names]
-    except AttributeError:
-      raise errors.BadConfigOption(u'Plugin names should be a list of strings.')
-
-    for plugin_object in iter(cls._plugin_classes.values()):
-      plugin_name = plugin_object.NAME.lower()
-
-      if plugin_name in plugin_names_lower:
-        queue_index = plugin_names_lower.index(plugin_name)
-
-        try:
-          incoming_queue = incoming_queues[queue_index]
-        except (TypeError, IndexError):
-          incoming_queue = None
-
-        yield plugin_object(incoming_queue)
+    for plugin_name, plugin_class in iter(cls._plugin_classes.items()):
+      yield plugin_name, plugin_class
 
   @classmethod
   def RegisterPlugin(cls, plugin_class):
@@ -123,10 +107,10 @@ class AnalysisPluginManager(object):
     Then analysis plugin classes are identified based on their lower case name.
 
     Args:
-      plugin_class: the class object of the analysis plugin.
+      plugin_class (type): class of the analysis plugin.
 
     Raises:
-      KeyError: if analysis plugin class is already set for the corresponding
+      KeyError: if an analysis plugin class is already set for the corresponding
                 name.
     """
     plugin_name = plugin_class.NAME.lower()
@@ -138,15 +122,16 @@ class AnalysisPluginManager(object):
 
   @classmethod
   def RegisterPlugins(cls, plugin_classes):
-    """Registers formatter classes.
+    """Registers analysis plugin classes.
 
-    The formatter classes are identified based on their lower case name.
+    The analysis plugin classes are identified based on their lower case name.
 
     Args:
-      plugin_classes: a list of class objects of the formatters.
+      plugin_classes (list[type]): classes of the analysis plugin.
 
     Raises:
-      KeyError: if formatter class is already set for the corresponding name.
+      KeyError: if an analysis plugin class is already set for the corresponding
+                name.
     """
     for plugin_class in plugin_classes:
       cls.RegisterPlugin(plugin_class)
