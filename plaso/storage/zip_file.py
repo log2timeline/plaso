@@ -3189,20 +3189,16 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     if not os.path.isfile(storage_file_path):
       return False
 
+    storage_merge_reader = gzip_file.GZIPStorageMergeReader()
+
     try:
       # In Windows the file could be inaccessible while it is being moved.
       # storage_reader = ZIPStorageFileReader(storage_file_path)
-      storage_reader = gzip_file.GZIPStorageFileReader(storage_file_path)
+      storage_merge_reader.WriteToStorage(self, path=storage_file_path)
     except IOError:
       return False
 
-    self.MergeFromStorage(storage_reader)
-
-    # Force close the storage reader so we can remove the file.
-    storage_reader.Close()
-
     os.remove(storage_file_path)
-
     return True
 
   def Open(self):
