@@ -62,27 +62,27 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
       },
   ]
 
-  def _CreateTestEventObject(self, event_dictionary):
+  def _CreateTestEventObject(self, event_attributes):
     """Create a test event with a set of attributes.
 
     Args:
-      event_dictionary (dict[str, str]): contains attributes of an event to add
-          to the queue.
+      event_attributes (dict[str, str]): attributes of an event to add to the
+          queue.
 
     Returns:
       EventObject: event with the appropriate attributes for testing.
     """
-    if event_dictionary[u'event_type'] == u'prefetch':
+    if event_attributes[u'event_type'] == u'prefetch':
       event_object = TestPrefetchEvent()
-    elif event_dictionary[u'event_type'] == u'chrome_download':
+    elif event_attributes[u'event_type'] == u'chrome_download':
       event_object = TestChromeDownloadEvent()
-    elif event_dictionary[u'event_type'] == u'evt':
+    elif event_attributes[u'event_type'] == u'evt':
       event_object = TestEvtRecordEvent()
     else:
       event_object = events.EventObject()
 
-    event_object.timestamp = event_dictionary[u'timestamp']
-    for key, value in iter(event_dictionary[u'attributes'].items()):
+    event_object.timestamp = event_attributes[u'timestamp']
+    for key, value in iter(event_attributes[u'attributes'].items()):
       setattr(event_object, key, value)
     return event_object
 
