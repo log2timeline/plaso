@@ -198,12 +198,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     task_identifier = None
     if not self._storage_merge_reader:
       task_identifier = self._task_manager.GetTaskPendingMerge()
+      self._merge_task_identifier = task_identifier
 
     # Limit the number of attributes containers from a single task-based
     # storage file that are merged per loop to keep tasks flowing.
     if task_identifier or self._storage_merge_reader:
       self._status = definitions.PROCESSING_STATUS_MERGING
-      self._merge_task_identifier = task_identifier
 
       if self._processing_profiler:
         self._processing_profiler.StartTiming(u'merge')
@@ -220,9 +220,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
       if fully_merged:
         self._storage_merge_reader = None
+        self._merge_task_identifier = u''
 
       self._status = definitions.PROCESSING_STATUS_RUNNING
-      self._merge_task_identifier = u''
       self._number_of_produced_errors = storage_writer.number_of_errors
       self._number_of_produced_events = storage_writer.number_of_events
       self._number_of_produced_sources = storage_writer.number_of_event_sources
