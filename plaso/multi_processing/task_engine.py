@@ -88,7 +88,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
   """
 
   # Maximum number of attribute containers to merge per loop.
-  _MAXIMUM_NUMBER_OF_CONTAINERS = 1000
+  _MAXIMUM_NUMBER_OF_CONTAINERS = 50
 
   # Maximum number of concurrent tasks.
   _MAXIMUM_NUMBER_OF_TASKS = 10000
@@ -98,6 +98,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
   _WORKER_PROCESSES_MINIMUM = 2
   _WORKER_PROCESSES_MAXIMUM = 15
+
+  _TASK_QUEUE_TIMEOUT = 2.0
 
   _ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS = 10 * 60
 
@@ -203,8 +205,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     # storage file that are merged per loop to keep tasks flowing.
     if task_identifier or self._storage_merge_reader:
       self._status = definitions.PROCESSING_STATUS_MERGING
-      if task_identifier:
-        self._merge_task_identifier = task_identifier
 
       if self._processing_profiler:
         self._processing_profiler.StartTiming(u'merge')
@@ -212,6 +212,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       if not self._storage_merge_reader:
         self._storage_merge_reader = storage_writer.StartMergeTaskStorage(
             task_identifier)
+        self._merge_task_identifier = task_identifier
 
       fully_merged = self._storage_merge_reader.MergeAttributeContainers(
           maximum_number_of_containers=self._MAXIMUM_NUMBER_OF_CONTAINERS)
@@ -323,6 +324,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           with the first written event source.
     """
     if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'fill_event_source_heap')
+
+    if self._processing_profiler:
       self._processing_profiler.StartTiming(u'get_event_source')
 
     if start_with_first:
@@ -346,6 +350,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
       if self._processing_profiler:
         self._processing_profiler.StopTiming(u'get_event_source')
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'fill_event_source_heap')
 
   def _ScheduleTasks(self, storage_writer):
     """Schedules tasks.
@@ -431,7 +438,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       task_queue = zeromq_queue.ZeroMQRequestConnectQueue(
           delay_open=True, name=u'{0:s} task queue'.format(process_name),
           linger_seconds=0, port=self._task_queue_port,
-          timeout_seconds=2)
+          timeout_seconds=self._TASK_QUEUE_TIMEOUT)
     else:
       task_queue = self._task_queue
 
