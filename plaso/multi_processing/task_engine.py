@@ -203,7 +203,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     # storage file that are merged per loop to keep tasks flowing.
     if task_identifier or self._storage_merge_reader:
       self._status = definitions.PROCESSING_STATUS_MERGING
-      self._merge_task_identifier = task_identifier
+      if task_identifier:
+        self._merge_task_identifier = task_identifier
 
       if self._processing_profiler:
         self._processing_profiler.StartTiming(u'merge')
