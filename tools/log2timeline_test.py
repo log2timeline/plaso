@@ -44,7 +44,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       u'                        will be used instead.',
       (u'  --workers WORKERS     The number of worker threads [defaults to '
        u'available'),
-      u'                        system CPUs minus three].',
+      u'                        system CPUs minus one].',
       u''])
 
   # TODO: add test for _FormatStatusTableRow.

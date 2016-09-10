@@ -47,24 +47,25 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
        u'either a'),
       (u'                        name of a parser or a parser list. Each entry '
        u'can be'),
-      (u'                        prepended with a minus sign to negate the '
-       u'selection'),
-      (u'                        (exclude it). The list match is an exact '
-       u'match while'),
-      (u'                        an individual parser matching is a case '
-       u'insensitive'),
-      (u'                        substring match, with support for glob '
-       u'patterns.'),
-      (u'                        Examples would be: "reg" that matches the '
-       u'substring'),
-      u'                        "reg" in all parser names or the glob pattern',
-      (u'                        "sky[pd]" that would match all parsers that '
-       u'have the'),
-      (u'                        string "skyp" or "skyd" in its name. All '
-       u'matching is'),
-      (u'                        case insensitive. Use "--parsers list" or '
-       u'"--info" to'),
-      u'                        list the available parsers.',
+      (u'                        prepended with an exclamation mark to negate '
+       u'the'),
+      (u'                        selection (exclude it). The list match is an '
+       u'exact'),
+      (u'                        match while an individual parser matching is '
+       u'a case'),
+      (u'                        insensitive substring match, with support for '
+       u'glob'),
+      (u'                        patterns. Examples would be: "reg" that '
+       u'matches the'),
+      (u'                        substring "reg" in all parser names or the '
+       u'glob'),
+      (u'                        pattern "sky[pd]" that would match all '
+       u'parsers that'),
+      (u'                        have the string "skyp" or "skyd" in its '
+       u'name. All'),
+      (u'                        matching is case insensitive. Use "--parsers '
+       u'list" or'),
+      u'                        "--info" to list the available parsers.',
       u'  --preferred_year YEAR, --preferred-year YEAR',
       (u'                        When a format\'s timestamp does not include '
        u'a year,'),
