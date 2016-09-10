@@ -259,6 +259,15 @@ class BaseFileStorage(BaseStorage):
 class StorageMergeReader(object):
   """Class that defines the storage reader interface for merging."""
 
+  def __init__(self, storage_writer):
+    """Initializes a storage merge reader.
+
+    Args:
+      storage_writer (StorageWriter): storage writer.
+    """
+    super(StorageMergeReader, self).__init__()
+    self._storage_writer = storage_writer
+
   @abc.abstractmethod
   def MergeAttributeContainers(self, maximum_number_of_containers=0):
     """Reads attribute containers from a task storage file into the writer.

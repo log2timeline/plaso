@@ -297,13 +297,12 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
       storage_writer (StorageWriter): storage writer.
       path (str): path to the input file.
     """
-    super(GZIPStorageMergeReader, self).__init__()
+    super(GZIPStorageMergeReader, self).__init__(storage_writer)
     self._data_buffer = None
     self._gzip_file = gzip.open(path, 'rb')
     self._path = path
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
-    self._storage_writer = storage_writer
 
   def _DeserializeAttributeContainer(self, container_data, container_type):
     """Deserializes an attribute container.
@@ -337,6 +336,9 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
 
     Returns:
       bool: True if the entire task storage file has been merged.
+
+    Raises:
+      RuntimeError: if the attribute container type is not supported.
     """
     if not self._data_buffer:
       # Do not use gzip.readlines() here since it can consume a large amount
@@ -352,7 +354,7 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
 
         container_type = attribute_container.CONTAINER_TYPE
         # Note the else statements below are sorted from more frequent
-        # containter type to less frequent containert type.
+        # container type to less frequent container type.
         # TODO: consider lookup table approach.
         if container_type == 'event_source':
           self._storage_writer.AddEventSource(attribute_container)
@@ -363,11 +365,15 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
         elif container_type == 'event_tag':
           self._storage_writer.AddEventTag(attribute_container)
 
-        elif container_type == 'error':
+        elif container_type == 'extraction_error':
           self._storage_writer.AddError(attribute_container)
 
         elif container_type == 'analysis_report':
           self._storage_writer.AddAnalysisReport(attribute_container)
+
+        elif container_type not in (u'task_completion', u'task_start'):
+          raise RuntimeError(u'Unsupported container type: {0:s}'.format(
+              container_type))
 
         number_of_containers += 1
 

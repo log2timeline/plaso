@@ -87,6 +87,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
   * merge results returned by extraction workers.
   """
 
+  # Maximum number of attribute containers to merge per loop.
+  _MAXIMUM_NUMBER_OF_CONTAINERS = 1000
+
   # Maximum number of concurrent tasks.
   _MAXIMUM_NUMBER_OF_TASKS = 10000
 
@@ -196,8 +199,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if not self._storage_merge_reader:
       task_identifier = self._task_manager.GetTaskPendingMerge()
 
-    # Merge only 10000 attributes from a single task-based storage file
-    # per loop to keep tasks flowing.
+    # Limit the number of attributes containers from a single task-based
+    # storage file that are merged per loop to keep tasks flowing.
     if task_identifier or self._storage_merge_reader:
       self._status = definitions.PROCESSING_STATUS_MERGING
       self._merge_task_identifier = task_identifier
@@ -210,7 +213,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
             task_identifier)
 
       fully_merged = self._storage_merge_reader.MergeAttributeContainers(
-          maximum_number_of_containers=10000)
+          maximum_number_of_containers=self._MAXIMUM_NUMBER_OF_CONTAINERS)
 
       if self._processing_profiler:
         self._processing_profiler.StopTiming(u'merge')
