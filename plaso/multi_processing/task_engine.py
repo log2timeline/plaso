@@ -143,8 +143,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._last_worker_number = 0
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._memory_profiler = None
-    self._merge_task_identifier = u''
-    self._merge_task_identifier_on_hold = u''
+    self._merge_task = None
+    self._merge_task_on_hold = u''
     self._mount_path = None
     self._number_of_consumed_errors = 0
     self._number_of_consumed_events = 0
@@ -189,38 +189,36 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if self._processing_profiler:
       self._processing_profiler.StartTiming(u'merge_check')
 
-    for task_identifier in self._task_manager.GetTaskIdentifiersProcessing():
+    for task in self._task_manager.GetProcessingTasks():
       if self._abort:
         break
 
-      file_size = storage_writer.CheckTaskStorageReadyForMerge(task_identifier)
+      file_size = storage_writer.CheckTaskStorageReadyForMerge(task)
       if file_size:
-        self._task_manager.UpdateTaskAsPendingMerge(task_identifier, file_size)
+        self._task_manager.UpdateTaskAsPendingMerge(task)
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming(u'merge_check')
 
-    task_identifier = None
+    task = None
     if not self._storage_merge_reader_on_hold:
-      task_identifier = self._task_manager.GetTaskIdentifierPendingMerge(
-          self._merge_task_identifier)
+      task = self._task_manager.GetTaskPendingMerge(self._merge_task)
 
     # Limit the number of attributes containers from a single task-based
     # storage file that are merged per loop to keep tasks flowing.
-    if task_identifier or self._storage_merge_reader:
+    if task or self._storage_merge_reader:
       self._status = definitions.PROCESSING_STATUS_MERGING
 
       if self._processing_profiler:
         self._processing_profiler.StartTiming(u'merge')
 
-      if task_identifier:
+      if task:
         if self._storage_merge_reader:
-          self._merge_task_identifier_on_hold = self._merge_task_identifier
+          self._merge_task_on_hold = self._merge_task
           self._storage_merge_reader_on_hold = self._storage_merge_reader
 
-        self._storage_merge_reader = storage_writer.StartMergeTaskStorage(
-            task_identifier)
-        self._merge_task_identifier = task_identifier
+        self._storage_merge_reader = storage_writer.StartMergeTaskStorage(task)
+        self._merge_task = task
 
       fully_merged = self._storage_merge_reader.MergeAttributeContainers(
           maximum_number_of_containers=self._MAXIMUM_NUMBER_OF_CONTAINERS)
@@ -229,16 +227,16 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         self._processing_profiler.StopTiming(u'merge')
 
       if fully_merged:
-        self._task_manager.CompleteTask(self._merge_task_identifier)
+        self._task_manager.CompleteTask(self._merge_task)
 
         if self._storage_merge_reader_on_hold:
-          self._merge_task_identifier = self._merge_task_identifier_on_hold
+          self._merge_task = self._merge_task_on_hold
           self._storage_merge_reader = self._storage_merge_reader_on_hold
 
-          self._merge_task_identifier_on_hold = u''
+          self._merge_task_on_hold = u''
           self._storage_merge_reader_on_hold = None
         else:
-          self._merge_task_identifier = u''
+          self._merge_task = None
           self._storage_merge_reader = None
 
       self._status = definitions.PROCESSING_STATUS_RUNNING
@@ -319,7 +317,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     try:
       self._task_queue.PushItem(task, block=False)
-      self._task_manager.UpdateTaskAsProcessing(task.identifier)
+      self._task_manager.UpdateTaskAsProcessing(task)
       is_scheduled = True
 
     except Queue.Full:
@@ -516,7 +514,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         self._CheckStatusWorkerProcess(pid)
 
       self._processing_status.UpdateForemanStatus(
-          self._name, self._status, self._pid, self._merge_task_identifier,
+          self._name, self._status, self._pid, self._merge_task,
           self._number_of_consumed_sources, self._number_of_produced_sources,
           self._number_of_consumed_events, self._number_of_produced_events,
           self._number_of_consumed_errors, self._number_of_produced_errors,
@@ -650,10 +648,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       return
 
     try:
-      self._task_manager.UpdateTask(task_identifier)
+      self._task_manager.UpdateTaskByIdentifier(task_identifier)
     except KeyError:
       try:
-        self._task_manager.RescheduleTask(task_identifier)
+        self._task_manager.RescheduleTaskByIdentifier(task_identifier)
       except KeyError:
         logging.error(u'Worker processing unknown task: {0:s}.'.format(
             task_identifier))

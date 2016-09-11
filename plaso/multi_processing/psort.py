@@ -9,6 +9,7 @@ import time
 
 from plaso.engine import plaso_queue
 from plaso.engine import zeromq_queue
+from plaso.containers import tasks
 from plaso.lib import bufferlib
 from plaso.lib import definitions
 from plaso.multi_processing import analysis_process
@@ -57,7 +58,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         profiling_sample_rate=profiling_sample_rate,
         profiling_type=profiling_type)
     self._event_queues = []
-    self._merge_task_identifier = u''
+    self._merge_task = None
     self._number_of_consumed_errors = 0
     self._number_of_consumed_events = 0
     self._number_of_consumed_reports = 0
@@ -126,7 +127,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     logging.debug(u'Processing analysis plugin results.')
 
-    # TODO: use a task based approach.
+    # TODO: use a proper task based approach.
     plugin_names = [plugin.plugin_name for plugin in analysis_plugins]
     while plugin_names:
       for plugin_name in list(plugin_names):
@@ -134,13 +135,12 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           break
 
         # TODO: temporary solution.
-        task_identifier = plugin_name
+        task = tasks.Task()
+        task.identifier = plugin_name
 
-        file_size = storage_writer.CheckTaskStorageReadyForMerge(
-            task_identifier)
-        if file_size:
-          storage_merge_reader = storage_writer.StartMergeTaskStorage(
-              task_identifier)
+        merge_ready = storage_writer.CheckTaskStorageReadyForMerge(task)
+        if merge_ready:
+          storage_merge_reader = storage_writer.StartMergeTaskStorage(task)
 
           storage_merge_reader.MergeAttributeContainers()
           # TODO: temporary solution.
@@ -381,8 +381,12 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       for pid in list(self._process_information_per_pid.keys()):
         self._CheckStatusAnalysisProcess(pid)
 
+      display_name = u''
+      if self._merge_task:
+        display_name = self._merge_task.identifier
+
       self._processing_status.UpdateForemanStatus(
-          self._name, self._status, self._pid, self._merge_task_identifier,
+          self._name, self._status, self._pid, display_name,
           self._number_of_consumed_sources, self._number_of_produced_sources,
           self._number_of_consumed_events, self._number_of_produced_events,
           self._number_of_consumed_errors, self._number_of_produced_errors,

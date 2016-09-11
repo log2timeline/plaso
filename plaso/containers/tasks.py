@@ -21,9 +21,12 @@ class Task(interface.AttributeContainer):
     file_entry_type (str): dfVFS type of the file entry the path specification
         is referencing.
     identifier (str): unique identifier of the task.
+    last_update_time (int): the last time the task was marked as being processed
+      as number of milliseconds since since January 1, 1970, 00:00:00 UTC.
     merge_priority (int): priority used for the task storage file merge, where
         a lower value indicates a higher priority to merge.
     path_spec (dfvfs.PathSpec): path specification.
+    results_storage_size (int): number of bytes in the storage file.
     session_identifier (str): the identifier of the session the task
         is part of.
     start_time (int): time that the task was started. Contains the number
@@ -43,8 +46,10 @@ class Task(interface.AttributeContainer):
     self.completion_time = None
     self.file_entry_type = None
     self.identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
+    self.last_update_time = None
     self.merge_priority = None
     self.path_spec = None
+    self.results_storage_size = None
     self.session_identifier = session_identifier
     self.start_time = int(time.time() * 1000000)
 

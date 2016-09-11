@@ -94,7 +94,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._session_identifier = session_identifier
     self._status = definitions.PROCESSING_STATUS_INITIALIZED
     self._storage_writer = storage_writer
-    self._task_identifier = u''
+    self._task = None
     self._task_queue = task_queue
     self._temporary_directory = temporary_directory
     self._text_prepend = text_prepend
@@ -125,6 +125,10 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       last_activity_timestamp = 0.0
       processing_status = self._status
 
+    task_identifier = u''
+    if self._task:
+      task_identifier = self._task.identifier
+
     status = {
         u'display_name': self._current_display_name,
         u'identifier': self._name,
@@ -136,7 +140,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
         u'number_of_produced_sources': number_of_produced_sources,
         u'last_activity_timestamp': last_activity_timestamp,
         u'processing_status': processing_status,
-        u'task_identifier': self._task_identifier}
+        u'task_identifier': task_identifier}
 
     return status
 
@@ -269,7 +273,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     Args:
       task (Task): task.
     """
-    self._task_identifier = task.identifier
+    self._task = task
 
     storage_writer = self._storage_writer.CreateTaskStorage(task)
 
@@ -299,11 +303,11 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       storage_writer.Close()
 
     try:
-      self._storage_writer.PrepareMergeTaskStorage(task.identifier)
+      self._storage_writer.PrepareMergeTaskStorage(task)
     except IOError:
       pass
 
-    self._task_identifier = u''
+    self._task = None
 
   def _StartProfiling(self):
     """Starts profiling."""
