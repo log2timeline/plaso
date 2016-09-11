@@ -189,7 +189,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if self._processing_profiler:
       self._processing_profiler.StartTiming(u'merge_check')
 
-    for task_identifier in self._task_manager.GetTasksProcessing():
+    for task_identifier in self._task_manager.GetTaskIdentifiersProcessing():
       if self._abort:
         break
 
@@ -202,7 +202,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     task_identifier = None
     if not self._storage_merge_reader_on_hold:
-      task_identifier = self._task_manager.GetTaskPendingMerge(
+      task_identifier = self._task_manager.GetTaskIdentifierPendingMerge(
           self._merge_task_identifier)
 
     # Limit the number of attributes containers from a single task-based

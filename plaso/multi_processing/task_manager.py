@@ -135,7 +135,7 @@ class TaskManager(object):
     """
     return self._abandoned_tasks.values()
 
-  def GetTasksProcessing(self):
+  def GetTaskIdentifiersProcessing(self):
     """Retrieves the tasks that are processing.
 
     Returns:
@@ -143,8 +143,8 @@ class TaskManager(object):
     """
     return self._tasks_processing.keys()
 
-  def GetTaskPendingMerge(self, merge_task_identifier):
-    """Retrieves the first task that is pending merge.
+  def GetTaskIdentifierPendingMerge(self, merge_task_identifier):
+    """Retrieves the first task that is pending merge or has a higher priority.
 
     This function will check if there is a task with a higher merge priority
     availble.
@@ -154,7 +154,8 @@ class TaskManager(object):
           merged or None.
 
     Returns:
-      str: unique identifier of the task or None.
+      str: unique identifier of the task or None if there is no task pending
+          merge or with a higher priority.
     """
     task_identifier = self._tasks_pending_merge.PeekTaskIdentifier()
     if not task_identifier:
