@@ -154,7 +154,8 @@ class ZeroMQQueue(plaso_queue.Queue):
 
   def _SetSocketTimeouts(self):
     """Sets the timeouts for socket send and receive."""
-    # Note that timeout must be and integer value.
+    # Note that timeout must be and integer value. If timeout is a float
+    # it appears that zmq will not enforce the timeout.
     timeout = int(self.timeout_seconds * 1000)
     receive_timeout = min(
         self._ZMQ_SOCKET_RECEIVE_TIMEOUT_MILLISECONDS, timeout)

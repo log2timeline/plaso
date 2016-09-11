@@ -99,7 +99,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
   _WORKER_PROCESSES_MINIMUM = 2
   _WORKER_PROCESSES_MAXIMUM = 15
 
-  _TASK_QUEUE_TIMEOUT = 2.0
+  _TASK_QUEUE_TIMEOUT_SECONDS = 2
 
   _ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS = 10 * 60
 
@@ -438,7 +438,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       task_queue = zeromq_queue.ZeroMQRequestConnectQueue(
           delay_open=True, name=u'{0:s} task queue'.format(process_name),
           linger_seconds=0, port=self._task_queue_port,
-          timeout_seconds=self._TASK_QUEUE_TIMEOUT)
+          timeout_seconds=self._TASK_QUEUE_TIMEOUT_SECONDS)
     else:
       task_queue = self._task_queue
 
