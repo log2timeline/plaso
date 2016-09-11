@@ -18,16 +18,11 @@ class _PendingMergeTaskHeap(object):
     super(_PendingMergeTaskHeap, self).__init__()
     self._heap = []
 
-  @property
-  def number_of_items(self):
-    """int: number of items in the heap."""
-    return len(self._heap)
-
   def PeekTask(self):
-    """Retrieves the first task from the heap without removing it.
+    """Retrieves the first task identifier from the heap without removing it.
 
     Returns:
-      str: unique identifier of the task or None.
+      str: unique identifier of the task or None if the heap is empty.
     """
     try:
       _, task_identifier = self._heap[0]
@@ -38,10 +33,10 @@ class _PendingMergeTaskHeap(object):
     return task_identifier
 
   def PopTask(self):
-    """Retrieves and removes the first task from the heap.
+    """Retrieves and removes the first task identifier from the heap.
 
     Returns:
-      str: unique identifier of the task or None.
+      str: unique identifier of the task or None if the heap is empty.
     """
     try:
       _, task_identifier = heapq.heappop(self._heap)
@@ -116,8 +111,10 @@ class TaskManager(object):
     self._active_tasks[task.identifier] = task
     return task
 
-  def DestroyTask(self, task_identifier):
-    """Destroys a task.
+  def CompleteTask(self, task_identifier):
+    """Completes a task.
+
+    The task is complete and can be removed from the task manager.
 
     Args:
       task_identifier (str): unique identifier of the task.

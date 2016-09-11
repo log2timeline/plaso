@@ -18,9 +18,11 @@ class Task(interface.AttributeContainer):
     aborted (bool): True if the session was aborted.
     completion_time (int): time that the task was completed. Contains the
         number of micro seconds since January 1, 1970, 00:00:00 UTC.
-    file_entry_type (str): dfVFS file entry type.
+    file_entry_type (str): dfVFS type of the file entry the path specification
+        is referencing.
     identifier (str): unique identifier of the task.
-    merge_weight (int): weight used for the task storage file merge.
+    merge_weight (int): weight used for the task storage file merge, where
+        a lower weight has a higher priority to be merged.
     path_spec (dfvfs.PathSpec): path specification.
     session_identifier (str): the identifier of the session the task
         is part of.
