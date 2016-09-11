@@ -520,11 +520,11 @@ class StorageWriter(object):
   def Close(self):
     """Closes the storage writer."""
 
-  def CreateTaskStorage(self, unused_task_name):
+  def CreateTaskStorage(self, unused_task_identifier):
     """Creates a task storage.
 
     Args:
-      task_name (str): unique name of the task.
+      task_identifier (str): unique identifier of the task.
 
     Returns:
       StorageWriter: storage writer.
@@ -590,11 +590,11 @@ class StorageWriter(object):
   def Open(self):
     """Opens the storage writer."""
 
-  def PrepareMergeTaskStorage(self, unsused_task_name):
+  def PrepareMergeTaskStorage(self, unsused_task_identifier):
     """Prepares a task storage for merging.
 
     Args:
-      task_name (str): unique name of the task.
+      task_identifier (str): unique identifier of the task.
 
     Raises:
       IOError: if the storage type is not supported or

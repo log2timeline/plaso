@@ -136,7 +136,9 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         # TODO: temporary solution.
         task_identifier = plugin_name
 
-        if storage_writer.CheckTaskStorageReadyForMerge(task_identifier):
+        file_size = storage_writer.CheckTaskStorageReadyForMerge(
+            task_identifier)
+        if file_size:
           storage_merge_reader = storage_writer.StartMergeTaskStorage(
               task_identifier)
 
