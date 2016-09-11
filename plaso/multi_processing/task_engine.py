@@ -231,7 +231,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       if fully_merged:
         self._task_manager.DestroyTask(self._merge_task_identifier)
 
-        if self._storage_merge_reader:
+        if self._storage_merge_reader_on_hold:
           self._merge_task_identifier = self._merge_task_identifier_on_hold
           self._storage_merge_reader = self._storage_merge_reader_on_hold
 
