@@ -5,6 +5,7 @@ Only supports task storage at the moment.
 """
 
 import gzip
+import os
 
 from plaso.lib import definitions
 from plaso.serializer import json_serializer
@@ -284,25 +285,22 @@ class GZIPStorageFile(interface.BaseFileStorage):
     self._WriteAttributeContainer(task_start)
 
 
-class GZIPStorageMergeReader(object):
+class GZIPStorageMergeReader(interface.StorageMergeReader):
   """Class that implements a gzip-based storage file reader for merging."""
 
   _DATA_BUFFER_SIZE = 16 * 1024 * 1024
 
-  def __init__(self, storage_type=definitions.STORAGE_TYPE_TASK):
+  def __init__(self, storage_writer, path):
     """Initializes a storage merge reader.
 
     Args:
-      storage_type (Optional[str]): storage type.
-
-    Raises:
-      ValueError: if the storage type is not supported.
+      storage_writer (StorageWriter): storage writer.
+      path (str): path to the input file.
     """
-    if storage_type != definitions.STORAGE_TYPE_TASK:
-      raise ValueError(u'Unsupported storage type: {0:s}.'.format(
-          storage_type))
-
-    super(GZIPStorageMergeReader, self).__init__()
+    super(GZIPStorageMergeReader, self).__init__(storage_writer)
+    self._data_buffer = None
+    self._gzip_file = gzip.open(path, 'rb')
+    self._path = path
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
 
@@ -329,53 +327,69 @@ class GZIPStorageMergeReader(object):
 
     return attribute_container
 
-  def WriteToStorage(self, storage_writer, path=None):
-    """Reads data from the storage file into the writer.
+  def MergeAttributeContainers(self, maximum_number_of_containers=0):
+    """Reads attribute containers from a task storage file into the writer.
 
     Args:
-      storage_writer (StorageWriter): storage writer.
-      path (Optional[str]): path of the storage file.
+      maximum_number_of_containers (Optional[int]): maximum number of
+          containers to merge, where 0 represent no limit.
+
+    Returns:
+      bool: True if the entire task storage file has been merged.
 
     Raises:
-      ValueError: if path is missing.
+      RuntimeError: if the attribute container type is not supported.
     """
-    if not path:
-      raise ValueError(u'Missing path.')
-
-    gzip_file = gzip.open(path, 'rb')
-
-    try:
+    if not self._data_buffer:
       # Do not use gzip.readlines() here since it can consume a large amount
       # of memory.
-      data_buffer = gzip_file.read(self._DATA_BUFFER_SIZE)
-      while data_buffer:
-        while b'\n' in data_buffer:
-          line, _, data_buffer = data_buffer.partition(b'\n')
-          attribute_container = self._DeserializeAttributeContainer(
-              line, u'attribute_container')
+      self._data_buffer = self._gzip_file.read(self._DATA_BUFFER_SIZE)
 
-          container_type = attribute_container.CONTAINER_TYPE
-          if container_type == 'analysis_report':
-            storage_writer.AddAnalysisReport(attribute_container)
+    number_of_containers = 0
+    while self._data_buffer:
+      while b'\n' in self._data_buffer:
+        line, _, self._data_buffer = self._data_buffer.partition(b'\n')
+        attribute_container = self._DeserializeAttributeContainer(
+            line, u'attribute_container')
 
-          elif container_type == 'event_source':
-            storage_writer.AddEventSource(attribute_container)
+        container_type = attribute_container.CONTAINER_TYPE
+        # Note the else statements below are sorted from more frequent
+        # container type to less frequent container type.
+        # TODO: consider lookup table approach.
+        if container_type == 'event_source':
+          self._storage_writer.AddEventSource(attribute_container)
 
-          elif container_type == 'event':
-            storage_writer.AddEvent(attribute_container)
+        elif container_type == 'event':
+          self._storage_writer.AddEvent(attribute_container)
 
-          elif container_type == 'event_tag':
-            storage_writer.AddEventTag(attribute_container)
+        elif container_type == 'event_tag':
+          self._storage_writer.AddEventTag(attribute_container)
 
-          elif container_type == 'error':
-            storage_writer.AddError(attribute_container)
+        elif container_type == 'extraction_error':
+          self._storage_writer.AddError(attribute_container)
 
-        additional_data_buffer = gzip_file.read(self._DATA_BUFFER_SIZE)
-        data_buffer = b''.join([data_buffer, additional_data_buffer])
+        elif container_type == 'analysis_report':
+          self._storage_writer.AddAnalysisReport(attribute_container)
 
-    finally:
-      gzip_file.close()
-      gzip_file = None
+        elif container_type not in (u'task_completion', u'task_start'):
+          raise RuntimeError(u'Unsupported container type: {0:s}'.format(
+              container_type))
+
+        number_of_containers += 1
+
+        if (maximum_number_of_containers > 0 and
+            number_of_containers >= maximum_number_of_containers):
+          return False
+
+      additional_data_buffer = self._gzip_file.read(self._DATA_BUFFER_SIZE)
+      self._data_buffer = b''.join([self._data_buffer, additional_data_buffer])
+
+    self._gzip_file.close()
+    self._gzip_file = None
+
+    os.remove(self._path)
+
+    return True
 
 
 class GZIPStorageFileReader(interface.FileStorageReader):
