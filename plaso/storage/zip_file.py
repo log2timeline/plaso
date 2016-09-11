@@ -3041,14 +3041,15 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     for label in event_tag.labels:
       self._session.event_labels_counter[label] += 1
 
-  def CheckTaskStorageReadyForMerge(self, task_name):
+  def CheckTaskStorageReadyForMerge(self, task_identifier):
     """Checks if a task storage is ready for merging with this session storage.
 
     Args:
-      task_name (str): unique name of the task.
+      task_identifier (str): unique identifier of the task.
 
     Returns:
-      bool: True if the storage for the task is ready for merge.
+      int: size of the task storage file if it is ready to be merged, None
+          otherwise.
 
     Raises:
       IOError: if the storage type is not supported or
@@ -3061,9 +3062,14 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       raise IOError(u'Missing merge task storage path.')
 
     storage_file_path = os.path.join(
-        self._merge_task_storage_path, u'{0:s}.plaso'.format(task_name))
+        self._merge_task_storage_path, u'{0:s}.plaso'.format(task_identifier))
 
-    return os.path.isfile(storage_file_path)
+    try:
+      stat_info = os.stat(storage_file_path)
+    except (IOError, OSError):
+      return
+
+    return stat_info.st_size
 
   def Close(self):
     """Closes the storage writer.
@@ -3190,11 +3196,11 @@ class ZIPStorageFileWriter(interface.StorageWriter):
         self._storage_file.GetNumberOfEventSources())
     self._written_event_source_index = self._first_written_event_source_index
 
-  def PrepareMergeTaskStorage(self, task_name):
+  def PrepareMergeTaskStorage(self, task_identifier):
     """Prepares a task storage for merging.
 
     Args:
-      task_name (str): unique name of the task.
+      task_identifier (str): unique identifier of the task.
 
     Raises:
       IOError: if the storage type is not supported or
@@ -3207,10 +3213,10 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       raise IOError(u'Missing task storage path.')
 
     storage_file_path = os.path.join(
-        self._task_storage_path, u'{0:s}.plaso'.format(task_name))
+        self._task_storage_path, u'{0:s}.plaso'.format(task_identifier))
 
     merge_storage_file_path = os.path.join(
-        self._merge_task_storage_path, u'{0:s}.plaso'.format(task_name))
+        self._merge_task_storage_path, u'{0:s}.plaso'.format(task_identifier))
 
     try:
       os.rename(storage_file_path, merge_storage_file_path)
@@ -3248,11 +3254,11 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     if self._storage_file:
       self._storage_file.SetSerializersProfiler(serializers_profiler)
 
-  def StartMergeTaskStorage(self, task_name):
+  def StartMergeTaskStorage(self, task_identifier):
     """Starts a merge of a task storage with the session storage.
 
     Args:
-      task_name (str): unique name of the task.
+      task_identifier (str): unique identifier of the task.
 
     Returns:
       StorageMergeReader: storage merge reader of the task storage.
@@ -3270,7 +3276,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       raise IOError(u'Missing merge task storage path.')
 
     storage_file_path = os.path.join(
-        self._merge_task_storage_path, u'{0:s}.plaso'.format(task_name))
+        self._merge_task_storage_path, u'{0:s}.plaso'.format(task_identifier))
 
     if not os.path.isfile(storage_file_path):
       raise IOError(u'Merge task storage path is not a file.')

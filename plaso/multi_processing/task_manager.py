@@ -2,9 +2,66 @@
 """The task manager."""
 
 import collections
+import heapq
 import time
 
+from dfvfs.lib import definitions as dfvfs_definitions
+
 from plaso.containers import tasks
+
+
+class _PendingMergeTaskHeap(object):
+  """Class that defines a pending merge task heap."""
+
+  def __init__(self):
+    """Initializes a pending merge task heap."""
+    super(_PendingMergeTaskHeap, self).__init__()
+    self._heap = []
+
+  def PeekTaskIdentifier(self):
+    """Retrieves the first task identifier from the heap without removing it.
+
+    Returns:
+      str: unique identifier of the task or None if the heap is empty.
+    """
+    try:
+      _, task_identifier = self._heap[0]
+
+    except IndexError:
+      return
+
+    return task_identifier
+
+  def PopTaskIdentifier(self):
+    """Retrieves and removes the first task identifier from the heap.
+
+    Returns:
+      str: unique identifier of the task or None if the heap is empty.
+    """
+    try:
+      _, task_identifier = heapq.heappop(self._heap)
+
+    except IndexError:
+      return
+
+    return task_identifier
+
+  def PushTask(self, task, file_size):
+    """Pushes a task onto the heap.
+
+    Args:
+      task (Task): task.
+      file_size (int): size of the task storage file.
+    """
+    if task.file_entry_type == dfvfs_definitions.FILE_ENTRY_TYPE_DIRECTORY:
+      weight = 1
+    else:
+      weight = file_size
+
+    task.merge_priority = weight
+
+    heap_values = (weight, task.identifier)
+    heapq.heappush(self._heap, heap_values)
 
 
 class TaskManager(object):
@@ -35,8 +92,8 @@ class TaskManager(object):
     self._abandoned_tasks = {}
     self._active_tasks = {}
     self._maximum_number_of_tasks = maximum_number_of_tasks
+    self._tasks_pending_merge = _PendingMergeTaskHeap()
     # Use ordered dictionaries to preserve the order in which tasks were added.
-    self._tasks_pending_merge = collections.OrderedDict()
     self._tasks_processing = collections.OrderedDict()
 
   # TODO: add support for task types.
@@ -54,6 +111,22 @@ class TaskManager(object):
     self._active_tasks[task.identifier] = task
     return task
 
+  def CompleteTask(self, task_identifier):
+    """Completes a task.
+
+    The task is complete and can be removed from the task manager.
+
+    Args:
+      task_identifier (str): unique identifier of the task.
+
+    Raises:
+      KeyError: if the task was not active.
+    """
+    if task_identifier not in self._active_tasks:
+      raise KeyError(u'Task not active')
+
+    del self._active_tasks[task_identifier]
+
   def GetAbandonedTasks(self):
     """Retrieves all abandoned tasks.
 
@@ -62,7 +135,7 @@ class TaskManager(object):
     """
     return self._abandoned_tasks.values()
 
-  def GetTasksProcessing(self):
+  def GetTaskIdentifiersProcessing(self):
     """Retrieves the tasks that are processing.
 
     Returns:
@@ -70,19 +143,32 @@ class TaskManager(object):
     """
     return self._tasks_processing.keys()
 
-  def GetTaskPendingMerge(self):
-    """Retrieves the first task that is pending merge.
+  def GetTaskIdentifierPendingMerge(self, merge_task_identifier):
+    """Retrieves the first task that is pending merge or has a higher priority.
+
+    This function will check if there is a task with a higher merge priority
+    availble.
+
+    Args:
+      merge_task_identifier (str): unique identifier of the current task being
+          merged or None.
 
     Returns:
-      str: unique identifier of the task or None.
+      str: unique identifier of the task or None if there is no task pending
+          merge or with a higher priority.
     """
-    if not self._tasks_pending_merge:
+    task_identifier = self._tasks_pending_merge.PeekTaskIdentifier()
+    if not task_identifier:
       return
 
-    _, task_identifier = self._tasks_pending_merge.popitem(last=False)
+    if merge_task_identifier:
+      task = self._active_tasks[task_identifier]
+      merge_task = self._active_tasks[merge_task_identifier]
 
-    del self._active_tasks[task_identifier]
-    return task_identifier
+      if task.merge_priority > merge_task.merge_priority:
+        return
+
+    return self._tasks_pending_merge.PopTaskIdentifier()
 
   def HasActiveTasks(self):
     """Determines if there are active tasks.
@@ -92,16 +178,12 @@ class TaskManager(object):
     Returns:
       bool: True if there are active tasks.
     """
-    if not self._tasks_processing and not self._tasks_pending_merge:
+    if not self._active_tasks:
       return False
 
     inactive_time = int(time.time() * 1000000) - self._TASK_INACTIVE_TIME
 
-    if self._tasks_pending_merge:
-      has_active_tasks = True
-    else:
-      has_active_tasks = False
-
+    has_active_tasks = False
     for task_identifier, last_update in iter(self._tasks_processing.items()):
       if last_update > inactive_time:
         has_active_tasks = True
@@ -145,11 +227,12 @@ class TaskManager(object):
 
     self._tasks_processing[task_identifier] = int(time.time() * 1000000)
 
-  def UpdateTaskAsPendingMerge(self, task_identifier):
+  def UpdateTaskAsPendingMerge(self, task_identifier, file_size):
     """Updates the task manager to reflect the task is ready to be merged.
 
     Args:
       task_identifier (str): unique identifier of the task.
+      file_size (int): file size of the task storage file.
 
     Raises:
       KeyError: if the task was not processing.
@@ -157,7 +240,8 @@ class TaskManager(object):
     if task_identifier not in self._tasks_processing:
       raise KeyError(u'Task not processing')
 
-    self._tasks_pending_merge[task_identifier] = task_identifier
+    task = self._active_tasks[task_identifier]
+    self._tasks_pending_merge.PushTask(task, file_size)
     del self._tasks_processing[task_identifier]
 
   def UpdateTaskAsProcessing(self, task_identifier):

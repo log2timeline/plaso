@@ -1600,19 +1600,19 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
 
       self.assertEqual(task_storage_writer.number_of_events, 4)
 
-      ready_for_merge = session_storage_writer.CheckTaskStorageReadyForMerge(
+      file_size = session_storage_writer.CheckTaskStorageReadyForMerge(
           task.identifier)
-      self.assertFalse(ready_for_merge)
+      self.assertIsNone(file_size)
 
       session_storage_writer.PrepareMergeTaskStorage(task.identifier)
 
-      ready_for_merge = session_storage_writer.CheckTaskStorageReadyForMerge(
+      file_size = session_storage_writer.CheckTaskStorageReadyForMerge(
           task.identifier)
-      self.assertTrue(ready_for_merge)
+      self.assertIsNotNone(file_size)
 
-      ready_for_merge = session_storage_writer.CheckTaskStorageReadyForMerge(
+      file_size = session_storage_writer.CheckTaskStorageReadyForMerge(
           session.identifier)
-      self.assertFalse(ready_for_merge)
+      self.assertIsNone(file_size)
 
       storage_merge_reader = session_storage_writer.StartMergeTaskStorage(
           task.identifier)
@@ -1623,9 +1623,9 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
 
       self.assertEqual(session_storage_writer.number_of_events, 4)
 
-      ready_for_merge = session_storage_writer.CheckTaskStorageReadyForMerge(
+      file_size = session_storage_writer.CheckTaskStorageReadyForMerge(
           task.identifier)
-      self.assertFalse(ready_for_merge)
+      self.assertIsNone(file_size)
 
       # Test an incomplete task merge.
       task = tasks.Task(session_identifier=session.identifier)
@@ -1642,9 +1642,9 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
 
       session_storage_writer.PrepareMergeTaskStorage(task.identifier)
 
-      ready_for_merge = session_storage_writer.CheckTaskStorageReadyForMerge(
+      file_size = session_storage_writer.CheckTaskStorageReadyForMerge(
           task.identifier)
-      self.assertTrue(ready_for_merge)
+      self.assertIsNotNone(file_size)
 
       storage_merge_reader = session_storage_writer.StartMergeTaskStorage(
           task.identifier)
