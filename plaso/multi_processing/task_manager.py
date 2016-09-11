@@ -23,8 +23,22 @@ class _PendingMergeTaskHeap(object):
     """int: number of items in the heap."""
     return len(self._heap)
 
+  def PeekTask(self):
+    """Retrieves the first task from the heap without removing it.
+
+    Returns:
+      str: unique identifier of the task or None.
+    """
+    try:
+      _, task_identifier = self._heap[0]
+
+    except IndexError:
+      return
+
+    return task_identifier
+
   def PopTask(self):
-    """Pops a task from the heap.
+    """Retrieves and removes the first task from the heap.
 
     Returns:
       str: unique identifier of the task or None.
@@ -48,6 +62,8 @@ class _PendingMergeTaskHeap(object):
       weight = 1
     else:
       weight = file_size
+
+    task.merge_weight = weight
 
     heap_values = (weight, task.identifier)
     heapq.heappush(self._heap, heap_values)
@@ -100,6 +116,20 @@ class TaskManager(object):
     self._active_tasks[task.identifier] = task
     return task
 
+  def DestroyTask(self, task_identifier):
+    """Destroys a task.
+
+    Args:
+      task_identifier (str): unique identifier of the task.
+
+    Raises:
+      KeyError: if the task was not active.
+    """
+    if task_identifier not in self._active_tasks:
+      raise KeyError(u'Task not active')
+
+    del self._active_tasks[task_identifier]
+
   def GetAbandonedTasks(self):
     """Retrieves all abandoned tasks.
 
@@ -116,17 +146,31 @@ class TaskManager(object):
     """
     return self._tasks_processing.keys()
 
-  def GetTaskPendingMerge(self):
+  def GetTaskPendingMerge(self, merge_task_identifier):
     """Retrieves the first task that is pending merge.
+
+    This function will check if there is a task with a higher merge priority
+    availble.
+
+    Args:
+      merge_task_identifier (str): unique identifier of the current task being
+          merged or None.
 
     Returns:
       str: unique identifier of the task or None.
     """
-    task_identifier = self._tasks_pending_merge.PopTask()
-    if task_identifier:
-      del self._active_tasks[task_identifier]
+    task_identifier = self._tasks_pending_merge.PeekTask()
+    if not task_identifier:
+      return
 
-    return task_identifier
+    if merge_task_identifier:
+      task = self._active_tasks[task_identifier]
+      merge_task = self._active_tasks[merge_task_identifier]
+
+      if task.merge_weight > merge_task.merge_weight:
+        return
+
+    return self._tasks_pending_merge.PopTask()
 
   def HasActiveTasks(self):
     """Determines if there are active tasks.
@@ -136,16 +180,12 @@ class TaskManager(object):
     Returns:
       bool: True if there are active tasks.
     """
-    if self._tasks_pending_merge.number_of_items > 0:
-      has_active_tasks = True
-    else:
-      has_active_tasks = False
-
-    if not self._tasks_processing and not has_active_tasks:
+    if not self._active_tasks:
       return False
 
     inactive_time = int(time.time() * 1000000) - self._TASK_INACTIVE_TIME
 
+    has_active_tasks = False
     for task_identifier, last_update in iter(self._tasks_processing.items()):
       if last_update > inactive_time:
         has_active_tasks = True

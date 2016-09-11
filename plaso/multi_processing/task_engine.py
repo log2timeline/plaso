@@ -144,6 +144,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._memory_profiler = None
     self._merge_task_identifier = u''
+    self._merge_task_identifier_on_hold = u''
     self._mount_path = None
     self._number_of_consumed_errors = 0
     self._number_of_consumed_events = 0
@@ -163,6 +164,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._session_identifier = None
     self._status = definitions.PROCESSING_STATUS_IDLE
     self._storage_merge_reader = None
+    self._storage_merge_reader_on_hold = None
     self._storage_writer = None
     self._task_queue = None
     self._task_queue_port = None
@@ -199,8 +201,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._processing_profiler.StopTiming(u'merge_check')
 
     task_identifier = None
-    if not self._storage_merge_reader:
-      task_identifier = self._task_manager.GetTaskPendingMerge()
+    if not self._storage_merge_reader_on_hold:
+      task_identifier = self._task_manager.GetTaskPendingMerge(
+          self._merge_task_identifier)
 
     # Limit the number of attributes containers from a single task-based
     # storage file that are merged per loop to keep tasks flowing.
@@ -210,7 +213,11 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       if self._processing_profiler:
         self._processing_profiler.StartTiming(u'merge')
 
-      if not self._storage_merge_reader:
+      if task_identifier:
+        if self._storage_merge_reader:
+          self._merge_task_identifier_on_hold = self._merge_task_identifier
+          self._storage_merge_reader_on_hold = self._storage_merge_reader
+
         self._storage_merge_reader = storage_writer.StartMergeTaskStorage(
             task_identifier)
         self._merge_task_identifier = task_identifier
@@ -222,8 +229,17 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         self._processing_profiler.StopTiming(u'merge')
 
       if fully_merged:
-        self._storage_merge_reader = None
-        self._merge_task_identifier = u''
+        self._task_manager.DestroyTask(self._merge_task_identifier)
+
+        if self._storage_merge_reader:
+          self._merge_task_identifier = self._merge_task_identifier_on_hold
+          self._storage_merge_reader = self._storage_merge_reader_on_hold
+
+          self._merge_task_identifier_on_hold = u''
+          self._storage_merge_reader_on_hold = None
+        else:
+          self._merge_task_identifier = u''
+          self._storage_merge_reader = None
 
       self._status = definitions.PROCESSING_STATUS_RUNNING
       self._number_of_produced_errors = storage_writer.number_of_errors

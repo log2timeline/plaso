@@ -20,6 +20,7 @@ class Task(interface.AttributeContainer):
         number of micro seconds since January 1, 1970, 00:00:00 UTC.
     file_entry_type (str): dfVFS file entry type.
     identifier (str): unique identifier of the task.
+    merge_weight (int): weight used for the task storage file merge.
     path_spec (dfvfs.PathSpec): path specification.
     session_identifier (str): the identifier of the session the task
         is part of.
@@ -40,6 +41,7 @@ class Task(interface.AttributeContainer):
     self.completion_time = None
     self.file_entry_type = None
     self.identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
+    self.merge_weight = None
     self.path_spec = None
     self.session_identifier = session_identifier
     self.start_time = int(time.time() * 1000000)
