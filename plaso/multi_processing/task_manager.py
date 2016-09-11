@@ -18,7 +18,7 @@ class _PendingMergeTaskHeap(object):
     super(_PendingMergeTaskHeap, self).__init__()
     self._heap = []
 
-  def PeekTask(self):
+  def PeekTaskIdentifier(self):
     """Retrieves the first task identifier from the heap without removing it.
 
     Returns:
@@ -32,7 +32,7 @@ class _PendingMergeTaskHeap(object):
 
     return task_identifier
 
-  def PopTask(self):
+  def PopTaskIdentifier(self):
     """Retrieves and removes the first task identifier from the heap.
 
     Returns:
@@ -58,7 +58,7 @@ class _PendingMergeTaskHeap(object):
     else:
       weight = file_size
 
-    task.merge_weight = weight
+    task.merge_priority = weight
 
     heap_values = (weight, task.identifier)
     heapq.heappush(self._heap, heap_values)
@@ -156,7 +156,7 @@ class TaskManager(object):
     Returns:
       str: unique identifier of the task or None.
     """
-    task_identifier = self._tasks_pending_merge.PeekTask()
+    task_identifier = self._tasks_pending_merge.PeekTaskIdentifier()
     if not task_identifier:
       return
 
@@ -164,10 +164,10 @@ class TaskManager(object):
       task = self._active_tasks[task_identifier]
       merge_task = self._active_tasks[merge_task_identifier]
 
-      if task.merge_weight > merge_task.merge_weight:
+      if task.merge_priority > merge_task.merge_priority:
         return
 
-    return self._tasks_pending_merge.PopTask()
+    return self._tasks_pending_merge.PopTaskIdentifier()
 
   def HasActiveTasks(self):
     """Determines if there are active tasks.

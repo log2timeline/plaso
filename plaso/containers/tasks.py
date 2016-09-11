@@ -21,8 +21,8 @@ class Task(interface.AttributeContainer):
     file_entry_type (str): dfVFS type of the file entry the path specification
         is referencing.
     identifier (str): unique identifier of the task.
-    merge_weight (int): weight used for the task storage file merge, where
-        a lower weight has a higher priority to be merged.
+    merge_priority (int): priority used for the task storage file merge, where
+        a lower value indicates a higher priority to merge.
     path_spec (dfvfs.PathSpec): path specification.
     session_identifier (str): the identifier of the session the task
         is part of.
@@ -43,7 +43,7 @@ class Task(interface.AttributeContainer):
     self.completion_time = None
     self.file_entry_type = None
     self.identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
-    self.merge_weight = None
+    self.merge_priority = None
     self.path_spec = None
     self.session_identifier = session_identifier
     self.start_time = int(time.time() * 1000000)
