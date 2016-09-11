@@ -193,8 +193,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       if self._abort:
         break
 
-      file_size = storage_writer.CheckTaskStorageReadyForMerge(task)
-      if file_size:
+      merge_ready = storage_writer.CheckTaskStorageReadyForMerge(task)
+      if merge_ready:
         self._task_manager.UpdateTaskAsPendingMerge(task)
 
     if self._processing_profiler:
@@ -513,8 +513,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       for pid in list(self._process_information_per_pid.keys()):
         self._CheckStatusWorkerProcess(pid)
 
+      display_name = u''
+      if self._merge_task:
+        display_name = self._merge_task.identifier
+
       self._processing_status.UpdateForemanStatus(
-          self._name, self._status, self._pid, self._merge_task,
+          self._name, self._status, self._pid, display_name,
           self._number_of_consumed_sources, self._number_of_produced_sources,
           self._number_of_consumed_events, self._number_of_produced_events,
           self._number_of_consumed_errors, self._number_of_produced_errors,

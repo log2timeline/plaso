@@ -590,7 +590,7 @@ class StorageWriter(object):
   def Open(self):
     """Opens the storage writer."""
 
-  def PrepareMergeTaskStorage(self, unsused_task):
+  def PrepareMergeTaskStorage(self, unused_task):
     """Prepares a task storage for merging.
 
     Args:
