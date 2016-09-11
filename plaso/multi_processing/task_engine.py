@@ -191,8 +191,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       if self._abort:
         break
 
-      if storage_writer.CheckTaskStorageReadyForMerge(task_identifier):
-        self._task_manager.UpdateTaskAsPendingMerge(task_identifier)
+      file_size = storage_writer.CheckTaskStorageReadyForMerge(task_identifier)
+      if file_size:
+        self._task_manager.UpdateTaskAsPendingMerge(task_identifier, file_size)
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming(u'merge_check')

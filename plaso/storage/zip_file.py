@@ -3048,7 +3048,8 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       task_name (str): unique name of the task.
 
     Returns:
-      bool: True if the storage for the task is ready for merge.
+      int: size of the task storage file if it is ready to be merged, None
+          otherwise.
 
     Raises:
       IOError: if the storage type is not supported or
@@ -3063,7 +3064,12 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     storage_file_path = os.path.join(
         self._merge_task_storage_path, u'{0:s}.plaso'.format(task_name))
 
-    return os.path.isfile(storage_file_path)
+    try:
+      stat_info = os.stat(storage_file_path)
+    except (IOError, OSError):
+      return
+
+    return stat_info.st_size
 
   def Close(self):
     """Closes the storage writer.

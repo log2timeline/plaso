@@ -37,16 +37,17 @@ class _PendingMergeTaskHeap(object):
 
     return task_identifier
 
-  def PushTask(self, task):
+  def PushTask(self, task, file_size):
     """Pushes a task onto the heap.
 
     Args:
       task (Task): task.
+      file_size (int): size of the task storage file.
     """
     if task.file_entry_type == dfvfs_definitions.FILE_ENTRY_TYPE_DIRECTORY:
       weight = 1
     else:
-      weight = 100
+      weight = file_size
 
     heap_values = (weight, task.identifier)
     heapq.heappush(self._heap, heap_values)
@@ -188,11 +189,12 @@ class TaskManager(object):
 
     self._tasks_processing[task_identifier] = int(time.time() * 1000000)
 
-  def UpdateTaskAsPendingMerge(self, task_identifier):
+  def UpdateTaskAsPendingMerge(self, task_identifier, file_size):
     """Updates the task manager to reflect the task is ready to be merged.
 
     Args:
       task_identifier (str): unique identifier of the task.
+      file_size (int): file size of the task storage file.
 
     Raises:
       KeyError: if the task was not processing.
@@ -201,7 +203,7 @@ class TaskManager(object):
       raise KeyError(u'Task not processing')
 
     task = self._active_tasks[task_identifier]
-    self._tasks_pending_merge.PushTask(task)
+    self._tasks_pending_merge.PushTask(task, file_size)
     del self._tasks_processing[task_identifier]
 
   def UpdateTaskAsProcessing(self, task_identifier):
