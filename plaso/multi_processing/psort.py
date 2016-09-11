@@ -138,7 +138,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         task = tasks.Task()
         task.identifier = plugin_name
 
-        merge_ready = storage_writer.CheckTaskStorageReadyForMerge(task)
+        merge_ready = storage_writer.CheckTaskReadyForMerge(task)
         if merge_ready:
           storage_merge_reader = storage_writer.StartMergeTaskStorage(task)
 

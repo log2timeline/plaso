@@ -97,7 +97,7 @@ class TaskManager(object):
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._tasks_pending_merge = _PendingMergeTaskHeap()
     # Use ordered dictionaries to preserve the order in which tasks were added.
-    # Dictionary maps task identifiers to tasks.
+    # This dictionary maps task identifiers to tasks.
     self._tasks_processing = collections.OrderedDict()
 
   # TODO: add support for task types.

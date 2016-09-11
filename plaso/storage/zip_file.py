@@ -3041,15 +3041,14 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     for label in event_tag.labels:
       self._session.event_labels_counter[label] += 1
 
-  def CheckTaskStorageReadyForMerge(self, task):
-    """Checks if a task storage is ready for merging with this session storage.
+  def CheckTaskReadyForMerge(self, task):
+    """Checks if a task is ready for merging with this session storage.
 
     Args:
       task (Task): task.
 
     Returns:
-      int: size of the task storage file if it is ready to be merged, None
-          otherwise.
+      bool: True if the task is ready to be merged.
 
     Raises:
       IOError: if the storage type is not supported or
@@ -3068,6 +3067,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       stat_info = os.stat(storage_file_path)
     except (IOError, OSError):
       return False
+
     task.results_storage_size = stat_info.st_size
     return True
 

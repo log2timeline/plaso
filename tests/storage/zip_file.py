@@ -1600,13 +1600,13 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
 
       self.assertEqual(task_storage_writer.number_of_events, 4)
 
-      merge_ready = session_storage_writer.CheckTaskStorageReadyForMerge(task)
+      merge_ready = session_storage_writer.CheckTaskReadyForMerge(task)
       self.assertFalse(merge_ready)
       self.assertIsNone(task.results_storage_size)
 
       session_storage_writer.PrepareMergeTaskStorage(task)
 
-      merge_ready = session_storage_writer.CheckTaskStorageReadyForMerge(task)
+      merge_ready = session_storage_writer.CheckTaskReadyForMerge(task)
       self.assertTrue(merge_ready)
       self.assertIsNotNone(task.results_storage_size)
 
@@ -1618,7 +1618,7 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
 
       self.assertEqual(session_storage_writer.number_of_events, 4)
 
-      merge_ready = session_storage_writer.CheckTaskStorageReadyForMerge(task)
+      merge_ready = session_storage_writer.CheckTaskReadyForMerge(task)
       self.assertFalse(merge_ready)
 
       # Test an incomplete task merge.
@@ -1636,7 +1636,7 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
 
       session_storage_writer.PrepareMergeTaskStorage(task)
 
-      merge_ready = session_storage_writer.CheckTaskStorageReadyForMerge(task)
+      merge_ready = session_storage_writer.CheckTaskReadyForMerge(task)
       self.assertTrue(merge_ready)
       self.assertIsNotNone(task.results_storage_size)
 

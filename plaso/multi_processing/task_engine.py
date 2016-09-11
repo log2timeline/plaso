@@ -194,7 +194,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       if self._abort:
         break
 
-      merge_ready = storage_writer.CheckTaskStorageReadyForMerge(task)
+      merge_ready = storage_writer.CheckTaskReadyForMerge(task)
       if merge_ready:
         self._task_manager.UpdateTaskAsPendingMerge(task)
 
