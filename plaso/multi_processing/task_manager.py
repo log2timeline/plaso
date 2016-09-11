@@ -225,7 +225,8 @@ class TaskManager(object):
     if task_identifier not in self._tasks_processing:
       raise KeyError(u'Task not processing')
 
-    self._tasks_processing[task_identifier] = int(time.time() * 1000000)
+    task = self._tasks_processing[task_identifier]
+    task.last_update_time = int(time.time() * 1000000)
 
   def UpdateTaskAsPendingMerge(self, task):
     """Updates the task manager to reflect the task is ready to be merged.
