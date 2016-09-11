@@ -385,6 +385,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       try:
         if event_source and not task:
           task = self._task_manager.CreateTask(self._session_identifier)
+          task.file_entry_type = event_source.file_entry_type
           task.path_spec = event_source.path_spec
           event_source = None
 

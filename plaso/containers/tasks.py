@@ -18,6 +18,7 @@ class Task(interface.AttributeContainer):
     aborted (bool): True if the session was aborted.
     completion_time (int): time that the task was completed. Contains the
         number of micro seconds since January 1, 1970, 00:00:00 UTC.
+    file_entry_type (str): dfVFS file entry type.
     identifier (str): unique identifier of the task.
     path_spec (dfvfs.PathSpec): path specification.
     session_identifier (str): the identifier of the session the task
@@ -37,6 +38,7 @@ class Task(interface.AttributeContainer):
     super(Task, self).__init__()
     self.aborted = False
     self.completion_time = None
+    self.file_entry_type = None
     self.identifier = u'{0:s}'.format(uuid.uuid4().get_hex())
     self.path_spec = None
     self.session_identifier = session_identifier
