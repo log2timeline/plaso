@@ -232,15 +232,15 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
         default=u'', metavar=u'PARSER_LIST', help=(
             u'Define a list of parsers to use by the tool. This is a comma '
             u'separated list where each entry can be either a name of a parser '
-            u'or a parser list. Each entry can be prepended with a minus sign '
-            u'to negate the selection (exclude it). The list match is an '
-            u'exact match while an individual parser matching is a case '
-            u'insensitive substring match, with support for glob patterns. '
-            u'Examples would be: "reg" that matches the substring "reg" in '
-            u'all parser names or the glob pattern "sky[pd]" that would match '
-            u'all parsers that have the string "skyp" or "skyd" in its name. '
-            u'All matching is case insensitive. Use "--parsers list" or '
-            u'"--info" to list the available parsers.'))
+            u'or a parser list. Each entry can be prepended with an '
+            u'exclamation mark to negate the selection (exclude it). The list '
+            u'match is an exact match while an individual parser matching is '
+            u'a case insensitive substring match, with support for glob '
+            u'patterns. Examples would be: "reg" that matches the substring '
+            u'"reg" in all parser names or the glob pattern "sky[pd]" that '
+            u'would match all parsers that have the string "skyp" or "skyd" '
+            u'in its name. All matching is case insensitive. Use "--parsers '
+            u'list" or "--info" to list the available parsers.'))
 
     argument_group.add_argument(
         u'--preferred_year', u'--preferred-year', dest=u'preferred_year',
