@@ -137,9 +137,10 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         task_identifier = plugin_name
 
         if storage_writer.CheckTaskStorageReadyForMerge(task_identifier):
-          merge_successful = storage_writer.MergeTaskStorage(task_identifier)
-          if not merge_successful:
-            logging.error(u'Unable to merge results of: {0:s}')
+          storage_merge_reader = storage_writer.StartMergeTaskStorage(
+              task_identifier)
+
+          storage_merge_reader.MergeAttributeContainers()
           # TODO: temporary solution.
           plugin_names.remove(plugin_name)
 

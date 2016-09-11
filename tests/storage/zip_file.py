@@ -1572,8 +1572,8 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
 
       storage_writer.Close()
 
-  def testMergeTaskStorage(self):
-    """Tests the MergeTaskStorage functions."""
+  def testStartMergeTaskStorage(self):
+    """Tests the StartMergeTaskStorage functions."""
     session = sessions.Session()
     event_objects = self._CreateTestEventObjects()
 
@@ -1614,9 +1614,12 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
           session.identifier)
       self.assertFalse(ready_for_merge)
 
-      merge_successful = session_storage_writer.MergeTaskStorage(
+      storage_merge_reader = session_storage_writer.StartMergeTaskStorage(
           task.identifier)
-      self.assertTrue(merge_successful)
+      self.assertIsNotNone(storage_merge_reader)
+
+      fully_merged = storage_merge_reader.MergeAttributeContainers()
+      self.assertTrue(fully_merged)
 
       self.assertEqual(session_storage_writer.number_of_events, 4)
 
@@ -1643,9 +1646,12 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
           task.identifier)
       self.assertTrue(ready_for_merge)
 
-      merge_successful = session_storage_writer.MergeTaskStorage(
+      storage_merge_reader = session_storage_writer.StartMergeTaskStorage(
           task.identifier)
-      self.assertTrue(merge_successful)
+      self.assertIsNotNone(storage_merge_reader)
+
+      fully_merged = storage_merge_reader.MergeAttributeContainers()
+      self.assertTrue(fully_merged)
 
       self.assertEqual(session_storage_writer.number_of_events, 8)
 

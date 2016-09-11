@@ -316,7 +316,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     argument_group.add_argument(
         u'--workers', dest=u'workers', action=u'store', type=int, default=0,
         help=(u'The number of worker threads [defaults to available system '
-              u'CPUs minus three].'))
+              u'CPUs minus one].'))
 
   def ListHashers(self):
     """Lists information about the available hashers."""
