@@ -5,12 +5,13 @@ import heapq
 import logging
 import multiprocessing
 import os
+import time
+
 # The 'Queue' module was renamed to 'queue' in Python 3
 try:
   import Queue
 except ImportError:
   import queue as Queue  # pylint: disable=import-error
-import time
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context

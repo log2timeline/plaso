@@ -135,12 +135,12 @@ import time
 import warnings
 import zipfile
 
+import construct
+
 try:
   import ConfigParser as configparser
 except ImportError:
   import configparser  # pylint: disable=import-error
-
-import construct
 
 from plaso.containers import sessions
 from plaso.lib import definitions
