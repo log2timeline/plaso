@@ -48,13 +48,13 @@ PYTHON_DEPENDENCIES = [
     # The bencode module does not appear to have version information.
     (u'bencode', u'', u'', None),
     (u'binplist', u'__version__', u'0.1.4', None),
-    (u'construct', u'__version__', u'2.5.2', None),
+    (u'construct', u'__version__', u'2.5.2', u'2.6.0'),
     (u'dateutil', u'__version__', u'1.5', None),
     (u'dfdatetime', u'__version__', u'20160319', None),
     (u'dfvfs', u'__version__', u'20160803', None),
     (u'dfwinreg', u'__version__', u'20160320', None),
     (u'dpkt', u'__version__', u'1.8', None),
-    # TODO: determine the version of efilter.
+    # TODO: determine the version of Efilter.
     (u'efilter', u'', u'1.5', None),
     (u'hachoir_core', u'__version__', u'1.3.3', None),
     (u'hachoir_metadata', u'__version__', u'1.3.3', None),

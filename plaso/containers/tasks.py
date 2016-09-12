@@ -81,7 +81,7 @@ class Task(interface.AttributeContainer):
     return task_start
 
   def UpdateProcessingTime(self):
-    """Updates the processing time of the Task to now."""
+    """Updates the processing time to now."""
     self.last_processing_time = int(time.time() * 1000000)
 
 

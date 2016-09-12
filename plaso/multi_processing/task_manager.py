@@ -174,8 +174,7 @@ class TaskManager(object):
       if next_task.merge_priority > current_task.merge_priority:
         return
 
-    task = self._tasks_pending_merge.PopTask()
-    return task
+    return self._tasks_pending_merge.PopTask()
 
   def HasActiveTasks(self):
     """Determines if there are active tasks.
@@ -198,9 +197,7 @@ class TaskManager(object):
         self._abandoned_tasks[task_identifier] = task
         del self._active_tasks[task_identifier]
 
-    has_active_tasks = len(self._active_tasks) > 0
-
-    return has_active_tasks
+    return bool(self._active_tasks)
 
   def RescheduleTaskByIdentifier(self, task_identifier):
     """Reschedules a previous abandoned task.
