@@ -524,7 +524,7 @@ class StorageWriter(object):
     """Creates a task storage.
 
     Args:
-      task (Task):  task.
+      task (Task): task.
 
     Returns:
       StorageWriter: storage writer.

@@ -145,7 +145,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._memory_profiler = None
     self._merge_task = None
-    self._merge_task_on_hold = u''
+    self._merge_task_on_hold = None
     self._mount_path = None
     self._number_of_consumed_errors = 0
     self._number_of_consumed_events = 0
@@ -234,7 +234,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           self._merge_task = self._merge_task_on_hold
           self._storage_merge_reader = self._storage_merge_reader_on_hold
 
-          self._merge_task_on_hold = u''
+          self._merge_task_on_hold = None
           self._storage_merge_reader_on_hold = None
         else:
           self._merge_task = None
@@ -514,9 +514,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       for pid in list(self._process_information_per_pid.keys()):
         self._CheckStatusWorkerProcess(pid)
 
-      display_name = u''
-      if self._merge_task:
-        display_name = self._merge_task.identifier
+      display_name = getattr(self._merge_task, u'identifier', u'')
 
       self._processing_status.UpdateForemanStatus(
           self._name, self._status, self._pid, display_name,

@@ -127,7 +127,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     logging.debug(u'Processing analysis plugin results.')
 
-    # TODO: use a proper task based approach.
+    # TODO: use a task based approach.
     plugin_names = [plugin.plugin_name for plugin in analysis_plugins]
     while plugin_names:
       for plugin_name in list(plugin_names):
@@ -381,9 +381,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       for pid in list(self._process_information_per_pid.keys()):
         self._CheckStatusAnalysisProcess(pid)
 
-      display_name = u''
-      if self._merge_task:
-        display_name = self._merge_task.identifier
+      display_name = getattr(self._merge_task, u'identifier', u'')
 
       self._processing_status.UpdateForemanStatus(
           self._name, self._status, self._pid, display_name,

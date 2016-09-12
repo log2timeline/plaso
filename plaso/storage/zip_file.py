@@ -3068,7 +3068,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     except (IOError, OSError):
       return False
 
-    task.results_storage_size = stat_info.st_size
+    task.storage_file_size = stat_info.st_size
     return True
 
   def Close(self):

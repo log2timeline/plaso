@@ -1602,13 +1602,13 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
 
       merge_ready = session_storage_writer.CheckTaskReadyForMerge(task)
       self.assertFalse(merge_ready)
-      self.assertIsNone(task.results_storage_size)
+      self.assertIsNone(task.storage_file_size)
 
       session_storage_writer.PrepareMergeTaskStorage(task)
 
       merge_ready = session_storage_writer.CheckTaskReadyForMerge(task)
       self.assertTrue(merge_ready)
-      self.assertIsNotNone(task.results_storage_size)
+      self.assertIsNotNone(task.storage_file_size)
 
       storage_merge_reader = session_storage_writer.StartMergeTaskStorage(task)
       self.assertIsNotNone(storage_merge_reader)
@@ -1638,7 +1638,7 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
 
       merge_ready = session_storage_writer.CheckTaskReadyForMerge(task)
       self.assertTrue(merge_ready)
-      self.assertIsNotNone(task.results_storage_size)
+      self.assertIsNotNone(task.storage_file_size)
 
       storage_merge_reader = session_storage_writer.StartMergeTaskStorage(task)
       self.assertIsNotNone(storage_merge_reader)

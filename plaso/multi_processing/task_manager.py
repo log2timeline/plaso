@@ -33,7 +33,7 @@ class _PendingMergeTaskHeap(object):
     return task
 
   def PopTask(self):
-    """Retrieves and removes the first task identifier from the heap.
+    """Retrieves and removes the first task from the heap.
 
     Returns:
       Task: the task or None if the heap is empty.
@@ -43,7 +43,6 @@ class _PendingMergeTaskHeap(object):
 
     except IndexError:
       return
-
     return task
 
   def PushTask(self, task):
@@ -51,13 +50,19 @@ class _PendingMergeTaskHeap(object):
 
     Args:
       task (Task): task.
+
+    Raises:
+      ValueError: if the size of the storage file is not set in the task.
     """
+    storage_file_size = getattr(task, u'storage_file_size', None)
+    if not storage_file_size:
+      raise ValueError(u'Task storage file size not set')
+
     if task.file_entry_type == dfvfs_definitions.FILE_ENTRY_TYPE_DIRECTORY:
       weight = 1
-    elif task.results_storage_size:
-      weight = task.results_storage_size
     else:
-      raise TypeError(u'Task has no result storage size.')
+      weight = storage_file_size
+
 
     task.merge_priority = weight
 
@@ -71,7 +76,8 @@ class TaskManager(object):
   Currently a task can have the following status:
   * abandoned: since no status information has been recently received from
       the worker about the task, we assume it was abandoned.
-  * active: a task managed by the task manager that has not been abandoned.
+  * active: a task managed by the task manager that has not been abandoned or
+      completed.
   * completed: a worker has completed processing the task and the results
       have been merged with the session storage.
   * pending_merge: a worker has completed processing the task and the results
@@ -90,9 +96,9 @@ class TaskManager(object):
           tasks, where 0 represents no limit.
     """
     super(TaskManager, self).__init__()
-    # Dictionary mapping task identifier to tasks.
+    # Dictionary mapping task identifiers to tasks which have been abandoned.
     self._abandoned_tasks = {}
-    # Dictionary mapping task identifiers to tasks.
+    # Dictionary mapping task identifiers to tasks that are active.
     self._active_tasks = {}
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._tasks_pending_merge = _PendingMergeTaskHeap()
@@ -168,7 +174,8 @@ class TaskManager(object):
       if next_task.merge_priority > current_task.merge_priority:
         return
 
-    return self._tasks_pending_merge.PopTask()
+    task = self._tasks_pending_merge.PopTask()
+    return task
 
   def HasActiveTasks(self):
     """Determines if there are active tasks.
@@ -183,14 +190,15 @@ class TaskManager(object):
 
     inactive_time = int(time.time() * 1000000) - self._TASK_INACTIVE_TIME
 
-    has_active_tasks = False
     for task in iter(self._tasks_processing.values()):
-      if task.last_update_time > inactive_time:
-        has_active_tasks = True
-      else:
-        del self._tasks_processing[task.identifier]
-        self._abandoned_tasks[task.identifier] = task
-        del self._active_tasks[task.identifier]
+      # Use a local variable to improve performance.
+      task_identifier = task.identifier
+      if task.last_processing_time < inactive_time:
+        del self._tasks_processing[task_identifier]
+        self._abandoned_tasks[task_identifier] = task
+        del self._active_tasks[task_identifier]
+
+    has_active_tasks = len(self._active_tasks) > 0
 
     return has_active_tasks
 
@@ -210,7 +218,7 @@ class TaskManager(object):
     self._active_tasks[task_identifier] = task
     del self._abandoned_tasks[task_identifier]
 
-    task.last_update_time = int(time.time() * 1000000)
+    task.UpdateProcessingTime()
     self._tasks_processing[task_identifier] = task
 
   def UpdateTaskByIdentifier(self, task_identifier):
@@ -226,7 +234,7 @@ class TaskManager(object):
       raise KeyError(u'Task not processing')
 
     task = self._tasks_processing[task_identifier]
-    task.last_update_time = int(time.time() * 1000000)
+    task.UpdateProcessingTime()
 
   def UpdateTaskAsPendingMerge(self, task):
     """Updates the task manager to reflect the task is ready to be merged.
@@ -256,5 +264,5 @@ class TaskManager(object):
       raise KeyError(u'Task already processing')
 
     # TODO: add check for maximum_number_of_tasks.
-    task.last_update_time = int(time.time() * 1000000)
+    task.UpdateProcessingTime()
     self._tasks_processing[task.identifier] = task

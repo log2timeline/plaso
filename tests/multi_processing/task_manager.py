@@ -11,6 +11,7 @@ from plaso.multi_processing import task_manager
 
 from tests import test_lib as shared_test_lib
 
+
 class TaskManagerTestCase(shared_test_lib.BaseTestCase):
   """Tests for the TaskManager."""
   _TEST_SESSION_IDENTIFIER = u'4'
@@ -30,13 +31,13 @@ class TaskManagerTestCase(shared_test_lib.BaseTestCase):
     self.assertEqual(0, len(tasks_processing))
 
     task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
-    self.assertIsNone(task.last_update_time)
+    self.assertIsNone(task.last_processing_time)
 
     manager.UpdateTaskAsProcessing(task)
     tasks_processing = manager.GetProcessingTasks()
     self.assertEqual(1, len(tasks_processing))
     task = tasks_processing[0]
-    self.assertIsNotNone(task.last_update_time)
+    self.assertIsNotNone(task.last_processing_time)
 
   def testPendingMerge(self):
     """Tests the UpdateTaskPendingMerge and GetTaskPending merge methods."""
@@ -52,20 +53,21 @@ class TaskManagerTestCase(shared_test_lib.BaseTestCase):
     task_pending_merge = manager.GetTaskPendingMerge(None)
     self.assertIsNone(task_pending_merge)
 
-    task.results_storage_size = 10
+    task.storage_file_size = 10
     manager.UpdateTaskAsPendingMerge(task)
     task_pending_merge = manager.GetTaskPendingMerge(None)
     self.assertEqual(task, task_pending_merge)
     manager.CompleteTask(task)
 
     small_task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
-    small_task.results_storage_size = 100
+    small_task.storage_file_size = 100
     manager.UpdateTaskAsProcessing(small_task)
     large_task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
-    large_task.results_storage_size = 1000
+    large_task.storage_file_size = 1000
     manager.UpdateTaskAsProcessing(large_task)
     directory_task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
     directory_task.file_entry_type = dfvfs_definitions.FILE_ENTRY_TYPE_DIRECTORY
+    directory_task.storage_file_size = 1000
     manager.UpdateTaskAsProcessing(directory_task)
 
     manager.UpdateTaskAsPendingMerge(small_task)
