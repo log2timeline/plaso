@@ -46,7 +46,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     self._serializers_profiler = None
     self._status = definitions.PROCESSING_STATUS_INITIALIZED
     self._storage_writer = storage_writer
-    self._task_identifier = u''
+    self._task = None
 
   def _GetStatus(self):
     """Returns status information.
@@ -87,7 +87,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     # TODO: temporary solution.
     task.identifier = self._analysis_plugin.plugin_name
 
-    self._task_identifier = task.identifier
+    self._task = task
 
     storage_writer = self._storage_writer.CreateTaskStorage(task)
 
@@ -153,13 +153,13 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
       storage_writer.Close()
 
     try:
-      self._storage_writer.PrepareMergeTaskStorage(task.identifier)
+      self._storage_writer.PrepareMergeTaskStorage(task)
     except IOError:
       pass
 
     self._analysis_mediator = None
     self._storage_writer = None
-    self._task_identifier = u''
+    self._task = None
 
     if self._abort:
       self._status = definitions.PROCESSING_STATUS_ABORTED
