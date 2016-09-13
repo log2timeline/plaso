@@ -378,7 +378,11 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
 
     lines = frozenset(lines)
 
-    self.assertEqual(number_of_tables, 2)
+    disabled_classes = list(test_tool._front_end.GetDisabledOutputClasses())
+    if disabled_classes:
+      self.assertEqual(number_of_tables, 2)
+    else:
+      self.assertEqual(number_of_tables, 1)
 
     expected_line = b'rawpy : "raw" (or native) Python output.'
     self.assertIn(expected_line, lines)
