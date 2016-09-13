@@ -376,8 +376,8 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
 
     self.assertIn(u'Output Modules', lines[1])
 
+    # pylint: disable=protected-access
     lines = frozenset(lines)
-
     disabled_classes = list(test_tool._front_end.GetDisabledOutputClasses())
     if disabled_classes:
       self.assertEqual(number_of_tables, 2)
