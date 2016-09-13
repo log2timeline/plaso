@@ -55,8 +55,8 @@ class SSHPlugin(interface.SyslogPlugin):
       pyparsing.Literal(u'from') + _PYPARSING_COMPONENTS[u'address'] +
       pyparsing.Literal(u'port') + _PYPARSING_COMPONENTS[u'port'] +
       _PYPARSING_COMPONENTS[u'protocol'] +
-      pyparsing.Optional(pyparsing.Literal(u':') +
-      _PYPARSING_COMPONENTS[u'fingerprint']) +
+      pyparsing.Optional(
+          pyparsing.Literal(u':') + _PYPARSING_COMPONENTS[u'fingerprint']) +
       pyparsing.StringEnd()
   )
 
