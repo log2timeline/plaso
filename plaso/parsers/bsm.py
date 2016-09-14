@@ -128,7 +128,7 @@ class BsmParser(interface.FileObjectParser):
       u'ipv6', construct.UBInt64(u'high'), construct.UBInt64(u'low'))
 
   # Tested structures.
-  # INFO: I have ommited the ID in the structures declaration.
+  # INFO: I have omitted the ID in the structures declaration.
   #       I used the BSM_TYPE first to read the ID, and then, the structure.
   # Tokens always start with an ID value that identifies their token
   # type and subsequent structure.

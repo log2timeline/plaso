@@ -5,6 +5,7 @@ Only supports task storage at the moment.
 """
 
 import gzip
+import logging
 import os
 
 from plaso.lib import definitions
@@ -233,6 +234,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
       IOError: if the storage file is already opened.
       ValueError: if path is missing.
     """
+    logging.debug(u'Trying to open gzip file {0:s}'.format(path))
     if self._is_open:
       raise IOError(u'Storage file already opened.')
 
@@ -299,6 +301,7 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
     """
     super(GZIPStorageMergeReader, self).__init__(storage_writer)
     self._data_buffer = None
+    logging.debug(u'Trying to open gzip file {0:s}'.format(path))
     self._gzip_file = gzip.open(path, 'rb')
     self._path = path
     self._serializer = json_serializer.JSONAttributeContainerSerializer

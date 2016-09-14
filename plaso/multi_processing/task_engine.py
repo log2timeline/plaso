@@ -656,8 +656,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       try:
         self._task_manager.RescheduleTaskByIdentifier(task_identifier)
       except KeyError:
-        logging.error(u'Worker processing unknown task: {0:s}.'.format(
-            task_identifier))
+        logging.error(u'Worker {0:s} is processing unknown task: {0:s}.'.format(
+            process.name, task_identifier))
 
   def ProcessSources(
       self, session_identifier, source_path_specs, storage_writer,

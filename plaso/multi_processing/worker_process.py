@@ -125,9 +125,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       last_activity_timestamp = 0.0
       processing_status = self._status
 
-    task_identifier = u''
-    if self._task:
-      task_identifier = self._task.identifier
+    task_identifier = getattr(self._task, u'identifier', u'')
 
     status = {
         u'display_name': self._current_display_name,
