@@ -604,8 +604,8 @@ class _SerializedDataStream(object):
     """
     stream_file_path = os.path.join(self._path, self._stream_name)
     self._file_object = open(stream_file_path, 'wb')
-    if msvcrt and self._zip_file.fp:
-      os_handle = msvcrt.get_osfhandle(self._zip_file.fp.fileno)
+    if msvcrt and self._file_object:
+      os_handle = msvcrt.get_osfhandle(self._file_object.fileno())
       win32api.SetHandleInformation(
           os_handle, win32con.HANDLE_FLAG_INHERIT, 0)
     return self._file_object.tell()
@@ -1770,7 +1770,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
           allowZip64=True)
       self._zipfile_path = zipfile_path
       if msvcrt and self._zipfile.fp:
-        os_handle = msvcrt.get_osfhandle(self._zipfile.fp.fileno)
+        os_handle = msvcrt.get_osfhandle(self._zipfile.fp.fileno())
         win32api.SetHandleInformation(
             os_handle, win32con.HANDLE_FLAG_INHERIT, 0)
 
