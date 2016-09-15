@@ -378,12 +378,16 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
 
     # pylint: disable=protected-access
     lines = frozenset(lines)
-    disabled_classes = list(test_tool._front_end.GetDisabledOutputClasses())
-    if disabled_classes:
-      self.assertEqual(number_of_tables, 2)
-    else:
-      self.assertEqual(number_of_tables, 1)
+    disabled_outputs = list(test_tool._front_end.GetDisabledOutputClasses())
+    enabled_outputs = list(test_tool._front_end.GetOutputClasses())
 
+    expected_number_of_tables = 0
+    if disabled_outputs:
+      expected_number_of_tables += 1
+    if enabled_outputs:
+      expected_number_of_tables += 1
+
+    self.assertEqual(number_of_tables, expected_number_of_tables)
     expected_line = b'rawpy : "raw" (or native) Python output.'
     self.assertIn(expected_line, lines)
 
