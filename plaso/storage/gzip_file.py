@@ -12,6 +12,15 @@ from plaso.lib import definitions
 from plaso.serializer import json_serializer
 from plaso.storage import interface
 
+# Conditional windows imports
+try:
+  import msvcrt
+  import win32api
+  import win32con
+except ImportError:
+  msvcrt = None
+  win32api = None
+  win32con = None
 
 class GZIPStorageFile(interface.BaseFileStorage):
   """Class that defines the gzip-based storage file."""
@@ -247,7 +256,9 @@ class GZIPStorageFile(interface.BaseFileStorage):
       access_mode = 'wb'
 
     self._gzip_file = gzip.open(path, access_mode, self._COMPRESSION_LEVEL)
-
+    if msvcrt:
+      os_handle = msvcrt.get_osfhandle(self._gzip_file)
+      win32api.SetHandleInformation(os_handle, win32con.HANDLE_FLAG_INHERIT, 0)
     if read_only:
       self._OpenRead()
 
@@ -303,6 +314,9 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
     self._data_buffer = None
     logging.debug(u'Trying to open gzip file {0:s}'.format(path))
     self._gzip_file = gzip.open(path, 'rb')
+    if msvcrt:
+      os_handle = msvcrt.get_osfhandle(self._gzip_file)
+      win32api.SetHandleInformation(os_handle, win32con.HANDLE_FLAG_INHERIT, 0)
     self._path = path
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
@@ -407,3 +421,6 @@ class GZIPStorageFileReader(interface.FileStorageReader):
     super(GZIPStorageFileReader, self).__init__(path)
     self._storage_file = GZIPStorageFile()
     self._storage_file.Open(path=path)
+    if msvcrt:
+      os_handle = msvcrt.get_osfhandle(self._storage_file)
+      win32api.SetHandleInformation(os_handle, win32con.HANDLE_FLAG_INHERIT, 0)
