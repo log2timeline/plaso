@@ -257,7 +257,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
 
     self._gzip_file = gzip.open(path, access_mode, self._COMPRESSION_LEVEL)
     if msvcrt:
-      os_handle = msvcrt.get_osfhandle(self._gzip_file)
+      os_handle = msvcrt.get_osfhandle(self._gzip_file.fileno())
       win32api.SetHandleInformation(os_handle, win32con.HANDLE_FLAG_INHERIT, 0)
     if read_only:
       self._OpenRead()
@@ -315,7 +315,7 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
     logging.debug(u'Trying to open gzip file {0:s}'.format(path))
     self._gzip_file = gzip.open(path, 'rb')
     if msvcrt:
-      os_handle = msvcrt.get_osfhandle(self._gzip_file)
+      os_handle = msvcrt.get_osfhandle(self._gzip_file.fileno())
       win32api.SetHandleInformation(os_handle, win32con.HANDLE_FLAG_INHERIT, 0)
     self._path = path
     self._serializer = json_serializer.JSONAttributeContainerSerializer
@@ -421,6 +421,3 @@ class GZIPStorageFileReader(interface.FileStorageReader):
     super(GZIPStorageFileReader, self).__init__(path)
     self._storage_file = GZIPStorageFile()
     self._storage_file.Open(path=path)
-    if msvcrt:
-      os_handle = msvcrt.get_osfhandle(self._storage_file)
-      win32api.SetHandleInformation(os_handle, win32con.HANDLE_FLAG_INHERIT, 0)
