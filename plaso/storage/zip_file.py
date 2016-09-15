@@ -148,6 +148,16 @@ from plaso.serializer import json_serializer
 from plaso.storage import interface
 from plaso.storage import gzip_file
 
+# Conditional windows imports
+try:
+  import msvcrt
+  import win32api
+  import win32con
+except ImportError:
+  msvcrt = None
+  win32api = None
+  win32con = None
+
 
 class _AttributeContainersList(object):
   """Class that defines the attribute containers list.
@@ -452,6 +462,10 @@ class _SerializedDataStream(object):
     """
     try:
       self._file_object = self._zip_file.open(self._stream_name, mode='r')
+      if msvcrt and self._zip_file.fp:
+        os_handle = msvcrt.get_osfhandle(self._zip_file.fp)
+        win32api.SetHandleInformation(
+            os_handle, win32con.HANDLE_FLAG_INHERIT, 0)
     except KeyError as exception:
       raise IOError(
           u'Unable to open stream with error: {0:s}'.format(exception))
@@ -465,6 +479,10 @@ class _SerializedDataStream(object):
       self._file_object = None
 
     self._file_object = self._zip_file.open(self._stream_name, mode='r')
+    if msvcrt and self._zip_file.fp:
+      os_handle = msvcrt.get_osfhandle(self._zip_file.fp)
+      win32api.SetHandleInformation(
+          os_handle, win32con.HANDLE_FLAG_INHERIT, 0)
     self._stream_offset = 0
 
   def ReadEntry(self):
@@ -594,6 +612,10 @@ class _SerializedDataStream(object):
     """
     stream_file_path = os.path.join(self._path, self._stream_name)
     self._file_object = open(stream_file_path, 'wb')
+    if msvcrt and self._zip_file.fp:
+      os_handle = msvcrt.get_osfhandle(self._zip_file.fp)
+      win32api.SetHandleInformation(
+          os_handle, win32con.HANDLE_FLAG_INHERIT, 0)
     return self._file_object.tell()
 
 
@@ -655,6 +677,10 @@ class _SerializedDataOffsetTable(object):
     """
     try:
       file_object = self._zip_file.open(self._stream_name, mode='r')
+      if msvcrt and self._zip_file.fp:
+        os_handle = msvcrt.get_osfhandle(self._zip_file.fp)
+        win32api.SetHandleInformation(
+            os_handle, win32con.HANDLE_FLAG_INHERIT, 0)
     except KeyError as exception:
       raise IOError(
           u'Unable to open stream with error: {0:s}'.format(exception))
@@ -744,6 +770,10 @@ class _SerializedDataTimestampTable(object):
     """
     try:
       file_object = self._zip_file.open(self._stream_name, mode='r')
+      if msvcrt and self._zip_file.fp:
+        os_handle = msvcrt.get_osfhandle(self._zip_file.fp)
+        win32api.SetHandleInformation(
+            os_handle, win32con.HANDLE_FLAG_INHERIT, 0)
     except KeyError as exception:
       raise IOError(
           u'Unable to open stream with error: {0:s}'.format(exception))
@@ -859,6 +889,10 @@ class _SerializedEventTagIndexTable(object):
 
     try:
       file_object = self._zip_file.open(self._stream_name, mode='r')
+      if msvcrt and self._zip_file.fp:
+        os_handle = msvcrt.get_osfhandle(self._zip_file.fp)
+        win32api.SetHandleInformation(
+            os_handle, win32con.HANDLE_FLAG_INHERIT, 0)
     except KeyError as exception:
       raise IOError(
           u'Unable to open stream with error: {0:s}'.format(exception))
@@ -1755,6 +1789,10 @@ class ZIPStorageFile(interface.BaseFileStorage):
           zipfile_path, mode=access_mode, compression=zipfile.ZIP_DEFLATED,
           allowZip64=True)
       self._zipfile_path = zipfile_path
+      if msvcrt and self._zipfile.fp:
+        os_handle = msvcrt.get_osfhandle(self._zipfile.fp)
+        win32api.SetHandleInformation(
+            os_handle, win32con.HANDLE_FLAG_INHERIT, 0)
 
     except zipfile.BadZipfile as exception:
       raise IOError(u'Unable to open ZIP file: {0:s} with error: {1:s}'.format(
