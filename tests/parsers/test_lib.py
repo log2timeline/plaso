@@ -17,12 +17,15 @@ from tests import test_lib as shared_test_lib
 
 
 class ParserTestCase(shared_test_lib.BaseTestCase):
-  """The unit test case for a parser."""
+    """The unit test case for a parser."""
 
-  def _CreateParserMediator(
-      self, storage_writer, file_entry=None,
-      knowledge_base_values=None, parser_chain=None, timezone=u'UTC'):
-    """Creates a parser mediator.
+    def _CreateParserMediator(self,
+                              storage_writer,
+                              file_entry=None,
+                              knowledge_base_values=None,
+                              parser_chain=None,
+                              timezone=u'UTC'):
+        """Creates a parser mediator.
 
     Args:
       storage_writer (StorageWriter): storage writer.
@@ -34,37 +37,37 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     Returns:
       ParserMediator: parser mediator.
     """
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    if knowledge_base_values:
-      for identifier, value in iter(knowledge_base_values.items()):
-        knowledge_base_object.SetValue(identifier, value)
+        knowledge_base_object = knowledge_base.KnowledgeBase()
+        if knowledge_base_values:
+            for identifier, value in iter(knowledge_base_values.items()):
+                knowledge_base_object.SetValue(identifier, value)
 
-    knowledge_base_object.SetTimezone(timezone)
+        knowledge_base_object.SetTimezone(timezone)
 
-    parser_mediator = mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        parser_mediator = mediator.ParserMediator(storage_writer,
+                                                  knowledge_base_object)
 
-    if file_entry:
-      parser_mediator.SetFileEntry(file_entry)
+        if file_entry:
+            parser_mediator.SetFileEntry(file_entry)
 
-    if parser_chain:
-      parser_mediator.parser_chain = parser_chain
+        if parser_chain:
+            parser_mediator.parser_chain = parser_chain
 
-    return parser_mediator
+        return parser_mediator
 
-  def _CreateStorageWriter(self):
-    """Creates a storage writer object.
+    def _CreateStorageWriter(self):
+        """Creates a storage writer object.
 
     Returns:
       FakeStorageWriter: storage writer.
     """
-    session = sessions.Session()
-    storage_writer = fake_storage.FakeStorageWriter(session)
-    storage_writer.Open()
-    return storage_writer
+        session = sessions.Session()
+        storage_writer = fake_storage.FakeStorageWriter(session)
+        storage_writer.Open()
+        return storage_writer
 
-  def _GetShortMessage(self, message_string):
-    """Shortens a message string to a maximum of 80 character width.
+    def _GetShortMessage(self, message_string):
+        """Shortens a message string to a maximum of 80 character width.
 
     Args:
       message_string (str): message string.
@@ -73,13 +76,13 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       str: short message string, if it is longer than 80 characters it will
            be shortened to it's first 77 characters followed by a "...".
     """
-    if len(message_string) > 80:
-      return u'{0:s}...'.format(message_string[0:77])
+        if len(message_string) > 80:
+            return u'{0:s}...'.format(message_string[0:77])
 
-    return message_string
+        return message_string
 
-  def _GetTestFileEntryFromPath(self, path_segments):
-    """Retrieves the file entry of a file in the test directory.
+    def _GetTestFileEntryFromPath(self, path_segments):
+        """Retrieves the file entry of a file in the test directory.
 
     Args:
       path_segments (list[str]): path segments inside the test data directory.
@@ -87,15 +90,17 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     Returns:
       dfvfs.FileEntry: file entry.
     """
-    path = self._GetTestFilePath(path_segments)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
-    return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+        path = self._GetTestFilePath(path_segments)
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
+        return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
-  def _ParseFile(
-      self, path_segments, parser, knowledge_base_values=None,
-      timezone=u'UTC'):
-    """Parses a file with a parser and writes results to a storage writer.
+    def _ParseFile(self,
+                   path_segments,
+                   parser,
+                   knowledge_base_values=None,
+                   timezone=u'UTC'):
+        """Parses a file with a parser and writes results to a storage writer.
 
     Args:
       path_segments (list[str]): path segments inside the test data directory.
@@ -106,17 +111,21 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     Returns:
       FakeStorageWriter: storage writer.
     """
-    path = self._GetTestFilePath(path_segments)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
-    return self._ParseFileByPathSpec(
-        path_spec, parser, knowledge_base_values=knowledge_base_values,
-        timezone=timezone)
+        path = self._GetTestFilePath(path_segments)
+        path_spec = path_spec_factory.Factory.NewPathSpec(
+            dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
+        return self._ParseFileByPathSpec(
+            path_spec,
+            parser,
+            knowledge_base_values=knowledge_base_values,
+            timezone=timezone)
 
-  def _ParseFileByPathSpec(
-      self, path_spec, parser, knowledge_base_values=None,
-      timezone=u'UTC'):
-    """Parses a file with a parser and writes results to a storage writer.
+    def _ParseFileByPathSpec(self,
+                             path_spec,
+                             parser,
+                             knowledge_base_values=None,
+                             timezone=u'UTC'):
+        """Parses a file with a parser and writes results to a storage writer.
 
     Args:
       path_spec (dfvfs.PathSpec): path specification.
@@ -127,31 +136,33 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     Returns:
       FakeStorageWriter: storage writer.
     """
-    storage_writer = self._CreateStorageWriter()
-    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-    parser_mediator = self._CreateParserMediator(
-        storage_writer, file_entry=file_entry,
-        knowledge_base_values=knowledge_base_values, timezone=timezone)
+        storage_writer = self._CreateStorageWriter()
+        file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+        parser_mediator = self._CreateParserMediator(
+            storage_writer,
+            file_entry=file_entry,
+            knowledge_base_values=knowledge_base_values,
+            timezone=timezone)
 
-    if isinstance(parser, interface.FileEntryParser):
-      parser.Parse(parser_mediator)
+        if isinstance(parser, interface.FileEntryParser):
+            parser.Parse(parser_mediator)
 
-    elif isinstance(parser, interface.FileObjectParser):
-      file_object = file_entry.GetFileObject()
-      try:
-        parser.Parse(parser_mediator, file_object)
-      finally:
-        file_object.close()
+        elif isinstance(parser, interface.FileObjectParser):
+            file_object = file_entry.GetFileObject()
+            try:
+                parser.Parse(parser_mediator, file_object)
+            finally:
+                file_object.close()
 
-    else:
-      self.fail(u'Got unsupported parser type: {0:s}'.format(
-          type(parser)))
+        else:
+            self.fail(u'Got unsupported parser type: {0:s}'.format(
+                type(parser)))
 
-    return storage_writer
+        return storage_writer
 
-  def _TestGetMessageStrings(
-      self, event, expected_message, expected_message_short):
-    """Tests the formatting of the message strings.
+    def _TestGetMessageStrings(self, event, expected_message,
+                               expected_message_short):
+        """Tests the formatting of the message strings.
 
     This function invokes the GetMessageStrings function of the event
     formatter on the event object and compares the resulting messages
@@ -162,17 +173,17 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       expected_message (str): expected message string.
       expected_message_short (str): expected short message string.
     """
-    formatter_mediator = formatters_mediator.FormatterMediator(
-        data_location=self._DATA_PATH)
-    message, message_short = (
-        formatters_manager.FormattersManager.GetMessageStrings(
-            formatter_mediator, event))
-    self.assertEqual(message, expected_message)
-    self.assertEqual(message_short, expected_message_short)
+        formatter_mediator = formatters_mediator.FormatterMediator(
+            data_location=self._DATA_PATH)
+        message, message_short = (
+            formatters_manager.FormattersManager.GetMessageStrings(
+                formatter_mediator, event))
+        self.assertEqual(message, expected_message)
+        self.assertEqual(message_short, expected_message_short)
 
-  def _TestGetSourceStrings(
-      self, event, expected_source, expected_source_short):
-    """Tests the formatting of the source strings.
+    def _TestGetSourceStrings(self, event, expected_source,
+                              expected_source_short):
+        """Tests the formatting of the source strings.
 
     This function invokes the GetSourceStrings function of the event
     formatter on the event object and compares the resulting source
@@ -183,15 +194,15 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       expected_source (str): expected source string.
       expected_source_short (str): expected short source string.
     """
-    # TODO: change this to return the long variant first so it is consistent
-    # with GetMessageStrings.
-    source_short, source = (
-        formatters_manager.FormattersManager.GetSourceStrings(event))
-    self.assertEqual(source, expected_source)
-    self.assertEqual(source_short, expected_source_short)
+        # TODO: change this to return the long variant first so it is consistent
+        # with GetMessageStrings.
+        source_short, source = (
+            formatters_manager.FormattersManager.GetSourceStrings(event))
+        self.assertEqual(source, expected_source)
+        self.assertEqual(source_short, expected_source_short)
 
-  def assertDictContains(self, received, expected):
-    """Tests if received contains every key-value pair as expected.
+    def assertDictContains(self, received, expected):
+        """Tests if received contains every key-value pair as expected.
 
     Recieved can contain new keys. If any value is a dict, this function is \
     called recursively.
@@ -201,10 +212,10 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
       expected (dict): expected dictionary.
 
     """
-    for key, value in expected.items():
-      self.assertTrue(key in received)
+        for key, value in expected.items():
+            self.assertTrue(key in received)
 
-      if isinstance(value, dict):
-        self.assertDictEqual(received[key], expected[key])
-      else:
-        self.assertEqual(value, expected[key])
+            if isinstance(value, dict):
+                self.assertDictEqual(received[key], expected[key])
+            else:
+                self.assertEqual(value, expected[key])
