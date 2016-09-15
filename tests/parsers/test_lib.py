@@ -189,3 +189,22 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         formatters_manager.FormattersManager.GetSourceStrings(event))
     self.assertEqual(source, expected_source)
     self.assertEqual(source_short, expected_source_short)
+
+  def assertDictContains(self, received, expected):
+    """Tests if received contains every key-value pair as expected.
+
+    Recieved can contain new keys. If any value is a dict, this function is \
+    called recursively.
+
+    Args:
+      received (dict): received dictionary.
+      expected (dict): expected dictionary.
+
+    """
+    for key, value in expected.items():
+      self.assertTrue(key in received)
+
+      if isinstance(value, dict):
+        self.assertDictEqual(received[key], expected[key])
+      else:
+        self.assertEqual(value, expected[key])
