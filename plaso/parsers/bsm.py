@@ -636,7 +636,7 @@ class BsmParser(interface.FileObjectParser):
         logging.warning(u'Unable to parse the Token ID at position: {0:d}'.
                         format(file_object.tell()))
         return
-      if not token_id in self.BSM_TYPE_LIST:
+      if token_id not in self.BSM_TYPE_LIST:
         pending = (offset + length) - file_object.tell()
         extra_tokens.update(
             self.TryWithUntestedStructures(file_object, token_id, pending))
@@ -784,8 +784,9 @@ class BsmParser(interface.FileObjectParser):
       # TODO: another way to save this information must be found.
       extra_tokens.update(
           {u'message': u'Plaso: some tokens from this entry can '
-           u'not be saved. Entry at 0x{0:X} with unknown '
-           u'token id "0x{1:X}".'.format(start_position - 1, start_token_id)})
+                       u'not be saved. Entry at 0x{0:X} with unknown '
+                       u'token id "0x{1:X}".'.format(start_position - 1,
+                                                     start_token_id)})
       # Move to next entry.
       file_object.seek(next_entry - file_object.tell(), os.SEEK_CUR)
       # It returns null list because it doesn't know witch structure was
