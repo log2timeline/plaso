@@ -116,6 +116,34 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
+    parser_object = winevtx.WinEvtxParser()
+    # Be aware of Security.evtx file, it was manually shortened so it probably
+    # contains invalid log at the end.
+    storage_writer = self._ParseFile(
+        [u'Security.evtx'], parser_object)
+
+    self.assertEqual(len(storage_writer.events), 194)
+    # 178 4624
+    # 180 4648
+    expected = [(u'source_user_id', u'S-1-5-18'),
+                (u'source_user_name', u'GREENDALEGOLD$'),
+                (u'target_machine_ip', u'-'),
+                (u'target_machine_name', None),
+                (u'target_user_id', u'S-1-5-18'),
+                (u'target_user_name', u'SYSTEM')]
+    received = sorted(storage_writer.events[178].strings_parsed.items())
+    self.assertEqual(received, expected)
+
+    expected = [(u'source_user_id',
+                 u'S-1-5-21-1539974973-2753941131-3212641383-1000'),
+                (u'source_user_name', u'gold_administrator'),
+                (u'target_machine_ip', u'-'),
+                (u'target_machine_name', u'DC1.internal.greendale.edu'),
+                (u'target_user_name', u'administrator')]
+    received = sorted(storage_writer.events[180].strings_parsed.items())
+    self.assertEqual(received, expected)
+    print storage_writer.events[180].strings_parsed
+
 
 if __name__ == '__main__':
   unittest.main()
