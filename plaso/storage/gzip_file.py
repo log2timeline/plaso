@@ -5,14 +5,13 @@ Only supports task storage at the moment.
 """
 
 import gzip
-import logging
 import os
 
 from plaso.lib import definitions
 from plaso.serializer import json_serializer
 from plaso.storage import interface
 
-# Conditional windows imports
+# Windows-only imports
 try:
   import msvcrt
   import win32api
@@ -243,7 +242,6 @@ class GZIPStorageFile(interface.BaseFileStorage):
       IOError: if the storage file is already opened.
       ValueError: if path is missing.
     """
-    logging.debug(u'Trying to open gzip file {0:s}'.format(path))
     if self._is_open:
       raise IOError(u'Storage file already opened.')
 
@@ -312,7 +310,6 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
     """
     super(GZIPStorageMergeReader, self).__init__(storage_writer)
     self._data_buffer = None
-    logging.debug(u'Trying to open gzip file {0:s}'.format(path))
     self._gzip_file = gzip.open(path, 'rb')
     if msvcrt:
       os_handle = msvcrt.get_osfhandle(self._gzip_file.fileno())

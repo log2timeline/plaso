@@ -148,7 +148,7 @@ from plaso.serializer import json_serializer
 from plaso.storage import interface
 from plaso.storage import gzip_file
 
-# Conditional windows imports
+# Windows-only imports
 try:
   import msvcrt
   import win32api
@@ -2774,7 +2774,6 @@ class ZIPStorageFile(interface.BaseFileStorage):
       IOError: if the storage file is already opened.
       ValueError: if path is missing.
     """
-    logging.debug(u'Trying to open zip file {0:s}'.format(path))
     if self._is_open:
       raise IOError(u'Storage file already opened.')
 
@@ -3195,7 +3194,6 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     Raises:
       IOError: if the storage writer is already opened.
     """
-    logging.debug(u'Trying to open zip file {0:s}'.format(self._output_file))
     if self._storage_file:
       raise IOError(u'Storage writer already opened.')
 
