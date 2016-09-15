@@ -776,6 +776,7 @@ class PsortTool(analysis_tool.AnalysisTool):
         self._storage_file_path)
     self._number_of_analysis_reports = (
         storage_reader.GetNumberOfAnalysisReports())
+    storage_reader.Close()
 
     if analysis_plugins:
       storage_writer = self._front_end.CreateStorageWriter(
