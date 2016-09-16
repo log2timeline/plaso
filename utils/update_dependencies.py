@@ -194,8 +194,7 @@ class SetupCfgWriter(object):
 class TravisBeforeInstallScript(object):
   """Class to help write the Travis-CI install.sh file."""
 
-  _PATH = os.path.join(
-      u'config', u'travis', u'install.sh')
+  _PATH = os.path.join(u'config', u'travis', u'install.sh')
 
   _FILE_HEADER = [
       u'#!/bin/bash',
