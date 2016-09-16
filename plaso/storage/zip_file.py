@@ -144,19 +144,10 @@ except ImportError:
 
 from plaso.containers import sessions
 from plaso.lib import definitions
+from plaso.lib import platform_specific
 from plaso.serializer import json_serializer
 from plaso.storage import interface
 from plaso.storage import gzip_file
-
-# Windows-only imports
-try:
-  import msvcrt
-  import win32api
-  import win32con
-except ImportError:
-  msvcrt = None
-  win32api = None
-  win32con = None
 
 
 class _AttributeContainersList(object):
@@ -604,10 +595,9 @@ class _SerializedDataStream(object):
     """
     stream_file_path = os.path.join(self._path, self._stream_name)
     self._file_object = open(stream_file_path, 'wb')
-    if msvcrt and self._file_object:
-      os_handle = msvcrt.get_osfhandle(self._file_object.fileno())
-      win32api.SetHandleInformation(
-          os_handle, win32con.HANDLE_FLAG_INHERIT, 0)
+    if platform_specific.OnWindows():
+      file_handle = self._file_object.fileno()
+      platform_specific.MarkWindowsFileHandleAsNoInherit(file_handle)
     return self._file_object.tell()
 
 
@@ -1769,10 +1759,9 @@ class ZIPStorageFile(interface.BaseFileStorage):
           zipfile_path, mode=access_mode, compression=zipfile.ZIP_DEFLATED,
           allowZip64=True)
       self._zipfile_path = zipfile_path
-      if msvcrt and self._zipfile.fp:
-        os_handle = msvcrt.get_osfhandle(self._zipfile.fp.fileno())
-        win32api.SetHandleInformation(
-            os_handle, win32con.HANDLE_FLAG_INHERIT, 0)
+      if platform_specific.OnWindows():
+        file_handle = self._zipfile.fp.fileno()
+        platform_specific.MarkWindowsFileHandleAsNoInherit(file_handle)
 
     except zipfile.BadZipfile as exception:
       raise IOError(u'Unable to open ZIP file: {0:s} with error: {1:s}'.format(
