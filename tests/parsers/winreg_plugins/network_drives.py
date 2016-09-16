@@ -22,11 +22,11 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
     """Creates Registry keys and values for testing.
 
     Args:
-      key_path: the Windows Registry key path.
-      time_string: string containing the key last written date and time.
+      key_path (str): Windows Registry key path.
+      time_string (str): key last written date and time.
 
     Returns:
-      A Windows Registry key (instance of dfwinreg.WinRegistryKey).
+      dfwinreg.WinRegistryKey: Windows Registry key.
     """
     filetime = dfdatetime_filetime.Filetime()
     filetime.CopyFromString(time_string)
@@ -142,7 +142,9 @@ class NetworkDrivesPluginTest(test_lib.RegistryPluginTestCase):
 
     self.assertEqual(len(storage_writer.events), 2)
 
-    event_object = storage_writer.events[0]
+    events = self._GetSortedEvents(storage_writer.events)
+
+    event_object = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
     self.assertEqual(event_object.timestamp, expected_timestamp)

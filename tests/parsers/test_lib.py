@@ -33,7 +33,7 @@ class _EventsHeap(object):
       EventObject: event.
     """
     try:
-      _, _, _, _, event = heapq.heappop(self._heap)
+      _, _, _, event = heapq.heappop(self._heap)
       return event
 
     except IndexError:
@@ -56,11 +56,18 @@ class _EventsHeap(object):
     Args:
       event (EventObject): event.
     """
-    # TODO: remove store number and store index once no longer exposed.
-    # Replace them by event specific attributes relevant to sorting.
-    heap_values = (
-        event.timestamp, event.timestamp_desc, event.store_number,
-        event.store_index, event)
+    # TODO: replace this work-around for an event "comparable".
+    event_values = event.CopyToDict()
+    attributes = []
+    for attribute_name, attribute_value in sorted(event_values.items()):
+      if isinstance(attribute_value, dict):
+        attribute_value = sorted(attribute_value.items())
+      comparable = u'{0:s}: {1!s}'.format(attribute_name, attribute_value)
+      attributes.append(comparable)
+
+    comparable = u', '.join(attributes)
+    event_values = sorted(event.CopyToDict().items())
+    heap_values = (event.timestamp, event.timestamp_desc, comparable, event)
     heapq.heappush(self._heap, heap_values)
 
   def PushEvents(self, events):
