@@ -63,10 +63,9 @@ class SSHSyslogParserTest(test_lib.SyslogPluginTestCase):
     self.assertEqual(event.DATA_TYPE, expected_data_type)
 
     expected_address = u'188.124.3.41'
-
     self.assertEqual(expected_address, event.address)
-    event = storage_writer.events[7]
 
+    event = storage_writer.events[7]
     expected_address = u'192.0.2.60'
     self.assertEqual(expected_address, event.address)
 
