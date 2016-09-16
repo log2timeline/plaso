@@ -88,13 +88,15 @@ _DPKG_PACKAGE_NAMES = {
 
 # Maps Python module names to PyPI projects.
 _PYPI_PROJECT_NAMES = {
+    u'dateutil': u'python-dateutil',
     u'hachoir_core': u'hachoir-core',
     u'hachoir_metadata': u'hachoir-metadata',
     u'hachoir_parser': u'hachoir-parser',
     u'sqlite3': u'pysqlite',
     u'yaml': u'PyYAML',
     u'yara': u'yara-python',
-    u'xlsxwriter': u'XlsxWriter'}
+    u'xlsxwriter': u'XlsxWriter',
+    u'zmq': u'pyzmq'}
 
 # Maps Python module names to RPM packages.
 _RPM_PACKAGE_NAMES = {
@@ -570,7 +572,7 @@ def GetInstallRequires():
     # Map the import name to the PyPI project name.
     module_name = _PYPI_PROJECT_NAMES.get(module_name, module_name)
     if module_name == u'efilter':
-      module_version = u'1!{0:s}'.format(module_version)
+      module_version = u'1-{0:s}'.format(module_version)
 
     elif module_name == u'pysqlite':
       # Override the pysqlite version since it does not match
