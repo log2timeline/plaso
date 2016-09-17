@@ -597,7 +597,7 @@ class _SerializedDataStream(object):
     self._file_object = open(stream_file_path, 'wb')
     if platform_specific.PlatformIsWindows():
       file_handle = self._file_object.fileno()
-      platform_specific.MarkWindowsFileHandleAsNoInherit(file_handle)
+      platform_specific.DisableWindowsFileHandleInheritance(file_handle)
     return self._file_object.tell()
 
 
@@ -1761,7 +1761,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       self._zipfile_path = zipfile_path
       if platform_specific.PlatformIsWindows():
         file_handle = self._zipfile.fp.fileno()
-        platform_specific.MarkWindowsFileHandleAsNoInherit(file_handle)
+        platform_specific.DisableWindowsFileHandleInheritance(file_handle)
 
     except zipfile.BadZipfile as exception:
       raise IOError(u'Unable to open ZIP file: {0:s} with error: {1:s}'.format(

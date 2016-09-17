@@ -14,7 +14,7 @@ except ImportError:
   win32con = None
 
 
-def MarkWindowsFileHandleAsNoInherit(file_descriptor):
+def DisableWindowsFileHandleInheritance(file_descriptor):
   """Flags a Windows file descriptor so that child processes don't inherit it.
 
   Args:
