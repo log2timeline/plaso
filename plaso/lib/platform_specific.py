@@ -28,13 +28,13 @@ def DisableWindowsFileHandleInheritance(file_descriptor):
   raise RuntimeError
 
 
-def PlatformIsWindows():
+def PlatformIsDarwin():
   """Checks if the current platform is Windows.
 
   Returns:
-    True if python is running on Windows.
+    True if python is running on Darwin.
   """
-  if sys.platform.startswith(u'win') or sys.platform.startswith(u'cygwin'):
+  if sys.platform.startswith(u'darwin'):
     return True
 
 
@@ -48,11 +48,11 @@ def PlatformIsLinux():
     return True
 
 
-def PlatformIsDarwin():
-  """CChecks if the current platform is Windows.
+def PlatformIsWindows():
+  """Checks if the current platform is Windows.
 
   Returns:
-    True if python is running on Darwin.
+    True if python is running on Windows.
   """
-  if sys.platform.startswith(u'darwin'):
+  if sys.platform.startswith(u'win') or sys.platform.startswith(u'cygwin'):
     return True
