@@ -1600,22 +1600,17 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
 
       self.assertEqual(task_storage_writer.number_of_events, 4)
 
-      file_size = session_storage_writer.CheckTaskStorageReadyForMerge(
-          task.identifier)
-      self.assertIsNone(file_size)
+      merge_ready = session_storage_writer.CheckTaskReadyForMerge(task)
+      self.assertFalse(merge_ready)
+      self.assertIsNone(task.storage_file_size)
 
-      session_storage_writer.PrepareMergeTaskStorage(task.identifier)
+      session_storage_writer.PrepareMergeTaskStorage(task)
 
-      file_size = session_storage_writer.CheckTaskStorageReadyForMerge(
-          task.identifier)
-      self.assertIsNotNone(file_size)
+      merge_ready = session_storage_writer.CheckTaskReadyForMerge(task)
+      self.assertTrue(merge_ready)
+      self.assertIsNotNone(task.storage_file_size)
 
-      file_size = session_storage_writer.CheckTaskStorageReadyForMerge(
-          session.identifier)
-      self.assertIsNone(file_size)
-
-      storage_merge_reader = session_storage_writer.StartMergeTaskStorage(
-          task.identifier)
+      storage_merge_reader = session_storage_writer.StartMergeTaskStorage(task)
       self.assertIsNotNone(storage_merge_reader)
 
       fully_merged = storage_merge_reader.MergeAttributeContainers()
@@ -1623,9 +1618,8 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
 
       self.assertEqual(session_storage_writer.number_of_events, 4)
 
-      file_size = session_storage_writer.CheckTaskStorageReadyForMerge(
-          task.identifier)
-      self.assertIsNone(file_size)
+      merge_ready = session_storage_writer.CheckTaskReadyForMerge(task)
+      self.assertFalse(merge_ready)
 
       # Test an incomplete task merge.
       task = tasks.Task(session_identifier=session.identifier)
@@ -1640,14 +1634,13 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
 
       self.assertEqual(task_storage_writer.number_of_events, 4)
 
-      session_storage_writer.PrepareMergeTaskStorage(task.identifier)
+      session_storage_writer.PrepareMergeTaskStorage(task)
 
-      file_size = session_storage_writer.CheckTaskStorageReadyForMerge(
-          task.identifier)
-      self.assertIsNotNone(file_size)
+      merge_ready = session_storage_writer.CheckTaskReadyForMerge(task)
+      self.assertTrue(merge_ready)
+      self.assertIsNotNone(task.storage_file_size)
 
-      storage_merge_reader = session_storage_writer.StartMergeTaskStorage(
-          task.identifier)
+      storage_merge_reader = session_storage_writer.StartMergeTaskStorage(task)
       self.assertIsNotNone(storage_merge_reader)
 
       fully_merged = storage_merge_reader.MergeAttributeContainers()

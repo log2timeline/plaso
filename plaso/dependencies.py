@@ -48,14 +48,14 @@ PYTHON_DEPENDENCIES = [
     # The bencode module does not appear to have version information.
     (u'bencode', u'', u'', None),
     (u'binplist', u'__version__', u'0.1.4', None),
-    (u'construct', u'__version__', u'2.5.2', None),
+    (u'construct', u'__version__', u'2.5.2', u'2.6.0'),
     (u'dateutil', u'__version__', u'1.5', None),
     (u'dfdatetime', u'__version__', u'20160319', None),
     (u'dfvfs', u'__version__', u'20160803', None),
     (u'dfwinreg', u'__version__', u'20160320', None),
     (u'dpkt', u'__version__', u'1.8', None),
-    # TODO: determine the version of efilter.
-    (u'efilter', u'', u'1.3', None),
+    # TODO: determine the version of Efilter.
+    (u'efilter', u'', u'1.5', None),
     (u'hachoir_core', u'__version__', u'1.3.3', None),
     (u'hachoir_metadata', u'__version__', u'1.3.3', None),
     (u'hachoir_parser', u'__version__', u'1.3.4', None),
@@ -88,13 +88,15 @@ _DPKG_PACKAGE_NAMES = {
 
 # Maps Python module names to PyPI projects.
 _PYPI_PROJECT_NAMES = {
+    u'dateutil': u'python-dateutil',
     u'hachoir_core': u'hachoir-core',
     u'hachoir_metadata': u'hachoir-metadata',
     u'hachoir_parser': u'hachoir-parser',
     u'sqlite3': u'pysqlite',
     u'yaml': u'PyYAML',
     u'yara': u'yara-python',
-    u'xlsxwriter': u'XlsxWriter'}
+    u'xlsxwriter': u'XlsxWriter',
+    u'zmq': u'pyzmq'}
 
 # Maps Python module names to RPM packages.
 _RPM_PACKAGE_NAMES = {
@@ -570,7 +572,7 @@ def GetInstallRequires():
     # Map the import name to the PyPI project name.
     module_name = _PYPI_PROJECT_NAMES.get(module_name, module_name)
     if module_name == u'efilter':
-      module_version = u'1!{0:s}'.format(module_version)
+      module_version = u'1-{0:s}'.format(module_version)
 
     elif module_name == u'pysqlite':
       # Override the pysqlite version since it does not match
