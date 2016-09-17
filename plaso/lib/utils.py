@@ -57,7 +57,7 @@ def IsText(bytes_in, encoding=None):
       return True
 
     except LookupError:
-      logging.error(u'Unuppported encoding: {0:s}'.format(encoding))
+      logging.error(u'Unsupported encoding: {0:s}'.format(encoding))
     except UnicodeDecodeError:
       pass
 
