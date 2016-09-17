@@ -32,7 +32,7 @@ def PlatformIsDarwin():
   """Checks if the current platform is Windows.
 
   Returns:
-    True if python is running on Darwin.
+    True if Python is running on Darwin.
   """
   if sys.platform.startswith(u'darwin'):
     return True
@@ -42,7 +42,7 @@ def PlatformIsLinux():
   """Checks if the current platform is Windows.
 
   Returns:
-    True if python is running on Windows.
+    True if Python is running on Windows.
   """
   if sys.platform.startswith(u'linux'):
     return True
@@ -52,7 +52,7 @@ def PlatformIsWindows():
   """Checks if the current platform is Windows.
 
   Returns:
-    True if python is running on Windows.
+    True if Python is running on Windows.
   """
   if sys.platform.startswith(u'win') or sys.platform.startswith(u'cygwin'):
     return True
