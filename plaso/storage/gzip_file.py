@@ -248,7 +248,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     self._gzip_file = gzip.open(path, access_mode, self._COMPRESSION_LEVEL)
     if platform_specific.PlatformIsWindows():
       file_handle = self._gzip_file.fileno()
-      platform_specific.MarkWindowsFileHandleAsNoInherit(file_handle)
+      platform_specific.DisableWindowsFileHandleInheritance(file_handle)
     if read_only:
       self._OpenRead()
 
@@ -305,7 +305,7 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
     self._gzip_file = gzip.open(path, 'rb')
     if platform_specific.PlatformIsWindows():
       file_handle = self._gzip_file.fileno()
-      platform_specific.MarkWindowsFileHandleAsNoInherit(file_handle)
+      platform_specific.DisableWindowsFileHandleInheritance(file_handle)
     self._path = path
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
