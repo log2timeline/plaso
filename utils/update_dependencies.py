@@ -129,6 +129,31 @@ class GIFTInstallScriptWriter(object):
       file_object.write(file_content)
 
 
+class RequirementsWriter(object):
+  """Class to help write a requirements.txt file."""
+
+  _PATH = u'requirements.txt'
+
+  _FILE_HEADER = [
+      u'pip >= 7.0.0',
+      u'pytest',
+      u'mock']
+
+  def Write(self):
+    """Writes a requirements.txt file."""
+    file_content = []
+    file_content.extend(self._FILE_HEADER)
+
+    for dependency in plaso.dependencies.GetInstallRequires():
+      file_content.append(u'{0:s}'.format(dependency))
+
+    file_content = u'\n'.join(file_content)
+    file_content = file_content.encode(u'utf-8')
+
+    with open(self._PATH, 'wb') as file_object:
+      file_object.write(file_content)
+
+
 class SetupCfgWriter(object):
   """Class to help write a setup.cfg file."""
 
@@ -165,51 +190,11 @@ class SetupCfgWriter(object):
     with open(self._PATH, 'wb') as file_object:
       file_object.write(file_content)
 
-class ToxIniWriter(object):
-  """Class to help write a tox.ini file."""
-
-  _PATH = u'tox.ini'
-
-  _FILE_HEADER = [
-      u'[tox]',
-      u'envlist = py27, py34',
-      u'',
-      u'[testenv]',
-      u'pip_pre = True',
-      u'sitepackages = True',
-      u'setenv =',
-      u'    PYTHONPATH = {toxinidir}',
-      u'deps =',
-      u'    pip >= 7.0.0',
-      u'    pytest',
-      u'    mock']
-
-  _FILE_FOOTER = [
-      u'commands = python run_tests.py',
-      u'']
-
-  def Write(self):
-    """Writes a tox.ini file."""
-    file_content = []
-    file_content.extend(self._FILE_HEADER)
-
-    for dependency in plaso.dependencies.GetInstallRequires():
-      file_content.append(u'    {0:s}'.format(dependency))
-
-    file_content.extend(self._FILE_FOOTER)
-
-    file_content = u'\n'.join(file_content)
-    file_content = file_content.encode(u'utf-8')
-
-    with open(self._PATH, 'wb') as file_object:
-      file_object.write(file_content)
-
 
 class TravisBeforeInstallScript(object):
-  """Class to help write the Travis-CI before_install.sh file."""
+  """Class to help write the Travis-CI install.sh file."""
 
-  _PATH = os.path.join(
-      u'config', u'travis', u'before_install.sh')
+  _PATH = os.path.join(u'config', u'travis', u'install.sh')
 
   _FILE_HEADER = [
       u'#!/bin/bash',
@@ -289,10 +274,10 @@ if __name__ == u'__main__':
   writer = GIFTInstallScriptWriter()
   writer.Write()
 
-  writer = SetupCfgWriter()
+  writer = RequirementsWriter()
   writer.Write()
 
-  writer = ToxIniWriter()
+  writer = SetupCfgWriter()
   writer.Write()
 
   writer = TravisBeforeInstallScript()
