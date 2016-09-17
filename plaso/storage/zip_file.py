@@ -595,7 +595,7 @@ class _SerializedDataStream(object):
     """
     stream_file_path = os.path.join(self._path, self._stream_name)
     self._file_object = open(stream_file_path, 'wb')
-    if platform_specific.OnWindows():
+    if platform_specific.PlatformIsWindows():
       file_handle = self._file_object.fileno()
       platform_specific.MarkWindowsFileHandleAsNoInherit(file_handle)
     return self._file_object.tell()
@@ -1759,7 +1759,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
           zipfile_path, mode=access_mode, compression=zipfile.ZIP_DEFLATED,
           allowZip64=True)
       self._zipfile_path = zipfile_path
-      if platform_specific.OnWindows():
+      if platform_specific.PlatformIsWindows():
         file_handle = self._zipfile.fp.fileno()
         platform_specific.MarkWindowsFileHandleAsNoInherit(file_handle)
 

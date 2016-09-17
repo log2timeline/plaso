@@ -2,6 +2,7 @@
 """This file contains functions for certain platform specific operations."""
 import sys
 
+
 # Windows-only imports
 try:
   import msvcrt
@@ -13,30 +14,45 @@ except ImportError:
   win32con = None
 
 
-def MarkWindowsFileHandleAsNoInherit(fileno):
-  """Flags a file descriptor so that child processes don't inherit it.
+def MarkWindowsFileHandleAsNoInherit(file_descriptor):
+  """Flags a Windows file descriptor so that child processes don't inherit it.
 
   Args:
-    fileno (int): file handle descriptor, as returned by
+    file_descriptor (int): file handle descriptor, as returned by fileno() and
+        similar methods.
   """
   if msvcrt and win32api and win32con:
-    os_handle = msvcrt.get_osfhandle(fileno)
+    os_handle = msvcrt.get_osfhandle(file_descriptor)
     win32api.SetHandleInformation(os_handle, win32con.HANDLE_FLAG_INHERIT, 0)
     return
-  raise
+  raise RuntimeError
 
-def OnWindows():
-  """Checks if currently running on Windows."""
-  if sys.platform.startswith(u'win'):
+
+def PlatformIsWindows():
+  """Checks if the current platform is Windows.
+
+  Returns:
+    True if python is running on Windows.
+  """
+  if sys.platform.startswith(u'win') or sys.platform.startswith(u'cygwin'):
     return True
 
-def OnLinux():
-  """Checks if currently running on Linux"""
+
+def PlatformIsLinux():
+  """Checks if the current platform is Windows.
+
+  Returns:
+    True if python is running on Windows.
+  """
   if sys.platform.startswith(u'linux'):
     return True
 
-def OnMacOS():
-  """Checks if currently running on MacOS/OSX/Darwin"""
+
+def PlatformIsDarwin():
+  """CChecks if the current platform is Windows.
+
+  Returns:
+    True if python is running on Darwin.
+  """
   if sys.platform.startswith(u'darwin'):
     return True
-
