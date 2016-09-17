@@ -144,6 +144,7 @@ except ImportError:
 
 from plaso.containers import sessions
 from plaso.lib import definitions
+from plaso.lib import platform_specific
 from plaso.serializer import json_serializer
 from plaso.storage import interface
 from plaso.storage import gzip_file
@@ -594,6 +595,9 @@ class _SerializedDataStream(object):
     """
     stream_file_path = os.path.join(self._path, self._stream_name)
     self._file_object = open(stream_file_path, 'wb')
+    if platform_specific.PlatformIsWindows():
+      file_handle = self._file_object.fileno()
+      platform_specific.DisableWindowsFileHandleInheritance(file_handle)
     return self._file_object.tell()
 
 
@@ -1755,6 +1759,9 @@ class ZIPStorageFile(interface.BaseFileStorage):
           zipfile_path, mode=access_mode, compression=zipfile.ZIP_DEFLATED,
           allowZip64=True)
       self._zipfile_path = zipfile_path
+      if platform_specific.PlatformIsWindows():
+        file_handle = self._zipfile.fp.fileno()
+        platform_specific.DisableWindowsFileHandleInheritance(file_handle)
 
     except zipfile.BadZipfile as exception:
       raise IOError(u'Unable to open ZIP file: {0:s} with error: {1:s}'.format(

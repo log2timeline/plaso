@@ -8,6 +8,7 @@ import gzip
 import os
 
 from plaso.lib import definitions
+from plaso.lib import platform_specific
 from plaso.serializer import json_serializer
 from plaso.storage import interface
 
@@ -245,7 +246,9 @@ class GZIPStorageFile(interface.BaseFileStorage):
       access_mode = 'wb'
 
     self._gzip_file = gzip.open(path, access_mode, self._COMPRESSION_LEVEL)
-
+    if platform_specific.PlatformIsWindows():
+      file_handle = self._gzip_file.fileno()
+      platform_specific.DisableWindowsFileHandleInheritance(file_handle)
     if read_only:
       self._OpenRead()
 
@@ -300,6 +303,9 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
     super(GZIPStorageMergeReader, self).__init__(storage_writer)
     self._data_buffer = None
     self._gzip_file = gzip.open(path, 'rb')
+    if platform_specific.PlatformIsWindows():
+      file_handle = self._gzip_file.fileno()
+      platform_specific.DisableWindowsFileHandleInheritance(file_handle)
     self._path = path
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None

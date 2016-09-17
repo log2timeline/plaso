@@ -128,7 +128,7 @@ class BsmParser(interface.FileObjectParser):
       u'ipv6', construct.UBInt64(u'high'), construct.UBInt64(u'low'))
 
   # Tested structures.
-  # INFO: I have ommited the ID in the structures declaration.
+  # INFO: I have omitted the ID in the structures declaration.
   #       I used the BSM_TYPE first to read the ID, and then, the structure.
   # Tokens always start with an ID value that identifies their token
   # type and subsequent structure.
@@ -705,7 +705,7 @@ class BsmParser(interface.FileObjectParser):
             u'Unable to parse the Token ID at position: {0:d}'.format(
                 file_object.tell()))
         return
-      if not token_id in self.BSM_TYPE_LIST:
+      if token_id not in self.BSM_TYPE_LIST:
         pending = (offset + length) - file_object.tell()
         extra_tokens.extend(self.TryWithUntestedStructures(
             file_object, token_id, pending))
