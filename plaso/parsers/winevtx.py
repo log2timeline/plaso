@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows XML EventLog (EVTX) files."""
 
-import pyevtx
 from collections import namedtuple
+import pyevtx
 
 from plaso import dependencies
 from plaso.containers import time_events
@@ -95,7 +95,7 @@ class WinEvtxParser(interface.FileObjectParser):
   # Mapping from evtx_record.strings entries to meaningful names.
   # This mapping is different for each event_identifier.
 
-  Rule = namedtuple('Rule', ['index','name'])
+  Rule = namedtuple('Rule', ['index', 'name'])
 
   _EVTX_FIELD_MAP = {
       4624:[
@@ -165,7 +165,7 @@ class WinEvtxParser(interface.FileObjectParser):
     if event_identifier in self._EVTX_FIELD_MAP:
       for rule in self._EVTX_FIELD_MAP[event_identifier]:
         if len(evtx_record.strings) <= rule.index:
-          print event_identifier, len(evtx_record.strings), list(evtx_record.strings)
+          #Note: this should not happend. Do we want an exception?
           strings_parsed = {}
           break
         strings_parsed[rule.name] = evtx_record.strings[rule.index]
