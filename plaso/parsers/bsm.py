@@ -25,7 +25,6 @@ __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 # Note that we're using Array and a helper function here instead of
 # PascalString because the latter seems to break pickling on Windows.
 
-
 def _BsmTokenGetLength(context):
   """Construct context parser helper function to replace lambda."""
   return context.length
@@ -34,7 +33,6 @@ def _BsmTokenGetLength(context):
 # Note that we're using RepeatUntil and a helper function here instead of
 # CString because the latter seems to break pickling on Windows.
 
-
 def _BsmTokenIsEndOfString(value, unused_context):
   """Construct context parser helper function to replace lambda."""
   return value == b'\x00'
@@ -42,7 +40,6 @@ def _BsmTokenIsEndOfString(value, unused_context):
 
 # Note that we're using Switch and a helper function here instead of
 # IfThenElse because the latter seems to break pickling on Windows.
-
 
 def _BsmTokenGetNetType(context):
   """Construct context parser helper function to replace lambda."""
