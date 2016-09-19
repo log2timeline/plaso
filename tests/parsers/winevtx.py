@@ -120,7 +120,7 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
     # Be aware of Security.evtx file, it was manually shortened so it probably
     # contains invalid log at the end.
     storage_writer = self._ParseFile(
-        [u'Security.evtx'], parser_object)
+        [u'System2.evtx'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 194)
     # 178 4624

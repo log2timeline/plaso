@@ -92,8 +92,8 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
               filter_name, exception))
 
     # Two files with test_data/testdir/filter_*.txt, AUTHORS
-    # and test_data/System.evtx.
-    self.assertEqual(len(path_specs), 4)
+    # and test_data/System.evtx and test_data/System2.evtx.
+    self.assertEqual(len(path_specs), 5)
 
     paths = self._GetFilePaths(path_specs)
 
