@@ -51,11 +51,11 @@ class DpkgLineEvent(time_events.TimestampEvent):
 
     Args:
       timestamp (int): timestamp, which contains the number of micro seconds
-            since January 1, 1970, 00:00:00 UTC.
+          since January 1, 1970, 00:00:00 UTC.
       body (str): body of the log line.
     """
-    super(DpkgLineEvent, self).__init__(timestamp,
-                                        eventdata.EventTimestamp.ADDED_TIME)
+    super(DpkgLineEvent, self).__init__(
+        timestamp, eventdata.EventTimestamp.ADDED_TIME)
     self.body = body
 
 
@@ -149,38 +149,39 @@ class DpkgParser(text_parser.PyparsingSingleLineTextParser):
 
     timestamp = self._GetTimestampFromLine(structure)
     if not timestamp:
-      logging.debug(u'DpkgLog invalid timestamp {0:s}'.format(
-          structure.timestamp))
+      parser_mediator.ProduceExtractionError(
+          u'DpkgLog invalid timestamp {0:s}'.format(structure.timestamp))
       return
 
     body_text = structure.body
     if not body_text:
-      logging.debug(u'DpkgLog invalid body {0:s}'.format(structure.body))
+      parser_mediator.ProduceExtractionError(
+          u'DpkgLog invalid body {0:s}'.format(structure.body))
       return
 
     event_object = DpkgLineEvent(timestamp, body_text)
     parser_mediator.ProduceEvent(event_object)
 
   def _GetTimestampFromLine(self, structure):
-    """Gets a timestamp from the structure.
+    """Retrieves a timestamp from the structure.
     The following is an example of the timestamp structure expected
         date: list:[month, day, year]
             ex.[2013, 07, 25]
         time: list: list:[hours, minutes, seconds]
             ex. [16, 03, 24] .
+
     Args:
       structure (pyparsing.ParseResults): structure of tokens derived from
         a line of a text file.
+
     Returns:
       int: The timestamp in microseconds or 0 on error.
     """
     hour, minute, second = structure.time
     year, month, day = structure.date
 
-    timestamp = timelib.Timestamp.FromTimeParts(year, month, day, hour, minute,
-                                                second)
-
-    return timestamp
+    return timelib.Timestamp.FromTimeParts(
+        year, month, day, hour, minute, second)
 
   def VerifyStructure(self, parser_mediator, line):
     """Verifies if a line from a text file is in the expected format.
@@ -203,5 +204,6 @@ class DpkgParser(text_parser.PyparsingSingleLineTextParser):
     return (u'date' in structure
             and u'time' in structure
             and u'body' in structure)
+
 
 manager.ParsersManager.RegisterParser(DpkgParser)

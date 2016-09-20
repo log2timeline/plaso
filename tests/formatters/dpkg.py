@@ -31,8 +31,9 @@ class DpkgFormatterTest(test_lib.EventFormatterTestCase):
         u'2016-08-09 04:57:14',
         u'status half-installed base-passwd:amd64 3.5.33')
 
-    expected_messages = (u'status half-installed base-passwd:amd64 3.5.33',
-                         u'status half-installed base-passwd:amd64 3.5.33')
+    expected_messages = (
+        u'status half-installed base-passwd:amd64 3.5.33',
+        u'status half-installed base-passwd:amd64 3.5.33')
     messages = self._formatter.GetMessages(mediator, event)
     self.assertEqual(messages, expected_messages)
 

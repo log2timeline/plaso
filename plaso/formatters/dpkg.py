@@ -18,4 +18,5 @@ class DpkgFormatter(interface.ConditionalEventFormatter):
   SOURCE_LONG = u'dpkg log File'
   SOURCE_SHORT = u'LOG'
 
+
 manager.FormattersManager.RegisterFormatter(DpkgFormatter)
