@@ -56,21 +56,21 @@ class MacBsmEvent(time_events.TimestampEvent):
 
   DATA_TYPE = u'mac:bsm:event'
 
-  def __init__(self, event_type, timestamp, extra_tokens, return_value,
-               record_length, offset):
+  def __init__(
+      self, event_type, timestamp, extra_tokens, return_value, record_length,
+      offset):
     """Initializes the event object.
 
     Args:
-      event_type: String with the text and ID that represents the event type.
-      timestamp: The timestamp which is an integer containing the number
-                 of micro seconds since January 1, 1970, 00:00:00 UTC.
-      extra_tokens: Dict of the extra tokens of the entry.
-      return_value: String with the process return value and exit status.
-      record_length: Record length in bytes (trailer number).
-      offset: The offset in bytes to where the record starts in the file.
+      event_type (str): text with ID that represents the event type.
+      timestamp (int): event timestamp.
+      extra_tokens (dict):event extra tokens.
+      return_value (str):  processed return value and exit status.
+      record_length (int): record length in bytes (trailer number).
+      offset (int): the offset in bytes to where the record starts in the file.
     """
-    super(MacBsmEvent, self).__init__(timestamp,
-                                      eventdata.EventTimestamp.CREATION_TIME)
+    super(MacBsmEvent, self).__init__(
+        timestamp, eventdata.EventTimestamp.CREATION_TIME)
     self.event_type = event_type
     self.extra_tokens = extra_tokens
     self.return_value = return_value
@@ -83,20 +83,19 @@ class BsmEvent(time_events.TimestampEvent):
 
   DATA_TYPE = u'bsm:event'
 
-  def __init__(self, event_type, timestamp, extra_tokens, record_length,
-               offset):
+  def __init__(
+      self, event_type, timestamp, extra_tokens, record_length, offset):
     """Initializes the event object.
 
     Args:
-      event_type: Text and integer ID that represents the type of the event.
-      timestamp: The timestamp which is an integer containing the number
-                 of micro seconds since January 1, 1970, 00:00:00 UTC.
-      extra_tokens: Dict of the extra tokens of the entry.
-      record_length: Record length in bytes (trailer number).
-      offset: The offset in bytes to where the record starts in the file.
+      event_type (str): text with ID that represents the type of the event.
+      timestamp (int): event timestamp.
+      extra_tokens (dict): event extra tokens.
+      record_length (int): record length in bytes (trailer number).
+      offset (int): offset in bytes to where the record starts in the file.
     """
-    super(BsmEvent, self).__init__(timestamp,
-                                   eventdata.EventTimestamp.CREATION_TIME)
+    super(BsmEvent, self).__init__(
+        timestamp, eventdata.EventTimestamp.CREATION_TIME)
     self.event_type = event_type
     self.extra_tokens = extra_tokens
     self.record_length = record_length
@@ -526,6 +525,26 @@ class BsmParser(interface.FileObjectParser):
       129: [u'BSM_TOKEN_AUT_SOCKINET128', BSM_TOKEN_AUT_SOCKINET128],
       130: [u'BSM_TOKEN_SOCKET_UNIX', BSM_TOKEN_SOCKET_UNIX]}
 
+
+  BSM_UTF8_BYTE_ARRAY_TOKEN_TYPES = (
+      u'BSM_TOKEN_TEXT', u'BSM_TOKEN_PATH', u'BSM_TOKEN_ZONENAME')
+  BSM_RETURN_TOKEN_TYPES = (
+      u'BSM_TOKEN_RETURN32', u'BSM_TOKEN_RETURN64', u'BSM_TOKEN_EXIT')
+  BSM_SUBJECT_TOKEN_TYPES = (u'BSM_TOKEN_SUBJECT32', u'BSM_TOKEN_SUBJECT64')
+  BSM_SUBJECT_EX_TOKEN_TYPES = (
+      u'BSM_TOKEN_SUBJECT32_EX', u'BSM_TOKEN_SUBJECT64_EX')
+  BSM_ARGUMENT_TOKEN_TYPES = (u'BSM_TOKEN_ARGUMENT32', u'BSM_TOKEN_ARGUMENT64')
+  BSM_EXEV_TOKEN_TYPES = (u'BSM_TOKEN_EXEC_ARGUMENTS', u'BSM_TOKEN_EXEC_ENV')
+  BSM_PROCESS_TOKEN_TYPES = (u'BSM_TOKEN_PROCESS32', u'BSM_TOKEN_PROCESS64')
+  BSM_PROCESS_EXE_TOKEN_TYPES = (
+      u'BSM_TOKEN_PROCESS32_EX', u'BSM_TOKEN_PROCESS64_EX')
+  BSM_ATTR_TOKEN_TYPES = (u'BSM_TOKEN_ATTR32', u'BSM_TOKEN_ATTR64')
+
+  MESSAGE_CAN_NOT_SAVE = (u'Plaso: some tokens from this entry can not be '
+                          u'saved. Entry at 0x{0:X} with unknown '
+                          u'token id "0x{1:X}".')
+
+
   def __init__(self):
     """Initializes a parser object."""
     super(BsmParser, self).__init__()
@@ -680,9 +699,10 @@ class BsmParser(interface.FileObjectParser):
     elif bsm_type == u'BSM_HEADER32_EX':
       token = structure.parse_stream(file_object)
     else:
-      logging.warning(u'Token ID Header {0} not expected at position 0x{1:X}.'
-                      u'The parsing of the file cannot be continued'.format(
-                          token_id, file_object.tell()))
+      logging.warning(
+          u'Token ID Header {0} not expected at position 0x{1:X}.'
+          u'The parsing of the file cannot be continued'.format(
+              token_id, file_object.tell()))
       # TODO: if it is a Mac OS X, search for the trailer magic value
       #       as a end of the entry can be a possibility to continue.
       return
@@ -700,26 +720,31 @@ class BsmParser(interface.FileObjectParser):
       try:
         token_id = self.BSM_TYPE.parse_stream(file_object)
       except (IOError, construct.FieldError):
-        logging.warning(u'Unable to parse the Token ID at position: {0:d}'.
-                        format(file_object.tell()))
+        logging.warning(
+            u'Unable to parse the Token ID at position: {0:d}'.format(
+                file_object.tell()))
         return
       if token_id not in self.BSM_TYPE_LIST:
         pending = (offset + length) - file_object.tell()
-        extra_tokens.update(
-            self.TryWithUntestedStructures(file_object, token_id, pending))
+        new_extra_tokens = self.TryWithUntestedStructures(file_object, token_id,
+                                                          pending)
+        extra_tokens.update(new_extra_tokens)
       else:
         token = self.BSM_TYPE_LIST[token_id][1].parse_stream(file_object)
-        extra_tokens.update(self.FormatToken(token_id, token, file_object))
+        new_extra_tokens = self.FormatToken(token_id, token, file_object)
+        extra_tokens.update(new_extra_tokens)
 
     if file_object.tell() > (offset + length):
-      logging.warning(u'Token ID {0} not expected at position 0x{1:X}.'
-                      u'Jumping for the next entry.'.format(
-                          token_id, file_object.tell()))
+      logging.warning(
+          u'Token ID {0} not expected at position 0x{1:X}.'
+          u'Jumping for the next entry.'.format(
+              token_id, file_object.tell()))
       try:
-        file_object.seek((offset + length) - file_object.tell(), os.SEEK_CUR)
+        file_object.seek(
+            (offset + length) - file_object.tell(), os.SEEK_CUR)
       except (IOError, construct.FieldError) as exception:
-        logging.warning(u'Unable to jump to next entry with error: {0:s}'.
-                        format(exception))
+        logging.warning(
+            u'Unable to jump to next entry with error: {0:s}'.format(exception))
         return
 
     # BSM can be in more than one OS: BSD, Solaris and Mac OS X.
@@ -729,16 +754,17 @@ class BsmParser(interface.FileObjectParser):
       if not return_value:
         return_value = extra_tokens.get(u'BSM_TOKEN_RETURN64')
       if not return_value:
-        return_value = "unknown"
+        return_value = 'UNKNOWN'
 
-      trailer = extra_tokens.get(u'BSM_TOKEN_TRAILER', "unknown")
-      return MacBsmEvent(event_type, timestamp, extra_tokens, return_value,
-                         trailer, offset)
+      trailer = extra_tokens.get(u'BSM_TOKEN_TRAILER', u'UNKNOWN')
+      return MacBsmEvent(
+          event_type, timestamp, extra_tokens, return_value, trailer, offset)
     else:
       # Generic BSM format.
       if extra_tokens:
         trailer = extra_tokens.get(u'BSM_TOKEN_TRAILER', 'unknown')
-      return BsmEvent(event_type, timestamp, extra_tokens, trailer, offset)
+      return BsmEvent(
+          event_type, timestamp, extra_tokens, trailer, offset)
 
   def VerifyFile(self, parser_mediator, file_object):
     """Check if the file is a BSM file.
@@ -827,19 +853,22 @@ class BsmParser(interface.FileObjectParser):
     try:
       if token_id in self.bsm_type_list_all:
         token = self.bsm_type_list_all[token_id][1].parse_stream(file_object)
-        extra_tokens.update(self.FormatToken(token_id, token, file_object))
+        new_extra_tokens = self.FormatToken(token_id, token, file_object)
+        extra_tokens.update(new_extra_tokens)
         while file_object.tell() < (start_position + pending):
           # Check if it is a known token.
           try:
             token_id = self.BSM_TYPE.parse_stream(file_object)
           except (IOError, construct.FieldError):
-            logging.warning(u'Unable to parse the Token ID at position: {0:d}'.
-                            format(file_object.tell()))
+            logging.warning(
+                u'Unable to parse the Token ID at position: {0:d}'.format(
+                    file_object.tell()))
             return
           if token_id not in self.bsm_type_list_all:
             break
           token = self.bsm_type_list_all[token_id][1].parse_stream(file_object)
-          extra_tokens.update(self.FormatToken(token_id, token, file_object))
+          new_extra_tokens = self.FormatToken(token_id, token, file_object)
+          extra_tokens.update(new_extra_tokens)
     except (IOError, construct.FieldError):
       token_id = 255
 
@@ -850,10 +879,8 @@ class BsmParser(interface.FileObjectParser):
           start_position - 1, token_id, token_id))
       # TODO: another way to save this information must be found.
       extra_tokens.update(
-          {u'message': u'Plaso: some tokens from this entry can '
-                       u'not be saved. Entry at 0x{0:X} with unknown '
-                       u'token id "0x{1:X}".'.format(start_position - 1,
-                                                     start_token_id)})
+          {u'message': self.MESSAGE_CAN_NOT_SAVE.format(start_position - 1,
+                                                        start_token_id)})
       # Move to next entry.
       file_object.seek(next_entry - file_object.tell(), os.SEEK_CUR)
       # It returns null list because it doesn't know witch structure was
@@ -866,12 +893,12 @@ class BsmParser(interface.FileObjectParser):
     """Parse the Token depending of the type of the structure.
 
     Args:
-      token_id: Identification integer of the token_type.
-      token: Token struct to parse.
+      token_id (int): identification of the token_type.
+      token (structure): token struct to parse.
       file_object: BSM file.
 
     Returns:
-      Dict with the parsed Token values.
+      (dict): parsed Token values.
 
     Keys for returned dictionary are token name like BSM_TOKEN_SUBJECT32.
     Values of this dictionary are key-value pairs like terminal_ip:127.0.0.1.
@@ -881,25 +908,21 @@ class BsmParser(interface.FileObjectParser):
 
     bsm_type, _ = self.bsm_type_list_all.get(token_id, [u'', u''])
 
-    if bsm_type in [
-        u'BSM_TOKEN_TEXT', u'BSM_TOKEN_PATH', u'BSM_TOKEN_ZONENAME'
-    ]:
+    if bsm_type in self.BSM_UTF8_BYTE_ARRAY_TOKEN_TYPES:
       try:
         string = self._CopyUtf8ByteArrayToString(token.text)
       except TypeError:
         string = u'Unknown'
       return {bsm_type: string}
 
-    elif bsm_type in [
-        u'BSM_TOKEN_RETURN32', u'BSM_TOKEN_RETURN64', u'BSM_TOKEN_EXIT'
-    ]:
+    elif bsm_type in self.BSM_RETURN_TOKEN_TYPES:
       return {bsm_type: {
           u'error': bsmtoken.BSM_ERRORS.get(token.status, u'Unknown'),
           u'token_status': token.status,
           u'call_status': token.return_value
       }}
 
-    elif bsm_type in [u'BSM_TOKEN_SUBJECT32', u'BSM_TOKEN_SUBJECT64']:
+    elif bsm_type in self.BSM_SUBJECT_TOKEN_TYPES:
       return {bsm_type: {
           u'aid': token.subject_data.audit_uid,
           u'euid': token.subject_data.effective_uid,
@@ -912,7 +935,7 @@ class BsmParser(interface.FileObjectParser):
           u'terminal_ip': self._IPv4Format(token.ipv4)
       }}
 
-    elif bsm_type in [u'BSM_TOKEN_SUBJECT32_EX', u'BSM_TOKEN_SUBJECT64_EX']:
+    elif bsm_type in self.BSM_SUBJECT_EX_TOKEN_TYPES:
       if token.bsm_ip_type_short.net_type == self.AU_IPv6:
         ip = self._IPv6Format(token.bsm_ip_type_short.ip_addr.high,
                               token.bsm_ip_type_short.ip_addr.low)
@@ -932,13 +955,13 @@ class BsmParser(interface.FileObjectParser):
           u'terminal_ip': ip
       }}
 
-    elif bsm_type in [u'BSM_TOKEN_ARGUMENT32', u'BSM_TOKEN_ARGUMENT64']:
+    elif bsm_type in self.BSM_ARGUMENT_TOKEN_TYPES:
       string = self._CopyUtf8ByteArrayToString(token.text)
       return {bsm_type: {u'string': string,
                          u'num_arg': token.num_arg,
                          u'is': token.name_arg}}
 
-    elif bsm_type in [u'BSM_TOKEN_EXEC_ARGUMENTS', u'BSM_TOKEN_EXEC_ENV']:
+    elif bsm_type in self.BSM_EXEV_TOKEN_TYPES:
       arguments = []
       for _ in range(0, token):
         sub_token = self.BSM_TOKEN_EXEC_ARGUMENT.parse_stream(file_object)
@@ -1001,7 +1024,7 @@ class BsmParser(interface.FileObjectParser):
           u'object_id': token.object_id
       }}
 
-    elif bsm_type in [u'BSM_TOKEN_PROCESS32', u'BSM_TOKEN_PROCESS64']:
+    elif bsm_type in self.BSM_PROCESS_TOKEN_TYPES:
       return {bsm_type: {
           u'aid': token.subject_data.audit_uid,
           u'euid': token.subject_data.effective_uid,
@@ -1014,7 +1037,7 @@ class BsmParser(interface.FileObjectParser):
           u'terminal_ip': self._IPv4Format(token.ipv4)
       }}
 
-    elif bsm_type in [u'BSM_TOKEN_PROCESS32_EX', u'BSM_TOKEN_PROCESS64_EX']:
+    elif bsm_type in self.BSM_PROCESS_EXE_TOKEN_TYPES:
       if token.bsm_ip_type_short.net_type == self.AU_IPv6:
         ip = self._IPv6Format(token.bsm_ip_type_short.ip_addr.high,
                               token.bsm_ip_type_short.ip_addr.low)
@@ -1056,7 +1079,7 @@ class BsmParser(interface.FileObjectParser):
           u'{0}'.format(self._RawToUTF8(''.join(map(str, data))))
       }}
 
-    elif bsm_type in [u'BSM_TOKEN_ATTR32', u'BSM_TOKEN_ATTR64']:
+    elif bsm_type in self.BSM_ATTR_TOKEN_TYPES:
       return {bsm_type: {u'mode': token.file_mode,
                          u'uid': token.uid,
                          u'gid': token.gid,
