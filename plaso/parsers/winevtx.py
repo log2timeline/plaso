@@ -94,11 +94,12 @@ class WinEvtxParser(interface.FileObjectParser):
 
   # Mapping from evtx_record.strings entries to meaningful names.
   # This mapping is different for each event_identifier.
+  # TODO: make this more generic in context of #158.
 
   Rule = namedtuple('Rule', ['index', 'name'])
 
   _EVTX_FIELD_MAP = {
-      4624:[
+      4624: [
           Rule(0, u'source_user_id'),
           Rule(1, u'source_user_name'),
           Rule(4, u'target_user_id'),
@@ -106,7 +107,7 @@ class WinEvtxParser(interface.FileObjectParser):
           Rule(11, u'target_machine_name'),
           Rule(18, u'target_machine_ip')
       ],
-      4648:[
+      4648: [
           Rule(0, u'source_user_id'),
           Rule(1, u'source_user_name'),
           Rule(5, u'target_user_name'),
@@ -163,11 +164,13 @@ class WinEvtxParser(interface.FileObjectParser):
 
     strings_parsed = {}
     if event_identifier in self._EVTX_FIELD_MAP:
-      for rule in self._EVTX_FIELD_MAP[event_identifier]:
+      rules = self._EVTX_FIELD_MAP.get(event_identifier, [])
+      for rule in rules:
         if len(evtx_record.strings) <= rule.index:
-          #Note: this should not happend. Do we want an exception?
-          strings_parsed = {}
-          break
+          parser_mediator.ProduceExtractionError((
+              u'evtx_record.strings has unexpected length of {0:d} '
+              u'(expected at least {1:d})'.format(len(evtx_record.strings),
+                                                  rule.index)))
         strings_parsed[rule.name] = evtx_record.strings[rule.index]
 
 
