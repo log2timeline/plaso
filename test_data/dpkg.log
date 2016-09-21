@@ -1,0 +1,4 @@
+2009-02-25 11:45:23 conffile /etc/X11/Xsession keep
+2016-08-03 15:25:53 startup archives install
+2016-08-06 17:35:39 install base-passwd:amd64 <none> 3.5.33
+2016-08-09 04:57:14 status half-installed base-passwd:amd64 3.5.33

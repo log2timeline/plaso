@@ -91,6 +91,14 @@ plaso.parsers.docker module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.dpkg module
+-------------------------
+
+.. automodule:: plaso.parsers.dpkg
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.esedb module
 --------------------------
 
