@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The arguments helper for the tagging analysis plugin."""
+"""The tagging analysis plugin CLI arguments helper."""
 
 import os
 
@@ -9,8 +9,8 @@ from plaso.cli.helpers import manager
 from plaso.analysis import tagging
 
 
-class TaggingAnalysisHelper(interface.ArgumentsHelper):
-  """CLI arguments helper class for the Tagging analysis plugin."""
+class TaggingAnalysisArgumentsHelper(interface.ArgumentsHelper):
+  """Tagging analysis plugin CLI arguments helper."""
 
   NAME = u'tagging'
   CATEGORY = u'analysis'
@@ -18,14 +18,14 @@ class TaggingAnalysisHelper(interface.ArgumentsHelper):
 
   @classmethod
   def AddArguments(cls, argument_group):
-    """Add command line arguments the helper supports to an argument group.
+    """Adds command line arguments the helper supports to an argument group.
 
     This function takes an argument parser or an argument group object and adds
     to it all the command line arguments this helper supports.
 
     Args:
-      argument_group: the argparse group (instance of argparse._ArgumentGroup or
-                      or argparse.ArgumentParser).
+      argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
+          argparse group.
     """
     argument_group.add_argument(
         u'--tagging-file', u'--tagging_file', dest=u'tagging_file', type=str,
@@ -36,16 +36,16 @@ class TaggingAnalysisHelper(interface.ArgumentsHelper):
     """Parses and validates options.
 
     Args:
-      options: the parser option object (instance of argparse.Namespace).
-      analysis_plugin: an analysis plugin (instance of OutputModule).
+      options (argparse.Namespace): parser options.
+      output_module (OutputModule): output module to configure.
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
       BadConfigOption: when a configuration parameter fails validation.
     """
-    if not isinstance(analysis_plugin, tagging.TaggingPlugin):
+    if not isinstance(analysis_plugin, tagging.TaggingAnalysisPlugin):
       raise errors.BadConfigObject(
-          u'Analysis plugin is not an instance of TaggingPlugin')
+          u'Analysis plugin is not an instance of TaggingAnalysisPlugin')
 
     tagging_file = cls._ParseStringOption(options, u'tagging_file')
     if tagging_file:
@@ -64,4 +64,4 @@ class TaggingAnalysisHelper(interface.ArgumentsHelper):
       analysis_plugin.SetAndLoadTagFile(tagging_file)
 
 
-manager.ArgumentHelperManager.RegisterHelper(TaggingAnalysisHelper)
+manager.ArgumentHelperManager.RegisterHelper(TaggingAnalysisArgumentsHelper)

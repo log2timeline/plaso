@@ -9,15 +9,17 @@ import os
 import pysigscan
 
 from dfvfs.helpers import file_system_searcher
+from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 from dfvfs.resolver import resolver as path_spec_resolver
 
+from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.engine import extractors
 from plaso.engine import knowledge_base
+from plaso.engine import path_helper
 from plaso.engine import utils as engine_utils
 from plaso.frontend import frontend
-from plaso.hashers import manager as hashers_manager
 from plaso.lib import py2to3
 from plaso.lib import specification
 from plaso.lib import timelib
@@ -33,11 +35,11 @@ class FileEntryFilter(object):
     """Compares the file entry against the filter.
 
     Args:
-      file_entry: The file entry (instance of dfvfs.FileEntry).
+      file_entry (dfvfs.FileEntry): file entry to compare.
 
     Returns:
-      A boolean indicating if the file entry matches the filter or
-      None if the filter does not apply
+      bool: True if the file entry matches the filter, False if not or
+          None if the filter does not apply.
     """
 
   @abc.abstractmethod
@@ -45,7 +47,7 @@ class FileEntryFilter(object):
     """Prints a human readable version of the filter.
 
     Args:
-      output_writer: the output writer object (instance of CLIOutputWriter).
+      output_writer (CLIOutputWriter): output writer.
     """
 
 
@@ -65,7 +67,7 @@ class DateTimeFileEntryFilter(FileEntryFilter):
 
   def AddDateTimeRange(
       self, time_value, start_time_string=None, end_time_string=None):
-    """Add a date time filter range.
+    """Adds a date time filter range.
 
     The time strings are formatted as:
     YYYY-MM-DD hh:mm:ss.######[+-]##:##
@@ -74,10 +76,10 @@ class DateTimeFileEntryFilter(FileEntryFilter):
     and timezone offset are optional. The default timezone is UTC.
 
     Args:
-      time_value: the time value strting e.g. atime, ctime, crtime, dtime,
-                  bkup and mtime.
-      start_time_string: the start date and time value string.
-      end_time_string: the end date and time value string.
+      time_value (str): time value, such as, atime, ctime, crtime, dtime, bkup
+          and mtime.
+      start_time_string (str): start date and time value string.
+      end_time_string (str): end date and time value string.
 
     Raises:
       ValueError: If the filter is badly formed.
@@ -118,11 +120,11 @@ class DateTimeFileEntryFilter(FileEntryFilter):
     """Compares the file entry against the filter.
 
     Args:
-      file_entry: The file entry (instance of dfvfs.FileEntry).
+      file_entry (dfvfs.FileEntry): file entry to compare.
 
     Returns:
-      A boolean indicating if the file entry matches the filter or
-      None if the filter does not apply.
+      bool: True if the file entry matches the filter, False if not or
+          None if the filter does not apply.
     """
     if not self._date_time_ranges:
       return
@@ -157,21 +159,21 @@ class DateTimeFileEntryFilter(FileEntryFilter):
     """Prints a human readable version of the filter.
 
     Args:
-      output_writer: the output writer object (instance of CLIOutputWriter).
+      output_writer (CLIOutputWriter): output writer.
     """
     if self._date_time_ranges:
       for date_time_range in self._date_time_ranges:
         if date_time_range.start_timestamp is None:
-          start_time_string = timelib.Timestamp.CopyToIsoFormat(
-              date_time_range.start_timestamp)
-          output_writer.Write(u'\t{0:s} before {1:s}\n'.format(
-              date_time_range.time_value, start_time_string))
-
-        elif date_time_range.end_timestamp is None:
           end_time_string = timelib.Timestamp.CopyToIsoFormat(
               date_time_range.end_timestamp)
           output_writer.Write(u'\t{0:s} after {1:s}\n'.format(
               date_time_range.time_value, end_time_string))
+
+        elif date_time_range.end_timestamp is None:
+          start_time_string = timelib.Timestamp.CopyToIsoFormat(
+              date_time_range.start_timestamp)
+          output_writer.Write(u'\t{0:s} before {1:s}\n'.format(
+              date_time_range.time_value, start_time_string))
 
         else:
           start_time_string = timelib.Timestamp.CopyToIsoFormat(
@@ -192,7 +194,7 @@ class ExtensionsFileEntryFilter(FileEntryFilter):
     An extension is defined as "pdf" as in "document.pdf".
 
     Args:
-      extensions: a list of extension strings.
+      extensions (list[str]): a list of extension strings.
     """
     super(ExtensionsFileEntryFilter, self).__init__()
     self._extensions = extensions
@@ -201,27 +203,27 @@ class ExtensionsFileEntryFilter(FileEntryFilter):
     """Compares the file entry against the filter.
 
     Args:
-      file_entry: The file entry (instance of dfvfs.FileEntry).
+      file_entry (dfvfs.FileEntry): file entry to compare.
 
     Returns:
-      A boolean indicating if the file entry matches the filter or
-      None if the filter does not apply
+      bool: True if the file entry matches the filter, False if not or
+          None if the filter does not apply.
     """
     location = getattr(file_entry.path_spec, u'location', None)
     if not location:
       return
 
-    _, _, extension = location.rpartition(u'.')
-    if not extension:
+    if u'.' not in location:
       return False
 
+    _, _, extension = location.rpartition(u'.')
     return extension.lower() in self._extensions
 
   def Print(self, output_writer):
     """Prints a human readable version of the filter.
 
     Args:
-      output_writer: the output writer object (instance of CLIOutputWriter).
+      output_writer (CLIOutputWriter): output writer.
     """
     if self._extensions:
       output_writer.Write(u'\textensions: {0:s}\n'.format(
@@ -235,7 +237,7 @@ class NamesFileEntryFilter(FileEntryFilter):
     """Initializes the names-based file entry filter.
 
     Args:
-      names: a list of name strings.
+      names (list[str]): names.
     """
     super(NamesFileEntryFilter, self).__init__()
     self._names = names
@@ -244,10 +246,10 @@ class NamesFileEntryFilter(FileEntryFilter):
     """Compares the file entry against the filter.
 
     Args:
-      file_entry: The file entry (instance of dfvfs.FileEntry).
+      file_entry (dfvfs.FileEntry): file entry to compare.
 
     Returns:
-      A boolean indicating if the file entry matches the filter.
+      bool: True if the file entry matches the filter.
     """
     if not self._names or not file_entry.IsFile():
       return
@@ -258,7 +260,7 @@ class NamesFileEntryFilter(FileEntryFilter):
     """Prints a human readable version of the filter.
 
     Args:
-      output_writer: the output writer object (instance of CLIOutputWriter).
+      output_writer (CLIOutputWriter): output writer.
     """
     if self._names:
       output_writer.Write(u'\tnames: {0:s}\n'.format(
@@ -272,30 +274,29 @@ class SignaturesFileEntryFilter(FileEntryFilter):
     """Initializes the signature-based file entry filter.
 
     Args:
-      specification_store: a specification store (instance of
-                           FormatSpecificationStore).
-      signature_identifiers: a list of signature identifiers.
+      specification_store (FormatSpecificationStore): a specification store.
+      signature_identifiers (list[str]): signature identifiers.
     """
     super(SignaturesFileEntryFilter, self).__init__()
+    self._file_scanner = None
     self._signature_identifiers = []
 
-    if specification_store:
-      self._file_scanner = self._GetScanner(
-          specification_store, signature_identifiers)
-    else:
-      self._file_scanner = None
+    self._file_scanner = self._GetScanner(
+        specification_store, signature_identifiers)
 
   def _GetScanner(self, specification_store, signature_identifiers):
     """Initializes the scanner object form the specification store.
 
     Args:
-      specification_store: a specification store (instance of
-                           FormatSpecificationStore).
-      signature_identifiers: a list of signature identifiers.
+      specification_store (FormatSpecificationStore): a specification store.
+      signature_identifiers (list[str]): signature identifiers.
 
     Returns:
-      A scanner object (instance of pysigscan.scanner).
+      pysigscan.scanner: signature scanner or None.
     """
+    if not specification_store:
+      return
+
     scanner_object = pysigscan.scanner()
 
     for format_specification in specification_store.specifications:
@@ -324,11 +325,11 @@ class SignaturesFileEntryFilter(FileEntryFilter):
     """Compares the file entry against the filter.
 
     Args:
-      file_entry: The file entry (instance of dfvfs.FileEntry).
+      file_entry (dfvfs.FileEntry): file entry to compare.
 
     Returns:
-      A boolean indicating if the file entry matches the filter or
-      None if the filter does not apply
+      bool: True if the file entry matches the filter, False if not or
+          None if the filter does not apply.
     """
     if not self._file_scanner or not file_entry.IsFile():
       return
@@ -340,6 +341,15 @@ class SignaturesFileEntryFilter(FileEntryFilter):
     try:
       scan_state = pysigscan.scan_state()
       self._file_scanner.scan_file_object(scan_state, file_object)
+
+    except IOError as exception:
+      # TODO: replace location by display name.
+      location = getattr(file_entry.path_spec, u'location', u'')
+      logging.error((
+          u'[skipping] unable to scan file: {0:s} for signatures '
+          u'with error: {1:s}').format(location, exception))
+      return False
+
     finally:
       file_object.close()
 
@@ -349,7 +359,7 @@ class SignaturesFileEntryFilter(FileEntryFilter):
     """Prints a human readable version of the filter.
 
     Args:
-      output_writer: the output writer object (instance of CLIOutputWriter).
+      output_writer (CLIOutputWriter): output writer.
     """
     if self._file_scanner:
       output_writer.Write(u'\tsignature identifiers: {0:s}\n'.format(
@@ -368,7 +378,7 @@ class FileEntryFilterCollection(object):
     """Adds a file entry filter to the collection.
 
     Args:
-      file_entry_filter: a file entry filter (instance of FileEntryFilter).
+      file_entry_filter (FileEntryFilter): file entry filter.
     """
     self._filters.append(file_entry_filter)
 
@@ -376,7 +386,7 @@ class FileEntryFilterCollection(object):
     """Determines if filters are defined.
 
     Returns:
-      A boolean value indicating if filters are defined.
+      bool: True if filters are defined.
     """
     return bool(self._filters)
 
@@ -384,11 +394,11 @@ class FileEntryFilterCollection(object):
     """Compares the file entry against the filter collection.
 
     Args:
-      file_entry: The file entry (instance of dfvfs.FileEntry).
+      file_entry (dfvfs.FileEntry): file entry to compare.
 
     Returns:
-      A boolean indicating if the file entry matches one of the filters.
-      If no filters are provided or applicable the result will be True.
+      bool: True if the file entry matches one of the filters. If no filters
+          are provided or applicable the result will be True.
     """
     if not self._filters:
       return True
@@ -404,7 +414,7 @@ class FileEntryFilterCollection(object):
     """Prints a human readable version of the filter.
 
     Args:
-      output_writer: the output writer object (instance of CLIOutputWriter).
+      output_writer (CLIOutputWriter): output writer.
     """
     if self._filters:
       output_writer.Write(u'Filters:\n')
@@ -412,10 +422,10 @@ class FileEntryFilterCollection(object):
         file_entry_filter.Print(output_writer)
 
 
-class FileSaver(object):
-  """Class that is used to save files."""
+class ImageExportFrontend(frontend.Frontend):
+  """Class that implements the image export front-end."""
 
-  _BAD_CHARACTERS = frozenset([
+  _DIRTY_CHARACTERS = frozenset([
       u'\x00', u'\x01', u'\x02', u'\x03', u'\x04', u'\x05', u'\x06', u'\x07',
       u'\x08', u'\x09', u'\x0a', u'\x0b', u'\x0c', u'\x0d', u'\x0e', u'\x0f',
       u'\x10', u'\x11', u'\x12', u'\x13', u'\x14', u'\x15', u'\x16', u'\x17',
@@ -426,80 +436,151 @@ class FileSaver(object):
   _COPY_BUFFER_SIZE = 32768
   _READ_BUFFER_SIZE = 4096
 
-  def __init__(self, skip_duplicates=False):
-    """Initializes the file saver object.
+  def __init__(self):
+    """Initializes the front-end object."""
+    super(ImageExportFrontend, self).__init__()
+    self._abort = False
+    self._digests = {}
+    self._filter_collection = FileEntryFilterCollection()
+    self._knowledge_base = None
+    self._resolver_context = context.Context()
+
+  def _CalculateDigestHash(self, file_entry, data_stream_name):
+    """Calculates a SHA-256 digest of the contents of the file entry.
 
     Args:
-      skip_duplicates: boolean value to indicate if duplicate file content
-                       should be skipped.
-    """
-    super(FileSaver, self).__init__()
-    self._digest_hashes = {}
-    self._skip_duplicates = skip_duplicates
-
-  def _CalculateHash(self, file_object):
-    """Calculates a MD5 hash of the contents of given file object.
-
-    Args:
-      file_object: a file-like object.
+      file_entry (dfvfs.FileEntry): file entry whose content will be hashed.
+      data_stream_name (str): name of the data stream whose content is to be
+          hashed.
 
     Returns:
-      A hexadecimal string of the MD5 hash.
+      str: hexadecimal representation of the SHA-256 hash or None if the digest
+          cannot be determined.
     """
-    hasher_object = hashers_manager.HashersManager.GetHasherObject(u'sha256')
-    file_object.seek(0, os.SEEK_SET)
+    file_object = file_entry.GetFileObject(data_stream_name=data_stream_name)
+    if not file_object:
+      return
 
-    data = file_object.read(self._READ_BUFFER_SIZE)
-    while data:
-      hasher_object.Update(data)
+    try:
+      file_object.seek(0, os.SEEK_SET)
+
+      hasher_object = hashers_manager.HashersManager.GetHasher(u'sha256')
+
       data = file_object.read(self._READ_BUFFER_SIZE)
+      while data:
+        hasher_object.Update(data)
+        data = file_object.read(self._READ_BUFFER_SIZE)
+
+    finally:
+      file_object.close()
 
     return hasher_object.GetStringDigest()
 
-  def _CopyFileObject(self, input_file_object, output_path):
-    """Copies the content of a file-like object to a file.
+  def _CreateSanitizedDestination(
+      self, source_file_entry, source_path_spec, destination_path):
+    """Creates a sanitized path of both destination directory and filename.
+
+    This function replaces non-printable and other characters defined in
+     _DIRTY_CHARACTERS with an underscore "_".
 
     Args:
-      input_file_object: the input file-like object.
-      output_path: the path of the output file.
+      source_file_entry (dfvfs.FileEntry): file entry of the source file.
+      source_path_spec (dfvfs.PathSpec): path specification of the source file.
+      destination_path (str): path of the destination directory.
+
+    Returns:
+      tuple[str, str]: sanitized paths of both destination directory and
+          filename.
     """
-    with open(output_path, 'wb') as output_file_object:
-      input_file_object.seek(0, os.SEEK_SET)
-
-      data = input_file_object.read(self._COPY_BUFFER_SIZE)
-      while data:
-        output_file_object.write(data)
-        data = input_file_object.read(self._COPY_BUFFER_SIZE)
-
-  def WriteFile(self, source_path_spec, destination_path, filename_prefix=u''):
-    """Writes the contents of the source to the destination file.
-
-    Args:
-      source_path_spec: the path specification of the source file.
-      destination_path: the path of the destination file.
-      filename_prefix: optional filename prefix.
-    """
-    file_entry = path_spec_resolver.Resolver.OpenFileEntry(source_path_spec)
-    if not file_entry.IsFile():
-      return
-
-    file_system = file_entry.GetFileSystem()
+    file_system = source_file_entry.GetFileSystem()
     path = getattr(source_path_spec, u'location', None)
     path_segments = file_system.SplitPath(path)
 
     # Sanitize each path segment.
     for index, path_segment in enumerate(path_segments):
       path_segments[index] = u''.join([
-          character if character not in self._BAD_CHARACTERS else u'_'
+          character if character not in self._DIRTY_CHARACTERS else u'_'
           for character in path_segment])
 
-    target_directory = os.path.join(destination_path, *path_segments[:-1])
+    return (
+        os.path.join(destination_path, *path_segments[:-1]), path_segments[-1])
 
-    if filename_prefix:
-      target_filename = u'{0:s}_{1:s}'.format(
-          filename_prefix, path_segments[-1])
-    else:
-      target_filename = path_segments[-1]
+  # TODO: merge with collector and/or engine.
+  def _Extract(
+      self, source_path_specs, destination_path, output_writer,
+      skip_duplicates=True):
+    """Extracts files.
+
+    Args:
+      source_path_specs (list[dfvfs.PathSpec]): path specifications to extract.
+      destination_path (str): path where the extracted files should be stored.
+      output_writer (CLIOutputWriter): output writer.
+      skip_duplicates (Optional[bool]): True if files with duplicate content
+          should be skipped.
+    """
+    output_writer.Write(u'Extracting file entries.\n')
+    path_spec_extractor = extractors.PathSpecExtractor(self._resolver_context)
+    for path_spec in path_spec_extractor.ExtractPathSpecs(source_path_specs):
+      self._ExtractFileEntry(
+          path_spec, destination_path, output_writer,
+          skip_duplicates=skip_duplicates)
+
+  def _ExtractDataStream(
+      self, file_entry, data_stream_name, destination_path, output_writer,
+      skip_duplicates=True):
+    """Extracts a data stream.
+
+    Args:
+      file_entry (dfvfs.FileEntry): file entry containing the data stream.
+      data_stream_name (str): name of the data stream.
+      destination_path (str): path where the extracted files should be stored.
+      output_writer (CLIOutputWriter): output writer.
+      skip_duplicates (Optional[bool]): True if files with duplicate content
+          should be skipped.
+    """
+    if not data_stream_name and not file_entry.IsFile():
+      return
+
+    display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
+        file_entry.path_spec)
+
+    if skip_duplicates:
+      try:
+        digest = self._CalculateDigestHash(file_entry, data_stream_name)
+      except (IOError, dfvfs_errors.BackEndError) as exception:
+        output_writer.Write((
+            u'[skipping] unable to read content of file entry: {0:s} '
+            u'with error: {1:s}\n').format(display_name, exception))
+        return
+
+      if not digest:
+        output_writer.Write(
+            u'[skipping] unable to read content of file entry: {0:s}\n'.format(
+                display_name))
+        return
+
+      duplicate_display_name = self._digests.get(digest, None)
+      if duplicate_display_name:
+        output_writer.Write((
+            u'[skipping] file entry: {0:s} is a duplicate of: {1:s} with '
+            u'digest: {2:s}\n').format(
+                display_name, duplicate_display_name, digest))
+        return
+
+      self._digests[digest] = display_name
+
+    target_directory, target_filename = self._CreateSanitizedDestination(
+        file_entry, file_entry.path_spec, destination_path)
+
+    parent_path_spec = getattr(file_entry.path_spec, u'parent', None)
+    if parent_path_spec:
+      vss_store_number = getattr(parent_path_spec, u'store_index', None)
+      if vss_store_number is not None:
+        target_filename = u'vss{0:d}_{1:s}'.format(
+            vss_store_number + 1, target_filename)
+
+    if data_stream_name:
+      target_filename = u'{0:s}_{1:s}'.format(target_filename, data_stream_name)
 
     if not target_directory:
       target_directory = destination_path
@@ -507,117 +588,75 @@ class FileSaver(object):
     elif not os.path.isdir(target_directory):
       os.makedirs(target_directory)
 
-    if self._skip_duplicates and file_entry.IsFile():
-      file_object = file_entry.GetFileObject()
-      if not file_object:
-        return
+    target_path = os.path.join(target_directory, target_filename)
 
-      try:
-        digest_hash = self._CalculateHash(file_object)
-      except IOError as exception:
-        logging.error((
-            u'[skipping] unable to calculate MD5 of file: {0:s} '
-            u'with error: {1:s}').format(path, exception))
-        return
-      finally:
-        file_object.close()
-
-      stat = file_entry.GetStat()
-      inode = getattr(stat, u'ino', 0)
-
-      if inode in self._digest_hashes:
-        if digest_hash in self._digest_hashes[inode]:
-          return
-        self._digest_hashes[inode].append(digest_hash)
-      else:
-        self._digest_hashes[inode] = [digest_hash]
-
-    file_object = file_entry.GetFileObject()
-    if not file_object:
+    if os.path.exists(target_path):
+      output_writer.Write((
+          u'[skipping] unable to export contents of file entry: {0:s} '
+          u'because exported file: {1:s} already exists.\n').format(
+              display_name, target_path))
       return
 
     try:
-      target_path = os.path.join(target_directory, target_filename)
-      self._CopyFileObject(file_object, target_path)
-    except IOError as exception:
-      logging.error(
-          u'[skipping] unable to export file: {0:s} with error: {1:s}'.format(
-              path, exception))
-    finally:
-      file_object.close()
+      self._WriteFileEntry(file_entry, data_stream_name, target_path)
+    except (IOError, dfvfs_errors.BackEndError) as exception:
+      output_writer.Write((
+          u'[skipping] unable to export contents of file entry: {0:s} '
+          u'with error: {1:s}\n').format(display_name, exception))
 
+      try:
+        os.remove(target_path)
+      except (IOError, OSError):
+        pass
 
-class ImageExportFrontend(frontend.Frontend):
-  """Class that implements the image export front-end."""
-
-  def __init__(self):
-    """Initializes the front-end object."""
-    super(ImageExportFrontend, self).__init__()
-    self._filter_collection = FileEntryFilterCollection()
-    self._knowledge_base = None
-    self._resolver_context = context.Context()
-
-  # TODO: merge with collector and/or engine.
-  def _Extract(
-      self, source_path_specs, destination_path, remove_duplicates=True):
-    """Extracts files.
+  def _ExtractFileEntry(
+      self, path_spec, destination_path, output_writer, skip_duplicates=True):
+    """Extracts a file entry.
 
     Args:
-      source_path_specs: list of path specifications (instances of
-                         dfvfs.PathSpec) to process.
-      destination_path: the path where the extracted files should be stored.
-      remove_duplicates: optional boolean value to indicate if files with
-                         duplicate content should be removed. The default
-                         is True.
-    """
-    if not os.path.isdir(destination_path):
-      os.makedirs(destination_path)
-
-    path_spec_extractor = extractors.PathSpecExtractor(self._resolver_context)
-    file_saver = FileSaver(skip_duplicates=remove_duplicates)
-
-    for path_spec in path_spec_extractor.ExtractPathSpecs(source_path_specs):
-      self._ExtractFile(file_saver, path_spec, destination_path)
-
-  def _ExtractFile(self, file_saver, path_spec, destination_path):
-    """Extracts a file.
-
-    Args:
-      file_saver: the file saver object (instance of FileSaver)
-      path_spec: a path specification (instance of dfvfs.PathSpec).
-      destination_path: the path where the extracted files should be stored.
+      path_spec (dfvfs.PathSpec): path specification of the source file.
+      destination_path (str): path where the extracted files should be stored.
+      output_writer (CLIOutputWriter): output writer.
+      skip_duplicates (Optional[bool]): True if files with duplicate content
+          should be skipped.
     """
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     if not self._filter_collection.Matches(file_entry):
       return
 
-    vss_store_number = getattr(path_spec, u'vss_store_number', None)
-    if vss_store_number is not None:
-      filename_prefix = u'vss_{0:d}'.format(vss_store_number + 1)
-    else:
-      filename_prefix = u''
+    file_entry_processed = False
+    for data_stream in file_entry.data_streams:
+      if self._abort:
+        break
 
-    file_saver.WriteFile(
-        path_spec, destination_path, filename_prefix=filename_prefix)
+      self._ExtractDataStream(
+          file_entry, data_stream.name, destination_path, output_writer,
+          skip_duplicates=skip_duplicates)
+
+      file_entry_processed = True
+
+    if not file_entry_processed:
+      self._ExtractDataStream(
+          file_entry, u'', destination_path, output_writer,
+          skip_duplicates=skip_duplicates)
 
   # TODO: merge with collector and/or engine.
   def _ExtractWithFilter(
-      self, source_path_specs, destination_path, filter_file_path,
-      remove_duplicates=True):
+      self, source_path_specs, destination_path, output_writer,
+      filter_file_path, skip_duplicates=True):
     """Extracts files using a filter expression.
 
     This method runs the file extraction process on the image and
     potentially on every VSS if that is wanted.
 
     Args:
-      source_path_specs: list of path specifications (instances of
-                         dfvfs.PathSpec) to process.
-      destination_path: The path where the extracted files should be stored.
-      filter_file_path: The path of the file that contains the filter
-                        expressions.
-      remove_duplicates: optional boolean value to indicate if files with
-                         duplicate content should be removed. The default
-                         is True.
+      source_path_specs (list[dfvfs.PathSpec]): path specifications to extract.
+      destination_path (str): path where the extracted files should be stored.
+      output_writer (CLIOutputWriter): output writer.
+      filter_file_path (str): path of the file that contains the filter
+          expressions.
+      skip_duplicates (Optional[bool]): True if files with duplicate content
+          should be skipped.
     """
     for source_path_spec in source_path_specs:
       file_system, mount_point = self._GetSourceFileSystem(
@@ -626,20 +665,21 @@ class ImageExportFrontend(frontend.Frontend):
       if self._knowledge_base is None:
         self._Preprocess(file_system, mount_point)
 
-      if not os.path.isdir(destination_path):
-        os.makedirs(destination_path)
+      display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(
+          source_path_spec)
+      output_writer.Write(
+          u'Extracting file entries from: {0:s}\n'.format(display_name))
 
       path_attributes = self._knowledge_base.GetPathAttributes()
       find_specs = engine_utils.BuildFindSpecsFromFile(
           filter_file_path, path_attributes=path_attributes)
 
-      # Save the regular files.
-      file_saver = FileSaver(skip_duplicates=remove_duplicates)
-
       searcher = file_system_searcher.FileSystemSearcher(
           file_system, mount_point)
       for path_spec in searcher.Find(find_specs=find_specs):
-        self._ExtractFile(file_saver, path_spec, destination_path)
+        self._ExtractFileEntry(
+            path_spec, destination_path, output_writer,
+            skip_duplicates=skip_duplicates)
 
       file_system.Close()
 
@@ -648,16 +688,16 @@ class ImageExportFrontend(frontend.Frontend):
     """Retrieves the file system of the source.
 
     Args:
-      source_path_spec: The source path specification (instance of
-                        dfvfs.PathSpec) of the file system.
-      resolver_context: Optional resolver context (instance of dfvfs.Context).
-                        The default is None which will use the built in context
-                        which is not multi process safe. Note that every thread
-                        or process must have its own resolver context.
+      source_path_spec (dfvfs.PathSpec): source path specification of the file
+          system.
+      resolver_context (dfvfs.Context): resolver context.
 
     Returns:
-      A tuple of the file system (instance of dfvfs.FileSystem) and
-      the mount point path specification (instance of path.PathSpec).
+      tuple: contains:
+
+        dfvfs.FileSystem: file system.
+        dfvfs.PathSpec: mount point path specification that refers
+            to the base location of the file system.
 
     Raises:
       RuntimeError: if source path specification is not set.
@@ -680,38 +720,214 @@ class ImageExportFrontend(frontend.Frontend):
     """Preprocesses the image.
 
     Args:
-      file_system: the file system object (instance of vfs.FileSystem)
-                   to be preprocessed.
-      mount_point: the mount point path specification (instance of
-                   path.PathSpec) that refers to the base location
-                   of the file system.
+      file_system (dfvfs.FileSystem): file system to be preprocessed.
+      mount_point (dfvfs.PathSpec): mount point path specification that refers
+          to the base location of the file system.
     """
     if self._knowledge_base is not None:
       return
 
     self._knowledge_base = knowledge_base.KnowledgeBase()
 
-    logging.info(u'Guessing OS')
+    logging.debug(u'Preprocessing.')
 
     searcher = file_system_searcher.FileSystemSearcher(file_system, mount_point)
     platform = preprocess_interface.GuessOS(searcher)
-    logging.info(u'OS: {0:s}'.format(platform))
-
-    logging.info(u'Running preprocess.')
+    logging.debug(u'operating system: {0:s}'.format(platform))
 
     preprocess_manager.PreprocessPluginsManager.RunPlugins(
         platform, file_system, mount_point, self._knowledge_base)
 
-    logging.info(u'Preprocess done, saving files from image.')
+  def _WriteFileEntry(self, file_entry, data_stream_name, destination_file):
+    """Writes the contents of the source file entry to a destination file.
+
+    Note that this function will overwrite an existing file.
+
+    Args:
+      file_entry (dfvfs.FileEntry): file entry whose content is to be written.
+      data_stream_name (str): name of the data stream whose content is to be
+          written.
+      destination_file (str): path of the destination file.
+    """
+    source_file_object = file_entry.GetFileObject(
+        data_stream_name=data_stream_name)
+    if not source_file_object:
+      return
+
+    try:
+      with open(destination_file, 'wb') as destination_file_object:
+        source_file_object.seek(0, os.SEEK_SET)
+
+        data = source_file_object.read(self._COPY_BUFFER_SIZE)
+        while data:
+          destination_file_object.write(data)
+          data = source_file_object.read(self._COPY_BUFFER_SIZE)
+
+    finally:
+      source_file_object.close()
+
+  def HasFilters(self):
+    """Determines if filters are defined.
+
+    Returns:
+      bool: True if filters are defined.
+    """
+    return self._filter_collection.HasFilters()
+
+  def ParseDateFilters(self, date_filters):
+    """Parses the date filters.
+
+    A date filter string is formatted as 3 comma separated values:
+    time value, start date and time (string) and end date and time (string)
+
+    The time value and either a start or end date and time is required.
+
+    The date and time strings are formatted as:
+    YYYY-MM-DD hh:mm:ss.######[+-]##:##
+    Where # are numeric digits ranging from 0 to 9 and the seconds
+    fraction can be either 3 or 6 digits. The time of day, seconds fraction
+    and timezone offset are optional. The default timezone is UTC.
+
+    Args:
+      date_filters (list[str]): date filter definitions.
+
+    Raises:
+      ValueError: if the date filter definitions are invalid.
+    """
+    if not date_filters:
+      return
+
+    file_entry_filter = DateTimeFileEntryFilter()
+
+    for date_filter in date_filters:
+      date_filter_pieces = date_filter.split(u',')
+      if len(date_filter_pieces) != 3:
+        raise ValueError(
+            u'Badly formed date filter: {0:s}'.format(date_filter))
+
+      time_value, start_time_string, end_time_string = date_filter_pieces
+      time_value = time_value.strip()
+      start_time_string = start_time_string.strip()
+      end_time_string = end_time_string.strip()
+
+      try:
+        file_entry_filter.AddDateTimeRange(
+            time_value, start_time_string=start_time_string,
+            end_time_string=end_time_string)
+      except ValueError:
+        raise ValueError(
+            u'Badly formed date filter: {0:s}'.format(date_filter))
+
+    self._filter_collection.AddFilter(file_entry_filter)
+
+  def ParseExtensionsString(self, extensions_string):
+    """Parses the extensions string.
+
+    Args:
+      extensions_string (str): comma separated extensions to filter.
+    """
+    if not extensions_string:
+      return
+
+    extensions_string = extensions_string.lower()
+    extensions = [
+        extension.strip() for extension in extensions_string.split(u',')]
+    file_entry_filter = ExtensionsFileEntryFilter(extensions)
+    self._filter_collection.AddFilter(file_entry_filter)
+
+  def ParseNamesString(self, names_string):
+    """Parses the name string.
+
+    Args:
+      names_string (str): comma separated filenames to filter.
+    """
+    if not names_string:
+      return
+
+    names_string = names_string.lower()
+    names = [name.strip() for name in names_string.split(u',')]
+    file_entry_filter = NamesFileEntryFilter(names)
+    self._filter_collection.AddFilter(file_entry_filter)
+
+  def ParseSignatureIdentifiers(self, data_location, signature_identifiers):
+    """Parses the signature identifiers.
+
+    Args:
+      data_location (str): location of the format specification file, for
+          example, "signatures.conf".
+      signature_identifiers (str): comma separated signature identifiers.
+
+    Raises:
+      IOError: if the format specification file could not be read from
+               the specified data location.
+      ValueError: if no data location was specified.
+    """
+    if not signature_identifiers:
+      return
+
+    if not data_location:
+      raise ValueError(u'Missing data location.')
+
+    path = os.path.join(data_location, u'signatures.conf')
+    if not os.path.exists(path):
+      raise IOError(
+          u'No such format specification file: {0:s}'.format(path))
+
+    try:
+      specification_store = self.ReadSpecificationFile(path)
+    except IOError as exception:
+      raise IOError((
+          u'Unable to read format specification file: {0:s} with error: '
+          u'{1:s}').format(path, exception))
+
+    signature_identifiers = signature_identifiers.lower()
+    signature_identifiers = [
+        identifier.strip() for identifier in signature_identifiers.split(u',')]
+    file_entry_filter = SignaturesFileEntryFilter(
+        specification_store, signature_identifiers)
+    self._filter_collection.AddFilter(file_entry_filter)
+
+  def PrintFilterCollection(self, output_writer):
+    """Prints the filter collection.
+
+    Args:
+      output_writer (CLIOutputWriter): output writer.
+    """
+    self._filter_collection.Print(output_writer)
+
+  def ProcessSources(
+      self, source_path_specs, destination_path, output_writer,
+      filter_file=None, skip_duplicates=True):
+    """Processes the sources.
+
+    Args:
+      source_path_specs (list[dfvfs.PathSpec]): path specifications to extract.
+      destination_path (str): path where the extracted files should be stored.
+      output_writer (CLIOutputWriter): output writer.
+      filter_file (Optional[str]): name of of the filter file.
+      skip_duplicates (Optional[bool]): True if files with duplicate content
+          should be skipped.
+    """
+    if not os.path.isdir(destination_path):
+      os.makedirs(destination_path)
+
+    if filter_file:
+      self._ExtractWithFilter(
+          source_path_specs, destination_path, output_writer, filter_file,
+          skip_duplicates=skip_duplicates)
+    else:
+      self._Extract(
+          source_path_specs, destination_path, output_writer,
+          skip_duplicates=skip_duplicates)
 
   def ReadSpecificationFile(self, path):
     """Reads the format specification file.
 
     Args:
-      path: the path of the format specification file.
+      path (str): path of the format specification file.
 
     Returns:
-      The format specification store (instance of FormatSpecificationStore).
+      FormatSpecificationStore: format specification store.
     """
     specification_store = specification.FormatSpecificationStore()
 
@@ -749,156 +965,3 @@ class ImageExportFrontend(frontend.Frontend):
         specification_store.AddSpecification(format_specification)
 
     return specification_store
-
-  def HasFilters(self):
-    """Determines if filters are defined.
-
-    Returns:
-      A boolean value indicating if filters are defined.
-    """
-    return self._filter_collection.HasFilters()
-
-  def ParseDateFilters(self, date_filters):
-    """Parses the date filters.
-
-    A date filter string is formatted as 3 comma separated values:
-    time value, start date and time (string) and end date and time (string)
-
-    The time value and either a start or end date and time is required.
-
-    The date and time strings are formatted as:
-    YYYY-MM-DD hh:mm:ss.######[+-]##:##
-    Where # are numeric digits ranging from 0 to 9 and the seconds
-    fraction can be either 3 or 6 digits. The time of day, seconds fraction
-    and timezone offset are optional. The default timezone is UTC.
-
-    Args:
-      date_filters: a list of strings containing date filter definitions.
-
-    Raises:
-      ValueError: if the date filter definitions are invalid.
-    """
-    if not date_filters:
-      return
-
-    file_entry_filter = DateTimeFileEntryFilter()
-
-    for date_filter in date_filters:
-      date_filter_pieces = date_filter.split(u',')
-      if len(date_filter_pieces) != 3:
-        raise ValueError(
-            u'Badly formed date filter: {0:s}'.format(date_filter))
-
-      time_value, start_time_string, end_time_string = date_filter_pieces
-      time_value = time_value.strip()
-      start_time_string = start_time_string.strip()
-      end_time_string = end_time_string.strip()
-
-      try:
-        file_entry_filter.AddDateTimeRange(
-            time_value, start_time_string=start_time_string,
-            end_time_string=end_time_string)
-      except ValueError:
-        raise ValueError(
-            u'Badly formed date filter: {0:s}'.format(date_filter))
-
-    self._filter_collection.AddFilter(file_entry_filter)
-
-  def ParseExtensionsString(self, extensions_string):
-    """Parses the extensions string.
-
-    Args:
-      extensions_string: a string with comma separated extensions to filter.
-    """
-    if not extensions_string:
-      return
-
-    extensions_string = extensions_string.lower()
-    extensions = [
-        extension.strip() for extension in extensions_string.split(u',')]
-    file_entry_filter = ExtensionsFileEntryFilter(extensions)
-    self._filter_collection.AddFilter(file_entry_filter)
-
-  def ParseNamesString(self, names_string):
-    """Parses the name string.
-
-    Args:
-      names_string: a string with comma separated filenames to filter.
-    """
-    if not names_string:
-      return
-
-    names_string = names_string.lower()
-    names = [name.strip() for name in names_string.split(u',')]
-    file_entry_filter = NamesFileEntryFilter(names)
-    self._filter_collection.AddFilter(file_entry_filter)
-
-  def ParseSignatureIdentifiers(self, data_location, signature_identifiers):
-    """Parses the signature identifiers.
-
-    Args:
-      data_location: the location of the format specification file
-                     (signatures.conf).
-      signature_identifiers: a string with comma separated signature
-                             identifiers.
-
-    Raises:
-      IOError: if the format specification file could not be read from
-               the specified data location.
-      ValueError: if no data location was specified.
-    """
-    if not signature_identifiers:
-      return
-
-    if not data_location:
-      raise ValueError(u'Missing data location.')
-
-    path = os.path.join(data_location, u'signatures.conf')
-    if not os.path.exists(path):
-      raise IOError(
-          u'No such format specification file: {0:s}'.format(path))
-
-    try:
-      specification_store = self.ReadSpecificationFile(path)
-    except IOError as exception:
-      raise IOError((
-          u'Unable to read format specification file: {0:s} with error: '
-          u'{1:s}').format(path, exception))
-
-    signature_identifiers = signature_identifiers.lower()
-    signature_identifiers = [
-        identifier.strip() for identifier in signature_identifiers.split(u',')]
-    file_entry_filter = SignaturesFileEntryFilter(
-        specification_store, signature_identifiers)
-    self._filter_collection.AddFilter(file_entry_filter)
-
-  def PrintFilterCollection(self, output_writer):
-    """Prints the filter collection.
-
-    Args:
-      output_writer: the output writer (instance of OutputWriter).
-    """
-    self._filter_collection.Print(output_writer)
-
-  def ProcessSources(
-      self, source_path_specs, destination_path, filter_file=None,
-      remove_duplicates=True):
-    """Processes the sources.
-
-    Args:
-      source_path_specs: list of path specifications (instances of
-                         dfvfs.PathSpec) to process.
-      destination_path: the path where the extracted files should be stored.
-      filter_file: optional name of of the filter file.
-      remove_duplicates: optional boolean value to indicate if files with
-                         duplicate content should be removed. The default
-                         is True.
-    """
-    if filter_file:
-      self._ExtractWithFilter(
-          source_path_specs, destination_path, filter_file,
-          remove_duplicates=remove_duplicates)
-    else:
-      self._Extract(
-          source_path_specs, destination_path,
-          remove_duplicates=remove_duplicates)

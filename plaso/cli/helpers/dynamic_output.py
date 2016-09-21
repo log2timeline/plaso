@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The arguments helper for the dynamic output module."""
+"""The dynamic output module CLI arguments helper."""
 
 from plaso.lib import errors
 from plaso.cli.helpers import interface
@@ -7,8 +7,8 @@ from plaso.cli.helpers import manager
 from plaso.output import dynamic
 
 
-class DynamicOutputHelper(interface.ArgumentsHelper):
-  """CLI arguments helper class for the dynamic output module."""
+class DynamicOutputArgumentsHelper(interface.ArgumentsHelper):
+  """Dynamic output module CLI arguments helper."""
 
   NAME = u'dynamic'
   CATEGORY = u'output'
@@ -20,27 +20,33 @@ class DynamicOutputHelper(interface.ArgumentsHelper):
 
   @classmethod
   def AddArguments(cls, argument_group):
-    """Add command line arguments the helper supports to an argument group.
+    """Adds command line arguments the helper supports to an argument group.
 
     This function takes an argument parser or an argument group object and adds
     to it all the command line arguments this helper supports.
 
     Args:
-      argument_group: the argparse group (instance of argparse._ArgumentGroup or
-                      or argparse.ArgumentParser).
+      argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
+          argparse group.
     """
     argument_group.add_argument(
         u'--fields', dest=u'fields', type=str, action=u'store',
         default=cls._DEFAULT_FIELDS, help=(
             u'Defines which fields should be included in the output.'))
+    argument_group.add_argument(
+        u'--additional_fields', dest=u'additional_fields', type=str,
+        action=u'store', default=u'', help=(
+            u'Defines extra fields to be included in the output, in addition to'
+            u' the default fields, which are {0:s}.'.format(
+                cls._DEFAULT_FIELDS)))
 
   @classmethod
   def ParseOptions(cls, options, output_module):
     """Parses and validates options.
 
     Args:
-      options: the parser option object (instance of argparse.Namespace).
-      output_module: an output module (instance of OutputModule).
+      options (argparse.Namespace): parser options.
+      output_module (OutputModule): output module to configure.
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
@@ -53,8 +59,14 @@ class DynamicOutputHelper(interface.ArgumentsHelper):
     fields = cls._ParseStringOption(
         options, u'fields', default_value=cls._DEFAULT_FIELDS)
 
+    additional_fields = cls._ParseStringOption(
+        options, u'additional_fields')
+
+    if additional_fields:
+      fields = u'{0:s},{1:s}'.format(fields, additional_fields)
+
     output_module.SetFields([
         field_name.strip() for field_name in fields.split(u',')])
 
 
-manager.ArgumentHelperManager.RegisterHelper(DynamicOutputHelper)
+manager.ArgumentHelperManager.RegisterHelper(DynamicOutputArgumentsHelper)

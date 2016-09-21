@@ -14,7 +14,13 @@ from plaso.lib import errors
 
 
 class ImageExportTool(storage_media_tool.StorageMediaTool):
-  """Class that implements the image export CLI tool."""
+  """Class that implements the image export CLI tool.
+
+  Attributes:
+    has_filters (bool): True if filters have been specified via the options.
+    list_signature_identifiers (bool): True if information about the signature
+        identifiers should be shown.
+  """
 
   NAME = u'image_export'
   DESCRIPTION = (
@@ -31,19 +37,17 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     """Initializes the CLI tool object.
 
     Args:
-      input_reader: the input reader (instance of InputReader).
-                    The default is None which indicates the use of the stdin
-                    input reader.
-      output_writer: the output writer (instance of OutputWriter).
-                     The default is None which indicates the use of the stdout
-                     output writer.
+      input_reader (Optional[InputReader]): input reader, where None indicates
+          that the stdin input reader should be used.
+      output_writer (Optional[OutputWriter]): output writer, where None
+          indicates that the stdout output writer should be used.
     """
     super(ImageExportTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._destination_path = None
     self._filter_file = None
     self._front_end = image_export.ImageExportFrontend()
-    self._remove_duplicates = True
+    self._skip_duplicates = True
     self.has_filters = False
     self.list_signature_identifiers = False
 
@@ -81,7 +85,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     """Parses the command line arguments.
 
     Returns:
-      A boolean value indicating the arguments were successfully parsed.
+      bool: True if the arguments were successfully parsed.
     """
     self._ConfigureLogging()
 
@@ -171,11 +175,9 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     try:
       self.ParseOptions(options)
     except errors.BadConfigOption as exception:
-      logging.error(u'{0:s}'.format(exception))
-
+      self._output_writer.Write(u'ERROR: {0:s}'.format(exception))
       self._output_writer.Write(u'')
       self._output_writer.Write(argument_parser.format_usage())
-
       return False
 
     return True
@@ -184,8 +186,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     """Parses the options and initializes the front-end.
 
     Args:
-      options: the command line arguments (instance of argparse.Namespace).
-      source_option: optional name of the source option.
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
@@ -204,17 +205,21 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     super(ImageExportTool, self).ParseOptions(options)
 
-    format_string = u'%(asctime)s [%(levelname)s] %(message)s'
+    format_string = (
+        u'%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
+        u'<%(module)s> %(message)s')
 
     if self._debug_mode:
-      log_level = logging.DEBUG
+      logging_level = logging.DEBUG
+    elif self._quiet_mode:
+      logging_level = logging.WARNING
     else:
-      log_level = logging.INFO
+      logging_level = logging.INFO
 
     self.ParseLogFileOptions(options)
     self._ConfigureLogging(
         filename=self._log_file, format_string=format_string,
-        log_level=log_level)
+        log_level=logging_level)
 
     self._destination_path = self.ParseStringOption(
         options, u'path', default_value=u'export')
@@ -223,7 +228,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
     if (getattr(options, u'no_vss', False) or
         getattr(options, u'include_duplicates', False)):
-      self._remove_duplicates = False
+      self._skip_duplicates = False
 
     date_filters = getattr(options, u'date_filters', None)
     try:
@@ -266,12 +271,14 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     """
     self.ScanSource()
 
-    logging.info(u'Processing started.')
+    self._output_writer.Write(u'Export started.\n')
+
     self._front_end.ProcessSources(
-        self._source_path_specs, self._destination_path,
-        filter_file=self._filter_file,
-        remove_duplicates=self._remove_duplicates)
-    logging.info(u'Processing completed.')
+        self._source_path_specs, self._destination_path, self._output_writer,
+        filter_file=self._filter_file, skip_duplicates=self._skip_duplicates)
+
+    self._output_writer.Write(u'Export completed.\n')
+    self._output_writer.Write(u'\n')
 
 
 def Main():
@@ -296,6 +303,10 @@ def Main():
 
   except (KeyboardInterrupt, errors.UserAbort):
     logging.warning(u'Aborted by user.')
+    return False
+
+  except errors.BadConfigOption as exception:
+    logging.warning(exception)
     return False
 
   except errors.SourceScannerError as exception:

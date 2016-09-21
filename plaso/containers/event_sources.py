@@ -2,6 +2,7 @@
 """Event source related attribute container object definitions."""
 
 from plaso.containers import interface
+from plaso.containers import manager
 
 
 class EventSource(interface.AttributeContainer):
@@ -12,10 +13,10 @@ class EventSource(interface.AttributeContainer):
   or Application Compatibility cache.
 
   Attributes:
-    data_type: a string containing the event data type indicator.
-    path_spec: a path specification (instance of dfvfs.PathSpec) or None.
-    storage_session: an integer containing the storage session number or
-                     0 if not set.
+    data_type (str): attribute container type indicator.
+    file_entry_type (str): dfVFS file entry type.
+    path_spec (dfvfs.PathSpec): path specification.
+    storage_session (int): storage session number or 0 if not set.
   """
   CONTAINER_TYPE = u'event_source'
   DATA_TYPE = None
@@ -24,11 +25,11 @@ class EventSource(interface.AttributeContainer):
     """Initializes an event source.
 
     Args:
-      path_spec: optional path specification (instance of dfvfs.PathSpec)
-                 or None.
+      path_spec (Optional[dfvfs.PathSpec]): path specification.
     """
     super(EventSource, self).__init__()
     self.data_type = self.DATA_TYPE
+    self.file_entry_type = None
     self.path_spec = path_spec
     self.storage_session = 0
 
@@ -40,3 +41,6 @@ class FileEntryEventSource(EventSource):
   within a file system.
   """
   DATA_TYPE = u'file_entry'
+
+
+manager.AttributeContainersManager.RegisterAttributeContainer(EventSource)

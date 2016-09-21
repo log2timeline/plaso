@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains the time-based event object classes."""
+"""This file contains the time-based event classes."""
 
 from plaso.containers import events
 from plaso.lib import timelib
@@ -9,22 +9,22 @@ class TimestampEvent(events.EventObject):
   """Convenience class for a timestamp-based event.
 
   Attributes:
-    data_type: the event data type.
-    timestamp: an integer containing a timestamp of the number
-               of micro seconds since January 1, 1970, 00:00:00 UTC.
-    timestamp_desc: the description of the usage of the timestamp.
+    data_type (str): event data type.
+    timestamp (int): timestamp, which contains the number of microseconds
+        since January 1, 1970, 00:00:00 UTC.
+    timestamp_desc (str): description of the meaning of the timestamp.
   """
 
   def __init__(self, timestamp, timestamp_description, data_type=None):
-    """Initializes an event object.
+    """Initializes an event.
 
     Args:
-      timestamp: an integer containing a timestamp of the number
-                 of micro seconds since January 1, 1970, 00:00:00 UTC.
-      timestamp_description: a string containing the usage of
-                             the timestamp value.
-      data_type: optional event data type. If not set data_type is
-                 derived from the DATA_TYPE attribute.
+      timestamp (int): timestamp, which contains the number of microseconds
+          since January 1, 1970, 00:00:00 UTC.
+      timestamp_description (str): description of the meaning of the timestamp
+          value.
+      data_type (Optional[str]): event data type. If the data type is not set
+          it is derived from the DATA_TYPE class attribute.
     """
     super(TimestampEvent, self).__init__()
     self.timestamp = timestamp
@@ -38,14 +38,14 @@ class CocoaTimeEvent(TimestampEvent):
   """Convenience class for a Cocoa time-based event."""
 
   def __init__(self, cocoa_time, timestamp_description, data_type=None):
-    """Initializes an event object.
+    """Initializes an event.
 
     Args:
-      cocoa_time: the Cocoa time value.
-      timestamp_description: a string containing the usage of
-                             the timestamp value.
-      data_type: optional event data type. If not set data_type is
-                 derived from the DATA_TYPE attribute.
+      cocoa_time (int): Cocoa time value.
+      timestamp_description (str): description of the meaning of the timestamp
+          value.
+      data_type (Optional[str]): event data type. If the data type is not set
+          it is derived from the DATA_TYPE class attribute.
     """
     timestamp = timelib.Timestamp.FromCocoaTime(cocoa_time)
     super(CocoaTimeEvent, self).__init__(
@@ -56,14 +56,14 @@ class DelphiTimeEvent(TimestampEvent):
   """Convenience class for a Delphi time-based event."""
 
   def __init__(self, delphi_time, timestamp_description, data_type=None):
-    """Initializes an event object.
+    """Initializes an event.
 
     Args:
-      delphi_time: the Delphi time value.
-      timestamp_description: a string containing the usage of
-                             the timestamp value.
-      data_type: optional event data type. If not set data_type is
-                 derived from the DATA_TYPE attribute.
+      delphi_time (int): Delphi time value.
+      timestamp_description (str): description of the meaning of the timestamp
+          value.
+      data_type (Optional[str]): event data type. If the data type is not set
+          it is derived from the DATA_TYPE class attribute.
     """
     timestamp = timelib.Timestamp.FromDelphiTime(delphi_time)
     super(DelphiTimeEvent, self).__init__(
@@ -74,14 +74,14 @@ class FatDateTimeEvent(TimestampEvent):
   """Convenience class for a FAT date time-based event."""
 
   def __init__(self, fat_date_time, timestamp_description, data_type=None):
-    """Initializes an event object.
+    """Initializes an event.
 
     Args:
-      fat_date_time: the FAT date time value.
-      timestamp_description: a string containing the usage of
-                             the timestamp value.
-      data_type: optional event data type. If not set data_type is
-                 derived from the DATA_TYPE attribute.
+      fat_date_time (int): FAT date time value.
+      timestamp_description (str): description of the meaning of the timestamp
+          value.
+      data_type (Optional[str]): event data type. If the data type is not set
+          it is derived from the DATA_TYPE class attribute.
     """
     timestamp = timelib.Timestamp.FromFatDateTime(fat_date_time)
     super(FatDateTimeEvent, self).__init__(
@@ -92,14 +92,14 @@ class FiletimeEvent(TimestampEvent):
   """Convenience class for a FILETIME timestamp-based event."""
 
   def __init__(self, filetime, timestamp_description, data_type=None):
-    """Initializes an event object.
+    """Initializes an event.
 
     Args:
-      filetime: the FILETIME timestamp value.
-      timestamp_description: a string containing the usage of
-                             the timestamp value.
-      data_type: optional event data type. If not set data_type is
-                 derived from the DATA_TYPE attribute.
+      filetime (int): FILETIME timestamp value.
+      timestamp_description (str): description of the meaning of the timestamp
+          value.
+      data_type (Optional[str]): event data type. If the data type is not set
+          it is derived from the DATA_TYPE class attribute.
     """
     timestamp = timelib.Timestamp.FromFiletime(filetime)
     super(FiletimeEvent, self).__init__(
@@ -110,15 +110,15 @@ class JavaTimeEvent(TimestampEvent):
   """Convenience class for a Java time-based event."""
 
   def __init__(self, java_time, timestamp_description, data_type=None):
-    """Initializes an event object.
+    """Initializes an event.
 
     Args:
-      java_time: the Java timestamp which is an integer containing the number
-                 of milliseconds since January 1, 1970, 00:00:00 UTC.
-      timestamp_description: a string containing the usage of
-                             the timestamp value.
-      data_type: optional event data type. If not set data_type is
-                 derived from the DATA_TYPE attribute.
+      java_time (int): Java timestamp, which contains the number of
+          milliseconds since January 1, 1970, 00:00:00 UTC.
+      timestamp_description (str): description of the meaning of the timestamp
+          value.
+      data_type (Optional[str]): event data type. If the data type is not set
+          it is derived from the DATA_TYPE class attribute.
     """
     timestamp = timelib.Timestamp.FromJavaTime(java_time)
     super(JavaTimeEvent, self).__init__(
@@ -130,15 +130,15 @@ class PosixTimeEvent(TimestampEvent):
 
   def __init__(
       self, posix_time, timestamp_description, data_type=None, micro_seconds=0):
-    """Initializes an event object.
+    """Initializes an event.
 
     Args:
-      posix_time: the POSIX time value, which contains the number of seconds
-                  since January 1, 1970 00:00:00 UTC.
-      timestamp_description: a string containing the usage of
-                             the timestamp value.
-      data_type: optional event data type. If not set data_type is
-                 derived from the DATA_TYPE attribute.
+      posix_time (int): POSIX time value, which contains the number of seconds
+          since January 1, 1970 00:00:00 UTC.
+      timestamp_description (str): description of the meaning of the timestamp
+          value.
+      data_type (Optional[str]): event data type. If the data type is not set
+          it is derived from the DATA_TYPE class attribute.
       micro_seconds: optional number of micro seconds.
     """
     if micro_seconds:
@@ -155,14 +155,14 @@ class PythonDatetimeEvent(TimestampEvent):
   """Convenience class for a Python DateTime time-based event."""
 
   def __init__(self, datetime_time, timestamp_description, data_type=None):
-    """Initializes an event object.
+    """Initializes an event.
 
     Args:
-      datetime_time: the datetime object (instance of datetime.datetime).
-      timestamp_description: a string containing the usage of
-                             the timestamp value.
-      data_type: optional event data type. If not set data_type is
-                 derived from the DATA_TYPE attribute.
+      datetime_time (datetime.datetime): datetime.
+      timestamp_description (str): description of the meaning of the timestamp
+          value.
+      data_type (Optional[str]): event data type. If the data type is not set
+          it is derived from the DATA_TYPE class attribute.
     """
     timestamp = timelib.Timestamp.FromPythonDatetime(datetime_time)
     super(PythonDatetimeEvent, self).__init__(
@@ -173,14 +173,14 @@ class SystemtimeEvent(TimestampEvent):
   """Convenience class for a SYSTEMTIME timestamp-based event."""
 
   def __init__(self, systemtime, timestamp_description, data_type=None):
-    """Initializes an event object.
+    """Initializes an event.
 
     Args:
-      systemtime: the SYSTEMTIME timestamp value.
-      timestamp_description: a string containing the usage of
-                             the timestamp value.
-      data_type: optional event data type. If not set data_type is
-                 derived from the DATA_TYPE attribute.
+      systemtime (bytes): 128-bit SYSTEMTIME timestamp value.
+      timestamp_description (str): description of the meaning of the timestamp
+          value.
+      data_type (Optional[str]): event data type. If the data type is not set
+          it is derived from the DATA_TYPE class attribute.
     """
     timestamp = timelib.Timestamp.FromSystemtime(systemtime)
     super(SystemtimeEvent, self).__init__(
@@ -191,16 +191,16 @@ class UUIDTimeEvent(TimestampEvent):
   """Convenience class for an UUID version time-based event.
 
   Attributes:
-    mac_address: the MAC address stored in the UUID.
+    mac_address (str): MAC address stored in the UUID.
   """
 
   def __init__(self, uuid, timestamp_description):
-    """Initializes an event object.
+    """Initializes an event.
 
     Args:
-      uuid: a uuid object (instance of uuid.UUID).
-      timestamp_description: a string containing the usage of
-                             the timestamp value.
+      uuid (uuid.UUID): UUID.
+      timestamp_description (str): description of the meaning of the timestamp
+          value.
 
     Raises:
       ValueError: if the UUID version is not supported.
@@ -222,14 +222,14 @@ class WebKitTimeEvent(TimestampEvent):
   """Convenience class for a WebKit time-based event."""
 
   def __init__(self, webkit_time, timestamp_description, data_type=None):
-    """Initializes an event object.
+    """Initializes an event.
 
     Args:
-      webkit_time: the WebKit time value.
-      timestamp_description: a string containing the usage of
-                             the timestamp value.
-      data_type: optional event data type. If not set data_type is
-                 derived from the DATA_TYPE attribute.
+      webkit_time (int): WebKit time value.
+      timestamp_description (str): description of the meaning of the timestamp
+          value.
+      data_type (Optional[str]): event data type. If the data type is not set
+          it is derived from the DATA_TYPE class attribute.
     """
     timestamp = timelib.Timestamp.FromWebKitTime(webkit_time)
     super(WebKitTimeEvent, self).__init__(

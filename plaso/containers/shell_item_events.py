@@ -7,7 +7,7 @@ from plaso.containers import time_events
 class ShellItemFileEntryEvent(time_events.FatDateTimeEvent):
   """Convenience class for a shell item file entry event."""
 
-  DATA_TYPE = 'windows:shell_item:file_entry'
+  DATA_TYPE = u'windows:shell_item:file_entry'
 
   def __init__(
       self, fat_date_time, usage, name, long_name, localized_name,
@@ -27,7 +27,6 @@ class ShellItemFileEntryEvent(time_events.FatDateTimeEvent):
       origin: A string containing the origin of the event (event source).
     """
     super(ShellItemFileEntryEvent, self).__init__(fat_date_time, usage)
-
     self.name = name
     self.long_name = long_name
     self.localized_name = localized_name

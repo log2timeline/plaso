@@ -3,14 +3,14 @@
 
 
 class Signature(object):
-  """Class that defines a signature of a format specification.
+  """The format specification signature.
 
   The signature consists of a byte string pattern, an optional
   offset relative to the start of the data, and a value to indicate
   if the pattern is bound to the offset.
   """
   def __init__(self, pattern, offset=None):
-    """Initializes the signature.
+    """Initializes a format specification signature.
 
     The signatures can be defined in 3 different "modes":
     * where offset >= 0, which represents that the signature is bound to the
@@ -21,9 +21,12 @@ class Signature(object):
       and that all of the data is scanned.
 
     Args:
-      pattern: a binary string containing the pattern of the signature.
-               Wildcards or regular pattern (regexp) are not supported.
-      offset: the offset of the signature or None by default.
+      pattern (byte): pattern of the signature. Wildcards or regular pattern
+          (regexp) are not supported.
+      offset (int): offset of the signature. None is used to indicate
+          the signature has no offset. A positive offset is relative from
+          the start of the data a negative offset is relative from the end
+          of the data.
     """
     super(Signature, self).__init__()
     self.identifier = None
@@ -34,20 +37,19 @@ class Signature(object):
     """Sets the identifier of the signature in the specification store.
 
     Args:
-      identifier: a string containing an unique signature identifier for
-                  a specification store.
+      identifier (str): unique signature identifier for a specification store.
     """
     self.identifier = identifier
 
 
 class FormatSpecification(object):
-  """Class that contains a format specification."""
+  """The format specification."""
 
   def __init__(self, identifier):
-    """Initializes the specification.
+    """Initializes a format specification.
 
     Args:
-      identifier: string containing a unique name for the format.
+      identifier (str): unique name for the format.
     """
     super(FormatSpecification, self).__init__()
     self.identifier = identifier
@@ -57,20 +59,20 @@ class FormatSpecification(object):
     """Adds a signature.
 
     Args:
-      pattern: a binary string containing the pattern of the signature.
-      offset: the offset of the signature or None by default. None is used
-              to indicate the signature has no offset. A positive offset
-              is relative from the start of the data a negative offset
-              is relative from the end of the data.
+      pattern (bytes): pattern of the signature.
+      offset (int): offset of the signature. None is used to indicate
+          the signature has no offset. A positive offset is relative from
+          the start of the data a negative offset is relative from the end
+          of the data.
     """
     self.signatures.append(Signature(pattern, offset=offset))
 
 
 class FormatSpecificationStore(object):
-  """Class that serves as a store for specifications."""
+  """The store for format specifications."""
 
   def __init__(self):
-    """Initializes the specification store."""
+    """Initializes a specification store."""
     super(FormatSpecificationStore, self).__init__()
     self._format_specifications = {}
     # Maps signature identifiers to format specifications.
@@ -78,18 +80,17 @@ class FormatSpecificationStore(object):
 
   @property
   def specifications(self):
-    """A specifications iterator object."""
-    return self._format_specifications.itervalues()
+    """iterator: specifications iterator."""
+    return iter(self._format_specifications.values())
 
   def AddNewSpecification(self, identifier):
-    """Adds a new specification.
+    """Adds a new format specification.
 
     Args:
-      identifier: a string containing the format identifier,
-                  which should be unique for the store.
+      identifier (str): format identifier, which should be unique for the store.
 
     Returns:
-      The format specification (instance of FormatSpecification).
+      FormatSpecification: format specification.
 
     Raises:
       KeyError: if the store already contains a specification with
@@ -105,10 +106,10 @@ class FormatSpecificationStore(object):
     return self._format_specifications[identifier]
 
   def AddSpecification(self, specification):
-    """Adds a specification.
+    """Adds a format specification.
 
     Args:
-      specification: the format specification (instance of FormatSpecification).
+      specification (FormatSpecification): format specification.
 
     Raises:
       KeyError: if the store already contains a specification with
@@ -139,12 +140,10 @@ class FormatSpecificationStore(object):
     """Retrieves a specification mapped to a signature identifier.
 
     Args:
-      identifier: a string containing an unique signature identifier for
-                  a specification store.
+      identifier (str): unique signature identifier for a specification store.
 
     Returns:
-      A format specification (instance of FormatSpecification) or None
-      if the signature identifier does not exist within the specification
-      store.
+      FormatSpecification: format specification or None if the signature
+          identifier does not exist within the specification store.
     """
     return self._signature_map.get(signature_identifier, None)

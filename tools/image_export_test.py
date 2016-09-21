@@ -5,6 +5,8 @@
 import unittest
 
 from plaso.lib import errors
+
+from tests import test_lib as shared_test_lib
 from tests.cli import test_lib as cli_test_lib
 
 from tools import image_export
@@ -13,21 +15,16 @@ from tools import image_export
 class ImageExportToolTest(cli_test_lib.CLIToolTestCase):
   """Tests for the image export CLI tool."""
 
-  def setUp(self):
-    """Sets up the needed objects used throughout the test."""
-    self._output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    self._test_tool = image_export.ImageExportTool(
-        output_writer=self._output_writer)
+  # pylint: disable=protected-access
 
   def testListSignatureIdentifiers(self):
     """Tests the ListSignatureIdentifiers function."""
-    options = cli_test_lib.TestOptions()
-    options.data_location = self._TEST_DATA_PATH
-    options.signature_identifiers = u'list'
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = image_export.ImageExportTool(output_writer=output_writer)
 
-    self._test_tool.ParseOptions(options)
+    test_tool._data_location = self._TEST_DATA_PATH
 
-    self._test_tool.ListSignatureIdentifiers()
+    test_tool.ListSignatureIdentifiers()
 
     expected_output = (
         b'Available signature identifiers:\n'
@@ -38,20 +35,72 @@ class ImageExportToolTest(cli_test_lib.CLIToolTestCase):
         b'vhdi_header, wtcdb_cache, wtcdb_index, zip\n'
         b'\n')
 
-    output = self._output_writer.ReadOutput()
+    output = output_writer.ReadOutput()
 
     # Compare the output as list of lines which makes it easier to spot
     # differences.
     self.assertEqual(output.split(b'\n'), expected_output.split(b'\n'))
 
-    options = cli_test_lib.TestOptions()
-    options.data_location = self._GetTestFilePath([u'tmp'])
-    options.signature_identifiers = u'list'
-
-    self._test_tool.ParseOptions(options)
+    test_tool._data_location = self._GetTestFilePath([u'tmp'])
 
     with self.assertRaises(errors.BadConfigOption):
-      self._test_tool.ListSignatureIdentifiers()
+      test_tool.ListSignatureIdentifiers()
+
+  def testParseArguments(self):
+    """Tests the ParseArguments function."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = image_export.ImageExportTool(output_writer=output_writer)
+
+    result = test_tool.ParseArguments()
+    self.assertFalse(result)
+
+    # TODO: check output.
+    # TODO: improve test coverage.
+
+  def testParseOptions(self):
+    """Tests the ParseOptions function."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = image_export.ImageExportTool(output_writer=output_writer)
+
+    options = cli_test_lib.TestOptions()
+    options.image = self._GetTestFilePath([u'image.qcow2'])
+
+    test_tool.ParseOptions(options)
+
+    options = cli_test_lib.TestOptions()
+
+    with self.assertRaises(errors.BadConfigOption):
+      test_tool.ParseOptions(options)
+
+    # TODO: improve test coverage.
+
+  # TODO: add test for PrintFilterCollection
+
+  def testProcessSourcesImage(self):
+    """Tests the ProcessSources function on a single partition image."""
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = image_export.ImageExportTool(output_writer=output_writer)
+
+    options = cli_test_lib.TestOptions()
+    options.image = self._GetTestFilePath([u'ímynd.dd'])
+    options.quiet = True
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      options.path = temp_directory
+
+      test_tool.ParseOptions(options)
+
+      test_tool.ProcessSources()
+
+      expected_output = b'\n'.join([
+          b'Export started.',
+          b'Extracting file entries.',
+          b'Export completed.',
+          b'',
+          b''])
+
+      output = output_writer.ReadOutput()
+      self.assertEqual(output, expected_output)
 
 
 if __name__ == '__main__':

@@ -12,13 +12,13 @@ from plaso.parsers.esedb_plugins import file_history
 from tests.parsers.esedb_plugins import test_lib
 
 
-class FileHistoryEseDbPluginTest(test_lib.EseDbPluginTestCase):
+class FileHistoryESEDBPluginTest(test_lib.ESEDBPluginTestCase):
   """Tests for the File History ESE database plugin."""
 
   def testProcess(self):
     """Tests the Process function."""
-    plugin_object = file_history.FileHistoryEseDbPlugin()
-    storage_writer = self._ParseEseDbFileWithPlugin(
+    plugin_object = file_history.FileHistoryESEDBPlugin()
+    storage_writer = self._ParseESEDBFileWithPlugin(
         [u'Catalog1.edb'], plugin_object)
 
     self.assertEqual(len(storage_writer.events), 2680)

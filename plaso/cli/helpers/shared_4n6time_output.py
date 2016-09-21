@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Arguments helper for information shared between 4n6time output modules."""
+"""The 4n6time output modules shared CLI arguments helper."""
 
 from plaso.lib import errors
 from plaso.cli.helpers import interface
 from plaso.output import shared_4n6time
 
 
-class Shared4n6TimeOutputHelper(interface.ArgumentsHelper):
-  """CLI arguments helper class for 4n6time output modules."""
+class Shared4n6TimeOutputArgumentsHelper(interface.ArgumentsHelper):
+  """4n6time output modules shared CLI arguments helper."""
 
   NAME = u'4n6time'
   CATEGORY = u'output'
@@ -20,14 +20,14 @@ class Shared4n6TimeOutputHelper(interface.ArgumentsHelper):
 
   @classmethod
   def AddArguments(cls, argument_group):
-    """Add command line arguments the helper supports to an argument group.
+    """Adds command line arguments the helper supports to an argument group.
 
     This function takes an argument parser or an argument group object and adds
     to it all the command line arguments this helper supports.
 
     Args:
-      argument_group: the argparse group (instance of argparse._ArgumentGroup or
-                      or argparse.ArgumentParser).
+      argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
+          argparse group.
     """
     argument_group.add_argument(
         u'--append', dest=u'append', action=u'store_true', default=False,
@@ -42,27 +42,38 @@ class Shared4n6TimeOutputHelper(interface.ArgumentsHelper):
         u'--fields', dest=u'fields', type=str, action=u'store',
         default=cls._DEFAULT_FIELDS, help=(
             u'Defines which fields should be indexed in the database.'))
+    argument_group.add_argument(
+        u'--additional_fields', dest=u'additional_fields', type=str,
+        action=u'store', default=u'', help=(
+            u'Defines extra fields to be included in the output, in addition to'
+            u' the default fields, which are {0:s}.'.format(
+                cls._DEFAULT_FIELDS)))
 
   @classmethod
   def ParseOptions(cls, options, output_module):
     """Parses and validates options.
 
     Args:
-      options: the parser option object (instance of argparse.Namespace).
-      output_module: an output module (instance of OutputModule).
+      options (argparse.Namespace): parser options.
+      output_module (OutputModule): output module to configure.
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
     """
-    if not isinstance(output_module, shared_4n6time.Base4n6TimeOutputModule):
+    if not isinstance(output_module, shared_4n6time.Shared4n6TimeOutputModule):
       raise errors.BadConfigObject(
-          u'Output module is not an instance of Base4n6TimeOutputModule')
+          u'Output module is not an instance of Shared4n6TimeOutputModule')
 
     append = getattr(options, u'append', cls._DEFAULT_APPEND)
     evidence = cls._ParseStringOption(
         options, u'evidence', default_value=cls._DEFAULT_EVIDENCE)
     fields = cls._ParseStringOption(
         options, u'fields', default_value=cls._DEFAULT_FIELDS)
+    additional_fields = cls._ParseStringOption(
+        options, u'additional_fields')
+
+    if additional_fields:
+      fields = u'{0:s},{1:s}'.format(fields, additional_fields)
 
     output_module.SetAppendMode(append)
     output_module.SetEvidence(evidence)

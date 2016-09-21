@@ -123,20 +123,6 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
 
     test_engine.PreprocessSources([None])
 
-  def testSetEnableDebugOutput(self):
-    """Tests the SetDebugMode function."""
-    test_engine = engine.BaseEngine()
-
-    test_engine.SetEnableDebugOutput(True)
-
-  def testSignalAbort(self):
-    """Tests the SignalAbort function."""
-    test_engine = engine.BaseEngine()
-
-    self.assertFalse(test_engine._abort)
-    test_engine.SignalAbort()
-    self.assertTrue(test_engine._abort)
-
   def testSupportsMemoryProfiling(self):
     """Tests the SupportsMemoryProfiling function."""
     test_engine = engine.BaseEngine()

@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 """Parser for Extensible Storage Engine (ESE) database files (EDB)."""
 
-import logging
-
 import pyesedb
 
 from plaso import dependencies
-from plaso.lib import errors
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -16,20 +13,20 @@ from plaso.parsers import plugins
 dependencies.CheckModuleVersion(u'pyesedb')
 
 
-class EseDbCache(plugins.BasePluginCache):
+class ESEDBCache(plugins.BasePluginCache):
   """A cache storing query results for ESEDB plugins."""
 
   def StoreDictInCache(self, attribute_name, dict_object):
     """Store a dict object in cache.
 
     Args:
-      attribute_name: The name of the attribute.
-      dict_object: A dict object.
+      attribute_name (str): name of the attribute.
+      dict_object (dict): dictionary.
     """
     setattr(self, attribute_name, dict_object)
 
 
-class EseDbParser(interface.FileObjectParser):
+class ESEDBParser(interface.FileObjectParser):
   """Parses Extensible Storage Engine (ESE) database files (EDB)."""
 
   _INITIAL_FILE_OFFSET = None
@@ -38,6 +35,21 @@ class EseDbParser(interface.FileObjectParser):
   DESCRIPTION = u'Parser for Extensible Storage Engine (ESE) database files.'
 
   _plugin_classes = {}
+
+  def _GetTableNames(self, database):
+    """Retrieves the table names in a database.
+
+    Args:
+      database (pyesedb.file): ESE database.
+
+    Returns:
+      list[str]: table names.
+    """
+    table_names = []
+    for esedb_table in database.tables:
+      table_names.append(esedb_table.name)
+
+    return table_names
 
   @classmethod
   def GetFormatSpecification(cls):
@@ -50,8 +62,8 @@ class EseDbParser(interface.FileObjectParser):
     """Parses an ESE database file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): parser mediator.
+      file_object (dfvfs.FileIO): file-like object.
     """
     esedb_file = pyesedb.file()
 
@@ -63,21 +75,30 @@ class EseDbParser(interface.FileObjectParser):
       return
 
     # Compare the list of available plugin objects.
-    cache = EseDbCache()
-    for plugin_object in self._plugin_objects:
-      try:
-        plugin_object.UpdateChainAndProcess(
-            parser_mediator, database=esedb_file, cache=cache)
-      except errors.WrongPlugin:
-        logging.debug((
-            u'[{0:s}] plugin: {1:s} cannot parse the ESE database: '
-            u'{2:s}').format(
-                self.NAME, plugin_object.NAME,
-                parser_mediator.GetDisplayName()))
+    cache = ESEDBCache()
+    try:
+      table_names = frozenset(self._GetTableNames(esedb_file))
 
-    # TODO: explicitly clean up cache.
+      for plugin in self._plugin_objects:
+        if parser_mediator.abort:
+          break
 
-    esedb_file.close()
+        if plugin.required_tables.difference(table_names):
+          continue
+
+        try:
+          plugin.UpdateChainAndProcess(
+              parser_mediator, cache=cache, database=esedb_file)
+
+        except Exception as exception:  # pylint: disable=broad-except
+          parser_mediator.ProduceExtractionError((
+              u'plugin: {0:s} unable to parse ESE database with error: '
+              u'{1:s}').format(plugin.NAME, exception))
+
+    finally:
+      # TODO: explicitly clean up cache.
+
+      esedb_file.close()
 
 
-manager.ParsersManager.RegisterParser(EseDbParser)
+manager.ParsersManager.RegisterParser(ESEDBParser)

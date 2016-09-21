@@ -15,8 +15,10 @@ class FakeStorageWriter(interface.StorageWriter):
     event_tags (list[EventTag]): event tags.
     events (list[EventObject]): event.
     session_completion (SessionCompletion): session completion attribute
-                                            container.
+        container.
     session_start (SessionStart): session start attribute container.
+    task_completion (TaskCompletion): task completion attribute container.
+    task_start (TaskStart): task start attribute container.
   """
 
   # pylint: disable=abstract-method
@@ -32,7 +34,6 @@ class FakeStorageWriter(interface.StorageWriter):
     """
     super(FakeStorageWriter, self).__init__(
         session, storage_type=storage_type, task=task)
-    self._event_source_index = 0
     self._is_open = False
     self.analysis_reports = []
     self.errors = []
@@ -128,11 +129,15 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._is_open = False
 
-  def GetNextEventSource(self):
-    """Retrieves the next event source.
+  def GetEvents(self, time_range=None):
+    """Retrieves the events in increasing chronological order.
 
-    Returns:
-      EventSource: event source.
+    Args:
+      time_range (Optional[TimeRange]): time range used to filter events
+          that fall in a specific period.
+
+    Yields:
+      EventObject: event.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -140,11 +145,55 @@ class FakeStorageWriter(interface.StorageWriter):
     if not self._is_open:
       raise IOError(u'Unable to read from closed storage writer.')
 
-    if self._event_source_index >= len(self.event_sources):
+    for event in sorted(self.events, key=lambda event: event.timestamp):
+      if time_range and event.timestamp < time_range.start_timestamp:
+        continue
+
+      if time_range and event.timestamp > time_range.end_timestamp:
+        break
+
+      yield event
+
+  def GetFirstWrittenEventSource(self):
+    """Retrieves the first event source that was written after open.
+
+    Using GetFirstWrittenEventSource and GetNextWrittenEventSource newly
+    added event sources can be retrieved in order of addition.
+
+    Returns:
+      EventSource: event source or None if there are no newly written ones.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._is_open:
+      raise IOError(u'Unable to read from closed storage writer.')
+
+    if self._written_event_source_index >= len(self.event_sources):
       return
 
-    event_source = self.event_sources[self._event_source_index]
-    self._event_source_index += 1
+    event_source = self.event_sources[self._first_written_event_source_index]
+    self._written_event_source_index = (
+        self._first_written_event_source_index + 1)
+    return event_source
+
+  def GetNextWrittenEventSource(self):
+    """Retrieves the next event source that was written after open.
+
+    Returns:
+      EventSource: event source or None if there are no newly written ones.
+
+    Raises:
+      IOError: when the storage writer is closed.
+    """
+    if not self._is_open:
+      raise IOError(u'Unable to read from closed storage writer.')
+
+    if self._written_event_source_index >= len(self.event_sources):
+      return
+
+    event_source = self.event_sources[self._written_event_source_index]
+    self._written_event_source_index += 1
     return event_source
 
   def Open(self):
@@ -158,23 +207,55 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self._is_open = True
 
-    self._event_source_index = len(self.event_sources)
+    self._first_written_event_source_index = len(self.event_sources)
+    self._written_event_source_index = self._first_written_event_source_index
 
-  # TODO: remove during phased processing refactor.
-  def WritePreprocessObject(self, unused_preprocess_object):
-    """Writes a preprocessing object.
+  def ReadPreprocessingInformation(self, unused_knowledge_base):
+    """Reads preprocessing information.
+
+    The preprocessing information contains the system configuration which
+    contains information about various system specific configuration data,
+    for example the user accounts.
 
     Args:
-      preprocess_object (PreprocessObject): preprocess object.
+      knowledge_base (KnowledgeBase): is used to store the preprocessing
+          information.
 
     Raises:
-      IOError: when the storage writer is closed.
+      IOError: if the storage type does not support writing preprocessing
+               information or when the storage writer is closed.
     """
     if not self._is_open:
       raise IOError(u'Unable to write to closed storage writer.')
 
-  def WriteSessionCompletion(self):
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Preprocessing information not supported by storage type.')
+
+    # TODO: implement.
+
+  def WritePreprocessingInformation(self, unused_knowledge_base):
+    """Writes preprocessing information.
+
+    Args:
+      knowledge_base (KnowledgeBase): contains the preprocessing information.
+
+    Raises:
+      IOError: if the storage type does not support writing preprocessing
+               information or when the storage writer is closed.
+    """
+    if not self._is_open:
+      raise IOError(u'Unable to write to closed storage writer.')
+
+    if self._storage_type != definitions.STORAGE_TYPE_SESSION:
+      raise IOError(u'Preprocessing information not supported by storage type.')
+
+    # TODO: implement.
+
+  def WriteSessionCompletion(self, aborted=False):
     """Writes session completion information.
+
+    Args:
+      aborted (Optional[bool]): True if the session was aborted.
 
     Raises:
       IOError: if the storage type does not support writing a session
@@ -186,6 +267,7 @@ class FakeStorageWriter(interface.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError(u'Session start not supported by storage type.')
 
+    self._session.aborted = aborted
     self.session_completion = self._session.CreateSessionCompletion()
 
   def WriteSessionStart(self):
@@ -203,8 +285,11 @@ class FakeStorageWriter(interface.StorageWriter):
 
     self.session_start = self._session.CreateSessionStart()
 
-  def WriteTaskCompletion(self):
+  def WriteTaskCompletion(self, aborted=False):
     """Writes task completion information.
+
+    Args:
+      aborted (Optional[bool]): True if the session was aborted.
 
     Raises:
       IOError: if the storage type does not support writing a task
@@ -216,6 +301,7 @@ class FakeStorageWriter(interface.StorageWriter):
     if self._storage_type != definitions.STORAGE_TYPE_TASK:
       raise IOError(u'Task completion not supported by storage type.')
 
+    self._task.aborted = aborted
     self.task_completion = self._task.CreateTaskCompletion()
 
   def WriteTaskStart(self):

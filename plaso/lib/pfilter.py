@@ -13,7 +13,6 @@ from plaso.lib import errors
 from plaso.lib import objectfilter
 from plaso.lib import py2to3
 from plaso.lib import timelib
-from plaso.lib import utils
 from plaso.parsers import presets
 
 
@@ -123,7 +122,7 @@ class PlasoValueExpander(objectfilter.AttributeValueExpander):
         ret = DictObject(ret)
 
       if attr_name == 'tag':
-        return ret.tags
+        return ret.labels
 
       return ret
 
@@ -272,11 +271,16 @@ class DateCompareObject(object):
       self.text = u'{0:f}'.format(data)
 
     elif isinstance(data, py2to3.STRING_TYPES):
-      self.text = utils.GetUnicodeString(data)
+      if isinstance(data, py2to3.BYTES_TYPE):
+        self.text = data.decode(u'utf-8', errors=u'ignore')
+      else:
+        self.text = data
+
       try:
-        self.data = timelib.Timestamp.FromTimeString(data)
+        self.data = timelib.Timestamp.FromTimeString(self.text)
       except (ValueError, errors.TimestampError):
-        raise ValueError(u'Wrongly formatted date string: {0:s}'.format(data))
+        raise ValueError(u'Wrongly formatted date string: {0:s}'.format(
+            self.text))
 
     elif isinstance(data, datetime.datetime):
       self.data = timelib.Timestamp.FromPythonDatetime(data)
@@ -322,99 +326,6 @@ class BaseParser(objectfilter.Parser):
   """Plaso version of the Parser."""
 
   expression_cls = PlasoExpression
-
-
-class TrueObject(object):
-  """A simple object that always returns true for all comparison.
-
-  This object is used for testing certain conditions inside filter queries.
-  By returning true for all comparisons this object can be used to evaluate
-  specific portions of a filter query.
-  """
-
-  def __init__(self, txt=''):
-    """Save the text object so it can be used when comparing text."""
-    self.txt = txt
-
-  def __getattr__(self, unused_attr):
-    """Return a TrueObject for every attribute request."""
-    return self
-
-  def __eq__(self, unused_x):
-    """Return true for tests of equality."""
-    return True
-
-  def __gt__(self, unused_x):
-    """Return true for checks for greater."""
-    return True
-
-  def __ge__(self, unused_x):
-    """Return true for checks for greater or equal."""
-    return True
-
-  def __lt__(self, unused_x):
-    """Return true for checks of less."""
-    return True
-
-  def __le__(self, unused_x):
-    """Return true for checks of less or equal."""
-    return True
-
-  def __ne__(self, unused_x):
-    """Return true for all not equal comparisons."""
-    return True
-
-  def __iter__(self):
-    """Return a generator so a test for the in keyword can be used."""
-    yield self
-
-  def __str__(self):
-    """Return a string to make regular expression searches possible.
-
-    Returns:
-      A string that contains the original query with some of the matches
-      expanded, perhaps several times.
-    """
-    # Regular expressions in pfilter may include the following escapes:
-    #     "\\'\"rnbt\.ws":
-    txt = self.txt
-    if r'\.' in self.txt:
-      txt += self.txt.replace(r'\.', ' _ text _ ')
-
-    if r'\b' in self.txt:
-      txt += self.txt.replace(r'\b', ' ')
-
-    if r'\s' in self.txt:
-      txt += self.txt.replace(r'\s', ' ')
-
-    return txt
-
-
-class MockTestFilter(object):
-  """A mock test filter object used to test certain portion of test queries.
-
-  The logic behind this object is that a single attribute can be isolated
-  for comparison. That is to say all calls to attributes will lead to a TRUE
-  response, except those attributes that are specifically stated in the
-  constructor. This way it is simple to test for instance whether or not
-  to include a parser at all, before actually running the tool. The same applies
-  to filtering out certain filenames, etc.
-  """
-
-  def __init__(self, query, **kwargs):
-    """Constructor, only valid attribute is the parser one."""
-    self.attributes = kwargs
-    self.txt = query
-
-  def __getattr__(self, attr):
-    """Return TrueObject for all requests except for stored attributes."""
-    if attr in self.attributes:
-      return self.attributes.get(attr, None)
-
-    # TODO: Either delete this entire object (MockTestFilter) or implement
-    # a false object and return the correct one depending on whether we
-    # are looking for a true or negative response (eg "not" keyword included).
-    return TrueObject(self.txt)
 
 
 class TimeRangeCache(object):

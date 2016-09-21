@@ -4,14 +4,6 @@ plaso.storage package
 Submodules
 ----------
 
-plaso.storage.collection module
--------------------------------
-
-.. automodule:: plaso.storage.collection
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.storage.factory module
 ----------------------------
 
@@ -28,18 +20,18 @@ plaso.storage.fake_storage module
     :undoc-members:
     :show-inheritance:
 
-plaso.storage.interface module
+plaso.storage.gzip_file module
 ------------------------------
 
-.. automodule:: plaso.storage.interface
+.. automodule:: plaso.storage.gzip_file
     :members:
     :undoc-members:
     :show-inheritance:
 
-plaso.storage.reader module
----------------------------
+plaso.storage.interface module
+------------------------------
 
-.. automodule:: plaso.storage.reader
+.. automodule:: plaso.storage.interface
     :members:
     :undoc-members:
     :show-inheritance:

@@ -85,34 +85,40 @@ class WindowsHostnameTest(WindowsSystemRegistryTest):
     self.assertEqual(knowledge_base_object.hostname, u'WKS-WIN732BITA')
 
 
-class WindowsProgramFilesPath(WindowsSoftwareRegistryTest):
-  """Tests for the Windows Program Files path preprocess plug-in object."""
+class WindowsProgramFilesEnvironmentVariableTest(WindowsSoftwareRegistryTest):
+  """Tests for the %ProgramFiles% environment variable plug-in."""
 
   def testGetValue(self):
     """Tests the GetValue function."""
-    plugin = windows.WindowsProgramFilesPath()
+    plugin = windows.WindowsProgramFilesEnvironmentVariable()
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
     plugin.Run(self._win_registry, knowledge_base_object)
 
-    path = knowledge_base_object.GetValue(u'programfiles')
-    self.assertEqual(path, u'\\Program Files')
+    environment_variable = knowledge_base_object.GetEnvironmentVariable(
+        u'ProgramFiles')
+
+    self.assertIsNotNone(environment_variable)
+    self.assertEqual(environment_variable.value, u'\\Program Files')
 
 
-class WindowsProgramFilesX86Path(WindowsSoftwareRegistryTest):
-  """Tests for the Windows Program Files X86 path preprocess plug-in object."""
+class WindowsProgramFilesX86EnvironmentVariableTest(
+    WindowsSoftwareRegistryTest):
+  """Tests for the %ProgramFilesX86% environment variable plug-in."""
 
   def testGetValue(self):
     """Tests the GetValue function."""
-    plugin = windows.WindowsProgramFilesX86Path()
+    plugin = windows.WindowsProgramFilesX86EnvironmentVariable()
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
     plugin.Run(self._win_registry, knowledge_base_object)
 
-    path = knowledge_base_object.GetValue(u'programfilesx86')
+    environment_variable = knowledge_base_object.GetEnvironmentVariable(
+        u'ProgramFilesX86')
+
     # The test SOFTWARE Registry file does not contain a value for
     # the Program Files X86 path.
-    self.assertIsNone(path)
+    self.assertIsNone(environment_variable)
 
 
 class WindowsSystemRegistryPathTest(shared_test_lib.BaseTestCase):
@@ -142,31 +148,32 @@ class WindowsSystemRegistryPathTest(shared_test_lib.BaseTestCase):
     self.assertEqual(path, u'\\Windows\\System32\\config')
 
 
-class WindowsSystemRootPathTest(shared_test_lib.BaseTestCase):
-  """Tests for the Windows system Root path preprocess plug-in object."""
+class WindowsSystemRootEnvironmentVariableTest(shared_test_lib.BaseTestCase):
+  """Tests for the %SystemRoot% environment variable plug-in."""
 
   _FILE_DATA = b'regf'
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
+  def testGetValue(self):
+    """Tests the GetValue function."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFile(
         u'/Windows/System32/config/SYSTEM', self._FILE_DATA)
 
     mount_point = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
-    self._searcher = file_system_searcher.FileSystemSearcher(
+    searcher = file_system_searcher.FileSystemSearcher(
         file_system_builder.file_system, mount_point)
 
-  def testGetValue(self):
-    """Tests the GetValue function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
 
-    plugin = windows.WindowsSystemRootPath()
-    plugin.Run(self._searcher, knowledge_base_object)
+    plugin = windows.WindowsSystemRootEnvironmentVariable()
+    plugin.Run(searcher, knowledge_base_object)
 
-    path = knowledge_base_object.GetValue(u'systemroot')
-    self.assertEqual(path, u'\\Windows')
+    environment_variable = knowledge_base_object.GetEnvironmentVariable(
+        u'SystemRoot')
+
+    self.assertIsNotNone(environment_variable)
+    self.assertEqual(environment_variable.value, u'\\Windows')
 
 
 class WindowsTimeZoneTest(WindowsSystemRegistryTest):
@@ -186,6 +193,8 @@ class WindowsTimeZoneTest(WindowsSystemRegistryTest):
 class WindowsUsersTest(WindowsSoftwareRegistryTest):
   """Tests for the Windows username preprocess plug-in object."""
 
+  # pylint: disable=protected-access
+
   def testGetValue(self):
     """Tests the GetValue function."""
     plugin = windows.WindowsUsers()
@@ -193,28 +202,46 @@ class WindowsUsersTest(WindowsSoftwareRegistryTest):
     knowledge_base_object = knowledge_base.KnowledgeBase()
     plugin.Run(self._win_registry, knowledge_base_object)
 
-    users = knowledge_base_object.GetValue(u'users')
+    users = sorted(
+        knowledge_base_object._user_accounts[0].values(),
+        key=lambda user_account: user_account.identifier)
     self.assertIsNotNone(users)
     self.assertEqual(len(users), 11)
 
+    user_account = users[9]
+
     expected_sid = u'S-1-5-21-2036804247-3058324640-2116585241-1114'
-    self.assertEqual(users[9].get(u'sid', None), expected_sid)
-    self.assertEqual(users[9].get(u'name', None), u'rsydow')
-    self.assertEqual(users[9].get(u'path', None), u'C:\\Users\\rsydow')
+    self.assertEqual(user_account.identifier, expected_sid)
+    self.assertEqual(user_account.username, u'rsydow')
+    self.assertEqual(user_account.user_directory, u'C:\\Users\\rsydow')
 
 
-class WindowsVersionTest(WindowsSoftwareRegistryTest):
-  """Tests for the Windows version preprocess plug-in object."""
+class WindowsSystemProductPluginTest(WindowsSoftwareRegistryTest):
+  """Tests for the plugin to determine Windows system version information."""
 
   def testGetValue(self):
     """Tests the GetValue function."""
-    plugin = windows.WindowsVersion()
+    plugin = windows.WindowsSystemProductPlugin()
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
     plugin.Run(self._win_registry, knowledge_base_object)
 
-    osversion = knowledge_base_object.GetValue(u'osversion')
+    osversion = knowledge_base_object.GetValue(u'operating_system_product')
     self.assertEqual(osversion, u'Windows 7 Ultimate')
+
+
+class WindowsSystemVersionPluginTest(WindowsSoftwareRegistryTest):
+  """Tests for the plugin to determine Windows system version information."""
+
+  def testGetValue(self):
+    """Tests the GetValue function."""
+    plugin = windows.WindowsSystemVersionPlugin()
+
+    knowledge_base_object = knowledge_base.KnowledgeBase()
+    plugin.Run(self._win_registry, knowledge_base_object)
+
+    osversion = knowledge_base_object.GetValue(u'operating_system_version')
+    self.assertEqual(osversion, u'6.1')
 
 
 if __name__ == '__main__':

@@ -7,3 +7,9 @@ file_downloaded
 
 login_attempt
   data_type == 'windows:evt:record' and source_name == 'Security' and event_identifier == 538
+
+security_event
+  data_type == 'windows:evt:record' and source_name == 'Security'
+
+text_contains
+  body contains 'a message'

@@ -24,9 +24,8 @@ class ParsersManager(object):
     added to the exclude section, otherwise in the include.
 
     Args:
-      parser_filter_expression: a string containing the parser filter
-                                expression, where None represents all parsers
-                                and plugins.
+      parser_filter_expression (str): parser filter expression, where None
+          represents all parsers and plugins.
 
     Returns:
       A tuple containing dictionaries of the names of the included and
@@ -165,16 +164,38 @@ class ParsersManager(object):
     del cls._parser_classes[parser_name]
 
   @classmethod
+  def GetParserAndPluginNames(cls, parser_filter_expression=None):
+    """Retrieves the parser and parser plugin names.
+
+    Args:
+      parser_filter_expression (Optional[str]): parser filter expression,
+          where None represents all parsers and plugins.
+
+    Returns:
+      list[str]: parser and parser plugin names.
+    """
+    parser_and_plugin_names = []
+    for parser_name, parser_class in cls.GetParsers(
+        parser_filter_expression=parser_filter_expression):
+      parser_and_plugin_names.append(parser_name)
+
+      if parser_class.SupportsPlugins():
+        for plugin_name, _ in parser_class.GetPlugins():
+          parser_and_plugin_names.append(
+              u'{0:s}/{1:s}'.format(parser_name, plugin_name))
+
+    return parser_and_plugin_names
+
+  @classmethod
   def GetParserPluginsInformation(cls, parser_filter_expression=None):
     """Retrieves the parser plugins information.
 
     Args:
-      parser_filter_expression: optional string containing the parser filter
-                                expression, where None represents all parsers
-                                and plugins.
+      parser_filter_expression (Optional[str]): parser filter expression,
+          where None represents all parsers and plugins.
 
     Returns:
-      A list of tuples of parser plugin names and descriptions.
+      list[tuple[str, str]]: pairs of parser plugin names and descriptions.
     """
     parser_plugins_information = []
     for _, parser_class in cls.GetParsers(
@@ -207,13 +228,11 @@ class ParsersManager(object):
     """Retrieves the parser objects.
 
     Args:
-      parser_filter_expression: optional string containing the parser filter
-                                expression, where None represents all parsers
-                                and plugins.
+      parser_filter_expression (Optional[str]): parser filter expression,
+          where None represents all parsers and plugins.
 
     Returns:
-      A dictionary mapping parser names to parsers objects (instances of
-      BaseParser).
+      dict[str, BaseParser]: parsers per name.
     """
     includes, excludes = cls._GetParserFilters(parser_filter_expression)
 
@@ -258,9 +277,8 @@ class ParsersManager(object):
        included in the list of registered parsers;
 
     Args:
-      parser_filter_expression: optional string containing the parser filter
-                                expression, where None represents all parsers
-                                and plugins.
+      parser_filter_expression (Optional[str]): parser filter expression,
+          where None represents all parsers and plugins.
 
     Yields:
       A tuple that contains the uniquely identifying name of the parser
@@ -309,14 +327,13 @@ class ParsersManager(object):
 
   @classmethod
   def GetScanner(cls, specification_store):
-    """Initializes the scanner object form the specification store.
+    """Initializes a signature scanner form a specification store.
 
     Args:
-      specification_store: a specification store (instance of
-                           FormatSpecificationStore).
+      specification_store (FormatSpecificationStore): specification store.
 
     Returns:
-      A scanner object (instance of pysigscan.scanner).
+      pysigscan.scanner: signature scanner.
     """
     scanner_object = pysigscan.scanner()
 
@@ -346,9 +363,8 @@ class ParsersManager(object):
     a format specification and a list of parser names for those that do not.
 
     Args:
-      parser_filter_expression: optional string containing the parser filter
-                                expression, where None represents all parsers
-                                and plugins.
+      parser_filter_expression (Optional[str]): parser filter expression,
+          where None represents all parsers and plugins.
 
     Returns:
       A tuple of a format specification store (instance of
@@ -383,7 +399,7 @@ class ParsersManager(object):
     """
     parser_name = parser_class.NAME.lower()
     if parser_name in cls._parser_classes:
-      raise KeyError((u'Parser class already set for name: {0:s}.').format(
+      raise KeyError(u'Parser class already set for name: {0:s}.'.format(
           parser_class.NAME))
 
     cls._parser_classes[parser_name] = parser_class

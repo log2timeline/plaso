@@ -9,7 +9,7 @@ class CircularBuffer(object):
     """Initializes a circular buffer object.
 
     Args:
-      size: an integer containing the number of elements in the buffer.
+      size (int): number of elements in the buffer.
     """
     super(CircularBuffer, self).__init__()
     self._index = 0
@@ -30,11 +30,15 @@ class CircularBuffer(object):
 
   @property
   def size(self):
-    """The number of elements in the buffer."""
+    """int: number of elements in the buffer."""
     return self._size
 
   def Append(self, item):
-    """Add an item to the list."""
+    """Add an item to the list.
+
+    Args:
+      item (object): item.
+    """
     if self._index >= self._size:
       self._index = self._index % self._size
 
@@ -56,7 +60,11 @@ class CircularBuffer(object):
     self.Clear()
 
   def GetCurrent(self):
-    """Returns the current item that index points to."""
+    """Retrieves the current item that index points to.
+
+    Return:
+      object: item.
+    """
     index = self._index - 1
     if index < 0:
       return

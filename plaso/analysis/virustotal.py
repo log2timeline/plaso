@@ -17,10 +17,9 @@ class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
     """Initializes a VirusTotal Analyzer thread.
 
     Args:
-      hash_queue: A queue (instance of Queue.queue) that contains hashes to
-                  be analyzed.
-      hash_analysis_queue: A queue (instance of Queue.queue) that the analyzer
-                           will append HashAnalysis objects to.
+      hash_queue (Queue.queue): queue that contains hashes to be analyzed.
+      hash_analysis_queue (Queue.queue): queue the analyzer will append
+          HashAnalysis objects to.
     """
     super(VirusTotalAnalyzer, self).__init__(
         hash_queue, hash_analysis_queue, **kwargs)
@@ -31,7 +30,7 @@ class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
     """Sets the VirusTotal API key to use in queries.
 
     Args:
-      _api_key: The VirusTotal API key
+      api_key (str): VirusTotal API key
     """
     self._api_key = api_key
 
@@ -42,10 +41,10 @@ class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
       https://www.virustotal.com/en/documentation/public-api/
 
     Args:
-      hashes: A list of hashes (strings) to look up.
+      hashes (list[str]): hashes to look up.
 
     Returns:
-      A list of HashAnalysis objects.
+      list[HashAnalysis]: analysis results.
 
     Raises:
       RuntimeError: If the VirusTotal API key has not been set.
@@ -83,6 +82,7 @@ class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
 
 class VirusTotalAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
   """An analysis plugin for looking up hashes in VirusTotal."""
+
   # VirusTotal allows lookups using any of these hash algorithms.
   REQUIRED_HASH_ATTRIBUTES = [u'sha256_hash', u'sha1_hash', u'md5_hash']
 
@@ -97,23 +97,10 @@ class VirusTotalAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
   _VIRUSTOTAL_PRESENT_RESPONSE_CODE = 1
   _VIRUSTOTAL_ANALYSIS_PENDING_RESPONSE_CODE = -2
 
-  def __init__(self, event_queue):
-    """Initializes a VirusTotal analysis plugin.
-
-    Args:
-      event_queue: A queue that is used to listen for incoming events.
-    """
-    super(VirusTotalAnalysisPlugin, self).__init__(
-        event_queue, VirusTotalAnalyzer)
+  def __init__(self):
+    """Initializes a VirusTotal analysis plugin."""
+    super(VirusTotalAnalysisPlugin, self).__init__(VirusTotalAnalyzer)
     self._api_key = None
-
-  def SetAPIKey(self, api_key):
-    """Sets the VirusTotal API key to use in queries.
-
-    Args:
-      _api_key: The VirusTotal API key
-    """
-    self._analyzer.SetAPIKey(api_key)
 
   def EnableFreeAPIKeyRateLimit(self, rate_limit):
     """Configures Rate limiting for queries to VirusTotal.
@@ -122,23 +109,22 @@ class VirusTotalAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     minute.
 
     Args:
-      rate_limit: Whether not to apply the free API key rate limit.
+      rate_limit (bool): whether to apply the free API key rate limit.
     """
     if rate_limit:
       self._analyzer.hashes_per_batch = 4
       self._analyzer.wait_after_analysis = 60
       self._analysis_queue_timeout = self._analyzer.wait_after_analysis + 1
 
-  def GenerateTagStrings(self, hash_information):
+  def GenerateLabels(self, hash_information):
     """Generates a list of strings that will be used in the event tag.
 
     Args:
-      hash_information: A dictionary containing the JSON decoded contents of the
-                        result of a VirusTotal lookup, as produced by the
-                        VirusTotalAnalyzer.
+      hash_information (dict[str, object]): the JSON decoded contents of the
+          result of a VirusTotal lookup, as produced by the VirusTotalAnalyzer.
 
     Returns:
-      A list of strings describing the results from VirusTotal.
+      list[str]: strings describing the results from VirusTotal.
     """
     response_code = hash_information[u'response_code']
     if response_code == self._VIRUSTOTAL_NOT_PRESENT_RESPONSE_CODE:
@@ -155,6 +141,14 @@ class VirusTotalAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
           u'VirusTotal returned unknown response code {0!s}'.format(
               response_code))
       return [u'virustotal_unknown_response_code_{0:d}'.format(response_code)]
+
+  def SetAPIKey(self, api_key):
+    """Sets the VirusTotal API key to use in queries.
+
+    Args:
+      api_key (str): VirusTotal API key
+    """
+    self._analyzer.SetAPIKey(api_key)
 
 
 manager.AnalysisPluginManager.RegisterPlugin(VirusTotalAnalysisPlugin)

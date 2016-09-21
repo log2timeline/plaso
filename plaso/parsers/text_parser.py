@@ -10,8 +10,9 @@ import abc
 import csv
 import logging
 
-from dfvfs.helpers import text_file
 import pyparsing
+
+from dfvfs.helpers import text_file
 
 from plaso.containers import events
 from plaso.lib import errors
@@ -66,7 +67,8 @@ class TextCSVParser(interface.FileObjectParser):
     """Converts all strings in a CSV row dict to Unicode.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       row (dict[str, bytes]): a row from a CSV file, where the dictionary
           key contains the column name and the value a binary string.
 
@@ -84,7 +86,7 @@ class TextCSVParser(interface.FileObjectParser):
       except UnicodeDecodeError:
         replaced_value = value.decode(self.encoding, errors=u'replace')
         parser_mediator.ProduceExtractionError(
-            u'Error decoding string as {0:s}, characters have been '
+            u'error decoding string as {0:s}, characters have been '
             u'replaced in {1:s}'.format(self.encoding, replaced_value))
         row[key] = replaced_value
     return row
@@ -93,7 +95,8 @@ class TextCSVParser(interface.FileObjectParser):
     """Parse a line of the log file and extract event objects.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       row_offset: the offset of the row.
       row: a dictionary containing all the fields as denoted in the
            COLUMNS class list. Strings in this dict are Unicode strings.
@@ -109,8 +112,9 @@ class TextCSVParser(interface.FileObjectParser):
     """Parses a CSV text file-like object.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      file_object: a file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -161,6 +165,8 @@ class TextCSVParser(interface.FileObjectParser):
     self.ParseRow(parser_mediator, text_file_object.tell(), row)
 
     for row in reader:
+      if parser_mediator.abort:
+        break
       row = self._ConvertRowToUnicode(parser_mediator, row)
       self.ParseRow(parser_mediator, text_file_object.tell(), row)
 
@@ -168,12 +174,12 @@ class TextCSVParser(interface.FileObjectParser):
     """Return a bool indicating whether or not this is the correct parser.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      row: a single row from the CSV file. Strings in this dict are binary
-           strings, to aid in file verification.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (dict[str, bytes]): a single row from the CSV file.
 
     Returns:
-      True if this is the correct parser, False otherwise.
+      bool: True if this is the correct parser, False otherwise.
     """
     pass
 
@@ -188,14 +194,19 @@ def PyParseRangeCheck(lower_bound, upper_bound):
   in setParseAction with the upper and lower bound set as parameters.
 
   Args:
-    lower_bound: an integer representing the lower bound of the range.
-    upper_bound: an integer representing the upper bound of the range.
+    lower_bound (int): lower bound of the range.
+    upper_bound (int): upper bound of the range.
 
   Returns:
-    A callback method that can be used by pyparsing setParseAction.
+    Function: callback method that can be used by pyparsing setParseAction.
   """
   def CheckRange(unused_string, unused_location, tokens):
-    """Parse the arguments."""
+    """Parse the arguments.
+
+    Args:
+      location (int): location within the string where the match was made.
+      tokens (list[str]): tokens.
+    """
     try:
       check_number = tokens[0]
     except IndexError:
@@ -227,10 +238,10 @@ def PyParseIntCast(unused_string, unused_location, tokens):
   them all to an integer value.
 
   Args:
-    unused_string: the original parsed string.
-    unused_location: the location within the string where the match was made.
-    tokens: A list of extracted tokens (where the string to be converted is
-    stored).
+    string (str): original parsed string.
+    location (int): location within the string where the match was made.
+    tokens (list[str]): extracted tokens, where the string to be converted
+        is stored.
   """
   # Cast the regular tokens.
   for index, token in enumerate(tokens):
@@ -260,10 +271,10 @@ def PyParseJoinList(unused_string, unused_location, tokens):
   token.
 
   Args:
-    unused_string: the original parsed string.
-    unused_location: the location within the string where the match was made.
-    tokens: a list of extracted tokens. This is the list that should be joined
-    together and stored as a single token.
+    string (str): original parsed string.
+    location (int): location within the string where the match was made.
+    tokens (list[str]): extracted tokens, where the string to be converted
+        is stored.
   """
   join_list = []
   for token in tokens:
@@ -355,6 +366,8 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
   # attribute.
   _ENCODING = u'ascii'
 
+  _EMPTY_LINES = frozenset([b'\n', b'\r', b'\r\n'])
+
   def __init__(self):
     """Initializes a parser object."""
     super(PyparsingSingleLineTextParser, self).__init__()
@@ -366,20 +379,20 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
 
   def _ReadLine(
       self, parser_mediator, text_file_object, max_len=0, quiet=False, depth=0):
-    """Read a single line from a text file and return it back.
+    """Reads a line from a text file.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      text_file_object: a text file object (instance of dfvfs.TextFile).
-      max_len: optional maximum number of bytes a single line can take.
-      quiet: optional boolean value to indicate parse warning should not be
-             displayed.
-      depth: optional number of new lines the parser can encounter before
-             bailing out.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      text_file_object (dfvfs.TextFile): text file.
+      max_len (Optional[int]): maximum number of bytes a single line can take.
+      quiet (Optional[bool]): True if parse warnings should not be displayed.
+      depth (Optional[int]): number of new lines the parser can encounter
+          before bailing out.
 
     Returns:
-      A single line read from the file-like object, or the maximum number of
-      characters (if max_len defined and line longer than the defined size).
+      str: single line read from the file-like object, or the maximum number of
+          characters, if max_len defined and line longer than the defined size.
     """
     if max_len:
       line = text_file_object.readline(max_len)
@@ -389,8 +402,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     if not line:
       return
 
-    # If line is empty, skip it and go on.
-    if line in [b'\n', b'\r\n']:
+    if line in self._EMPTY_LINES:
       # Max 40 new lines in a row before we bail out.
       if depth == 40:
         return u''
@@ -402,23 +414,22 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
       return line.strip()
 
     try:
-      decoded_line = line.decode(self.encoding)
-      return decoded_line.strip()
+      line = line.decode(self.encoding)
     except UnicodeDecodeError:
       if not quiet:
-        display_name = parser_mediator.GetDisplayName()
-        logging.warning((
-            u'Unable to decode line [{0:s}...] with encoding: {1:s} in '
-            u'file: {2:s}').format(
-                repr(line[1:30]), self.encoding, display_name))
-      return line.strip()
+        parser_mediator.ProduceExtractionError(
+            u'unable to decode line: "{0:s}..." with encoding: {1:s}'.format(
+                repr(line[:30]), self.encoding))
+
+    return line.strip()
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a text file-like object using a pyparsing definition.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      file_object: a file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -455,6 +466,8 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     self._current_offset = 0
     # Read every line in the text file.
     while line:
+      if parser_mediator.abort:
+        break
       parsed_structure = None
       use_key = None
       # Try to parse the line using all the line structures.
@@ -477,7 +490,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
         if len(line) > 80:
           line = u'{0:s}...'.format(line[0:77])
         parser_mediator.ProduceExtractionError(
-            u'Unable to parse log line: {0:s} at offset {1:d}'.format(
+            u'unable to parse log line: {0:s} at offset {1:d}'.format(
                 repr(line), self._current_offset))
 
       self._current_offset = text_file_object.get_offset()
@@ -491,14 +504,13 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     and produces an EventObject if possible from that structure.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      key: an identification string indicating the name of the parsed
-           structure.
-      structure: a pyparsing.ParseResults object from a line in the
-                 log file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
 
     Returns:
-      An event object (instance of EventObject) or None.
+      EventObject: event or None.
     """
 
   @abc.abstractmethod
@@ -509,11 +521,12 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
     that the file is the correct one for this particular parser.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      line: a single line from the text file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      line (str): single line from the text file.
 
     Returns:
-      True if this is the correct parser, False otherwise.
+      bool: True if this is the correct parser, False otherwise.
     """
 
 
@@ -524,8 +537,8 @@ class EncodedTextReader(object):
     """Initializes the encoded test reader object.
 
     Args:
-      buffer_size: optional buffer size.
-      encoding: optional encoding.
+      buffer_size (Optional[int]): buffer size.
+      encoding (Optional[str]): encoding.
     """
     super(EncodedTextReader, self).__init__()
     self._buffer = b''
@@ -549,10 +562,10 @@ class EncodedTextReader(object):
     """Reads a line from the file object.
 
     Args:
-      file_object: the file-like object.
+      file_object (dfvfs.FileIO): file-like object.
 
     Returns:
-      A string containing the line.
+      str: line read from the file-like object.
     """
     if len(self._buffer) < self._buffer_size:
       self._buffer = b''.join([
@@ -589,10 +602,10 @@ class EncodedTextReader(object):
     """Reads a line.
 
     Args:
-      file_object: the file-like object.
+      file_object (dfvfs.FileIO): file-like object.
 
     Returns:
-      A single line read from the lines buffer.
+      str: line read from the lines buffer.
     """
     line, _, self.lines = self.lines.partition(u'\n')
     if not line:
@@ -605,7 +618,7 @@ class EncodedTextReader(object):
     """Reads lines into the lines buffer.
 
     Args:
-      file_object: the file-like object.
+      file_object (dfvfs.FileIO): file-like object.
     """
     lines_size = len(self.lines)
     if lines_size < self._buffer_size:
@@ -629,8 +642,8 @@ class EncodedTextReader(object):
     """Skips ahead a number of characters.
 
     Args:
-      file_object: the file-like object.
-      number_of_characters: the number of characters.
+      file_object (dfvfs.FileIO): file-like object.
+      number_of_characters (int): number of characters.
     """
     lines_size = len(self.lines)
     while number_of_characters >= lines_size:
@@ -661,8 +674,9 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     """Parses a text file-like object using a pyparsing definition.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      file_object: a file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -691,6 +705,8 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
 
     # Read every line in the text file.
     while self._text_reader.lines:
+      if parser_mediator.abort:
+        break
       # Initialize pyparsing objects.
       tokens = None
       start = 0
@@ -727,11 +743,11 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
           if len(odd_line) > 80:
             odd_line = u'{0:s}...'.format(odd_line[0:77])
           parser_mediator.ProduceExtractionError(
-              u'Unable to parse log line: {0:s}'.format(repr(odd_line)))
+              u'unable to parse log line: {0:s}'.format(repr(odd_line)))
 
       try:
         self._text_reader.ReadLines(file_object)
       except UnicodeDecodeError as exception:
         parser_mediator.ProduceExtractionError(
-            u'Unable to read lines from file with error: {0:s}'.format(
+            u'unable to read lines from file with error: {0:s}'.format(
                 exception))

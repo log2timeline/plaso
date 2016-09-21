@@ -10,8 +10,6 @@ from plaso.lib import utils
 class UtilsTestCase(unittest.TestCase):
   """The unit test for utils method collection."""
 
-  # TODO: add tests for GetUnicodeString.
-
   def testIsText(self):
     """Tests the IsText function."""
     bytes_in = b'this is My Weird ASCII and non whatever string.'

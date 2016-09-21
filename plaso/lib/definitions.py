@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 """The definitions."""
 
-OS_LINUX = u'Linux'
-OS_MACOSX = u'MacOSX'
-# TODO: keeping this compatible with the existing code for now.
-# Rename None to Unknown in the future.
-OS_UNKNOWN = u'None'
-OS_WINDOWS = u'Windows'
+OPERATING_SYSTEM_LINUX = u'Linux'
+OPERATING_SYSTEM_MACOSX = u'MacOSX'
+OPERATING_SYSTEM_UNKNOWN = u'Unknown'
+OPERATING_SYSTEM_WINDOWS = u'Windows'
+
+OPERATING_SYSTEMS = frozenset([
+    OPERATING_SYSTEM_LINUX,
+    OPERATING_SYSTEM_MACOSX,
+    OPERATING_SYSTEM_UNKNOWN,
+    OPERATING_SYSTEM_WINDOWS])
 
 PROCESSING_STATUS_ABORTED = u'aborted'
 PROCESSING_STATUS_ANALYZING = u'analyzing'
@@ -18,7 +22,11 @@ PROCESSING_STATUS_HASHING = u'hashing'
 PROCESSING_STATUS_IDLE = u'idle'
 PROCESSING_STATUS_INITIALIZED = u'initialized'
 PROCESSING_STATUS_KILLED = u'killed'
+PROCESSING_STATUS_MERGING = u'merging'
+PROCESSING_STATUS_NOT_RESPONDING = u'not responding'
+PROCESSING_STATUS_REPORTING = u'reporting'
 PROCESSING_STATUS_RUNNING = u'running'
+PROCESSING_STATUS_YARA_SCAN = u'yara scan'
 
 PROCESSING_ERROR_STATUS = frozenset([
     PROCESSING_STATUS_ABORTED,

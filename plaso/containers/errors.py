@@ -2,6 +2,7 @@
 """Error related attribute container object definitions."""
 
 from plaso.containers import interface
+from plaso.containers import manager
 
 
 # TODO: add AnalysisError.
@@ -31,3 +32,6 @@ class ExtractionError(interface.AttributeContainer):
     self.message = message
     self.parser_chain = parser_chain
     self.path_spec = path_spec
+
+
+manager.AttributeContainersManager.RegisterAttributeContainer(ExtractionError)

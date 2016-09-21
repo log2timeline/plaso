@@ -11,7 +11,19 @@ from plaso.winnt import human_readable_service_enums
 
 
 class WindowsService(yaml.YAMLObject):
-  """Class to represent a Windows Service."""
+  """Class to represent a Windows Service.
+
+  Attributes:
+    image_path (str): value of the ImagePath value of the service key.
+    name (str): name of the service
+    object_name (str): value of the ObjectName value of the service key.
+    service_dll (str): value of the ServiceDll value in the service's Parameters
+        subkey.
+    service_type (int): value of the Type value of the service key.
+    source (tuple[str, str]) : tuple containing the path and registry key
+        describing where the service was found
+    start_type (int):  value of the Start value of the service key.
+    """
   # This is used for comparison operations and defines attributes that should
   # not be used during evaluation of whether two services are the same.
   COMPARE_EXCLUDE = frozenset([u'sources'])
@@ -29,15 +41,15 @@ class WindowsService(yaml.YAMLObject):
     """Initializes a Windows service object.
 
     Args:
-      name: A string that contains the name of the service
-      service_type: The value of the Type value of the service key.
-      image_path: The value of the ImagePath value of the service key.
-      start_type: The value of the Start value of the service key.
-      object_name: The value of the ObjectName value of the service key.
-      source: A tuple of (pathspec, Registry key) describing where the
-              service was found
-      service_dll: Optional string value of the ServiceDll value in the
-                   service's Parameters subkey.
+      name (str): name of the service
+      service_type (int): value of the Type value of the service key.
+      image_path (str): value of the ImagePath value of the service key.
+      start_type (int):  value of the Start value of the service key.
+      object_name (str): value of the ObjectName value of the service key.
+      source (tuple[str, str]) : tuple containing the path and registry key
+          describing where the service was found
+      service_dll (Optional[str]): value of the ServiceDll value in the
+          service's Parameters subkey.
 
     Raises:
       TypeError: If a tuple with two elements is not passed as the 'source'
@@ -73,11 +85,10 @@ class WindowsService(yaml.YAMLObject):
     COMPARE_EXCLUDE constant.
 
     Args:
-      other_service: The service (instance of WindowsService) we are testing
-      for equality.
+      other_service (WindowsService): service we are testing for equality.
 
     Returns:
-      A boolean value to indicate the services are equal.
+      bool: whether the services are equal.
     """
     if not isinstance(other_service, WindowsService):
       return False
@@ -99,12 +110,13 @@ class WindowsService(yaml.YAMLObject):
 
   @classmethod
   def FromEvent(cls, service_event):
-    """Creates a service object from an event object.
+    """Creates a service object from an event.
 
     Args:
-      service_event: an event object (instance of EventObject)
-                     to create a new service object from.
+      service_event (EventObject): event to create a new service object from.
 
+    Returns:
+      WindowsService: service.
     """
     _, _, name = service_event.key_path.rpartition(
         WindowsService._REGISTRY_KEY_PATH_SEPARATOR)
@@ -124,14 +136,22 @@ class WindowsService(yaml.YAMLObject):
         source=source, service_dll=service_dll)
 
   def HumanReadableType(self):
-    """Return a human readable string describing the type value."""
+    """Return a human readable string describing the type value.
+
+    Returns:
+      str: human readable description of the type value.
+    """
     if isinstance(self.service_type, py2to3.STRING_TYPES):
       return self.service_type
     return human_readable_service_enums.SERVICE_ENUMS[u'Type'].get(
         self.service_type, u'{0:d}'.format(self.service_type))
 
   def HumanReadableStartType(self):
-    """Return a human readable string describing the start_type value."""
+    """Return a human readable string describing the start type value.
+
+    Returns:
+      str: human readable description of the start type value.
+    """
     if isinstance(self.start_type, py2to3.STRING_TYPES):
       return self.start_type
     return human_readable_service_enums.SERVICE_ENUMS[u'Start'].get(
@@ -150,7 +170,7 @@ class WindowsServiceCollection(object):
     """Add a new service to the list of ones we know about.
 
     Args:
-      new_service: the service object (instance of WindowsService) to add.
+      new_service (WindowsService): the service to add.
     """
     for service in self._services:
       if new_service == service:
@@ -165,11 +185,11 @@ class WindowsServiceCollection(object):
 
   @property
   def services(self):
-    """Get the services in this collection."""
+    """list[WindowsService]: services in this collection."""
     return self._services
 
 
-class WindowsServicesPlugin(interface.AnalysisPlugin):
+class WindowsServicesAnalysisPlugin(interface.AnalysisPlugin):
   """Provides a single list of for Windows services found in the Registry."""
 
   NAME = u'windows_services'
@@ -177,13 +197,9 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
   # Indicate that we can run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = True
 
-  def __init__(self, incoming_queue):
-    """Initializes the Windows Services plugin
-
-    Args:
-      incoming_queue: A queue to read events from.
-    """
-    super(WindowsServicesPlugin, self).__init__(incoming_queue)
+  def __init__(self):
+    """Initializes the Windows Services plugin."""
+    super(WindowsServicesAnalysisPlugin, self).__init__()
     self._output_format = u'text'
     self._service_collection = WindowsServiceCollection()
 
@@ -191,7 +207,10 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
     """Produces a human readable multi-line string representing the service.
 
     Args:
-      service: The service (instance of WindowsService) to format.
+      service (WindowsService):  service to format.
+
+    Returns:
+      str: human readable representation of a Windows Service.
     """
     string_segments = [
         service.name,
@@ -206,15 +225,15 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
       string_segments.append(u'\t\t{0:s}:{1:s}'.format(source[0], source[1]))
     return u'\n'.join(string_segments)
 
-  def CompileReport(self, analysis_mediator):
+  def CompileReport(self, mediator):
     """Compiles an analysis report.
 
     Args:
-      analysis_mediator: The analysis mediator object (instance of
-                         AnalysisMediator).
+      mediator (AnalysisMediator): mediates interactions between analysis
+          plugins and other components, such as storage and dfvfs.
 
     Returns:
-      The analysis report (instance of AnalysisReport).
+      AnalysisReport: report.
     """
     # TODO: move YAML representation out of plugin and into serialization.
     lines_of_text = []
@@ -231,22 +250,22 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
     report_text = u'\n'.join(lines_of_text)
     return reports.AnalysisReport(plugin_name=self.NAME, text=report_text)
 
-  def ExamineEvent(self, analysis_mediator, event_object, **kwargs):
-    """Analyzes an event_object and creates Windows Services as required.
+  def ExamineEvent(self, mediator, event):
+    """Analyzes an event and creates Windows Services as required.
 
       At present, this method only handles events extracted from the Registry.
 
     Args:
-      analysis_mediator: The analysis mediator object (instance of
-                         AnalysisMediator).
-      event_object: The event object (instance of EventObject) to examine.
+      mediator (AnalysisMediator): mediates interactions between analysis
+          plugins and other components, such as storage and dfvfs.
+      event (EventObject): event to examine.
     """
     # TODO: Handle event log entries here also (ie, event id 4697).
-    if getattr(event_object, u'data_type', None) != u'windows:registry:service':
+    if getattr(event, u'data_type', None) != u'windows:registry:service':
       return
     else:
       # Create and store the service.
-      service = WindowsService.FromEvent(event_object)
+      service = WindowsService.FromEvent(event)
       self._service_collection.AddService(service)
 
   def SetOutputFormat(self, output_format):
@@ -259,4 +278,4 @@ class WindowsServicesPlugin(interface.AnalysisPlugin):
     self._output_format = output_format
 
 
-manager.AnalysisPluginManager.RegisterPlugin(WindowsServicesPlugin)
+manager.AnalysisPluginManager.RegisterPlugin(WindowsServicesAnalysisPlugin)

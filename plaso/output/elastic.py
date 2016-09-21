@@ -161,6 +161,9 @@ class ElasticSearchOutputModule(interface.OutputModule):
   NAME = u'elastic'
   DESCRIPTION = u'Saves the events into an Elasticsearch database.'
 
+  # Strings longer than this will not be analyzed by elasticsearch.
+  _ELASTIC_ANALYZER_STRING_LIMIT = 10922
+
   def __init__(self, output_mediator):
     """Initializes the output module object.
 
@@ -263,7 +266,8 @@ class ElasticSearchOutputModule(interface.OutputModule):
                   u'fields': {
                       u'raw': {
                           u'type': u'string',
-                          u'index': u'not_analyzed'
+                          u'index': u'not_analyzed',
+                          u'ignore_above': self._ELASTIC_ANALYZER_STRING_LIMIT
                       }
                   }
               }

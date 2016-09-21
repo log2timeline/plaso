@@ -6,6 +6,10 @@ import shutil
 import tempfile
 import unittest
 
+from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.path import factory as path_spec_factory
+from dfvfs.resolver import resolver as path_spec_resolver
+
 
 class BaseTestCase(unittest.TestCase):
   """The base test case."""
@@ -17,15 +21,28 @@ class BaseTestCase(unittest.TestCase):
   # conventions.
   maxDiff = None
 
+  def _GetTestFileEntryFromPath(self, path_segments):
+    """Creates a file entry that references a file in the test data directory.
+
+    Args:
+      path_segments (list[str]): path segments inside the test data directory.
+
+    Returns:
+      dfvfs.FileEntry: file entry.
+    """
+    path = self._GetTestFilePath(path_segments)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
+    return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+
   def _GetTestFilePath(self, path_segments):
     """Retrieves the path of a test file in the test data directory.
 
     Args:
-      path_segments: a list of strings containing the path segments inside
-                     the test data directory.
+      path_segments (list[str]): path segments inside the test data directory.
 
     Returns:
-      A string containing the path of the test file.
+      str: path of the test file.
     """
     # Note that we need to pass the individual path segments to os.path.join
     # and not a list.

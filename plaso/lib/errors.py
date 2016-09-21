@@ -13,16 +13,12 @@ class BadConfigOption(Error):
   """Raised when a faulty configuration option is encountered."""
 
 
-class CollectorError(Error):
-  """Class that defines collector errors."""
-
-
 class ConnectionError(Error):
   """Class that defines errors encountered connecting to a service."""
 
 
-class EngineAbort(Error):
-  """Class that defines an engine initiated abort exception."""
+class HeapFull(Error):
+  """Class that implements a heap full exception."""
 
 
 class MaximumRecursionDepth(Error):

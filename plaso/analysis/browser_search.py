@@ -52,13 +52,9 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
        '_ExtractYouTubeSearchQuery'),
   ])
 
-  def __init__(self, incoming_queue):
-    """Initializes an analysis plugin.
-
-    Args:
-      incoming_queue (Queue): queue for incoming events.
-    """
-    super(BrowserSearchPlugin, self).__init__(incoming_queue)
+  def __init__(self):
+    """Initializes an analysis plugin."""
+    super(BrowserSearchPlugin, self).__init__()
     self._counter = collections.Counter()
 
     # Store a list of search terms in a timeline format.
@@ -236,15 +232,16 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     if not url:
       return u''
 
-    # Strip addional key value pairs.
+    # Strip additional key value pairs.
     url, _, _ = url.partition(u'&')
     return url
 
-  def CompileReport(self, analysis_mediator):
+  def CompileReport(self, mediator):
     """Compiles an analysis report.
 
     Args:
-      analysis_mediator (AnalysisMediator): analysis mediator.
+      mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
 
     Returns:
       AnalysisReport: analysis report.
@@ -275,12 +272,13 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     analysis_report.report_dict = results
     return analysis_report
 
-  def ExamineEvent(self, unused_analysis_mediator, event, **kwargs):
+  def ExamineEvent(self, unused_mediator, event):
     """Analyzes an event.
 
     Args:
-      analysis_mediator (AnalysisMediator): analysis mediator.
-      event (EventObject): event.
+      mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
+      event (EventObject): event to examine.
     """
     # This event requires an URL attribute.
     url = getattr(event, u'url', None)

@@ -13,7 +13,7 @@ from tests.cli.helpers import test_lib
 
 
 class HelperManagerTest(unittest.TestCase):
-  """Tests for the parsers manager."""
+  """Tests the parsers manager."""
 
   # pylint: disable=protected-access
 

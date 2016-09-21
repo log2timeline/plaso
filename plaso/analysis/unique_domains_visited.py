@@ -27,30 +27,26 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
       u'macosx:lsquarantine', u'msiecf:redirected', u'msiecf:url',
       u'msie:webcache:container', u'opera:history', u'safari:history:visit']
 
-  def __init__(self, incoming_queue):
-    """Initializes the domains visited plugin.
-
-    Args:
-      incoming_queue: A queue to read events from.
-    """
-    super(UniqueDomainsVisitedPlugin, self).__init__(incoming_queue)
+  def __init__(self):
+    """Initializes the domains visited plugin."""
+    super(UniqueDomainsVisitedPlugin, self).__init__()
     self._domains = []
 
-  def ExamineEvent(self, analysis_mediator, event_object, **kwargs):
-    """Analyzes an event_object and extracts domains from it.
+  def ExamineEvent(self, mediator, event):
+    """Analyzes an event and extracts domains from it.
 
     We only evaluate straightforward web history events, not visits which can
     be inferred by TypedURLs, cookies or other means.
 
     Args:
-      analysis_mediator: The analysis mediator object (instance of
-                         AnalysisMediator).
-      event_object: The event object (instance of EventObject) to examine.
+      mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
+      event (EventObject): event to examine.
     """
-    if event_object.data_type not in self._DATATYPES:
+    if event.data_type not in self._DATATYPES:
       return
 
-    url = getattr(event_object, u'url', None)
+    url = getattr(event, u'url', None)
     if url is None:
       return
     parsed_url = urlparse.urlparse(url)
@@ -60,12 +56,12 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
       return
     self._domains.append(domain)
 
-  def CompileReport(self, analysis_mediator):
+  def CompileReport(self, mediator):
     """Compiles an analysis report.
 
     Args:
-      analysis_mediator: The analysis mediator object (instance of
-                         AnalysisMediator).
+      mediator (AnalysisMediator): mediates interactions between
+          analysis plugins and other components, such as storage and dfvfs.
 
     Returns:
       The analysis report (instance of AnalysisReport).

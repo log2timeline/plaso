@@ -36,14 +36,6 @@ plaso.lib.errors module
     :undoc-members:
     :show-inheritance:
 
-plaso.lib.event module
-----------------------
-
-.. automodule:: plaso.lib.event
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.lib.eventdata module
 --------------------------
 
@@ -72,6 +64,14 @@ plaso.lib.pfilter module
 ------------------------
 
 .. automodule:: plaso.lib.pfilter
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.lib.platform_specific module
+----------------------------------
+
+.. automodule:: plaso.lib.platform_specific
     :members:
     :undoc-members:
     :show-inheritance:

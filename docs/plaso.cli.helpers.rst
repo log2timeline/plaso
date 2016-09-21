@@ -52,6 +52,14 @@ plaso.cli.helpers.mysql_4n6time_output module
     :undoc-members:
     :show-inheritance:
 
+plaso.cli.helpers.nsrlsvr_analysis module
+-----------------------------------------
+
+.. automodule:: plaso.cli.helpers.nsrlsvr_analysis
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.cli.helpers.server_config module
 --------------------------------------
 
@@ -84,10 +92,10 @@ plaso.cli.helpers.tagging_analysis module
     :undoc-members:
     :show-inheritance:
 
-plaso.cli.helpers.timesketch_out module
----------------------------------------
+plaso.cli.helpers.timesketch_output module
+------------------------------------------
 
-.. automodule:: plaso.cli.helpers.timesketch_out
+.. automodule:: plaso.cli.helpers.timesketch_output
     :members:
     :undoc-members:
     :show-inheritance:
