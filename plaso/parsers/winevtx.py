@@ -169,8 +169,8 @@ class WinEvtxParser(interface.FileObjectParser):
         if len(evtx_record.strings) <= rule.index:
           parser_mediator.ProduceExtractionError((
               u'evtx_record.strings has unexpected length of {0:d} '
-              u'(expected at least {1:d})'.format(len(evtx_record.strings),
-                                                  rule.index)))
+              u'(expected at least {1:d})'.format(
+                  len(evtx_record.strings), rule.index)))
         strings_parsed[rule.name] = evtx_record.strings[rule.index]
 
 

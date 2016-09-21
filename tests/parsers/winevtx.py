@@ -123,12 +123,13 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(len(storage_writer.events), 194)
 
-    expected_strings_parsed = [(u'source_user_id', u'S-1-5-18'),
-                               (u'source_user_name', u'GREENDALEGOLD$'),
-                               (u'target_machine_ip', u'-'),
-                               (u'target_machine_name', None),
-                               (u'target_user_id', u'S-1-5-18'),
-                               (u'target_user_name', u'SYSTEM')]
+    expected_strings_parsed = [
+        (u'source_user_id', u'S-1-5-18'),
+        (u'source_user_name', u'GREENDALEGOLD$'),
+        (u'target_machine_ip', u'-'),
+        (u'target_machine_name', None),
+        (u'target_user_id', u'S-1-5-18'),
+        (u'target_user_name', u'SYSTEM')]
 
     strings_parsed = sorted(storage_writer.events[178].strings_parsed.items())
     self.assertEqual(strings_parsed, expected_strings_parsed)
