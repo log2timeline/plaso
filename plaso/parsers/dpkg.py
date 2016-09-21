@@ -172,7 +172,7 @@ class DpkgParser(text_parser.PyparsingSingleLineTextParser):
 
     Args:
       structure (pyparsing.ParseResults): structure of tokens derived from
-        a line of a text file.
+          a line of a text file.
 
     Returns:
       int: The timestamp in microseconds or 0 on error.
