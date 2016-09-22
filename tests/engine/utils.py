@@ -61,8 +61,8 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
     self.assertIsNotNone(path_spec_generator)
 
     path_specs = list(path_spec_generator)
-    # One evtx, one AUTHORS, two filter_*.txt files, total 4 files.
-    self.assertEqual(len(path_specs), 4)
+    # Two evtx, one AUTHORS, two filter_*.txt files, total 5 files.
+    self.assertEqual(len(path_specs), 5)
 
     with self.assertRaises(IOError):
       _ = utils.BuildFindSpecsFromFile('thisfiledoesnotexist')
