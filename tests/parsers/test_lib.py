@@ -83,12 +83,9 @@ class _EventsHeap(object):
 class ParserTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for a parser."""
 
-  def _CreateParserMediator(self,
-                            storage_writer,
-                            file_entry=None,
-                            knowledge_base_values=None,
-                            parser_chain=None,
-                            timezone=u'UTC'):
+  def _CreateParserMediator(
+      self, storage_writer, file_entry=None, knowledge_base_values=None,
+      parser_chain=None, timezone=u'UTC'):
     """Creates a parser mediator.
 
     Args:
@@ -108,8 +105,8 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
 
     knowledge_base_object.SetTimezone(timezone)
 
-    parser_mediator = mediator.ParserMediator(storage_writer,
-                                              knowledge_base_object)
+    parser_mediator = mediator.ParserMediator(
+        storage_writer, knowledge_base_object)
 
     if file_entry:
       parser_mediator.SetFileEntry(file_entry)
@@ -192,16 +189,11 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
     return self._ParseFileByPathSpec(
-        path_spec,
-        parser,
-        knowledge_base_values=knowledge_base_values,
+        path_spec, parser, knowledge_base_values=knowledge_base_values,
         timezone=timezone)
 
-  def _ParseFileByPathSpec(self,
-                           path_spec,
-                           parser,
-                           knowledge_base_values=None,
-                           timezone=u'UTC'):
+  def _ParseFileByPathSpec(
+      self, path_spec, parser, knowledge_base_values=None, timezone=u'UTC'):
     """Parses a file with a parser and writes results to a storage writer.
 
     Args:
@@ -236,8 +228,8 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
 
     return storage_writer
 
-  def _TestGetMessageStrings(self, event, expected_message,
-                             expected_message_short):
+  def _TestGetMessageStrings(
+      self, event, expected_message, expected_message_short):
     """Tests the formatting of the message strings.
 
     This function invokes the GetMessageStrings function of the event
@@ -257,8 +249,8 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     self.assertEqual(message, expected_message)
     self.assertEqual(message_short, expected_message_short)
 
-  def _TestGetSourceStrings(self, event, expected_source,
-                            expected_source_short):
+  def _TestGetSourceStrings(
+      self, event, expected_source, expected_source_short):
     """Tests the formatting of the source strings.
 
     This function invokes the GetSourceStrings function of the event
@@ -278,18 +270,17 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     self.assertEqual(source_short, expected_source_short)
 
   def assertDictContains(self, received, expected):
-    """Tests if received contains every key-value pair as expected.
+    """Asserts if a dictionary contains every key-value pair as expected.
 
-    Recieved can contain new keys. If any value is a dict, this function is \
+    Recieved can contain new keys. If any value is a dict, this function is
     called recursively.
 
     Args:
       received (dict): received dictionary.
       expected (dict): expected dictionary.
-
     """
     for key, value in expected.items():
-      self.assertTrue(key in received)
+      self.assertIn(key, received)
 
       if isinstance(value, dict):
         self.assertDictEqual(received[key], expected[key])
