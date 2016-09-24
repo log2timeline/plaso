@@ -1104,7 +1104,10 @@ class ZIPStorageFile(interface.BaseFileStorage):
     if not event:
       return
 
-    self._event_heap.PushEvent(event, stream_number, event.store_index)
+    # TODO: refactor.
+    store_index = getattr(event, u'_store_index', None)
+
+    self._event_heap.PushEvent(event, stream_number, store_index)
 
     reference_timestamp = event.timestamp
     while event.timestamp == reference_timestamp:
@@ -1112,7 +1115,10 @@ class ZIPStorageFile(interface.BaseFileStorage):
       if not event:
         break
 
-      self._event_heap.PushEvent(event, stream_number, event.store_index)
+      # TODO: refactor.
+      store_index = getattr(event, u'_store_index', None)
+
+      self._event_heap.PushEvent(event, stream_number, store_index)
 
   def _GetEvent(self, stream_number, entry_index=-1):
     """Reads an event from a specific stream.
@@ -1636,8 +1642,10 @@ class ZIPStorageFile(interface.BaseFileStorage):
         if time_range and event.timestamp > time_range.end_timestamp:
           continue
 
-        self._event_heap.PushEvent(
-            event, stream_number, event.store_number)
+        # TODO: refactor.
+        store_index = getattr(event, u'_store_index', None)
+
+        self._event_heap.PushEvent(event, stream_number, store_index)
 
         reference_timestamp = event.timestamp
         while event.timestamp == reference_timestamp:
@@ -1645,8 +1653,10 @@ class ZIPStorageFile(interface.BaseFileStorage):
           if not event:
             break
 
-          self._event_heap.PushEvent(
-              event, stream_number, event.store_number)
+          # TODO: refactor.
+          store_index = getattr(event, u'_store_index', None)
+
+          self._event_heap.PushEvent(event, stream_number, store_index)
 
   def _OpenRead(self):
     """Opens the storage file for reading."""

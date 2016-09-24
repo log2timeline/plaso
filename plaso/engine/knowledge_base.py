@@ -283,14 +283,14 @@ class KnowledgeBase(object):
         for user_account in system_configuration.user_accounts}
 
     try:
-      self.SetTimezone(system_configuration.time_zone)
+      self.SetTimeZone(system_configuration.time_zone)
     except ValueError:
       logging.warning(
           u'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
               system_configuration.time_zone, self.timezone.zone))
 
-  def SetDefaultCodepage(self, codepage):
-    """Sets the default codepage.
+  def SetCodepage(self, codepage):
+    """Sets the codepage.
 
     Args:
       codepage (str): codepage.
@@ -332,7 +332,7 @@ class KnowledgeBase(object):
     """
     try:
       self._time_zone = pytz.timezone(time_zone)
-    except pytz.UnknownTimeZoneError:
+    except (AttributeError, pytz.UnknownTimeZoneError):
       raise ValueError(u'Unsupported timezone: {0:s}'.format(time_zone))
 
   def SetValue(self, identifier, value):
