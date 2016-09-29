@@ -18,6 +18,7 @@ from plaso.formatters import chrome_preferences
 from plaso.formatters import cron
 from plaso.formatters import cups_ipp
 from plaso.formatters import docker
+from plaso.formatters import dpkg
 from plaso.formatters import file_history
 from plaso.formatters import file_system
 from plaso.formatters import firefox
