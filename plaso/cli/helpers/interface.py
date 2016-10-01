@@ -9,7 +9,7 @@ from plaso.lib import py2to3
 
 
 class ArgumentsHelper(object):
-  """The CLI arguments helper class."""
+  """CLI arguments helper."""
 
   NAME = u'baseline'
   # Category further divides the registered helpers down after function,

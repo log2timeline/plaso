@@ -91,12 +91,12 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
   _EXPECTED_ANALYSIS_PLUGIN_OPTIONS = u'\n'.join([
       u'usage: psort_test.py [--nsrlsvr-host NSRLSVR_HOST]',
       u'                     [--nsrlsvr-port NSRLVR_PORT]',
+      (u'                     [--tagging-file TAGGING_FILE] '
+       u'[--viper-host VIPER_HOST]'),
+      u'                     [--viper-protocol {http,https}]',
       u'                     [--virustotal-api-key VIRUSTOTAL_API_KEY]',
       u'                     [--virustotal-free-rate-limit]',
       u'                     [--windows-services-output {text,yaml}]',
-      (u'                     [--viper-host VIPER_HOST] [--viper-protocol '
-       u'{http,https}]'),
-      u'                     [--tagging-file TAGGING_FILE]',
       u'',
       u'Test argument parser.',
       u'',
