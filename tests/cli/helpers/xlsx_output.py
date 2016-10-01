@@ -24,7 +24,7 @@ class XLSXOutputArgumentsHelperTest(test_lib.OutputModuleArgumentsHelperTest):
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-       u'  --additional_fields ADDITIONAL_FIELDS',
+      u'  --additional_fields ADDITIONAL_FIELDS',
       (u'                        Defines extra fields to be included in the '
        u'output, in'),
       (u'                        addition to the default fields, which are '
