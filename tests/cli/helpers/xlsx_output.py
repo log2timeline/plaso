@@ -24,14 +24,15 @@ class XLSXOutputArgumentsHelperTest(test_lib.OutputModuleArgumentsHelperTest):
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      (u'  --fields FIELDS       Defines which fields should be included in '
-       u'the output.'), u'  --additional_fields ADDITIONAL_FIELDS',
+       u'  --additional_fields ADDITIONAL_FIELDS',
       (u'                        Defines extra fields to be included in the '
        u'output, in'),
       (u'                        addition to the default fields, which are '
        u'datetime,tim'),
       (u'                        estamp_desc,source,source_long,message,parser,'
        u'display_'), u'                        name,tag.',
+      (u'  --fields FIELDS       Defines which fields should be included in '
+       u'the output.'),
       u'  --timestamp_format TIMESTAMP_FORMAT',
       (u'                        Set the timestamp format that will be used '
        u'in the'),
@@ -43,7 +44,7 @@ class XLSXOutputArgumentsHelperTest(test_lib.OutputModuleArgumentsHelperTest):
     argument_parser = argparse.ArgumentParser(
         prog=u'cli_helper.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     xlsx_output.XLSXOutputArgumentsHelper.AddArguments(argument_parser)
 

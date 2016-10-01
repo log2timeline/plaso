@@ -25,6 +25,11 @@ class Shared4n6TimeOutputArgumentsHelperTest(
       u'Test argument parser.',
       u'',
       u'optional arguments:',
+      u'  --additional_fields ADDITIONAL_FIELDS',
+      (u'                        Defines extra fields to be included in the '
+       u'output, in'),
+      u'                        addition to the default fields, which are',
+      u'                        datetime,host,source,sourcetype,user,type.',
       (u'  --append              Defines whether the intention is to append '
        u'to an'),
       (u'                        already existing database or overwrite it. '
@@ -36,11 +41,6 @@ class Shared4n6TimeOutputArgumentsHelperTest(
       (u'  --fields FIELDS       Defines which fields should be indexed in '
        u'the'),
       u'                        database.',
-      u'  --additional_fields ADDITIONAL_FIELDS',
-      (u'                        Defines extra fields to be included in the '
-       u'output, in'),
-      u'                        addition to the default fields, which are',
-      u'                        datetime,host,source,sourcetype,user,type.',
       u''])
 
   def testAddArguments(self):
@@ -48,7 +48,7 @@ class Shared4n6TimeOutputArgumentsHelperTest(
     argument_parser = argparse.ArgumentParser(
         prog=u'cli_helper.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     shared_4n6time_output.Shared4n6TimeOutputArgumentsHelper.AddArguments(
         argument_parser)
