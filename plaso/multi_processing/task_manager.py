@@ -3,6 +3,7 @@
 
 import collections
 import heapq
+import threading
 import time
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -101,6 +102,7 @@ class TaskManager(object):
     # Dictionary mapping task identifiers to tasks that are active.
     self._active_tasks = {}
     self._maximum_number_of_tasks = maximum_number_of_tasks
+    self._lock = threading.Lock()
     self._tasks_pending_merge = _PendingMergeTaskHeap()
     # Use ordered dictionaries to preserve the order in which tasks were added.
     # This dictionary maps task identifiers to tasks.
@@ -117,9 +119,10 @@ class TaskManager(object):
     Returns:
       Task: task attribute container.
     """
-    task = tasks.Task(session_identifier)
-    self._active_tasks[task.identifier] = task
-    return task
+    with self._lock:
+      task = tasks.Task(session_identifier)
+      self._active_tasks[task.identifier] = task
+      return task
 
   def CompleteTask(self, task):
     """Completes a task.
@@ -132,10 +135,11 @@ class TaskManager(object):
     Raises:
       KeyError: if the task was not active.
     """
-    if task.identifier not in self._active_tasks:
-      raise KeyError(u'Task not active')
+    with self._lock:
+      if task.identifier not in self._active_tasks:
+        raise KeyError(u'Task not active')
 
-    del self._active_tasks[task.identifier]
+      del self._active_tasks[task.identifier]
 
   def GetAbandonedTasks(self):
     """Retrieves all abandoned tasks.
@@ -143,7 +147,9 @@ class TaskManager(object):
     Returns:
       list[task]: task.
     """
-    return self._abandoned_tasks.values()
+    with self._lock:
+      abandoned_tasks = self._abandoned_tasks.values()
+    return abandoned_tasks
 
   def GetProcessingTasks(self):
     """Retrieves the tasks that are processing.
@@ -151,7 +157,9 @@ class TaskManager(object):
     Returns:
       list[Task]: tasks that are being processed by workers.
     """
-    return self._tasks_processing.values()
+    with self._lock:
+      processing_tasks = self._tasks_processing.values()
+    return processing_tasks
 
   def GetTaskPendingMerge(self, current_task):
     """Retrieves the first task that is pending merge or has a higher priority.
@@ -166,15 +174,16 @@ class TaskManager(object):
       Task: the next task to merge or None if there is no task pending merge or
           with a higher priority.
     """
-    next_task = self._tasks_pending_merge.PeekTask()
-    if not next_task:
-      return
-
-    if current_task:
-      if next_task.merge_priority > current_task.merge_priority:
+    with self._lock:
+      next_task = self._tasks_pending_merge.PeekTask()
+      if not next_task:
         return
 
-    return self._tasks_pending_merge.PopTask()
+      if current_task:
+        if next_task.merge_priority > current_task.merge_priority:
+          return
+
+      return self._tasks_pending_merge.PopTask()
 
   def HasActiveTasks(self):
     """Determines if there are active tasks.
@@ -184,20 +193,21 @@ class TaskManager(object):
     Returns:
       bool: True if there are active tasks.
     """
-    if not self._active_tasks:
-      return False
+    with self._lock:
+      if not self._active_tasks:
+        return False
 
-    inactive_time = int(time.time() * 1000000) - self._TASK_INACTIVE_TIME
+      inactive_time = int(time.time() * 1000000) - self._TASK_INACTIVE_TIME
 
-    for task in iter(self._tasks_processing.values()):
-      # Use a local variable to improve performance.
-      task_identifier = task.identifier
-      if task.last_processing_time < inactive_time:
-        del self._tasks_processing[task_identifier]
-        self._abandoned_tasks[task_identifier] = task
-        del self._active_tasks[task_identifier]
+      for task in iter(self._tasks_processing.values()):
+        # Use a local variable to improve performance.
+        task_identifier = task.identifier
+        if task.last_processing_time < inactive_time:
+          del self._tasks_processing[task_identifier]
+          self._abandoned_tasks[task_identifier] = task
+          del self._active_tasks[task_identifier]
 
-    return bool(self._active_tasks)
+      return bool(self._active_tasks)
 
   def RescheduleTaskByIdentifier(self, task_identifier):
     """Reschedules a previous abandoned task.
@@ -208,15 +218,16 @@ class TaskManager(object):
     Raises:
       KeyError: if the task was not abandoned.
     """
-    if task_identifier not in self._abandoned_tasks:
-      raise KeyError(u'Task not abandoned')
+    with self._lock:
+      if task_identifier not in self._abandoned_tasks:
+        raise KeyError(u'Task not abandoned')
 
-    task = self._abandoned_tasks[task_identifier]
-    self._active_tasks[task_identifier] = task
-    del self._abandoned_tasks[task_identifier]
+      task = self._abandoned_tasks[task_identifier]
+      self._active_tasks[task_identifier] = task
+      del self._abandoned_tasks[task_identifier]
 
-    task.UpdateProcessingTime()
-    self._tasks_processing[task_identifier] = task
+      task.UpdateProcessingTime()
+      self._tasks_processing[task_identifier] = task
 
   def UpdateTaskByIdentifier(self, task_identifier):
     """Updates a task.
@@ -227,11 +238,12 @@ class TaskManager(object):
     Raises:
       KeyError: if the task is not processing.
     """
-    if task_identifier not in self._tasks_processing:
-      raise KeyError(u'Task not processing')
+    with self._lock:
+      if task_identifier not in self._tasks_processing:
+        raise KeyError(u'Task not processing')
 
-    task = self._tasks_processing[task_identifier]
-    task.UpdateProcessingTime()
+      task = self._tasks_processing[task_identifier]
+      task.UpdateProcessingTime()
 
   def UpdateTaskAsPendingMerge(self, task):
     """Updates the task manager to reflect the task is ready to be merged.
@@ -242,11 +254,12 @@ class TaskManager(object):
     Raises:
       KeyError: if the task was not processing.
     """
-    if task.identifier not in self._tasks_processing:
-      raise KeyError(u'Task not processing')
+    with self._lock:
+      if task.identifier not in self._tasks_processing:
+        raise KeyError(u'Task not processing')
 
-    self._tasks_pending_merge.PushTask(task)
-    del self._tasks_processing[task.identifier]
+      self._tasks_pending_merge.PushTask(task)
+      del self._tasks_processing[task.identifier]
 
   def UpdateTaskAsProcessing(self, task):
     """Updates the task manager to reflect the task is processing.
@@ -257,9 +270,10 @@ class TaskManager(object):
     Raises:
       KeyError: if the task is already processing.
     """
-    if task.identifier in self._tasks_processing:
-      raise KeyError(u'Task already processing')
+    with self._lock:
+      if task.identifier in self._tasks_processing:
+        raise KeyError(u'Task already processing')
 
-    # TODO: add check for maximum_number_of_tasks.
-    task.UpdateProcessingTime()
-    self._tasks_processing[task.identifier] = task
+      # TODO: add check for maximum_number_of_tasks.
+      task.UpdateProcessingTime()
+      self._tasks_processing[task.identifier] = task
