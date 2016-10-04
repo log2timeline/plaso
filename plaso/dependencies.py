@@ -48,7 +48,7 @@ PYTHON_DEPENDENCIES = [
     # The bencode module does not appear to have version information.
     (u'bencode', u'', u'', None),
     (u'binplist', u'__version__', u'0.1.4', None),
-    (u'construct', u'__version__', u'2.5.2', u'2.6.0'),
+    (u'construct', u'__version__', u'2.5.2', u'2.5.3'),
     (u'dateutil', u'__version__', u'1.5', None),
     (u'dfdatetime', u'__version__', u'20160319', None),
     (u'dfvfs', u'__version__', u'20160803', None),
@@ -568,6 +568,7 @@ def GetInstallRequires():
   for values in PYTHON_DEPENDENCIES:
     module_name = values[0]
     module_version = values[2]
+    maximum_version = values[3]
 
     # Map the import name to the PyPI project name.
     module_name = _PYPI_PROJECT_NAMES.get(module_name, module_name)
@@ -581,9 +582,12 @@ def GetInstallRequires():
 
     if not module_version:
       install_requires.append(module_name)
-    else:
+    elif not maximum_version:
       install_requires.append(u'{0:s} >= {1:s}'.format(
           module_name, module_version))
+    else:
+      install_requires.append(u'{0:s} >= {1:s},<= {2:s}'.format(
+          module_name, module_version, maximum_version))
 
   install_requires.append(u'pytsk3 >= 4.1.2')
 
