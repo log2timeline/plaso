@@ -1353,7 +1353,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       offset_tables_lfu (list[_SerializedDataOffsetTable]): least frequently
           used (LFU) offset tables.
       stream_name_prefix (str): stream name prefix.
-      stream_number (str): number of the stream.
+      stream_number (int): number of the stream.
 
     Returns:
       _SerializedDataOffsetTable: serialized data offset table.
@@ -1372,7 +1372,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
       number_of_tables = len(offset_tables_cache)
       if number_of_tables >= self._MAXIMUM_NUMBER_OF_CACHED_TABLES:
-        lfu_stream_number = self._event_offset_tables_lfu.pop()
+        lfu_stream_number = offset_tables_lfu.pop()
         del offset_tables_cache[lfu_stream_number]
 
       offset_tables_cache[stream_number] = offset_table
