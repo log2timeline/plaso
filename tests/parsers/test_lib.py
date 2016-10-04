@@ -19,7 +19,7 @@ from tests import test_lib as shared_test_lib
 
 
 class _EventsHeap(object):
-  """Class that defines the events heap."""
+  """Events heap."""
 
   def __init__(self):
     """Initializes an events heap."""
@@ -128,7 +128,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     return storage_writer
 
   def _GetSortedEvents(self, events):
-    """Retrieves the events sorted in a deterministic order.
+    """Retrieves events sorted in a deterministic order.
 
     Args:
       events (list[EventObject]): events.

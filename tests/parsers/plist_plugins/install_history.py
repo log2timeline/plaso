@@ -24,13 +24,13 @@ class InstallHistoryPluginTest(test_lib.PlistPluginTestCase):
 
     self.assertEqual(len(storage_writer.events), 7)
 
-    # The older in which PlistParser generates events is undeterministic
+    # The order in which PlistParser generates events is nondeterministic
     # hence we sort the events.
     events = self._GetSortedEvents(storage_writer.events)
 
-    expected_timestamps = sorted([
+    expected_timestamps = [
         1384225175000000, 1388205491000000, 1388232883000000, 1388232883000000,
-        1388232883000000, 1388232883000000, 1390941528000000])
+        1388232883000000, 1388232883000000, 1390941528000000]
     timestamps = sorted([event_object.timestamp for event_object in events])
 
     self.assertEqual(timestamps, expected_timestamps)

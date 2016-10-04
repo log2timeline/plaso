@@ -25,7 +25,7 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
 
     self.assertEqual(len(storage_writer.events), 4)
 
-    # The older in which BencodeParser generates events is undeterministic
+    # The order in which BencodeParser generates events is nondeterministic
     # hence we sort the events.
     events = self._GetSortedEvents(storage_writer.events)
 

@@ -25,7 +25,7 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
 
     self.assertEqual(len(storage_writer.events), 4)
 
-    # The older in which PlistParser generates events is undeterministic
+    # The order in which PlistParser generates events is nondeterministic
     # hence we sort the events.
     events = self._GetSortedEvents(storage_writer.events)
 

@@ -24,14 +24,14 @@ class SpotlightPluginTest(test_lib.PlistPluginTestCase):
 
     self.assertEqual(len(storage_writer.events), 9)
 
-    # The older in which PlistParser generates events is undeterministic
+    # The order in which PlistParser generates events is nondeterministic
     # hence we sort the events.
     events = self._GetSortedEvents(storage_writer.events)
 
-    expected_timestamps = sorted([
+    expected_timestamps = [
         1379937262090906, 1387822901900937, 1375236414408299, 1388331212005129,
         1376696381196456, 1386951868185477, 1380942616952359, 1389056477460443,
-        1386111811136093])
+        1386111811136093]
     timestamps = sorted([event_object.timestamp for event_object in events])
 
     self.assertEqual(timestamps, expected_timestamps)

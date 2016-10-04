@@ -27,12 +27,11 @@ class AppleAccountPluginTest(test_lib.PlistPluginTestCase):
 
     self.assertEqual(len(storage_writer.events), 3)
 
-    # The older in which PlistParser generates events is undeterministic
+    # The order in which PlistParser generates events is nondeterministic
     # hence we sort the events.
     events = self._GetSortedEvents(storage_writer.events)
 
-    expected_timestamps = sorted([
-        1372106802000000, 1387980032000000, 1387980032000000])
+    expected_timestamps = [1372106802000000, 1387980032000000, 1387980032000000]
     timestamps = sorted([event_object.timestamp for event_object in events])
 
     self.assertEqual(timestamps, expected_timestamps)

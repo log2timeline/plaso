@@ -26,7 +26,7 @@ class MactimeTest(test_lib.ParserTestCase):
     # Total entries: 11 * 3 + 2 * 4 = 41
     self.assertEqual(len(storage_writer.events), 41)
 
-    # The older in which TextCSVParser generates events is undeterministic
+    # The order in which TextCSVParser generates events is nondeterministic
     # hence we sort the events.
     events = self._GetSortedEvents(storage_writer.events)
 
