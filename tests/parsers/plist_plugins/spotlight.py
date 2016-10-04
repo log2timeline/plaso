@@ -29,9 +29,9 @@ class SpotlightPluginTest(test_lib.PlistPluginTestCase):
     events = self._GetSortedEvents(storage_writer.events)
 
     expected_timestamps = [
-        1379937262090906, 1387822901900937, 1375236414408299, 1388331212005129,
-        1376696381196456, 1386951868185477, 1380942616952359, 1389056477460443,
-        1386111811136093]
+        1375236414408299, 1376696381196456, 1379937262090906, 1380942616952359,
+        1386111811136093, 1386951868185477, 1387822901900937, 1388331212005129,
+        1389056477460443]
     timestamps = sorted([event_object.timestamp for event_object in events])
 
     self.assertEqual(timestamps, expected_timestamps)

@@ -28,7 +28,7 @@ class SpotlightVolumePluginTest(test_lib.PlistPluginTestCase):
     # hence we sort the events.
     events = self._GetSortedEvents(storage_writer.events)
 
-    expected_timestamps = [1372139683000000, 1369657656000000]
+    expected_timestamps = [1369657656000000, 1372139683000000]
     timestamps = sorted([event_object.timestamp for event_object in events])
 
     self.assertEqual(timestamps, expected_timestamps)
