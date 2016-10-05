@@ -5,6 +5,7 @@
 import unittest
 
 from plaso.containers import events
+from plaso import formatters   # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.output import mysql_4n6time
@@ -150,11 +151,6 @@ class MySQL4n6TimeOutputModuleTest(test_lib.OutputModuleTestCase):
     fake_cursor.expected_query = (
         mysql_4n6time.MySQL4n6TimeOutputModule._INSERT_QUERY)
 
-    extra = (
-        u'my_number: 123  '
-        u'some_additional_foo: True  '
-        u'text: Reporter <CRON> '
-        u'PID: 8442 (pam_unix(cron:session): session closed for user root) ')
     fake_cursor.expected_query_args = {
         u'computer_name': u'-',
         u'datetime': u'2012-06-27 18:17:01',
@@ -162,7 +158,11 @@ class MySQL4n6TimeOutputModuleTest(test_lib.OutputModuleTestCase):
         u'event_identifier': u'-',
         u'event_type': u'-',
         u'evidence': u'-',
-        u'extra': extra,
+        u'extra': (
+            u'my_number: 123  '
+            u'some_additional_foo: True  '
+            u'text: Reporter <CRON> PID: 8442 (pam_unix(cron:session): '
+            u'session closed for user root) '),
         u'filename': u'log/syslog.1',
         u'format': u'-',
         u'host': u'ubuntu',

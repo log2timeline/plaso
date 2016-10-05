@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows XML EventLog (EVTX) files."""
 
+from collections import namedtuple
 import pyevtx
 
 from plaso import dependencies
@@ -35,7 +36,7 @@ class WinEvtxRecordEvent(time_events.FiletimeEvent):
 
   def __init__(
       self, filetime, evtx_record, record_number, event_identifier,
-      event_identifier_qualifiers, recovered=False):
+      event_identifier_qualifiers, strings_parsed, recovered=False):
     """Initializes the event.
 
     Args:
@@ -44,6 +45,7 @@ class WinEvtxRecordEvent(time_events.FiletimeEvent):
       record_number (int): event record number.
       event_identifier (int): event identifier.
       event_identifier_qualifiers (int): event identifier qualifiers.
+      strings_parsed [dict]: parsed information from evtx_record.strings
       recovered (Optional[bool]): True if the record was recovered.
     """
     super(WinEvtxRecordEvent, self).__init__(
@@ -71,7 +73,7 @@ class WinEvtxRecordEvent(time_events.FiletimeEvent):
     self.user_sid = evtx_record.user_security_identifier
 
     self.strings = list(evtx_record.strings)
-
+    self.strings_parsed = strings_parsed
     self.xml_string = evtx_record.xml_string
 
 
@@ -89,6 +91,30 @@ class WinEvtxParser(interface.FileObjectParser):
     format_specification = specification.FormatSpecification(cls.NAME)
     format_specification.AddNewSignature(b'ElfFile\x00', offset=0)
     return format_specification
+
+  # Mapping from evtx_record.strings entries to meaningful names.
+  # This mapping is different for each event_identifier.
+  # TODO: make this more generic in context of #158.
+
+  Rule = namedtuple('Rule', ['index', 'name'])
+
+  _EVTX_FIELD_MAP = {
+      4624: [
+          Rule(0, u'source_user_id'),
+          Rule(1, u'source_user_name'),
+          Rule(4, u'target_user_id'),
+          Rule(5, u'target_user_name'),
+          Rule(11, u'target_machine_name'),
+          Rule(18, u'target_machine_ip')
+      ],
+      4648: [
+          Rule(0, u'source_user_id'),
+          Rule(1, u'source_user_name'),
+          Rule(5, u'target_user_name'),
+          Rule(8, u'target_machine_name'),
+          Rule(12, u'target_machine_ip')
+      ]
+  }
 
   def _ParseRecord(
       self, parser_mediator, record_index, evtx_record, recovered=False):
@@ -136,10 +162,22 @@ class WinEvtxParser(interface.FileObjectParser):
 
       written_time = None
 
+    strings_parsed = {}
+    if event_identifier in self._EVTX_FIELD_MAP:
+      rules = self._EVTX_FIELD_MAP.get(event_identifier, [])
+      for rule in rules:
+        if len(evtx_record.strings) <= rule.index:
+          parser_mediator.ProduceExtractionError((
+              u'evtx_record.strings has unexpected length of {0:d} '
+              u'(expected at least {1:d})'.format(
+                  len(evtx_record.strings), rule.index)))
+        strings_parsed[rule.name] = evtx_record.strings[rule.index]
+
+
     if written_time is not None:
       event_object = WinEvtxRecordEvent(
           written_time, evtx_record, record_number, event_identifier,
-          event_identifier_qualifiers, recovered=recovered)
+          event_identifier_qualifiers, strings_parsed, recovered=recovered)
       parser_mediator.ProduceEvent(event_object)
 
     # TODO: what if written_time is None.

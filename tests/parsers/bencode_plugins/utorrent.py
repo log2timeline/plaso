@@ -25,11 +25,15 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
 
     self.assertEqual(len(storage_writer.events), 4)
 
+    # The order in which BencodeParser generates events is nondeterministic
+    # hence we sort the events.
+    events = self._GetSortedEvents(storage_writer.events)
+
     expected_caption = u'plaso test'
     expected_path = u'e:\\torrent\\files\\plaso test'
 
     # First test on when the torrent was added to the client.
-    event_object = storage_writer.events[3]
+    event_object = events[0]
 
     self.assertEqual(event_object.caption, expected_caption)
     self.assertEqual(event_object.path, expected_path)
@@ -43,7 +47,7 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Second test on when the torrent file was completely downloaded.
-    event_object = storage_writer.events[2]
+    event_object = events[3]
 
     self.assertEqual(event_object.caption, expected_caption)
     self.assertEqual(event_object.path, expected_path)
@@ -57,7 +61,7 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Third test on when the torrent was first modified.
-    event_object = storage_writer.events[0]
+    event_object = events[2]
 
     self.assertEqual(event_object.caption, expected_caption)
     self.assertEqual(event_object.path, expected_path)
@@ -71,7 +75,7 @@ class UTorrentPluginTest(test_lib.BencodePluginTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Fourth test on when the torrent was again modified.
-    event_object = storage_writer.events[1]
+    event_object = events[1]
 
     self.assertEqual(event_object.caption, expected_caption)
     self.assertEqual(event_object.path, expected_path)
