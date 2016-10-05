@@ -25,7 +25,17 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
 
     self.assertEqual(len(storage_writer.events), 4)
 
-    event_object = storage_writer.events[1]
+    # The order in which PlistParser generates events is nondeterministic
+    # hence we sort the events.
+    events = self._GetSortedEvents(storage_writer.events)
+
+    event_object = events[0]
+
+    timestamp = timelib.Timestamp.CopyFromString(u'1995-11-22 18:25:07')
+    self.assertEqual(event_object.timestamp, timestamp)
+    self.assertEqual(event_object.device_id, u'0000A11300000000')
+
+    event_object = events[2]
 
     timestamp = timelib.Timestamp.CopyFromString(u'2013-10-09 19:27:54')
     self.assertEqual(event_object.timestamp, timestamp)
@@ -49,12 +59,6 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
     self.assertEqual(event_object.firmware_version, 256)
     self.assertEqual(event_object.imei, u'012345678901234')
     self.assertEqual(event_object.use_count, 1)
-
-    event_object = storage_writer.events[3]
-
-    timestamp = timelib.Timestamp.CopyFromString(u'1995-11-22 18:25:07')
-    self.assertEqual(event_object.timestamp, timestamp)
-    self.assertEqual(event_object.device_id, u'0000A11300000000')
 
 
 if __name__ == '__main__':
