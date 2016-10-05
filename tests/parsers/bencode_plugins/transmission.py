@@ -25,7 +25,11 @@ class BencodeTest(test_lib.BencodePluginTestCase):
 
     self.assertEqual(len(storage_writer.events), 3)
 
-    event_object = storage_writer.events[0]
+    # The order in which BencodeParser generates events is nondeterministic
+    # hence we sort the events.
+    events = self._GetSortedEvents(storage_writer.events)
+
+    event_object = events[0]
 
     expected_destination = u'/Users/brian/Downloads'
     self.assertEqual(event_object.destination, expected_destination)
@@ -40,7 +44,7 @@ class BencodeTest(test_lib.BencodePluginTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # Test on second event of first torrent.
-    event_object = storage_writer.events[1]
+    event_object = events[1]
     self.assertEqual(event_object.destination, expected_destination)
     self.assertEqual(event_object.seedtime, 4)
 
