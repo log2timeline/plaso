@@ -7,7 +7,7 @@ XlsxWriter >= 0.9.3
 artifacts >= 20150409
 bencode
 binplist >= 0.1.4
-construct >= 2.5.2
+construct >= 2.5.2,<= 2.5.3
 dfdatetime >= 20160319
 dfvfs >= 20160803
 dfwinreg >= 20160320
@@ -40,7 +40,7 @@ pefile >= 1.2.10-139
 psutil >= 1.2.1
 pyparsing >= 2.0.3
 python-dateutil >= 1.5
-pytsk3 >= 4.1.2
+pytsk3 >= 20160721
 pytz
 pyzmq >= 2.1.11
 requests >= 2.2.1

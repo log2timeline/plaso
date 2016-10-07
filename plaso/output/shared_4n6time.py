@@ -79,7 +79,7 @@ class Shared4n6TimeOutputModule(interface.OutputModule):
           u'Unable to find event formatter for: {0:s}.'.format(data_type))
 
     extra_attributes = []
-    for attribute_name, attribute_value in event.GetAttributes():
+    for attribute_name, attribute_value in sorted(event.GetAttributes()):
       if (attribute_name in definitions.RESERVED_VARIABLE_NAMES or
           attribute_name in format_variables):
         continue
