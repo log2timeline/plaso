@@ -21,6 +21,6 @@ script:
   - python setup.py sdist
   - python setup.py bdist
   - if test `uname -s` = 'Linux'; then mkdir -p ${PWD}/tmp/lib/python${TRAVIS_PYTHON_VERSION}/site-packages/ && PYTHONPATH=${PWD}/tmp/lib/python${TRAVIS_PYTHON_VERSION}/site-packages/ python setup.py install --prefix=${PWD}/tmp/; fi
-  - PYTHONPATH=. ./tests/end-to-end.py --debug -c config/end-to-end.ini
+  - PYTHONPATH=${PYTHONPATH}:. ./tests/end-to-end.py --debug -c config/end-to-end.ini
 after_success:
   - if test `uname -s` = 'Linux' && test ${TRAVIS_PYTHON_VERSION} = "2.7"; then coveralls --verbose; fi
