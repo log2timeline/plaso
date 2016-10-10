@@ -101,8 +101,8 @@ class TaskManager(object):
     self._abandoned_tasks = {}
     # Dictionary mapping task identifiers to tasks that are active.
     self._active_tasks = {}
-    self._maximum_number_of_tasks = maximum_number_of_tasks
     self._lock = threading.Lock()
+    self._maximum_number_of_tasks = maximum_number_of_tasks
     self._tasks_pending_merge = _PendingMergeTaskHeap()
     # Use ordered dictionaries to preserve the order in which tasks were added.
     # This dictionary maps task identifiers to tasks.
@@ -122,7 +122,7 @@ class TaskManager(object):
     with self._lock:
       task = tasks.Task(session_identifier)
       self._active_tasks[task.identifier] = task
-      return task
+    return task
 
   def CompleteTask(self, task):
     """Completes a task.
@@ -130,7 +130,7 @@ class TaskManager(object):
     The task is complete and can be removed from the task manager.
 
     Args:
-      task (Task): unique identifier of the task.
+      task (Task): task.
 
     Raises:
       KeyError: if the task was not active.
@@ -145,11 +145,9 @@ class TaskManager(object):
     """Retrieves all abandoned tasks.
 
     Returns:
-      list[task]: task.
+      list[Task]: tasks.
     """
-    with self._lock:
-      abandoned_tasks = self._abandoned_tasks.values()
-    return abandoned_tasks
+    return list(self._abandoned_tasks.values())
 
   def GetProcessingTasks(self):
     """Retrieves the tasks that are processing.
@@ -157,9 +155,7 @@ class TaskManager(object):
     Returns:
       list[Task]: tasks that are being processed by workers.
     """
-    with self._lock:
-      processing_tasks = self._tasks_processing.values()
-    return processing_tasks
+    return list(self._tasks_processing.values())
 
   def GetTaskPendingMerge(self, current_task):
     """Retrieves the first task that is pending merge or has a higher priority.
@@ -174,16 +170,15 @@ class TaskManager(object):
       Task: the next task to merge or None if there is no task pending merge or
           with a higher priority.
     """
-    with self._lock:
-      next_task = self._tasks_pending_merge.PeekTask()
-      if not next_task:
+    next_task = self._tasks_pending_merge.PeekTask()
+    if not next_task:
+      return
+
+    if current_task:
+      if next_task.merge_priority > current_task.merge_priority:
         return
 
-      if current_task:
-        if next_task.merge_priority > current_task.merge_priority:
-          return
-
-      return self._tasks_pending_merge.PopTask()
+    return self._tasks_pending_merge.PopTask()
 
   def HasActiveTasks(self):
     """Determines if there are active tasks.
@@ -243,7 +238,7 @@ class TaskManager(object):
         raise KeyError(u'Task not processing')
 
       task = self._tasks_processing[task_identifier]
-      task.UpdateProcessingTime()
+    task.UpdateProcessingTime()
 
   def UpdateTaskAsPendingMerge(self, task):
     """Updates the task manager to reflect the task is ready to be merged.
@@ -254,10 +249,10 @@ class TaskManager(object):
     Raises:
       KeyError: if the task was not processing.
     """
-    with self._lock:
-      if task.identifier not in self._tasks_processing:
-        raise KeyError(u'Task not processing')
+    if task.identifier not in self._tasks_processing:
+      raise KeyError(u'Task not processing')
 
+    with self._lock:
       self._tasks_pending_merge.PushTask(task)
       del self._tasks_processing[task.identifier]
 
@@ -270,10 +265,10 @@ class TaskManager(object):
     Raises:
       KeyError: if the task is already processing.
     """
-    with self._lock:
-      if task.identifier in self._tasks_processing:
-        raise KeyError(u'Task already processing')
+    if task.identifier in self._tasks_processing:
+      raise KeyError(u'Task already processing')
 
+    with self._lock:
       # TODO: add check for maximum_number_of_tasks.
       task.UpdateProcessingTime()
       self._tasks_processing[task.identifier] = task
