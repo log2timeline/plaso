@@ -91,12 +91,12 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
   _EXPECTED_ANALYSIS_PLUGIN_OPTIONS = u'\n'.join([
       u'usage: psort_test.py [--nsrlsvr-host NSRLSVR_HOST]',
       u'                     [--nsrlsvr-port NSRLVR_PORT]',
+      (u'                     [--tagging-file TAGGING_FILE] '
+       u'[--viper-host VIPER_HOST]'),
+      u'                     [--viper-protocol {http,https}]',
       u'                     [--virustotal-api-key VIRUSTOTAL_API_KEY]',
       u'                     [--virustotal-free-rate-limit]',
       u'                     [--windows-services-output {text,yaml}]',
-      (u'                     [--viper-host VIPER_HOST] [--viper-protocol '
-       u'{http,https}]'),
-      u'                     [--tagging-file TAGGING_FILE]',
       u'',
       u'Test argument parser.',
       u'',
@@ -105,6 +105,12 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       u'                        Specify the host to query Nsrlsvr on.',
       u'  --nsrlsvr-port NSRLVR_PORT',
       u'                        Port to use to query Nsrlsvr.',
+      u'  --tagging-file TAGGING_FILE, --tagging_file TAGGING_FILE',
+      u'                        Specify a file to read tagging criteria from.',
+      u'  --viper-host VIPER_HOST',
+      u'                        Specify the host to query Viper on.',
+      u'  --viper-protocol {http,https}',
+      u'                        Protocol to use to query Viper.',
       u'  --virustotal-api-key VIRUSTOTAL_API_KEY',
       u'                        Specify the API key for use with VirusTotal.',
       u'  --virustotal-free-rate-limit',
@@ -117,12 +123,6 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       (u'                        Specify how the results should be displayed. '
        u'Options'),
       u'                        are text and yaml.',
-      u'  --viper-host VIPER_HOST',
-      u'                        Specify the host to query Viper on.',
-      u'  --viper-protocol {http,https}',
-      u'                        Protocol to use to query Viper.',
-      u'  --tagging-file TAGGING_FILE, --tagging_file TAGGING_FILE',
-      u'                        Specify a file to read tagging criteria from.',
       u''])
 
   _EXPECTED_FILTER_OPTIONS = u'\n'.join([
@@ -201,8 +201,6 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      (u'  --fields FIELDS       Defines which fields should be included in '
-       u'the output.'),
       u'  --additional_fields ADDITIONAL_FIELDS',
       (u'                        Defines extra fields to be included in the '
        u'output, in'),
@@ -211,6 +209,8 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       (u'                        estamp_desc,source,source_long,message,parser,'
        u'display_'),
       u'                        name,tag.',
+      (u'  --fields FIELDS       Defines which fields should be included in '
+       u'the output.'),
       u''])
 
   _EXPECTED_PROCESSING_OPTIONS = u'\n'.join([
@@ -241,7 +241,7 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'psort_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = psort.PsortTool()
     test_tool.AddAnalysisPluginOptions(argument_parser, [])
@@ -254,7 +254,7 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'psort_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = psort.PsortTool()
     test_tool.AddFilterOptions(argument_parser)
@@ -267,7 +267,7 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'psort_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = psort.PsortTool()
     test_tool.AddLanguageOptions(argument_parser)
@@ -280,7 +280,7 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'psort_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = psort.PsortTool()
     test_tool.AddOutputModuleOptions(argument_parser, [u'dynamic'])
@@ -293,7 +293,7 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'psort_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = psort.PsortTool()
     test_tool.AddProcessingOptions(argument_parser)

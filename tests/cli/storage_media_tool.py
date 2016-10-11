@@ -75,6 +75,11 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
       u'Test argument parser.',
       u'',
       u'optional arguments:',
+      (u'  --ob IMAGE_OFFSET_BYTES, --offset_bytes IMAGE_OFFSET_BYTES, '
+       u'--offset_bytes IMAGE_OFFSET_BYTES'),
+      (u'                        The offset of the volume within the storage '
+       u'media'),
+      u'                        image in number of bytes.',
       u'  --partition PARTITION',
       (u'                        Choose a partition number from a disk image. '
        u'This'),
@@ -95,6 +100,10 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
       (u'                        combined as: "1,3..5". The first partition '
        u'is 1. All'),
       u'                        partition can be defined as: "all".',
+      u'  --sector_size BYTES_PER_SECTOR, --sector-size BYTES_PER_SECTOR',
+      (u'                        The number of bytes per sector, which is 512 '
+       u'by'),
+      u'                        default.',
       u'  -o IMAGE_OFFSET, --offset IMAGE_OFFSET',
       (u'                        The offset of the volume within the storage '
        u'media'),
@@ -103,15 +112,6 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
       (u'                        size by default this can be overwritten with '
        u'the'),
       u'                        --sector_size option.',
-      (u'  --ob IMAGE_OFFSET_BYTES, --offset_bytes IMAGE_OFFSET_BYTES, '
-       u'--offset_bytes IMAGE_OFFSET_BYTES'),
-      (u'                        The offset of the volume within the storage '
-       u'media'),
-      u'                        image in number of bytes.',
-      u'  --sector_size BYTES_PER_SECTOR, --sector-size BYTES_PER_SECTOR',
-      (u'                        The number of bytes per sector, which is 512 '
-       u'by'),
-      u'                        default.',
       u''])
 
   _EXPECTED_OUTPUT_VSS_PROCESSING_OPTIONS = u'\n'.join([
@@ -445,7 +445,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'storage_media_tool_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool.AddCredentialOptions(argument_parser)
@@ -458,7 +458,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'storage_media_tool_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool.AddFilterOptions(argument_parser)
@@ -471,7 +471,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'storage_media_tool_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool.AddStorageMediaImageOptions(argument_parser)
@@ -484,7 +484,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'storage_media_tool_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = storage_media_tool.StorageMediaTool()
     test_tool.AddVSSProcessingOptions(argument_parser)

@@ -1,12 +1,27 @@
 # -*- coding: utf-8 -*-
 """CLI related functions and classes for testing."""
 
+import argparse
 import io
+import operator
 import os
 
 from plaso.cli import tools
 
 from tests import test_lib as shared_test_lib
+
+
+class SortedArgumentsHelpFormatter(argparse.HelpFormatter):
+  """Class that implements an argparse help formatter with sorted arguments."""
+
+  def add_arguments(self, actions):
+    """Adds arguments.
+
+    Args:
+      actions (TODO): TODO.
+    """
+    actions = sorted(actions, key=operator.attrgetter(u'option_strings'))
+    super(SortedArgumentsHelpFormatter, self).add_arguments(actions)
 
 
 class TestOptions(object):
@@ -20,7 +35,7 @@ class TestOutputWriter(tools.FileObjectOutputWriter):
     """Initializes the output writer object.
 
     Args:
-      encoding: optional output encoding.
+      encoding (Optional[str]): output encoding.
     """
     file_object = io.BytesIO()
     super(TestOutputWriter, self).__init__(file_object, encoding=encoding)
@@ -30,7 +45,7 @@ class TestOutputWriter(tools.FileObjectOutputWriter):
     """Reads the newly added output data.
 
     Returns:
-      A binary string of the encoded output data.
+      bytes: encoded output data.
     """
     self._file_object.seek(self._read_offset, os.SEEK_SET)
     output_data = self._file_object.read()
@@ -46,11 +61,10 @@ class CLIToolTestCase(shared_test_lib.BaseTestCase):
     """Runs argparse.format_help() with test conditions.
 
     Args:
-      argument_parser: an argument parser object (instance of
-                       argparse.ArgumentParser).
+      argument_parser (argparse.ArgumentParser): argument parser.
 
     Returns:
-      A binary string containing the output of argparse.format_help().
+      bytes: output of argparse.format_help().
     """
     columns_environment_variable = os.environ.get(u'COLUMNS', None)
     os.environ[u'COLUMNS'] = u'80'
