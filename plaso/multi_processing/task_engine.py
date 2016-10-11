@@ -101,6 +101,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
   _WORKER_PROCESSES_MAXIMUM = 15
 
   _TASK_QUEUE_TIMEOUT_SECONDS = 2
+  _TASK_RETRY_COUNT = 1
 
   _ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS = 10 * 60
 
@@ -421,6 +422,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         if not event_source and not task:
           event_source = event_source_heap.PopEventSource()
 
+        for task in self._task_manager.GetAbandonedTasks():
+          if task.abandonment_count <= self._TASK_RETRY_COUNT:
+            logging.debug(u'Retrying task: {0:s}'.format(task.identifier))
+            self._task_manager.RescheduleTask(task)
+            self._ScheduleTask(task)
+
       except KeyboardInterrupt:
         self._abort = True
 
@@ -653,11 +660,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     try:
       self._task_manager.UpdateTaskByIdentifier(task_identifier)
     except KeyError:
-      try:
-        self._task_manager.RescheduleTaskByIdentifier(task_identifier)
-      except KeyError:
-        logging.error(u'Worker {0:s} is processing unknown task: {1:s}.'.format(
-            process.name, task_identifier))
+      logging.debug(u'Worker {0:s} is processing unknown task: {1:s}.'.format(
+          process.name, task_identifier))
 
   def ProcessSources(
       self, session_identifier, source_path_specs, storage_writer,
