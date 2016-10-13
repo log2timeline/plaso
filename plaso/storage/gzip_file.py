@@ -291,7 +291,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
 class GZIPStorageMergeReader(interface.StorageMergeReader):
   """Class that implements a gzip-based storage file reader for merging."""
 
-  _DATA_BUFFER_SIZE = 16 * 1024 * 1024
+  _DATA_BUFFER_SIZE = 1 * 1024 * 1024
 
   def __init__(self, storage_writer, path):
     """Initializes a storage merge reader.
