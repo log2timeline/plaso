@@ -34,7 +34,7 @@ class WindowsServicesAnalysisArgumentsHelperTest(
     argument_parser = argparse.ArgumentParser(
         prog=u'cli_helper.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     arguments_helper.WindowsServicesAnalysisArgumentsHelper.AddArguments(
         argument_parser)

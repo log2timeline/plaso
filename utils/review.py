@@ -39,10 +39,10 @@ class CLIHelper(object):
     """Runs a command.
 
     Args:
-      command: string containing the command to run.
+      command (str): command to run.
 
     Returns:
-      A tuple of the exit code, stdout and stderr file-like objects.
+      tuple[int,file,file]: exit code, stdout and stderr file-like objects.
     """
     arguments = shlex.split(command)
     process = subprocess.Popen(
@@ -63,8 +63,10 @@ class CodeReviewHelper(CLIHelper):
   """Class that defines codereview helper functions."""
 
   _REVIEWERS = frozenset([
+      u'jberggren@gmail.com',
       u'joachim.metz@gmail.com',
-      u'onager@deerpie.com'])
+      u'onager@deerpie.com',
+      u'romaing@google.com'])
 
   _REVIEWERS_CC = frozenset([
       u'kiddi@kiddaland.net',
@@ -74,10 +76,9 @@ class CodeReviewHelper(CLIHelper):
     """Initializes a codereview helper object.
 
     Args:
-      email_address: string containing the email address.
-      no_browser: optional boolean value to indicate if the functionality
-                  to use the webbrowser to get the OAuth token should be
-                  disabled.
+      email_address (str): email address.
+      no_browser (Optional[bool]): True if the functionality to use the
+          webbrowser to get the OAuth token should be disabled.
     """
     super(CodeReviewHelper, self).__init__()
     self._access_token = None
@@ -92,13 +93,11 @@ class CodeReviewHelper(CLIHelper):
     Where the merge is a commit to the main project git repository.
 
     Args:
-      issue_number: an integer or string containing the codereview
-                    issue number.
-      message: a string containing the message to add to the code review issue.
+      issue_number (int|str): codereview issue number.
+      message (str): message to add to the code review issue.
 
     Returns:
-      A boolean indicating the merge message was added to
-      the code review issue.
+      bool: merge message was added to the code review issue.
     """
     codereview_access_token = self.GetAccessToken()
     xsrf_token = self.GetXSRFToken()
@@ -145,11 +144,10 @@ class CodeReviewHelper(CLIHelper):
     """Closes a code review issue.
 
     Args:
-      issue_number: an integer or string containing the codereview
-                    issue number.
+      issue_number (int|str): codereview issue number.
 
     Returns:
-      A boolean indicating the code review was closed.
+      bool: True if the code review was closed.
     """
     codereview_access_token = self.GetAccessToken()
     xsrf_token = self.GetXSRFToken()
@@ -188,14 +186,14 @@ class CodeReviewHelper(CLIHelper):
     return True
 
   def CreateIssue(self, diffbase, description):
-    """Creates a new code review issue.
+    """Creates a new codereview issue.
 
     Args:
-      diffbase: string containing the diffbase.
-      description: string containing the description.
+      diffbase (str): diffbase.
+      description (str): description.
 
     Returns:
-      An integer containing the code review number or None.
+      int: codereview issue number or None.
     """
     reviewers = list(self._REVIEWERS)
     reviewers_cc = list(self._REVIEWERS_CC)
@@ -259,7 +257,7 @@ class CodeReviewHelper(CLIHelper):
     """Retrieves the OAuth access token.
 
     Returns:
-      String containing a codereview access token.
+      str: codereview access token.
     """
     if not self._access_token:
       # TODO: add support to get access token directly from user.
@@ -273,8 +271,7 @@ class CodeReviewHelper(CLIHelper):
     """Retrieves the XSRF token.
 
     Returns:
-      String containing a codereview XSRF token or None if the token
-      could not be obtained.
+      str: codereview XSRF token or None if the token could not be obtained.
     """
     if not self._xsrf_token:
       codereview_access_token = self.GetAccessToken()
@@ -333,11 +330,10 @@ class CodeReviewHelper(CLIHelper):
     "YYYY-MM-DD hh:mm:ss.######"
 
     Args:
-      issue_number: an integer or string containing the codereview
-                    issue number.
+      issue_number (int|str): codereview issue number.
 
     Returns:
-      A dictonary containing the JSON response or None.
+      dict[str,object]: JSON response or None.
     """
     codereview_url = b'https://codereview.appspot.com/api/{0!s}'.format(
         issue_number)
@@ -365,13 +361,12 @@ class CodeReviewHelper(CLIHelper):
     """Updates a code review issue.
 
     Args:
-      issue_number: an integer or string containing the codereview
-                    issue number.
-      diffbase: string containing the diffbase.
-      description: string containing the description.
+      issue_number (int|str): codereview issue number.
+      diffbase (str): diffbase.
+      description (str): description.
 
     Returns:
-      A boolean indicating the code review was updated.
+      bool: True if the code review was updated.
     """
     command = u'{0:s} {1:s} --oauth2'.format(
         sys.executable, self._upload_py_path)
@@ -382,6 +377,19 @@ class CodeReviewHelper(CLIHelper):
     command = (
         u'{0:s} -i {1!s} -m "Code updated." -t "{2:s}" -y -- '
         u'{3:s}').format(command, issue_number, description, diffbase)
+
+    if self._no_browser:
+      print(
+          u'Upload server: codereview.appspot.com (change with -s/--server)\n'
+          u'Go to the following link in your browser:\n'
+          u'\n'
+          u'    https://codereview.appspot.com/get-access-token\n'
+          u'\n'
+          u'and copy the access token.\n'
+          u'\n')
+      print(u'Enter access token:', end=u' ')
+
+      sys.stdout.flush()
 
     exit_code, output, _ = self.RunCommand(command)
     print(output)
@@ -396,17 +404,17 @@ class GitHelper(CLIHelper):
     """Initializes a git helper object.
 
     Args:
-      git_repo_url: string containing a git repo url.
+      git_repo_url (str): git repo URL.
     """
     super(GitHelper, self).__init__()
     self._git_repo_url = git_repo_url
     self._remotes = []
 
   def _GetRemotes(self):
-    """Retrieves the git repo remotes.
+    """Retrieves the git repository remotes.
 
     Returns:
-      A list of string containing the remotes or None.
+      list[str]: git repository remotes or None.
     """
     if not self._remotes:
       exit_code, output, _ = self.RunCommand(u'git remote -v')
@@ -419,10 +427,10 @@ class GitHelper(CLIHelper):
     """Adds a specific path to be managed by git.
 
     Args:
-      path: string containing the path.
+      path (str): path.
 
     Returns:
-      A boolean indicating the path was added.
+      bool: True if the path was added.
     """
     command = u'git add -A {0:s}'.format(path)
     exit_code, _, _ = self.RunCommand(command)
@@ -432,10 +440,10 @@ class GitHelper(CLIHelper):
     """Checks if the git repo has a specific branch.
 
     Args:
-      branch: name of the feature branch.
+      branch (str): name of the feature branch.
 
     Returns:
-      A boolean indicating the git repo has the specific branch.
+      bool: True if git repo has the specific branch.
     """
     exit_code, output, _ = self.RunCommand(u'git branch')
     if exit_code != 0:
@@ -452,7 +460,7 @@ class GitHelper(CLIHelper):
     """Checks if the git repo has the project remote origin defined.
 
     Returns:
-      A boolean indicating the git repo has the project origin defined.
+      bool: True if the git repo has the project origin defined.
     """
     origin_git_repo_url = self.GetRemoteOrigin()
     return origin_git_repo_url == self._git_repo_url
@@ -461,8 +469,7 @@ class GitHelper(CLIHelper):
     """Checks if the git repo has the project remote upstream defined.
 
     Returns:
-      A boolean indicating the git repo has the project remote upstream
-      defined.
+      bool: True if the git repo has the project remote upstream defined.
     """
     # Check for remote entries starting with upstream.
     for remote in self._GetRemotes():
@@ -474,7 +481,7 @@ class GitHelper(CLIHelper):
     """Checks if the git repo has uncommitted changes.
 
     Returns:
-      A boolean indicating the git repo has uncommitted changes.
+      bool: True if the git repo has uncommitted changes.
     """
     exit_code, output, _ = self.RunCommand(u'git status -s')
     if exit_code != 0:
@@ -490,7 +497,7 @@ class GitHelper(CLIHelper):
     """Checks if the git repo is synchronized with upstream.
 
     Returns:
-      A boolean indicating the git repo is synchronized with upstream.
+      bool: True if the git repo is synchronized with upstream.
     """
     # Fetch the entire upstream repo information not only that of
     # the master branch. Otherwise the information about the current
@@ -510,14 +517,13 @@ class GitHelper(CLIHelper):
     """Commits changes in name of an author to the master branch of origin.
 
     Args:
-      codereview_issue_number: an integer or string containing the codereview
-                               issue number.
-      author: string containing the full name and email address of the author.
-              E.g. "Full Name <email.address@example.com>".
-      description: string containing the description of the commit.
+      codereview_issue_number (int|str): codereview issue number.
+      author (str): full name and email address of the author, formatted as:
+          "Full Name <email.address@example.com>".
+      description (str): description of the commit.
 
     Returns:
-      A boolean indicating the changes were committed to the git repo.
+      bool: True if the changes were committed to the git repository.
     """
     command = (
         u'git commit -a --author="{0:s}" '
@@ -542,7 +548,7 @@ class GitHelper(CLIHelper):
     """Retrieves the active branch.
 
     Returns:
-      String containing the name of the active branch or None.
+      str: name of the active branch or None.
     """
     exit_code, output, _ = self.RunCommand(u'git branch')
     if exit_code != 0:
@@ -559,11 +565,10 @@ class GitHelper(CLIHelper):
     """Retrieves the changed files.
 
     Args:
-      diffbase: optional string containing the git diffbase
-                e.g. upstream/master.
+      diffbase (Optional[str]): git diffbase, for example "upstream/master".
 
     Returns:
-      List containing string with the names of the changed files.
+      list[str]: names of the changed files.
     """
     if diffbase:
       command = u'git diff --name-only {0:s}'.format(diffbase)
@@ -586,11 +591,10 @@ class GitHelper(CLIHelper):
     * setup.py and utils/upload.py
 
     Args:
-      diffbase: optional string containing the git diffbase
-                e.g. upstream/master.
+      diffbase (Optional[str]): git diffbase, for example "upstream/master".
 
     Returns:
-      List containing string with the names of the changed Python files.
+      list[str]: names of the changed Python files.
     """
     upload_path = os.path.join(u'utils', u'upload.py')
     python_files = []
@@ -611,7 +615,7 @@ class GitHelper(CLIHelper):
     """Retrieves the email address.
 
     Returns:
-      A string containing the email address or None.
+      str: email address or None.
     """
     exit_code, output, _ = self.RunCommand(u'git config user.email')
     if exit_code != 0:
@@ -627,7 +631,7 @@ class GitHelper(CLIHelper):
     """Retrieves the last commit message.
 
     Returns:
-      A string containing the last commit message or None.
+      str: last commit message or None.
     """
     exit_code, output, _ = self.RunCommand(u'git log -1')
     if exit_code != 0:
@@ -645,7 +649,7 @@ class GitHelper(CLIHelper):
     """Retrieves the remote origin.
 
     Returns:
-      A string containing the git repo URL or None.
+      str: git repository URL or None.
     """
     # Check for remote entries starting with origin.
     for remote in self._GetRemotes():
@@ -658,11 +662,11 @@ class GitHelper(CLIHelper):
     """Pulls changes from a feature branch on a fork.
 
     Args:
-      git_repo_url: string containing the git repo url of the fork.
-      branch: name of the feature branch of the fork.
+      git_repo_url (str): git repository URL of the fork.
+      branch (str): name of the feature branch of the fork.
 
     Returns:
-      A boolean indicating the pull was successful.
+      bool: True if the pull was successful.
     """
     command = u'git pull --squash {0:s} {1:s}'.format(git_repo_url, branch)
     exit_code, _, _ = self.RunCommand(command)
@@ -672,11 +676,11 @@ class GitHelper(CLIHelper):
     """Forces a push of the active branch of the git repo to origin.
 
     Args:
-      branch: name of the feature branch.
-      force: optional boolean value to indicate the push should be forced.
+      branch (str): name of the feature branch.
+      force (Optional[bool]): True if the push should be forced.
 
     Returns:
-      A boolean indicating the push was successful.
+      bool: True if the push was successful.
     """
     if force:
       command = u'git push --set-upstream origin {0:s}'.format(branch)
@@ -690,7 +694,7 @@ class GitHelper(CLIHelper):
     """Removes the git feature branch both local and from origin.
 
     Args:
-      branch: name of the feature branch.
+      branch (str): name of the feature branch.
     """
     if branch == u'master':
       return
@@ -702,7 +706,7 @@ class GitHelper(CLIHelper):
     """Synchronizes git with origin.
 
     Returns:
-      A boolean indicating the git repo has synchronized with origin.
+      bool: True if the git repository has synchronized with origin.
     """
     exit_code, _, _ = self.RunCommand(u'git fetch origin')
     if exit_code != 0:
@@ -717,7 +721,7 @@ class GitHelper(CLIHelper):
     """Synchronizes git with upstream.
 
     Returns:
-      A boolean indicating the git repo has synchronized with upstream.
+      bool: True if the git repository has synchronized with upstream.
     """
     exit_code, _, _ = self.RunCommand(u'git fetch upstream')
     if exit_code != 0:
@@ -736,7 +740,7 @@ class GitHelper(CLIHelper):
     """Switches git to the master branch.
 
     Returns:
-      A boolean indicating the git repo has switched to the master branch.
+      bool: True if the git repository has switched to the master branch.
     """
     exit_code, _, _ = self.RunCommand(u'git checkout master')
     return exit_code != 0
@@ -749,8 +753,8 @@ class GitHubHelper(object):
     """Initializes a github helper object.
 
     Args:
-      organization: string containing the github organization name.
-      project: string containing the github project name.
+      organization (str): github organization name.
+      project (str): github project name.
     """
     super(GitHubHelper, self).__init__()
     self._organization = organization
@@ -761,15 +765,14 @@ class GitHubHelper(object):
     """Creates a pull request.
 
     Args:
-      access_token: string containing the github access token.
-      codereview_issue_number: an integer or string containing the codereview
-                               issue number.
-      origin: a string containing the origin of the pull request e.g.
-              "username:feature".
-      description: a string containing the description.
+      access_token (str): github access token.
+      codereview_issue_number (int|str): codereview issue number.
+      origin (str): origin of the pull request, formatted as:
+          "username:feature".
+      description (str): description.
 
     Returns:
-      A boolean indicating the pull request was created.
+      bool: True if the pull request was created.
     """
     title = b'{0!s}: {1:s}'.format(codereview_issue_number, description)
     body = (
@@ -812,13 +815,13 @@ class GitHubHelper(object):
     return True
 
   def GetForkGitRepoUrl(self, username):
-    """Retrieves the git repo URL of a fork.
+    """Retrieves the git repository URL of a fork.
 
     Args:
-      username: string containing the github username of the fork.
+      username (str): github username of the fork.
 
     Returns:
-      A string containing the git repo URL or None.
+      str: git repository URL or None.
     """
     return u'https://github.com/{0:s}/{1:s}.git'.format(username, self._project)
 
@@ -826,10 +829,10 @@ class GitHubHelper(object):
     """Queries a github user.
 
     Args:
-      username: a github user name.
+      username (str): github user name.
 
     Returns:
-      A dictonary containing the JSON response or None.
+      dict[str,object]: JSON response or None.
     """
     github_url = b'https://api.github.com/users/{0:s}'.format(username)
 
@@ -853,89 +856,108 @@ class GitHubHelper(object):
     return json.loads(response_data)
 
 
-class ProjectHelper(object):
-  """Class that defines project helper functions."""
+class ProjectHelper(CLIHelper):
+  """Class that defines project helper functions.
+
+  Attributes:
+    project_name (str): name of the project.
+  """
+
+  _AUTHORS_FILE_HEADER = [
+      u'# Names should be added to this file with this pattern:',
+      u'#',
+      u'# For individuals:',
+      u'#   Name (email address)',
+      u'#',
+      u'# For organizations:',
+      u'#   Organization (fnmatch pattern)',
+      u'#',
+      u'# See python fnmatch module documentation for more information.',
+      u'',
+      u'Google Inc. (*@google.com)']
 
   SUPPORTED_PROJECTS = frozenset([
       u'dfdatetime', u'dfvfs', u'dfwinreg', u'l2tdevtools', u'l2tdocs',
       u'plaso'])
 
-  def __init__(self):
-    """Initializes a project helper object."""
-    super(ProjectHelper, self).__init__()
-    self._project_name = None
-    self._version_file_path = None
-
-  def _ReadVersionFile(self):
-    """Reads the contents of the version file.
-
-    Returns:
-      A string containing the version file content or None.
-    """
-    project_name = self.GetName()
-    if not project_name:
-      logging.error(u'Missing project name.')
-      return
-
-    self._version_file_path = os.path.join(project_name, u'__init__.py')
-    if not os.path.exists(self._version_file_path):
-      logging.error(
-          u'Missing version file: {0:s}'.format(self._version_file_path))
-      return
-
-    try:
-      with open(self._version_file_path, u'rb') as file_object:
-        version_file_contents = file_object.read()
-
-    except IOError as exception:
-      logging.error(
-          u'Unable to read version file with error: {0:s}'.format(exception))
-      return
-
-    try:
-      version_file_contents = version_file_contents.decode(u'utf-8')
-    except UnicodeDecodeError as exception:
-      logging.error(
-          u'Unable to read version file with error: {0:s}'.format(exception))
-      return
-
-    return version_file_contents
-
-  def GetName(self, path=None):
-    """Retrieves the project name from the path of the script.
+  def __init__(self, script_path):
+    """Initializes a project helper object.
 
     Args:
-      path: optional path to the script. If None, __file__ will be used instead.
+      script_path (str): path to the script.
+
+    Raises:
+      ValueError: if the project name is not supported.
+    """
+    super(ProjectHelper, self).__init__()
+    self.project_name = self._GetProjectName(script_path)
+
+  @property
+  def version_file_path(self):
+    """str: path of the version file."""
+    return os.path.join(self.project_name, u'__init__.py')
+
+  def _GetProjectName(self, script_path):
+    """Retrieves the project name from the script path.
+
+    Args:
+      script_path (str): path to the script.
 
     Returns:
-      A string containing the project name or None.
-    """
-    if self._project_name:
-      return self._project_name
+      str: project name.
 
-    if not path:
-      path = os.path.abspath(__file__)
-    project_name = path
+    Raises:
+      ValueError: if the project name is not supported.
+    """
+    project_name = os.path.abspath(script_path)
     project_name = os.path.dirname(project_name)
     project_name = os.path.dirname(project_name)
     project_name = os.path.basename(project_name)
 
     for supported_project_name in self.SUPPORTED_PROJECTS:
       if supported_project_name in project_name:
-        self._project_name = supported_project_name
-        return self._project_name
+        return supported_project_name
 
-    logging.error(
+    raise ValueError(
         u'Unsupported project name: {0:s}.'.format(project_name))
-    return
+
+  def _ReadFileContents(self, path):
+    """Reads the contents of a file.
+
+    Args:
+      filename (str): path of the file.
+
+    Returns:
+      bytes: file content or None.
+    """
+    if not os.path.exists(path):
+      logging.error(u'Missing file: {0:s}'.format(path))
+      return
+
+    try:
+      with open(path, u'rb') as file_object:
+        file_contents = file_object.read()
+
+    except IOError as exception:
+      logging.error(u'Unable to read file with error: {0:s}'.format(exception))
+      return
+
+    try:
+      file_contents = file_contents.decode(u'utf-8')
+    except UnicodeDecodeError as exception:
+      logging.error(
+          u'Unable to read file with error: {0:s}'.format(exception))
+      return
+
+    return file_contents
 
   def GetVersion(self):
     """Retrieves the project version from the version file.
 
     Returns:
-      A string containing the project version or None.
+      str: project version or None.
     """
-    version_file_contents = self._ReadVersionFile()
+    version_file_contents = self._ReadFileContents(self.version_file_path)
     if not version_file_contents:
       return
 
@@ -954,10 +976,9 @@ class ProjectHelper(object):
     """Updates the dpkg changelog file.
 
     Returns:
-      A boolean indicating the dpkg changelog file was updated. This function
-      will return True if the dpkg changelog file does not exists.
+      bool: True if the dpkg changelog file was updated or if the dpkg
+          changelog file does not exists.
     """
-    project_name = self.GetName()
     project_version = self.GetVersion()
 
     dpkg_changelog_path = os.path.join(u'config', u'dpkg', u'changelog')
@@ -968,7 +989,7 @@ class ProjectHelper(object):
     dpkg_date = time.strftime(u'%a, %d %b %Y %H:%M:%S %z')
     dpkg_changelog_content = u'\n'.join([
         u'{0:s} ({1:s}-1) unstable; urgency=low'.format(
-            project_name, project_version),
+            self.project_name, project_version),
         u'',
         u'  * Auto-generated',
         u'',
@@ -993,26 +1014,67 @@ class ProjectHelper(object):
 
     return True
 
+  def UpdateAuthorsFile(self):
+    """Updates the AUTHORS file.
+
+    Returns:
+      bool: True if the AUTHORS file update was successful.
+    """
+    exit_code, output, _ = self.RunCommand(u'git log --format="%aN (%aE)"')
+    if exit_code != 0:
+      return False
+
+    lines = output.split(b'\n')
+
+    # Reverse the lines since we want the oldest commits first.
+    lines.reverse()
+
+    authors_by_commit = []
+    authors = {}
+    for author in lines:
+      name, _, email_address = author[:-1].rpartition(u'(')
+      if email_address in authors:
+        if name != authors[email_address]:
+          logging.warning(u'Detected name mismatch for author: {0:d}.'.format(
+              email_address))
+        continue
+
+      authors[email_address] = name
+      authors_by_commit.append(author)
+
+    file_content = []
+    file_content.extend(self._AUTHORS_FILE_HEADER)
+    file_content.extend(authors_by_commit)
+
+    file_content = u'\n'.join(file_content)
+    file_content = file_content.encode(u'utf-8')
+
+    with open(u'AUTHORS', 'wb') as file_object:
+      file_object.write(file_content)
+
+    return True
+
   def UpdateVersionFile(self):
     """Updates the version file.
 
     Returns:
-      A boolean indicating the version file was updated.
+      bool: True if the file was updated.
     """
-    version_file_contents = self._ReadVersionFile()
+    version_file_contents = self._ReadFileContents(self.version_file_path)
     if not version_file_contents:
       logging.error(u'Unable to read version file.')
       return False
 
     date_version = time.strftime(u'%Y%m%d')
-    project_name = self.GetName()
     lines = version_file_contents.split(u'\n')
     for line_index, line in enumerate(lines):
-      if project_name == u'plaso' and line.startswith(u'VERSION_DATE = '):
+      if (self.project_name == u'plaso' and
+          line.startswith(u'VERSION_DATE = ')):
         version_string = u'VERSION_DATE = \'{0:s}\''.format(date_version)
         lines[line_index] = version_string
 
-      elif project_name != u'plaso' and line.startswith(u'__version__ = '):
+      elif (self.project_name != u'plaso' and
+            line.startswith(u'__version__ = ')):
         version_string = u'__version__ = \'{0:s}\''.format(date_version)
         lines[line_index] = version_string
 
@@ -1026,7 +1088,7 @@ class ProjectHelper(object):
       return False
 
     try:
-      with open(self._version_file_path, u'wb') as file_object:
+      with open(self.version_file_path, u'wb') as file_object:
         file_object.write(version_file_contents)
 
     except IOError as exception:
@@ -1046,10 +1108,10 @@ class PylintHelper(CLIHelper):
     """Checks if the linting of the files is correct using pylint.
 
     Args:
-      filenames: list of strings with file names.
+      filenames (list[str]): names of the files to lint.
 
     Returns:
-      A boolean indicating the git repo has the specific branch.
+      bool: True if the files were linted without errors.
     """
     print(u'Running linter on changed files.')
     failed_filenames = []
@@ -1072,7 +1134,7 @@ class PylintHelper(CLIHelper):
     """Checks if the pylint version is up to date.
 
     Returns:
-      A boolean indicating the version is up to date.
+      bool: True if the pylint version is up to date.
     """
     exit_code, output, _ = self.RunCommand(u'pylint --version')
     if exit_code != 0:
@@ -1097,7 +1159,7 @@ class ReadTheDocsHelper(object):
     """Initializes a readthedocs helper object.
 
     Args:
-      project: string containing the github project name.
+      project (str): github project name.
     """
     super(ReadTheDocsHelper, self).__init__()
     self._project = project
@@ -1106,7 +1168,7 @@ class ReadTheDocsHelper(object):
     """Triggers readthedocs to build the docs of the project.
 
     Returns:
-      A boolean indicating the build was triggered.
+      bool: True if the build was triggered.
     """
     readthedocs_url = u'https://readthedocs.org/build/{0:s}'.format(
         self._project)
@@ -1142,7 +1204,7 @@ class SphinxAPIDocHelper(CLIHelper):
     """Initializes a sphinx-apidoc helper object.
 
     Args:
-      project: string containing the github project name.
+      project (str): github project name.
     """
     super(SphinxAPIDocHelper, self).__init__()
     self._project = project
@@ -1151,7 +1213,7 @@ class SphinxAPIDocHelper(CLIHelper):
     """Checks if the sphinx-apidoc version is up to date.
 
     Returns:
-      A boolean indicating the version is up to date.
+      bool: True if the sphinx-apidoc version is up to date.
     """
     exit_code, output, _ = self.RunCommand(u'sphinx-apidoc --version')
     if exit_code != 0:
@@ -1167,7 +1229,11 @@ class SphinxAPIDocHelper(CLIHelper):
     return version_tuple >= self._MINIMUM_VERSION_TUPLE
 
   def UpdateAPIDocs(self):
-    """Updates the API docs."""
+    """Updates the API docs.
+
+    Returns:
+      bool: True if the API docs have been updated.
+    """
     command = u'sphinx-apidoc -f -o docs {0:s}'.format(self._project)
     exit_code, output, _ = self.RunCommand(command)
     print(output)
@@ -1177,6 +1243,8 @@ class SphinxAPIDocHelper(CLIHelper):
 
 class NetRCFile(object):
   """Class that defines a .netrc file."""
+
+  _NETRC_SEPARATOR_RE = re.compile(r'[^ \t\n]+')
 
   def __init__(self):
     """Initializes a .netrc file object."""
@@ -1193,23 +1261,28 @@ class NetRCFile(object):
       self._contents = file_object.read()
 
   def _GetGitHubValues(self):
-    """Retrieves the github values."""
+    """Retrieves the github values.
+
+    Returns:
+      list[str]: .netrc values for github.com or None.
+    """
     if not self._contents:
       return
 
+    # Note that according to GNU's manual on .netrc file, the credential
+    # tokens "may be separated by spaces, tabs, or new-lines".
     if not self._values:
-      for line in self._contents.split(b'\n'):
-        if line.startswith(b'machine github.com '):
-          self._values = line.split(b' ')
-          break
+      self._values = self._NETRC_SEPARATOR_RE.findall(self._contents)
 
-    return self._values[2:]
+    for value_index, value in enumerate(self._values):
+      if value == u'github.com' and self._values[value_index - 1] == u'machine':
+        return self._values[value_index + 1:]
 
   def GetGitHubAccessToken(self):
     """Retrieves the github access token.
 
     Returns:
-      A string containing the github access token or None.
+      str: github access token or None.
     """
     values = self._GetGitHubValues()
     if not values:
@@ -1223,15 +1296,20 @@ class NetRCFile(object):
     """Retrieves the github username.
 
     Returns:
-      A string containing the github username or None.
+      str: github username or None.
     """
     values = self._GetGitHubValues()
     if not values:
       return
 
+    login_value = None
     for value_index, value in enumerate(values):
-      if value == u'username':
-        return values[value_index + 1]
+      if value == u'login':
+        login_value = values[value_index + 1]
+
+      # If the next field is 'password' we assume the login field is empty.
+      if login_value != u'password':
+        return login_value
 
 
 class ReviewFile(object):
@@ -1246,18 +1324,15 @@ class ReviewFile(object):
     """Initializes a review file object.
 
     Args:
-      branch_name: string containing the name of the feature branch of
-                   the review.
+      branch_name (str): name of the feature branch of the review.
     """
     super(ReviewFile, self).__init__()
     self._contents = None
-
     self._path = os.path.join(u'.review', branch_name)
-    if not os.path.exists(self._path):
-      return
 
-    with open(self._path, 'r') as file_object:
-      self._contents = file_object.read()
+    if os.path.exists(self._path):
+      with open(self._path, 'r') as file_object:
+        self._contents = file_object.read()
 
   def Create(self, codereview_issue_number):
     """Creates a new review file.
@@ -1265,22 +1340,29 @@ class ReviewFile(object):
     If the .review directory does not exist, it will be created.
 
     Args:
-      codereview_issue_number: an integer or string containing the codereview
-                               issue number.
+      codereview_issue_number (int|str): codereview issue number.
 
     Returns:
-      A boolean indicating the review file was created.
+      bool: True if the review file was created.
     """
     if not os.path.exists(u'.review'):
       os.mkdir(u'.review')
     with open(self._path, 'w') as file_object:
       file_object.write(u'{0!s}'.format(codereview_issue_number))
 
+  def Exists(self):
+    """Determines if the review file exists.
+
+    Returns:
+      bool: True if review file exists.
+    """
+    return os.path.exists(self._path)
+
   def GetCodeReviewIssueNumber(self):
     """Retrieves the codereview issue number.
 
     Returns:
-      An integer containing the codereview issue number.
+      int: codereview issue number.
     """
     if not self._contents:
       return
@@ -1310,17 +1392,16 @@ class ReviewHelper(object):
     """Initializes a review helper object.
 
     Args:
-      command: string containing the command.
-      github_origin: string containing the github origin.
-      feature_branch: string containing the feature branch.
-      diffbase: string containing the diffbase.
-      all_files: optional boolean value to indicate if the command should
-                 apply to all files. Currently only affects the lint command.
-      no_browser: optional boolean value to indicate if the functionality
-                  to use the webbrowser to get the OAuth token should be
-                  disabled.
-      no_confirm: optional boolean value to indicate if the defaults should
-                  be applied without confirmation.
+      command (str): user provided command, for example "create", "lint".
+      github_origin (str): github origin.
+      feature_branch (str): feature branch.
+      diffbase (str): diffbase.
+      all_files (Optional[bool]): True if the command should apply to all
+          files. Currently this only affects the lint command.
+      no_browser (Optional[bool]): True if the functionality to use the
+          webbrowser to get the OAuth token should be disabled.
+      no_confirm (Optional[bool]): True if the defaults should be applied
+          without confirmation.
     """
     super(ReviewHelper, self).__init__()
     self._active_branch = None
@@ -1347,7 +1428,7 @@ class ReviewHelper(object):
     """Checks the state of the local git repository.
 
     Returns:
-      A boolean value to indicate if the state is sane.
+      bool: True if the state of the local git repository is sane.
     """
     if self._command in (u'close', u'create', u'lint', u'update'):
       if not self._git_helper.CheckHasProjectUpstream():
@@ -1393,7 +1474,7 @@ class ReviewHelper(object):
     """Checks the state of the remote git repository.
 
     Returns:
-      A boolean value to indicate if the state is sane.
+      bool: True if the state of the remote git repository is sane.
     """
     if self._command == u'close':
       if not self._git_helper.SynchronizeWithUpstream():
@@ -1436,15 +1517,21 @@ class ReviewHelper(object):
     """Closes a review.
 
     Returns:
-      A boolean value to indicate if the close was successful.
+      bool: True if the close was successful.
     """
+    review_file = ReviewFile(self._feature_branch)
+    if not review_file.Exists():
+      print(u'Review file missing for branch: {0:s}'.format(
+          self._feature_branch))
+      return False
+
     if not self._git_helper.CheckHasBranch(self._feature_branch):
       print(u'No such feature branch: {0:s}'.format(self._feature_branch))
     else:
       self._git_helper.RemoveFeatureBranch(self._feature_branch)
 
-    review_file = ReviewFile(self._feature_branch)
     codereview_issue_number = review_file.GetCodeReviewIssueNumber()
+
     review_file.Remove()
 
     if codereview_issue_number:
@@ -1461,8 +1548,14 @@ class ReviewHelper(object):
     """Creates a review.
 
     Returns:
-      A boolean value to indicate if the create was successful.
+      bool: True if the create was successful.
     """
+    review_file = ReviewFile(self._active_branch)
+    if review_file.Exists():
+      print(u'Review file already exists for branch: {0:s}'.format(
+          self._active_branch))
+      return False
+
     git_origin = self._git_helper.GetRemoteOrigin()
     if not git_origin.startswith(u'https://github.com/'):
       print(u'{0:s} aborted - unsupported git remote origin: {1:s}'.format(
@@ -1513,7 +1606,6 @@ class ReviewHelper(object):
     if not os.path.isdir(u'.review'):
       os.mkdir(u'.review')
 
-    review_file = ReviewFile(self._active_branch)
     review_file.Create(codereview_issue_number)
 
     create_github_origin = u'{0:s}:{1:s}'.format(
@@ -1529,11 +1621,13 @@ class ReviewHelper(object):
     """Initializes the helper objects.
 
     Returns:
-      A boolean value to indicate if the helper initialization was successful.
+      bool: True if the helper initialization was successful.
     """
-    self._project_helper = ProjectHelper()
+    script_path = os.path.abspath(__file__)
 
-    self._project_name = self._project_helper.GetName()
+    self._project_helper = ProjectHelper(script_path)
+
+    self._project_name = self._project_helper.project_name
     if not self._project_name:
       print(u'{0:s} aborted - unable to determine project name.'.format(
           self._command.title()))
@@ -1554,11 +1648,14 @@ class ReviewHelper(object):
     if self._command == u'merge':
       self._sphinxapidoc_helper = SphinxAPIDocHelper(
           self._project_name)
-      if not self._sphinxapidoc_helper.CheckUpToDateVersion():
-        print((
-            u'{0:s} aborted - sphinx-apidoc verion 1.2.0 or later '
-            u'required.').format(self._command.title()))
-        return False
+      # TODO: disable the version check for now since sphinx-apidoc 1.2.2
+      # on Unbuntu 14.04 does not have the --version option. Re-enable when
+      # sphinx-apidoc 1.2.3 or later is introduced.
+      # if not self._sphinxapidoc_helper.CheckUpToDateVersion():
+      #   print((
+      #       u'{0:s} aborted - sphinx-apidoc verion 1.2.0 or later '
+      #       u'required.').format(self._command.title()))
+      #   return False
 
     return True
 
@@ -1566,7 +1663,7 @@ class ReviewHelper(object):
     """Lints a review.
 
     Returns:
-      A boolean value to indicate if the lint was successful.
+      bool: True if linting was successful.
     """
     if self._project_name == u'l2tdocs':
       return True
@@ -1614,11 +1711,10 @@ class ReviewHelper(object):
     """Merges a review.
 
     Args:
-      codereview_issue_number: an integer or string containing the codereview
-                               issue number.
+      codereview_issue_number (int|str): codereview issue number.
 
     Returns:
-      A boolean value to indicate if the merge was successful.
+      bool: True if the merge was successful.
     """
     if not self._project_helper.UpdateVersionFile():
       print(u'Unable to update version file.')
@@ -1662,11 +1758,10 @@ class ReviewHelper(object):
     """Opens a review.
 
     Args:
-      codereview_issue_number: an integer or string containing the codereview
-                               issue number.
+      codereview_issue_number (int|str): codereview issue number.
 
     Returns:
-      A boolean value to indicate if the open was successful.
+      bool: True if the open was successful.
     """
     # TODO: implement.
     # * check if feature branch exists
@@ -1682,11 +1777,10 @@ class ReviewHelper(object):
     """Prepares a merge.
 
     Args:
-      codereview_issue_number: an integer or string containing the codereview
-                               issue number.
+      codereview_issue_number (int|str): codereview issue number.
 
     Returns:
-      A boolean value to indicate if the prepare were successful.
+      bool: True if the prepare were successful.
     """
     codereview_information = self._codereview_helper.QueryIssue(
         codereview_issue_number)
@@ -1750,7 +1844,7 @@ class ReviewHelper(object):
     """Tests a review.
 
     Returns:
-      A boolean value to indicate if the test was successful.
+      bool: True if the tests were successful.
     """
     if self._project_name == u'l2tdocs':
       return True
@@ -1776,9 +1870,14 @@ class ReviewHelper(object):
     """Updates a review.
 
     Returns:
-      A boolean value to indicate if the update was successful.
+      bool: True if the update was successful.
     """
     review_file = ReviewFile(self._active_branch)
+    if not review_file.Exists():
+      print(u'Review file missing for branch: {0:s}'.format(
+          self._active_branch))
+      return False
+
     codereview_issue_number = review_file.GetCodeReviewIssueNumber()
 
     last_commit_message = self._git_helper.GetLastCommitMessage()
@@ -1807,11 +1906,26 @@ class ReviewHelper(object):
 
     return True
 
+  def UpdateAuthors(self):
+    """Updates the authors.
+
+    Returns:
+      bool: True if the authors update was successful.
+    """
+    if self._project_name == u'l2tdocs':
+      return True
+
+    if not self._project_helper.UpdateAuthorsFile():
+      print(u'Unable to update authors file.')
+      return False
+
+    return True
+
   def UpdateVersion(self):
     """Updates the version.
 
     Returns:
-      A boolean value to indicate if the version update was successful.
+      bool: True if the version update was successful.
     """
     if self._project_name == u'l2tdocs':
       return True
@@ -1824,14 +1938,14 @@ class ReviewHelper(object):
       print(u'Unable to update dpkg changelog file.')
       return False
 
-    return False
+    return True
 
 
 def Main():
   """The main program function.
 
   Returns:
-    A boolean containing True if successful or False if not.
+    bool: True if successful or False if not.
   """
   argument_parser = argparse.ArgumentParser(
       description=u'Script to manage code reviews.')
@@ -1863,6 +1977,11 @@ def Main():
           u'Do not ask for confirmation apply defaults.\n'
           u'WARNING: only use this when you are familiar with the defaults.'))
 
+  argument_parser.add_argument(
+      u'--offline', dest=u'offline', action=u'store_true', default=False, help=(
+          u'The review script is running offline and any online check is '
+          u'skipped.'))
+
   commands_parser = argument_parser.add_subparsers(dest=u'command')
 
   close_command_parser = commands_parser.add_parser(u'close')
@@ -1870,7 +1989,7 @@ def Main():
   # TODO: add this to help output.
   close_command_parser.add_argument(
       u'branch', action=u'store', metavar=u'BRANCH', default=None,
-      help=(u'name of the corresponding feature branch.'))
+      help=u'name of the corresponding feature branch.')
 
   commands_parser.add_parser(u'create')
 
@@ -1880,13 +1999,13 @@ def Main():
   merge_command_parser.add_argument(
       u'codereview_issue_number', action=u'store',
       metavar=u'CODEREVIEW_ISSUE_NUMBER', default=None,
-      help=(u'the codereview issue number to be merged.'))
+      help=u'the codereview issue number to be merged.')
 
   # TODO: add this to help output.
   merge_command_parser.add_argument(
       u'github_origin', action=u'store',
       metavar=u'GITHUB_ORIGIN', default=None,
-      help=(u'the github origin to merged e.g. username:feature.'))
+      help=u'the github origin to merged e.g. username:feature.')
 
   commands_parser.add_parser(u'lint')
 
@@ -1896,12 +2015,12 @@ def Main():
   open_command_parser.add_argument(
       u'codereview_issue_number', action=u'store',
       metavar=u'CODEREVIEW_ISSUE_NUMBER', default=None,
-      help=(u'the codereview issue number to be opened.'))
+      help=u'the codereview issue number to be opened.')
 
   # TODO: add this to help output.
   open_command_parser.add_argument(
       u'branch', action=u'store', metavar=u'BRANCH', default=None,
-      help=(u'name of the corresponding feature branch.'))
+      help=u'name of the corresponding feature branch.')
 
   # TODO: add submit option?
 
@@ -1911,6 +2030,9 @@ def Main():
   # useful to test pending CLs.
 
   commands_parser.add_parser(u'update')
+
+  commands_parser.add_parser(u'update-authors')
+  commands_parser.add_parser(u'update_authors')
 
   commands_parser.add_parser(u'update-version')
   commands_parser.add_parser(u'update_version')
@@ -1928,6 +2050,10 @@ def Main():
       print(u'Feature branch value is missing.')
       print_help_on_error = True
 
+      # Support "username:branch" notation.
+      if u':' in feature_branch:
+        _, _, feature_branch = feature_branch.rpartition(u':')
+
   if options.command in (u'merge', u'open'):
     codereview_issue_number = getattr(
         options, u'codereview_issue_number', None)
@@ -1940,6 +2066,10 @@ def Main():
     if not github_origin:
       print(u'Github origin value is missing.')
       print_help_on_error = True
+
+  if options.offline and options.command not in (u'lint', u'test'):
+    print(u'Cannot run: {0:s} in offline mode.'.format(options.command))
+    print_help_on_error = True
 
   if print_help_on_error:
     print(u'')
@@ -1965,7 +2095,7 @@ def Main():
   if not review_helper.CheckLocalGitState():
     return False
 
-  if not review_helper.CheckRemoteGitState():
+  if not options.offline and not review_helper.CheckRemoteGitState():
     return False
 
   if options.command == u'merge':
@@ -1985,6 +2115,9 @@ def Main():
   elif options.command == u'close':
     result = review_helper.Close()
 
+  elif options.command in (u'lint', u'test'):
+    result = True
+
   elif options.command == u'merge':
     result = review_helper.Merge(codereview_issue_number)
 
@@ -1993,6 +2126,9 @@ def Main():
 
   elif options.command == u'update':
     result = review_helper.Update()
+
+  elif options.command in (u'update-authors', u'update_authors'):
+    result = review_helper.UpdateAuthors()
 
   elif options.command in (u'update-version', u'update_version'):
     result = review_helper.UpdateVersion()

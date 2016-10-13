@@ -27,7 +27,7 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
     """Tests the AddStorageFileOptions function."""
     argument_parser = argparse.ArgumentParser(
         prog=u'analysis_tool_test.py', description=u'Test argument parser.',
-        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
+        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = analysis_tool.AnalysisTool()
     test_tool.AddStorageFileOptions(argument_parser)
