@@ -3,6 +3,7 @@
 
 import collections
 import heapq
+import logging
 import time
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -80,7 +81,6 @@ class TaskManager(object):
       completed.
   * completed: a worker has completed processing the task and the results
       have been merged with the session storage.
-  * failed: an abandoned task that was retried, and failed again.
   * pending_merge: a worker has completed processing the task and the results
       are ready to be merged with the session storage.
   * processing: a worker is processing the task.
@@ -194,27 +194,13 @@ class TaskManager(object):
       # Use a local variable to improve performance.
       task_identifier = task.identifier
       if task.last_processing_time < inactive_time:
+        logging.debug(u'Marking task {0:s} as abandoned'.format(
+            task_identifier))
         del self._tasks_processing[task_identifier]
-        task.abandonment_count += 1
         self._abandoned_tasks[task_identifier] = task
         del self._active_tasks[task_identifier]
 
     return bool(self._active_tasks)
-
-  def RescheduleTask(self, task):
-    """Marks a previous abandoned task as processing.
-
-    Args:
-      task (Task): task.
-
-    Raises:
-      KeyError: if the task was not abandoned.
-    """
-    if task.identifier not in self._abandoned_tasks:
-      raise KeyError(u'Task not abandoned')
-
-    self._active_tasks[task.identifier] = task
-    del self._abandoned_tasks[task.identifier]
 
   def UpdateTaskByIdentifier(self, task_identifier):
     """Updates a task.
@@ -243,6 +229,8 @@ class TaskManager(object):
     if task.identifier not in self._tasks_processing:
       raise KeyError(u'Task not processing')
 
+    logging.debug(u'Marking task {0:s} as pending merge'.format(
+        task.identifier))
     self._tasks_pending_merge.PushTask(task)
     del self._tasks_processing[task.identifier]
 

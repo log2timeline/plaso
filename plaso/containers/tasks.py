@@ -15,7 +15,6 @@ class Task(interface.AttributeContainer):
   e.g. to process a path specification or to analyze an event.
 
   Attributes:
-    abandonment_count (int): number of times a task was marked as abandoned.
     aborted (bool): True if the session was aborted.
     completion_time (int): time that the task was completed. Contains the
         number of micro seconds since January 1, 1970, 00:00:00 UTC.
@@ -43,7 +42,6 @@ class Task(interface.AttributeContainer):
           is part of.
     """
     super(Task, self).__init__()
-    self.abandonment_count = 0
     self.aborted = False
     self.completion_time = None
     self.file_entry_type = None
