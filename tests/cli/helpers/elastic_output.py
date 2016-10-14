@@ -25,19 +25,19 @@ class ElasticSearchOutputArgumentsHelperTest(
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      u'  --index_name INDEX_NAME',
-      u'                        Name of the index in ElasticSearch.',
       u'  --doc_type DOC_TYPE   Name of the document type that will be used in',
       u'                        ElasticSearch.',
       u'  --flush_interval FLUSH_INTERVAL',
       u'                        Events to queue up before bulk insert to',
       u'                        ElasticSearch.',
+      u'  --index_name INDEX_NAME',
+      u'                        Name of the index in ElasticSearch.',
+      u'  --port PORT           The port number of the server.',
       (u'  --raw_fields          Export string fields that will not be '
        u'analyzed by'),
       u'                        Lucene.',
       (u'  --server HOSTNAME     The hostname or server IP address of the '
        u'server.'),
-      u'  --port PORT           The port number of the server.',
       u''])
 
   def testAddArguments(self):
@@ -45,7 +45,7 @@ class ElasticSearchOutputArgumentsHelperTest(
     argument_parser = argparse.ArgumentParser(
         prog=u'cli_helper.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     elastic_output.ElasticSearchOutputArgumentsHelper.AddArguments(
         argument_parser)

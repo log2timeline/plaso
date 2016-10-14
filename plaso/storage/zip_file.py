@@ -523,7 +523,7 @@ class _SerializedDataStream(object):
       skip_read_size = stream_offset - self._stream_offset
 
     if skip_read_size > 0:
-      # Since zipfile.ZipExtFile is not seekable we need to read upto
+      # Since zipfile.ZipExtFile is not seekable we need to read up to
       # the stream offset.
       self._file_object.read(skip_read_size)
       self._stream_offset += skip_read_size
@@ -1828,7 +1828,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     data_stream = _SerializedDataStream(
         self._zipfile, self._zipfile_path, stream_name)
-    data_stream.SeekEntryAtOffset(entry_index, tag_index_value.store_index)
+    data_stream.SeekEntryAtOffset(entry_index, tag_index_value.offset)
 
     return self._ReadAttributeContainerFromStreamEntry(data_stream, u'event')
 

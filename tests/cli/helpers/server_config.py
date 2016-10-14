@@ -45,8 +45,8 @@ class ServerArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      u'  --server HOSTNAME  The hostname or server IP address of the server.',
       u'  --port PORT        The port number of the server.',
+      u'  --server HOSTNAME  The hostname or server IP address of the server.',
       u''])
 
   def testAddArguments(self):
@@ -54,7 +54,7 @@ class ServerArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'cli_helper.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     server_config.ServerArgumentsHelper.AddArguments(argument_parser)
 

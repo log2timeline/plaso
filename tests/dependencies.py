@@ -50,11 +50,6 @@ class DependenciesTest(unittest.TestCase):
         u'bogus', u'__version__', u'0', verbose_output=False)
     self.assertFalse(result)
 
-  def testCheckPyTSK(self):
-    """Tests the _CheckPyTSK function."""
-    result = dependencies._CheckPyTSK(verbose_output=False)
-    self.assertTrue(result)
-
   def testCheckSQLite3(self):
     """Tests the _CheckSQLite3 function."""
     result = dependencies._CheckSQLite3(verbose_output=False)
