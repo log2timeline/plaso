@@ -89,40 +89,59 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
   """Tests for the psort tool."""
 
   _EXPECTED_ANALYSIS_PLUGIN_OPTIONS = u'\n'.join([
-      u'usage: psort_test.py [--nsrlsvr-host NSRLSVR_HOST]',
-      u'                     [--nsrlsvr-port NSRLVR_PORT]',
-      (u'                     [--tagging-file TAGGING_FILE] '
-       u'[--viper-host VIPER_HOST]'),
-      u'                     [--viper-protocol {http,https}]',
-      u'                     [--virustotal-api-key VIRUSTOTAL_API_KEY]',
-      u'                     [--virustotal-free-rate-limit]',
+      u'usage: psort_test.py [--nsrlsvr-hash HASH] [--nsrlsvr-host HOSTNAME]',
+      (u'                     [--nsrlsvr-port PORT] '
+       u'[--tagging-file TAGGING_FILE]'),
+      u'                     [--viper-hash HASH] [--viper-host HOSTNAME]',
+      u'                     [--viper-port PORT] [--viper-protocol PROTOCOL]',
+      u'                     [--virustotal-api-key API_KEY]',
+      (u'                     [--virustotal-free-rate-limit] '
+       u'[--virustotal-hash HASH]'),
       u'                     [--windows-services-output {text,yaml}]',
       u'',
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      u'  --nsrlsvr-host NSRLSVR_HOST',
+      u'  --nsrlsvr-hash HASH, --nsrlsvr_hash HASH',
+      (u'                        Type of hash to query the NSRL server, '
+       u'the default is:'),
+      u'                        md5',
+      u'  --nsrlsvr-host HOSTNAME, --nsrlsvr_host HOSTNAME',
       (u'                        Hostname of the NSRL server to query, '
        u'the default is:'),
       u'                        localhost',
-      u'  --nsrlsvr-port NSRLVR_PORT',
+      u'  --nsrlsvr-port PORT, --nsrlsvr_port PORT',
       (u'                        Port of the NSRL server to query, the '
        u'default is:'),
       u'                        9120.',
       u'  --tagging-file TAGGING_FILE, --tagging_file TAGGING_FILE',
       u'                        Specify a file to read tagging criteria from.',
-      u'  --viper-host VIPER_HOST',
-      u'                        Specify the host to query Viper on.',
-      u'  --viper-protocol {http,https}',
+      u'  --viper-hash HASH, --viper_hash HASH',
+      (u'                        Type of hash to query the Viper server, '
+       u'the default'),
+      u'                        is: sha256',
+      u'  --viper-host HOSTNAME, --viper_host HOSTNAME',
+      (u'                        Hostname of the Viper server to query, the '
+       u'default is:'),
+      u'                        localhost',
+      u'  --viper-port PORT, --viper_port PORT',
+      (u'                        Port of the Viper server to query, the '
+       u'default is:'),
+      u'                        8080.',
+      u'  --viper-protocol PROTOCOL, --viper_protocol PROTOCOL',
       u'                        Protocol to use to query Viper.',
-      u'  --virustotal-api-key VIRUSTOTAL_API_KEY',
+      u'  --virustotal-api-key API_KEY, --virustotal_api_key API_KEY',
       u'                        Specify the API key for use with VirusTotal.',
-      u'  --virustotal-free-rate-limit',
+      u'  --virustotal-free-rate-limit, --virustotal_free_rate_limit',
       (u'                        Limit Virustotal requests to the default '
        u'free API key'),
       (u'                        rate of 4 requests per minute. Set this to '
        u'false if'),
       u'                        you have an key for the private API.',
+      u'  --virustotal-hash HASH, --virustotal_hash HASH',
+      (u'                        Type of hash to query VirusTotal, the '
+       u'default is:'),
+      u'                        sha256',
       u'  --windows-services-output {text,yaml}',
       (u'                        Specify how the results should be displayed. '
        u'Options'),

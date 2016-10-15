@@ -99,12 +99,6 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
   # must override this attribute.
   DATA_TYPES = []
 
-  # The plugin will select hashes from the event objects from these attributes,
-  # in priority order. More collision-resistant hashing algorithms should be
-  # preferred over less resistant algorithms.
-  REQUIRED_HASH_ATTRIBUTES = frozenset(
-      [u'sha256_hash', u'sha1_hash', u'md5_hash'])
-
   # The default number of seconds for the plugin to wait for analysis results
   # to be added to the hash_analysis_queue by the analyzer thread.
   DEFAULT_QUEUE_TIMEOUT = 4
@@ -206,26 +200,27 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
       event (EventObject): event.
     """
     self._EnsureRequesterStarted()
+
     pathspec = event.pathspec
     event_uuids = self._event_uuids_by_pathspec[pathspec]
     event_uuids.append(event.uuid)
-    if event.data_type in self.DATA_TYPES:
-      for attribute in self.REQUIRED_HASH_ATTRIBUTES:
-        hash_for_lookup = getattr(event, attribute, None)
-        if not hash_for_lookup:
-          continue
-        pathspecs = self._hash_pathspecs[hash_for_lookup]
-        pathspecs.append(pathspec)
-        # There may be multiple pathspecs that have the same hash. We only
-        # want to look them up once.
-        if len(pathspecs) == 1:
-          self.hash_queue.put(hash_for_lookup)
-        return
-      warning_message = (
-          u'Event with ID {0:s} had none of the required attributes '
-          u'{1:s}.').format(
-              event.uuid, self.REQUIRED_HASH_ATTRIBUTES)
-      logging.warning(warning_message)
+    if event.data_type not in self.DATA_TYPES:
+      return
+
+    if not self._analyzer.lookup_hash:
+      return
+
+    lookup_hash = u'{0:s}_hash'.format(self._analyzer.lookup_hash)
+    lookup_hash = getattr(event, lookup_hash, None)
+    if not lookup_hash:
+      return
+
+    pathspecs = self._hash_pathspecs[lookup_hash]
+    pathspecs.append(pathspec)
+    # There may be multiple pathspecs that have the same hash. We only
+    # want to look them up once.
+    if len(pathspecs) == 1:
+      self.hash_queue.put(lookup_hash)
 
   def _ContinueReportCompilation(self):
     """Determines if the plugin should continue trying to compile the report.
@@ -327,6 +322,14 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
       list[str]: list of labels to apply to events.
     """
 
+  def SetLookupHash(self, lookup_hash):
+    """Sets the hash to query.
+
+    Args:
+      lookup_hash (str): name of the hash attribute to look up.
+    """
+    self._analyzer.SetLookupHash(lookup_hash)
+
 
 class HashAnalyzer(threading.Thread):
   """Class that defines the interfaces for hash analyzer threads.
@@ -337,6 +340,7 @@ class HashAnalyzer(threading.Thread):
     analyses_performed (int): number of analysis batches completed by this
         analyzer.
     hashes_per_batch (int): maximum number of hashes to analyze at once.
+    lookup_hash (str): name of the hash attribute to look up.
     seconds_spent_analyzing (int): number of seconds this analyzer has spent
         performing analysis (as opposed to waiting on queues, etc.)
     wait_after_analysis (int): number of seconds the analyzer will sleep for
@@ -347,7 +351,7 @@ class HashAnalyzer(threading.Thread):
 
   def __init__(
       self, hash_queue, hash_analysis_queue, hashes_per_batch=1,
-      wait_after_analysis=0):
+      lookup_hash=u'sha256', wait_after_analysis=0):
     """Initializes a hash analyzer.
 
     Args:
@@ -355,6 +359,7 @@ class HashAnalyzer(threading.Thread):
       hash_analysis_queue (Queue.queue): queue that the analyzer will append
           HashAnalysis objects to.
       hashes_per_batch (Optional[int]): number of hashes to analyze at once.
+      lookup_hash (Optional[str]): name of the hash attribute to look up.
       wait_after_analysis (Optional[int]: number of seconds to wait after each
           batch is analyzed.
     """
@@ -364,6 +369,7 @@ class HashAnalyzer(threading.Thread):
     self._hash_analysis_queue = hash_analysis_queue
     self.analyses_performed = 0
     self.hashes_per_batch = hashes_per_batch
+    self.lookup_hash = lookup_hash
     self.seconds_spent_analyzing = 0
     self.wait_after_analysis = wait_after_analysis
     # Indicate that this is a daemon thread. The program will exit if only
@@ -420,6 +426,14 @@ class HashAnalyzer(threading.Thread):
       else:
         # Wait for some more hashes to be added to the queue.
         time.sleep(self.EMPTY_QUEUE_WAIT_TIME)
+
+  def SetLookupHash(self, lookup_hash):
+    """Sets the hash to query the nsrlsvr.
+
+    Args:
+      lookup_hash (str): name of the hash attribute to look up.
+    """
+    self.lookup_hash = lookup_hash
 
   def SignalAbort(self):
     """Instructs this analyzer to stop running."""

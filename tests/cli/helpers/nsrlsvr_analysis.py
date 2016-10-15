@@ -18,17 +18,21 @@ class NsrlsvrAnalysisArgumentsHelperTest(
   """Tests the nsrlsvr analysis plugin CLI arguments helper."""
 
   _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [--nsrlsvr-host NSRLSVR_HOST]',
-      u'                     [--nsrlsvr-port NSRLVR_PORT]',
+      u'usage: cli_helper.py [--nsrlsvr-hash HASH] [--nsrlsvr-host HOSTNAME]',
+      u'                     [--nsrlsvr-port PORT]',
       u'',
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      u'  --nsrlsvr-host NSRLSVR_HOST',
+      u'  --nsrlsvr-hash HASH, --nsrlsvr_hash HASH',
+      (u'                        Type of hash to query the NSRL server, '
+       u'the default is:'),
+      u'                        md5',
+      u'  --nsrlsvr-host HOSTNAME, --nsrlsvr_host HOSTNAME',
       (u'                        Hostname of the NSRL server to query, '
        u'the default is:'),
       u'                        localhost',
-      u'  --nsrlsvr-port NSRLVR_PORT',
+      u'  --nsrlsvr-port PORT, --nsrlsvr_port PORT',
       (u'                        Port of the NSRL server to query, the '
        u'default is:'),
       u'                        9120.',

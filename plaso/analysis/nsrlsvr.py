@@ -9,7 +9,7 @@ from plaso.analysis import manager
 
 
 class NsrlsvrAnalyzer(interface.HashAnalyzer):
-  """Class that analyzes file hashes by consulting an nsrlsvr instance.
+  """Analyzes file hashes by consulting an nsrlsvr instance.
 
   Attributes:
     analyses_performed (int): number of analysis batches completed by this
@@ -84,7 +84,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
 
     return hash_analyses
 
-  def SetHost(self, host):
+  def SetHostname(self, host):
     """Sets the address or hostname of the server running nsrlsvr.
 
     Args:
@@ -103,9 +103,6 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
 
 class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
   """An analysis plugin for looking up hashes in nsrlsvr."""
-
-  # nsrlsvr allows lookups using any of these hash algorithms.
-  REQUIRED_HASH_ATTRIBUTES = [u'sha256_hash', u'md5_hash']
 
   # The NSRL contains files of all different types, and can handle a high load
   # so look up all files.
@@ -136,13 +133,13 @@ class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     # return [u'nsrl_not_present']
     return []
 
-  def SetHost(self, host):
+  def SetHostname(self, host):
     """Sets the address or hostname of the server running nsrlsvr.
 
     Args:
       host (str): IP address or hostname to query.
     """
-    self._analyzer.SetHost(host)
+    self._analyzer.SetHostname(host)
 
   def SetPort(self, port):
     """Sets the port where nsrlsvr is listening.

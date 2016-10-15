@@ -14,7 +14,8 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
   CATEGORY = u'analysis'
   DESCRIPTION = u'Argument helper for the nsrlsvr analysis plugin.'
 
-  _DEFAULT_HOST = u'localhost'
+  _DEFAULT_HASH = u'md5'
+  _DEFAULT_HOSTNAME = u'localhost'
   _DEFAULT_PORT = 9120
 
   @classmethod
@@ -29,13 +30,22 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
           to append arguments to.
     """
     argument_group.add_argument(
-        u'--nsrlsvr-host', dest=u'nsrlsvr_host', type=str, action='store',
-        default=cls._DEFAULT_HOST, help=(
-            u'Hostname of the NSRL server to query, the default is: '
-            u'{0:s}'.format(cls._DEFAULT_HOST)))
+        u'--nsrlsvr-hash', u'--nsrlsvr_hash', dest=u'nsrlsvr_hash', type=str,
+        action='store', choices=[u'md5', u'sha1'], default=cls._DEFAULT_HASH,
+        metavar=u'HASH', help=(
+            u'Type of hash to query the NSRL server, the default is: '
+            u'{0:s}'.format(cls._DEFAULT_HASH)))
+
     argument_group.add_argument(
-        u'--nsrlsvr-port', dest=u'nsrlvr_port', type=int, action='store',
-        default=cls._DEFAULT_PORT, help=(
+        u'--nsrlsvr-host', u'--nsrlsvr_host', dest=u'nsrlsvr_host', type=str,
+        action='store', default=cls._DEFAULT_HOSTNAME, metavar=u'HOSTNAME',
+        help=(
+            u'Hostname of the NSRL server to query, the default is: '
+            u'{0:s}'.format(cls._DEFAULT_HOSTNAME)))
+
+    argument_group.add_argument(
+        u'--nsrlsvr-port', u'--nsrlsvr_port', dest=u'nsrlvr_port', type=int,
+        action='store', default=cls._DEFAULT_PORT, metavar=u'PORT', help=(
             u'Port of the NSRL server to query, the default is: {0:d}.'.format(
                 cls._DEFAULT_PORT)))
 
@@ -54,9 +64,13 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           u'Analysis plugin is not an instance of NsrlsvrAnalysisPlugin')
 
+    lookup_hash = cls._ParseStringOption(
+        options, u'nsrlsvr_hash', default_value=cls._DEFAULT_HASH)
+    analysis_plugin.SetLookupHash(lookup_hash)
+
     host = cls._ParseStringOption(
-        options, u'nsrlsvr_host', default_value=cls._DEFAULT_HOST)
-    analysis_plugin.SetHost(host)
+        options, u'nsrlsvr_host', default_value=cls._DEFAULT_HOSTNAME)
+    analysis_plugin.SetHostname(host)
 
     port = cls._ParseStringOption(
         options, u'nsrlsvr_port', default_value=cls._DEFAULT_PORT)

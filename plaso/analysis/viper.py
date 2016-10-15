@@ -19,38 +19,16 @@ class ViperAnalyzer(interface.HTTPHashAnalyzer):
     """Initializes a Viper hash analyzer.
 
     Args:
-      hash_queue: A queue (instance of Queue.queue) that contains hashes to
-                  be analyzed.
-      hash_analysis_queue: A queue (instance of Queue.queue) that the analyzer
-                           will append HashAnalysis objects to.
+      hash_queue (Queue.queue): contains hashes to be analyzed.
+      hash_analysis_queue (Queue.queue): that the analyzer will append
+          HashAnalysis objects this queue.
     """
     super(ViperAnalyzer, self).__init__(
         hash_queue, hash_analysis_queue, **kwargs)
     self._checked_for_old_python_version = False
     self._host = None
+    self._port = None
     self._protocol = None
-
-  def SetHost(self, host):
-    """Sets the Viper host that will be queried.
-
-    Args:
-      host: The Viper host to query.
-    """
-    self._host = host
-
-  def SetProtocol(self, protocol):
-    """Sets the protocol that will be used to query Viper.
-
-    Args:
-      protocol: The protocol to use to query Viper. Either 'http' or 'https'.
-
-    Raises:
-      ValueError: If an invalid protocol is specified.
-    """
-    protocol = protocol.lower().strip()
-    if protocol not in self._SUPPORTED_PROTOCOLS:
-      raise ValueError(u'Invalid protocol specified for Viper lookup')
-    self._protocol = protocol
 
   def Analyze(self, hashes):
     """Looks up hashes in Viper using the Viper HTTP API.
@@ -80,8 +58,8 @@ class ViperAnalyzer(interface.HTTPHashAnalyzer):
     sha256 = hashes[0]
 
     hash_analyses = []
-    url = u'{0:s}://{1:s}/{2:s}'.format(
-        self._protocol, self._host, self._VIPER_API_PATH)
+    url = u'{0:s}://{1:s}:{2:d}/{3:s}'.format(
+        self._protocol, self._host, self._port, self._VIPER_API_PATH)
     params = {u'sha256': sha256}
     try:
       json_response = self.MakeRequestAndDecodeJSON(url, u'POST', data=params)
@@ -96,11 +74,39 @@ class ViperAnalyzer(interface.HTTPHashAnalyzer):
     hash_analyses.append(hash_analysis)
     return hash_analyses
 
+  def SetHostname(self, host):
+    """Sets the address or hostname of the server running Viper server.
+
+    Args:
+      host (str): IP address or hostname to query.
+    """
+    self._host = host
+
+  def SetPort(self, port):
+    """Sets the port where Viper server is listening.
+
+    Args:
+      port (int): port to query.
+    """
+    self._port = port
+
+  def SetProtocol(self, protocol):
+    """Sets the protocol that will be used to query Viper.
+
+    Args:
+      protocol (str): protocol to use to query Viper. Either 'http' or 'https'.
+
+    Raises:
+      ValueError: If an invalid protocol is specified.
+    """
+    protocol = protocol.lower().strip()
+    if protocol not in self._SUPPORTED_PROTOCOLS:
+      raise ValueError(u'Invalid protocol specified for Viper lookup')
+    self._protocol = protocol
+
 
 class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
   """An analysis plugin for looking up SHA256 hashes in Viper."""
-
-  REQUIRED_HASH_ATTRIBUTES = [u'sha256_hash']
 
   # TODO: Check if there are other file types worth checking Viper for.
   DATA_TYPES = [u'pe:compilation:compilation_time']
@@ -112,7 +118,6 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
   def __init__(self):
     """Initializes a Viper analysis plugin."""
     super(ViperAnalysisPlugin, self).__init__(ViperAnalyzer)
-    self._host = None
 
   def GenerateLabels(self, hash_information):
     """Generates a list of strings that will be used in the event tag.
@@ -154,19 +159,27 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
 
     return strings
 
-  def SetHost(self, host):
-    """Sets the Viper host that will be queried.
+  def SetHostname(self, host):
+    """Sets the address or hostname of the server running Viper server.
 
     Args:
-      host: The Viper host to query.
+      host (str): IP address or hostname to query.
     """
-    self._analyzer.SetHost(host)
+    self._analyzer.SetHostname(host)
+
+  def SetPort(self, port):
+    """Sets the port where Viper server is listening.
+
+    Args:
+      port (int): port to query.
+    """
+    self._analyzer.SetPort(port)
 
   def SetProtocol(self, protocol):
     """Sets the protocol that will be used to query Viper.
 
     Args:
-      protocol: The protocol to use to query Viper. Either 'http' or 'https'.
+      protocol (str): protocol to use to query Viper. Either 'http' or 'https'.
 
     Raises:
       ValueError: If an invalid protocol is selected.
