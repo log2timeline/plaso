@@ -37,6 +37,50 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     self._port = None
     self.hashes_per_batch = 100
 
+  def _Connect(self):
+    """Connects to the nsrlsvr.
+
+    Returns:
+      socket._socketobject: socket of connection to nsrlsvr or None if
+          connection cannot be established.
+    """
+    try:
+      return socket.create_connection(
+          (self._host, self._port), self._SOCKET_TIMEOUT)
+
+    except socket.error as exception:
+      logging.error(
+          u'Unable to connect to nsrlsvr with error: {0:s}.'.format(exception))
+
+  def _QueryHash(self, nsrl_socket, digest):
+    """Queries nsrlsvr for a specfic hash.
+
+    Args:
+      nsrl_socket (socket._socketobject): socket of connection to nsrlsvr.
+      digest (str): hash to look up.
+
+    Returns:
+      bool: True if the hash was found, False if not or None on error.
+    """
+    query = u'QUERY {0:s}\n'.format(digest)
+
+    try:
+      nsrl_socket.sendall(query)
+      response = nsrl_socket.recv(self._RECEIVE_BUFFER_SIZE)
+
+    except socket.error as exception:
+      logging.error(
+          u'Unable to query nsrlsvr with error: {0:s}.'.format(exception))
+
+    if not response:
+      return False
+
+    # Strip end-of-line characters since they can differ per platform on which
+    # nsrlsvr is running.
+    response = response.strip()
+    # nsrlsvr returns "OK 1" if the has was found or "OK 0" if not.
+    return response == b'OK 1'
+
   def Analyze(self, hashes):
     """Looks up hashes in nsrlsvr.
 
@@ -46,40 +90,23 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     Returns:
       list[HashAnalysis]: analysis results, or an empty list on error.
     """
-    # Open a socket
     logging.debug(
         u'Opening connection to {0:s}:{1:d}'.format(self._host, self._port))
-    try:
-      nsrl_socket = socket.create_connection(
-          (self._host, self._port), self._SOCKET_TIMEOUT)
-    except socket.error as exception:
-      logging.error((
-          u'Error communicating with nsrlsvr {0:s}. nsrlsvr plugin is '
-          u'aborting.').format(exception))
+
+    nsrl_socket = self._Connect()
+    if not nsrl_socket:
       self.SignalAbort()
       return []
 
     hash_analyses = []
     for digest in hashes:
-      query = u'QUERY {0:s}\n'.format(digest)
-      try:
-        nsrl_socket.sendall(query)
-        response = nsrl_socket.recv(self._RECEIVE_BUFFER_SIZE)
-      except socket.error as exception:
-        logging.error(
-            (u'Error communicating with nsrlsvr {0:s}. nsrlsvr plugin is '
-             u'aborting.').format(exception))
-        self.SignalAbort()
-        return hash_analyses
+      response = self._QueryHash(nsrl_socket, digest)
+      if response is None:
+        continue
 
-      _, _, nsrl_result = response.rpartition(u' ')
+      hash_analysis = interface.HashAnalysis(digest, response)
+      hash_analyses.append(hash_analysis)
 
-      if nsrl_result == u'1':
-        hash_analysis = interface.HashAnalysis(digest, True)
-        hash_analyses.append(hash_analysis)
-      else:
-        hash_analysis = interface.HashAnalysis(digest, False)
-        hash_analyses.append(hash_analysis)
     nsrl_socket.close()
 
     return hash_analyses
@@ -99,6 +126,21 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
       port (int): port to query.
     """
     self._port = port
+
+  def TestConnection(self):
+    """Tests the connection to nsrlsvr.
+
+    Returns:
+      bool: True if the nsrlsvr is reachable.
+    """
+    response = None
+    nsrl_socket = self._Connect()
+    if nsrl_socket:
+      response = self._QueryHash(
+          nsrl_socket, u'd41d8cd98f00b204e9800998ecf8427e')
+      nsrl_socket.close()
+
+    return response is not None
 
 
 class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
@@ -148,6 +190,14 @@ class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
       port (int): port to query.
     """
     self._analyzer.SetPort(port)
+
+  def TestConnection(self):
+    """Tests the connection to nsrlsvr.
+
+    Returns:
+      bool: True if the nsrlsvr is reachable.
+    """
+    return self._analyzer.TestConnection()
 
 
 manager.AnalysisPluginManager.RegisterPlugin(NsrlsvrAnalysisPlugin)

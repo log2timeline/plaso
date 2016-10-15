@@ -59,6 +59,7 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the analysis plugin is the wrong type.
+      BadConfigOption: when the nsrlsvr cannot be connected.
     """
     if not isinstance(analysis_plugin, nsrlsvr.NsrlsvrAnalysisPlugin):
       raise errors.BadConfigObject(
@@ -75,6 +76,10 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
     port = cls._ParseStringOption(
         options, u'nsrlsvr_port', default_value=cls._DEFAULT_PORT)
     analysis_plugin.SetPort(port)
+
+    if not analysis_plugin.TestConnection():
+      raise errors.BadConfigOption(
+          u'Unable to connect to nsrlsvr {0:s}:{1:d}'.format(host, port))
 
 
 manager.ArgumentHelperManager.RegisterHelper(NsrlsvrAnalysisArgumentsHelper)
