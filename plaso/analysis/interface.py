@@ -184,7 +184,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     labels = self.GenerateLabels(hash_analysis.hash_information)
     pathspecs = self._hash_pathspecs.pop(hash_analysis.subject_hash)
     for pathspec in pathspecs:
-      event_uuids = self._event_uuids_by_pathspec.pop(pathspec)
+      event_uuids = self._event_uuids_by_pathspec.pop(pathspec, [])
       if labels:
         for event_uuid in event_uuids:
           tag = self._CreateTag(event_uuid, labels)
@@ -302,13 +302,15 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     number_of_hashes = self.hash_queue.qsize()
     hashes_per_batch = self._analyzer.hashes_per_batch
     wait_time_per_batch = self._analyzer.wait_after_analysis
-    try:
-      average_analysis_time = divmod(
-          self._analyzer.seconds_spent_analyzing,
-          self._analyzer.analyses_performed)
-    except ZeroDivisionError:
-      average_analysis_time = 1
-    batches_remaining = divmod(number_of_hashes, hashes_per_batch)
+    analyses_performed = self._analyzer.analyses_performed
+
+    if analyses_performed == 0:
+      average_analysis_time = self._analyzer.seconds_spent_analyzing
+    else:
+      average_analysis_time, _ = divmod(
+          self._analyzer.seconds_spent_analyzing, analyses_performed)
+
+    batches_remaining, _ = divmod(number_of_hashes, hashes_per_batch)
     estimated_seconds_per_batch = average_analysis_time + wait_time_per_batch
     return batches_remaining * estimated_seconds_per_batch
 

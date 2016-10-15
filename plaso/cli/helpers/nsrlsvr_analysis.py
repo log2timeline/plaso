@@ -30,12 +30,14 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
     """
     argument_group.add_argument(
         u'--nsrlsvr-host', dest=u'nsrlsvr_host', type=str, action='store',
-        default=cls._DEFAULT_HOST,
-        help=u'Specify the host to query Nsrlsvr on.')
+        default=cls._DEFAULT_HOST, help=(
+            u'Hostname of the NSRL server to query, the default is: '
+            u'{0:s}'.format(cls._DEFAULT_HOST)))
     argument_group.add_argument(
         u'--nsrlsvr-port', dest=u'nsrlvr_port', type=int, action='store',
-        default=cls._DEFAULT_PORT,
-        help=u'Port to use to query Nsrlsvr.')
+        default=cls._DEFAULT_PORT, help=(
+            u'Port of the NSRL server to query, the default is: {0:d}.'.format(
+                cls._DEFAULT_PORT)))
 
   @classmethod
   def ParseOptions(cls, options, analysis_plugin):

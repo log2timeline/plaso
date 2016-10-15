@@ -25,9 +25,13 @@ class NsrlsvrAnalysisArgumentsHelperTest(
       u'',
       u'optional arguments:',
       u'  --nsrlsvr-host NSRLSVR_HOST',
-      u'                        Specify the host to query Nsrlsvr on.',
+      (u'                        Hostname of the NSRL server to query, '
+       u'the default is:'),
+      u'                        localhost',
       u'  --nsrlsvr-port NSRLVR_PORT',
-      u'                        Port to use to query Nsrlsvr.',
+      (u'                        Port of the NSRL server to query, the '
+       u'default is:'),
+      u'                        9120.',
       u''])
 
   def testAddArguments(self):
