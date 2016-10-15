@@ -109,6 +109,12 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
 
     nsrl_socket.close()
 
+    logging.debug(
+        u'Closed connection to {0:s}:{1:d}'.format(self._host, self._port))
+
+    if not hash_analyses:
+      self.SignalAbort()
+
     return hash_analyses
 
   def SetHostname(self, host):
