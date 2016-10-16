@@ -205,24 +205,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     storage_file.Close()
 
-  def _GetEventsFromGroup(self, storage_file, event_group):
-    """Return a generator with all EventObjects from a group.
-
-    Args:
-      storage_file: a storage file (instance of StorageFile).
-      event_group: an event group (instance of plaso_storage_pb2.EventGroup).
-
-    Returns:
-      A list of event objects (instance of EventObjects).
-    """
-    test_events = []
-    for group_event in event_group.events:
-      event = storage_file._GetEvent(
-          group_event.store_number, entry_index=group_event.store_index)
-      test_events.append(event)
-
-    return test_events
-
   def _GetTaggedEvent(self, storage_file, event_tag):
     """Retrieves the event object for a specific event tag.
 
@@ -1109,8 +1091,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-04-05 12:27:39')
     self.assertEqual(event.timestamp, expected_timestamp)
-    self.assertEqual(event.store_number, 1)
-    self.assertEqual(event.store_index, 0)
     self.assertEqual(event.tag.comment, u'My comment')
 
     message, _ = formatters_manager.FormattersManager.GetMessageStrings(
