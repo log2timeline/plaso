@@ -243,6 +243,8 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     Returns:
       AnalysisReport: report.
     """
+    # TODO: refactor to update the counter on demand instead of
+    # during reporting.
     path_specs_per_labels_counter = collections.Counter()
     tags = []
     while self._ContinueReportCompilation():
