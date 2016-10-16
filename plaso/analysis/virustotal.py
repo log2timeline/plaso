@@ -10,8 +10,11 @@ from plaso.lib import errors
 
 class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
   """Class that analyzes file hashes by consulting VirusTotal."""
+
   _VIRUSTOTAL_API_REPORT_URL = (
       u'https://www.virustotal.com/vtapi/v2/file/report')
+
+  SUPPORTED_HASHES = [u'md5', u'sha1', u'sha256']
 
   def __init__(self, hash_queue, hash_analysis_queue, **kwargs):
     """Initializes a VirusTotal Analyzer thread.

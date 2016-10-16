@@ -23,6 +23,8 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
   _RECEIVE_BUFFER_SIZE = 4096
   _SOCKET_TIMEOUT = 3
 
+  SUPPORTED_HASHES = [u'md5', u'sha1']
+
   def __init__(self, hash_queue, hash_analysis_queue, **kwargs):
     """Initializes an nsrlsvr analyzer thread.
 
