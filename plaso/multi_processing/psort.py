@@ -58,7 +58,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         profiling_sample_rate=profiling_sample_rate,
         profiling_type=profiling_type)
     self._completed_analysis_processes = set()
-    self._event_queues = []
+    self._event_queues = {}
     self._merge_task = None
     self._number_of_consumed_errors = 0
     self._number_of_consumed_events = 0
@@ -112,7 +112,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         number_of_filtered_events += 1
         continue
 
-      for event_queue in self._event_queues:
+      for event_queue in self._event_queues.values():
         # TODO: Check for premature exit of analysis plugins.
         event_queue.PushItem(event)
 
@@ -124,7 +124,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     logging.debug(u'Finished pushing events to analysis plugins.')
     # Signal that we have finished adding events.
-    for event_queue in self._event_queues:
+    for event_queue in self._event_queues.values():
       event_queue.PushItem(plaso_queue.QueueAbort(), block=False)
 
     logging.debug(u'Processing analysis plugin results.')
@@ -146,6 +146,11 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
           pid = self._pid_per_analysis_plugin[plugin_name]
           self._completed_analysis_processes.add(pid)
+
+          event_queue = self._event_queues[plugin_name]
+          del self._event_queues[plugin_name]
+
+          event_queue.Close()
 
           storage_merge_reader = storage_writer.StartMergeTaskStorage(task)
 
@@ -365,7 +370,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         output_event_queue = multi_process_queue.MultiProcessingQueue(
             timeout=self._QUEUE_TIMEOUT)
 
-      self._event_queues.append(output_event_queue)
+      self._event_queues[analysis_plugin.NAME] = output_event_queue
 
       if self._use_zeromq:
         queue_name = u'{0:s} input event queue'.format(analysis_plugin.NAME)
@@ -435,17 +440,17 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     if not self._use_zeromq:
       logging.debug(u'Emptying queues.')
-      for event_queue in self._event_queues:
+      for event_queue in self._event_queues.values():
         event_queue.Empty()
 
     # Wake the processes to make sure that they are not blocking
     # waiting for the queue new items.
-    for event_queue in self._event_queues:
+    for event_queue in self._event_queues.values():
       event_queue.PushItem(plaso_queue.QueueAbort(), block=False)
 
     # Try waiting for the processes to exit normally.
     self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
-    for event_queue in self._event_queues:
+    for event_queue in self._event_queues.values():
       event_queue.Close(abort=abort)
 
     if abort:
@@ -456,7 +461,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       self._AbortTerminate()
       self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
 
-      for event_queue in self._event_queues:
+      for event_queue in self._event_queues.values():
         event_queue.Close(abort=True)
 
   def _UpdateProcessingStatus(self, pid, process_status):
