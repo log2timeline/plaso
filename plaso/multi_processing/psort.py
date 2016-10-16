@@ -70,7 +70,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._number_of_produced_events = 0
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
-    self._pid_per_analysis_plugin = {}
     self._status = definitions.PROCESSING_STATUS_IDLE
     self._status_update_callback = None
     self._use_zeromq = use_zeromq
@@ -146,9 +145,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         if merge_ready:
           self._status = definitions.PROCESSING_STATUS_MERGING
 
-          pid = self._pid_per_analysis_plugin[plugin_name]
-          self._completed_analysis_processes.add(pid)
-
           event_queue = self._event_queues[plugin_name]
           del self._event_queues[plugin_name]
 
@@ -198,47 +194,47 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._RaiseIfNotRegistered(pid)
 
     if pid in self._completed_analysis_processes:
-      processing_status_string = u'completed'
-      status_indicator = definitions.PROCESSING_STATUS_COMPLETED
+      return
+
+    process = self._processes_per_pid[pid]
+
+    process_status = self._GetProcessStatus(process)
+    if process_status is None:
+      process_is_alive = False
+    else:
+      process_is_alive = True
+
+    if isinstance(process_status, dict):
+      self._rpc_errors_per_pid[pid] = 0
+      status_indicator = process_status.get(u'processing_status', None)
+
+    else:
+      rpc_errors = self._rpc_errors_per_pid.get(pid, 0) + 1
+      self._rpc_errors_per_pid[pid] = rpc_errors
+
+      if rpc_errors > self._MAXIMUM_RPC_ERRORS:
+        process_is_alive = False
+
+      if process_is_alive:
+        rpc_port = process.rpc_port.value
+        logging.warning((
+            u'Unable to retrieve process: {0:s} (PID: {1:d}) status via '
+            u'RPC socket: http://localhost:{2:d}').format(
+                process.name, pid, rpc_port))
+
+        processing_status_string = u'RPC error'
+        status_indicator = definitions.PROCESSING_STATUS_RUNNING
+      else:
+        processing_status_string = u'killed'
+        status_indicator = definitions.PROCESSING_STATUS_KILLED
 
       process_status = {
           u'processing_status': processing_status_string}
 
-    else:
-      process = self._processes_per_pid[pid]
-
-      process_status = self._GetProcessStatus(process)
-      if process_status is None:
-        process_is_alive = False
-      else:
-        process_is_alive = True
-
-      if isinstance(process_status, dict):
-        self._rpc_errors_per_pid[pid] = 0
-        status_indicator = process_status.get(u'processing_status', None)
-
-      else:
-        rpc_errors = self._rpc_errors_per_pid.get(pid, 0) + 1
-        self._rpc_errors_per_pid[pid] = rpc_errors
-
-        if rpc_errors > self._MAXIMUM_RPC_ERRORS:
-          process_is_alive = False
-
-        if process_is_alive:
-          rpc_port = process.rpc_port.value
-          logging.warning((
-              u'Unable to retrieve process: {0:s} (PID: {1:d}) status via '
-              u'RPC socket: http://localhost:{2:d}').format(
-                  process.name, pid, rpc_port))
-
-          processing_status_string = u'RPC error'
-          status_indicator = definitions.PROCESSING_STATUS_RUNNING
-        else:
-          processing_status_string = u'killed'
-          status_indicator = definitions.PROCESSING_STATUS_KILLED
-
-        process_status = {
-            u'processing_status': processing_status_string}
+    if status_indicator in (
+        definitions.PROCESSING_STATUS_ABORTED,
+        definitions.PROCESSING_STATUS_COMPLETED):
+      self._completed_analysis_processes.add(pid)
 
     self._UpdateProcessingStatus(pid, process_status)
 
@@ -401,8 +397,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
       self._RegisterProcess(process)
       self._StartMonitoringProcess(process.pid)
-
-      self._pid_per_analysis_plugin[analysis_plugin.plugin_name] = process.pid
 
     logging.info(u'Analysis plugins running')
 

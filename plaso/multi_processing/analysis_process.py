@@ -2,6 +2,7 @@
 """The multi-process analysis process."""
 
 import logging
+import threading
 
 from plaso.analysis import mediator as analysis_mediator
 from plaso.containers import tasks
@@ -13,6 +14,10 @@ from plaso.multi_processing import base_process
 
 class AnalysisProcess(base_process.MultiProcessBaseProcess):
   """Class that defines a multi-processing analysis process."""
+
+  # Number of seconds to wait for the completion status to be queried
+  # by the foreman process.
+  _FOREMAN_STATUS_WAIT = 5 * 60
 
   def __init__(
       self, event_queue, storage_writer, knowledge_base, analysis_plugin,
@@ -40,6 +45,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     self._debug_output = False
     self._event_filter_expression = event_filter_expression
     self._event_queue = event_queue
+    self._foreman_status_wait_event = threading.Event()
     self._knowledge_base = knowledge_base
     self._memory_profiler = None
     self._number_of_consumed_events = 0
@@ -78,6 +84,11 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
         u'number_of_produced_sources': None,
         u'processing_status': self._status,
         u'task_identifier': None}
+
+    if self._status in (
+        definitions.PROCESSING_STATUS_ABORTED,
+        definitions.PROCESSING_STATUS_COMPLETED):
+      self._foreman_status_wait_event.set()
 
     return status
 
@@ -162,10 +173,6 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     except IOError:
       pass
 
-    self._analysis_mediator = None
-    self._storage_writer = None
-    self._task = None
-
     if self._abort:
       self._status = definitions.PROCESSING_STATUS_ABORTED
     else:
@@ -173,6 +180,12 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
 
     logging.debug(u'Analysis plugin: {0!s} (PID: {1:d}) stopped'.format(
         self._name, self._pid))
+
+    self._foreman_status_wait_event.wait(self._FOREMAN_STATUS_WAIT)
+
+    self._analysis_mediator = None
+    self._storage_writer = None
+    self._task = None
 
     try:
       self._event_queue.Close(abort=self._abort)
@@ -200,3 +213,4 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
   def SignalAbort(self):
     """Signals the process to abort."""
     self._abort = True
+    self._foreman_status_wait_event.set()
