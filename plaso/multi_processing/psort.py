@@ -194,8 +194,9 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._RaiseIfNotRegistered(pid)
 
     if pid in self._completed_analysis_processes:
+      status_indicator = definitions.PROCESSING_STATUS_COMPLETED
       process_status = {
-          u'processing_status': definitions.PROCESSING_STATUS_COMPLETED}
+          u'processing_status': status_indicator}
 
     else:
       process = self._processes_per_pid[pid]
