@@ -451,10 +451,11 @@ class StorageWriter(object):
   """Class that defines the storage writer interface.
 
   Attributes:
-    number_of_errors: an integer containing the number of errors written.
-    number_of_event_sources: an integer containing the number of event
-                             sources written.
-    number_of_events: an integer containing the number of events written.
+    number_of_analysis_repors (int): number of analysis repors written.
+    number_of_errors (int): number of errors written.
+    number_of_event_sources (int): number of event sources written.
+    number_of_event_tags (int): number of event tags written.
+    number_of_events (int): number of events written.
   """
 
   def __init__(
@@ -472,8 +473,10 @@ class StorageWriter(object):
     self._storage_type = storage_type
     self._task = task
     self._written_event_source_index = 0
+    self.number_of_analysis_reports = 0
     self.number_of_errors = 0
     self.number_of_event_sources = 0
+    self.number_of_event_tags = 0
     self.number_of_events = 0
 
   @abc.abstractmethod

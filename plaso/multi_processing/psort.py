@@ -61,10 +61,12 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._event_queues = {}
     self._merge_task = None
     self._number_of_consumed_errors = 0
+    self._number_of_consumed_event_tags = 0
     self._number_of_consumed_events = 0
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
     self._number_of_produced_errors = 0
+    self._number_of_produced_event_tags = 0
     self._number_of_produced_events = 0
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
@@ -159,6 +161,11 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           plugin_names.remove(plugin_name)
 
           self._status = definitions.PROCESSING_STATUS_RUNNING
+
+          self._number_of_produced_event_tags = (
+              storage_writer.number_of_event_tags)
+          self._number_of_produced_reports = (
+              storage_writer.number_of_analysis_reports)
 
     try:
       storage_writer.StopTaskStorage(abort=self._abort)
@@ -413,6 +420,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           self._name, self._status, self._pid, display_name,
           self._number_of_consumed_sources, self._number_of_produced_sources,
           self._number_of_consumed_events, self._number_of_produced_events,
+          self._number_of_consumed_event_tags,
+          self._number_of_produced_event_tags,
           self._number_of_consumed_errors, self._number_of_produced_errors,
           self._number_of_consumed_reports, self._number_of_produced_reports)
 
@@ -491,14 +500,22 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         u'number_of_consumed_errors', None)
     number_of_produced_errors = process_status.get(
         u'number_of_produced_errors', None)
+
+    number_of_consumed_event_tags = process_status.get(
+        u'number_of_consumed_event_tags', None)
+    number_of_produced_event_tags = process_status.get(
+        u'number_of_produced_event_tags', None)
+
     number_of_consumed_events = process_status.get(
         u'number_of_consumed_events', None)
     number_of_produced_events = process_status.get(
         u'number_of_produced_events', None)
+
     number_of_consumed_reports = process_status.get(
         u'number_of_consumed_reports', None)
     number_of_produced_reports = process_status.get(
         u'number_of_produced_reports', None)
+
     number_of_consumed_sources = process_status.get(
         u'number_of_consumed_sources', None)
     number_of_produced_sources = process_status.get(
@@ -522,6 +539,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         process.name, processing_status, pid, display_name,
         number_of_consumed_sources, number_of_produced_sources,
         number_of_consumed_events, number_of_produced_events,
+        number_of_consumed_event_tags, number_of_produced_event_tags,
         number_of_consumed_errors, number_of_produced_errors,
         number_of_consumed_reports, number_of_produced_reports)
 

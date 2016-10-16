@@ -2,7 +2,7 @@
 """This file contains the interface for analysis plugins."""
 
 import abc
-from collections import defaultdict
+import collections
 import logging
 import Queue
 import sys
@@ -114,31 +114,14 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     super(HashTaggingAnalysisPlugin, self).__init__()
     self._analysis_queue_timeout = self.DEFAULT_QUEUE_TIMEOUT
     self._analyzer_started = False
-    self._event_uuids_by_pathspec = defaultdict(list)
-    self._hash_pathspecs = defaultdict(list)
+    self._event_uuids_by_pathspec = collections.defaultdict(list)
+    self._hash_pathspecs = collections.defaultdict(list)
     self._requester_class = None
     self._time_of_last_status_log = time.time()
     self.hash_analysis_queue = Queue.Queue()
     self.hash_queue = Queue.Queue()
 
     self._analyzer = analyzer_class(self.hash_queue, self.hash_analysis_queue)
-
-  def _GenerateTextLine(self, mediator, pathspec, labels):
-    """Generates a line of text regarding the plugin's findings.
-
-    Args:
-      mediator (AnalysisMediator): mediates interactions between
-          analysis plugins and other components, such as storage and dfvfs.
-      pathspec (dfvfs.PathSpec): pathspec whose hash was looked up by the
-          plugin.
-      labels (list[str]): strings describing the plugin's results for a given
-          pathspec.
-
-    Returns:
-      str: human readable text regarding the plugin's findings.
-    """
-    display_name = mediator.GetDisplayName(pathspec)
-    return u'{0:s}: {1:s}'.format(display_name, u', '.join(labels))
 
   def _CreateTag(self, event_uuid, labels):
     """Creates an event tag.
@@ -260,8 +243,8 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     Returns:
       AnalysisReport: report.
     """
+    path_specs_per_labels_counter = collections.Counter()
     tags = []
-    lines_of_text = [u'{0:s} hash tagging Results'.format(self.NAME)]
     while self._ContinueReportCompilation():
       try:
         self._LogProgressUpdateIfReasonable()
@@ -273,16 +256,22 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
         continue
       pathspecs, labels, new_tags = self._HandleHashAnalysis(
           hash_analysis)
+
       tags.extend(new_tags)
-      if labels:
-        for pathspec in pathspecs:
-          text_line = self._GenerateTextLine(mediator, pathspec, labels)
-          lines_of_text.append(text_line)
+      for label in labels:
+        path_specs_per_labels_counter[label] += len(pathspecs)
 
     self._analyzer.SignalAbort()
 
+    lines_of_text = [u'{0:s} hash tagging results'.format(self.NAME)]
+    for label, count in path_specs_per_labels_counter.items():
+      line_of_text = (
+          u'{0:d} path specifications tagged with label: {1:s}'.format(
+              count, label))
+      lines_of_text.append(line_of_text)
     lines_of_text.append(u'')
     report_text = u'\n'.join(lines_of_text)
+
     analysis_report = reports.AnalysisReport(
         plugin_name=self.NAME, text=report_text)
     analysis_report.SetTags(tags)

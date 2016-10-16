@@ -115,6 +115,17 @@ class PsortTool(analysis_tool.AnalysisTool):
     if len(events) < 8:
       events = u'{0:s}\t'.format(events)
 
+    event_tags = u''
+    if (process_status.number_of_produced_event_tags is not None and
+        process_status.number_of_produced_event_tags_delta is not None):
+      event_tags = u'{0:d} ({1:d})'.format(
+          process_status.number_of_produced_event_tags,
+          process_status.number_of_produced_event_tags_delta)
+
+    # This check makes sure the columns are tab aligned.
+    if len(event_tags) < 8:
+      event_tags = u'{0:s}\t'.format(event_tags)
+
     reports = u''
     if (process_status.number_of_produced_reports is not None and
         process_status.number_of_produced_reports_delta is not None):
@@ -127,8 +138,8 @@ class PsortTool(analysis_tool.AnalysisTool):
       reports = u'{0:s}\t'.format(reports)
 
     # TODO: shorten display name to fit in 80 chars and show the filename.
-    return u'{0:s}\t{1:d}\t{2:s}\t{3:s}\t{4:s}'.format(
-        identifier, process_status.pid, status, events, reports)
+    return u'{0:s}\t{1:d}\t{2:s}\t{3:s}\t{4:s}\t{5:s}'.format(
+        identifier, process_status.pid, status, events, event_tags, reports)
 
   def _ParseAnalysisPluginOptions(self, options):
     """Parses the analysis plugin options.
@@ -285,7 +296,7 @@ class PsortTool(analysis_tool.AnalysisTool):
 
     # TODO: for win32console get current color and set intensity,
     # write the header separately then reset intensity.
-    status_header = u'Identifier\t\tPID\tStatus\t\tEvents\t\tReports'
+    status_header = u'Identifier\t\tPID\tStatus\t\tEvents\t\tTags\t\tReports'
     if not win32console:
       status_header = u'\x1b[1m{0:s}\x1b[0m'.format(status_header)
 
