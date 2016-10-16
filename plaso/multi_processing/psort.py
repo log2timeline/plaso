@@ -211,6 +211,9 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         self._rpc_errors_per_pid[pid] = 0
         status_indicator = process_status.get(u'processing_status', None)
 
+        if status_indicator == definitions.PROCESSING_STATUS_COMPLETED:
+          self._completed_analysis_processes.add(pid)
+
       else:
         rpc_errors = self._rpc_errors_per_pid.get(pid, 0) + 1
         self._rpc_errors_per_pid[pid] = rpc_errors
@@ -233,9 +236,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
         process_status = {
             u'processing_status': processing_status_string}
-
-      if status_indicator == definitions.PROCESSING_STATUS_COMPLETED:
-        self._completed_analysis_processes.add(pid)
 
     self._UpdateProcessingStatus(pid, process_status)
 
