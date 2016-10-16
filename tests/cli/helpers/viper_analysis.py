@@ -18,17 +18,17 @@ class ViperAnalysisArgumentsHelperTest(
   """Tests the Viper analysis plugin CLI arguments helper."""
 
   _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [--viper-hash HASH] [--viper-host HOSTNAME]',
+      u'usage: cli_helper.py [--viper-hash HASH] [--viper-host HOST]',
       u'                     [--viper-port PORT] [--viper-protocol PROTOCOL]',
       u'',
       u'Test argument parser.',
       u'',
       u'optional arguments:',
       u'  --viper-hash HASH, --viper_hash HASH',
-      (u'                        Type of hash to query the Viper server, '
-       u'the default'),
-      u'                        is: sha256',
-      u'  --viper-host HOSTNAME, --viper_host HOSTNAME',
+      (u'                        Type of hash to use to query the Viper '
+       u'server, the'),
+      u'                        default is: sha256',
+      u'  --viper-host HOST, --viper_host HOST',
       (u'                        Hostname of the Viper server to query, the '
        u'default is:'),
       u'                        localhost',

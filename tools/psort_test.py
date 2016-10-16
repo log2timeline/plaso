@@ -89,10 +89,10 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
   """Tests for the psort tool."""
 
   _EXPECTED_ANALYSIS_PLUGIN_OPTIONS = u'\n'.join([
-      u'usage: psort_test.py [--nsrlsvr-hash HASH] [--nsrlsvr-host HOSTNAME]',
+      u'usage: psort_test.py [--nsrlsvr-hash HASH] [--nsrlsvr-host HOST]',
       (u'                     [--nsrlsvr-port PORT] '
        u'[--tagging-file TAGGING_FILE]'),
-      u'                     [--viper-hash HASH] [--viper-host HOSTNAME]',
+      u'                     [--viper-hash HASH] [--viper-host HOST]',
       u'                     [--viper-port PORT] [--viper-protocol PROTOCOL]',
       u'                     [--virustotal-api-key API_KEY]',
       (u'                     [--virustotal-free-rate-limit] '
@@ -103,10 +103,10 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       u'',
       u'optional arguments:',
       u'  --nsrlsvr-hash HASH, --nsrlsvr_hash HASH',
-      (u'                        Type of hash to query the NSRL server, '
-       u'the default is:'),
-      u'                        md5',
-      u'  --nsrlsvr-host HOSTNAME, --nsrlsvr_host HOSTNAME',
+      (u'                        Type of hash to use to query the NSRL server, '
+       u'the'),
+      u'                        default is: md5',
+      u'  --nsrlsvr-host HOST, --nsrlsvr_host HOST',
       (u'                        Hostname of the NSRL server to query, '
        u'the default is:'),
       u'                        localhost',
@@ -117,10 +117,10 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       u'  --tagging-file TAGGING_FILE, --tagging_file TAGGING_FILE',
       u'                        Specify a file to read tagging criteria from.',
       u'  --viper-hash HASH, --viper_hash HASH',
-      (u'                        Type of hash to query the Viper server, '
-       u'the default'),
-      u'                        is: sha256',
-      u'  --viper-host HOSTNAME, --viper_host HOSTNAME',
+      (u'                        Type of hash to use to query the Viper '
+       u'server, the'),
+      u'                        default is: sha256',
+      u'  --viper-host HOST, --viper_host HOST',
       (u'                        Hostname of the Viper server to query, the '
        u'default is:'),
       u'                        localhost',

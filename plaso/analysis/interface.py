@@ -428,7 +428,7 @@ class HashAnalyzer(threading.Thread):
         time.sleep(self.EMPTY_QUEUE_WAIT_TIME)
 
   def SetLookupHash(self, lookup_hash):
-    """Sets the hash to query the nsrlsvr.
+    """Sets the hash to query.
 
     Args:
       lookup_hash (str): name of the hash attribute to look up.

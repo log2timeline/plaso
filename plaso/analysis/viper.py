@@ -74,7 +74,7 @@ class ViperAnalyzer(interface.HTTPHashAnalyzer):
     hash_analyses.append(hash_analysis)
     return hash_analyses
 
-  def SetHostname(self, host):
+  def SetHost(self, host):
     """Sets the address or hostname of the server running Viper server.
 
     Args:
@@ -159,13 +159,13 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
 
     return strings
 
-  def SetHostname(self, host):
+  def SetHost(self, host):
     """Sets the address or hostname of the server running Viper server.
 
     Args:
       host (str): IP address or hostname to query.
     """
-    self._analyzer.SetHostname(host)
+    self._analyzer.SetHost(host)
 
   def SetPort(self, port):
     """Sets the port where Viper server is listening.

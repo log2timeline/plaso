@@ -116,7 +116,7 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
       events.append(event)
 
     plugin = viper.ViperAnalysisPlugin()
-    plugin.SetHostname(u'localhost')
+    plugin.SetHost(u'localhost')
     plugin.SetPort(8080)
     plugin.SetProtocol(u'http')
 

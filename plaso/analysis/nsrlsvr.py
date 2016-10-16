@@ -38,7 +38,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     self.hashes_per_batch = 100
 
   def _Connect(self):
-    """Connects to the nsrlsvr.
+    """Connects to nsrlsvr instance.
 
     Returns:
       socket._socketobject: socket of connection to nsrlsvr or None if
@@ -114,7 +114,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
 
     return hash_analyses
 
-  def SetHostname(self, host):
+  def SetHost(self, host):
     """Sets the address or hostname of the server running nsrlsvr.
 
     Args:
@@ -133,8 +133,12 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
   def TestConnection(self):
     """Tests the connection to nsrlsvr.
 
+    Checks if a connection can be set up and queries the server for the
+    MD5 of an empty file and expects a response. The value of the response
+    is not checked.
+
     Returns:
-      bool: True if the nsrlsvr is reachable.
+      bool: True if nsrlsvr instance is reachable.
     """
     response = None
     nsrl_socket = self._Connect()
@@ -178,13 +182,13 @@ class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     # return [u'nsrl_not_present']
     return []
 
-  def SetHostname(self, host):
+  def SetHost(self, host):
     """Sets the address or hostname of the server running nsrlsvr.
 
     Args:
       host (str): IP address or hostname to query.
     """
-    self._analyzer.SetHostname(host)
+    self._analyzer.SetHost(host)
 
   def SetPort(self, port):
     """Sets the port where nsrlsvr is listening.
@@ -198,7 +202,7 @@ class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     """Tests the connection to nsrlsvr.
 
     Returns:
-      bool: True if the nsrlsvr is reachable.
+      bool: True if nsrlsvr instance is reachable.
     """
     return self._analyzer.TestConnection()
 

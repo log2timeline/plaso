@@ -57,6 +57,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         profiling_directory=profiling_directory,
         profiling_sample_rate=profiling_sample_rate,
         profiling_type=profiling_type)
+    self._completed_analysis_processes = set()
     self._event_queues = []
     self._merge_task = None
     self._number_of_consumed_errors = 0
@@ -67,6 +68,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._number_of_produced_events = 0
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
+    self._pid_per_analysis_plugin = {}
     self._status = definitions.PROCESSING_STATUS_IDLE
     self._status_update_callback = None
     self._use_zeromq = use_zeromq
@@ -140,11 +142,18 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
         merge_ready = storage_writer.CheckTaskReadyForMerge(task)
         if merge_ready:
+          self._status = definitions.PROCESSING_STATUS_MERGING
+
+          pid = self._pid_per_analysis_plugin[plugin_name]
+          self._completed_analysis_processes.add(pid)
+
           storage_merge_reader = storage_writer.StartMergeTaskStorage(task)
 
           storage_merge_reader.MergeAttributeContainers()
           # TODO: temporary solution.
           plugin_names.remove(plugin_name)
+
+          self._status = definitions.PROCESSING_STATUS_RUNNING
 
     try:
       storage_writer.StopTaskStorage(abort=self._abort)
@@ -176,40 +185,48 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     # vs management).
     self._RaiseIfNotRegistered(pid)
 
-    process = self._processes_per_pid[pid]
-
-    process_status = self._GetProcessStatus(process)
-    if process_status is None:
-      process_is_alive = False
-    else:
-      process_is_alive = True
-
-    if isinstance(process_status, dict):
-      self._rpc_errors_per_pid[pid] = 0
-      status_indicator = process_status.get(u'processing_status', None)
-
-    else:
-      rpc_errors = self._rpc_errors_per_pid.get(pid, 0) + 1
-      self._rpc_errors_per_pid[pid] = rpc_errors
-
-      if rpc_errors > self._MAXIMUM_RPC_ERRORS:
-        process_is_alive = False
-
-      if process_is_alive:
-        rpc_port = process.rpc_port.value
-        logging.warning((
-            u'Unable to retrieve process: {0:s} (PID: {1:d}) status via '
-            u'RPC socket: http://localhost:{2:d}').format(
-                process.name, pid, rpc_port))
-
-        processing_status_string = u'RPC error'
-        status_indicator = definitions.PROCESSING_STATUS_RUNNING
-      else:
-        processing_status_string = u'killed'
-        status_indicator = definitions.PROCESSING_STATUS_KILLED
+    if pid in self._completed_analysis_processes:
+      processing_status_string = u'completed'
+      status_indicator = definitions.PROCESSING_STATUS_COMPLETED
 
       process_status = {
           u'processing_status': processing_status_string}
+
+    else:
+      process = self._processes_per_pid[pid]
+
+      process_status = self._GetProcessStatus(process)
+      if process_status is None:
+        process_is_alive = False
+      else:
+        process_is_alive = True
+
+      if isinstance(process_status, dict):
+        self._rpc_errors_per_pid[pid] = 0
+        status_indicator = process_status.get(u'processing_status', None)
+
+      else:
+        rpc_errors = self._rpc_errors_per_pid.get(pid, 0) + 1
+        self._rpc_errors_per_pid[pid] = rpc_errors
+
+        if rpc_errors > self._MAXIMUM_RPC_ERRORS:
+          process_is_alive = False
+
+        if process_is_alive:
+          rpc_port = process.rpc_port.value
+          logging.warning((
+              u'Unable to retrieve process: {0:s} (PID: {1:d}) status via '
+              u'RPC socket: http://localhost:{2:d}').format(
+                  process.name, pid, rpc_port))
+
+          processing_status_string = u'RPC error'
+          status_indicator = definitions.PROCESSING_STATUS_RUNNING
+        else:
+          processing_status_string = u'killed'
+          status_indicator = definitions.PROCESSING_STATUS_KILLED
+
+        process_status = {
+            u'processing_status': processing_status_string}
 
     self._UpdateProcessingStatus(pid, process_status)
 
@@ -240,6 +257,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       collections.Counter: counter that tracks the number of unique events
           read from storage.
     """
+    self._status = definitions.PROCESSING_STATUS_EXPORTING
+
     time_slice_buffer = None
     if time_slice:
       if time_slice.event_timestamp is not None:
@@ -370,6 +389,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
       self._RegisterProcess(process)
       self._StartMonitoringProcess(process.pid)
+
+      self._pid_per_analysis_plugin[analysis_plugin.plugin_name] = process.pid
 
     logging.info(u'Analysis plugins running')
 
@@ -546,6 +567,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         self._AnalyzeEvents(
             storage_writer, analysis_plugins, event_filter=event_filter)
 
+        self._status = definitions.PROCESSING_STATUS_FINALIZING
+
       except KeyboardInterrupt:
         self._abort = True
 
@@ -608,10 +631,18 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     event_buffer = output_event_buffer.EventBuffer(
         output_module, deduplicate_events)
 
-    with event_buffer:
-      events_counter = self._ExportEvents(
-          storage_reader, event_buffer, event_filter=event_filter,
-          time_slice=time_slice, use_time_slicer=use_time_slicer)
+    self._StartStatusUpdateThread()
+
+    try:
+      with event_buffer:
+        events_counter = self._ExportEvents(
+            storage_reader, event_buffer, event_filter=event_filter,
+            time_slice=time_slice, use_time_slicer=use_time_slicer)
+
+    finally:
+      # Stop the status update thread after close of the storage writer
+      # so we include the storage sync to disk in the status updates.
+      self._StopStatusUpdateThread()
 
     # Reset values.
     self._status_update_callback = None

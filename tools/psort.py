@@ -795,6 +795,7 @@ class PsortTool(analysis_tool.AnalysisTool):
       events_counter = self._front_end.ExportEvents(
           storage_reader, output_module,
           deduplicate_events=self._deduplicate_events,
+          status_update_callback=status_update_callback,
           time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
 
       counter += events_counter

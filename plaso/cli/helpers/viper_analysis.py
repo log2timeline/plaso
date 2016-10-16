@@ -15,7 +15,7 @@ class ViperAnalysisArgumentsHelper(interface.ArgumentsHelper):
   DESCRIPTION = u'Argument helper for the Viper analysis plugin.'
 
   _DEFAULT_HASH = u'sha256'
-  _DEFAULT_HOSTNAME = u'localhost'
+  _DEFAULT_HOST = u'localhost'
   _DEFAULT_PORT = 8080
   _DEFAULT_PROTOCOL = u'http'
 
@@ -34,15 +34,15 @@ class ViperAnalysisArgumentsHelper(interface.ArgumentsHelper):
         u'--viper-hash', u'--viper_hash', dest=u'viper_hash', type=str,
         action='store', choices=[u'sha256'], default=cls._DEFAULT_HASH,
         metavar=u'HASH', help=(
-            u'Type of hash to query the Viper server, the default is: '
+            u'Type of hash to use to query the Viper server, the default is: '
             u'{0:s}'.format(cls._DEFAULT_HASH)))
 
     argument_group.add_argument(
         u'--viper-host', u'--viper_host', dest=u'viper_host', type=str,
-        action='store', default=cls._DEFAULT_HOSTNAME, metavar=u'HOSTNAME',
+        action='store', default=cls._DEFAULT_HOST, metavar=u'HOST',
         help=(
             u'Hostname of the Viper server to query, the default is: '
-            u'{0:s}'.format(cls._DEFAULT_HOSTNAME)))
+            u'{0:s}'.format(cls._DEFAULT_HOST)))
 
     argument_group.add_argument(
         u'--viper-port', u'--viper_port', dest=u'viper_port', type=int,
@@ -76,8 +76,8 @@ class ViperAnalysisArgumentsHelper(interface.ArgumentsHelper):
     analysis_plugin.SetLookupHash(lookup_hash)
 
     host = cls._ParseStringOption(
-        options, u'viper_host', default_value=cls._DEFAULT_HOSTNAME)
-    analysis_plugin.SetHostname(host)
+        options, u'viper_host', default_value=cls._DEFAULT_HOST)
+    analysis_plugin.SetHost(host)
 
     port = cls._ParseStringOption(
         options, u'viper_port', default_value=cls._DEFAULT_PORT)
