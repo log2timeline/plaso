@@ -13,47 +13,46 @@ from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
+# TODO: refactor to pass user_sid as an int.
 class MactimeEvent(time_events.PosixTimeEvent):
   """Convenience class for a mactime event.
 
   Attributes:
-    filename: string containing the name of the file.
-    inode: integer containing the "inode" of the file. Note that
-           inode is an overloaded term in the context of mactime and
-           used for MFT entry index values as well.
-    md5_hash: string containing the MD5 hash of the content data.
-    mode_as_string: string containing the protection mode.
-    offset: integer containing the line number of the corresponding
-            mactime entry.
-    size: integer containing the size of the content data.
-    user_gid: integer containing the user group identifier (GID).
-    user_sid: string containing the user security identifier (SID).
+    filename (str): name of the file.
+    inode (int): "inode" of the file. Note that inode is an overloaded term
+        in the context of mactime and used for MFT entry index values as well.
+    md5_hash (str): MD5 hash of the file content.
+    mode_as_string (str): protection mode.
+    offset (int): number of the corresponding line.
+    size (int): size of the file content.
+    user_gid (int): user group identifier (GID).
+    user_sid (str): user security identifier (SID).
   """
 
   DATA_TYPE = u'fs:mactime:line'
 
   def __init__(
-      self, posix_time, usage, row_offset, filename, inode_number, data_size,
-      mode, user_uid, user_gid, md5_hash):
-    """Initializes a mactime-based event object.
+      self, posix_time, timestamp_description, row_offset, filename,
+      inode_number, data_size, mode, user_uid, user_gid, md5_hash):
+    """Initializes a mactime event.
 
     Args:
-      posix_time: the POSIX time value, which contains the number of seconds
-                  since January 1, 1970 00:00:00 UTC.
-      usage: the description of the usage of the time value.
-      row_offset: integer containing the line number of the corresponding
-                  mactime entry.
-      filename: string containing the name of the file.
-      inode_number: integer containing the "inode" of the file. Note that
-                    inode is an overloaded term in the context of mactime and
-                    used for MFT entry index values as well.
-      data_size: integer containing the size of the content data.
-      mode: string containing the protection mode.
-      user_uid: integer containing the user identifier (UID).
-      user_gid: integer containing the user group identifier (GID).
-      md5_hash: string containing the MD5 hash of the content data.
+      posix_time (int): POSIX time value, which contains the number of seconds
+          since January 1, 1970 00:00:00 UTC.
+      timestamp_description (str): description of the meaning of the timestamp
+          value.
+      row_offset (int): number of the corresponding line.
+      filename (str): name of the file.
+      inode_number (int): "inode" of the file. Note that inode is an
+          overloaded term in the context of mactime and used for MFT entry
+          index values as well.
+      data_size (int): size of the file content.
+      mode (str): protection mode.
+      user_uid (int): user identifier (UID).
+      user_gid (int): user group identifier (GID).
+      md5_hash (str): MD5 hash of the file content.
     """
-    super(MactimeEvent, self).__init__(posix_time, usage)
+    super(MactimeEvent, self).__init__(posix_time, timestamp_description)
     self.filename = filename
     self.inode = inode_number
     self.md5 = md5_hash
@@ -92,15 +91,14 @@ class MactimeParser(text_parser.TextCSVParser):
   }
 
   def _GetIntegerValue(self, row, value_name):
-    """Retrieves an integer value from the row.
+    """Converts a specific value of the row to an integer.
 
     Args:
-      row: a dictionary containing all the fields as denoted in the
-           COLUMNS class list.
-      value_name: string containing the name of the value.
+      row (dict[str, str]): fields of a single row, as denoted in COLUMNS.
+      value_name (str): name of the value within the row.
 
     Retruns:
-      An integer containing the value or None.
+      int: value or None if the value cannot be converted.
     """
     value = row.get(value_name, None)
     try:
@@ -108,42 +106,14 @@ class MactimeParser(text_parser.TextCSVParser):
     except (TypeError, ValueError):
       return
 
-  def VerifyRow(self, unused_parser_mediator, row):
-    """Verify we are dealing with a mactime bodyfile.
-
-    Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      row: a dictionary containing all the fields as denoted in the
-           COLUMNS class list.
-
-    Returns:
-      A boolean indicating the row could be verified.
-    """
-    # The md5 value is '0' if not set.
-    if row[u'md5'] != b'0' and not self._MD5_RE.match(row[u'md5']):
-      return False
-
-    try:
-      # Verify that the "size" field is an integer, thus cast it to int
-      # and then back to string so it can be compared, if the value is
-      # not a string representation of an integer, e.g. '12a' then this
-      # conversion will fail and we return a False value.
-      if str(int(row.get(u'size', b'0'), 10)) != row.get(u'size', None):
-        return False
-    except ValueError:
-      return False
-
-    # TODO: Add additional verification.
-    return True
-
   def ParseRow(self, parser_mediator, row_offset, row):
-    """Parses a row and extract event objects.
+    """Parses a row and extract events.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      row_offset: the offset of the row.
-      row: a dictionary containing all the fields as denoted in the
-           COLUMNS class list.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row_offset (int): number of the corresponding line.
+      row (dict[str, str]): fields of a single row, as denoted in COLUMNS.
     """
     filename = row.get(u'name', None)
     md5_hash = row.get(u'md5', None)
@@ -169,10 +139,38 @@ class MactimeParser(text_parser.TextCSVParser):
       if not posix_time:
         continue
 
-      event_object = MactimeEvent(
+      event = MactimeEvent(
           posix_time, timestamp_description, row_offset, filename,
           inode_number, data_size, mode, user_uid, user_gid, md5_hash)
-      parser_mediator.ProduceEvent(event_object)
+      parser_mediator.ProduceEvent(event)
+
+  def VerifyRow(self, unused_parser_mediator, row):
+    """Verify we are dealing with a mactime bodyfile.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (dict[str, str]): fields of a single row, as denoted in COLUMNS.
+
+    Returns:
+      bool: True if the row is valid.
+    """
+    # The md5 value is '0' if not set.
+    if row[u'md5'] != b'0' and not self._MD5_RE.match(row[u'md5']):
+      return False
+
+    try:
+      # Verify that the "size" field is an integer, thus cast it to int
+      # and then back to string so it can be compared, if the value is
+      # not a string representation of an integer, e.g. '12a' then this
+      # conversion will fail and we return a False value.
+      if str(int(row.get(u'size', b'0'), 10)) != row.get(u'size', None):
+        return False
+    except ValueError:
+      return False
+
+    # TODO: Add additional verification.
+    return True
 
 
 manager.ParsersManager.RegisterParser(MactimeParser)

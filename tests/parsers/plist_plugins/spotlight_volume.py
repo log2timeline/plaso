@@ -24,14 +24,16 @@ class SpotlightVolumePluginTest(test_lib.PlistPluginTestCase):
 
     self.assertEqual(len(storage_writer.events), 2)
 
-    timestamps = sorted([
-        event_object.timestamp for event_object in storage_writer.events])
-    expected_timestamps = sorted([
-        1372139683000000, 1369657656000000])
+    # The order in which PlistParser generates events is nondeterministic
+    # hence we sort the events.
+    events = self._GetSortedEvents(storage_writer.events)
+
+    expected_timestamps = [1369657656000000, 1372139683000000]
+    timestamps = sorted([event_object.timestamp for event_object in events])
 
     self.assertEqual(timestamps, expected_timestamps)
 
-    event_object = storage_writer.events[0]
+    event_object = events[1]
 
     self.assertEqual(event_object.key, u'')
     self.assertEqual(event_object.root, u'/Stores')

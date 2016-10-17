@@ -38,9 +38,6 @@ class SerializedDataStream(test_lib.StorageTestCase):
     data_stream = zip_file._SerializedDataStream(
         zip_file_object, test_file, stream_name)
 
-    # The event_index.000002 stream contains 3 protobuf serialized
-    # event objects. The first one at offset 0 of size 762 (including the
-    # 4 bytes of the entry size) and the second one at offset 762 of size 742.
     self.assertEqual(data_stream.entry_index, 0)
 
     entry_data1 = data_stream.ReadEntry()
@@ -50,21 +47,21 @@ class SerializedDataStream(test_lib.StorageTestCase):
 
     entry_data2 = data_stream.ReadEntry()
     self.assertEqual(data_stream.entry_index, 2)
-    self.assertEqual(data_stream._stream_offset, 1323)
+    self.assertEqual(data_stream._stream_offset, 1340)
     self.assertIsNotNone(entry_data2)
 
     # Read more entries than in the stream.
-    for _ in range(3, 18):
+    for _ in range(3, 99):
       entry_data = data_stream.ReadEntry()
 
-    self.assertEqual(data_stream.entry_index, 16)
-    self.assertEqual(data_stream._stream_offset, 10723)
+    self.assertEqual(data_stream.entry_index, 19)
+    self.assertEqual(data_stream._stream_offset, 12745)
     self.assertIsNone(entry_data)
 
     data_stream.SeekEntryAtOffset(1, 671)
     entry_data = data_stream.ReadEntry()
     self.assertEqual(data_stream.entry_index, 2)
-    self.assertEqual(data_stream._stream_offset, 1323)
+    self.assertEqual(data_stream._stream_offset, 1340)
     self.assertEqual(entry_data, entry_data2)
 
     data_stream.SeekEntryAtOffset(0, 0)
@@ -109,8 +106,8 @@ class SerializedDataOffsetTable(test_lib.StorageTestCase):
     with self.assertRaises(IndexError):
       offset_table.GetOffset(99)
 
-    self.assertEqual(offset_table.GetOffset(-1), 10051)
-    self.assertEqual(offset_table.GetOffset(-2), 9383)
+    self.assertEqual(offset_table.GetOffset(-1), 12067)
+    self.assertEqual(offset_table.GetOffset(-2), 11399)
 
     with self.assertRaises(IndexError):
       offset_table.GetOffset(-99)
@@ -195,36 +192,18 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     Returns:
       A storage file object (instance of StorageFile).
     """
-    event_objects = self._CreateTestEventObjects()
-    event_tags = self._CreateTestEventTags()
-
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=path, read_only=False)
-    for event in event_objects:
+
+    test_events = self._CreateTestEvents()
+    for event in test_events:
       storage_file.AddEvent(event)
 
-    storage_file.AddEventTags(event_tags[:-1])
-    storage_file.AddEventTags(event_tags[-1:])
+    test_event_tags = self._CreateTestEventTags()
+    storage_file.AddEventTags(test_event_tags[:-1])
+    storage_file.AddEventTags(test_event_tags[-1:])
 
     storage_file.Close()
-
-  def _GetEventsFromGroup(self, storage_file, event_group):
-    """Return a generator with all EventObjects from a group.
-
-    Args:
-      storage_file: a storage file (instance of StorageFile).
-      event_group: an event group (instance of plaso_storage_pb2.EventGroup).
-
-    Returns:
-      A list of event objects (instance of EventObjects).
-    """
-    event_objects = []
-    for group_event in event_group.events:
-      event = storage_file._GetEvent(
-          group_event.store_number, entry_index=group_event.store_index)
-      event_objects.append(event)
-
-    return event_objects
 
   def _GetTaggedEvent(self, storage_file, event_tag):
     """Retrieves the event object for a specific event tag.
@@ -286,8 +265,8 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     event = storage_file._GetEvent(0)
     self.assertIsNone(event)
 
-    # There are 16 events in the first event data stream.
-    for _ in range(0, 16):
+    # There are 19 events in the first event data stream.
+    for _ in range(0, 19):
       event = storage_file._GetEvent(1)
       self.assertIsNotNone(event)
 
@@ -300,7 +279,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     event = storage_file._GetEvent(1, entry_index=15)
     self.assertIsNotNone(event)
 
-    event = storage_file._GetEvent(1, entry_index=16)
+    event = storage_file._GetEvent(1, entry_index=19)
     self.assertIsNone(event)
 
     with self.assertRaises(ValueError):
@@ -323,8 +302,8 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     self.assertIsNone(data_tuple[0])
     self.assertIsNone(data_tuple[1])
 
-    # There are 16 events in the first event data stream.
-    for entry_index in range(0, 16):
+    # There are 19 events in the first event data stream.
+    for entry_index in range(0, 19):
       data_tuple = storage_file._GetEventSerializedData(1)
       self.assertIsNotNone(data_tuple)
       self.assertIsNotNone(data_tuple[0])
@@ -333,7 +312,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     data_tuple = storage_file._GetEventSerializedData(1)
     self.assertIsNotNone(data_tuple)
     self.assertIsNone(data_tuple[0])
-    self.assertEqual(data_tuple[1], 16)
+    self.assertEqual(data_tuple[1], 19)
 
     data_tuple = storage_file._GetEventSerializedData(1, entry_index=0)
     self.assertIsNotNone(data_tuple)
@@ -345,7 +324,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     self.assertIsNotNone(data_tuple[0])
     self.assertEqual(data_tuple[1], 15)
 
-    data_tuple = storage_file._GetEventSerializedData(1, entry_index=16)
+    data_tuple = storage_file._GetEventSerializedData(1, entry_index=19)
     self.assertIsNotNone(data_tuple)
     self.assertIsNone(data_tuple[0])
     # TODO: make the behavior of this method more consistent.
@@ -632,7 +611,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    expected_timestamp = 1468820255000000
+    expected_timestamp = 1476630823000000
 
     event = storage_file._GetSortedEvent(time_range=test_time_range)
     self.assertEqual(event.timestamp, expected_timestamp)
@@ -726,7 +705,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     attribute_containers = list(
         storage_file._ReadAttributeContainersFromStream(data_stream, u'event'))
-    self.assertEqual(len(attribute_containers), 16)
+    self.assertEqual(len(attribute_containers), 19)
 
     storage_file.Close()
 
@@ -805,14 +784,14 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
   def testWriteSerializedEvents(self):
     """Tests the _WriteSerializedEvents function."""
-    event_objects = self._CreateTestEventObjects()
+    test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event in event_objects:
+      for event in test_events:
         storage_file.AddEvent(event)
 
       storage_file._WriteSerializedEvents()
@@ -836,7 +815,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
   def testWriteSerializedEventTags(self):
     """Tests the _WriteSerializedEventTags function."""
-    event_objects = self._CreateTestEventObjects()
+    test_events = self._CreateTestEvents()
     event_tags = self._CreateTestEventTags()
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -844,7 +823,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event in event_objects:
+      for event in test_events:
         storage_file.AddEvent(event)
 
       for event_tag in event_tags:
@@ -923,14 +902,14 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
   def testAddEvent(self):
     """Tests the AddEvent function."""
-    event_objects = self._CreateTestEventObjects()
+    test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'storage.plaso')
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event in event_objects:
+      for event in test_events:
         storage_file.AddEvent(event)
 
       storage_file.Close()
@@ -954,7 +933,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
   def testAddEventTag(self):
     """Tests the AddEventTag function."""
-    event_objects = self._CreateTestEventObjects()
+    test_events = self._CreateTestEvents()
     event_tags = self._CreateTestEventTags()
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -962,7 +941,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event in event_objects:
+      for event in test_events:
         storage_file.AddEvent(event)
 
       for event_tag in event_tags:
@@ -974,7 +953,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
   def testAddEventTags(self):
     """Tests the AddEventTags function."""
-    event_objects = self._CreateTestEventObjects()
+    test_events = self._CreateTestEvents()
     event_tags = self._CreateTestEventTags()
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -982,7 +961,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event in event_objects:
+      for event in test_events:
         storage_file.AddEvent(event)
 
       storage_file.AddEventTags(event_tags[:-1])
@@ -1037,7 +1016,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file.Open(path=test_file)
 
     test_events = list(storage_file.GetEvents())
-    self.assertEqual(len(test_events), 32)
+    self.assertEqual(len(test_events), 38)
 
     storage_file.Close()
 
@@ -1112,8 +1091,6 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-04-05 12:27:39')
     self.assertEqual(event.timestamp, expected_timestamp)
-    self.assertEqual(event.store_number, 1)
-    self.assertEqual(event.store_index, 0)
     self.assertEqual(event.tag.comment, u'My comment')
 
     message, _ = formatters_manager.FormattersManager.GetMessageStrings(
@@ -1329,6 +1306,20 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
   """Tests for the ZIP-based storage file reader object."""
 
+  _EXPECTED_TIMESTAMPS_BEFORE_20060430 = [
+      1453449153000000, 1453449153000000, 1453449153000000, 1453449153000000,
+      1453449181000000, 1453449181000000, 1453449241000000, 1453449241000000,
+      1453449241000000, 1453449241000000, 1453449272000000, 1453449272000000,
+      1454771790000000, 1454771790000000, 1456708543000000, 1456708543000000,
+      1458774078000000, 1458774078000000, 1458774078000000, 1458774078000000]
+
+  _EXPECTED_TIMESTAMPS_AFTER_20060430 = [
+      1476630823000000, 1476630823000000, 1476630823000000, 1476630823000000,
+      1476630824000000, 1476630824000000, 1479431720000000, 1479431720000000,
+      1479431743000000, 1479431743000000, 1479457820000000, 1479457820000000,
+      1479457880000000, 1479457880000000, 1482083672000000, 1482083672000000,
+      1483206872000000, 1483206872000000]
+
   def testGetEvents(self):
     """Tests the GetEvents function."""
     test_file = self._GetTestFilePath([u'psort_test.json.plaso'])
@@ -1338,17 +1329,12 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
       for event in storage_reader.GetEvents():
         timestamps.append(event.timestamp)
 
-    expected_timestamps = [
-        1453449153000000, 1453449153000000, 1453449153000000, 1453449153000000,
-        1453449181000000, 1453449181000000, 1453449241000000, 1453449241000000,
-        1453449241000000, 1453449241000000, 1453449272000000, 1453449272000000,
-        1456708543000000, 1456708543000000, 1458774078000000, 1458774078000000,
-        1458774078000000, 1458774078000000, 1468820255000000, 1468820255000000,
-        1468820255000000, 1468820255000000, 1468820255000000, 1468820256000000,
-        1479431720000000, 1479431720000000, 1479431743000000, 1479431743000000,
-        1482083672000000, 1482083672000000, 1483206872000000, 1483206872000000]
+    expected_timestamps = []
+    expected_timestamps.extend(self._EXPECTED_TIMESTAMPS_BEFORE_20060430)
+    expected_timestamps.extend(self._EXPECTED_TIMESTAMPS_AFTER_20060430)
 
-    self.assertEqual(len(timestamps), 32)
+    print sorted(timestamps)
+    self.assertEqual(len(timestamps), 38)
     self.assertEqual(sorted(timestamps), expected_timestamps)
 
     # Test lower bound time range filter.
@@ -1361,11 +1347,7 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
       for event in storage_reader.GetEvents(time_range=test_time_range):
         timestamps.append(event.timestamp)
 
-    expected_timestamps = [
-        1468820255000000, 1468820255000000, 1468820255000000, 1468820255000000,
-        1468820255000000, 1468820256000000, 1479431720000000, 1479431720000000,
-        1479431743000000, 1479431743000000, 1482083672000000, 1482083672000000,
-        1483206872000000, 1483206872000000]
+    expected_timestamps = self._EXPECTED_TIMESTAMPS_AFTER_20060430
 
     self.assertEqual(sorted(timestamps), expected_timestamps)
 
@@ -1379,12 +1361,7 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
       for event in storage_reader.GetEvents(time_range=test_time_range):
         timestamps.append(event.timestamp)
 
-    expected_timestamps = [
-        1453449153000000, 1453449153000000, 1453449153000000, 1453449153000000,
-        1453449181000000, 1453449181000000, 1453449241000000, 1453449241000000,
-        1453449241000000, 1453449241000000, 1453449272000000, 1453449272000000,
-        1456708543000000, 1456708543000000, 1458774078000000, 1458774078000000,
-        1458774078000000, 1458774078000000]
+    expected_timestamps = self._EXPECTED_TIMESTAMPS_BEFORE_20060430
 
     self.assertEqual(sorted(timestamps), expected_timestamps)
 
@@ -1427,14 +1404,14 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
   def testAddEvent(self):
     """Tests the AddEvent function."""
     session = sessions.Session()
-    event_objects = self._CreateTestEventObjects()
+    test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'storage.plaso')
       storage_writer = zip_file.ZIPStorageFileWriter(session, temp_file)
       storage_writer.Open()
 
-      for event in event_objects:
+      for event in test_events:
         storage_writer.AddEvent(event)
 
       storage_writer.Close()
@@ -1456,7 +1433,7 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
   def testAddEventTag(self):
     """Tests the AddEventTag function."""
     session = sessions.Session()
-    event_objects = self._CreateTestEventObjects()
+    test_events = self._CreateTestEvents()
     event_tags = self._CreateTestEventTags()
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -1464,7 +1441,7 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
       storage_writer = zip_file.ZIPStorageFileWriter(session, temp_file)
       storage_writer.Open()
 
-      for event in event_objects:
+      for event in test_events:
         storage_writer.AddEvent(event)
 
       for event_tag in event_tags:
@@ -1575,7 +1552,7 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
   def testStartMergeTaskStorage(self):
     """Tests the StartMergeTaskStorage functions."""
     session = sessions.Session()
-    event_objects = self._CreateTestEventObjects()
+    test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'storage.plaso')
@@ -1592,7 +1569,7 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
       task_storage_writer.Open()
       task_storage_writer.WriteTaskStart()
 
-      for event in event_objects:
+      for event in test_events:
         task_storage_writer.AddEvent(event)
 
       task_storage_writer.WriteTaskCompletion()
@@ -1627,7 +1604,7 @@ class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
       task_storage_writer.Open()
       task_storage_writer.WriteTaskStart()
 
-      for event in event_objects:
+      for event in test_events:
         task_storage_writer.AddEvent(event)
 
       task_storage_writer.Close()

@@ -28,28 +28,28 @@ class MySQL4n6TimeOutputArgumentsHelperTest(
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      (u'  --append              Defines whether the intention is to append '
-       u'to an'),
-      (u'                        already existing database or overwrite it. '
-       u'Defaults to'),
-      u'                        overwrite.',
-      (u'  --evidence EVIDENCE   Set the evidence field to a specific value, '
-       u'defaults'),
-      u'                        to empty.',
-      (u'  --fields FIELDS       Defines which fields should be indexed in '
-       u'the'), u'                        database.',
       u'  --additional_fields ADDITIONAL_FIELDS',
       (u'                        Defines extra fields to be included in the '
        u'output, in'),
       u'                        addition to the default fields, which are',
       u'                        datetime,host,source,sourcetype,user,type.',
-      u'  --user USERNAME       The username used to connect to the database.',
-      u'  --password PASSWORD   The password for the database user.',
+      (u'  --append              Defines whether the intention is to append '
+       u'to an'),
+      (u'                        already existing database or overwrite it. '
+       u'Defaults to'),
+      u'                        overwrite.',
       u'  --db_name DB_NAME, --db-name DB_NAME',
       u'                        The name of the database to connect to.',
+      (u'  --evidence EVIDENCE   Set the evidence field to a specific value, '
+       u'defaults'),
+      u'                        to empty.',
+      (u'  --fields FIELDS       Defines which fields should be indexed in '
+       u'the'), u'                        database.',
+      u'  --password PASSWORD   The password for the database user.',
+      u'  --port PORT           The port number of the server.',
       (u'  --server HOSTNAME     The hostname or server IP address of the '
        u'server.'),
-      u'  --port PORT           The port number of the server.',
+      u'  --user USERNAME       The username used to connect to the database.',
       u''])
 
   def testAddArguments(self):
@@ -57,7 +57,7 @@ class MySQL4n6TimeOutputArgumentsHelperTest(
     argument_parser = argparse.ArgumentParser(
         prog=u'cli_helper.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     mysql_4n6time_output.MySQL4n6TimeOutputArgumentsHelper.AddArguments(
         argument_parser)

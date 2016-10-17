@@ -27,9 +27,10 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      u'  --single_process, --single-process',
-      (u'                        Indicate that the tool should run in a '
-       u'single process.'),
+      u'  --disable_zeromq, --disable-zeromq',
+      (u'                        Disable queueing using ZeroMQ. A '
+       u'Multiprocessing queue'),
+      u'                        will be used instead.',
       u'  --show_memory_usage, --show-memory-usage',
       (u'                        Indicates that basic memory usage should '
        u'be included'),
@@ -38,10 +39,9 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       (u'                        is not set the tool only displays basic '
        u'status and'),
       u'                        counter information.',
-      u'  --disable_zeromq, --disable-zeromq',
-      (u'                        Disable queueing using ZeroMQ. A '
-       u'Multiprocessing queue'),
-      u'                        will be used instead.',
+      u'  --single_process, --single-process',
+      (u'                        Indicate that the tool should run in a '
+       u'single process.'),
       (u'  --workers WORKERS     The number of worker threads [defaults to '
        u'available'),
       u'                        system CPUs minus one].',
@@ -59,7 +59,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'log2timeline_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = log2timeline.Log2TimelineTool()
     test_tool.AddProcessingOptions(argument_parser)

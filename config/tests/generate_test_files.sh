@@ -74,15 +74,15 @@ TEST_FILE="psort_test.json.plaso";
 PYTHONPATH=. ./tools/log2timeline.py --buffer_size=300 --quiet ${TEST_FILE} test_data/syslog;
 PYTHONPATH=. ./tools/log2timeline.py --quiet --timezone=Iceland ${TEST_FILE} test_data/syslog;
 
-# cat > tagging.txt <<EOI
-# repeated
-#   body contains 'last message repeated'
-# EOI
-
-# Work-around for issue with object filter support by efilter.
 cat > tagging.txt <<EOI
+anacron
+  body contains 'anacron'
+
+exit
+  body contains ' exit '
+
 repeated
-  body == 'last message repeated 5 times'
+  body contains 'last message repeated'
 EOI
 
 PYTHONPATH=. ./tools/psort.py --analysis tagging --output-format=null --tagging-file=tagging.txt ${TEST_FILE};

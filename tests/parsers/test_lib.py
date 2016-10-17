@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser related functions and classes for testing."""
 
+import heapq
+
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -16,15 +18,74 @@ from plaso.storage import fake_storage
 from tests import test_lib as shared_test_lib
 
 
+class _EventsHeap(object):
+  """Events heap."""
+
+  def __init__(self):
+    """Initializes an events heap."""
+    super(_EventsHeap, self).__init__()
+    self._heap = []
+
+  def PopEvent(self):
+    """Pops an event from the heap.
+
+    Returns:
+      EventObject: event.
+    """
+    try:
+      _, _, _, event = heapq.heappop(self._heap)
+      return event
+
+    except IndexError:
+      return None
+
+  def PopEvents(self):
+    """Pops events from the heap.
+
+    Yields:
+      EventObject: event.
+    """
+    event = self.PopEvent()
+    while event:
+      yield event
+      event = self.PopEvent()
+
+  def PushEvent(self, event):
+    """Pushes an event onto the heap.
+
+    Args:
+      event (EventObject): event.
+    """
+    # TODO: replace this work-around for an event "comparable".
+    event_values = event.CopyToDict()
+    attributes = []
+    for attribute_name, attribute_value in sorted(event_values.items()):
+      if isinstance(attribute_value, dict):
+        attribute_value = sorted(attribute_value.items())
+      comparable = u'{0:s}: {1!s}'.format(attribute_name, attribute_value)
+      attributes.append(comparable)
+
+    comparable = u', '.join(attributes)
+    event_values = sorted(event.CopyToDict().items())
+    heap_values = (event.timestamp, event.timestamp_desc, comparable, event)
+    heapq.heappush(self._heap, heap_values)
+
+  def PushEvents(self, events):
+    """Pushes events onto the heap.
+
+    Args:
+      events list[EventObject]: events.
+    """
+    for event in events:
+      self.PushEvent(event)
+
+
 class ParserTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for a parser."""
 
-  def _CreateParserMediator(self,
-                            storage_writer,
-                            file_entry=None,
-                            knowledge_base_values=None,
-                            parser_chain=None,
-                            timezone=u'UTC'):
+  def _CreateParserMediator(
+      self, storage_writer, file_entry=None, knowledge_base_values=None,
+      parser_chain=None, timezone=u'UTC'):
     """Creates a parser mediator.
 
     Args:
@@ -44,8 +105,8 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
 
     knowledge_base_object.SetTimezone(timezone)
 
-    parser_mediator = mediator.ParserMediator(storage_writer,
-                                              knowledge_base_object)
+    parser_mediator = mediator.ParserMediator(
+        storage_writer, knowledge_base_object)
 
     if file_entry:
       parser_mediator.SetFileEntry(file_entry)
@@ -65,6 +126,19 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()
     return storage_writer
+
+  def _GetSortedEvents(self, events):
+    """Retrieves events sorted in a deterministic order.
+
+    Args:
+      events (list[EventObject]): events.
+
+    Returns:
+      list[EventObject]: sorted events.
+    """
+    events_heap = _EventsHeap()
+    events_heap.PushEvents(events)
+    return list(events_heap.PopEvents())
 
   def _GetShortMessage(self, message_string):
     """Shortens a message string to a maximum of 80 character width.
@@ -115,16 +189,11 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
     return self._ParseFileByPathSpec(
-        path_spec,
-        parser,
-        knowledge_base_values=knowledge_base_values,
+        path_spec, parser, knowledge_base_values=knowledge_base_values,
         timezone=timezone)
 
-  def _ParseFileByPathSpec(self,
-                           path_spec,
-                           parser,
-                           knowledge_base_values=None,
-                           timezone=u'UTC'):
+  def _ParseFileByPathSpec(
+      self, path_spec, parser, knowledge_base_values=None, timezone=u'UTC'):
     """Parses a file with a parser and writes results to a storage writer.
 
     Args:
@@ -159,8 +228,8 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
 
     return storage_writer
 
-  def _TestGetMessageStrings(self, event, expected_message,
-                             expected_message_short):
+  def _TestGetMessageStrings(
+      self, event, expected_message, expected_message_short):
     """Tests the formatting of the message strings.
 
     This function invokes the GetMessageStrings function of the event
@@ -180,8 +249,8 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     self.assertEqual(message, expected_message)
     self.assertEqual(message_short, expected_message_short)
 
-  def _TestGetSourceStrings(self, event, expected_source,
-                            expected_source_short):
+  def _TestGetSourceStrings(
+      self, event, expected_source, expected_source_short):
     """Tests the formatting of the source strings.
 
     This function invokes the GetSourceStrings function of the event
@@ -201,18 +270,17 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     self.assertEqual(source_short, expected_source_short)
 
   def assertDictContains(self, received, expected):
-    """Tests if received contains every key-value pair as expected.
+    """Asserts if a dictionary contains every key-value pair as expected.
 
-    Recieved can contain new keys. If any value is a dict, this function is \
+    Recieved can contain new keys. If any value is a dict, this function is
     called recursively.
 
     Args:
       received (dict): received dictionary.
       expected (dict): expected dictionary.
-
     """
     for key, value in expected.items():
-      self.assertTrue(key in received)
+      self.assertIn(key, received)
 
       if isinstance(value, dict):
         self.assertDictEqual(received[key], expected[key])

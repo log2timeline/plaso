@@ -18,12 +18,12 @@
   {timestamp} 1453449153000000
   {timestamp_desc} Content Modification Time
   {username} -
-  {uuid} d3f3f001caae4c6082e3cbd0796aef65
+  {uuid} b6b05a44e5894600893157d56ca285a5
 
 [Additional attributes]:
   {pid} 30840
   {reporter} client
-  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
   2016-01-22T07:52:33+00:00
@@ -32,7 +32,7 @@
   
 
 [Reserved attributes]:
-  {body} INFO No new content.
+  {body} INFO No new content in ímynd.dd.
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
@@ -44,12 +44,12 @@
   {timestamp} 1453449153000000
   {timestamp_desc} Content Modification Time
   {username} -
-  {uuid} cc93e2860b974321aaec3f55101c5d1d
+  {uuid} 33c5c3b331404fcb8ae0ed12706d257f
 
 [Additional attributes]:
   {pid} 30840
   {reporter} client
-  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
   2016-01-22T07:53:01+00:00
@@ -70,13 +70,13 @@
   {timestamp} 1453449181000000
   {timestamp_desc} Content Modification Time
   {username} root
-  {uuid} c52540c4e4934c5085a7f6400d8231de
+  {uuid} 3d7a996296714dd8b2cf52ead3d0a653
 
 [Additional attributes]:
   {command} touch /var/run/crond.somecheck
   {pid} 31051
   {reporter} CRON
-  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
   2016-01-22T07:54:01+00:00
@@ -97,13 +97,13 @@
   {timestamp} 1453449241000000
   {timestamp_desc} Content Modification Time
   {username} root
-  {uuid} c06f21fbd9f341a2930a0c9edede9edc
+  {uuid} 621480ad919c428a8bc1427ad1c22268
 
 [Additional attributes]:
   {command} /sbin/status.mycheck)
   {pid} 31067
   {reporter} CRON
-  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
   2016-01-22T07:54:01+00:00
@@ -124,13 +124,13 @@
   {timestamp} 1453449241000000
   {timestamp_desc} Content Modification Time
   {username} root
-  {uuid} c2e6970a50c34a41b0846d94130d396a
+  {uuid} 7f6d04ccd9d2418e9f804b6900fd49a3
 
 [Additional attributes]:
   {command} touch /var/run/crond.somecheck
   {pid} 31068
   {reporter} CRON
-  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
   2016-01-22T07:54:32+00:00
@@ -151,11 +151,37 @@
   {timestamp} 1453449272000000
   {timestamp_desc} Content Modification Time
   {username} -
-  {uuid} faa35ab2c0704bd4a6cdeee41f9e5369
+  {uuid} 2ccc05492ec1411783f1b67f5fe264cb
 
 [Additional attributes]:
   {reporter} Job
-  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+[Timestamp]:
+  2016-02-06T15:16:30+00:00
+[Pathspec]:
+  type: OS, location: /tmp/test/test_data/syslog
+  
+
+[Reserved attributes]:
+  {body} Test message with single character day
+  {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {hostname} victoria
+  {offset} 0
+  {parser} syslog
+  {store_index} 6
+  {store_number} 2
+  {timestamp} 1454771790000000
+  {timestamp_desc} Content Modification Time
+  {username} -
+  {uuid} 81f8ba8705c24f4cb49bf048d3449ce8
+
+[Additional attributes]:
+  {pid} 2085
+  {reporter} process
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
   2016-02-29T01:15:43+00:00
@@ -164,21 +190,23 @@
   
 
 [Reserved attributes]:
-  {body} testing leap year in parsing, events take place in 2012
-  {data_type} syslog:comment
+  {body} testing leap year in parsing, events take place in 2012 ---
+  {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
+  {hostname} :
   {offset} 0
   {parser} syslog
-  {store_index} 6
+  {store_index} 7
   {store_number} 2
   {timestamp} 1456708543000000
   {timestamp_desc} Content Modification Time
   {username} -
-  {uuid} 85284323c4ec4f85bf3a41e04ba33d23
+  {uuid} ee75539c5bec4770a82d46b476e7a114
 
 [Additional attributes]:
-  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
+  {reporter} ---
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
   2016-03-23T23:01:18+00:00
@@ -194,17 +222,17 @@
   {hostname} myhostname.myhost.com
   {offset} 0
   {parser} syslog
-  {store_index} 7
+  {store_index} 8
   {store_number} 2
   {timestamp} 1458774078000000
   {timestamp_desc} Content Modification Time
   {username} -
-  {uuid} 02bb4e2bf4a440a0a54035eb94916998
+  {uuid} 7d9ae0a43b7f4f379917ae686388c305
 
 [Additional attributes]:
   {pid} 19
   {reporter} somrandomexe
-  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
   2016-03-23T23:01:18+00:00
@@ -220,46 +248,20 @@
   {hostname} myhostname.myhost.com
   {offset} 0
   {parser} syslog
-  {store_index} 8
+  {store_index} 9
   {store_number} 2
   {timestamp} 1458774078000000
   {timestamp_desc} Content Modification Time
   {username} -
-  {uuid} 0d35b5f0ebbc4148ab52ed1caabed202
+  {uuid} e87c7fc02497414d99506c08b5e815a7
 
 [Additional attributes]:
   {pid} 1915
   {reporter} somrandomexe
-  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2016-07-18T05:37:35+00:00
-[Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
-  
-
-[Reserved attributes]:
-  {data_type} fs:stat
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
-  {offset} 0
-  {parser} filestat
-  {store_index} 9
-  {store_number} 1
-  {timestamp} 1468820255000000
-  {timestamp_desc} atime
-  {username} -
-  {uuid} a9c8d3e456184906b76aeebd602b9326
-
-[Additional attributes]:
-  {file_entry_type} 3
-  {file_size} (1270,)
-  {file_system_type} OS
-  {is_allocated} True
-  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-[Timestamp]:
-  2016-07-18T05:37:35+00:00
+  2016-10-16T15:13:43+00:00
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
   
@@ -272,98 +274,20 @@
   {parser} filestat
   {store_index} 11
   {store_number} 1
-  {timestamp} 1468820255000000
+  {timestamp} 1476630823000000
   {timestamp_desc} ctime
   {username} -
-  {uuid} e1ff874b270d484a91892eb28333c61c
+  {uuid} 639c744e25004ce0bbfe653c8919ad97
 
 [Additional attributes]:
   {file_entry_type} 3
-  {file_size} (1270,)
+  {file_size} (1509,)
   {file_system_type} OS
   {is_allocated} True
-  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
-  2016-07-18T05:37:35+00:00
-[Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
-  
-
-[Reserved attributes]:
-  {data_type} fs:stat
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
-  {offset} 0
-  {parser} filestat
-  {store_index} 10
-  {store_number} 2
-  {timestamp} 1468820255000000
-  {timestamp_desc} ctime
-  {username} -
-  {uuid} 5b5f9249b03a41da813d80662a3d0518
-
-[Additional attributes]:
-  {file_entry_type} 3
-  {file_size} (1270,)
-  {file_system_type} OS
-  {is_allocated} True
-  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-[Timestamp]:
-  2016-07-18T05:37:35+00:00
-[Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
-  
-
-[Reserved attributes]:
-  {data_type} fs:stat
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
-  {offset} 0
-  {parser} filestat
-  {store_index} 10
-  {store_number} 1
-  {timestamp} 1468820255000000
-  {timestamp_desc} mtime
-  {username} -
-  {uuid} d6bbe3c5a8f643dd8c24f9726a8bee54
-
-[Additional attributes]:
-  {file_entry_type} 3
-  {file_size} (1270,)
-  {file_system_type} OS
-  {is_allocated} True
-  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-[Timestamp]:
-  2016-07-18T05:37:35+00:00
-[Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
-  
-
-[Reserved attributes]:
-  {data_type} fs:stat
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
-  {offset} 0
-  {parser} filestat
-  {store_index} 9
-  {store_number} 2
-  {timestamp} 1468820255000000
-  {timestamp_desc} mtime
-  {username} -
-  {uuid} 232155daa1db40f091f6a14e05b43589
-
-[Additional attributes]:
-  {file_entry_type} 3
-  {file_size} (1270,)
-  {file_system_type} OS
-  {is_allocated} True
-  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-[Timestamp]:
-  2016-07-18T05:37:36+00:00
+  2016-10-16T15:13:43+00:00
 [Pathspec]:
   type: OS, location: /tmp/test/test_data/syslog
   
@@ -376,17 +300,121 @@
   {parser} filestat
   {store_index} 11
   {store_number} 2
-  {timestamp} 1468820256000000
-  {timestamp_desc} atime
+  {timestamp} 1476630823000000
+  {timestamp_desc} ctime
   {username} -
-  {uuid} 5d9083be07904b9facdd941c3cee3413
+  {uuid} cf817ac91b124848b432197d9cdfb393
 
 [Additional attributes]:
   {file_entry_type} 3
-  {file_size} (1270,)
+  {file_size} (1509,)
   {file_system_type} OS
   {is_allocated} True
-  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+[Timestamp]:
+  2016-10-16T15:13:43+00:00
+[Pathspec]:
+  type: OS, location: /tmp/test/test_data/syslog
+  
+
+[Reserved attributes]:
+  {data_type} fs:stat
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {offset} 0
+  {parser} filestat
+  {store_index} 10
+  {store_number} 1
+  {timestamp} 1476630823000000
+  {timestamp_desc} mtime
+  {username} -
+  {uuid} 4293feb525354f84bf77171dfc1e736b
+
+[Additional attributes]:
+  {file_entry_type} 3
+  {file_size} (1509,)
+  {file_system_type} OS
+  {is_allocated} True
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+[Timestamp]:
+  2016-10-16T15:13:43+00:00
+[Pathspec]:
+  type: OS, location: /tmp/test/test_data/syslog
+  
+
+[Reserved attributes]:
+  {data_type} fs:stat
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {offset} 0
+  {parser} filestat
+  {store_index} 10
+  {store_number} 2
+  {timestamp} 1476630823000000
+  {timestamp_desc} mtime
+  {username} -
+  {uuid} b1cd4d4f5d2e456da010f092ee594d88
+
+[Additional attributes]:
+  {file_entry_type} 3
+  {file_size} (1509,)
+  {file_system_type} OS
+  {is_allocated} True
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+[Timestamp]:
+  2016-10-16T15:13:44+00:00
+[Pathspec]:
+  type: OS, location: /tmp/test/test_data/syslog
+  
+
+[Reserved attributes]:
+  {data_type} fs:stat
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {offset} 0
+  {parser} filestat
+  {store_index} 12
+  {store_number} 1
+  {timestamp} 1476630824000000
+  {timestamp_desc} atime
+  {username} -
+  {uuid} 197d44ae30ab4d8ca97fcc4f95cf8a3d
+
+[Additional attributes]:
+  {file_entry_type} 3
+  {file_size} (1509,)
+  {file_system_type} OS
+  {is_allocated} True
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+[Timestamp]:
+  2016-10-16T15:13:44+00:00
+[Pathspec]:
+  type: OS, location: /tmp/test/test_data/syslog
+  
+
+[Reserved attributes]:
+  {data_type} fs:stat
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {offset} 0
+  {parser} filestat
+  {store_index} 12
+  {store_number} 2
+  {timestamp} 1476630824000000
+  {timestamp_desc} atime
+  {username} -
+  {uuid} 14e53f82155540208addd65baf52efb2
+
+[Additional attributes]:
+  {file_entry_type} 3
+  {file_size} (1509,)
+  {file_system_type} OS
+  {is_allocated} True
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
   2016-11-18T01:15:20+00:00
@@ -403,17 +431,17 @@
   {hostname} myhostname.myhost.com
   {offset} 0
   {parser} syslog
-  {store_index} 12
+  {store_index} 13
   {store_number} 2
   {timestamp} 1479431720000000
   {timestamp_desc} Content Modification Time
   {username} -
-  {uuid} 88e76ebe7527465eb0018f9ce347e89f
+  {uuid} 70607b0510464ab2a0e630aa562a784b
 
 [Additional attributes]:
   {pid} 10100
   {reporter} aprocess
-  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
   2016-11-18T01:15:43+00:00
@@ -422,21 +450,72 @@
   
 
 [Reserved attributes]:
-  {body} last message repeated 5 times
-  {data_type} syslog:comment
+  {body} last message repeated 5 times ---
+  {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
+  {hostname} :
   {offset} 0
   {parser} syslog
-  {store_index} 13
+  {store_index} 14
   {store_number} 2
   {timestamp} 1479431743000000
   {timestamp_desc} Content Modification Time
   {username} -
-  {uuid} 01398a1b8d34452280b2a5c226ca2197
+  {uuid} 9c61b48e327a460aba7c54ad3d69cbe6
 
 [Additional attributes]:
-  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
+  {reporter} ---
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+[Timestamp]:
+  2016-11-18T08:30:20+00:00
+[Pathspec]:
+  type: OS, location: /tmp/test/test_data/syslog
+  
+
+[Reserved attributes]:
+  {body} [997.390602] sda2: rw=0, want=65, limit=2
+  {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {offset} 0
+  {parser} syslog
+  {store_index} 15
+  {store_number} 2
+  {timestamp} 1479457820000000
+  {timestamp_desc} Content Modification Time
+  {username} -
+  {uuid} 15dcc4c388f640558217f89a884c3cf9
+
+[Additional attributes]:
+  {reporter} kernel
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+[Timestamp]:
+  2016-11-18T08:31:20+00:00
+[Pathspec]:
+  type: OS, location: /tmp/test/test_data/syslog
+  
+
+[Reserved attributes]:
+  {body} [998.390602] sda2: rw=0, want=66, limit=2
+  {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {hostname} victoria
+  {offset} 0
+  {parser} syslog
+  {store_index} 16
+  {store_number} 2
+  {timestamp} 1479457880000000
+  {timestamp_desc} Content Modification Time
+  {username} -
+  {uuid} 9408c2b7c740426c8633f0a2749d647b
+
+[Additional attributes]:
+  {reporter} kernel
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
   2016-12-18T17:54:32+00:00
@@ -452,17 +531,17 @@
   {hostname} myhostname.myhost.com
   {offset} 0
   {parser} syslog
-  {store_index} 14
+  {store_index} 17
   {store_number} 2
   {timestamp} 1482083672000000
   {timestamp_desc} Content Modification Time
   {username} -
-  {uuid} 0e3bf231991948f38fc78b8afd86d67d
+  {uuid} 0a536db8a8f549c983328dcf748e6292
 
 [Additional attributes]:
   {pid} 1234
   {reporter} anacron
-  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
 [Timestamp]:
   2016-12-31T17:54:32+00:00
@@ -478,14 +557,14 @@
   {hostname} myhostname.myhost.com
   {offset} 0
   {parser} syslog
-  {store_index} 15
+  {store_index} 18
   {store_number} 2
   {timestamp} 1483206872000000
   {timestamp_desc} Content Modification Time
   {username} -
-  {uuid} 217106bef1124b82a16ebfb4881bb1a7
+  {uuid} c8b6ca0fbcc942068a7bb042af4fe410
 
 [Additional attributes]:
   {pid} 1234
-  {reporter} anacron
-  {sha256_hash} fe86fd5cf0680b86a0518c19f01098e5f890c7c9718d1510a755298cfc748ce5
+  {reporter} /sbin/anacron
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4

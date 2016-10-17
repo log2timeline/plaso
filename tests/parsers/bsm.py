@@ -281,8 +281,8 @@ class OpenBsmParserTest(test_lib.ParserTestCase):
 
     for event_object_index in range(0, 19):
       event_object = storage_writer.events[event_object_index]
-      self.assertDictContains(event_object.extra_tokens,
-                              expected_extra_tokens[event_object_index])
+      self.assertDictContains(
+          event_object.extra_tokens, expected_extra_tokens[event_object_index])
 
 
 if __name__ == '__main__':
