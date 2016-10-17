@@ -6,6 +6,7 @@ Only supports task storage at the moment.
 
 import gzip
 import os
+import time
 
 from plaso.lib import definitions
 from plaso.lib import platform_specific
@@ -20,7 +21,8 @@ class GZIPStorageFile(interface.BaseFileStorage):
 
   _COMPRESSION_LEVEL = 9
 
-  _DATA_BUFFER_SIZE = 16 * 1024 * 1024
+  _INITIAL_DATA_BUFFER_SIZE = 16 * 1024 * 1024
+  _INCREMENTAL_DATA_BUFFER_SIZE = 1 * 1024 * 1024
 
   def __init__(self, storage_type=definitions.STORAGE_TYPE_TASK):
     """Initializes a storage.
@@ -66,17 +68,25 @@ class GZIPStorageFile(interface.BaseFileStorage):
     """Opens the storage file for reading."""
     # Do not use gzip.readlines() here since it can consume a large amount
     # of memory.
-    data_buffer = self._gzip_file.read(self._DATA_BUFFER_SIZE)
-    while data_buffer:
-      while b'\n' in data_buffer:
-        line, _, data_buffer = data_buffer.partition(b'\n')
+    data_buffer = self._gzip_file.read(self._INITIAL_DATA_BUFFER_SIZE)
+    if len(data_buffer) < self._INITIAL_DATA_BUFFER_SIZE:
+      for line in data_buffer.split(b'\n'):
         attribute_container = self._DeserializeAttributeContainer(
             line, u'attribute_container')
 
         self._AddAttributeContainer(attribute_container)
+    else:
+      while data_buffer:
+        while b'\n' in data_buffer:
+          line, _, data_buffer = data_buffer.partition(b'\n')
+          attribute_container = self._DeserializeAttributeContainer(
+              line, u'attribute_container')
 
-      additional_data_buffer = self._gzip_file.read(self._DATA_BUFFER_SIZE)
-      data_buffer = b''.join([data_buffer, additional_data_buffer])
+          self._AddAttributeContainer(attribute_container)
+
+        additional_data_buffer = self._gzip_file.read(
+            self._INCREMENTAL_DATA_BUFFER_SIZE)
+        data_buffer = b''.join([data_buffer, additional_data_buffer])
 
   def _WriteAttributeContainer(self, attribute_container):
     """Writes an attribute container.
@@ -292,6 +302,8 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
   """Class that implements a gzip-based storage file reader for merging."""
 
   _DATA_BUFFER_SIZE = 1 * 1024 * 1024
+  _MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES = 4
+  _LOCKED_FILE_SLEEP_TIME = 0.5
 
   def __init__(self, storage_writer, path):
     """Initializes a storage merge reader.
@@ -299,10 +311,25 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
     Args:
       storage_writer (StorageWriter): storage writer.
       path (str): path to the input file.
+
+    Raises:
+      IOError: if the input file cannot be opened.
     """
     super(GZIPStorageMergeReader, self).__init__(storage_writer)
     self._data_buffer = None
-    self._gzip_file = gzip.open(path, 'rb')
+    attempts = 1
+    # On Windows the file can sometimes be in use and we have to wait.
+    while attempts <= self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+      try:
+        self._gzip_file = gzip.open(path, 'rb')
+        break
+      except IOError:
+        if attempts == self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+          raise
+        time.sleep(self._LOCKED_FILE_SLEEP_TIME)
+        attempts += 1
+
+
     if platform_specific.PlatformIsWindows():
       file_handle = self._gzip_file.fileno()
       platform_specific.DisableWindowsFileHandleInheritance(file_handle)
@@ -344,6 +371,7 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
       bool: True if the entire task storage file has been merged.
 
     Raises:
+      OSError: if the task storage file cannot be deleted.
       RuntimeError: if the attribute container type is not supported.
     """
     if not self._data_buffer:
@@ -393,7 +421,17 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
     self._gzip_file.close()
     self._gzip_file = None
 
-    os.remove(self._path)
+    attempts = 0
+    # On Windows the file can sometimes be in use and we have to wait.
+    while attempts <= self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+      try:
+        os.remove(self._path)
+        break
+      except OSError:
+        if attempts == self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+          raise
+        time.sleep(self._LOCKED_FILE_SLEEP_TIME)
+        attempts += 1
 
     return True
 
