@@ -27,6 +27,7 @@ LIBYAL_DEPENDENCIES = {
     u'pyewf': 20131210,
     u'pyfsntfs': 20151130,
     u'pyfvde': 20160719,
+    u'pyfwnt': 20160418,
     u'pyfwsi': 20150606,
     u'pylnk': 20150830,
     u'pymsiecf': 20150314,
@@ -39,7 +40,8 @@ LIBYAL_DEPENDENCIES = {
     u'pysmraw': 20140612,
     u'pyvhdi': 20131210,
     u'pyvmdk': 20140421,
-    u'pyvshadow': 20160109}
+    u'pyvshadow': 20160109,
+    u'pyvslvm': 20160109}
 
 # The tuple values are:
 # module_name, version_attribute_name, minimum_version, maximum_version
@@ -49,6 +51,7 @@ PYTHON_DEPENDENCIES = [
     (u'bencode', u'', u'', None),
     (u'binplist', u'__version__', u'0.1.4', None),
     (u'construct', u'__version__', u'2.5.2', u'2.5.3'),
+    (u'Crypto', u'__version__', u'2.6.0', None),
     (u'dateutil', u'__version__', u'1.5', None),
     (u'dfdatetime', u'__version__', u'20160319', None),
     (u'dfvfs', u'__version__', u'20160803', None),
@@ -81,6 +84,7 @@ PYTHON_TEST_DEPENDENCIES = [
 
 # Maps Python module names to DPKG packages.
 _DPKG_PACKAGE_NAMES = {
+    u'Crypto': u'python-crypto',
     u'hachoir_core': u'python-hachoir-core',
     u'hachoir_metadata': u'python-hachoir-metadata',
     u'hachoir_parser': u'python-hachoir-parser',
@@ -89,6 +93,7 @@ _DPKG_PACKAGE_NAMES = {
 
 # Maps Python module names to PyPI projects.
 _PYPI_PROJECT_NAMES = {
+    u'Crypto': u'pycrypto',
     u'dateutil': u'python-dateutil',
     u'hachoir_core': u'hachoir-core',
     u'hachoir_metadata': u'hachoir-metadata',
@@ -101,6 +106,7 @@ _PYPI_PROJECT_NAMES = {
 
 # Maps Python module names to RPM packages.
 _RPM_PACKAGE_NAMES = {
+    u'Crypto': u'pycrypto',
     u'hachoir_core': u'python-hachoir-core',
     u'hachoir_metadata': u'python-hachoir-metadata',
     u'hachoir_parser': u'python-hachoir-parser',
