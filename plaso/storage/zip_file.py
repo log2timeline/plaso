@@ -3273,7 +3273,8 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       StorageMergeReader: storage merge reader of the task storage.
 
     Raises:
-      IOError: if the storage type is not supported or
+      IOError: if the storage file cannot be opened or
+               if the storage type is not supported or
                if the temporary path for the task storage does not exist or
                if the temporary path for the task storage doe not refers to
                a file.
@@ -3290,7 +3291,12 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     if not os.path.isfile(storage_file_path):
       raise IOError(u'Merge task storage path is not a file.')
 
-    return gzip_file.GZIPStorageMergeReader(self, storage_file_path)
+    try:
+      merge_reader = gzip_file.GZIPStorageMergeReader(self, storage_file_path)
+    except IOError:
+      raise
+
+    return merge_reader
 
   def StartTaskStorage(self):
     """Creates a temporary path for the task storage.
