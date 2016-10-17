@@ -121,8 +121,9 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
        u'server, the'),
       u'                        default is: sha256',
       u'  --viper-host HOST, --viper_host HOST',
-      u'                        Hostname of the Viper server to query, the '
-      u'                        default is: localhost',
+      (u'                        Hostname of the Viper server to query, the '
+       u'default is:'),
+      u'                        localhost',
       u'  --viper-port PORT, --viper_port PORT',
       (u'                        Port of the Viper server to query, the '
        u'default is:'),
