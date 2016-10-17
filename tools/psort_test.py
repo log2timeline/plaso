@@ -103,17 +103,17 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       u'',
       u'optional arguments:',
       u'  --nsrlsvr-hash HASH, --nsrlsvr_hash HASH',
-      (u'                        Type of hash to use to query the NSRL server, '
-       u'the'),
+      (u'                        Type of hash to use to query nsrlsvr '
+       u'instance, the'),
       u'                        default is: md5',
       u'  --nsrlsvr-host HOST, --nsrlsvr_host HOST',
-      (u'                        Hostname of the NSRL server to query, '
-       u'the default is:'),
-      u'                        localhost',
+      (u'                        Hostname or IP address of the nsrlsvr '
+       u'instance to'),
+      u'                        query, the default is: localhost',
       u'  --nsrlsvr-port PORT, --nsrlsvr_port PORT',
-      (u'                        Port of the NSRL server to query, the '
-       u'default is:'),
-      u'                        9120.',
+      (u'                        Port number of the nsrlsvr instance to '
+       u'query, the'),
+      u'                        default is: 9120.',
       u'  --tagging-file TAGGING_FILE, --tagging_file TAGGING_FILE',
       u'                        Specify a file to read tagging criteria from.',
       u'  --viper-hash HASH, --viper_hash HASH',
@@ -121,9 +121,8 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
        u'server, the'),
       u'                        default is: sha256',
       u'  --viper-host HOST, --viper_host HOST',
-      (u'                        Hostname of the Viper server to query, the '
-       u'default is:'),
-      u'                        localhost',
+      u'                        Hostname of the Viper server to query, the '
+      u'                        default is: localhost',
       u'  --viper-port PORT, --viper_port PORT',
       (u'                        Port of the Viper server to query, the '
        u'default is:'),

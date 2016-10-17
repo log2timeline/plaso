@@ -451,7 +451,7 @@ class StorageWriter(object):
   """Class that defines the storage writer interface.
 
   Attributes:
-    number_of_analysis_repors (int): number of analysis repors written.
+    number_of_analysis_reports (int): number of analysis reports written.
     number_of_errors (int): number of errors written.
     number_of_event_sources (int): number of event sources written.
     number_of_event_tags (int): number of event tags written.

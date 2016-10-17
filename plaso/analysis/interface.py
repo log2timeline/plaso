@@ -184,8 +184,8 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     """
     self._EnsureRequesterStarted()
 
-    pathspec = event.pathspec
-    event_uuids = self._event_uuids_by_pathspec[pathspec]
+    path_spec = event.pathspec
+    event_uuids = self._event_uuids_by_pathspec[path_spec]
     event_uuids.append(event.uuid)
     if event.data_type not in self.DATA_TYPES:
       return
@@ -196,13 +196,18 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     lookup_hash = u'{0:s}_hash'.format(self._analyzer.lookup_hash)
     lookup_hash = getattr(event, lookup_hash, None)
     if not lookup_hash:
+      display_name = mediator.GetDisplayName(path_spec)
+      logging.warning((
+          u'Lookup hash attribute: {0:s}_hash missing from event that '
+          u'originated from: {1:s}.').format(
+              self._analyzer.lookup_hash, path_spec))
       return
 
-    pathspecs = self._hash_pathspecs[lookup_hash]
-    pathspecs.append(pathspec)
-    # There may be multiple pathspecs that have the same hash. We only
+    path_specs = self._hash_pathspecs[lookup_hash]
+    path_specs.append(path_spec)
+    # There may be multiple path specification that have the same hash. We only
     # want to look them up once.
-    if len(pathspecs) == 1:
+    if len(path_specs) == 1:
       self.hash_queue.put(lookup_hash)
 
   def _ContinueReportCompilation(self):
@@ -363,8 +368,6 @@ class HashAnalyzer(threading.Thread):
     self.lookup_hash = lookup_hash
     self.seconds_spent_analyzing = 0
     self.wait_after_analysis = wait_after_analysis
-    # Indicate that this is a daemon thread. The program will exit if only
-    # daemon threads are running. This thread should never block program exit.
 
   def _GetHashes(self, target_queue, max_hashes):
     """Retrieves a list of items from a queue.

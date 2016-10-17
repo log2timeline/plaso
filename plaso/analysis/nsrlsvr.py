@@ -37,12 +37,12 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     self._port = None
     self.hashes_per_batch = 100
 
-  def _Connect(self):
-    """Connects to nsrlsvr instance.
+  def _GetSocket(self):
+    """Establishes a connection to an nsrlsvr instance.
 
     Returns:
-      socket._socketobject: socket of connection to nsrlsvr or None if
-          connection cannot be established.
+      socket._socketobject: socket connected to an nsrlsvr instance or None if
+          a connection cannot be established.
     """
     try:
       return socket.create_connection(
@@ -93,7 +93,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     logging.debug(
         u'Opening connection to {0:s}:{1:d}'.format(self._host, self._port))
 
-    nsrl_socket = self._Connect()
+    nsrl_socket = self._GetSocket()
     if not nsrl_socket:
       self.SignalAbort()
       return []
@@ -141,7 +141,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
       bool: True if nsrlsvr instance is reachable.
     """
     response = None
-    nsrl_socket = self._Connect()
+    nsrl_socket = self._GetSocket()
     if nsrl_socket:
       response = self._QueryHash(
           nsrl_socket, u'd41d8cd98f00b204e9800998ecf8427e')

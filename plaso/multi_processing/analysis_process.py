@@ -178,10 +178,10 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     else:
       self._status = definitions.PROCESSING_STATUS_COMPLETED
 
+    self._foreman_status_wait_event.wait(self._FOREMAN_STATUS_WAIT)
+
     logging.debug(u'Analysis plugin: {0!s} (PID: {1:d}) stopped'.format(
         self._name, self._pid))
-
-    self._foreman_status_wait_event.wait(self._FOREMAN_STATUS_WAIT)
 
     self._analysis_mediator = None
     self._storage_writer = None

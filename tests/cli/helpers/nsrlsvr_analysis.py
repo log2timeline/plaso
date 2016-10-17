@@ -25,17 +25,17 @@ class NsrlsvrAnalysisArgumentsHelperTest(
       u'',
       u'optional arguments:',
       u'  --nsrlsvr-hash HASH, --nsrlsvr_hash HASH',
-      (u'                        Type of hash to use to query the NSRL server, '
-       u'the'),
+      (u'                        Type of hash to use to query nsrlsvr '
+       u'instance, the'),
       u'                        default is: md5',
       u'  --nsrlsvr-host HOST, --nsrlsvr_host HOST',
-      (u'                        Hostname of the NSRL server to query, '
-       u'the default is:'),
-      u'                        localhost',
+      (u'                        Hostname or IP address of the nsrlsvr '
+       u'instance to'),
+      u'                        query, the default is: localhost',
       u'  --nsrlsvr-port PORT, --nsrlsvr_port PORT',
-      (u'                        Port of the NSRL server to query, the '
-       u'default is:'),
-      u'                        9120.',
+      (u'                        Port number of the nsrlsvr instance to '
+       u'query, the'),
+      u'                        default is: 9120.',
       u''])
 
   def testAddArguments(self):
