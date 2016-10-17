@@ -74,7 +74,8 @@ class GZIPStorageFile(interface.BaseFileStorage):
         attribute_container = self._DeserializeAttributeContainer(
             line, u'attribute_container')
 
-        self._AddAttributeContainer(attribute_container)
+        if attribute_container:
+          self._AddAttributeContainer(attribute_container)
     else:
       while data_buffer:
         while b'\n' in data_buffer:
