@@ -200,7 +200,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
       logging.warning((
           u'Lookup hash attribute: {0:s}_hash missing from event that '
           u'originated from: {1:s}.').format(
-              self._analyzer.lookup_hash, path_spec))
+              self._analyzer.lookup_hash, display_name))
       return
 
     path_specs = self._hash_pathspecs[lookup_hash]
