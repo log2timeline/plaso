@@ -14,36 +14,36 @@ from tests import test_lib as shared_test_lib
 class StorageTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for a storage object."""
 
-  def _CreateTestEventObjects(self):
-    """Creates the event objects for testing.
+  def _CreateTestEvents(self):
+    """Creates events for testing.
 
     Returns:
-      A list of event objects (instances of EventObject).
+      list[EventObject]: events.
     """
-    event_objects = []
+    test_events = []
     filetime = dfdatetime_filetime.Filetime()
 
     filetime.CopyFromString(u'2012-04-20 22:38:46.929596')
     values_dict = {u'Value': u'c:/Temp/evil.exe'}
-    event_object = windows_events.WindowsRegistryEvent(
+    event = windows_events.WindowsRegistryEvent(
         filetime, u'MY AutoRun key', values_dict)
-    event_object.parser = 'UNKNOWN'
-    event_objects.append(event_object)
+    event.parser = 'UNKNOWN'
+    test_events.append(event)
 
     filetime.CopyFromString(u'2012-05-02 13:43:26.929596')
     values_dict = {u'Value': u'send all the exes to the other world'}
-    event_object = windows_events.WindowsRegistryEvent(
+    event = windows_events.WindowsRegistryEvent(
         filetime, u'HKCU\\Secret\\EvilEmpire\\Malicious_key',
         values_dict)
-    event_object.parser = 'UNKNOWN'
-    event_objects.append(event_object)
+    event.parser = 'UNKNOWN'
+    test_events.append(event)
 
     filetime.CopyFromString(u'2012-04-20 16:44:46')
     values_dict = {u'Value': u'run all the benign stuff'}
-    event_object = windows_events.WindowsRegistryEvent(
+    event = windows_events.WindowsRegistryEvent(
         filetime, u'HKCU\\Windows\\Normal', values_dict)
-    event_object.parser = 'UNKNOWN'
-    event_objects.append(event_object)
+    event.parser = 'UNKNOWN'
+    test_events.append(event)
 
     timemstamp = timelib.Timestamp.CopyFromString(u'2009-04-05 12:27:39')
     text_dict = {
@@ -53,11 +53,11 @@ class StorageTestCase(shared_test_lib.BaseTestCase):
             u'since this log line exceeds the accepted 80 chars it will be '
             u'shortened.'),
         u'username': u'johndoe'}
-    event_object = text_events.TextEvent(timemstamp, 12, text_dict)
-    event_object.parser = 'UNKNOWN'
-    event_objects.append(event_object)
+    event = text_events.TextEvent(timemstamp, 12, text_dict)
+    event.parser = 'UNKNOWN'
+    test_events.append(event)
 
-    return event_objects
+    return test_events
 
   def _CreateTestEventTags(self):
     """Creates the event tags for testing.

@@ -371,10 +371,10 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     for line in output.split(b'\n'):
       lines.append(line)
 
-    self.assertEqual(len(lines), 21)
+    self.assertEqual(len(lines), 24)
 
     expected_line = (
-        u'2016-07-18T05:37:35+00:00,'
+        u'2016-10-16T15:13:43+00:00,'
         u'mtime,'
         u'FILE,'
         u'OS mtime,'
