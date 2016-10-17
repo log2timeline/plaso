@@ -54,19 +54,19 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
   def testAddEvent(self):
     """Tests the AddEvent function."""
     session = sessions.Session()
-    event_objects = self._CreateTestEventObjects()
+    test_events = self._CreateTestEvents()
 
     storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()
 
-    event_object = None
-    for event_object in event_objects:
-      storage_writer.AddEvent(event_object)
+    event = None
+    for event in test_events:
+      storage_writer.AddEvent(event)
 
     storage_writer.Close()
 
     with self.assertRaises(IOError):
-      storage_writer.AddEvent(event_object)
+      storage_writer.AddEvent(event)
 
   def testAddEventSource(self):
     """Tests the AddEventSource function."""
@@ -86,14 +86,14 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
   def testAddEventTag(self):
     """Tests the AddEventTag function."""
     session = sessions.Session()
-    event_objects = self._CreateTestEventObjects()
+    test_events = self._CreateTestEvents()
     event_tags = self._CreateTestEventTags()
 
     storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()
 
-    for event_object in event_objects:
-      storage_writer.AddEvent(event_object)
+    for event in test_events:
+      storage_writer.AddEvent(event)
 
     event_tag = None
     for event_tag in event_tags:

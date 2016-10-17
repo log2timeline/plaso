@@ -13,8 +13,8 @@ from plaso.containers import windows_events
 from plaso.lib import timelib
 
 
-def CreateTestEventObjects():
-  """Creates event objects for testing.
+def CreateTestEvents():
+  """Creates events for testing.
 
   Returns:
     list[EventObject]: events.
