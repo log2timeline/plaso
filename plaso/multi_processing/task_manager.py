@@ -139,7 +139,8 @@ class TaskManager(object):
     with self._lock:
       if task.identifier not in self._active_tasks:
         raise KeyError(u'Task not active')
-
+      logging.debug(u'Marking task {0:s} as complete'.format(
+          task.identifier))
       del self._active_tasks[task.identifier]
 
   def GetAbandonedTasks(self):
@@ -255,5 +256,7 @@ class TaskManager(object):
 
     with self._lock:
       # TODO: add check for maximum_number_of_tasks.
+      logging.debug(u'Marking task {0:s} as processing'.format(
+          task.identifier))
       task.UpdateProcessingTime()
       self._tasks_processing[task.identifier] = task
