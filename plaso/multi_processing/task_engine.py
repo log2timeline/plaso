@@ -653,9 +653,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     try:
       self._task_manager.UpdateTaskByIdentifier(task_identifier)
     except KeyError:
-      abandoned_task_identifiers = [
-          task.identifer for task in self._task_manager.GetAbandonedTasks()]
-      if task_identifier in abandoned_task_identifiers:
+      if self._task_manager.IsAbandonedTask(task_identifier):
         logging.debug(
             u'Worker {0:s} is processing abandoned task: {1:s}.'.format(
                 process.name, task_identifier))
