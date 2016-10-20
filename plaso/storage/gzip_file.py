@@ -303,7 +303,7 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
   """Class that implements a gzip-based storage file reader for merging."""
 
   _DATA_BUFFER_SIZE = 1 * 1024 * 1024
-  _MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES = 4
+  _MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS = 4
   _LOCKED_FILE_SLEEP_TIME = 0.5
 
   def __init__(self, storage_writer, path):
@@ -318,18 +318,14 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
     """
     super(GZIPStorageMergeReader, self).__init__(storage_writer)
     self._data_buffer = None
-    attempts = 1
     # On Windows the file can sometimes be in use and we have to wait.
-    while attempts <= self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+    for attempt in range(1, self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS):
       try:
         self._gzip_file = gzip.open(path, 'rb')
         break
       except IOError:
-        if attempts == self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+        if attempt == self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS:
           raise
-        time.sleep(self._LOCKED_FILE_SLEEP_TIME)
-        attempts += 1
-
 
     if platform_specific.PlatformIsWindows():
       file_handle = self._gzip_file.fileno()
@@ -422,17 +418,15 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
     self._gzip_file.close()
     self._gzip_file = None
 
-    attempts = 0
     # On Windows the file can sometimes be in use and we have to wait.
-    while attempts <= self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+    for attempt in range(1, self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS):
       try:
         os.remove(self._path)
         break
       except OSError:
-        if attempts == self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+        if attempt == self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS:
           raise
         time.sleep(self._LOCKED_FILE_SLEEP_TIME)
-        attempts += 1
 
     return True
 
