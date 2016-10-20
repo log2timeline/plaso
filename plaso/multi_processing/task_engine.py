@@ -224,9 +224,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         try:
           self._storage_merge_reader = storage_writer.StartMergeTaskStorage(
               task)
-        except IOError:
-          logging.error(u'Error merging results of task: {0:s}'.format(
-              task.identifier))
+        except IOError as exception:
+          logging.error(
+              u'Unable to merge results of task: {0:s} with error {1:s}'.format(
+                  task.identifier, exception))
           self._storage_merge_reader = None
 
       if self._storage_merge_reader:
