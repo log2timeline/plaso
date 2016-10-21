@@ -21,7 +21,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
 
   _COMPRESSION_LEVEL = 9
 
-  _INITIAL_DATA_BUFFER_SIZE = 16 * 1024 * 1024
+  _INITIAL_DATA_BUFFER_SIZE = 5 * 1024 * 1024
   _INCREMENTAL_DATA_BUFFER_SIZE = 1 * 1024 * 1024
 
   def __init__(self, storage_type=definitions.STORAGE_TYPE_TASK):
@@ -69,25 +69,18 @@ class GZIPStorageFile(interface.BaseFileStorage):
     # Do not use gzip.readlines() here since it can consume a large amount
     # of memory.
     data_buffer = self._gzip_file.read(self._INITIAL_DATA_BUFFER_SIZE)
-    if len(data_buffer) < self._INITIAL_DATA_BUFFER_SIZE:
-      for line in data_buffer.split(b'\n'):
-        attribute_container = self._DeserializeAttributeContainer(
-            line, u'attribute_container')
-
-        if attribute_container:
-          self._AddAttributeContainer(attribute_container)
-    else:
-      while data_buffer:
-        while b'\n' in data_buffer:
-          line, _, data_buffer = data_buffer.partition(b'\n')
+    while data_buffer:
+      lines = data_buffer.splitlines(True)
+      data_buffer = b''
+      for index, line in enumerate(lines):
+        if line.endswith(b'\n'):
           attribute_container = self._DeserializeAttributeContainer(
               line, u'attribute_container')
-
           self._AddAttributeContainer(attribute_container)
-
-        additional_data_buffer = self._gzip_file.read(
-            self._INCREMENTAL_DATA_BUFFER_SIZE)
-        data_buffer = b''.join([data_buffer, additional_data_buffer])
+        else:
+          data_buffer = lines[index:].join(b'')
+      data_buffer = data_buffer + self._gzip_file.read(
+          self._INITIAL_DATA_BUFFER_SIZE)
 
   def _WriteAttributeContainer(self, attribute_container):
     """Writes an attribute container.
