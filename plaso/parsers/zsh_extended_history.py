@@ -11,6 +11,7 @@ import pyparsing
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
+from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
@@ -99,3 +100,5 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
     """
     if self._VERIFICATION_REGEX.match(lines):
       return True
+
+manager.ParsersManager.RegisterParser(ZshExtendedHistoryParser)

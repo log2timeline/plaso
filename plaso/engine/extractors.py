@@ -47,7 +47,7 @@ class EventExtractor(object):
     self._file_scanner = None
     self._filestat_parser = None
     self._mft_parser = None
-    self._non_sigscan_parser_names = None
+    self._non_sigscan_parser_names = []
     self._parser_filter_expression = parser_filter_expression
     self._parsers = None
     self._parsers_profiler = None
@@ -104,7 +104,6 @@ class EventExtractor(object):
         parsers_manager.ParsersManager.GetSpecificationStore(
             parser_filter_expression=self._parser_filter_expression))
 
-    self._non_sigscan_parser_names = []
     for parser_name in non_sigscan_parser_names:
       if parser_name in (u'filestat', u'usnjrnl'):
         continue
