@@ -2482,7 +2482,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     self._path = None
     self._zipfile_path = None
 
-    if not file_renamed:
+    if self._path != self._zipfile_path and not file_renamed:
       raise IOError(u'Unable to close storage file.')
 
   def Flush(self):
