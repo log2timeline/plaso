@@ -101,4 +101,5 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
     if self._VERIFICATION_REGEX.match(lines):
       return True
 
+
 manager.ParsersManager.RegisterParser(ZshExtendedHistoryParser)
