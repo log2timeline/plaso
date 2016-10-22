@@ -283,6 +283,7 @@ class SingleProcessEngine(engine.BaseEngine):
         self._name, status, self._pid, display_name,
         number_of_consumed_sources, storage_writer.number_of_event_sources,
         0, storage_writer.number_of_events,
+        0, 0,
         0, storage_writer.number_of_errors,
         0, 0)
 
