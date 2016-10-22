@@ -345,6 +345,9 @@ class HashAnalyzer(threading.Thread):
   # How long to wait for new items to be added to the the input queue.
   EMPTY_QUEUE_WAIT_TIME = 4
 
+  # List of lookup hashes supported by the analyzer.
+  SUPPORTED_HASHES = []
+
   def __init__(
       self, hash_queue, hash_analysis_queue, hashes_per_batch=1,
       lookup_hash=u'sha256', wait_after_analysis=0):
@@ -426,7 +429,13 @@ class HashAnalyzer(threading.Thread):
 
     Args:
       lookup_hash (str): name of the hash attribute to look up.
+
+    Raises:
+      ValueError: if the lookup hash is not supported.
     """
+    if lookup_hash not in self.SUPPORTED_HASHES:
+      raise ValueError(u'Unsupported lookup hash: {0!s}'.format(lookup_hash))
+
     self.lookup_hash = lookup_hash
 
   def SignalAbort(self):
@@ -495,7 +504,7 @@ class HTTPHashAnalyzer(HashAnalyzer):
       url (str): URL to make a request to.
       method (str): HTTP method to used to make the request. GET and POST are
           supported.
-      kwargs: Parameters to the requests .get() or post() methods, depending
+      kwargs: parameters to the requests .get() or post() methods, depending
           on the value of the method parameter.
 
     Returns:
@@ -503,7 +512,7 @@ class HTTPHashAnalyzer(HashAnalyzer):
 
     Raises:
       ConnectionError: If it is not possible to connect to the given URL, or it
-                       the request returns a HTTP error.
+          the request returns a HTTP error.
       ValueError: If an invalid HTTP method is specified.
     """
     method = method.lower()

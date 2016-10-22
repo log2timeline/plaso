@@ -31,10 +31,12 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
     """
     argument_group.add_argument(
         u'--nsrlsvr-hash', u'--nsrlsvr_hash', dest=u'nsrlsvr_hash', type=str,
-        action='store', choices=[u'md5', u'sha1'], default=cls._DEFAULT_HASH,
-        metavar=u'HASH', help=(
+        action='store', choices=nsrlsvr.NsrlsvrAnalyzer.SUPPORTED_HASHES,
+        default=cls._DEFAULT_HASH, metavar=u'HASH', help=(
             u'Type of hash to use to query nsrlsvr instance, the default is: '
-            u'{0:s}').format(cls._DEFAULT_HASH))
+            u'{0:s}. Supported options: {1:s}'.format(
+                cls._DEFAULT_HASH, u', '.join(
+                    nsrlsvr.NsrlsvrAnalyzer.SUPPORTED_HASHES))))
 
     argument_group.add_argument(
         u'--nsrlsvr-host', u'--nsrlsvr_host', dest=u'nsrlsvr_host', type=str,

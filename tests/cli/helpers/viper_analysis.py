@@ -27,7 +27,8 @@ class ViperAnalysisArgumentsHelperTest(
       u'  --viper-hash HASH, --viper_hash HASH',
       (u'                        Type of hash to use to query the Viper '
        u'server, the'),
-      u'                        default is: sha256',
+      (u'                        default is: sha256. Supported options: md5, '
+       u'sha256'),
       u'  --viper-host HOST, --viper_host HOST',
       (u'                        Hostname of the Viper server to query, the '
        u'default is:'),
@@ -37,7 +38,9 @@ class ViperAnalysisArgumentsHelperTest(
        u'default is:'),
       u'                        8080.',
       u'  --viper-protocol PROTOCOL, --viper_protocol PROTOCOL',
-      u'                        Protocol to use to query Viper.',
+      (u'                        Protocol to use to query Viper, the '
+       u'default is: http.'),
+      u'                        Supported options: http, https',
       u''])
 
   def testAddArguments(self):
@@ -56,10 +59,11 @@ class ViperAnalysisArgumentsHelperTest(
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
-
     analysis_plugin = viper.ViperAnalysisPlugin()
-    viper_analysis.ViperAnalysisArgumentsHelper.ParseOptions(
-        options, analysis_plugin)
+
+    with self.assertRaises(errors.BadConfigOption):
+      viper_analysis.ViperAnalysisArgumentsHelper.ParseOptions(
+          options, analysis_plugin)
 
     with self.assertRaises(errors.BadConfigObject):
       viper_analysis.ViperAnalysisArgumentsHelper.ParseOptions(
