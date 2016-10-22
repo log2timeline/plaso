@@ -1333,7 +1333,6 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
     expected_timestamps.extend(self._EXPECTED_TIMESTAMPS_BEFORE_20060430)
     expected_timestamps.extend(self._EXPECTED_TIMESTAMPS_AFTER_20060430)
 
-    print sorted(timestamps)
     self.assertEqual(len(timestamps), 38)
     self.assertEqual(sorted(timestamps), expected_timestamps)
 
