@@ -21,8 +21,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
 
   _COMPRESSION_LEVEL = 9
 
-  _INITIAL_DATA_BUFFER_SIZE = 5 * 1024 * 1024
-  _INCREMENTAL_DATA_BUFFER_SIZE = 1 * 1024 * 1024
+  _DATA_BUFFER_SIZE = 1 * 1024 * 1024
 
   def __init__(self, storage_type=definitions.STORAGE_TYPE_TASK):
     """Initializes a storage.
@@ -68,7 +67,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     """Opens the storage file for reading."""
     # Do not use gzip.readlines() here since it can consume a large amount
     # of memory.
-    data_buffer = self._gzip_file.read(self._INITIAL_DATA_BUFFER_SIZE)
+    data_buffer = self._gzip_file.read(self._DATA_BUFFER_SIZE)
     while data_buffer:
       lines = data_buffer.splitlines(True)
       data_buffer = b''
@@ -80,7 +79,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
         else:
           data_buffer = lines[index:].join(b'')
       data_buffer = data_buffer + self._gzip_file.read(
-          self._INITIAL_DATA_BUFFER_SIZE)
+          self._DATA_BUFFER_SIZE)
 
   def _WriteAttributeContainer(self, attribute_container):
     """Writes an attribute container.
