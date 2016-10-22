@@ -121,13 +121,10 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     # TODO: preserve the tuples in the report dict.
     # TODO: add report_array tests.
+    # TODO: remove _event_tags.
 
     expected_analysis_report_dict = {
-        u'_event_tags': [{
-            u'comment': expected_comment,
-            u'event_uuid': expected_uuid,
-            u'labels': expected_labels,
-        }],
+        u'_event_tags': [],
         u'plugin_name': u'chrome_extension_test',
         u'report_dict': expected_report_dict,
         u'text': expected_report_text,

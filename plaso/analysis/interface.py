@@ -2,7 +2,7 @@
 """This file contains the interface for analysis plugins."""
 
 import abc
-from collections import defaultdict
+import collections
 import logging
 import Queue
 import sys
@@ -99,12 +99,6 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
   # must override this attribute.
   DATA_TYPES = []
 
-  # The plugin will select hashes from the event objects from these attributes,
-  # in priority order. More collision-resistant hashing algorithms should be
-  # preferred over less resistant algorithms.
-  REQUIRED_HASH_ATTRIBUTES = frozenset(
-      [u'sha256_hash', u'sha1_hash', u'md5_hash'])
-
   # The default number of seconds for the plugin to wait for analysis results
   # to be added to the hash_analysis_queue by the analyzer thread.
   DEFAULT_QUEUE_TIMEOUT = 4
@@ -120,31 +114,14 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     super(HashTaggingAnalysisPlugin, self).__init__()
     self._analysis_queue_timeout = self.DEFAULT_QUEUE_TIMEOUT
     self._analyzer_started = False
-    self._event_uuids_by_pathspec = defaultdict(list)
-    self._hash_pathspecs = defaultdict(list)
+    self._event_uuids_by_pathspec = collections.defaultdict(list)
+    self._hash_pathspecs = collections.defaultdict(list)
     self._requester_class = None
     self._time_of_last_status_log = time.time()
     self.hash_analysis_queue = Queue.Queue()
     self.hash_queue = Queue.Queue()
 
     self._analyzer = analyzer_class(self.hash_queue, self.hash_analysis_queue)
-
-  def _GenerateTextLine(self, mediator, pathspec, labels):
-    """Generates a line of text regarding the plugin's findings.
-
-    Args:
-      mediator (AnalysisMediator): mediates interactions between
-          analysis plugins and other components, such as storage and dfvfs.
-      pathspec (dfvfs.PathSpec): pathspec whose hash was looked up by the
-          plugin.
-      labels (list[str]): strings describing the plugin's results for a given
-          pathspec.
-
-    Returns:
-      str: human readable text regarding the plugin's findings.
-    """
-    display_name = mediator.GetDisplayName(pathspec)
-    return u'{0:s}: {1:s}'.format(display_name, u', '.join(labels))
 
   def _CreateTag(self, event_uuid, labels):
     """Creates an event tag.
@@ -184,7 +161,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     labels = self.GenerateLabels(hash_analysis.hash_information)
     pathspecs = self._hash_pathspecs.pop(hash_analysis.subject_hash)
     for pathspec in pathspecs:
-      event_uuids = self._event_uuids_by_pathspec.pop(pathspec)
+      event_uuids = self._event_uuids_by_pathspec.pop(pathspec, [])
       if labels:
         for event_uuid in event_uuids:
           tag = self._CreateTag(event_uuid, labels)
@@ -206,26 +183,32 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
       event (EventObject): event.
     """
     self._EnsureRequesterStarted()
-    pathspec = event.pathspec
-    event_uuids = self._event_uuids_by_pathspec[pathspec]
+
+    path_spec = event.pathspec
+    event_uuids = self._event_uuids_by_pathspec[path_spec]
     event_uuids.append(event.uuid)
-    if event.data_type in self.DATA_TYPES:
-      for attribute in self.REQUIRED_HASH_ATTRIBUTES:
-        hash_for_lookup = getattr(event, attribute, None)
-        if not hash_for_lookup:
-          continue
-        pathspecs = self._hash_pathspecs[hash_for_lookup]
-        pathspecs.append(pathspec)
-        # There may be multiple pathspecs that have the same hash. We only
-        # want to look them up once.
-        if len(pathspecs) == 1:
-          self.hash_queue.put(hash_for_lookup)
-        return
-      warning_message = (
-          u'Event with ID {0:s} had none of the required attributes '
-          u'{1:s}.').format(
-              event.uuid, self.REQUIRED_HASH_ATTRIBUTES)
-      logging.warning(warning_message)
+    if event.data_type not in self.DATA_TYPES:
+      return
+
+    if not self._analyzer.lookup_hash:
+      return
+
+    lookup_hash = u'{0:s}_hash'.format(self._analyzer.lookup_hash)
+    lookup_hash = getattr(event, lookup_hash, None)
+    if not lookup_hash:
+      display_name = mediator.GetDisplayName(path_spec)
+      logging.warning((
+          u'Lookup hash attribute: {0:s}_hash missing from event that '
+          u'originated from: {1:s}.').format(
+              self._analyzer.lookup_hash, display_name))
+      return
+
+    path_specs = self._hash_pathspecs[lookup_hash]
+    path_specs.append(path_spec)
+    # There may be multiple path specification that have the same hash. We only
+    # want to look them up once.
+    if len(path_specs) == 1:
+      self.hash_queue.put(lookup_hash)
 
   def _ContinueReportCompilation(self):
     """Determines if the plugin should continue trying to compile the report.
@@ -265,8 +248,10 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     Returns:
       AnalysisReport: report.
     """
+    # TODO: refactor to update the counter on demand instead of
+    # during reporting.
+    path_specs_per_labels_counter = collections.Counter()
     tags = []
-    lines_of_text = [u'{0:s} hash tagging Results'.format(self.NAME)]
     while self._ContinueReportCompilation():
       try:
         self._LogProgressUpdateIfReasonable()
@@ -278,16 +263,22 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
         continue
       pathspecs, labels, new_tags = self._HandleHashAnalysis(
           hash_analysis)
+
       tags.extend(new_tags)
-      if labels:
-        for pathspec in pathspecs:
-          text_line = self._GenerateTextLine(mediator, pathspec, labels)
-          lines_of_text.append(text_line)
+      for label in labels:
+        path_specs_per_labels_counter[label] += len(pathspecs)
 
     self._analyzer.SignalAbort()
 
+    lines_of_text = [u'{0:s} hash tagging results'.format(self.NAME)]
+    for label, count in path_specs_per_labels_counter.items():
+      line_of_text = (
+          u'{0:d} path specifications tagged with label: {1:s}'.format(
+              count, label))
+      lines_of_text.append(line_of_text)
     lines_of_text.append(u'')
     report_text = u'\n'.join(lines_of_text)
+
     analysis_report = reports.AnalysisReport(
         plugin_name=self.NAME, text=report_text)
     analysis_report.SetTags(tags)
@@ -302,13 +293,15 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     number_of_hashes = self.hash_queue.qsize()
     hashes_per_batch = self._analyzer.hashes_per_batch
     wait_time_per_batch = self._analyzer.wait_after_analysis
-    try:
-      average_analysis_time = divmod(
-          self._analyzer.seconds_spent_analyzing,
-          self._analyzer.analyses_performed)
-    except ZeroDivisionError:
-      average_analysis_time = 1
-    batches_remaining = divmod(number_of_hashes, hashes_per_batch)
+    analyses_performed = self._analyzer.analyses_performed
+
+    if analyses_performed == 0:
+      average_analysis_time = self._analyzer.seconds_spent_analyzing
+    else:
+      average_analysis_time, _ = divmod(
+          self._analyzer.seconds_spent_analyzing, analyses_performed)
+
+    batches_remaining, _ = divmod(number_of_hashes, hashes_per_batch)
     estimated_seconds_per_batch = average_analysis_time + wait_time_per_batch
     return batches_remaining * estimated_seconds_per_batch
 
@@ -325,6 +318,14 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
       list[str]: list of labels to apply to events.
     """
 
+  def SetLookupHash(self, lookup_hash):
+    """Sets the hash to query.
+
+    Args:
+      lookup_hash (str): name of the hash attribute to look up.
+    """
+    self._analyzer.SetLookupHash(lookup_hash)
+
 
 class HashAnalyzer(threading.Thread):
   """Class that defines the interfaces for hash analyzer threads.
@@ -335,6 +336,7 @@ class HashAnalyzer(threading.Thread):
     analyses_performed (int): number of analysis batches completed by this
         analyzer.
     hashes_per_batch (int): maximum number of hashes to analyze at once.
+    lookup_hash (str): name of the hash attribute to look up.
     seconds_spent_analyzing (int): number of seconds this analyzer has spent
         performing analysis (as opposed to waiting on queues, etc.)
     wait_after_analysis (int): number of seconds the analyzer will sleep for
@@ -343,9 +345,12 @@ class HashAnalyzer(threading.Thread):
   # How long to wait for new items to be added to the the input queue.
   EMPTY_QUEUE_WAIT_TIME = 4
 
+  # List of lookup hashes supported by the analyzer.
+  SUPPORTED_HASHES = []
+
   def __init__(
       self, hash_queue, hash_analysis_queue, hashes_per_batch=1,
-      wait_after_analysis=0):
+      lookup_hash=u'sha256', wait_after_analysis=0):
     """Initializes a hash analyzer.
 
     Args:
@@ -353,6 +358,7 @@ class HashAnalyzer(threading.Thread):
       hash_analysis_queue (Queue.queue): queue that the analyzer will append
           HashAnalysis objects to.
       hashes_per_batch (Optional[int]): number of hashes to analyze at once.
+      lookup_hash (Optional[str]): name of the hash attribute to look up.
       wait_after_analysis (Optional[int]: number of seconds to wait after each
           batch is analyzed.
     """
@@ -362,10 +368,9 @@ class HashAnalyzer(threading.Thread):
     self._hash_analysis_queue = hash_analysis_queue
     self.analyses_performed = 0
     self.hashes_per_batch = hashes_per_batch
+    self.lookup_hash = lookup_hash
     self.seconds_spent_analyzing = 0
     self.wait_after_analysis = wait_after_analysis
-    # Indicate that this is a daemon thread. The program will exit if only
-    # daemon threads are running. This thread should never block program exit.
 
   def _GetHashes(self, target_queue, max_hashes):
     """Retrieves a list of items from a queue.
@@ -418,6 +423,20 @@ class HashAnalyzer(threading.Thread):
       else:
         # Wait for some more hashes to be added to the queue.
         time.sleep(self.EMPTY_QUEUE_WAIT_TIME)
+
+  def SetLookupHash(self, lookup_hash):
+    """Sets the hash to query.
+
+    Args:
+      lookup_hash (str): name of the hash attribute to look up.
+
+    Raises:
+      ValueError: if the lookup hash is not supported.
+    """
+    if lookup_hash not in self.SUPPORTED_HASHES:
+      raise ValueError(u'Unsupported lookup hash: {0!s}'.format(lookup_hash))
+
+    self.lookup_hash = lookup_hash
 
   def SignalAbort(self):
     """Instructs this analyzer to stop running."""
@@ -485,7 +504,7 @@ class HTTPHashAnalyzer(HashAnalyzer):
       url (str): URL to make a request to.
       method (str): HTTP method to used to make the request. GET and POST are
           supported.
-      kwargs: Parameters to the requests .get() or post() methods, depending
+      kwargs: parameters to the requests .get() or post() methods, depending
           on the value of the method parameter.
 
     Returns:
@@ -493,7 +512,7 @@ class HTTPHashAnalyzer(HashAnalyzer):
 
     Raises:
       ConnectionError: If it is not possible to connect to the given URL, or it
-                       the request returns a HTTP error.
+          the request returns a HTTP error.
       ValueError: If an invalid HTTP method is specified.
     """
     method = method.lower()

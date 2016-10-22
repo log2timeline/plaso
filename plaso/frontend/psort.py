@@ -188,6 +188,35 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     return storage_zip_file.ZIPStorageFileWriter(session, storage_file_path)
 
+  def ExportEvents(
+      self, storage_reader, output_module, deduplicate_events=True,
+      status_update_callback=None, time_slice=None, use_time_slicer=False):
+    """Exports events using an output module.
+
+    Args:
+      storage_reader (StorageReader): storage reader.
+      output_module (OutputModule): output module.
+      deduplicate_events (Optional[bool]): True if events should be
+          deduplicated.
+      status_update_callback (Optional[function]): callback function for status
+          updates.
+      time_slice (Optional[TimeSlice]): slice of time to output.
+      use_time_slicer (Optional[bool]): True if the 'time slicer' should be
+          used. The 'time slicer' will provide a context of events around
+          an event of interest.
+
+    Returns:
+      collections.Counter: counter that tracks the number of events extracted
+          from storage and the analysis plugin results.
+    """
+    engine = self._CreateEngine()
+
+    return engine.ExportEvents(
+        self._knowledge_base, storage_reader, output_module,
+        deduplicate_events=deduplicate_events, event_filter=self._event_filter,
+        status_update_callback=status_update_callback, time_slice=time_slice,
+        use_time_slicer=use_time_slicer)
+
   def GetAnalysisPluginInfo(self):
     """Retrieves information about the registered analysis plugins.
 
@@ -252,35 +281,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       bool: True if the output class is registered.
     """
     return output_manager.OutputManager.HasOutputClass(name)
-
-  def ExportEvents(
-      self, storage_reader, output_module, deduplicate_events=True,
-      status_update_callback=None, time_slice=None, use_time_slicer=False):
-    """Exports events using an output module.
-
-    Args:
-      storage_reader (StorageReader): storage reader.
-      output_module (OutputModule): output module.
-      deduplicate_events (Optional[bool]): True if events should be
-          deduplicated.
-      status_update_callback (Optional[function]): callback function for status
-          updates.
-      time_slice (Optional[TimeSlice]): slice of time to output.
-      use_time_slicer (Optional[bool]): True if the 'time slicer' should be
-          used. The 'time slicer' will provide a context of events around
-          an event of interest.
-
-    Returns:
-      collections.Counter: counter that tracks the number of events extracted
-          from storage and the analysis plugin results.
-    """
-    engine = self._CreateEngine()
-
-    return engine.ExportEvents(
-        self._knowledge_base, storage_reader, output_module,
-        deduplicate_events=deduplicate_events, event_filter=self._event_filter,
-        status_update_callback=status_update_callback, time_slice=time_slice,
-        use_time_slicer=use_time_slicer)
 
   def SetEventFilter(self, event_filter, event_filter_expression):
     """Sets the event filter information.

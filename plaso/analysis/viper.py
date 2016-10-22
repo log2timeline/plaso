@@ -10,97 +10,126 @@ from plaso.lib import errors
 
 
 class ViperAnalyzer(interface.HTTPHashAnalyzer):
-  """Class that analyzes file hashes by consulting Viper."""
+  """Class that analyzes file hashes by consulting Viper.
 
-  _VIPER_API_PATH = u'file/find'
-  _SUPPORTED_PROTOCOLS = frozenset([u'http', u'https'])
+  REST API reference:
+    https://viper-framework.readthedocs.org/en/latest/usage/web.html#api
+  """
+
+  SUPPORTED_HASHES = [u'md5', u'sha256']
+  SUPPORTED_PROTOCOLS = [u'http', u'https']
 
   def __init__(self, hash_queue, hash_analysis_queue, **kwargs):
     """Initializes a Viper hash analyzer.
 
     Args:
-      hash_queue: A queue (instance of Queue.queue) that contains hashes to
-                  be analyzed.
-      hash_analysis_queue: A queue (instance of Queue.queue) that the analyzer
-                           will append HashAnalysis objects to.
+      hash_queue (Queue.queue): contains hashes to be analyzed.
+      hash_analysis_queue (Queue.queue): that the analyzer will append
+          HashAnalysis objects this queue.
     """
     super(ViperAnalyzer, self).__init__(
         hash_queue, hash_analysis_queue, **kwargs)
     self._checked_for_old_python_version = False
     self._host = None
+    self._port = None
     self._protocol = None
+    self._url = None
 
-  def SetHost(self, host):
-    """Sets the Viper host that will be queried.
+  def _QueryHash(self, digest):
+    """Queries the Viper Server for a specfic hash.
 
     Args:
-      host: The Viper host to query.
+      digest (str): hash to look up.
+
+    Returns:
+      dict[str, object]: JSON response or None on error.
+    """
+    if not self._url:
+      self._url = u'{0:s}://{1:s}:{2:d}/file/find'.format(
+          self._protocol, self._host, self._port)
+
+    request_data = {self.lookup_hash: digest}
+
+    try:
+      json_response = self.MakeRequestAndDecodeJSON(
+          self._url, u'POST', data=request_data)
+
+    except errors.ConnectionError as exception:
+      json_response = None
+      logging.error(u'Unable to query Viper with error: {0:s}.'.format(
+          exception))
+
+    return json_response
+
+  def Analyze(self, hashes):
+    """Looks up hashes in Viper using the Viper HTTP API.
+
+    Args:
+      hashes (list[str]): hashes to look up.
+
+    Returns:
+      list[HashAnalysis]: hash analysis.
+
+    Raises:
+      RuntimeError: If no host has been set for Viper.
+    """
+    hash_analyses = []
+    for digest in hashes:
+      json_response = self._QueryHash(digest)
+      hash_analysis = interface.HashAnalysis(digest, json_response)
+      hash_analyses.append(hash_analysis)
+
+    return hash_analyses
+
+  def SetHost(self, host):
+    """Sets the address or hostname of the server running Viper server.
+
+    Args:
+      host (str): IP address or hostname to query.
     """
     self._host = host
+
+  def SetPort(self, port):
+    """Sets the port where Viper server is listening.
+
+    Args:
+      port (int): port to query.
+    """
+    self._port = port
 
   def SetProtocol(self, protocol):
     """Sets the protocol that will be used to query Viper.
 
     Args:
-      protocol: The protocol to use to query Viper. Either 'http' or 'https'.
+      protocol (str): protocol to use to query Viper. Either 'http' or 'https'.
 
     Raises:
-      ValueError: If an invalid protocol is specified.
+      ValueError: if the protocol is not supported.
     """
-    protocol = protocol.lower().strip()
-    if protocol not in self._SUPPORTED_PROTOCOLS:
-      raise ValueError(u'Invalid protocol specified for Viper lookup')
+    if protocol not in self.SUPPORTED_PROTOCOLS:
+      raise ValueError(u'Unsupported protocol: {0!s}'.format(protocol))
+
     self._protocol = protocol
 
-  def Analyze(self, hashes):
-    """Looks up hashes in Viper using the Viper HTTP API.
-
-    The API is documented here:
-      https://viper-framework.readthedocs.org/en/latest/usage/web.html#api
-
-    Args:
-      hashes: A list of hashes (strings) to look up. The Viper plugin supports
-              only one hash at a time.
+  def TestConnection(self):
+    """Tests the connection to the Viper server.
 
     Returns:
-      A list of hash analysis objects (instances of HashAnalysis).
-
-    Raises:
-      RuntimeError: If no host has been set for Viper.
-      ValueError: If the hashes list contains a number of hashes other than
-                      one.
+      bool: True if the Viper server instance is reachable.
     """
-    if not self._host:
-      raise RuntimeError(u'No host specified for Viper lookup.')
+    url = u'{0:s}://{1:s}:{2:d}/test'.format(
+        self._protocol, self._host, self._port)
 
-    if len(hashes) != 1:
-      raise ValueError(
-          u'Unsupported number of hashes provided. Viper supports only one '
-          u'hash at a time.')
-    sha256 = hashes[0]
-
-    hash_analyses = []
-    url = u'{0:s}://{1:s}/{2:s}'.format(
-        self._protocol, self._host, self._VIPER_API_PATH)
-    params = {u'sha256': sha256}
     try:
-      json_response = self.MakeRequestAndDecodeJSON(url, u'POST', data=params)
-    except errors.ConnectionError as exception:
-      logging.error(
-          (u'Error communicating with Viper {0:s}. Viper plugin is '
-           u'aborting.').format(exception))
-      self.SignalAbort()
-      return hash_analyses
+      json_response = self.MakeRequestAndDecodeJSON(url, u'GET')
+    except errors.ConnectionError:
+      json_response = None
 
-    hash_analysis = interface.HashAnalysis(sha256, json_response)
-    hash_analyses.append(hash_analysis)
-    return hash_analyses
+    return json_response is not None
 
 
 class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
   """An analysis plugin for looking up SHA256 hashes in Viper."""
-
-  REQUIRED_HASH_ATTRIBUTES = [u'sha256_hash']
 
   # TODO: Check if there are other file types worth checking Viper for.
   DATA_TYPES = [u'pe:compilation:compilation_time']
@@ -112,7 +141,6 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
   def __init__(self):
     """Initializes a Viper analysis plugin."""
     super(ViperAnalysisPlugin, self).__init__(ViperAnalyzer)
-    self._host = None
 
   def GenerateLabels(self, hash_information):
     """Generates a list of strings that will be used in the event tag.
@@ -155,18 +183,26 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     return strings
 
   def SetHost(self, host):
-    """Sets the Viper host that will be queried.
+    """Sets the address or hostname of the server running Viper server.
 
     Args:
-      host: The Viper host to query.
+      host (str): IP address or hostname to query.
     """
     self._analyzer.SetHost(host)
+
+  def SetPort(self, port):
+    """Sets the port where Viper server is listening.
+
+    Args:
+      port (int): port to query.
+    """
+    self._analyzer.SetPort(port)
 
   def SetProtocol(self, protocol):
     """Sets the protocol that will be used to query Viper.
 
     Args:
-      protocol: The protocol to use to query Viper. Either 'http' or 'https'.
+      protocol (str): protocol to use to query Viper. Either 'http' or 'https'.
 
     Raises:
       ValueError: If an invalid protocol is selected.
@@ -175,6 +211,14 @@ class ViperAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     if protocol not in [u'http', u'https']:
       raise ValueError(u'Invalid protocol specified for Viper lookup')
     self._analyzer.SetProtocol(protocol)
+
+  def TestConnection(self):
+    """Tests the connection to the Viper server.
+
+    Returns:
+      bool: True if the Viper server instance is reachable.
+    """
+    return self._analyzer.TestConnection()
 
 
 manager.AnalysisPluginManager.RegisterPlugin(ViperAnalysisPlugin)
