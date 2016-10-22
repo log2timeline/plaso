@@ -5,12 +5,13 @@ import heapq
 import logging
 import multiprocessing
 import os
+import time
+
 # The 'Queue' module was renamed to 'queue' in Python 3
 try:
   import Queue
 except ImportError:
   import queue as Queue  # pylint: disable=import-error
-import time
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
@@ -87,6 +88,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
   * merge results returned by extraction workers.
   """
 
+  # Maximum number of attribute containers to merge per loop.
+  _MAXIMUM_NUMBER_OF_CONTAINERS = 50
+
   # Maximum number of concurrent tasks.
   _MAXIMUM_NUMBER_OF_TASKS = 10000
 
@@ -95,6 +99,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
   _WORKER_PROCESSES_MINIMUM = 2
   _WORKER_PROCESSES_MAXIMUM = 15
+
+  _TASK_QUEUE_TIMEOUT_SECONDS = 2
 
   _ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS = 10 * 60
 
@@ -138,13 +144,16 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._last_worker_number = 0
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._memory_profiler = None
-    self._merge_task_identifier = u''
+    self._merge_task = None
+    self._merge_task_on_hold = None
     self._mount_path = None
     self._number_of_consumed_errors = 0
+    self._number_of_consumed_event_tags = 0
     self._number_of_consumed_events = 0
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
     self._number_of_produced_errors = 0
+    self._number_of_produced_event_tags = 0
     self._number_of_produced_events = 0
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
@@ -157,6 +166,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._serializers_profiler = None
     self._session_identifier = None
     self._status = definitions.PROCESSING_STATUS_IDLE
+    self._storage_merge_reader = None
+    self._storage_merge_reader_on_hold = None
     self._storage_writer = None
     self._task_queue = None
     self._task_queue_port = None
@@ -181,33 +192,71 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if self._processing_profiler:
       self._processing_profiler.StartTiming(u'merge_check')
 
-    for task_identifier in self._task_manager.GetTasksProcessing():
+    for task in self._task_manager.GetProcessingTasks():
       if self._abort:
         break
 
-      if storage_writer.CheckTaskStorageReadyForMerge(task_identifier):
-        self._task_manager.UpdateTaskAsPendingMerge(task_identifier)
+      merge_ready = storage_writer.CheckTaskReadyForMerge(task)
+      if merge_ready:
+        self._task_manager.UpdateTaskAsPendingMerge(task)
 
     if self._processing_profiler:
       self._processing_profiler.StopTiming(u'merge_check')
 
-    # Merge only one task-based storage file per loop to keep tasks flowing.
-    task_identifier = self._task_manager.GetTaskPendingMerge()
-    if task_identifier:
+    task = None
+    if not self._storage_merge_reader_on_hold:
+      task = self._task_manager.GetTaskPendingMerge(self._merge_task)
+
+    # Limit the number of attributes containers from a single task-based
+    # storage file that are merged per loop to keep tasks flowing.
+    if task or self._storage_merge_reader:
       self._status = definitions.PROCESSING_STATUS_MERGING
-      self._merge_task_identifier = task_identifier
 
       if self._processing_profiler:
         self._processing_profiler.StartTiming(u'merge')
 
-      # TODO: look into time slicing merge.
-      storage_writer.MergeTaskStorage(task_identifier)
+      if task:
+        if self._storage_merge_reader:
+          self._merge_task_on_hold = self._merge_task
+          self._storage_merge_reader_on_hold = self._storage_merge_reader
+
+        self._merge_task = task
+        try:
+          self._storage_merge_reader = storage_writer.StartMergeTaskStorage(
+              task)
+        except IOError as exception:
+          logging.error(
+              (u'Unable to merge results of task: {0:s} '
+               u'with error: {1:s}').format(
+                   task.identifier, exception))
+          self._storage_merge_reader = None
+
+      if self._storage_merge_reader:
+        fully_merged = self._storage_merge_reader.MergeAttributeContainers(
+            maximum_number_of_containers=self._MAXIMUM_NUMBER_OF_CONTAINERS)
+      else:
+        # TODO: Do something more sensible when this happens, perhaps
+        # retrying the task once that is implemented. For now, we mark the task
+        # as fully merged because we can't continue with it.
+        fully_merged = True
 
       if self._processing_profiler:
         self._processing_profiler.StopTiming(u'merge')
 
+      if fully_merged:
+        self._task_manager.CompleteTask(self._merge_task)
+
+        if self._storage_merge_reader_on_hold:
+          self._merge_task = self._merge_task_on_hold
+          self._storage_merge_reader = self._storage_merge_reader_on_hold
+
+          self._merge_task_on_hold = None
+          self._storage_merge_reader_on_hold = None
+        else:
+          self._merge_task = None
+          self._storage_merge_reader = None
+
       self._status = definitions.PROCESSING_STATUS_RUNNING
-      self._merge_task_identifier = u''
       self._number_of_produced_errors = storage_writer.number_of_errors
       self._number_of_produced_events = storage_writer.number_of_events
       self._number_of_produced_sources = storage_writer.number_of_event_sources
@@ -229,10 +278,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     self._status = definitions.PROCESSING_STATUS_COLLECTING
     self._number_of_consumed_errors = 0
+    self._number_of_consumed_event_tags = 0
     self._number_of_consumed_events = 0
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
     self._number_of_produced_errors = 0
+    self._number_of_produced_event_tags = 0
     self._number_of_produced_events = 0
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
@@ -285,7 +336,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     try:
       self._task_queue.PushItem(task, block=False)
-      self._task_manager.UpdateTaskAsProcessing(task.identifier)
+      self._task_manager.UpdateTaskAsProcessing(task)
       is_scheduled = True
 
     except Queue.Full:
@@ -306,6 +357,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       start_with_first (Optional[bool]): True if the function should start
           with the first written event source.
     """
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'fill_event_source_heap')
+
     if self._processing_profiler:
       self._processing_profiler.StartTiming(u'get_event_source')
 
@@ -330,6 +384,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
       if self._processing_profiler:
         self._processing_profiler.StopTiming(u'get_event_source')
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'fill_event_source_heap')
 
   def _ScheduleTasks(self, storage_writer):
     """Schedules tasks.
@@ -362,6 +419,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       try:
         if event_source and not task:
           task = self._task_manager.CreateTask(self._session_identifier)
+          task.file_entry_type = event_source.file_entry_type
           task.path_spec = event_source.path_spec
           event_source = None
 
@@ -415,7 +473,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       task_queue = zeromq_queue.ZeroMQRequestConnectQueue(
           delay_open=True, name=u'{0:s} task queue'.format(process_name),
           linger_seconds=0, port=self._task_queue_port,
-          timeout_seconds=2)
+          timeout_seconds=self._TASK_QUEUE_TIMEOUT_SECONDS)
     else:
       task_queue = self._task_queue
 
@@ -474,10 +532,14 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       for pid in list(self._process_information_per_pid.keys()):
         self._CheckStatusWorkerProcess(pid)
 
+      display_name = getattr(self._merge_task, u'identifier', u'')
+
       self._processing_status.UpdateForemanStatus(
-          self._name, self._status, self._pid, self._merge_task_identifier,
+          self._name, self._status, self._pid, display_name,
           self._number_of_consumed_sources, self._number_of_produced_sources,
           self._number_of_consumed_events, self._number_of_produced_events,
+          self._number_of_consumed_event_tags,
+          self._number_of_produced_event_tags,
           self._number_of_consumed_errors, self._number_of_produced_errors,
           self._number_of_consumed_reports, self._number_of_produced_reports)
 
@@ -570,14 +632,22 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         u'number_of_consumed_errors', None)
     number_of_produced_errors = process_status.get(
         u'number_of_produced_errors', None)
+
+    number_of_consumed_event_tags = process_status.get(
+        u'number_of_consumed_event_tags', None)
+    number_of_produced_event_tags = process_status.get(
+        u'number_of_produced_event_tags', None)
+
     number_of_consumed_events = process_status.get(
         u'number_of_consumed_events', None)
     number_of_produced_events = process_status.get(
         u'number_of_produced_events', None)
+
     number_of_consumed_reports = process_status.get(
         u'number_of_consumed_reports', None)
     number_of_produced_reports = process_status.get(
         u'number_of_produced_reports', None)
+
     number_of_consumed_sources = process_status.get(
         u'number_of_consumed_sources', None)
     number_of_produced_sources = process_status.get(
@@ -595,12 +665,13 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           logging.error((
               u'Process {0:s} (PID: {1:d}) has not reported activity within '
               u'the timeout period.').format(process.name, pid))
-          processing_status = definitions.PROCESSING_ERROR_STATUS
+          processing_status = definitions.PROCESSING_STATUS_NOT_RESPONDING
 
     self._processing_status.UpdateWorkerStatus(
         process.name, processing_status, pid, display_name,
         number_of_consumed_sources, number_of_produced_sources,
         number_of_consumed_events, number_of_produced_events,
+        number_of_consumed_event_tags, number_of_produced_event_tags,
         number_of_consumed_errors, number_of_produced_errors,
         number_of_consumed_reports, number_of_produced_reports)
 
@@ -609,13 +680,16 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       return
 
     try:
-      self._task_manager.UpdateTask(task_identifier)
+      self._task_manager.UpdateTaskByIdentifier(task_identifier)
     except KeyError:
-      try:
-        self._task_manager.RescheduleTask(task_identifier)
-      except KeyError:
-        logging.error(u'Worker processing unknown task: {0:s}.'.format(
-            task_identifier))
+      if self._task_manager.IsAbandonedTask(task_identifier):
+        logging.debug(
+            u'Worker {0:s} is processing abandoned task: {1:s}.'.format(
+                process.name, task_identifier))
+      else:
+        logging.debug(
+            u'Worker {0:s} is processing unknown task: {1:s}.'.format(
+                process.name, task_identifier))
 
   def ProcessSources(
       self, session_identifier, source_path_specs, storage_writer,

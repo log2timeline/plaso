@@ -9,6 +9,7 @@ import time
 
 from plaso.engine import plaso_queue
 from plaso.engine import zeromq_queue
+from plaso.containers import tasks
 from plaso.lib import bufferlib
 from plaso.lib import definitions
 from plaso.multi_processing import analysis_process
@@ -56,13 +57,16 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         profiling_directory=profiling_directory,
         profiling_sample_rate=profiling_sample_rate,
         profiling_type=profiling_type)
-    self._event_queues = []
-    self._merge_task_identifier = u''
+    self._completed_analysis_processes = set()
+    self._event_queues = {}
+    self._merge_task = None
     self._number_of_consumed_errors = 0
+    self._number_of_consumed_event_tags = 0
     self._number_of_consumed_events = 0
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
     self._number_of_produced_errors = 0
+    self._number_of_produced_event_tags = 0
     self._number_of_produced_events = 0
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
@@ -109,7 +113,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         number_of_filtered_events += 1
         continue
 
-      for event_queue in self._event_queues:
+      for event_queue in self._event_queues.values():
         # TODO: Check for premature exit of analysis plugins.
         event_queue.PushItem(event)
 
@@ -121,7 +125,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     logging.debug(u'Finished pushing events to analysis plugins.')
     # Signal that we have finished adding events.
-    for event_queue in self._event_queues:
+    for event_queue in self._event_queues.values():
       event_queue.PushItem(plaso_queue.QueueAbort(), block=False)
 
     logging.debug(u'Processing analysis plugin results.')
@@ -134,14 +138,30 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           break
 
         # TODO: temporary solution.
-        task_identifier = plugin_name
+        task = tasks.Task()
+        task.identifier = plugin_name
 
-        if storage_writer.CheckTaskStorageReadyForMerge(task_identifier):
-          merge_successful = storage_writer.MergeTaskStorage(task_identifier)
-          if not merge_successful:
-            logging.error(u'Unable to merge results of: {0:s}')
+        merge_ready = storage_writer.CheckTaskReadyForMerge(task)
+        if merge_ready:
+          self._status = definitions.PROCESSING_STATUS_MERGING
+
+          event_queue = self._event_queues[plugin_name]
+          del self._event_queues[plugin_name]
+
+          event_queue.Close()
+
+          storage_merge_reader = storage_writer.StartMergeTaskStorage(task)
+
+          storage_merge_reader.MergeAttributeContainers()
           # TODO: temporary solution.
           plugin_names.remove(plugin_name)
+
+          self._status = definitions.PROCESSING_STATUS_RUNNING
+
+          self._number_of_produced_event_tags = (
+              storage_writer.number_of_event_tags)
+          self._number_of_produced_reports = (
+              storage_writer.number_of_analysis_reports)
 
     try:
       storage_writer.StopTaskStorage(abort=self._abort)
@@ -173,40 +193,49 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     # vs management).
     self._RaiseIfNotRegistered(pid)
 
-    process = self._processes_per_pid[pid]
-
-    process_status = self._GetProcessStatus(process)
-    if process_status is None:
-      process_is_alive = False
-    else:
-      process_is_alive = True
-
-    if isinstance(process_status, dict):
-      self._rpc_errors_per_pid[pid] = 0
-      status_indicator = process_status.get(u'processing_status', None)
-
-    else:
-      rpc_errors = self._rpc_errors_per_pid.get(pid, 0) + 1
-      self._rpc_errors_per_pid[pid] = rpc_errors
-
-      if rpc_errors > self._MAXIMUM_RPC_ERRORS:
-        process_is_alive = False
-
-      if process_is_alive:
-        rpc_port = process.rpc_port.value
-        logging.warning((
-            u'Unable to retrieve process: {0:s} (PID: {1:d}) status via '
-            u'RPC socket: http://localhost:{2:d}').format(
-                process.name, pid, rpc_port))
-
-        processing_status_string = u'RPC error'
-        status_indicator = definitions.PROCESSING_STATUS_RUNNING
-      else:
-        processing_status_string = u'killed'
-        status_indicator = definitions.PROCESSING_STATUS_KILLED
-
+    if pid in self._completed_analysis_processes:
+      status_indicator = definitions.PROCESSING_STATUS_COMPLETED
       process_status = {
-          u'processing_status': processing_status_string}
+          u'processing_status': status_indicator}
+
+    else:
+      process = self._processes_per_pid[pid]
+
+      process_status = self._GetProcessStatus(process)
+      if process_status is None:
+        process_is_alive = False
+      else:
+        process_is_alive = True
+
+      if isinstance(process_status, dict):
+        self._rpc_errors_per_pid[pid] = 0
+        status_indicator = process_status.get(u'processing_status', None)
+
+        if status_indicator == definitions.PROCESSING_STATUS_COMPLETED:
+          self._completed_analysis_processes.add(pid)
+
+      else:
+        rpc_errors = self._rpc_errors_per_pid.get(pid, 0) + 1
+        self._rpc_errors_per_pid[pid] = rpc_errors
+
+        if rpc_errors > self._MAXIMUM_RPC_ERRORS:
+          process_is_alive = False
+
+        if process_is_alive:
+          rpc_port = process.rpc_port.value
+          logging.warning((
+              u'Unable to retrieve process: {0:s} (PID: {1:d}) status via '
+              u'RPC socket: http://localhost:{2:d}').format(
+                  process.name, pid, rpc_port))
+
+          processing_status_string = u'RPC error'
+          status_indicator = definitions.PROCESSING_STATUS_RUNNING
+        else:
+          processing_status_string = u'killed'
+          status_indicator = definitions.PROCESSING_STATUS_KILLED
+
+        process_status = {
+            u'processing_status': processing_status_string}
 
     self._UpdateProcessingStatus(pid, process_status)
 
@@ -237,6 +266,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       collections.Counter: counter that tracks the number of unique events
           read from storage.
     """
+    self._status = definitions.PROCESSING_STATUS_EXPORTING
+
     time_slice_buffer = None
     if time_slice:
       if time_slice.event_timestamp is not None:
@@ -334,7 +365,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       if self._use_zeromq:
         queue_name = u'{0:s} output event queue'.format(analysis_plugin.NAME)
         output_event_queue = zeromq_queue.ZeroMQPushBindQueue(
-            name=queue_name)
+            name=queue_name, timeout_seconds=self._QUEUE_TIMEOUT)
         # Open the queue so it can bind to a random port, and we can get the
         # port number to use in the input queue.
         output_event_queue.Open()
@@ -343,13 +374,13 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         output_event_queue = multi_process_queue.MultiProcessingQueue(
             timeout=self._QUEUE_TIMEOUT)
 
-      self._event_queues.append(output_event_queue)
+      self._event_queues[analysis_plugin.NAME] = output_event_queue
 
       if self._use_zeromq:
         queue_name = u'{0:s} input event queue'.format(analysis_plugin.NAME)
         input_event_queue = zeromq_queue.ZeroMQPullConnectQueue(
-            name=queue_name, timeout_seconds=self._QUEUE_TIMEOUT,
-            delay_open=True, port=output_event_queue.port)
+            name=queue_name, delay_open=True, port=output_event_queue.port,
+            timeout_seconds=self._QUEUE_TIMEOUT)
 
       else:
         input_event_queue = output_event_queue
@@ -378,10 +409,14 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       for pid in list(self._process_information_per_pid.keys()):
         self._CheckStatusAnalysisProcess(pid)
 
+      display_name = getattr(self._merge_task, u'identifier', u'')
+
       self._processing_status.UpdateForemanStatus(
-          self._name, self._status, self._pid, self._merge_task_identifier,
+          self._name, self._status, self._pid, display_name,
           self._number_of_consumed_sources, self._number_of_produced_sources,
           self._number_of_consumed_events, self._number_of_produced_events,
+          self._number_of_consumed_event_tags,
+          self._number_of_produced_event_tags,
           self._number_of_consumed_errors, self._number_of_produced_errors,
           self._number_of_consumed_reports, self._number_of_produced_reports)
 
@@ -409,17 +444,17 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     if not self._use_zeromq:
       logging.debug(u'Emptying queues.')
-      for event_queue in self._event_queues:
+      for event_queue in self._event_queues.values():
         event_queue.Empty()
 
     # Wake the processes to make sure that they are not blocking
     # waiting for the queue new items.
-    for event_queue in self._event_queues:
+    for event_queue in self._event_queues.values():
       event_queue.PushItem(plaso_queue.QueueAbort(), block=False)
 
     # Try waiting for the processes to exit normally.
     self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
-    for event_queue in self._event_queues:
+    for event_queue in self._event_queues.values():
       event_queue.Close(abort=abort)
 
     if abort:
@@ -430,7 +465,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       self._AbortTerminate()
       self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)
 
-      for event_queue in self._event_queues:
+      for event_queue in self._event_queues.values():
         event_queue.Close(abort=True)
 
   def _UpdateProcessingStatus(self, pid, process_status):
@@ -460,14 +495,22 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         u'number_of_consumed_errors', None)
     number_of_produced_errors = process_status.get(
         u'number_of_produced_errors', None)
+
+    number_of_consumed_event_tags = process_status.get(
+        u'number_of_consumed_event_tags', None)
+    number_of_produced_event_tags = process_status.get(
+        u'number_of_produced_event_tags', None)
+
     number_of_consumed_events = process_status.get(
         u'number_of_consumed_events', None)
     number_of_produced_events = process_status.get(
         u'number_of_produced_events', None)
+
     number_of_consumed_reports = process_status.get(
         u'number_of_consumed_reports', None)
     number_of_produced_reports = process_status.get(
         u'number_of_produced_reports', None)
+
     number_of_consumed_sources = process_status.get(
         u'number_of_consumed_sources', None)
     number_of_produced_sources = process_status.get(
@@ -485,12 +528,13 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           logging.error((
               u'Process {0:s} (PID: {1:d}) has not reported activity within '
               u'the timeout period.').format(process.name, pid))
-          processing_status = definitions.PROCESSING_ERROR_STATUS
+          processing_status = definitions.PROCESSING_STATUS_NOT_RESPONDING
 
     self._processing_status.UpdateWorkerStatus(
         process.name, processing_status, pid, display_name,
         number_of_consumed_sources, number_of_produced_sources,
         number_of_consumed_events, number_of_produced_events,
+        number_of_consumed_event_tags, number_of_produced_event_tags,
         number_of_consumed_errors, number_of_produced_errors,
         number_of_consumed_reports, number_of_produced_reports)
 
@@ -540,6 +584,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       try:
         self._AnalyzeEvents(
             storage_writer, analysis_plugins, event_filter=event_filter)
+
+        self._status = definitions.PROCESSING_STATUS_FINALIZING
 
       except KeyboardInterrupt:
         self._abort = True
@@ -603,10 +649,18 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     event_buffer = output_event_buffer.EventBuffer(
         output_module, deduplicate_events)
 
-    with event_buffer:
-      events_counter = self._ExportEvents(
-          storage_reader, event_buffer, event_filter=event_filter,
-          time_slice=time_slice, use_time_slicer=use_time_slicer)
+    self._StartStatusUpdateThread()
+
+    try:
+      with event_buffer:
+        events_counter = self._ExportEvents(
+            storage_reader, event_buffer, event_filter=event_filter,
+            time_slice=time_slice, use_time_slicer=use_time_slicer)
+
+    finally:
+      # Stop the status update thread after close of the storage writer
+      # so we include the storage sync to disk in the status updates.
+      self._StopStatusUpdateThread()
 
     # Reset values.
     self._status_update_callback = None

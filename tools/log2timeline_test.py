@@ -27,9 +27,10 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      u'  --single_process, --single-process',
-      (u'                        Indicate that the tool should run in a '
-       u'single process.'),
+      u'  --disable_zeromq, --disable-zeromq',
+      (u'                        Disable queueing using ZeroMQ. A '
+       u'Multiprocessing queue'),
+      u'                        will be used instead.',
       u'  --show_memory_usage, --show-memory-usage',
       (u'                        Indicates that basic memory usage should '
        u'be included'),
@@ -38,13 +39,12 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       (u'                        is not set the tool only displays basic '
        u'status and'),
       u'                        counter information.',
-      u'  --disable_zeromq, --disable-zeromq',
-      (u'                        Disable queueing using ZeroMQ. A '
-       u'Multiprocessing queue'),
-      u'                        will be used instead.',
+      u'  --single_process, --single-process',
+      (u'                        Indicate that the tool should run in a '
+       u'single process.'),
       (u'  --workers WORKERS     The number of worker threads [defaults to '
        u'available'),
-      u'                        system CPUs minus three].',
+      u'                        system CPUs minus one].',
       u''])
 
   # TODO: add test for _FormatStatusTableRow.
@@ -59,7 +59,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'log2timeline_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = log2timeline.Log2TimelineTool()
     test_tool.AddProcessingOptions(argument_parser)
@@ -102,7 +102,6 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     test_tool.ListOutputModules()
 
     output = output_writer.ReadOutput()
-
     number_of_tables = 0
     lines = []
     for line in output.split(b'\n'):
@@ -114,9 +113,18 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
     self.assertIn(u'Output Modules', lines[1])
 
+    # pylint: disable=protected-access
     lines = frozenset(lines)
+    disabled_outputs = list(test_tool._front_end.GetDisabledOutputClasses())
+    enabled_outputs = list(test_tool._front_end.GetOutputClasses())
 
-    self.assertEqual(number_of_tables, 2)
+    expected_number_of_tables = 0
+    if disabled_outputs:
+      expected_number_of_tables += 1
+    if enabled_outputs:
+      expected_number_of_tables += 1
+
+    self.assertEqual(number_of_tables, expected_number_of_tables)
 
     expected_line = b'rawpy : "raw" (or native) Python output.'
     self.assertIn(expected_line, lines)

@@ -82,13 +82,13 @@ class DatabaseArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      u'  --user USERNAME       The username used to connect to the database.',
-      u'  --password PASSWORD   The password for the database user.',
       u'  --db_name DB_NAME, --db-name DB_NAME',
       u'                        The name of the database to connect to.',
+      u'  --password PASSWORD   The password for the database user.',
+      u'  --port PORT           The port number of the server.',
       (u'  --server HOSTNAME     The hostname or server IP address of the '
        u'server.'),
-      u'  --port PORT           The port number of the server.',
+      u'  --user USERNAME       The username used to connect to the database.',
       u''])
 
   def testAddArguments(self):
@@ -96,7 +96,7 @@ class DatabaseArgumentsHelperTest(cli_test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'cli_helper.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     database_config.DatabaseArgumentsHelper.AddArguments(argument_parser)
 

@@ -23,8 +23,8 @@ class CLIToolTest(test_lib.CLIToolTestCase):
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      u'  -h, --help     show this help message and exit.',
       u'  -V, --version  show the version information.',
+      u'  -h, --help     show this help message and exit.',
       u''])
 
   _EXPECTED_DATA_OPTION = u'\n'.join([
@@ -64,7 +64,7 @@ class CLIToolTest(test_lib.CLIToolTestCase):
     """Tests the AddBasicOptions function."""
     argument_parser = argparse.ArgumentParser(
         prog=u'tool_test.py', description=u'Test argument parser.',
-        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
+        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = tools.CLITool()
     test_tool.AddBasicOptions(argument_parser)
@@ -76,7 +76,7 @@ class CLIToolTest(test_lib.CLIToolTestCase):
     """Tests the AddDataLocationOption function."""
     argument_parser = argparse.ArgumentParser(
         prog=u'tool_test.py', description=u'Test argument parser.',
-        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
+        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = tools.CLITool()
     test_tool.AddDataLocationOption(argument_parser)
@@ -88,7 +88,7 @@ class CLIToolTest(test_lib.CLIToolTestCase):
     """Tests the AddInformationalOptions function."""
     argument_parser = argparse.ArgumentParser(
         prog=u'tool_test.py', description=u'Test argument parser.',
-        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
+        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = tools.CLITool()
     test_tool.AddInformationalOptions(argument_parser)
@@ -100,7 +100,7 @@ class CLIToolTest(test_lib.CLIToolTestCase):
     """Tests the AddTimezoneOption function."""
     argument_parser = argparse.ArgumentParser(
         prog=u'tool_test.py', description=u'Test argument parser.',
-        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
+        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = tools.CLITool()
     test_tool.AddTimezoneOption(argument_parser)

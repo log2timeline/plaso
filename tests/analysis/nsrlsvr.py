@@ -94,7 +94,7 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
       events.append(event)
 
     plugin = nsrlsvr.NsrlsvrAnalysisPlugin()
-    plugin.SetHost(u'127.0.0.1')
+    plugin.SetHost(u'localhost')
     plugin.SetPort(9120)
 
     storage_writer = self._AnalyzeEvents(events, plugin)

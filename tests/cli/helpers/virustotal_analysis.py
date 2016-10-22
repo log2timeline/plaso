@@ -18,20 +18,25 @@ class VirusTotalAnalysisArgumentsHelperTest(
   """Tests the VirusTotal analysis plugin CLI arguments helper."""
 
   _EXPECTED_OUTPUT = u'\n'.join([
-      u'usage: cli_helper.py [--virustotal-api-key VIRUSTOTAL_API_KEY]',
-      u'                     [--virustotal-free-rate-limit]',
+      u'usage: cli_helper.py [--virustotal-api-key API_KEY]',
+      (u'                     [--virustotal-free-rate-limit] '
+       u'[--virustotal-hash HASH]'),
       u'',
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      u'  --virustotal-api-key VIRUSTOTAL_API_KEY',
+      u'  --virustotal-api-key API_KEY, --virustotal_api_key API_KEY',
       u'                        Specify the API key for use with VirusTotal.',
-      u'  --virustotal-free-rate-limit',
+      u'  --virustotal-free-rate-limit, --virustotal_free_rate_limit',
       (u'                        Limit Virustotal requests to the default '
        u'free API key'),
       (u'                        rate of 4 requests per minute. Set this to '
        u'false if'),
       u'                        you have an key for the private API.',
+      u'  --virustotal-hash HASH, --virustotal_hash HASH',
+      (u'                        Type of hash to query VirusTotal, the '
+       u'default is:'),
+      u'                        sha256',
       u''])
 
   def testAddArguments(self):
@@ -39,7 +44,7 @@ class VirusTotalAnalysisArgumentsHelperTest(
     argument_parser = argparse.ArgumentParser(
         prog=u'cli_helper.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     virustotal_analysis.VirusTotalAnalysisArgumentsHelper.AddArguments(
         argument_parser)

@@ -27,6 +27,7 @@ LIBYAL_DEPENDENCIES = {
     u'pyewf': 20131210,
     u'pyfsntfs': 20151130,
     u'pyfvde': 20160719,
+    u'pyfwnt': 20160418,
     u'pyfwsi': 20150606,
     u'pylnk': 20150830,
     u'pymsiecf': 20150314,
@@ -39,7 +40,8 @@ LIBYAL_DEPENDENCIES = {
     u'pysmraw': 20140612,
     u'pyvhdi': 20131210,
     u'pyvmdk': 20140421,
-    u'pyvshadow': 20160109}
+    u'pyvshadow': 20160109,
+    u'pyvslvm': 20160109}
 
 # The tuple values are:
 # module_name, version_attribute_name, minimum_version, maximum_version
@@ -48,14 +50,15 @@ PYTHON_DEPENDENCIES = [
     # The bencode module does not appear to have version information.
     (u'bencode', u'', u'', None),
     (u'binplist', u'__version__', u'0.1.4', None),
-    (u'construct', u'__version__', u'2.5.2', None),
+    (u'construct', u'__version__', u'2.5.2', u'2.5.3'),
+    (u'Crypto', u'__version__', u'2.6.0', None),
     (u'dateutil', u'__version__', u'1.5', None),
     (u'dfdatetime', u'__version__', u'20160319', None),
     (u'dfvfs', u'__version__', u'20160803', None),
     (u'dfwinreg', u'__version__', u'20160320', None),
     (u'dpkt', u'__version__', u'1.8', None),
-    # TODO: determine the version of efilter.
-    (u'efilter', u'', u'1.3', None),
+    # TODO: determine the version of Efilter.
+    (u'efilter', u'', u'1.5', None),
     (u'hachoir_core', u'__version__', u'1.3.3', None),
     (u'hachoir_metadata', u'__version__', u'1.3.3', None),
     (u'hachoir_parser', u'__version__', u'1.3.4', None),
@@ -63,6 +66,7 @@ PYTHON_DEPENDENCIES = [
     (u'pefile', u'__version__', u'1.2.10-139', None),
     (u'psutil', u'__version__', u'1.2.1', None),
     (u'pyparsing', u'__version__', u'2.0.3', None),
+    (u'pytsk3', u'get_version()', u'20160721', None),
     # TODO: determine the version of pytz.
     # pytz uses __version__ but has a different version indicator e.g. 2012d
     (u'pytz', u'', u'', None),
@@ -80,6 +84,7 @@ PYTHON_TEST_DEPENDENCIES = [
 
 # Maps Python module names to DPKG packages.
 _DPKG_PACKAGE_NAMES = {
+    u'Crypto': u'python-crypto',
     u'hachoir_core': u'python-hachoir-core',
     u'hachoir_metadata': u'python-hachoir-metadata',
     u'hachoir_parser': u'python-hachoir-parser',
@@ -88,16 +93,20 @@ _DPKG_PACKAGE_NAMES = {
 
 # Maps Python module names to PyPI projects.
 _PYPI_PROJECT_NAMES = {
+    u'Crypto': u'pycrypto',
+    u'dateutil': u'python-dateutil',
     u'hachoir_core': u'hachoir-core',
     u'hachoir_metadata': u'hachoir-metadata',
     u'hachoir_parser': u'hachoir-parser',
     u'sqlite3': u'pysqlite',
     u'yaml': u'PyYAML',
     u'yara': u'yara-python',
-    u'xlsxwriter': u'XlsxWriter'}
+    u'xlsxwriter': u'XlsxWriter',
+    u'zmq': u'pyzmq'}
 
 # Maps Python module names to RPM packages.
 _RPM_PACKAGE_NAMES = {
+    u'Crypto': u'pycrypto',
     u'hachoir_core': u'python-hachoir-core',
     u'hachoir_metadata': u'python-hachoir-metadata',
     u'hachoir_parser': u'python-hachoir-parser',
@@ -183,7 +192,7 @@ def _CheckPythonModule(
   Args:
     module_name (str): name of the module.
     version_attribute_name (str): name of the attribute that contains
-       the module version.
+       the module version or method to retrieve the module version.
     minimum_version (str): minimum required version.
     maximum_version (Optional[str]): maximum required version. Should only be
         used if there is a later version that is not supported.
@@ -203,7 +212,14 @@ def _CheckPythonModule(
       print(u'[OK]\t\t{0:s}'.format(module_name))
     return True
 
-  module_version = getattr(module_object, version_attribute_name, None)
+  module_version = None
+  if not version_attribute_name.endswith(u'()'):
+    module_version = getattr(module_object, version_attribute_name, None)
+  else:
+    version_method = getattr(module_object, version_attribute_name[:-2], None)
+    if version_method:
+      module_version = version_method()
+
   if not module_version:
     print((
         u'[FAILURE]\tunable to determine version information '
@@ -231,58 +247,6 @@ def _CheckPythonModule(
           u'[FAILURE]\t{0:s} version: {1:s} is too recent, {2:s} or earlier '
           u'required.').format(module_name, module_version, maximum_version))
       return False
-
-  if verbose_output:
-    print(u'[OK]\t\t{0:s} version: {1:s}'.format(module_name, module_version))
-
-  return True
-
-
-def _CheckPyTSK(verbose_output=True):
-  """Checks the availability of pytsk.
-
-  Args:
-    verbose_output (Optional[bool]): True if output should be verbose.
-
-  Returns:
-    bool: True if the pytsk Python module is available, False otherwise.
-  """
-  module_name = u'pytsk3'
-  minimum_version_libtsk = u'4.1.2'
-  minimum_version_pytsk = u'20140506'
-
-  module_object = _ImportPythonModule(module_name)
-  if not module_object:
-    print(u'[FAILURE]\tmissing: {0:s}.'.format(module_name))
-    return False
-
-  module_version = module_object.TSK_VERSION_STR
-
-  # Split the version string and convert every digit into an integer.
-  # A string compare of both version strings will yield an incorrect result.
-  module_version_map = list(map(int, module_version.split(u'.')))
-  minimum_version_map = list(map(int, minimum_version_libtsk.split(u'.')))
-  if module_version_map < minimum_version_map:
-    print((
-        u'[FAILURE]\tSleuthKit (libtsk) version: {0:s} is too old, {1:s} or '
-        u'later required.').format(module_version, minimum_version_libtsk))
-    return False
-
-  if verbose_output:
-    print(u'[OK]\t\tSleuthKit version: {0:s}'.format(module_version))
-
-  if not hasattr(module_object, u'get_version'):
-    print(u'[FAILURE]\t{0:s} is too old, {1:s} or later required.'.format(
-        module_name, minimum_version_pytsk))
-    return False
-
-  module_version = module_object.get_version()
-  if module_version < minimum_version_pytsk:
-    print((
-        u'[FAILURE]\t{0:s} version: {1:s} is too old, {2:s} or later '
-        u'required.').format(
-            module_name, module_version, minimum_version_pytsk))
-    return False
 
   if verbose_output:
     print(u'[OK]\t\t{0:s} version: {1:s}'.format(module_name, module_version))
@@ -444,9 +408,6 @@ def CheckDependencies(latest_version_check=False, verbose_output=True):
   if not _CheckSQLite3(verbose_output=verbose_output):
     check_result = False
 
-  if not _CheckPyTSK(verbose_output=verbose_output):
-    check_result = False
-
   libyal_check_result = _CheckLibyal(
       LIBYAL_DEPENDENCIES, latest_version_check=latest_version_check,
       verbose_output=verbose_output)
@@ -541,11 +502,6 @@ def GetDPKGDepends(exclude_version=False):
     else:
       requires.append(u'{0:s} (>= {1:s})'.format(module_name, module_version))
 
-  if exclude_version:
-    requires.append(u'python-pytsk3')
-  else:
-    requires.append(u'python-pytsk3 (>= 4.1.2)')
-
   for module_name, module_version in sorted(LIBYAL_DEPENDENCIES.items()):
     if exclude_version or not module_version:
       requires.append(u'lib{0:s}-python'.format(module_name[2:]))
@@ -566,11 +522,12 @@ def GetInstallRequires():
   for values in PYTHON_DEPENDENCIES:
     module_name = values[0]
     module_version = values[2]
+    maximum_version = values[3]
 
     # Map the import name to the PyPI project name.
     module_name = _PYPI_PROJECT_NAMES.get(module_name, module_name)
     if module_name == u'efilter':
-      module_version = u'1!{0:s}'.format(module_version)
+      module_version = u'1-{0:s}'.format(module_version)
 
     elif module_name == u'pysqlite':
       # Override the pysqlite version since it does not match
@@ -579,11 +536,12 @@ def GetInstallRequires():
 
     if not module_version:
       install_requires.append(module_name)
-    else:
+    elif not maximum_version:
       install_requires.append(u'{0:s} >= {1:s}'.format(
           module_name, module_version))
-
-  install_requires.append(u'pytsk3 >= 4.1.2')
+    else:
+      install_requires.append(u'{0:s} >= {1:s},<= {2:s}'.format(
+          module_name, module_version, maximum_version))
 
   for module_name, module_version in sorted(LIBYAL_DEPENDENCIES.items()):
     if not module_version:
@@ -618,8 +576,6 @@ def GetRPMRequires():
       requires.append(module_name)
     else:
       requires.append(u'{0:s} >= {1:s}'.format(module_name, module_version))
-
-  requires.append(u'pytsk3-python >= 4.1.2')
 
   for module_name, module_version in sorted(LIBYAL_DEPENDENCIES.items()):
     if not module_version:

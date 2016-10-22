@@ -256,6 +256,31 @@ class BaseFileStorage(BaseStorage):
     self._serializers_profiler = serializers_profiler
 
 
+class StorageMergeReader(object):
+  """Class that defines the storage reader interface for merging."""
+
+  def __init__(self, storage_writer):
+    """Initializes a storage merge reader.
+
+    Args:
+      storage_writer (StorageWriter): storage writer.
+    """
+    super(StorageMergeReader, self).__init__()
+    self._storage_writer = storage_writer
+
+  @abc.abstractmethod
+  def MergeAttributeContainers(self, maximum_number_of_containers=0):
+    """Reads attribute containers from a task storage file into the writer.
+
+    Args:
+      maximum_number_of_containers (Optional[int]): maximum number of
+          containers to merge, where 0 represent no limit.
+
+    Returns:
+      bool: True if the entire task storage file has been merged.
+    """
+
+
 class StorageReader(object):
   """Class that defines the storage reader interface."""
 
@@ -426,10 +451,11 @@ class StorageWriter(object):
   """Class that defines the storage writer interface.
 
   Attributes:
-    number_of_errors: an integer containing the number of errors written.
-    number_of_event_sources: an integer containing the number of event
-                             sources written.
-    number_of_events: an integer containing the number of events written.
+    number_of_analysis_reports (int): number of analysis reports written.
+    number_of_errors (int): number of errors written.
+    number_of_event_sources (int): number of event sources written.
+    number_of_event_tags (int): number of event tags written.
+    number_of_events (int): number of events written.
   """
 
   def __init__(
@@ -447,8 +473,10 @@ class StorageWriter(object):
     self._storage_type = storage_type
     self._task = task
     self._written_event_source_index = 0
+    self.number_of_analysis_reports = 0
     self.number_of_errors = 0
     self.number_of_event_sources = 0
+    self.number_of_event_tags = 0
     self.number_of_events = 0
 
   @abc.abstractmethod
@@ -495,11 +523,11 @@ class StorageWriter(object):
   def Close(self):
     """Closes the storage writer."""
 
-  def CreateTaskStorage(self, unused_task_name):
+  def CreateTaskStorage(self, unused_task):
     """Creates a task storage.
 
     Args:
-      task_name (str): unique name of the task.
+      task (Task): task.
 
     Returns:
       StorageWriter: storage writer.
@@ -565,11 +593,11 @@ class StorageWriter(object):
   def Open(self):
     """Opens the storage writer."""
 
-  def PrepareMergeTaskStorage(self, unsused_task_name):
+  def PrepareMergeTaskStorage(self, unused_task):
     """Prepares a task storage for merging.
 
     Args:
-      task_name (str): unique name of the task.
+      task (Task): task.
 
     Raises:
       IOError: if the storage type is not supported or

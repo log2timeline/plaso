@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Parser related functions and classes for testing."""
 
+import heapq
+
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
@@ -16,12 +18,74 @@ from plaso.storage import fake_storage
 from tests import test_lib as shared_test_lib
 
 
+class _EventsHeap(object):
+  """Events heap."""
+
+  def __init__(self):
+    """Initializes an events heap."""
+    super(_EventsHeap, self).__init__()
+    self._heap = []
+
+  def PopEvent(self):
+    """Pops an event from the heap.
+
+    Returns:
+      EventObject: event.
+    """
+    try:
+      _, _, _, event = heapq.heappop(self._heap)
+      return event
+
+    except IndexError:
+      return None
+
+  def PopEvents(self):
+    """Pops events from the heap.
+
+    Yields:
+      EventObject: event.
+    """
+    event = self.PopEvent()
+    while event:
+      yield event
+      event = self.PopEvent()
+
+  def PushEvent(self, event):
+    """Pushes an event onto the heap.
+
+    Args:
+      event (EventObject): event.
+    """
+    # TODO: replace this work-around for an event "comparable".
+    event_values = event.CopyToDict()
+    attributes = []
+    for attribute_name, attribute_value in sorted(event_values.items()):
+      if isinstance(attribute_value, dict):
+        attribute_value = sorted(attribute_value.items())
+      comparable = u'{0:s}: {1!s}'.format(attribute_name, attribute_value)
+      attributes.append(comparable)
+
+    comparable = u', '.join(attributes)
+    event_values = sorted(event.CopyToDict().items())
+    heap_values = (event.timestamp, event.timestamp_desc, comparable, event)
+    heapq.heappush(self._heap, heap_values)
+
+  def PushEvents(self, events):
+    """Pushes events onto the heap.
+
+    Args:
+      events list[EventObject]: events.
+    """
+    for event in events:
+      self.PushEvent(event)
+
+
 class ParserTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for a parser."""
 
   def _CreateParserMediator(
-      self, storage_writer, file_entry=None,
-      knowledge_base_values=None, parser_chain=None, timezone=u'UTC'):
+      self, storage_writer, file_entry=None, knowledge_base_values=None,
+      parser_chain=None, timezone=u'UTC'):
     """Creates a parser mediator.
 
     Args:
@@ -63,6 +127,19 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     storage_writer.Open()
     return storage_writer
 
+  def _GetSortedEvents(self, events):
+    """Retrieves events sorted in a deterministic order.
+
+    Args:
+      events (list[EventObject]): events.
+
+    Returns:
+      list[EventObject]: sorted events.
+    """
+    events_heap = _EventsHeap()
+    events_heap.PushEvents(events)
+    return list(events_heap.PopEvents())
+
   def _GetShortMessage(self, message_string):
     """Shortens a message string to a maximum of 80 character width.
 
@@ -92,9 +169,11 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
     return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
 
-  def _ParseFile(
-      self, path_segments, parser, knowledge_base_values=None,
-      timezone=u'UTC'):
+  def _ParseFile(self,
+                 path_segments,
+                 parser,
+                 knowledge_base_values=None,
+                 timezone=u'UTC'):
     """Parses a file with a parser and writes results to a storage writer.
 
     Args:
@@ -114,8 +193,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         timezone=timezone)
 
   def _ParseFileByPathSpec(
-      self, path_spec, parser, knowledge_base_values=None,
-      timezone=u'UTC'):
+      self, path_spec, parser, knowledge_base_values=None, timezone=u'UTC'):
     """Parses a file with a parser and writes results to a storage writer.
 
     Args:
@@ -130,8 +208,10 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
     storage_writer = self._CreateStorageWriter()
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
     parser_mediator = self._CreateParserMediator(
-        storage_writer, file_entry=file_entry,
-        knowledge_base_values=knowledge_base_values, timezone=timezone)
+        storage_writer,
+        file_entry=file_entry,
+        knowledge_base_values=knowledge_base_values,
+        timezone=timezone)
 
     if isinstance(parser, interface.FileEntryParser):
       parser.Parse(parser_mediator)
@@ -144,8 +224,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         file_object.close()
 
     else:
-      self.fail(u'Got unsupported parser type: {0:s}'.format(
-          type(parser)))
+      self.fail(u'Got unsupported parser type: {0:s}'.format(type(parser)))
 
     return storage_writer
 
@@ -189,3 +268,21 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
         formatters_manager.FormattersManager.GetSourceStrings(event))
     self.assertEqual(source, expected_source)
     self.assertEqual(source_short, expected_source_short)
+
+  def assertDictContains(self, received, expected):
+    """Asserts if a dictionary contains every key-value pair as expected.
+
+    Recieved can contain new keys. If any value is a dict, this function is
+    called recursively.
+
+    Args:
+      received (dict): received dictionary.
+      expected (dict): expected dictionary.
+    """
+    for key, value in expected.items():
+      self.assertIn(key, received)
+
+      if isinstance(value, dict):
+        self.assertDictEqual(received[key], expected[key])
+      else:
+        self.assertEqual(value, expected[key])

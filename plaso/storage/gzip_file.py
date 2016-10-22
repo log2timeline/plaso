@@ -5,8 +5,12 @@ Only supports task storage at the moment.
 """
 
 import gzip
+import os
+import time
 
 from plaso.lib import definitions
+from plaso.lib import platform_specific
+from plaso.serializer import json_serializer
 from plaso.storage import interface
 
 
@@ -16,6 +20,8 @@ class GZIPStorageFile(interface.BaseFileStorage):
   # pylint: disable=abstract-method
 
   _COMPRESSION_LEVEL = 9
+
+  _DATA_BUFFER_SIZE = 1 * 1024 * 1024
 
   def __init__(self, storage_type=definitions.STORAGE_TYPE_TASK):
     """Initializes a storage.
@@ -59,11 +65,21 @@ class GZIPStorageFile(interface.BaseFileStorage):
 
   def _OpenRead(self):
     """Opens the storage file for reading."""
-    for line in self._gzip_file.readlines():
-      attribute_container = self._DeserializeAttributeContainer(
-          line, u'attribute_container')
-
-      self._AddAttributeContainer(attribute_container)
+    # Do not use gzip.readlines() here since it can consume a large amount
+    # of memory.
+    data_buffer = self._gzip_file.read(self._DATA_BUFFER_SIZE)
+    while data_buffer:
+      lines = data_buffer.splitlines(True)
+      data_buffer = b''
+      for index, line in enumerate(lines):
+        if line.endswith(b'\n'):
+          attribute_container = self._DeserializeAttributeContainer(
+              line, u'attribute_container')
+          self._AddAttributeContainer(attribute_container)
+        else:
+          data_buffer = b''.join(lines[index:])
+      data_buffer = data_buffer + self._gzip_file.read(
+          self._DATA_BUFFER_SIZE)
 
   def _WriteAttributeContainer(self, attribute_container):
     """Writes an attribute container.
@@ -134,8 +150,9 @@ class GZIPStorageFile(interface.BaseFileStorage):
     if not self._is_open:
       raise IOError(u'Storage file already closed.')
 
-    self._gzip_file.close()
-    self._gzip_file = None
+    if self._gzip_file:
+      self._gzip_file.close()
+      self._gzip_file = None
     self._is_open = False
 
   def GetAnalysisReports(self):
@@ -232,7 +249,9 @@ class GZIPStorageFile(interface.BaseFileStorage):
       access_mode = 'wb'
 
     self._gzip_file = gzip.open(path, access_mode, self._COMPRESSION_LEVEL)
-
+    if platform_specific.PlatformIsWindows():
+      file_handle = self._gzip_file.fileno()
+      platform_specific.DisableWindowsFileHandleInheritance(file_handle)
     if read_only:
       self._OpenRead()
 
@@ -270,6 +289,138 @@ class GZIPStorageFile(interface.BaseFileStorage):
       task_start (TaskStart): task start information.
     """
     self._WriteAttributeContainer(task_start)
+
+
+class GZIPStorageMergeReader(interface.StorageMergeReader):
+  """Class that implements a gzip-based storage file reader for merging."""
+
+  _DATA_BUFFER_SIZE = 1 * 1024 * 1024
+  _MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS = 4
+  _LOCKED_FILE_SLEEP_TIME = 0.5
+
+  def __init__(self, storage_writer, path):
+    """Initializes a storage merge reader.
+
+    Args:
+      storage_writer (StorageWriter): storage writer.
+      path (str): path to the input file.
+
+    Raises:
+      IOError: if the input file cannot be opened.
+    """
+    super(GZIPStorageMergeReader, self).__init__(storage_writer)
+    self._data_buffer = None
+    # On Windows the file can sometimes be in use and we have to wait.
+    for attempt in range(1, self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS):
+      try:
+        self._gzip_file = gzip.open(path, 'rb')
+        break
+      except IOError:
+        if attempt == self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS:
+          raise
+
+    if platform_specific.PlatformIsWindows():
+      file_handle = self._gzip_file.fileno()
+      platform_specific.DisableWindowsFileHandleInheritance(file_handle)
+    self._path = path
+    self._serializer = json_serializer.JSONAttributeContainerSerializer
+    self._serializers_profiler = None
+
+  def _DeserializeAttributeContainer(self, container_data, container_type):
+    """Deserializes an attribute container.
+
+    Args:
+      container_data (bytes): serialized attribute container data.
+      container_type (str): attribute container type.
+
+    Returns:
+      AttributeContainer: attribute container or None.
+    """
+    if not container_data:
+      return
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StartTiming(container_type)
+
+    attribute_container = self._serializer.ReadSerialized(container_data)
+
+    if self._serializers_profiler:
+      self._serializers_profiler.StopTiming(container_type)
+
+    return attribute_container
+
+  def MergeAttributeContainers(self, maximum_number_of_containers=0):
+    """Reads attribute containers from a task storage file into the writer.
+
+    Args:
+      maximum_number_of_containers (Optional[int]): maximum number of
+          containers to merge, where 0 represent no limit.
+
+    Returns:
+      bool: True if the entire task storage file has been merged.
+
+    Raises:
+      OSError: if the task storage file cannot be deleted.
+      RuntimeError: if the attribute container type is not supported.
+    """
+    if not self._data_buffer:
+      # Do not use gzip.readlines() here since it can consume a large amount
+      # of memory.
+      self._data_buffer = self._gzip_file.read(self._DATA_BUFFER_SIZE)
+
+    number_of_containers = 0
+    while self._data_buffer:
+      while b'\n' in self._data_buffer:
+        line, _, self._data_buffer = self._data_buffer.partition(b'\n')
+        attribute_container = self._DeserializeAttributeContainer(
+            line, u'attribute_container')
+
+        container_type = attribute_container.CONTAINER_TYPE
+        # Note the else statements below are sorted from more frequent
+        # container type to less frequent container type.
+        # TODO: consider lookup table approach.
+        if container_type == 'event_source':
+          self._storage_writer.AddEventSource(attribute_container)
+
+        elif container_type == 'event':
+          self._storage_writer.AddEvent(attribute_container)
+
+        elif container_type == 'event_tag':
+          self._storage_writer.AddEventTag(attribute_container)
+
+        elif container_type == 'extraction_error':
+          self._storage_writer.AddError(attribute_container)
+
+        elif container_type == 'analysis_report':
+          self._storage_writer.AddAnalysisReport(attribute_container)
+
+        elif container_type not in (u'task_completion', u'task_start'):
+          raise RuntimeError(u'Unsupported container type: {0:s}'.format(
+              container_type))
+
+        number_of_containers += 1
+
+        if (maximum_number_of_containers > 0 and
+            number_of_containers >= maximum_number_of_containers):
+          return False
+
+      additional_data_buffer = self._gzip_file.read(self._DATA_BUFFER_SIZE)
+      self._data_buffer = b''.join([self._data_buffer, additional_data_buffer])
+
+    self._gzip_file.close()
+    self._gzip_file = None
+
+    # On Windows the file can sometimes be in use and we have to wait.
+    for attempt in range(1, self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS):
+      try:
+        os.remove(self._path)
+        break
+      except OSError:
+        if attempt == self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS:
+          raise
+        time.sleep(self._LOCKED_FILE_SLEEP_TIME)
+
+    return True
 
 
 class GZIPStorageFileReader(interface.FileStorageReader):

@@ -198,7 +198,7 @@ class ExtractionFrontend(frontend.Frontend):
   #   * mount point
 
   def _SetTimezone(self, knowledge_base, timezone):
-    """Sets the timezone in the knowlege base.
+    """Sets the timezone in the knowledge base.
 
     Args:
       knowledge_base (KnowledgeBase): contains information from the source
@@ -227,7 +227,7 @@ class ExtractionFrontend(frontend.Frontend):
       self, command_line_arguments=None, filter_file=None,
       parser_filter_expression=None, preferred_encoding=u'utf-8',
       preferred_year=None):
-    """Creates a session attribute containiner.
+    """Creates a session attribute container.
 
     Args:
       command_line_arguments (Optional[str]): the command line arguments.
