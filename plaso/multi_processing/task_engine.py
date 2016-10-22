@@ -226,9 +226,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
               task)
         except IOError as exception:
           logging.error(
-              u'Unable to merge results of task: {0:s} '
-              u'with error: {1:s}'.format(
-                  task.identifier, exception))
+              (u'Unable to merge results of task: {0:s} '
+               u'with error: {1:s}').format(
+                   task.identifier, exception))
           self._storage_merge_reader = None
 
       if self._storage_merge_reader:
