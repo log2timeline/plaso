@@ -236,7 +236,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       else:
         # TODO: Do something more sensible when this happens, perhaps
         # retrying the task once that is implemented. For now, we mark the task
-        # as fully merged.
+        # as fully merged because we can't continue with it.
         fully_merged = True
 
       if self._processing_profiler:
