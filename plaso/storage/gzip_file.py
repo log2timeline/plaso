@@ -77,7 +77,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
               line, u'attribute_container')
           self._AddAttributeContainer(attribute_container)
         else:
-          data_buffer = lines[index:].join(b'')
+          data_buffer = b''.join(lines[index:])
       data_buffer = data_buffer + self._gzip_file.read(
           self._DATA_BUFFER_SIZE)
 
