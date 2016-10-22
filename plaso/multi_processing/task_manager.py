@@ -214,8 +214,9 @@ class TaskManager(object):
     Args:
       task_identifier (str): unique identifier of the task.
     """
-    if task_identifier in self._abandoned_tasks:
-      return True
+    with self._lock:
+      if task_identifier in self._abandoned_tasks:
+        return True
 
   def UpdateTaskByIdentifier(self, task_identifier):
     """Updates a task.
