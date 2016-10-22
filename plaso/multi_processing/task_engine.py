@@ -220,11 +220,25 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           self._merge_task_on_hold = self._merge_task
           self._storage_merge_reader_on_hold = self._storage_merge_reader
 
-        self._storage_merge_reader = storage_writer.StartMergeTaskStorage(task)
         self._merge_task = task
+        try:
+          self._storage_merge_reader = storage_writer.StartMergeTaskStorage(
+              task)
+        except IOError as exception:
+          logging.error(
+              (u'Unable to merge results of task: {0:s} '
+               u'with error: {1:s}').format(
+                   task.identifier, exception))
+          self._storage_merge_reader = None
 
-      fully_merged = self._storage_merge_reader.MergeAttributeContainers(
-          maximum_number_of_containers=self._MAXIMUM_NUMBER_OF_CONTAINERS)
+      if self._storage_merge_reader:
+        fully_merged = self._storage_merge_reader.MergeAttributeContainers(
+            maximum_number_of_containers=self._MAXIMUM_NUMBER_OF_CONTAINERS)
+      else:
+        # TODO: Do something more sensible when this happens, perhaps
+        # retrying the task once that is implemented. For now, we mark the task
+        # as fully merged because we can't continue with it.
+        fully_merged = True
 
       if self._processing_profiler:
         self._processing_profiler.StopTiming(u'merge')
