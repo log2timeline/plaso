@@ -3290,9 +3290,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     if not os.path.isfile(storage_file_path):
       raise IOError(u'Merge task storage path is not a file.')
 
-    merge_reader = gzip_file.GZIPStorageMergeReader(self, storage_file_path)
-
-    return merge_reader
+    return gzip_file.GZIPStorageMergeReader(self, storage_file_path)
 
   def StartTaskStorage(self):
     """Creates a temporary path for the task storage.
