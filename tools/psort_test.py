@@ -105,7 +105,8 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       u'  --nsrlsvr-hash HASH, --nsrlsvr_hash HASH',
       (u'                        Type of hash to use to query nsrlsvr '
        u'instance, the'),
-      u'                        default is: md5',
+      (u'                        default is: md5. Supported options: md5, '
+       u'sha1'),
       u'  --nsrlsvr-host HOST, --nsrlsvr_host HOST',
       (u'                        Hostname or IP address of the nsrlsvr '
        u'instance to'),
@@ -119,7 +120,8 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       u'  --viper-hash HASH, --viper_hash HASH',
       (u'                        Type of hash to use to query the Viper '
        u'server, the'),
-      u'                        default is: sha256',
+      (u'                        default is: sha256. Supported options: md5, '
+       u'sha256'),
       u'  --viper-host HOST, --viper_host HOST',
       (u'                        Hostname of the Viper server to query, the '
        u'default is:'),
@@ -129,7 +131,9 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
        u'default is:'),
       u'                        8080.',
       u'  --viper-protocol PROTOCOL, --viper_protocol PROTOCOL',
-      u'                        Protocol to use to query Viper.',
+      (u'                        Protocol to use to query Viper, the '
+       u'default is: http.'),
+      u'                        Supported options: http, https',
       u'  --virustotal-api-key API_KEY, --virustotal_api_key API_KEY',
       u'                        Specify the API key for use with VirusTotal.',
       u'  --virustotal-free-rate-limit, --virustotal_free_rate_limit',

@@ -32,10 +32,12 @@ class ViperAnalysisArgumentsHelper(interface.ArgumentsHelper):
     """
     argument_group.add_argument(
         u'--viper-hash', u'--viper_hash', dest=u'viper_hash', type=str,
-        action='store', choices=[u'sha256'], default=cls._DEFAULT_HASH,
-        metavar=u'HASH', help=(
+        action='store', choices=viper.ViperAnalyzer.SUPPORTED_HASHES,
+        default=cls._DEFAULT_HASH, metavar=u'HASH', help=(
             u'Type of hash to use to query the Viper server, the default is: '
-            u'{0:s}'.format(cls._DEFAULT_HASH)))
+            u'{0:s}. Supported options: {1:s}').format(
+                cls._DEFAULT_HASH, u', '.join(
+                    viper.ViperAnalyzer.SUPPORTED_HASHES)))
 
     argument_group.add_argument(
         u'--viper-host', u'--viper_host', dest=u'viper_host', type=str,
@@ -52,9 +54,13 @@ class ViperAnalysisArgumentsHelper(interface.ArgumentsHelper):
 
     argument_group.add_argument(
         u'--viper-protocol', u'--viper_protocol', dest=u'viper_protocol',
-        type=str, choices=[u'http', u'https'], action='store',
-        default=cls._DEFAULT_PROTOCOL, metavar=u'PROTOCOL', help=(
-            u'Protocol to use to query Viper.'))
+        type=str, choices=viper.ViperAnalyzer.SUPPORTED_PROTOCOLS,
+        action='store', default=cls._DEFAULT_PROTOCOL, metavar=u'PROTOCOL',
+        help=(
+            u'Protocol to use to query Viper, the default is: {0:s}. '
+            u'Supported options: {1:s}').format(
+                cls._DEFAULT_PROTOCOL, u', '.join(
+                    viper.ViperAnalyzer.SUPPORTED_PROTOCOLS)))
 
   @classmethod
   def ParseOptions(cls, options, analysis_plugin):
@@ -66,6 +72,7 @@ class ViperAnalysisArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the output module object is of the wrong type.
+      BadConfigOption: when unable to connect to Viper instance.
     """
     if not isinstance(analysis_plugin, viper.ViperAnalysisPlugin):
       raise errors.BadConfigObject(
@@ -85,7 +92,12 @@ class ViperAnalysisArgumentsHelper(interface.ArgumentsHelper):
 
     protocol = cls._ParseStringOption(
         options, u'viper_protocol', default_value=cls._DEFAULT_PROTOCOL)
+    protocol = protocol.lower().strip()
     analysis_plugin.SetProtocol(protocol)
+
+    if not analysis_plugin.TestConnection():
+      raise errors.BadConfigOption(
+          u'Unable to connect to Viper {0:s}:{1:d}'.format(host, port))
 
 
 manager.ArgumentHelperManager.RegisterHelper(ViperAnalysisArgumentsHelper)

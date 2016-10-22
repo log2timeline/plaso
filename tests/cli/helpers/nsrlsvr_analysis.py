@@ -27,7 +27,8 @@ class NsrlsvrAnalysisArgumentsHelperTest(
       u'  --nsrlsvr-hash HASH, --nsrlsvr_hash HASH',
       (u'                        Type of hash to use to query nsrlsvr '
        u'instance, the'),
-      u'                        default is: md5',
+      (u'                        default is: md5. Supported options: md5, '
+       u'sha1'),
       u'  --nsrlsvr-host HOST, --nsrlsvr_host HOST',
       (u'                        Hostname or IP address of the nsrlsvr '
        u'instance to'),
@@ -54,8 +55,8 @@ class NsrlsvrAnalysisArgumentsHelperTest(
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     options = cli_test_lib.TestOptions()
-
     analysis_plugin = nsrlsvr.NsrlsvrAnalysisPlugin()
+
     with self.assertRaises(errors.BadConfigOption):
       nsrlsvr_analysis.NsrlsvrAnalysisArgumentsHelper.ParseOptions(
           options, analysis_plugin)
