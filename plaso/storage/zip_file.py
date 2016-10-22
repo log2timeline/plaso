@@ -1009,7 +1009,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
   # The maximum serialized report size (32 MiB).
   _MAXIMUM_SERIALIZED_REPORT_SIZE = 32 * 1024 * 1024
 
-  _MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES = 5
+  _MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS = 5
   _LOCKED_FILE_SLEEP_TIME = 0.5
 
   def __init__(
@@ -1741,18 +1741,15 @@ class ZIPStorageFile(interface.BaseFileStorage):
       zipfile_path = os.path.join(directory_name, basename)
 
       if os.path.exists(path):
-        attempts = 1
-        # On Windows the file can sometimes be in use and we have to wait.
-        while attempts <= self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+        for attempt in range(1, self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS):
           try:
             os.rename(path, zipfile_path)
             break
 
           except OSError:
-            if attempts == self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+            if attempt == self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS:
               raise
             time.sleep(self._LOCKED_FILE_SLEEP_TIME)
-            attempts += 1
 
     try:
       self._zipfile = zipfile.ZipFile(
@@ -2466,26 +2463,28 @@ class ZIPStorageFile(interface.BaseFileStorage):
     self._zipfile = None
     self._is_open = False
 
-    attempts = 1
+    file_renamed = False
     if self._path != self._zipfile_path and os.path.exists(self._zipfile_path):
       # On Windows the file can sometimes be still in use and we have to wait.
-      while attempts <= self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+      for attempt in range(1, self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS):
         try:
           os.rename(self._zipfile_path, self._path)
+          file_renamed = True
           break
 
         except OSError:
+          if attempt == self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS:
+            raise
           time.sleep(self._LOCKED_FILE_SLEEP_TIME)
-          attempts += 1
 
-      if attempts <= self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+      if file_renamed:
         directory_name = os.path.dirname(self._zipfile_path)
         os.rmdir(directory_name)
 
     self._path = None
     self._zipfile_path = None
 
-    if attempts > self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+    if self._path != self._zipfile_path and not file_renamed:
       raise IOError(u'Unable to close storage file.')
 
   def Flush(self):
@@ -3273,7 +3272,8 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       StorageMergeReader: storage merge reader of the task storage.
 
     Raises:
-      IOError: if the storage type is not supported or
+      IOError: if the storage file cannot be opened or
+               if the storage type is not supported or
                if the temporary path for the task storage does not exist or
                if the temporary path for the task storage doe not refers to
                a file.
