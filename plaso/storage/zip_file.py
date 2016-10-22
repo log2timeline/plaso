@@ -135,12 +135,12 @@ import time
 import warnings
 import zipfile
 
-import construct
-
 try:
   import ConfigParser as configparser
 except ImportError:
   import configparser  # pylint: disable=import-error
+
+import construct
 
 from plaso.containers import sessions
 from plaso.lib import definitions
@@ -2979,6 +2979,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     report_identifier = analysis_report.plugin_name
     self._session.analysis_reports_counter[u'total'] += 1
     self._session.analysis_reports_counter[report_identifier] += 1
+    self.number_of_analysis_reports += 1
 
   def AddError(self, error):
     """Adds an error.
@@ -3044,6 +3045,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self._session.event_labels_counter[u'total'] += 1
     for label in event_tag.labels:
       self._session.event_labels_counter[label] += 1
+    self.number_of_event_tags += 1
 
   def CheckTaskReadyForMerge(self, task):
     """Checks if a task is ready for merging with this session storage.

@@ -14,6 +14,7 @@ class VirusTotalAnalysisArgumentsHelper(interface.ArgumentsHelper):
   CATEGORY = u'analysis'
   DESCRIPTION = u'Argument helper for the VirusTotal analysis plugin.'
 
+  _DEFAULT_HASH = u'sha256'
   _DEFAULT_RATE_LIMIT = True
 
   @classmethod
@@ -28,15 +29,25 @@ class VirusTotalAnalysisArgumentsHelper(interface.ArgumentsHelper):
           argparse group.
     """
     argument_group.add_argument(
-        u'--virustotal-api-key', dest=u'virustotal_api_key',
-        type=str, action='store', default=None, help=u'Specify the API key '
-        u'for use with VirusTotal.')
+        u'--virustotal-api-key', u'--virustotal_api_key',
+        dest=u'virustotal_api_key', type=str, action='store', default=None,
+        metavar=u'API_KEY', help=(
+            u'Specify the API key for use with VirusTotal.'))
+
     argument_group.add_argument(
-        u'--virustotal-free-rate-limit', dest=u'virustotal_rate_limit',
+        u'--virustotal-free-rate-limit', u'--virustotal_free_rate_limit',
+        dest=u'virustotal_free_rate_limit',
         action='store_false', default=cls._DEFAULT_RATE_LIMIT, help=(
             u'Limit Virustotal requests to the default free API key rate of '
             u'4 requests per minute. Set this to false if you have an key '
             u'for the private API.'))
+
+    argument_group.add_argument(
+        u'--virustotal-hash', u'--virustotal_hash', dest=u'virustotal_hash',
+        type=str, action='store', choices=[u'md5', u'sha1', u'sha256'],
+        default=cls._DEFAULT_HASH, metavar=u'HASH', help=(
+            u'Type of hash to query VirusTotal, the default is: {0:s}'.format(
+                cls._DEFAULT_HASH)))
 
   @classmethod
   def ParseOptions(cls, options, analysis_plugin):
@@ -62,9 +73,14 @@ class VirusTotalAnalysisArgumentsHelper(interface.ArgumentsHelper):
 
     analysis_plugin.SetAPIKey(api_key)
 
-    rate_limit = getattr(
-        options, u'virustotal_rate_limit', cls._DEFAULT_RATE_LIMIT)
-    analysis_plugin.EnableFreeAPIKeyRateLimit(rate_limit)
+    enable_rate_limit = getattr(
+        options, u'virustotal_free_rate_limit', cls._DEFAULT_RATE_LIMIT)
+    if enable_rate_limit:
+      analysis_plugin.EnableFreeAPIKeyRateLimit()
+
+    lookup_hash = cls._ParseStringOption(
+        options, u'virustotal_hash', default_value=cls._DEFAULT_HASH)
+    analysis_plugin.SetLookupHash(lookup_hash)
 
 
 manager.ArgumentHelperManager.RegisterHelper(VirusTotalAnalysisArgumentsHelper)
