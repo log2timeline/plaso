@@ -222,15 +222,16 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       if attribute_name.startswith(u'__'):
         continue
 
+      # Event tags should be serialized separately.
+      # TODO: remove when analysis report no longer defines event tags.
+      if (container_type == u'analysis_report' and
+          attribute_name == u'_event_tags'):
+        continue
+
       # Be strict about which attributes to set in non event objects.
       if (container_type != u'event' and
           attribute_name not in container_object.__dict__):
         continue
-
-      # Note that "_tags" is the name for "labels" in EventTag prior to
-      # version 1.4.1-20160131
-      if container_type == u'event_tag' and attribute_name == u'_event_tags':
-        attribute_name = u'labels'
 
       if isinstance(attribute_value, dict):
         attribute_value = cls._ConvertDictToObject(attribute_value)

@@ -14,6 +14,7 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
   CATEGORY = u'analysis'
   DESCRIPTION = u'Argument helper for the nsrlsvr analysis plugin.'
 
+  _DEFAULT_HASH = u'md5'
   _DEFAULT_HOST = u'localhost'
   _DEFAULT_PORT = 9120
 
@@ -29,13 +30,24 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
           to append arguments to.
     """
     argument_group.add_argument(
-        u'--nsrlsvr-host', dest=u'nsrlsvr_host', type=str, action='store',
-        default=cls._DEFAULT_HOST,
-        help=u'Specify the host to query Nsrlsvr on.')
+        u'--nsrlsvr-hash', u'--nsrlsvr_hash', dest=u'nsrlsvr_hash', type=str,
+        action='store', choices=[u'md5', u'sha1'], default=cls._DEFAULT_HASH,
+        metavar=u'HASH', help=(
+            u'Type of hash to use to query nsrlsvr instance, the default is: '
+            u'{0:s}').format(cls._DEFAULT_HASH))
+
     argument_group.add_argument(
-        u'--nsrlsvr-port', dest=u'nsrlvr_port', type=int, action='store',
-        default=cls._DEFAULT_PORT,
-        help=u'Port to use to query Nsrlsvr.')
+        u'--nsrlsvr-host', u'--nsrlsvr_host', dest=u'nsrlsvr_host', type=str,
+        action='store', default=cls._DEFAULT_HOST, metavar=u'HOST',
+        help=(
+            u'Hostname or IP address of the nsrlsvr instance to query, the '
+            u'default is: {0:s}').format(cls._DEFAULT_HOST))
+
+    argument_group.add_argument(
+        u'--nsrlsvr-port', u'--nsrlsvr_port', dest=u'nsrlvr_port', type=int,
+        action='store', default=cls._DEFAULT_PORT, metavar=u'PORT', help=(
+            u'Port number of the nsrlsvr instance to query, the default is: '
+            u'{0:d}.').format(cls._DEFAULT_PORT))
 
   @classmethod
   def ParseOptions(cls, options, analysis_plugin):
@@ -47,10 +59,15 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
 
     Raises:
       BadConfigObject: when the analysis plugin is the wrong type.
+      BadConfigOption: when unable to connect to nsrlsvr instance.
     """
     if not isinstance(analysis_plugin, nsrlsvr.NsrlsvrAnalysisPlugin):
       raise errors.BadConfigObject(
           u'Analysis plugin is not an instance of NsrlsvrAnalysisPlugin')
+
+    lookup_hash = cls._ParseStringOption(
+        options, u'nsrlsvr_hash', default_value=cls._DEFAULT_HASH)
+    analysis_plugin.SetLookupHash(lookup_hash)
 
     host = cls._ParseStringOption(
         options, u'nsrlsvr_host', default_value=cls._DEFAULT_HOST)
@@ -59,6 +76,10 @@ class NsrlsvrAnalysisArgumentsHelper(interface.ArgumentsHelper):
     port = cls._ParseStringOption(
         options, u'nsrlsvr_port', default_value=cls._DEFAULT_PORT)
     analysis_plugin.SetPort(port)
+
+    if not analysis_plugin.TestConnection():
+      raise errors.BadConfigOption(
+          u'Unable to connect to nsrlsvr {0:s}:{1:d}'.format(host, port))
 
 
 manager.ArgumentHelperManager.RegisterHelper(NsrlsvrAnalysisArgumentsHelper)
