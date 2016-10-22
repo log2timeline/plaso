@@ -3,6 +3,7 @@
 
 import collections
 import heapq
+import logging
 import threading
 import time
 
@@ -138,7 +139,8 @@ class TaskManager(object):
     with self._lock:
       if task.identifier not in self._active_tasks:
         raise KeyError(u'Task not active')
-
+      logging.debug(u'Task {0:s} is complete'.format(
+          task.identifier))
       del self._active_tasks[task.identifier]
 
   def GetAbandonedTasks(self):
@@ -198,31 +200,23 @@ class TaskManager(object):
         # Use a local variable to improve performance.
         task_identifier = task.identifier
         if task.last_processing_time < inactive_time:
+          logging.debug(u'Task {0:s} is abandoned'.format(
+              task_identifier))
           del self._tasks_processing[task_identifier]
           self._abandoned_tasks[task_identifier] = task
           del self._active_tasks[task_identifier]
 
-      return bool(self._active_tasks)
+    return bool(self._active_tasks)
 
-  def RescheduleTaskByIdentifier(self, task_identifier):
-    """Reschedules a previous abandoned task.
+  def IsAbandonedTask(self, task_identifier):
+    """Determines if a task is abandoned.
 
     Args:
       task_identifier (str): unique identifier of the task.
-
-    Raises:
-      KeyError: if the task was not abandoned.
     """
     with self._lock:
-      if task_identifier not in self._abandoned_tasks:
-        raise KeyError(u'Task not abandoned')
-
-      task = self._abandoned_tasks[task_identifier]
-      self._active_tasks[task_identifier] = task
-      del self._abandoned_tasks[task_identifier]
-
-      task.UpdateProcessingTime()
-      self._tasks_processing[task_identifier] = task
+      if task_identifier in self._abandoned_tasks:
+        return True
 
   def UpdateTaskByIdentifier(self, task_identifier):
     """Updates a task.
@@ -253,6 +247,8 @@ class TaskManager(object):
       raise KeyError(u'Task not processing')
 
     with self._lock:
+      logging.debug(u'Task {0:s} is pending merge'.format(
+          task.identifier))
       self._tasks_pending_merge.PushTask(task)
       del self._tasks_processing[task.identifier]
 
@@ -270,5 +266,7 @@ class TaskManager(object):
 
     with self._lock:
       # TODO: add check for maximum_number_of_tasks.
+      logging.debug(u'Task {0:s} is processing'.format(
+          task.identifier))
       task.UpdateProcessingTime()
       self._tasks_processing[task.identifier] = task

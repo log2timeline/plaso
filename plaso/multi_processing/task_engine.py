@@ -681,11 +681,14 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     try:
       self._task_manager.UpdateTaskByIdentifier(task_identifier)
     except KeyError:
-      try:
-        self._task_manager.RescheduleTaskByIdentifier(task_identifier)
-      except KeyError:
-        logging.error(u'Worker {0:s} is processing unknown task: {1:s}.'.format(
-            process.name, task_identifier))
+      if self._task_manager.IsAbandonedTask(task_identifier):
+        logging.debug(
+            u'Worker {0:s} is processing abandoned task: {1:s}.'.format(
+                process.name, task_identifier))
+      else:
+        logging.debug(
+            u'Worker {0:s} is processing unknown task: {1:s}.'.format(
+                process.name, task_identifier))
 
   def ProcessSources(
       self, session_identifier, source_path_specs, storage_writer,
