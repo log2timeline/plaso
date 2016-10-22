@@ -2466,7 +2466,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     file_renamed = False
     if self._path != self._zipfile_path and os.path.exists(self._zipfile_path):
       # On Windows the file can sometimes be still in use and we have to wait.
-      for attempt in range(1, self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS):
+      for _ in range(1, self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS):
         try:
           os.rename(self._zipfile_path, self._path)
           file_renamed = True
