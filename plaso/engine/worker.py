@@ -38,8 +38,6 @@ class EventExtractionWorker(object):
         'Extracting', 'Hashing'.
   """
 
-  _DEFAULT_HASH_READ_SIZE = 4096
-
   # TSK metadata files that need special handling.
   _METADATA_FILE_LOCATIONS_TSK = frozenset([
       # NTFS
