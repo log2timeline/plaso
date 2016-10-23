@@ -4,9 +4,8 @@
 import logging
 import os
 
-from dfvfs.lib import definitions as dfvfs_definitions
-
 from plaso.containers import errors
+from plaso.engine import path_helper
 from plaso.lib import py2to3
 from plaso.lib import timelib
 
@@ -45,12 +44,12 @@ class ParserMediator(object):
 
   @property
   def abort(self):
-    """Read-only value to indicate the parsing should be aborted."""
+    """bool: True if the parsing should be aborted."""
     return self._abort
 
   @property
   def codepage(self):
-    """The codepage."""
+    """str: codepage."""
     return self._knowledge_base.codepage
 
   @property
@@ -132,14 +131,12 @@ class ParserMediator(object):
   def _GetInode(self, inode_value):
     """Retrieves the inode from the inode value.
 
-    Note that the inode value in TSK can be a string, e.g. '27-128-1'.
-
     Args:
-      inode_value: a string or an integer containing the inode.
+      inode_value (int|str): inode, such as 1 or '27-128-1'.
 
     Returns:
-      An integer containing the inode or -1 on error if the inode value
-      cannot be converted to an integer.
+      int: inode or -1 on error if the inode value cannot be converted
+          to an integer.
     """
     if isinstance(inode_value, py2to3.INTEGER_TYPES):
       return inode_value
@@ -165,7 +162,7 @@ class ParserMediator(object):
     time (metadata last modification time) is used.
 
     Returns:
-      An integer containing the year of the file entry or None.
+      int: year of the file entry or None.
     """
     file_entry = self.GetFileEntry()
     stat_object = file_entry.GetStat()
@@ -189,42 +186,6 @@ class ParserMediator(object):
           u'information with error: {0:s}').format(exception))
       return
 
-  def _GetRelativePath(self, path_spec):
-    """Retrieves the relative path.
-
-    Args:
-      path_spec: a path specification (instance of dfvfs.PathSpec).
-
-    Returns:
-      A string containing the relative path or None.
-    """
-    if not path_spec:
-      return
-
-    # TODO: Solve this differently, quite possibly inside dfVFS using mount
-    # path spec.
-    location = getattr(path_spec, u'location', None)
-    if not location and path_spec.HasParent():
-      location = getattr(path_spec.parent, u'location', None)
-
-    if not location:
-      return
-
-    data_stream = getattr(path_spec, u'data_stream', None)
-    if data_stream:
-      location = u'{0:s}:{1:s}'.format(location, data_stream)
-
-    if path_spec.type_indicator != dfvfs_definitions.TYPE_INDICATOR_OS:
-      return location
-
-    # If we are parsing a mount point we don't want to include the full
-    # path to file's location here, we are only interested in the path
-    # relative to the mount point.
-    if self._mount_path:
-      _, _, location = location.partition(self._mount_path)
-
-    return location
-
   def AddEventAttribute(self, attribute_name, attribute_value):
     """Add an attribute that will be set on all events produced.
 
@@ -233,8 +194,8 @@ class ParserMediator(object):
     provided value.
 
     Args:
-      attribute_name: The name of the attribute to set.
-      attribute_value: The value of the attribute to set.
+      attribute_name (str): name of the attribute to set.
+      attribute_value (str): value of the attribute to set.
 
     Raises:
       KeyError: If an attribute with the given name is already set.
@@ -246,11 +207,15 @@ class ParserMediator(object):
     self._extra_event_attributes[attribute_name] = attribute_value
 
   def AppendToParserChain(self, plugin_or_parser):
-    """Add a parser or plugin to the chain to the chain."""
+    """Adds a parser or parser plugin to the parser chain.
+
+    Args:
+      plugin_or_parser (BaseParser): parser or parser plugin.
+    """
     self._parser_chain_components.append(plugin_or_parser.NAME)
 
   def ClearEventAttributes(self):
-    """Clear out attributes that should be added to all events."""
+    """Clears the extra event attributes."""
     self._extra_event_attributes = {}
 
   def ClearParserChain(self):
@@ -261,12 +226,11 @@ class ParserMediator(object):
     """Retrieves the display name for a file entry.
 
     Args:
-      file_entry: optional file entry object (instance of dfvfs.FileEntry).
-                  If none is provided, the display name of self._file_entry
-                  will be returned.
+      file_entry (Optional[dfvfs.FileEntry]): file entry object, where None
+          will return the display name of self._file_entry.
 
     Returns:
-      A human readable string that describes the path to the file entry.
+      str: human readable string that describes the path to the file entry.
 
     Raises:
       ValueError: if the file entry is missing.
@@ -279,7 +243,8 @@ class ParserMediator(object):
 
     path_spec = getattr(file_entry, u'path_spec', None)
 
-    relative_path = self._GetRelativePath(path_spec)
+    relative_path = path_helper.PathHelper.GetRelativePathForPathSpec(
+        path_spec, mount_path=self._mount_path)
     if not relative_path:
       return file_entry.name
 
@@ -294,27 +259,8 @@ class ParserMediator(object):
     Returns:
       str: human readable version of the path specification.
     """
-    relative_path = self._GetRelativePath(path_spec)
-    if not relative_path:
-      return path_spec.type_indicator
-
-    if self._text_prepend:
-      relative_path = u'{0:s}{1:s}'.format(self._text_prepend, relative_path)
-
-    parent_path_spec = path_spec.parent
-    if parent_path_spec and path_spec.type_indicator in [
-        dfvfs_definitions.TYPE_INDICATOR_BZIP2,
-        dfvfs_definitions.TYPE_INDICATOR_GZIP]:
-      parent_path_spec = parent_path_spec.parent
-
-    if parent_path_spec and parent_path_spec.type_indicator in [
-        dfvfs_definitions.TYPE_INDICATOR_VSHADOW]:
-      store_index = getattr(path_spec.parent, u'store_index', None)
-      if store_index is not None:
-        return u'VSS{0:d}:{1:s}:{2:s}'.format(
-            store_index + 1, path_spec.type_indicator, relative_path)
-
-    return u'{0:s}:{1:s}'.format(path_spec.type_indicator, relative_path)
+    return path_helper.PathHelper.GetDisplayNameForPathSpec(
+        path_spec, mount_path=self._mount_path, text_prepend=self._text_prepend)
 
   def GetEstimatedYear(self):
     """Retrieves an estimate of the year.
@@ -348,7 +294,7 @@ class ParserMediator(object):
     """Retrieves the active file entry.
 
     Returns:
-      A file entry (instance of dfvfs.FileEntry).
+      dfvfs.FileEntry: file entry.
     """
     return self._file_entry
 
@@ -356,7 +302,7 @@ class ParserMediator(object):
     """Retrieves the name of the active file entry.
 
     Returns:
-      A string containing the name of the active file entry or None.
+      str: name of the active file entry or None.
     """
     if not self._file_entry:
       return
@@ -374,7 +320,7 @@ class ParserMediator(object):
     if that fails the current year is used.
 
     Returns:
-      An integer containing the year of the file entry or the current year.
+      int: year of the file entry or the current year.
     """
     year = self._GetLatestYearFromFileEntry()
 
@@ -384,55 +330,58 @@ class ParserMediator(object):
     return year
 
   def GetParserChain(self):
-    """The parser chain up to this point."""
+    """Retrieves the current parser chain.
+
+    Returns:
+      str: parser chain.
+    """
     return u'/'.join(self._parser_chain_components)
 
-  def MatchesFilter(self, event_object):
+  def MatchesFilter(self, event):
     """Checks if the event object matches the filter.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event object.
 
     Returns:
-      A boolean value indicating if the event object matches the filter.
+      bool: True if the event matches the filter.
     """
-    return self._filter_object and self._filter_object.Matches(event_object)
+    return self._filter_object and self._filter_object.Matches(event)
 
   def PopFromParserChain(self):
-    """Remove the last added parser or plugin from the chain."""
+    """Removes the last added parser or parser plugin from the parser chain."""
     self._parser_chain_components.pop()
 
   def ProcessEvent(
-      self, event_object, parser_chain=None, file_entry=None, query=None):
+      self, event, parser_chain=None, file_entry=None, query=None):
     """Processes an event before it written to the storage.
 
     Args:
-      event_object: the event object (instance of EventObject).
-      parser_chain: Optional string containing the parsing chain up to this
-                    point.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-                  The default is None, which will default to the current
-                  file entry set in the mediator.
-      query: Optional query string.
+      event (EventObject): event.
+      parser_chain (Optional[str]): parser chain.
+      file_entry (Optional[dfvfs.FileEntry]): file entry, where None will
+          default to the current file entry set in the mediator.
+      query (Optional[str]): query string.
     """
-    # TODO: rename this to event_object.parser_chain or equivalent.
-    if not getattr(event_object, u'parser', None) and parser_chain:
-      event_object.parser = parser_chain
+    # TODO: rename this to event.parser_chain or equivalent.
+    if not getattr(event, u'parser', None) and parser_chain:
+      event.parser = parser_chain
 
     # TODO: deprecate text_prepend in favor of an event tag.
-    if not getattr(event_object, u'text_prepend', None) and self._text_prepend:
-      event_object.text_prepend = self._text_prepend
+    if not getattr(event, u'text_prepend', None) and self._text_prepend:
+      event.text_prepend = self._text_prepend
 
     if file_entry is None:
       file_entry = self._file_entry
 
     display_name = None
     if file_entry:
-      event_object.pathspec = file_entry.path_spec
+      event.pathspec = file_entry.path_spec
 
-      if not getattr(event_object, u'filename', None):
+      if not getattr(event, u'filename', None):
         path_spec = getattr(file_entry, u'path_spec', None)
-        event_object.filename = self._GetRelativePath(path_spec)
+        event.filename = path_helper.PathHelper.GetRelativePathForPathSpec(
+            path_spec, mount_path=self._mount_path)
 
       if not display_name:
         # TODO: dfVFS refactor: move display name to output since the path
@@ -441,35 +390,35 @@ class ParserMediator(object):
 
       stat_object = file_entry.GetStat()
       inode_value = getattr(stat_object, u'ino', None)
-      if not hasattr(event_object, u'inode') and inode_value:
-        event_object.inode = self._GetInode(inode_value)
+      if not hasattr(event, u'inode') and inode_value:
+        event.inode = self._GetInode(inode_value)
 
-    if not getattr(event_object, u'display_name', None) and display_name:
-      event_object.display_name = display_name
+    if not getattr(event, u'display_name', None) and display_name:
+      event.display_name = display_name
 
-    if not getattr(event_object, u'hostname', None) and self.hostname:
-      event_object.hostname = self.hostname
+    if not getattr(event, u'hostname', None) and self.hostname:
+      event.hostname = self.hostname
 
-    if not getattr(event_object, u'username', None):
-      user_sid = getattr(event_object, u'user_sid', None)
+    if not getattr(event, u'username', None):
+      user_sid = getattr(event, u'user_sid', None)
       username = self._knowledge_base.GetUsernameByIdentifier(user_sid)
       if username:
-        event_object.username = username
+        event.username = username
 
-    if not getattr(event_object, u'query', None) and query:
-      event_object.query = query
+    if not getattr(event, u'query', None) and query:
+      event.query = query
 
     for attribute, value in iter(self._extra_event_attributes.items()):
-      if hasattr(event_object, attribute):
+      if hasattr(event, attribute):
         raise KeyError(u'Event already has a value for {0:s}'.format(attribute))
 
-      setattr(event_object, attribute, value)
+      setattr(event, attribute, value)
 
-  def ProduceEvent(self, event_object, query=None):
+  def ProduceEvent(self, event, query=None):
     """Produces an event.
 
     Args:
-      event_object (EventObject): an event.
+      event (EventObject): event.
       query (Optional[str]): query that was used to obtain the event.
 
     Raises:
@@ -479,25 +428,24 @@ class ParserMediator(object):
       raise RuntimeError(u'Storage writer not set.')
 
     self.ProcessEvent(
-        event_object, parser_chain=self.GetParserChain(),
+        event, parser_chain=self.GetParserChain(),
         file_entry=self._file_entry, query=query)
 
-    if self.MatchesFilter(event_object):
+    if self.MatchesFilter(event):
       return
 
-    self._storage_writer.AddEvent(event_object)
+    self._storage_writer.AddEvent(event)
     self._number_of_events += 1
 
-  def ProduceEvents(self, event_objects, query=None):
+  def ProduceEvents(self, events, query=None):
     """Produces events.
 
     Args:
-      event_objects: a list or generator of event objects (instances of
-                     EventObject).
-      query: Optional query string.
+      events (list[EventObject]): event objects.
+      query (Optional[str]): query string.
     """
-    for event_object in event_objects:
-      self.ProduceEvent(event_object, query=query)
+    for event in events:
+      self.ProduceEvent(event, query=query)
 
   def ProduceEventSource(self, event_source):
     """Produces an event source.
@@ -544,7 +492,7 @@ class ParserMediator(object):
     """Sets the active file entry.
 
     Args:
-      file_entry: the file entry (instance of dfvfs.FileEntry).
+      file_entry (dfvfs.FileEntry): file entry.
     """
     self._file_entry = file_entry
 
@@ -552,7 +500,7 @@ class ParserMediator(object):
     """Sets the filter object.
 
     Args:
-      filter_object: the filter object (instance of objectfilter.Filter).
+      filter_object (objectfilter.Filter): filter object.
     """
     self._filter_object = filter_object
 
@@ -560,7 +508,7 @@ class ParserMediator(object):
     """Sets the mount path.
 
     Args:
-      mount_path: string containing the mount path.
+      mount_path (str): mount path.
     """
     # Remove a trailing path separator from the mount path so the relative
     # paths will start with a path separator.
@@ -581,7 +529,7 @@ class ParserMediator(object):
     """Sets the text prepend.
 
     Args:
-      text_prepend: string that contains the text to prepend to every event.
+      text_prepend (str): text to prepend to every event.
     """
     self._text_prepend = text_prepend
 
