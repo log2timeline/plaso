@@ -102,8 +102,6 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
     self.assertEqual(len(storage_writer.analysis_reports), 1)
     self.assertEqual(len(storage_writer.event_tags), 4)
 
-    analysis_report = storage_writer.analysis_reports[0]
-
     labels = []
     for event_tag in storage_writer.event_tags:
       labels.extend(event_tag.labels)
