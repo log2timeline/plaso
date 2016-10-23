@@ -365,9 +365,9 @@ class ExtractionFrontend(frontend.Frontend):
       self, session, storage_writer, source_path_specs, source_type,
       enable_sigsegv_handler=False, force_preprocessing=False,
       hasher_names_string=None, number_of_extraction_workers=0,
-      process_archive_files=False, single_process_mode=False,
-      status_update_callback=None, temporary_directory=None, timezone=u'UTC',
-      yara_rules_string=None):
+      process_archives=False, process_compressed_streams=True,
+      single_process_mode=False, status_update_callback=None,
+      temporary_directory=None, timezone=u'UTC', yara_rules_string=None):
     """Processes the sources.
 
     Args:
@@ -384,8 +384,10 @@ class ExtractionFrontend(frontend.Frontend):
           of hashers to use during processing.
       number_of_extraction_workers (Optional[int]): number of extraction
           workers to run. If 0, the number will be selected automatically.
-      process_archive_files (Optional[bool]): True if archive files should be
+      process_archives (Optional[bool]): True if archive files should be
           scanned for file entries.
+      process_compressed_streams (Optional[bool]): True if file content in
+          compressed streams should be processeed.
       single_process_mode (Optional[bool]): True if the front-end should
           run in single process mode.
       status_update_callback (Optional[function]): callback function for status
@@ -455,7 +457,8 @@ class ExtractionFrontend(frontend.Frontend):
           mount_path=self._mount_path,
           parser_filter_expression=session.parser_filter_expression,
           preferred_year=session.preferred_year,
-          process_archive_files=process_archive_files,
+          process_archives=process_archives,
+          process_compressed_streams=process_compressed_streams,
           status_update_callback=status_update_callback,
           temporary_directory=temporary_directory,
           text_prepend=self._text_prepend,
@@ -475,7 +478,8 @@ class ExtractionFrontend(frontend.Frontend):
           number_of_worker_processes=number_of_extraction_workers,
           parser_filter_expression=session.parser_filter_expression,
           preferred_year=session.preferred_year,
-          process_archive_files=process_archive_files,
+          process_archives=process_archives,
+          process_compressed_streams=process_compressed_streams,
           status_update_callback=status_update_callback,
           show_memory_usage=self._show_worker_memory_information,
           temporary_directory=temporary_directory,

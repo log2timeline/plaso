@@ -79,7 +79,7 @@ class EventExtractionWorker(object):
 
   def __init__(
       self, resolver_context, parser_filter_expression=None,
-      process_archive_files=False):
+      process_archives=False, process_compressed_streams=True):
     """Initializes the event extraction worker object.
 
     Args:
@@ -96,8 +96,10 @@ class EventExtractionWorker(object):
           * A name of a single parser (case insensitive), e.g. msiecf.
           * A glob name for a single parser, e.g. '*msie*' (case insensitive).
 
-      process_archive_files (Optional[bool]): True if the worker should scan
+      process_archives (Optional[bool]): True if the worker should scan
           for file entries inside archive files.
+      process_compressed_streams (Optional[bool]): True if file content in
+          compressed streams should be processeed.
     """
     super(EventExtractionWorker, self).__init__()
     self._abort = False
@@ -105,7 +107,8 @@ class EventExtractionWorker(object):
     self._event_extractor = extractors.EventExtractor(
         resolver_context, parser_filter_expression=parser_filter_expression)
     self._hasher_names = None
-    self._process_archive_files = process_archive_files
+    self._process_archives = process_archives
+    self._process_compressed_streams = process_compressed_streams
     self._processing_profiler = None
     self._resolver_context = resolver_context
 
@@ -666,14 +669,15 @@ class EventExtractionWorker(object):
     archive_types = []
     compressed_stream_types = []
 
-    compressed_stream_types = self._GetCompressedStreamTypes(
-        mediator, path_spec)
+    if self._process_compressed_streams:
+      compressed_stream_types = self._GetCompressedStreamTypes(
+          mediator, path_spec)
 
     if not compressed_stream_types:
       archive_types = self._GetArchiveTypes(mediator, path_spec)
 
     if archive_types:
-      if self._process_archive_files:
+      if self._process_archives:
         self._ProcessArchiveTypes(mediator, path_spec, archive_types)
 
       if dfvfs_definitions.TYPE_INDICATOR_ZIP in archive_types:
