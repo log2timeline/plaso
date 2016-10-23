@@ -724,7 +724,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       process_archives (Optional[bool]): True if archive files should be
           scanned for file entries.
       process_compressed_streams (Optional[bool]): True if file content in
-          compressed streams should be processeed.
+          compressed streams should be processed.
       show_memory_usage (Optional[bool]): True if memory information should be
           included in status updates.
       status_update_callback (Optional[function]): callback function for status

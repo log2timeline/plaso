@@ -99,7 +99,7 @@ class EventExtractionWorker(object):
       process_archives (Optional[bool]): True if the worker should scan
           for file entries inside archive files.
       process_compressed_streams (Optional[bool]): True if file content in
-          compressed streams should be processeed.
+          compressed streams should be processed.
     """
     super(EventExtractionWorker, self).__init__()
     self._abort = False

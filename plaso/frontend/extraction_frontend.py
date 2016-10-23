@@ -387,7 +387,7 @@ class ExtractionFrontend(frontend.Frontend):
       process_archives (Optional[bool]): True if archive files should be
           scanned for file entries.
       process_compressed_streams (Optional[bool]): True if file content in
-          compressed streams should be processeed.
+          compressed streams should be processed.
       single_process_mode (Optional[bool]): True if the front-end should
           run in single process mode.
       status_update_callback (Optional[function]): callback function for status

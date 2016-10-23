@@ -50,7 +50,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       process_archives (Optional[bool]): True if archive files should be
           scanned for file entries.
       process_compressed_streams (Optional[bool]): True if file content in
-          compressed streams should be processeed.
+          compressed streams should be processed.
       profiling_directory (Optional[str]): path to the directory where
           the profiling sample files should be stored.
       profiling_sample_rate (Optional[int]): the profiling sample rate.
