@@ -752,12 +752,15 @@ class EventExtractionWorker(object):
 
     Args:
       hasher_names_string (str): comma separated names of the hashers
-          to enable.
+          to enable, where 'none' disables the hashing analyzer.
     """
-    hashing_processor = analyzers_manager.AnalyzersManager.GetAnalyzerInstance(
+    if not hasher_names_string or hasher_names_string == u'none':
+      return
+
+    analyzer_object = analyzers_manager.AnalyzersManager.GetAnalyzerInstance(
         u'hashing')
-    hashing_processor.SetHasherNames(hasher_names_string)
-    self._analyzers.append(hashing_processor)
+    analyzer_object.SetHasherNames(hasher_names_string)
+    self._analyzers.append(analyzer_object)
 
   def SetParsersProfiler(self, parsers_profiler):
     """Sets the parsers profiler.
@@ -781,10 +784,10 @@ class EventExtractionWorker(object):
     Args:
       yara_rules_string(str): unparsed Yara rule definitions.
     """
-    yara_processor = analyzers_manager.AnalyzersManager.GetAnalyzerInstance(
+    analyzer_object = analyzers_manager.AnalyzersManager.GetAnalyzerInstance(
         u'yara')
-    yara_processor.SetRules(yara_rules_string)
-    self._analyzers.append(yara_processor)
+    analyzer_object.SetRules(yara_rules_string)
+    self._analyzers.append(analyzer_object)
 
   def SignalAbort(self):
     """Signals the extraction worker to abort."""
