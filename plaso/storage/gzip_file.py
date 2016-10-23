@@ -249,9 +249,6 @@ class GZIPStorageFile(interface.BaseFileStorage):
       access_mode = 'wb'
 
     self._gzip_file = gzip.open(path, access_mode, self._COMPRESSION_LEVEL)
-    if not self._gzip_file:
-      raise IOError(u'Unable to open file.')
-
     if platform_specific.PlatformIsWindows():
       file_handle = self._gzip_file.fileno()
       platform_specific.DisableWindowsFileHandleInheritance(file_handle)

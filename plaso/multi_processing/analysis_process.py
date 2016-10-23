@@ -97,7 +97,7 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     logging.debug(u'Analysis plugin: {0!s} (PID: {1:d}) started'.format(
         self._name, self._pid))
 
-    # Creating the threading event in the construct will cause a pickle
+    # Creating the threading event in the constructor will cause a pickle
     # error on Windows when an analysis process is created.
     self._foreman_status_wait_event = threading.Event()
     self._status = definitions.PROCESSING_STATUS_ANALYZING
