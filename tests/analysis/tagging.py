@@ -100,15 +100,13 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
     storage_writer = self._AnalyzeEvents(event_objects, plugin)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
+    self.assertEqual(len(storage_writer.event_tags), 4)
 
     analysis_report = storage_writer.analysis_reports[0]
 
-    tags = analysis_report.GetTags()
-    self.assertEqual(len(tags), 4)
-
     labels = []
-    for tag in tags:
-      labels.extend(tag.labels)
+    for event_tag in storage_writer.event_tags:
+      labels.extend(event_tag.labels)
     self.assertEqual(len(labels), 5)
 
     # This is from a tag rule declared in objectfilter syntax.
