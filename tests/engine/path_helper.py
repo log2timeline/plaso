@@ -76,17 +76,23 @@ class PathHelperTest(shared_test_lib.BaseTestCase):
 
     # TODO: add test with mount_point.
 
-  def testGetRelativePathFromPathSpec(self):
-    """Tests the GetRelativePathFromPathSpec function."""
+    display_name = path_helper.PathHelper.GetDisplayNameForPathSpec(None)
+    self.assertIsNone(display_name)
+
+  def testGetRelativePathForPathSpec(self):
+    """Tests the GetRelativePathForPathSpec function."""
     test_path = self._GetTestFilePath([u'syslog.gz'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=test_path)
 
-    relative_path = path_helper.PathHelper.GetRelativePathFromPathSpec(
+    relative_path = path_helper.PathHelper.GetRelativePathForPathSpec(
         os_path_spec)
     self.assertEqual(relative_path, test_path)
 
     # TODO: add test with mount_point.
+
+    display_name = path_helper.PathHelper.GetRelativePathForPathSpec(None)
+    self.assertIsNone(display_name)
 
 
 if __name__ == '__main__':
