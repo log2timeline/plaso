@@ -26,19 +26,6 @@ class HashingAnalyzer(interface.BaseAnalyzer):
     self._hasher_names_string = u''
     self._hashers = []
 
-  def SetHasherNames(self, hasher_names_string):
-    """Sets the hashers that should be enabled.
-
-    Args:
-      hasher_names_string(str): comma separated names of hashers to enable.
-    """
-    hasher_names = hashers_manager.HashersManager.GetHasherNamesFromString(
-        hasher_names_string)
-    self._hasher_names_string = hasher_names_string
-    logging.debug(u'Got hasher names {0:s}'.format(hasher_names))
-    self._hashers = hashers_manager.HashersManager.GetHashers(
-        hasher_names)
-
   def Analyze(self, data):
     """Updates the internal state of the analyzer, processing a block of data.
 
@@ -71,6 +58,19 @@ class HashingAnalyzer(interface.BaseAnalyzer):
     """Resets the internal state of the analyzer."""
     hasher_names = hashers_manager.HashersManager.GetHasherNamesFromString(
         self._hasher_names_string)
+    self._hashers = hashers_manager.HashersManager.GetHashers(
+        hasher_names)
+
+  def SetHasherNames(self, hasher_names_string):
+    """Sets the hashers that should be enabled.
+
+    Args:
+      hasher_names_string(str): comma separated names of hashers to enable.
+    """
+    hasher_names = hashers_manager.HashersManager.GetHasherNamesFromString(
+        hasher_names_string)
+    self._hasher_names_string = hasher_names_string
+    logging.debug(u'Got hasher names {0:s}'.format(hasher_names))
     self._hashers = hashers_manager.HashersManager.GetHashers(
         hasher_names)
 
