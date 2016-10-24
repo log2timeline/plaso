@@ -44,7 +44,7 @@ class ParserMediator(object):
 
   @property
   def abort(self):
-    """bool: True if the parsing should be aborted."""
+    """bool: True if parsing should be aborted."""
     return self._abort
 
   @property
