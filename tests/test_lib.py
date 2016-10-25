@@ -22,7 +22,7 @@ def skipUnlessHasTestFile(path_segments):
     function: to invoke.
   """
   fail_unless_has_test_file = getattr(
-      unittest, u'fail_unless_has_test_file', False):
+      unittest, u'fail_unless_has_test_file', False)
 
   path = os.path.join(u'test_data', *path_segments)
   if fail_unless_has_test_file or os.path.exists(path):
