@@ -101,45 +101,45 @@ class SystemdJournalParser(interface.FileObjectParser):
       construct.ULInt64(u'realtime'),
       construct.ULInt64(u'monotonic'),
       construct.Struct(u'boot_id',
-                     construct.Bytes('bytes', 16),
-                     construct.ULInt64(u'qword1'),
-                     construct.ULInt64(u'qword2')),
+                       construct.Bytes('bytes', 16),
+                       construct.ULInt64(u'qword1'),
+                       construct.ULInt64(u'qword2')),
       construct.ULInt64(u'xor_hash'),
       construct.Rename(u'object_items', construct.GreedyRange(_ENTRY_ITEM))
   )
 
   _JOURNAL_HEADER = construct.Struct(
-     u'journal_header',
-     construct.Const(construct.String(u'signature', 8), b'LPKSHHRH'),
-     construct.ULInt32(u'compatible_flags'),
-     construct.ULInt32(u'incompatible_flags'),
-     _JOURNAL_STATE,
-     construct.Bytes(u'reserved', 7),
-     construct.Bytes(u'file_id', 16),
-     construct.Bytes(u'machine_id', 16),
-     construct.Bytes(u'boot_id', 16),
-     construct.Bytes(u'seqnum_id', 16),
-     construct.ULInt64(u'header_size'),
-     construct.ULInt64(u'arena_size'),
-     construct.ULInt64(u'data_hash_table_offset'),
-     construct.ULInt64(u'data_hash_table_size'),
-     construct.ULInt64(u'field_hash_table_offset'),
-     construct.ULInt64(u'field_hash_table_size'),
-     construct.ULInt64(u'tail_object_offset'),
-     construct.ULInt64(u'n_objects'),
-     construct.ULInt64(u'n_entries'),
-     construct.ULInt64(u'tail_entry_seqnum'),
-     construct.ULInt64(u'head_entry_seqnum'),
-     construct.ULInt64(u'entry_array_offset'),
-     construct.ULInt64(u'head_entry_realtime'),
-     construct.ULInt64(u'tail_entry_realtime'),
-     construct.ULInt64(u'tail_entry_monotonic'),
-     # Added in 187
-     construct.ULInt64(u'n_data'),
-     construct.ULInt64(u'n_fields'),
-     # Added in 189
-     construct.ULInt64(u'n_tags'),
-     construct.ULInt64(u'n_entry_arrays')
+      u'journal_header',
+      construct.Const(construct.String(u'signature', 8), b'LPKSHHRH'),
+      construct.ULInt32(u'compatible_flags'),
+      construct.ULInt32(u'incompatible_flags'),
+      _JOURNAL_STATE,
+      construct.Bytes(u'reserved', 7),
+      construct.Bytes(u'file_id', 16),
+      construct.Bytes(u'machine_id', 16),
+      construct.Bytes(u'boot_id', 16),
+      construct.Bytes(u'seqnum_id', 16),
+      construct.ULInt64(u'header_size'),
+      construct.ULInt64(u'arena_size'),
+      construct.ULInt64(u'data_hash_table_offset'),
+      construct.ULInt64(u'data_hash_table_size'),
+      construct.ULInt64(u'field_hash_table_offset'),
+      construct.ULInt64(u'field_hash_table_size'),
+      construct.ULInt64(u'tail_object_offset'),
+      construct.ULInt64(u'n_objects'),
+      construct.ULInt64(u'n_entries'),
+      construct.ULInt64(u'tail_entry_seqnum'),
+      construct.ULInt64(u'head_entry_seqnum'),
+      construct.ULInt64(u'entry_array_offset'),
+      construct.ULInt64(u'head_entry_realtime'),
+      construct.ULInt64(u'tail_entry_realtime'),
+      construct.ULInt64(u'tail_entry_monotonic'),
+      # Added in 187
+      construct.ULInt64(u'n_data'),
+      construct.ULInt64(u'n_fields'),
+      # Added in 189
+      construct.ULInt64(u'n_tags'),
+      construct.ULInt64(u'n_entry_arrays')
   )
 
   _JOURNAL_HEADER_SIZE = _JOURNAL_HEADER.sizeof()
@@ -166,8 +166,9 @@ class SystemdJournalParser(interface.FileObjectParser):
       return event_data.decode(u'utf-8').split(u'=', 1)
 
     else:
-      raise SystemdJournalParseException('Expected an object of type DATA, but got {0:s}'.format(
-          object_header.type))
+      raise SystemdJournalParseException(
+          'Expected an object of type DATA, but got {0:s}'.format(
+              object_header.type))
 
   def _ParseJournalEntry(self, parser_mediator, offset):
     object_header, payload_size = self._ParseObjectHeader(offset)
@@ -179,12 +180,14 @@ class SystemdJournalParser(interface.FileObjectParser):
     if object_header.type == u'ENTRY':
       for item in entry_object.object_items:
         if item.object_offset < self._max_journal_file_offset:
-          raise SystemdJournalParseException("object offset too small (%d)"%offset)
+          raise SystemdJournalParseException(
+              u'object offset too small ({0:d})'.format(offset))
         key, value = self._ParseItem(item.object_offset)
         fields[key] = value
     else:
-      raise SystemdJournalParseException('Expected an object of type ENTRY, but got {0:s}'.format(
-          object_header.type))
+      raise SystemdJournalParseException(
+          'Expected an object of type ENTRY, but got {0:s}'.format(
+              object_header.type))
 
     # Already a number of microseconds since 1970-01-01, in UTC
     timestamp = entry_object.realtime
@@ -216,8 +219,9 @@ class SystemdJournalParser(interface.FileObjectParser):
       else:
         return entry_offsets + self._ParseEntries(offset=next_array_offset)
     else:
-      raise SystemdJournalParseException('Expected an object of type ENTRY_ARRAY, but got {0:s}'.
-                      format(object_header.type))
+      raise SystemdJournalParseException(
+          'Expected an object of type ENTRY_ARRAY, but got {0:s}'.format(
+              object_header.type))
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Systemd journal file-like object.
