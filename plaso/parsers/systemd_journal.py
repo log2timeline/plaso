@@ -48,21 +48,21 @@ class SystemdJournalParser(interface.FileObjectParser):
   # clean state.
   _JOURNAL_STATE = construct.Enum(
       construct.ULInt8(u'state'),
-      STATE_OFFLINE = 0,
-      STATE_ONLINE = 1,
-      STATE_ARCHIVED = 2
+      STATE_OFFLINE=0,
+      STATE_ONLINE=1,
+      STATE_ARCHIVED=2
   )
 
   _OBJECT_HEADER_TYPE = construct.Enum(
       construct.ULInt8(u'type'),
-      UNUSED = 0,
-      DATA = 1,
-      FIELD = 2,
-      ENTRY = 3,
-      DATA_HASH_TABLE = 4,
-      FIELD_HASH_TABLE = 5,
-      ENTRY_ARRAY = 6,
-      TAG = 7
+      UNUSED=0,
+      DATA=1,
+      FIELD=2,
+      ENTRY=3,
+      DATA_HASH_TABLE=4,
+      FIELD_HASH_TABLE=5,
+      ENTRY_ARRAY=6,
+      TAG=7
   )
 
   _ULInt64 = construct.Struct(u'int', construct.ULInt64(u'int'))
@@ -78,21 +78,21 @@ class SystemdJournalParser(interface.FileObjectParser):
   _OBJECT_HEADER_SIZE = _OBJECT_HEADER.sizeof()
 
   _DATA_OBJECT = construct.Struct(
-     u'data_object',
-     construct.ULInt64(u'hash'),
-     construct.ULInt64(u'next_hash_offset'),
-     construct.ULInt64(u'next_field_offset'),
-     construct.ULInt64(u'entry_offset'),
-     construct.ULInt64(u'entry_array_offset'),
-     construct.ULInt64(u'n_entries')
+      u'data_object',
+      construct.ULInt64(u'hash'),
+      construct.ULInt64(u'next_hash_offset'),
+      construct.ULInt64(u'next_field_offset'),
+      construct.ULInt64(u'entry_offset'),
+      construct.ULInt64(u'entry_array_offset'),
+      construct.ULInt64(u'n_entries')
   )
 
   _DATA_OBJECT_SIZE = _DATA_OBJECT.sizeof()
 
   _ENTRY_ITEM = construct.Struct(
-    'entry_item',
-    construct.ULInt64(u'object_offset'),
-    construct.ULInt64(u'hash')
+     'entry_item',
+     construct.ULInt64(u'object_offset'),
+     construct.ULInt64(u'hash')
   )
 
   _ENTRY_OBJECT = construct.Struct(
@@ -109,37 +109,37 @@ class SystemdJournalParser(interface.FileObjectParser):
   )
 
   _JOURNAL_HEADER = construct.Struct(
-    u'journal_header',
-    construct.Const(construct.String(u'signature', 8), b'LPKSHHRH'),
-    construct.ULInt32(u'compatible_flags'),
-    construct.ULInt32(u'incompatible_flags'),
-    _JOURNAL_STATE,
-    construct.Bytes(u'reserved', 7),
-    construct.Bytes(u'file_id', 16),
-    construct.Bytes(u'machine_id', 16),
-    construct.Bytes(u'boot_id', 16),
-    construct.Bytes(u'seqnum_id', 16),
-    construct.ULInt64(u'header_size'),
-    construct.ULInt64(u'arena_size'),
-    construct.ULInt64(u'data_hash_table_offset'),
-    construct.ULInt64(u'data_hash_table_size'),
-    construct.ULInt64(u'field_hash_table_offset'),
-    construct.ULInt64(u'field_hash_table_size'),
-    construct.ULInt64(u'tail_object_offset'),
-    construct.ULInt64(u'n_objects'),
-    construct.ULInt64(u'n_entries'),
-    construct.ULInt64(u'tail_entry_seqnum'),
-    construct.ULInt64(u'head_entry_seqnum'),
-    construct.ULInt64(u'entry_array_offset'),
-    construct.ULInt64(u'head_entry_realtime'),
-    construct.ULInt64(u'tail_entry_realtime'),
-    construct.ULInt64(u'tail_entry_monotonic'),
-    # Added in 187
-    construct.ULInt64(u'n_data'),
-    construct.ULInt64(u'n_fields'),
-    # Added in 189
-    construct.ULInt64(u'n_tags'),
-    construct.ULInt64(u'n_entry_arrays')
+     u'journal_header',
+     construct.Const(construct.String(u'signature', 8), b'LPKSHHRH'),
+     construct.ULInt32(u'compatible_flags'),
+     construct.ULInt32(u'incompatible_flags'),
+     _JOURNAL_STATE,
+     construct.Bytes(u'reserved', 7),
+     construct.Bytes(u'file_id', 16),
+     construct.Bytes(u'machine_id', 16),
+     construct.Bytes(u'boot_id', 16),
+     construct.Bytes(u'seqnum_id', 16),
+     construct.ULInt64(u'header_size'),
+     construct.ULInt64(u'arena_size'),
+     construct.ULInt64(u'data_hash_table_offset'),
+     construct.ULInt64(u'data_hash_table_size'),
+     construct.ULInt64(u'field_hash_table_offset'),
+     construct.ULInt64(u'field_hash_table_size'),
+     construct.ULInt64(u'tail_object_offset'),
+     construct.ULInt64(u'n_objects'),
+     construct.ULInt64(u'n_entries'),
+     construct.ULInt64(u'tail_entry_seqnum'),
+     construct.ULInt64(u'head_entry_seqnum'),
+     construct.ULInt64(u'entry_array_offset'),
+     construct.ULInt64(u'head_entry_realtime'),
+     construct.ULInt64(u'tail_entry_realtime'),
+     construct.ULInt64(u'tail_entry_monotonic'),
+     # Added in 187
+     construct.ULInt64(u'n_data'),
+     construct.ULInt64(u'n_fields'),
+     # Added in 189
+     construct.ULInt64(u'n_tags'),
+     construct.ULInt64(u'n_entry_arrays')
   )
 
   _JOURNAL_HEADER_SIZE = _JOURNAL_HEADER.sizeof()

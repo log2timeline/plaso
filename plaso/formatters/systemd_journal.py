@@ -3,7 +3,6 @@
 
 from plaso.formatters import interface
 from plaso.formatters import manager
-from plaso.lib import errors
 
 class SystemdJournalEventFormatter(interface.ConditionalEventFormatter):
   """Formatter for a Systemd journal event."""
@@ -43,5 +42,5 @@ class SystemdJournalUserlandEventFormatter(SystemdJournalEventFormatter):
   ]
 
 
-manager.FormattersManager.RegisterFormatters([SystemdJournalEventFormatter,
-                                              SystemdJournalUserlandEventFormatter])
+manager.FormattersManager.RegisterFormatters(
+    [SystemdJournalEventFormatter, SystemdJournalUserlandEventFormatter])
