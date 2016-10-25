@@ -129,5 +129,5 @@ class AnalysisMediator(object):
     self.number_of_produced_event_tags += 1
 
   def SignalAbort(self):
-    """Signals the parsers to abort."""
+    """Signals the analysis plugins to abort."""
     self._abort = True
