@@ -24,6 +24,7 @@ class AnalysisMediator(object):
           analysis.
     """
     super(AnalysisMediator, self).__init__()
+    self._abort = False
     self._data_location = data_location
     self._event_filter_expression = None
     self._knowledge_base = knowledge_base
@@ -31,6 +32,11 @@ class AnalysisMediator(object):
 
     self.number_of_produced_analysis_reports = 0
     self.number_of_produced_event_tags = 0
+
+  @property
+  def abort(self):
+    """bool: True if the analysis should be aborted."""
+    return self._abort
 
   @property
   def data_location(self):
@@ -118,6 +124,10 @@ class AnalysisMediator(object):
     Args:
       event_tag (EventTag): event tag.
     """
-    self._storage_writer.AddEventTage(event_tag)
+    self._storage_writer.AddEventTag(event_tag)
 
     self.number_of_produced_event_tags += 1
+
+  def SignalAbort(self):
+    """Signals the analysis plugins to abort."""
+    self._abort = True

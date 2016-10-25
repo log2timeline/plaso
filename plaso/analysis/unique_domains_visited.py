@@ -21,11 +21,11 @@ class UniqueDomainsVisitedPlugin(interface.AnalysisPlugin):
   # Indicate that we can run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = True
 
-  _DATATYPES = [
+  _DATATYPES = frozenset([
       u'chrome:history:file_downloaded', u'chrome:history:page_visited',
       u'firefox:places:page_visited', u'firefox:downloads:download',
       u'macosx:lsquarantine', u'msiecf:redirected', u'msiecf:url',
-      u'msie:webcache:container', u'opera:history', u'safari:history:visit']
+      u'msie:webcache:container', u'opera:history', u'safari:history:visit'])
 
   def __init__(self):
     """Initializes the domains visited plugin."""
