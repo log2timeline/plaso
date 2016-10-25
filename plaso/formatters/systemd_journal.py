@@ -43,6 +43,5 @@ class SystemdJournalUserlandEventFormatter(SystemdJournalEventFormatter):
   ]
 
 
-
 manager.FormattersManager.RegisterFormatters([SystemdJournalEventFormatter,
                                               SystemdJournalUserlandEventFormatter])

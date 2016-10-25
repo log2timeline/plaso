@@ -11,35 +11,47 @@ from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import manager
 
+class SystemdJournalParseException(Exception):
+  """Exception indicating an unusual condition in the file being parsed."""
+  pass
+
+
 class SystemdJournalEvent(text_events.TextEvent):
   """Convenience class for a Systemd journal event."""
+
   DATA_TYPE = u'systemd:journal:event'
+
 
 class SystemdJournalUserlandEvent(SystemdJournalEvent):
   """Convenience class for a Systemd journal Userland event."""
 
+  # This class will be formatted with the process' PID.
   DATA_TYPE = u'systemd:journal:userland'
-#    self.journal_size_available = getattr(event_dict, 'AVAILABLE', None)
-#    self.journal_size_available_text = getattr(event_dict, 'AVAILABLE_PRETTY', None)
-#    self.current_use = getattr(event_dict, 'CURRENT_USE', None)
-#    self.current_use_text = getattr(event_dict, 'CURRENT_USE_PRETTY', None)
-#    self.disk_available = getattr(event_dict, 'DISK_AVAILABLE', None)
-#    self.disk_available_text = getattr(event_dict, 'DISK_AVAILABLE_PRETTY', None)
-#    self.disk_keep_free = getattr(event_dict, 'DISK_KEEP_FREE', None)
-#    self.disk_keep_free_text = getattr(event_dict, 'DISK_KEEP_FREE_PRETTY', None)
-#    self.journal_name = getattr(event_dict, 'JOURNAL_NAME', None)
-#    self.journal_path = getattr(event_dict, 'JOURNAL_PATH', None)
-#    self.limit = getattr(event_dict, 'LIMIT', None)
-#    self.limit_text = getattr(event_dict, 'LIMIT_PRETTY', None)
 
 
 class SystemdJournalParser(interface.FileObjectParser):
   """Parses Systemd Journal files."""
 
   NAME = u'systemd_journal'
+
   DESCRIPTION = u'Parser for Systemd Journal files.'
 
   _OBJECT_COMPRESSED_FLAG = 0x00000001
+
+  # Unfortunately this doesn't help us knowing about the "dirtiness" or
+  # "corrupted" file state.
+  # A file can be in any of these state and still be corrupted, for example, by
+  # an unexpected shut down. Once journald detects one of these, it will
+  # "rotate" the corrupted journal file, an store it away, and change the status
+  # to STATE_OFFLINE.
+  # STATE_ONLINE means the file wasn't closed, but the journal can still be in a
+  # clean state.
+  _JOURNAL_STATE = construct.Enum(
+      construct.ULInt8(u'state'),
+      STATE_OFFLINE = 0,
+      STATE_ONLINE = 1,
+      STATE_ARCHIVED = 2
+  )
 
   _OBJECT_HEADER_TYPE = construct.Enum(
       construct.ULInt8(u'type'),
@@ -89,7 +101,7 @@ class SystemdJournalParser(interface.FileObjectParser):
      construct.ULInt64(u'realtime'),
      construct.ULInt64(u'monotonic'),
      construct.Struct(u'boot_id',
-            construct.Bytes('bytes',16),
+            construct.Bytes('bytes', 16),
             construct.ULInt64(u'qword1'),
             construct.ULInt64(u'qword2')),
      construct.ULInt64(u'xor_hash'),
@@ -101,7 +113,7 @@ class SystemdJournalParser(interface.FileObjectParser):
     construct.Const(construct.String(u'signature', 8), b'LPKSHHRH'),
     construct.ULInt32(u'compatible_flags'),
     construct.ULInt32(u'incompatible_flags'),
-    construct.ULInt8(u'state'),
+    _JOURNAL_STATE,
     construct.Bytes(u'reserved', 7),
     construct.Bytes(u'file_id', 16),
     construct.Bytes(u'machine_id', 16),
@@ -134,6 +146,7 @@ class SystemdJournalParser(interface.FileObjectParser):
 
 
   def _ParseObjectHeader(self, offset):
+
     self.journal_file.seek(offset)
     object_header_data = self.journal_file.read(self._OBJECT_HEADER_SIZE)
     object_header = self._OBJECT_HEADER.parse(object_header_data)
@@ -142,7 +155,6 @@ class SystemdJournalParser(interface.FileObjectParser):
 
   def _ParseItem(self, offset):
     object_header, payload_size = self._ParseObjectHeader(offset)
-    # _ = self._DATA_OBJECT.parse(self.journal_file.read(self._DATA_OBJECT_SIZE))
     _ = self.journal_file.read(self._DATA_OBJECT_SIZE)
 
     if object_header.type == u'DATA':
@@ -154,7 +166,7 @@ class SystemdJournalParser(interface.FileObjectParser):
       return event_data.decode(u'utf-8').split(u'=', 1)
 
     else:
-      raise Exception('Expected an object of type DATA, but got {0:s}'.format(
+      raise SystemdJournalParseException('Expected an object of type DATA, but got {0:s}'.format(
           object_header.type))
 
   def _ParseJournalEntry(self, parser_mediator, offset):
@@ -163,34 +175,36 @@ class SystemdJournalParser(interface.FileObjectParser):
     entry_object_data = self.journal_file.read(payload_size)
     entry_object = self._ENTRY_OBJECT.parse(entry_object_data)
 
-    fields=dict()
+    fields = dict()
     if object_header.type == u'ENTRY':
       for item in entry_object.object_items:
+        if item.object_offset < self._max_journal_file_offset:
+          raise SystemdJournalParseException("object offset too small (%d)"%offset)
         key, value = self._ParseItem(item.object_offset)
         fields[key] = value
     else:
-      raise Exception('Expected an object of type ENTRY, but got {0:s}'.format(
+      raise SystemdJournalParseException('Expected an object of type ENTRY, but got {0:s}'.format(
           object_header.type))
 
     # Already a number of microseconds since 1970-01-01, in UTC
-    timestamp=entry_object.realtime
+    timestamp = entry_object.realtime
 
     event_class = SystemdJournalEvent
-    if 'SYSLOG_IDENTIFIER' in fields:
-      if fields['SYSLOG_IDENTIFIER']!='kernel':
-        if not '_PID' in fields:
-          fields['_PID'] = fields['SYSLOG_PID']
+    if u'SYSLOG_IDENTIFIER' in fields:
+      if fields[u'SYSLOG_IDENTIFIER'] != u'kernel':
+        if not u'_PID' in fields:
+          fields[u'_PID'] = fields[u'SYSLOG_PID']
         event_class = SystemdJournalUserlandEvent
 
     parser_mediator.ProduceEvent(event_class(timestamp, offset, fields))
 
-  def _ParseEntries(self,offset=None):
+  def _ParseEntries(self, offset=None):
     entry_offsets = []
     if not offset:
       # First call
       offset = self.journal_header.entry_array_offset
     object_header, payload_size = self._ParseObjectHeader(offset)
-    if object_header.type == 'ENTRY_ARRAY':
+    if object_header.type == u'ENTRY_ARRAY':
       next_array_offset = self._ULInt64.parse(self.journal_file.read(8)).int
       entry_offests_numbers = (payload_size - 8) / 8
       for entry_offset in range(entry_offests_numbers):
@@ -202,7 +216,7 @@ class SystemdJournalParser(interface.FileObjectParser):
       else:
         return entry_offsets + self._ParseEntries(offset=next_array_offset)
     else:
-      raise Exception('Expected an object of type ENTRY_ARRAY, but got {0:s}'.
+      raise SystemdJournalParseException('Expected an object of type ENTRY_ARRAY, but got {0:s}'.
                       format(object_header.type))
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
@@ -215,13 +229,22 @@ class SystemdJournalParser(interface.FileObjectParser):
 
     self.journal_file = file_object
 
-    data = self.journal_file.read(self._JOURNAL_HEADER_SIZE)
-    self.journal_header = self._JOURNAL_HEADER.parse(data)
+    journal_header_data = self.journal_file.read(self._JOURNAL_HEADER_SIZE)
+    self.journal_header = self._JOURNAL_HEADER.parse(journal_header_data)
+
+    self._max_journal_file_offset = max(
+        self.journal_header.data_hash_table_offset +
+        self.journal_header.data_hash_table_size,
+        self.journal_header.field_hash_table_offset +
+        self.journal_header.field_hash_table_size)
 
     entries_offsets = self._ParseEntries()
     for entry_offset in entries_offsets:
-      #time, event_data = self._ParseJournalEntry(entry_offset)
-      self._ParseJournalEntry(parser_mediator, entry_offset)
+      try:
+        self._ParseJournalEntry(parser_mediator, entry_offset)
+      except SystemdJournalParseException:
+        # The journal seems broken from here, skip this entry and abort parsing.
+        break
 
 
 manager.ParsersManager.RegisterParser(SystemdJournalParser)
