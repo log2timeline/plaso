@@ -6,6 +6,7 @@ import construct
 from dfvfs.compression.xz_decompressor import XZDecompressor
 from plaso.containers import time_events
 from plaso.containers import text_events
+from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import interface
@@ -234,7 +235,11 @@ class SystemdJournalParser(interface.FileObjectParser):
     self.journal_file = file_object
 
     journal_header_data = self.journal_file.read(self._JOURNAL_HEADER_SIZE)
-    self.journal_header = self._JOURNAL_HEADER.parse(journal_header_data)
+    try:
+      self.journal_header = self._JOURNAL_HEADER.parse(journal_header_data)
+    except construct.ConstError as exception:
+      raise errors.UnableToParseFile(
+          u'Unable to parse journal header with error: {0:s}'.format(exception))
 
     self._max_journal_file_offset = max(
         self.journal_header.data_hash_table_offset +
