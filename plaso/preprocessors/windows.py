@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """This file contains preprocessors for Windows."""
 
+import logging
+
 from plaso.containers import artifacts
 from plaso.lib import errors
 from plaso.lib import py2to3
