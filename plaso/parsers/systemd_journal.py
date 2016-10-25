@@ -147,6 +147,18 @@ class SystemdJournalParser(interface.FileObjectParser):
 
 
   def _ParseObjectHeader(self, offset):
+    """Parses a Systemd journal object header structure.
+
+    Args:
+      offset (int): offset to the object header.
+
+    Returns:
+      tuple(_OBJECT_HEADER,int): the parsed object header and size of the
+        followong object's payload.
+
+    Raises:
+      SystemdJournalParseException: When an unexpected object type is parsed.
+    """
 
     self.journal_file.seek(offset)
     object_header_data = self.journal_file.read(self._OBJECT_HEADER_SIZE)
