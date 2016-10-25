@@ -21,11 +21,8 @@ def skipUnlessHasTestFile(path_segments):
   Returns:
     function: to invoke.
   """
-  fail_unless_has_test_file = getattr(
-      unittest, u'fail_unless_has_test_file', False)
-
   path = os.path.join(u'test_data', *path_segments)
-  if fail_unless_has_test_file or os.path.exists(path):
+  if os.path.exists(path):
     return lambda function: function
 
   if sys.version_info[0] < 3:
@@ -33,7 +30,12 @@ def skipUnlessHasTestFile(path_segments):
 
   # Note that the message should be of type str which is different for
   # different versions of Python.
-  return unittest.skip('missing test file: {0:s}'.format(path))
+  message = 'missing test file: {0:s}'.format(path)
+
+  if getattr(unittest, u'fail_unless_has_test_file', False):
+    return unittest.fail(message)
+
+  return unittest.skip(message)
 
 
 def GetTestFilePath(path_segments):
