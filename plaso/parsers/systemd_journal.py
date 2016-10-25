@@ -4,11 +4,8 @@
 import construct
 
 from dfvfs.compression.xz_decompressor import XZDecompressor
-from plaso.containers import time_events
 from plaso.containers import text_events
 from plaso.lib import errors
-from plaso.lib import eventdata
-from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -146,6 +143,12 @@ class SystemdJournalParser(interface.FileObjectParser):
   _JOURNAL_HEADER_SIZE = _JOURNAL_HEADER.sizeof()
 
 
+  def __init__(self):
+    super(SystemdJournalParser, self).__init__()
+    self.journal_file = None
+    self.journal_header = None
+    self._max_journal_file_offset = 0
+
   def _ParseObjectHeader(self, offset):
     """Parses a Systemd journal object header structure.
 
@@ -234,7 +237,7 @@ class SystemdJournalParser(interface.FileObjectParser):
     event_class = SystemdJournalEvent
     if u'SYSLOG_IDENTIFIER' in fields:
       if fields[u'SYSLOG_IDENTIFIER'] != u'kernel':
-        if not u'_PID' in fields:
+        if u'_PID' not in fields:
           fields[u'_PID'] = fields[u'SYSLOG_PID']
         event_class = SystemdJournalUserlandEvent
 
