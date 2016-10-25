@@ -292,7 +292,7 @@ class SystemdJournalParser(interface.FileObjectParser):
     journal_header_data = self.journal_file.read(self._JOURNAL_HEADER_SIZE)
     try:
       self.journal_header = self._JOURNAL_HEADER.parse(journal_header_data)
-    except construct.ConstError as exception:
+    except construct.ConstructError as exception:
       raise errors.UnableToParseFile(
           u'Unable to parse journal header with error: {0:s}'.format(exception))
 
@@ -309,7 +309,7 @@ class SystemdJournalParser(interface.FileObjectParser):
       except SystemdJournalParseException:
         # The journal seems broken from here, skip this entry and abort parsing.
         break
-      except construct.ConstError as exception:
+      except construct.ConstructError as exception:
         raise errors.UnableToParseFile(
             u'Unable to parse journal header with error: {0:s}'.format(
                 exception))
