@@ -312,5 +312,4 @@ class SystemdJournalParser(interface.FileObjectParser):
                 exception))
 
 
-
 manager.ParsersManager.RegisterParser(SystemdJournalParser)
