@@ -21,8 +21,11 @@ def skipUnlessHasTestFile(path_segments):
   Returns:
     function: to invoke.
   """
+  fail_unless_has_test_file = getattr(
+      unittest, u'fail_unless_has_test_file', False)
+
   path = os.path.join(u'test_data', *path_segments)
-  if os.path.exists(path):
+  if fail_unless_has_test_file or os.path.exists(path):
     return lambda function: function
 
   if sys.version_info[0] < 3:
