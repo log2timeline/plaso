@@ -17,7 +17,7 @@ class PreprocessPluginTestCase(shared_test_lib.BaseTestCase):
   """Preprocess plugin test case."""
 
   def _RunFileSystemPlugin(self, file_system, mount_point, plugin):
-    """Runs the file system preprocess plugin.
+    """Runs a file system preprocess plugin.
 
     Args:
       file_system (dfvfs.FileSystem): file system to be preprocessed.
@@ -36,7 +36,7 @@ class PreprocessPluginTestCase(shared_test_lib.BaseTestCase):
     return knowledge_base_object
 
   def _RunWindowsRegistryPlugin(self, file_system, mount_point, plugin):
-    """Runs the Windows Registry preprocess plugin.
+    """Runs a Windows Registry preprocess plugin.
 
     Args:
       file_system (dfvfs.FileSystem): file system to be preprocessed.
@@ -60,7 +60,7 @@ class PreprocessPluginTestCase(shared_test_lib.BaseTestCase):
     return knowledge_base_object
 
   def _RunWindowsRegistryPluginOnSoftware(self, plugin):
-    """Runs the Windows Registry preprocess plugin on a SOFTWARE file.
+    """Runs a Windows Registry preprocess plugin on a SOFTWARE file.
 
     Args:
       plugin (PreprocessPlugin): preprocess plugin.
@@ -80,7 +80,7 @@ class PreprocessPluginTestCase(shared_test_lib.BaseTestCase):
         file_system_builder.file_system, mount_point, plugin)
 
   def _RunWindowsRegistryPluginOnSystem(self, plugin):
-    """Runs the Windows Registry preprocess plugin on a SYSTEM file.
+    """Runs a Windows Registry preprocess plugin on a SYSTEM file.
 
     Args:
       plugin (PreprocessPlugin): preprocess plugin.

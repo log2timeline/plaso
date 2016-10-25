@@ -180,9 +180,16 @@ class WindowsTimeZonePreprocessPlugin(
 
     # Map the Windows time zone name to a Python equivalent name.
     lookup_key = value_data.replace(u' ', u'')
-    timezone = time_zones.TIME_ZONES.get(lookup_key, value_data)
 
-    knowledge_base.SetValue(u'time_zone_str', timezone)
+    try:
+      # Catch and warn about unsupported mapping.
+      time_zone = time_zones.TIME_ZONES[lookup_key]
+    except KeyError:
+      time_zone = value_data
+      logging.warning(
+          u'Unable to map: "{0:s}" to time zone'.format(value_data))
+
+    knowledge_base.SetValue(u'time_zone_str', time_zone)
 
 
 class WindowsUserAccountsPreprocessPlugin(

@@ -46,7 +46,7 @@ class LinuxTimeZonePreprocessPlugin(interface.FilePreprocessPlugin):
   _PATH = u'/etc/timezone'
 
   def _ParseFileObject(self, knowledge_base, file_object):
-    """Parses a hostname file-like object.
+    """Parses a time zone file-like object.
 
     Args:
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
