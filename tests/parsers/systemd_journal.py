@@ -24,7 +24,9 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     event_object = journal.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2011-07-27 06:41:47')
+        u'2016-10-24 13:45:19.373121')
+
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (u'test-VirtualBox systemd-journald[577] Runtime journal '
                     u'(/run/log/journal/) is 1.2M, max 9.9M, 8.6M free.')
@@ -46,7 +48,9 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     event_object = journal.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2011-07-27 06:41:47')
+        u'2016-10-24 13:20:01.063423')
+
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (u'test-VirtualBox systemd-journald[569] Runtime journal '
                     u'(/run/log/journal/) is 1.2M, max 9.9M, 8.6M free.')
