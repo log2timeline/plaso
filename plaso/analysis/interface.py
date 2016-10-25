@@ -57,6 +57,24 @@ class AnalysisPlugin(object):
     """str: name of the plugin."""
     return self.NAME
 
+  def _CreateEventTag(self, event, comment, labels):
+    """Creates an event tag.
+
+    Args:
+      event (EventObject): event to tag.
+      comment (str): event tag comment.
+      labels (list[str]): event tag labels.
+    """
+    event_uuid = getattr(event, u'uuid', None)
+    event_tag = events.EventTag(
+        comment=comment, event_uuid=event_uuid)
+    event_tag.AddLabels(labels)
+
+    logging.debug(u'Created event tag: {0:s} for event: {1:s}'.format(
+        comment, event_uuid))
+
+    return event_tag
+
   @abc.abstractmethod
   def CompileReport(self, mediator):
     """Compiles a report of the analysis.
@@ -108,7 +126,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     """Initializes a hash tagging analysis plugin.
 
     Args:
-      analyzer_class (type): A subclass of HashAnalyzer that will be
+      analyzer_class (type): a subclass of HashAnalyzer that will be
           instantiated by the plugin.
     """
     super(HashTaggingAnalysisPlugin, self).__init__()
@@ -450,7 +468,7 @@ class HTTPHashAnalyzer(HashAnalyzer):
     """Initializes a HTTP hash analyzer.
 
     Args:
-      hash_queue (Queue.queue): A queue that contains hashes to be analyzed.
+      hash_queue (Queue.queue): a queue that contains hashes to be analyzed.
       hash_analysis_queue (Queue.queue): queue that the analyzer will append
           HashAnalysis objects to.
     """

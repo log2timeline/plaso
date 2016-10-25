@@ -8,7 +8,6 @@ import urllib
 
 from plaso.analysis import interface
 from plaso.analysis import manager
-from plaso.containers import events
 from plaso.containers import reports
 from plaso.formatters import manager as formatters_manager
 from plaso.lib import py2to3
@@ -27,6 +26,9 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
 
   # Indicate that we do not want to run this plugin during regular extraction.
   ENABLE_IN_EXTRACTION = False
+
+  _EVENT_TAG_COMMENT = u'Browser Search'
+  _EVENT_TAG_LABELS = [u'browser_search']
 
   # TODO: use groups to build a single RE.
 
@@ -60,7 +62,6 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     # Store a list of search terms in a timeline format.
     # The format is key = timestamp, value = (source, engine, search term).
     self._search_term_timeline = []
-    self._tags = []
 
   def _DecodeURL(self, url):
     """Decodes the URL, replaces %XX to their corresponding characters.
@@ -267,12 +268,11 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
     report_text = u'\n'.join(lines_of_text)
     analysis_report = reports.AnalysisReport(
         plugin_name=self.NAME, text=report_text)
-    analysis_report.SetTags(self._tags)
     analysis_report.report_array = self._search_term_timeline
     analysis_report.report_dict = results
     return analysis_report
 
-  def ExamineEvent(self, unused_mediator, event):
+  def ExamineEvent(self, mediator, event):
     """Analyzes an event.
 
     Args:
@@ -311,11 +311,9 @@ class BrowserSearchPlugin(interface.AnalysisPlugin):
       if not search_query:
         continue
 
-      event_uuid = getattr(event, u'uuid', None)
-      event_tag = events.EventTag(
-          comment=u'Browser Search', event_uuid=event_uuid)
-      event_tag.AddLabels([u'browser_search'])
-      self._tags.append(event_tag)
+      event_tag = self._CreateEventTag(
+          event, self._EVENT_TAG_COMMENT, self._EVENT_TAG_LABELS)
+      mediator.ProduceEventTag(event_tag)
 
       self._counter[u'{0:s}:{1:s}'.format(engine, search_query)] += 1
 
