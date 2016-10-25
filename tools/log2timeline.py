@@ -503,7 +503,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           u'risk.')
       time.sleep(5)
 
-    if self._process_archive_files:
+    if self._process_archives:
       logging.warning(
           u'Scanning archive files currently can cause deadlock. Continue at '
           u'your own risk.')
@@ -658,7 +658,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         force_preprocessing=self._force_preprocessing,
         hasher_names_string=self._hasher_names_string,
         number_of_extraction_workers=self._number_of_extraction_workers,
-        process_archive_files=self._process_archive_files,
+        process_archives=self._process_archives,
+        process_compressed_streams=self._process_compressed_streams,
         single_process_mode=self._single_process_mode,
         status_update_callback=status_update_callback,
         timezone=self._timezone, yara_rules_string=self._yara_rules_string)

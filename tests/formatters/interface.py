@@ -53,7 +53,7 @@ class EventFormatterTest(unittest.TestCase):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self._event_objects = containers_test_lib.CreateTestEventObjects()
+    self._event_objects = containers_test_lib.CreateTestEvents()
 
   def testInitialization(self):
     """Tests the initialization."""

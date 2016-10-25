@@ -59,9 +59,12 @@ class PathHelper(object):
       text_prepend (Optional[str]): text to prepend.
 
     Returns:
-      str: human readable version of the path specification.
+      str: human readable version of the path specification or None.
     """
-    relative_path = cls.GetRelativePathFromPathSpec(
+    if not path_spec:
+      return
+
+    relative_path = cls.GetRelativePathForPathSpec(
         path_spec, mount_path=mount_path)
     if not relative_path:
       return path_spec.type_indicator
@@ -85,7 +88,7 @@ class PathHelper(object):
     return u'{0:s}:{1:s}'.format(path_spec.type_indicator, relative_path)
 
   @classmethod
-  def GetRelativePathFromPathSpec(cls, path_spec, mount_path=None):
+  def GetRelativePathForPathSpec(cls, path_spec, mount_path=None):
     """Retrieves the relative path of a path specification.
 
     If a mount path is defined the path will be relative to the mount point,

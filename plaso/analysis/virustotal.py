@@ -10,8 +10,11 @@ from plaso.lib import errors
 
 class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
   """Class that analyzes file hashes by consulting VirusTotal."""
+
   _VIRUSTOTAL_API_REPORT_URL = (
       u'https://www.virustotal.com/vtapi/v2/file/report')
+
+  SUPPORTED_HASHES = [u'md5', u'sha1', u'sha256']
 
   def __init__(self, hash_queue, hash_analysis_queue, **kwargs):
     """Initializes a VirusTotal Analyzer thread.
@@ -83,9 +86,6 @@ class VirusTotalAnalyzer(interface.HTTPHashAnalyzer):
 class VirusTotalAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
   """An analysis plugin for looking up hashes in VirusTotal."""
 
-  # VirusTotal allows lookups using any of these hash algorithms.
-  REQUIRED_HASH_ATTRIBUTES = [u'sha256_hash', u'sha1_hash', u'md5_hash']
-
   # TODO: Check if there are other file types worth checking VirusTotal for.
   DATA_TYPES = [u'pe:compilation:compilation_time']
 
@@ -102,19 +102,15 @@ class VirusTotalAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
     super(VirusTotalAnalysisPlugin, self).__init__(VirusTotalAnalyzer)
     self._api_key = None
 
-  def EnableFreeAPIKeyRateLimit(self, rate_limit):
+  def EnableFreeAPIKeyRateLimit(self):
     """Configures Rate limiting for queries to VirusTotal.
 
     The default rate limit for free VirusTotal API keys is 4 requests per
     minute.
-
-    Args:
-      rate_limit (bool): whether to apply the free API key rate limit.
     """
-    if rate_limit:
-      self._analyzer.hashes_per_batch = 4
-      self._analyzer.wait_after_analysis = 60
-      self._analysis_queue_timeout = self._analyzer.wait_after_analysis + 1
+    self._analyzer.hashes_per_batch = 4
+    self._analyzer.wait_after_analysis = 60
+    self._analysis_queue_timeout = self._analyzer.wait_after_analysis + 1
 
   def GenerateLabels(self, hash_information):
     """Generates a list of strings that will be used in the event tag.

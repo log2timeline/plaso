@@ -20,6 +20,7 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       (u'                               [--parsers PARSER_LIST]'
        u' [--preferred_year YEAR]'),
       u'                               [-p] [--process_archives]',
+      u'                               [--skip_compressed_streams]',
       u'                               [--temporary_directory DIRECTORY]',
       u'',
       u'Test argument parser.',
@@ -71,9 +72,13 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       u'                        attempting auto-detection.',
       u'  --process_archives, --process-archives',
       (u'                        Process file entries embedded within archive '
-       u'files.'),
-      (u'                        This can make processing '
-       u'significantly slower.'),
+       u'files,'),
+      (u'                        such as archive.tar and archive.zip. This '
+       u'can make'),
+      u'                        processing significantly slower.',
+      u'  --skip_compressed_streams, --skip-compressed-streams',
+      u'                        Skip processing file content within compressed',
+      u'                        streams, such as syslog.gz and syslog.bz2.',
       u'  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY',
       (u'                        Path to the directory that should be used to '
        u'store'),

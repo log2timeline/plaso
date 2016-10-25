@@ -55,7 +55,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
   def _TestProcessPathSpec(
       self, storage_writer, path_spec, extraction_worker=None,
-      process_archive_files=False):
+      process_archives=False):
     """Tests processing a path specification.
 
     Args:
@@ -63,7 +63,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
       path_spec (dfvfs.PathSpec): path specification.
       extraction_worker (Optional[EventExtractorWorker]): worker to process the
           pathspec. If None, a new worker will be created.
-      process_archive_files (Optional[bool]): whether archive files should be
+      process_archives (Optional[bool]): whether archive files should be
           processed.
     """
     knowledge_base_object = knowledge_base.KnowledgeBase()
@@ -74,7 +74,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
       resolver_context = context.Context()
 
       extraction_worker = worker.EventExtractionWorker(
-          resolver_context, process_archive_files=process_archive_files)
+          resolver_context, process_archives=process_archives)
 
     storage_writer.Open()
     storage_writer.WriteSessionStart()
@@ -167,7 +167,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     path_spec = self._GetTestFilePathSpec([u'syslog.tar'])
     storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(
-        storage_writer, path_spec, process_archive_files=True)
+        storage_writer, path_spec, process_archives=True)
 
     self.assertEqual(storage_writer.number_of_events, 16)
 
@@ -190,7 +190,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     path_spec = self._GetTestFilePathSpec([u'syslog.tgz'])
     storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(
-        storage_writer, path_spec, process_archive_files=True)
+        storage_writer, path_spec, process_archives=True)
 
     self.assertEqual(storage_writer.number_of_events, 17)
 
