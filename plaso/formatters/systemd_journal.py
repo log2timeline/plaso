@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The Systemd journam file event formatter."""
+"""The Systemd journal file event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
