@@ -254,6 +254,11 @@ class SystemdJournalParser(interface.FileObjectParser):
       except SystemdJournalParseException:
         # The journal seems broken from here, skip this entry and abort parsing.
         break
+      except construct.ConstError as exception:
+        raise errors.UnableToParseFile(
+            u'Unable to parse journal header with error: {0:s}'.format(
+                exception))
+
 
 
 manager.ParsersManager.RegisterParser(SystemdJournalParser)
