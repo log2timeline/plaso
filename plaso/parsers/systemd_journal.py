@@ -155,6 +155,21 @@ class SystemdJournalParser(interface.FileObjectParser):
     return (object_header, payload_size)
 
   def _ParseItem(self, offset):
+    """Parses a Systemd journal DATA object.
+
+    This method will read, and decompress if needed, the content of a DATA
+    object.
+
+    Args:
+      offset (int): offset to the DATA object.
+
+    Returns:
+      tuple(str,str): the key and value of this item.
+
+    Raises:
+      SystemdJournalParseException: When an unexpected object type is parsed.
+    """
+
     object_header, payload_size = self._ParseObjectHeader(offset)
     _ = self.journal_file.read(self._DATA_OBJECT_SIZE)
 
@@ -163,7 +178,6 @@ class SystemdJournalParser(interface.FileObjectParser):
       if object_header.flags & self._OBJECT_COMPRESSED_FLAG:
         xzd = XZDecompressor()
         event_data = xzd.Decompress(event_data)[0]
-
       return event_data.decode(u'utf-8').split(u'=', 1)
 
     else:
@@ -172,6 +186,18 @@ class SystemdJournalParser(interface.FileObjectParser):
               object_header.type))
 
   def _ParseJournalEntry(self, parser_mediator, offset):
+    """Parses a Systemd journal ENTRY object.
+
+    This method will generate an event per ENTRY object.
+
+    Args:
+      parser_mediator: A parser mediator object (instance of ParserMediator).
+      offset (int): offset of the ENTRY object.
+
+    Raises:
+      SystemdJournalParseException: When an unexpected object type is parsed.
+    """
+
     object_header, payload_size = self._ParseObjectHeader(offset)
 
     entry_object_data = self.journal_file.read(payload_size)
@@ -203,6 +229,17 @@ class SystemdJournalParser(interface.FileObjectParser):
     parser_mediator.ProduceEvent(event_class(timestamp, offset, fields))
 
   def _ParseEntries(self, offset=None):
+    """Parses Systemd journal ENTRY_ARRAY objects.
+
+    Args:
+      offset (int): offset of the ENTRY_ARRAY object.
+
+    Returns:
+      list: A list of dict() containing every ENTRY objects offsets.
+
+    Raises:
+      SystemdJournalParseException: When an unexpected object type is parsed.
+    """
     entry_offsets = []
     if not offset:
       # First call
@@ -230,6 +267,9 @@ class SystemdJournalParser(interface.FileObjectParser):
     Args:
       parser_mediator (ParserMediator): parser mediator.
       file_object (dfvfs.FileIO): a file-like object.
+
+    Raises:
+      UnableToParseFile: when the header cannot be parsed.
     """
 
     self.journal_file = file_object
