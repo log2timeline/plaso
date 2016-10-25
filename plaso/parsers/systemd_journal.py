@@ -90,22 +90,22 @@ class SystemdJournalParser(interface.FileObjectParser):
   _DATA_OBJECT_SIZE = _DATA_OBJECT.sizeof()
 
   _ENTRY_ITEM = construct.Struct(
-     'entry_item',
-     construct.ULInt64(u'object_offset'),
-     construct.ULInt64(u'hash')
+      'entry_item',
+      construct.ULInt64(u'object_offset'),
+      construct.ULInt64(u'hash')
   )
 
   _ENTRY_OBJECT = construct.Struct(
-     u'entry_object',
-     construct.ULInt64(u'seqnum'),
-     construct.ULInt64(u'realtime'),
-     construct.ULInt64(u'monotonic'),
-     construct.Struct(u'boot_id',
-            construct.Bytes('bytes', 16),
-            construct.ULInt64(u'qword1'),
-            construct.ULInt64(u'qword2')),
-     construct.ULInt64(u'xor_hash'),
-     construct.Rename(u'object_items', construct.GreedyRange(_ENTRY_ITEM))
+      u'entry_object',
+      construct.ULInt64(u'seqnum'),
+      construct.ULInt64(u'realtime'),
+      construct.ULInt64(u'monotonic'),
+      construct.Struct(u'boot_id',
+                     construct.Bytes('bytes', 16),
+                     construct.ULInt64(u'qword1'),
+                     construct.ULInt64(u'qword2')),
+      construct.ULInt64(u'xor_hash'),
+      construct.Rename(u'object_items', construct.GreedyRange(_ENTRY_ITEM))
   )
 
   _JOURNAL_HEADER = construct.Struct(
