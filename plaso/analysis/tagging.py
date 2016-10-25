@@ -12,7 +12,6 @@ from efilter import query as efilter_query
 
 from plaso.analysis import interface
 from plaso.analysis import manager
-from plaso.containers import events
 from plaso.containers import reports
 
 
@@ -22,6 +21,8 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
   NAME = u'tagging'
 
   ENABLE_IN_EXTRACTION = True
+
+  _EVENT_TAG_COMMENT = u'Tag applied by tagging analysis plugin.'
 
   _OS_TAG_FILES = {
       u'macosx': u'tag_macosx.txt',
@@ -36,12 +37,12 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
       r'\s(is|isnot|equals|notequals|inset|notinset|contains|notcontains)\s')
 
   def __init__(self):
-    """Initializes the tagging analysis plugin."""
+    """Initializes a tagging analysis plugin."""
     super(TaggingAnalysisPlugin, self).__init__()
     self._autodetect_tag_file_attempt = False
+    self._number_of_event_tags = 0
     self._tag_rules = None
     self._tagging_file_name = None
-    self._tags = []
 
   def _AttemptAutoDetectTagFile(self, analysis_mediator):
     """Detects which tag file is most appropriate.
@@ -171,11 +172,8 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
       AnalysisReport: analysis report.
     """
     report_text = u'Tagging plugin produced {0:d} tags.\n'.format(
-        len(self._tags))
-    analysis_report = reports.AnalysisReport(
-        plugin_name=self.NAME, text=report_text)
-    analysis_report.SetTags(self._tags)
-    return analysis_report
+        self._number_of_event_tags)
+    return reports.AnalysisReport(plugin_name=self.NAME, text=report_text)
 
   def ExamineEvent(self, mediator, event):
     """Analyzes an EventObject and tags it according to rules in the tag file.
@@ -207,16 +205,9 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     if not matched_labels:
       return
 
-    event_uuid = getattr(event, u'uuid')
-    event_tag = events.EventTag(
-        comment=u'Tag applied by tagging analysis plugin.',
-        event_uuid=event_uuid)
-
-    for label in efilter_api.getvalues(matched_labels):
-      event_tag.AddLabel(label)
-
-    logging.debug(u'Tagging event: {0!s}'.format(event_uuid))
-    self._tags.append(event_tag)
+    labels = list(efilter_api.getvalues(matched_labels))
+    event_tag = self._CreateEventTag(event, self._EVENT_TAG_COMMENT, labels)
+    mediator.ProduceEventTag(event_tag)
 
   def SetAndLoadTagFile(self, tagging_file_path):
     """Sets the tag file to be used by the plugin.
