@@ -160,7 +160,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._number_of_worker_processes = 0
     self._parser_filter_expression = None
     self._preferred_year = None
-    self._process_archive_files = False
+    self._process_archives = False
+    self._process_compressed_streams = True
     self._processing_profiler = None
     self._resolver_context = context.Context()
     self._serializers_profiler = None
@@ -487,7 +488,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         mount_path=self._mount_path, name=process_name,
         parser_filter_expression=self._parser_filter_expression,
         preferred_year=self._preferred_year,
-        process_archive_files=self._process_archive_files,
+        process_archives=self._process_archives,
+        process_compressed_streams=self._process_compressed_streams,
         profiling_directory=self._profiling_directory,
         profiling_sample_rate=self._profiling_sample_rate,
         profiling_type=self._profiling_type,
@@ -696,9 +698,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       enable_sigsegv_handler=False, filter_find_specs=None,
       filter_object=None, hasher_names_string=None, mount_path=None,
       number_of_worker_processes=0, parser_filter_expression=None,
-      preferred_year=None, process_archive_files=False,
-      status_update_callback=None, show_memory_usage=False,
-      temporary_directory=None, text_prepend=None, yara_rules_string=None):
+      preferred_year=None, process_archives=False,
+      process_compressed_streams=True, status_update_callback=None,
+      show_memory_usage=False, temporary_directory=None, text_prepend=None,
+      yara_rules_string=None):
     """Processes the sources and extract event objects.
 
     Args:
@@ -718,8 +721,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       parser_filter_expression (Optional[str]): parser filter expression,
           where None represents all parsers and plugins.
       preferred_year (Optional[int]): preferred year.
-      process_archive_files (Optional[bool]): True if archive files should be
+      process_archives (Optional[bool]): True if archive files should be
           scanned for file entries.
+      process_compressed_streams (Optional[bool]): True if file content in
+          compressed streams should be processed.
       show_memory_usage (Optional[bool]): True if memory information should be
           included in status updates.
       status_update_callback (Optional[function]): callback function for status
@@ -768,7 +773,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._mount_path = mount_path
     self._parser_filter_expression = parser_filter_expression
     self._preferred_year = preferred_year
-    self._process_archive_files = process_archive_files
+    self._process_archives = process_archives
+    self._process_compressed_streams = process_compressed_streams
     self._session_identifier = session_identifier
     self._status_update_callback = status_update_callback
     self._storage_writer = storage_writer
@@ -880,7 +886,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._mount_path = None
     self._parser_filter_expression = None
     self._preferred_year = None
-    self._process_archive_files = None
+    self._process_archives = None
+    self._process_compressed_streams = None
     self._session_identifier = None
     self._status_update_callback = None
     self._storage_writer = None

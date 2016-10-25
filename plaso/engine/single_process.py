@@ -296,8 +296,9 @@ class SingleProcessEngine(engine.BaseEngine):
       self, source_path_specs, storage_writer, resolver_context,
       filter_find_specs=None, filter_object=None, hasher_names_string=None,
       mount_path=None, parser_filter_expression=None, preferred_year=None,
-      process_archive_files=False, status_update_callback=None,
-      temporary_directory=None, text_prepend=None, yara_rules_string=None):
+      process_archives=False, process_compressed_streams=True,
+      status_update_callback=None, temporary_directory=None,
+      text_prepend=None, yara_rules_string=None):
     """Processes the sources.
 
     Args:
@@ -313,8 +314,10 @@ class SingleProcessEngine(engine.BaseEngine):
       mount_path (Optional[str]): mount path.
       parser_filter_expression (Optional[str]): parser filter expression.
       preferred_year (Optional[int]): preferred year.
-      process_archive_files (Optional[bool]): True if archive files should be
+      process_archives (Optional[bool]): True if archive files should be
           scanned for file entries.
+      process_compressed_streams (Optional[bool]): True if file content in
+          compressed streams should be processed.
       status_update_callback (Optional[function]): callback function for status
           updates.
       temporary_directory (Optional[str]): path of the directory for temporary
@@ -340,7 +343,8 @@ class SingleProcessEngine(engine.BaseEngine):
 
     extraction_worker = worker.EventExtractionWorker(
         resolver_context, parser_filter_expression=parser_filter_expression,
-        process_archive_files=process_archive_files)
+        process_archives=process_archives,
+        process_compressed_streams=process_compressed_streams)
 
     if hasher_names_string:
       extraction_worker.SetHashers(hasher_names_string)

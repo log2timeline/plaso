@@ -252,6 +252,7 @@ class GZIPStorageFile(interface.BaseFileStorage):
     if platform_specific.PlatformIsWindows():
       file_handle = self._gzip_file.fileno()
       platform_specific.DisableWindowsFileHandleInheritance(file_handle)
+
     if read_only:
       self._OpenRead()
 
@@ -308,20 +309,23 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
     Raises:
       IOError: if the input file cannot be opened.
     """
-    super(GZIPStorageMergeReader, self).__init__(storage_writer)
-    self._data_buffer = None
     # On Windows the file can sometimes be in use and we have to wait.
+    gzip_file = None
     for attempt in range(1, self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS):
       try:
-        self._gzip_file = gzip.open(path, 'rb')
+        gzip_file = gzip.open(path, 'rb')
         break
       except IOError:
-        if attempt == self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS:
+        if attempt == (self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS - 1):
           raise
 
     if platform_specific.PlatformIsWindows():
-      file_handle = self._gzip_file.fileno()
+      file_handle = gzip_file.fileno()
       platform_specific.DisableWindowsFileHandleInheritance(file_handle)
+
+    super(GZIPStorageMergeReader, self).__init__(storage_writer)
+    self._data_buffer = None
+    self._gzip_file = gzip_file
     self._path = path
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
@@ -416,7 +420,7 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
         os.remove(self._path)
         break
       except OSError:
-        if attempt == self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS:
+        if attempt == (self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS - 1):
           raise
         time.sleep(self._LOCKED_FILE_SLEEP_TIME)
 
