@@ -7,8 +7,10 @@ import unittest
 from plaso.containers import artifacts
 from plaso.engine import knowledge_base
 
+from tests import test_lib as shared_test_lib
 
-class KnowledgeBaseTest(unittest.TestCase):
+
+class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
   """Tests for the knowledge base."""
 
   _MACOSX_PATHS = [

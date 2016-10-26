@@ -28,8 +28,10 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
     """Retrieves a list of file paths from path specifications.
 
     Args:
-      path_specs: a list of path specification objects (instances of
-                  dfvfs.PathSpec).
+      path_specs (list[dfvfs.PathSpec]): path specifications.
+
+    Returns:
+     list[str]: file paths.
     """
     file_paths = []
     for path_spec in path_specs:
@@ -42,12 +44,16 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
 
     return file_paths
 
+  @shared_test_lib.skipUnlessHasTestFile([u'syslog.bz2'])
+  @shared_test_lib.skipUnlessHasTestFile([u'syslog.tgz'])
+  @shared_test_lib.skipUnlessHasTestFile([u'syslog.zip'])
+  @shared_test_lib.skipUnlessHasTestFile([u'wtmp.1'])
   def testExtractPathSpecsFileSystem(self):
     """Tests the ExtractPathSpecs function on the file system."""
     test_files = [
+        self._GetTestFilePath([u'syslog.bz2']),
         self._GetTestFilePath([u'syslog.tgz']),
         self._GetTestFilePath([u'syslog.zip']),
-        self._GetTestFilePath([u'syslog.bz2']),
         self._GetTestFilePath([u'wtmp.1'])]
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -64,6 +70,9 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
 
       self.assertEqual(len(path_specs), 4)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'System.evtx'])
+  @shared_test_lib.skipUnlessHasTestFile([u'testdir', u'filter_1.txt'])
+  @shared_test_lib.skipUnlessHasTestFile([u'testdir', u'filter_3.txt'])
   def testExtractPathSpecsFileSystemWithFilter(self):
     """Tests the ExtractPathSpecs function on the file system with a filter."""
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -115,23 +124,24 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
         current_directory, u'AUTHORS')
     self.assertTrue(expected_path in paths)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'syslog_image.dd'])
   def testExtractPathSpecsStorageMediaImage(self):
     """Tests the ExtractPathSpecs function an image file.
 
     The image file contains the following files:
-      + logs/hidden.zip
-      + logs/sys.tgz
+    * logs/hidden.zip
+    * logs/sys.tgz
 
     The hidden.zip file contains one file, syslog, which is the
     same for sys.tgz.
 
     The end results should therefore be:
-      + logs/hidden.zip (unchanged)
-      + logs/hidden.zip:syslog (the text file extracted out)
-      + logs/sys.tgz (unchanged)
-      + logs/sys.tgz (read as a GZIP file, so not compressed)
-      + logs/sys.tgz:syslog.gz (A GZIP file from the TAR container)
-      + logs/sys.tgz:syslog.gz:syslog (the extracted syslog file)
+    * logs/hidden.zip (unchanged)
+    * logs/hidden.zip:syslog (the text file extracted out)
+    * logs/sys.tgz (unchanged)
+    * logs/sys.tgz (read as a GZIP file, so not compressed)
+    * logs/sys.tgz:syslog.gz (A GZIP file from the TAR container)
+    * logs/sys.tgz:syslog.gz:syslog (the extracted syslog file)
 
     This means that the collection script should collect 6 files in total.
     """
@@ -150,6 +160,7 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(len(path_specs), 3)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
   def testExtractPathSpecsStorageMediaImageWithFilter(self):
     """Tests the ExtractPathSpecs function on an image file with a filter."""
     test_file = self._GetTestFilePath([u'ímynd.dd'])
@@ -199,6 +210,7 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
     # image_offset: 0
     self.assertEqual(paths[1], u'/passwords.txt')
 
+  @shared_test_lib.skipUnlessHasTestFile([u'multi_partition_image.vmdk'])
   def testExtractPathSpecsStorageMediaImageWithPartitions(self):
     """Tests the ExtractPathSpecs function an image file with partitions.
 

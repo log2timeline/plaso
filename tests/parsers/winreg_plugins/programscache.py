@@ -17,7 +17,7 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessStartPage(self):
     """Tests the Process function on a StartPage key."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER.DAT'])
+    test_file_entry = self._GetTestFileEntry([u'NTUSER.DAT'])
     key_path = (
         u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         u'Explorer\\StartPage')
@@ -121,7 +121,7 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessStartPage2(self):
     """Tests the Process function on a StartPage2 key."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
+    test_file_entry = self._GetTestFileEntry([u'NTUSER-WIN7.DAT'])
     key_path = (
         u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         u'Explorer\\StartPage2')

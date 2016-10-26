@@ -6,13 +6,11 @@ import unittest
 
 from plaso.cli import hexdump
 
+from tests import test_lib as shared_test_lib
 
-class HexdumpTest(unittest.TestCase):
+
+class HexdumpTest(shared_test_lib.BaseTestCase):
   """Tests for the hexadecimal representation formatter (hexdump) class."""
-
-  # Show full diff results, part of TestCase so does not follow our naming
-  # conventions.
-  maxDiff = None
 
   def testAddDataLocationOption(self):
     """Tests the AddDataLocationOption function."""

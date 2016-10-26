@@ -7,7 +7,6 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
-from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import sessions
 from plaso.engine import knowledge_base
@@ -23,35 +22,6 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
   """Tests for the worker object."""
 
   # pylint: disable=protected-access
-
-  def _GetTestFileEntry(self, path_segments):
-    """Creates a file entry that references a file in the test data directory.
-
-    Args:
-      path_segments (list[str]): components of a path to a test file, relative
-          to the test_data directory.
-
-    Returns:
-      dfvfs.FileEntry: file entry.
-    """
-    path = self._GetTestFilePath(path_segments)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
-    return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-
-  def _GetTestFilePathSpec(self, path_segments):
-    """Retrieves a path specification of a test file in the test data directory.
-
-    Args:
-      path_segments (list[str]): components of a path to a test file, relative
-          to the test_data directory.
-
-    Returns:
-      A path specification (instance of dfvfs.PathSpec).
-    """
-    source_path = self._GetTestFilePath(path_segments)
-    return path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
 
   def _TestProcessPathSpec(
       self, storage_writer, path_spec, extraction_worker=None,
@@ -88,6 +58,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     storage_writer.WriteSessionCompletion()
     storage_writer.Close()
 
+  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
   def testAnalyzeFileObject(self):
     """Tests the _AnalyzeFileObject function."""
     session = sessions.Session()
@@ -119,23 +90,32 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     event_attribute = mediator._extra_event_attributes.get(u'test_result', None)
     self.assertEqual(event_attribute, u'is_vegetable')
 
-  def testProcessPathSpec(self):
-    """Tests the ProcessPathSpec function."""
+  @shared_test_lib.skipUnlessHasTestFile([u'syslog'])
+  def testProcessPathSpecFile(self):
+    """Tests the ProcessPathSpec function on a file."""
     session = sessions.Session()
 
-    # Process a file.
     path_spec = self._GetTestFilePathSpec([u'syslog'])
     storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(storage_writer, path_spec)
 
     self.assertEqual(storage_writer.number_of_events, 19)
 
-    # Process a compressed file.
+  @shared_test_lib.skipUnlessHasTestFile([u'syslog.gz'])
+  def testProcessPathSpecCompressedFileGZIP(self):
+    """Tests the ProcessPathSpec function on a gzip compressed file."""
+    session = sessions.Session()
+
     path_spec = self._GetTestFilePathSpec([u'syslog.gz'])
     storage_writer = fake_storage.FakeStorageWriter(session)
     self._TestProcessPathSpec(storage_writer, path_spec)
 
     self.assertEqual(storage_writer.number_of_events, 16)
+
+  @shared_test_lib.skipUnlessHasTestFile([u'syslog.bz2'])
+  def testProcessPathSpecCompressedFileBZIP2(self):
+    """Tests the ProcessPathSpec function on a bzip2 compressed file."""
+    session = sessions.Session()
 
     path_spec = self._GetTestFilePathSpec([u'syslog.bz2'])
     storage_writer = fake_storage.FakeStorageWriter(session)
@@ -143,7 +123,11 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(storage_writer.number_of_events, 15)
 
-    # Process a file in an archive.
+  @shared_test_lib.skipUnlessHasTestFile([u'syslog.tar'])
+  def testProcessPathSpec(self):
+    """Tests the ProcessPathSpec function on an archive file."""
+    session = sessions.Session()
+
     source_path = self._GetTestFilePath([u'syslog.tar'])
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
@@ -171,7 +155,11 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(storage_writer.number_of_events, 16)
 
-    # Process a file in a compressed archive.
+  @shared_test_lib.skipUnlessHasTestFile([u'syslog.tgz'])
+  def testProcessPathSpecCompressedArchive(self):
+    """Tests the ProcessPathSpec function on a compressed archive file."""
+    session = sessions.Session()
+
     source_path = self._GetTestFilePath([u'syslog.tgz'])
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
@@ -194,7 +182,11 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(storage_writer.number_of_events, 17)
 
-    # Process a storage media image with a symbolic link.
+  @shared_test_lib.skipUnlessHasTestFile([u'image.vmdk'])
+  def testProcessPathSpecVMDK(self):
+    """Tests the ProcessPathSpec function on a VMDK with symbolic links."""
+    session = sessions.Session()
+
     source_path = self._GetTestFilePath([u'image.vmdk'])
     path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
@@ -208,6 +200,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(storage_writer.number_of_events, 18)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'empty_file'])
   def testExtractionWorkerHashing(self):
     """Test that the worker sets up and runs hashing code correctly."""
     resolver_context = context.Context()
@@ -227,6 +220,8 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
       md5_hash = getattr(event, u'md5_hash', None)
       self.assertEqual(md5_hash, empty_file_md5)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'yara.rules'])
+  @shared_test_lib.skipUnlessHasTestFile([u'test_pe.exe'])
   def testExtractionWorkerYara(self):
     """Tests that the worker applies Yara matching code correctly."""
     resolver_context = context.Context()

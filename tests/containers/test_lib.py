@@ -1,8 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""This file contains the tests for the event attribute containers."""
-
-import unittest
+"""Containers related functions and classes for testing."""
 
 from dfdatetime import filetime as dfdatetime_filetime
 
@@ -121,11 +119,3 @@ class TestEvent(events.EventObject):
     self.timestamp_desc = u'Some time in the future'
     for attribute, value in attributes.iteritems():
       setattr(self, attribute, value)
-
-
-class AttributeContainerTestCase(unittest.TestCase):
-  """The unit test case for an attribute container."""
-
-  # Show full diff results, part of TestCase so does not follow our naming
-  # conventions.
-  maxDiff = None

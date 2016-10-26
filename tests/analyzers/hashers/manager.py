@@ -6,6 +6,8 @@ import unittest
 from plaso.analyzers.hashers import interface
 from plaso.analyzers.hashers import manager
 
+from tests import test_lib as shared_test_lib
+
 
 class TestHasher(interface.BaseHasher):
   """Test hasher."""
@@ -46,7 +48,7 @@ class TestHasher(interface.BaseHasher):
     return
 
 
-class HashersManagerTest(unittest.TestCase):
+class HashersManagerTest(shared_test_lib.BaseTestCase):
   """Tests for the hashers manager."""
 
   # pylint: disable=protected-access

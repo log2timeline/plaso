@@ -27,7 +27,7 @@ class PlistPluginTestCase(test_lib.ParserTestCase):
     Returns:
       A storage writer object (instance of FakeStorageWriter).
     """
-    file_entry = self._GetTestFileEntryFromPath(path_segments)
+    file_entry = self._GetTestFileEntry(path_segments)
     file_object = file_entry.GetFileObject()
 
     parser_object = plist.PlistParser()

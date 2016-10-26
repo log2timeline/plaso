@@ -6,10 +6,11 @@ import unittest
 
 from plaso.containers import manager
 
+from tests import test_lib as shared_test_lib
 from tests.containers import test_lib
 
 
-class AttributeContainersManagerTest(unittest.TestCase):
+class AttributeContainersManagerTest(shared_test_lib.BaseTestCase):
   """Tests for the attribute container manager."""
 
   def testAttributeContainerRegistration(self):

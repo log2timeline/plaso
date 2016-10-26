@@ -6,10 +6,10 @@ import unittest
 
 from plaso.containers import reports
 
-from tests.containers import test_lib
+from tests import test_lib as shared_test_lib
 
 
-class AnalysisReportTest(test_lib.AttributeContainerTestCase):
+class AnalysisReportTest(shared_test_lib.BaseTestCase):
   """Tests for the analysis report attributes container."""
 
   def testCopyToDict(self):

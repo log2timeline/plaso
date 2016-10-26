@@ -21,7 +21,7 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
+    test_file_entry = self._GetTestFileEntry([u'NTUSER-WIN7.DAT'])
     key_path = (
         u'HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\14.0\\Word\\'
         u'File MRU')
