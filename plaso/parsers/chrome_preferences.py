@@ -12,6 +12,23 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
+class ChromePreferencesEvent(time_events.WebKitTimeEvent):
+  """Convenience class for Chrome Preferences file events."""
+
+  DATA_TYPE = u'chrome:preferences'
+
+
+class ChromePreferencesClearHistoryEvent(ChromePreferencesEvent):
+  """Convenience class for Chrome history clearing events."""
+
+  DATA_TYPE = u'chrome:preferences:clear_history'
+
+  def __init__(self, timestamp):
+    """Initialize the event."""
+    super(ChromePreferencesClearHistoryEvent, self).__init__(
+        timestamp, eventdata.EventTimestamp.DELETED_TIME)
+    self.MESSAGE="Chrome history is deleted by user"
+
 class ChromeExtensionInstallationEvent(time_events.WebKitTimeEvent):
   """Convenience class for Chrome Extension events."""
 
@@ -111,6 +128,15 @@ class ChromePreferencesParser(interface.FileObjectParser):
           u'[{0:s}] {1:s} is not a valid Preference file, '
           u'does not contain extensions settings value.'.format(
               self.NAME, parser_mediator.GetDisplayName()))
+
+    if u'browser' in json_dict:
+      browser_dict = json_dict.get(u'browser')
+      if u'last_clear_browsing_data_time' in browser_dict:
+        last_clear_history = int(
+            browser_dict.get(u'last_clear_browsing_data_time', u'0'), 10)
+        event_object = ChromePreferencesClearHistoryEvent(last_clear_history)
+        parser_mediator.ProduceEvent(event_object)
+
 
     self._ExtractExtensionInstallEvents(extensions_dict, parser_mediator)
 
