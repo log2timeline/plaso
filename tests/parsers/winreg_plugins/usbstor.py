@@ -17,7 +17,7 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'SYSTEM'])
+    test_file_entry = self._GetTestFileEntry([u'SYSTEM'])
     key_path = u'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Enum\\USBSTOR'
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)

@@ -20,6 +20,9 @@ from tests import test_lib as shared_test_lib
 class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
   """Tests for the BuildFindSpecsFromFile function."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'System.evtx'])
+  @shared_test_lib.skipUnlessHasTestFile([u'testdir', u'filter_1.txt'])
+  @shared_test_lib.skipUnlessHasTestFile([u'testdir', u'filter_3.txt'])
   def testBuildFindSpecsFromFile(self):
     """Tests the BuildFindSpecsFromFile function."""
     filter_file_path = u''

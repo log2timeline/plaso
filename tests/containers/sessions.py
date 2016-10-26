@@ -9,10 +9,10 @@ import uuid
 import plaso
 from plaso.containers import sessions
 
-from tests.containers import test_lib
+from tests import test_lib as shared_test_lib
 
 
-class SessionTest(test_lib.AttributeContainerTestCase):
+class SessionTest(shared_test_lib.BaseTestCase):
   """Tests for the session attributes container."""
 
   def testCopyToDict(self):
@@ -42,7 +42,7 @@ class SessionTest(test_lib.AttributeContainerTestCase):
   # TODO: add more tests.
 
 
-class SessionCompletionTest(test_lib.AttributeContainerTestCase):
+class SessionCompletionTest(shared_test_lib.BaseTestCase):
   """Tests for the session completion attributes container."""
 
   def testCopyToDict(self):
@@ -67,7 +67,7 @@ class SessionCompletionTest(test_lib.AttributeContainerTestCase):
   # TODO: add more tests.
 
 
-class SessionStartTest(test_lib.AttributeContainerTestCase):
+class SessionStartTest(shared_test_lib.BaseTestCase):
   """Tests for the session start attributes container."""
 
   def testCopyToDict(self):

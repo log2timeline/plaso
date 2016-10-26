@@ -17,7 +17,7 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
   def testProcess(self):
     """Tests the Process function."""
     plugin_object = bagmru.BagMRUPlugin()
-    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER.DAT'])
+    test_file_entry = self._GetTestFileEntry([u'NTUSER.DAT'])
     key_path = (
         u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\ShellNoRoam\\BagMRU')
 
