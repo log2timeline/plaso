@@ -11,9 +11,9 @@ class ChromePreferencesClearHistoryEventFormatter(
 
   DATA_TYPE = u'chrome:preferences:clear_history'
 
-  FORMAT_STRING_PIECES = [ u'{MESSAGE}']
+  FORMAT_STRING_PIECES = [u'{MESSAGE}']
 
-  FORMAT_STRING_SHORT_PIECES = [ u'{MESSAGE}']
+  FORMAT_STRING_SHORT_PIECES = [u'{MESSAGE}']
 
   SOURCE_LONG = u'Chrome History Deletion'
   SOURCE_SHORT = u'LOG'
