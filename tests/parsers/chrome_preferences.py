@@ -22,9 +22,20 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         [u'Preferences'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 20)
+    self.assertEqual(len(storage_writer.events), 21)
 
-    event_object = storage_writer.events[14]
+    clear_hist_event = storage_writer.events[0]
+
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2016-06-08 16:17:47.453766')
+    self.assertEqual(clear_hist_event.timestamp, expected_timestamp)
+    expected_message = (u'Chrome history is deleted by user')
+    expected_message_short = (u'Chrome history is deleted by user')
+    self._TestGetMessageStrings(
+        clear_hist_event, expected_message, expected_message_short)
+
+
+    event_object = storage_writer.events[15]
 
     self.assertIsInstance(
         event_object, chrome_preferences.ChromeExtensionInstallationEvent)
