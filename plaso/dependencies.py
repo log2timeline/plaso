@@ -133,7 +133,7 @@ _PYPI_PROJECT_NAMES = {
 
 # Maps Python module names to RPM packages.
 _RPM_PACKAGE_NAMES = {
-    u'Crypto': u'pycrypto',
+    u'Crypto': u'python-crypto',
     u'hachoir_core': u'python-hachoir-core',
     u'hachoir_metadata': u'python-hachoir-metadata',
     u'hachoir_parser': u'python-hachoir-parser',
