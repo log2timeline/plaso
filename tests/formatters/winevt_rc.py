@@ -2,29 +2,23 @@
 # -*- coding: utf-8 -*-
 """Tests for the Windows Event Log resources database reader."""
 
-import os
 import unittest
 
 from plaso.formatters import winevt_rc
 
+from tests import test_lib as shared_test_lib
 
-class WinevtResourcesSqlite3DatabaseReaderTest(unittest.TestCase):
+
+class WinevtResourcesSqlite3DatabaseReaderTest(shared_test_lib.BaseTestCase):
   """Tests for the Event Log resources sqlite3 database reader."""
 
-  # Show full diff results, part of TestCase so does not follow our naming
-  # conventions.
-  maxDiff = None
-
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._database_path = os.path.join(
-        os.getcwd(), u'test_data', u'winevt-rc.db')
-
+  @shared_test_lib.skipUnlessHasTestFile([u'winevt-rc.db'])
   def testGetMessage(self):
     """Tests the GetMessage function."""
+    database_path = self._GetTestFilePath([u'winevt-rc.db'])
     database_reader = winevt_rc.WinevtResourcesSqlite3DatabaseReader()
 
-    database_reader.Open(self._database_path)
+    database_reader.Open(database_path)
 
     expected_message_string = (
         u'Your computer has detected that the IP address {0:s} for the Network '
