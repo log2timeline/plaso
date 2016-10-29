@@ -9,6 +9,7 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import sam_users
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -18,6 +19,7 @@ __author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
 class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests the SAM Users Account information plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SAM'])
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntry([u'SAM'])

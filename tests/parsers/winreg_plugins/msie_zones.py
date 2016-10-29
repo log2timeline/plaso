@@ -8,12 +8,14 @@ from plaso.formatters import winreg as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import msie_zones
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
 class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for Internet Settings Zones plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER-WIN7.DAT'])
   def testProcessNtuserLockdownZones(self):
     """Tests the Process function on a Lockdown_Zones key."""
     test_file_entry = self._GetTestFileEntry([u'NTUSER-WIN7.DAT'])
@@ -61,6 +63,7 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER-WIN7.DAT'])
   def testProcessNtuserZones(self):
     """Tests the Process function on a Zones key."""
     test_file_entry = self._GetTestFileEntry([u'NTUSER-WIN7.DAT'])
@@ -112,6 +115,7 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE'])
   def testProcessSoftwareLockdownZones(self):
     """Tests the Process function on a Lockdown_Zones key."""
     test_file_entry = self._GetTestFileEntry([u'SOFTWARE'])
@@ -240,6 +244,7 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE'])
   def testProcessSoftwareZones(self):
     """Tests the Process function on a Zones key."""
     test_file_entry = self._GetTestFileEntry([u'SOFTWARE'])

@@ -9,12 +9,14 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import userassist
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
 class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the UserAssist Windows Registry plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER.DAT'])
   def testProcessOnWinXP(self):
     """Tests the Process function on a Windows XP Registry file."""
     test_file_entry = self._GetTestFileEntry([u'NTUSER.DAT'])
@@ -56,6 +58,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(
         event_object, expected_message, userassist_value)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER-WIN7.DAT'])
   def testProcessOnWin7(self):
     """Tests the Process function on a Windows 7 Registry file."""
     test_file_entry = self._GetTestFileEntry([u'NTUSER-WIN7.DAT'])

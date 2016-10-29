@@ -10,6 +10,7 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import officemru
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -19,6 +20,7 @@ __author__ = 'David Nides (david.nides@gmail.com)'
 class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Microsoft Office MRUs Windows Registry plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER-WIN7.DAT'])
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntry([u'NTUSER-WIN7.DAT'])
