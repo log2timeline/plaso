@@ -9,12 +9,14 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import imessage
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class IMessageTest(test_lib.SQLitePluginTestCase):
   """Tests for the iMessage database plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'imessage_chat.db'])
   def testProcess(self):
     """Test the Process function on a iMessage chat.db file."""
     plugin_object = imessage.IMessagePlugin()

@@ -11,12 +11,14 @@ from plaso.lib import timelib
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import firefox
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Mozilla Firefox history database plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'places.sqlite'])
   def testProcessPriorTo24(self):
     """Tests the Process function on a Firefox History database file."""
     # This is probably version 23 but potentially an older version.
@@ -174,6 +176,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
     expected_short = expected_title
     self._TestGetMessageStrings(event_object, expected_msg, expected_short)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'places_new.sqlite'])
   def testProcessVersion25(self):
     """Tests the Process function on a Firefox History database file v 25."""
     plugin_object = firefox.FirefoxHistoryPlugin()
@@ -213,6 +216,7 @@ class FirefoxHistoryPluginTest(test_lib.SQLitePluginTestCase):
 class FirefoxDownloadsPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Mozilla Firefox downloads database plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'downloads.sqlite'])
   def testProcessVersion25(self):
     """Tests the Process function on a Firefox Downloads database file."""
     plugin_object = firefox.FirefoxDownloadsPlugin()

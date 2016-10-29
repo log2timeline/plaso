@@ -8,12 +8,14 @@ from plaso.formatters import zeitgeist as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import zeitgeist
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class ZeitgeistPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Zeitgeist activity database plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'activity.sqlite'])
   def testProcess(self):
     """Tests the Process function."""
     plugin_object = zeitgeist.ZeitgeistPlugin()

@@ -9,12 +9,14 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import kik_ios
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class KikMessageTest(test_lib.SQLitePluginTestCase):
   """Tests for the Kik message database plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'kik_ios.sqlite'])
   def testProcess(self):
     """Test the Process function on a Kik messenger kik.sqlite file."""
     plugin_object = kik_ios.KikIOSPlugin()

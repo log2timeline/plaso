@@ -10,12 +10,14 @@ from plaso.lib import timelib
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import gdrive
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Google Drive database plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'snapshot.db'])
   def testProcess(self):
     """Tests the Process function on a Google Drive database file."""
     plugin_object = gdrive.GoogleDrivePlugin()

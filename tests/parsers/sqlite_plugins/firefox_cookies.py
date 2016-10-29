@@ -9,12 +9,14 @@ from plaso.formatters import firefox_cookies as firefox_cookies_formatter
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import firefox_cookies
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Firefox cookie database plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'firefox_cookies.sqlite'])
   def testProcess(self):
     """Tests the Process function on a Firefox 29 cookie database file."""
     plugin_object = firefox_cookies.FirefoxCookiePlugin()

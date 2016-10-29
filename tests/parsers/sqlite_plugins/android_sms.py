@@ -9,12 +9,14 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import android_sms
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class AndroidSMSTest(test_lib.SQLitePluginTestCase):
   """Tests for the Android SMS database plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'mmssms.db'])
   def testProcess(self):
     """Test the Process function on an Android SMS mmssms.db file."""
     plugin_object = android_sms.AndroidSMSPlugin()
