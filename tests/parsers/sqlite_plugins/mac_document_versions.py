@@ -4,8 +4,7 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import mac_document_versions as mac_doc_rev_formatter
+from plaso.formatters import mac_document_versions  # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import mac_document_versions

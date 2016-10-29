@@ -4,7 +4,7 @@
 
 import unittest
 
-from plaso.formatters import safari_cookies as _ # pylint: disable=unused-import
+from plaso.formatters import safari_cookies  # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import safari_cookies

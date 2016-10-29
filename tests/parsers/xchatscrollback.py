@@ -4,8 +4,7 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import xchatscrollback as xchatscrollback_formatter
+from plaso.formatters import xchatscrollback  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import xchatscrollback
 

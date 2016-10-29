@@ -4,8 +4,7 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import chrome_cookies as chrome_cookies_formatter
+from plaso.formatters import chrome_cookies  # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import chrome_cookies

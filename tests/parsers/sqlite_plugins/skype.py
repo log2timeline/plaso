@@ -4,7 +4,7 @@
 
 import unittest
 
-from plaso.formatters import skype as _  # pylint: disable=unused-import
+from plaso.formatters import skype  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import skype

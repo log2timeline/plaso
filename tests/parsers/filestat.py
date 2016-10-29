@@ -8,8 +8,7 @@ import unittest
 from dfvfs.lib import definitions
 from dfvfs.path import factory as path_spec_factory
 
-# pylint: disable=unused-import
-from plaso.formatters import file_system as file_system_formatter
+from plaso.formatters import file_system  # pylint: disable=unused-import
 from plaso.parsers import filestat
 
 from tests import test_lib as shared_test_lib

@@ -4,8 +4,7 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import chrome_preferences as chrome_preferences_formatter
+from plaso.formatters import chrome_preferences  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import chrome_preferences
 

@@ -4,7 +4,7 @@
 
 import unittest
 
-from plaso.formatters import android_sms as _  # pylint: disable=unused-import
+from plaso.formatters import android_sms  # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import android_sms

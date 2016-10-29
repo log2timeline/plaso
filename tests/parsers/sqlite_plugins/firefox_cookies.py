@@ -4,8 +4,7 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import firefox_cookies as firefox_cookies_formatter
+from plaso.formatters import firefox_cookies  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import firefox_cookies
 

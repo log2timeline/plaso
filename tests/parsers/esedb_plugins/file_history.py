@@ -4,7 +4,7 @@
 
 import unittest
 
-from plaso.formatters import file_history as _  # pylint: disable=unused-import
+from plaso.formatters import file_history  # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.esedb_plugins import file_history

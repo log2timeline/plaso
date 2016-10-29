@@ -4,9 +4,7 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import android_app_usage as android_app_usage_formatter
-from plaso.lib import eventdata
+from plaso.formatters import android_app_usage  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import android_app_usage
 

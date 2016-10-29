@@ -4,8 +4,7 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import mcafeeav as mcafeeav_formatter
+from plaso.formatters import mcafeeav  # pylint: disable=unused-import
 from plaso.parsers import mcafeeav
 
 from tests import test_lib as shared_test_lib

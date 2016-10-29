@@ -4,8 +4,7 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import pcap as pcap_formatter
+from plaso.formatters import pcap  # pylint: disable=unused-import
 from plaso.parsers import pcap
 
 from tests import test_lib as shared_test_lib

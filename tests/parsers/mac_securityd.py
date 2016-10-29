@@ -4,7 +4,7 @@
 
 import unittest
 
-from plaso.formatters import mac_securityd as _  # pylint: disable=unused-import
+from plaso.formatters import mac_securityd  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import mac_securityd
 

@@ -7,8 +7,7 @@ import unittest
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
-# pylint: disable=unused-import
-from plaso.formatters import file_system as file_system_formatter
+from plaso.formatters import file_system  # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import ntfs

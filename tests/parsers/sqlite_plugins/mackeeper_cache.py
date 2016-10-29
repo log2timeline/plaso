@@ -4,8 +4,7 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import mackeeper_cache as mackeeper_cache_formatter
+from plaso.formatters import mackeeper_cache  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import mackeeper_cache
 

@@ -4,8 +4,8 @@
 
 import unittest
 
-from plaso.formatters import officemru as _  # pylint: disable=unused-import
-from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.formatters import officemru  # pylint: disable=unused-import
+from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import officemru

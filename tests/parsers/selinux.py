@@ -4,8 +4,7 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import selinux as selinux_formatter
+from plaso.formatters import selinux  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import selinux
 

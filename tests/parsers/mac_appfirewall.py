@@ -4,8 +4,7 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import mac_appfirewall as mac_appfirewall_formatter
+from plaso.formatters import mac_appfirewall  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import mac_appfirewall
 

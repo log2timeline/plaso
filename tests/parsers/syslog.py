@@ -4,7 +4,7 @@
 
 import unittest
 
-from plaso.formatters import syslog as _  # pylint: disable=unused-import
+from plaso.formatters import syslog  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import syslog
 
