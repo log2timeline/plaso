@@ -8,12 +8,14 @@ from plaso.formatters import bsm as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import bsm
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class MacOSXBsmParserTest(test_lib.ParserTestCase):
   """Tests for Basic Security Module (BSM) file parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'apple.bsm'])
   def testParse(self):
     """Tests the Parse function on a Mac OS X BSM file."""
     parser_object = bsm.BsmParser()
@@ -171,6 +173,7 @@ class MacOSXBsmParserTest(test_lib.ParserTestCase):
 class OpenBsmParserTest(test_lib.ParserTestCase):
   """Tests for Basic Security Module (BSM) file parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'openbsm.bsm'])
   def testParse(self):
     """Tests the Parse function on a "generic" BSM file."""
     parser_object = bsm.BsmParser()

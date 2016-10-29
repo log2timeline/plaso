@@ -8,6 +8,7 @@ from plaso.formatters import syslog as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import syslog
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
@@ -26,6 +27,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
     """Cleans up after running an individual test."""
     syslog.SyslogParser.RegisterPlugins(self.plugins)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'syslog_rsyslog'])
   def testParseRsyslog(self):
     """Tests the Parse function on an Ubuntu-style syslog file"""
     knowledge_base_values = {u'year': 2016}
@@ -35,6 +37,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(len(storage_writer.events), 8)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'syslog_osx'])
   def testParseDarwin(self):
     """Tests the Parse function on an Darwin-style syslog file"""
     knowledge_base_values = {u'year': 2016}
@@ -44,6 +47,7 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(len(storage_writer.events), 2)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'syslog'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = syslog.SyslogParser()

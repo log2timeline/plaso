@@ -8,12 +8,14 @@ import unittest
 from plaso.formatters import mcafeeav as mcafeeav_formatter
 from plaso.parsers import mcafeeav
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
   """Tests for the McAfee AV Log parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'AccessProtectionLog.txt'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = mcafeeav.McafeeAccessProtectionParser()

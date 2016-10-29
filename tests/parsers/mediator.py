@@ -11,12 +11,15 @@ from dfvfs.resolver import resolver as path_spec_resolver
 from plaso.containers import sessions
 from plaso.storage import fake_storage
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class ParsersMediatorTest(test_lib.ParserTestCase):
   """Tests for the parsers mediator."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'syslog.gz'])
+  @shared_test_lib.skipUnlessHasTestFile([u'vsstest.qcow2'])
   def testGetDisplayName(self):
     """Tests the GetDisplayName function."""
     session = sessions.Session()
@@ -25,7 +28,7 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
         storage_writer, knowledge_base_values=None)
 
     with self.assertRaises(ValueError):
-      _ = parsers_mediator.GetDisplayName(file_entry=None)
+      parsers_mediator.GetDisplayName(file_entry=None)
 
     test_path = self._GetTestFilePath([u'syslog.gz'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(

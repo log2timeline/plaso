@@ -9,17 +9,18 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import java_idx
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class IDXTest(test_lib.ParserTestCase):
   """Tests for Java Cache IDX file parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'java_602.idx'])
   def testParse602(self):
     """Tests the Parse function on a version 602 IDX file."""
     parser_object = java_idx.JavaIDXParser()
-    storage_writer = self._ParseFile(
-        [u'java_602.idx'], parser_object)
+    storage_writer = self._ParseFile([u'java_602.idx'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 2)
 
@@ -55,11 +56,11 @@ class IDXTest(test_lib.ParserTestCase):
         u'2010-05-05 03:52:31')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'java.idx'])
   def testParse605(self):
     """Tests the Parse function on a version 605 IDX file."""
     parser_object = java_idx.JavaIDXParser()
-    storage_writer = self._ParseFile(
-        [u'java.idx'], parser_object)
+    storage_writer = self._ParseFile([u'java.idx'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 2)
 

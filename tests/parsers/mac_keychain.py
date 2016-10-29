@@ -9,17 +9,18 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import mac_keychain
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class MacKeychainParserTest(test_lib.ParserTestCase):
   """Tests for keychain file parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'login.keychain'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = mac_keychain.KeychainParser()
-    storage_writer = self._ParseFile(
-        [u'login.keychain'], parser_object)
+    storage_writer = self._ParseFile([u'login.keychain'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 5)
 

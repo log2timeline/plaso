@@ -9,12 +9,14 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import recycler
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class WinRecycleBinParserTest(test_lib.ParserTestCase):
   """Tests for the Windows Recycle Bin parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'$II3DF3L.zip'])
   def testParseVista(self):
     """Tests the Parse function on a Windows Vista RecycleBin file."""
     parser_object = recycler.WinRecycleBinParser()
@@ -38,6 +40,7 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_object, expected_message, expected_message_short)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'$I103S5F.jpg'])
   def testParseWindows10(self):
     """Tests the Parse function on a Windows 10 RecycleBin file."""
     parser_object = recycler.WinRecycleBinParser()
@@ -65,6 +68,7 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
 class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
   """Tests for the Windows Recycler INFO2 parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'INFO2'])
   def testParse(self):
     """Reads an INFO2 file and run a few tests."""
     parser_object = recycler.WinRecyclerInfo2Parser()

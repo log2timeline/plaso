@@ -8,17 +8,18 @@ from plaso.formatters import utmp as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import utmp
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class UtmpParserTest(test_lib.ParserTestCase):
   """The unit test for UTMP parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'utmp'])
   def testParseUtmpFile(self):
     """Tests the Parse function for an UTMP file."""
     parser_object = utmp.UtmpParser()
-    storage_writer = self._ParseFile(
-        [u'utmp'], parser_object)
+    storage_writer = self._ParseFile([u'utmp'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 14)
 
@@ -81,11 +82,11 @@ class UtmpParserTest(test_lib.ParserTestCase):
         u'User: moxilo')
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'wtmp.1'])
   def testParseWtmpFile(self):
     """Tests the Parse function for an WTMP file."""
     parser_object = utmp.UtmpParser()
-    storage_writer = self._ParseFile(
-        [u'wtmp.1'], parser_object)
+    storage_writer = self._ParseFile([u'wtmp.1'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 4)
 

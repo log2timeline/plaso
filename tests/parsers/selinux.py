@@ -9,6 +9,7 @@ from plaso.formatters import selinux as selinux_formatter
 from plaso.lib import timelib
 from plaso.parsers import selinux
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
@@ -18,6 +19,7 @@ __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 class SELinuxUnitTest(test_lib.ParserTestCase):
   """Tests for the selinux log file parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'selinux.log'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = selinux.SELinuxParser()

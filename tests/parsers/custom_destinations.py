@@ -9,12 +9,15 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import custom_destinations
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class CustomDestinationsParserTest(test_lib.ParserTestCase):
   """Tests for the .customDestinations-ms file parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([
+      u'5afe4de1b92fc382.customDestinations-ms'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = custom_destinations.CustomDestinationsParser()

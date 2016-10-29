@@ -9,12 +9,14 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import cups_ipp
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class CupsIppParserTest(test_lib.ParserTestCase):
   """The unit test for Mac Cups IPP parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'mac_cups_ipp'])
   def testParse(self):
     """Tests the Parse function."""
     # TODO: only tested against Mac OS X Cups IPP (Version 2.0)

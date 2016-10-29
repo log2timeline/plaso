@@ -8,6 +8,7 @@ from plaso.formatters import iis as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import iis
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
@@ -17,11 +18,11 @@ __author__ = 'Ashley Holtz (ashley.a.holtz@gmail.com)'
 class WinIISUnitTest(test_lib.ParserTestCase):
   """Tests for the Windows IIS parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'iis.log'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = iis.WinIISParser()
-    storage_writer = self._ParseFile(
-        [u'iis.log'], parser_object)
+    storage_writer = self._ParseFile([u'iis.log'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 11)
 
@@ -73,11 +74,11 @@ class WinIISUnitTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'iis_without_date.log'])
   def testParseWithoutDate(self):
     """Tests the Parse function with logs without a date column."""
     parser_object = iis.WinIISParser()
-    storage_writer = self._ParseFile(
-        [u'iis_without_date.log'], parser_object)
+    storage_writer = self._ParseFile([u'iis_without_date.log'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 11)
 

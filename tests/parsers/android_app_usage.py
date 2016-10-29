@@ -10,12 +10,14 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import android_app_usage
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class AndroidAppUsageParserTest(test_lib.ParserTestCase):
   """Tests for the Android Application Usage History parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'usage-history.xml'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = android_app_usage.AndroidAppUsageParser()

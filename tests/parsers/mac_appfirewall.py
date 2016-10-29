@@ -9,12 +9,14 @@ from plaso.formatters import mac_appfirewall as mac_appfirewall_formatter
 from plaso.lib import timelib
 from plaso.parsers import mac_appfirewall
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class MacAppFirewallUnitTest(test_lib.ParserTestCase):
   """Tests for Mac AppFirewall log file parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'appfirewall.log'])
   def testParseFile(self):
     """Test parsing of a Mac Wifi log file."""
     parser_object = mac_appfirewall.MacAppFirewallParser()

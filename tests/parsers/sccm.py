@@ -5,19 +5,21 @@
 import unittest
 
 from plaso.formatters import sccm as _ # pylint: disable=unused-import
-from plaso.parsers import sccm
-from tests.parsers import test_lib
 from plaso.lib import timelib
+from plaso.parsers import sccm
+
+from tests import test_lib as shared_test_lib
+from tests.parsers import test_lib
 
 
 class SCCMLogsUnitTest(test_lib.ParserTestCase):
   """Tests for the SCCM Logs Parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'sccm_various.log'])
   def testParse(self):
     """Tests for the Parse function."""
     parser_object = sccm.SCCMParser()
-    storage_writer = self._ParseFile(
-        [u'sccm_various.log'], parser_object)
+    storage_writer = self._ParseFile([u'sccm_various.log'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 10)
 

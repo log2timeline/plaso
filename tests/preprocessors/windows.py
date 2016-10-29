@@ -62,6 +62,7 @@ class WindowsSystemRegistryTest(shared_test_lib.BaseTestCase):
 class WindowsCodepageTest(WindowsSystemRegistryTest):
   """Tests for the Windows codepage preprocess plug-in object."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
   def testGetValue(self):
     """Tests the GetValue function."""
     plugin = windows.WindowsCodepage()
@@ -75,6 +76,7 @@ class WindowsCodepageTest(WindowsSystemRegistryTest):
 class WindowsHostnameTest(WindowsSystemRegistryTest):
   """Tests for the Windows hostname preprocess plug-in object."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
   def testGetValue(self):
     """Tests the GetValue function."""
     plugin = windows.WindowsHostname()
@@ -88,6 +90,7 @@ class WindowsHostnameTest(WindowsSystemRegistryTest):
 class WindowsProgramFilesEnvironmentVariableTest(WindowsSoftwareRegistryTest):
   """Tests for the %ProgramFiles% environment variable plug-in."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE'])
   def testGetValue(self):
     """Tests the GetValue function."""
     plugin = windows.WindowsProgramFilesEnvironmentVariable()
@@ -106,6 +109,7 @@ class WindowsProgramFilesX86EnvironmentVariableTest(
     WindowsSoftwareRegistryTest):
   """Tests for the %ProgramFilesX86% environment variable plug-in."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE'])
   def testGetValue(self):
     """Tests the GetValue function."""
     plugin = windows.WindowsProgramFilesX86EnvironmentVariable()
@@ -179,6 +183,7 @@ class WindowsSystemRootEnvironmentVariableTest(shared_test_lib.BaseTestCase):
 class WindowsTimeZoneTest(WindowsSystemRegistryTest):
   """Tests for the Windows timezone preprocess plug-in object."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
   def testGetValue(self):
     """Tests the GetValue function."""
     plugin = windows.WindowsTimeZone()
@@ -195,6 +200,7 @@ class WindowsUsersTest(WindowsSoftwareRegistryTest):
 
   # pylint: disable=protected-access
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE'])
   def testGetValue(self):
     """Tests the GetValue function."""
     plugin = windows.WindowsUsers()
@@ -219,6 +225,7 @@ class WindowsUsersTest(WindowsSoftwareRegistryTest):
 class WindowsSystemProductPluginTest(WindowsSoftwareRegistryTest):
   """Tests for the plugin to determine Windows system version information."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE'])
   def testGetValue(self):
     """Tests the GetValue function."""
     plugin = windows.WindowsSystemProductPlugin()
@@ -233,6 +240,7 @@ class WindowsSystemProductPluginTest(WindowsSoftwareRegistryTest):
 class WindowsSystemVersionPluginTest(WindowsSoftwareRegistryTest):
   """Tests for the plugin to determine Windows system version information."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE'])
   def testGetValue(self):
     """Tests the GetValue function."""
     plugin = windows.WindowsSystemVersionPlugin()

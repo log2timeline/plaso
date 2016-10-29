@@ -9,14 +9,16 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import safari_cookies
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class SafariCookieParserTest(test_lib.ParserTestCase):
   """Tests for the Safari cookie parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'Cookies.binarycookies'])
   def testParseFile(self):
-    """Tests the Parse function on a version 17 Prefetch file."""
+    """Tests the Parse function on a Safari binary cookies file."""
     parser_object = safari_cookies.BinaryCookieParser()
     storage_writer = self._ParseFile(
         [u'Cookies.binarycookies'], parser_object)

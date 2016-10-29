@@ -8,6 +8,7 @@ from plaso.parsers import winreg
 # Register all plugins.
 from plaso.parsers import winreg_plugins  # pylint: disable=unused-import
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
@@ -45,11 +46,11 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
     self.assertNotEqual(parser_object._plugin_objects, [])
     self.assertEqual(len(parser_object._plugin_objects), 1)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER.DAT'])
   def testParseNTUserDat(self):
     """Tests the Parse function on a NTUSER.DAT file."""
     parser_object = winreg.WinRegistryParser()
-    storage_writer = self._ParseFile(
-        [u'NTUSER.DAT'], parser_object)
+    storage_writer = self._ParseFile([u'NTUSER.DAT'], parser_object)
 
     parser_chains = self._GetParserChains(storage_writer.events)
 
@@ -58,19 +59,19 @@ class WinRegistryParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(parser_chains[expected_parser_chain], 14)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'ntuser.dat.LOG'])
   def testParseNoRootKey(self):
     """Test the parse function on a Registry file with no root key."""
     parser_object = winreg.WinRegistryParser()
-    storage_writer = self._ParseFile(
-        [u'ntuser.dat.LOG'], parser_object)
+    storage_writer = self._ParseFile([u'ntuser.dat.LOG'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 0)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
   def testParseSystem(self):
     """Tests the Parse function on a SYSTEM file."""
     parser_object = winreg.WinRegistryParser()
-    storage_writer = self._ParseFile(
-        [u'SYSTEM'], parser_object)
+    storage_writer = self._ParseFile([u'SYSTEM'], parser_object)
 
     parser_chains = self._GetParserChains(storage_writer.events)
 

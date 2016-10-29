@@ -13,12 +13,14 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import ntfs
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class NTFSMFTParserTest(test_lib.ParserTestCase):
   """Tests for NTFS $MFT metadata file parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'MFT'])
   def testParseFile(self):
     """Tests the Parse function on a stand-alone $MFT file."""
     parser_object = ntfs.NTFSMFTParser()
@@ -52,6 +54,8 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'vsstest.qcow2'])
+  @shared_test_lib.skipUnlessHasTestFile([u'multi_partition_image.vmdk'])
   def testParseImage(self):
     """Tests the Parse function on a storage media image."""
     parser_object = ntfs.NTFSMFTParser()
@@ -178,6 +182,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
 class NTFSUsnJrnlParser(test_lib.ParserTestCase):
   """Tests for NTFS $UsnJrnl metadata file parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'usnjrnl.qcow2'])
   def testParseImage(self):
     """Tests the Parse function on a storage media image."""
     parser_object = ntfs.NTFSUsnJrnlParser()

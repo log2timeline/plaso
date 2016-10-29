@@ -8,17 +8,18 @@ from plaso.formatters import pls_recall as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import pls_recall
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class PlsRecallTest(test_lib.ParserTestCase):
   """Tests for PL-SQL recall file parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'PLSRecall_Test.dat'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = pls_recall.PlsRecallParser()
-    storage_writer = self._ParseFile(
-        [u'PLSRecall_Test.dat'], parser_object)
+    storage_writer = self._ParseFile([u'PLSRecall_Test.dat'], parser_object)
 
     # There are two events in test file.
     self.assertEqual(len(storage_writer.events), 2)

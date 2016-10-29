@@ -9,17 +9,18 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import winprefetch
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class WinPrefetchParserTest(test_lib.ParserTestCase):
   """Tests for the Windows prefetch parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'CMD.EXE-087B4001.pf'])
   def testParse17(self):
     """Tests the Parse function on a version 17 Prefetch file."""
     parser_object = winprefetch.WinPrefetchParser()
-    storage_writer = self._ParseFile(
-        [u'CMD.EXE-087B4001.pf'], parser_object)
+    storage_writer = self._ParseFile([u'CMD.EXE-087B4001.pf'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 2)
 
@@ -98,11 +99,11 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'PING.EXE-B29F6629.pf'])
   def testParse23(self):
     """Tests the Parse function on a version 23 Prefetch file."""
     parser_object = winprefetch.WinPrefetchParser()
-    storage_writer = self._ParseFile(
-        [u'PING.EXE-B29F6629.pf'], parser_object)
+    storage_writer = self._ParseFile([u'PING.EXE-B29F6629.pf'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 2)
 
@@ -145,6 +146,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'WUAUCLT.EXE-830BCC14.pf'])
   def testParse23MultiVolume(self):
     """Tests the Parse function on a multi volume version 23 Prefetch file."""
     parser_object = winprefetch.WinPrefetchParser()
@@ -211,6 +213,7 @@ class WinPrefetchParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'TASKHOST.EXE-3AE259FC.pf'])
   def testParse26(self):
     """Tests the Parse function on a version 26 Prefetch file."""
     parser_object = winprefetch.WinPrefetchParser()

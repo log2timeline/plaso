@@ -9,6 +9,7 @@ from plaso.formatters import xchatscrollback as xchatscrollback_formatter
 from plaso.lib import timelib
 from plaso.parsers import xchatscrollback
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
@@ -18,11 +19,11 @@ __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 class XChatScrollbackUnitTest(test_lib.ParserTestCase):
   """Tests for the xchatscrollback log parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'xchatscrollback.log'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = xchatscrollback.XChatScrollbackParser()
-    storage_writer = self._ParseFile(
-        [u'xchatscrollback.log'], parser_object)
+    storage_writer = self._ParseFile([u'xchatscrollback.log'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 10)
 
