@@ -8,6 +8,7 @@ import unittest
 from plaso.cli import extraction_tool
 from plaso.lib import errors
 
+from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
 
 
@@ -176,6 +177,7 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_PROFILING_OPTIONS)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     test_tool = extraction_tool.ExtractionTool()

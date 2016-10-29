@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests the single process processing engine."""
 
-import os
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -21,13 +20,14 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
+  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
   def testProcessSources(self):
     """Tests the ProcessSources function."""
     test_engine = single_process.SingleProcessEngine()
     resolver_context = context.Context()
     session = sessions.Session()
 
-    source_path = os.path.join(self._TEST_DATA_PATH, u'ímynd.dd')
+    source_path = self._GetTestFilePath([u'ímynd.dd'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
     source_path_spec = path_spec_factory.Factory.NewPathSpec(

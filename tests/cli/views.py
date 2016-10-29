@@ -6,6 +6,7 @@ import unittest
 
 from plaso.cli import views
 
+from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
 
 
@@ -21,15 +22,7 @@ class TestBaseTableView(views.BaseTableView):
     return
 
 
-class ViewTestCase(unittest.TestCase):
-  """The unit test case for a view class."""
-
-  # Show full diff results, part of TestCase so does not follow our naming
-  # conventions.
-  maxDiff = None
-
-
-class BaseTableViewTests(ViewTestCase):
+class BaseTableViewTests(shared_test_lib.BaseTestCase):
   """Tests for the table view interface class."""
 
   def testAddRow(self):
@@ -58,7 +51,7 @@ class BaseTableViewTests(ViewTestCase):
       table_view.AddRow([u'7', u'8'])
 
 
-class CLITableViewTests(ViewTestCase):
+class CLITableViewTests(shared_test_lib.BaseTestCase):
   """Tests for the command line table view class."""
 
   def testWrite(self):
@@ -126,7 +119,7 @@ class CLITableViewTests(ViewTestCase):
       table_view.Write(output_writer)
 
 
-class MarkdownTableViewTests(ViewTestCase):
+class MarkdownTableViewTests(shared_test_lib.BaseTestCase):
   """Tests for the Markdown table view class."""
 
   def testWrite(self):

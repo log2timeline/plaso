@@ -16,7 +16,7 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessNtuserLockdownZones(self):
     """Tests the Process function on a Lockdown_Zones key."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
+    test_file_entry = self._GetTestFileEntry([u'NTUSER-WIN7.DAT'])
     key_path = (
         u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         u'Internet Settings\\Lockdown_Zones')
@@ -63,7 +63,7 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessNtuserZones(self):
     """Tests the Process function on a Zones key."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
+    test_file_entry = self._GetTestFileEntry([u'NTUSER-WIN7.DAT'])
     key_path = (
         u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         u'Internet Settings\\Zones')
@@ -114,7 +114,7 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessSoftwareLockdownZones(self):
     """Tests the Process function on a Lockdown_Zones key."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'SOFTWARE'])
+    test_file_entry = self._GetTestFileEntry([u'SOFTWARE'])
     key_path = (
         u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         u'Internet Settings\\Lockdown_Zones')
@@ -242,7 +242,7 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessSoftwareZones(self):
     """Tests the Process function on a Zones key."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'SOFTWARE'])
+    test_file_entry = self._GetTestFileEntry([u'SOFTWARE'])
     key_path = (
         u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         u'Internet Settings\\Zones')

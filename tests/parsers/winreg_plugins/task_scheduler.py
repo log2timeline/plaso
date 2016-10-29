@@ -16,7 +16,7 @@ class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'SOFTWARE-RunTests'])
+    test_file_entry = self._GetTestFileEntry([u'SOFTWARE-RunTests'])
     key_path = (
         u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\'
         u'CurrentVersion\\Schedule\\TaskCache')

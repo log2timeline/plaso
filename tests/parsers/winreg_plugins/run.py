@@ -16,7 +16,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessNtuserRun(self):
     """Tests the Process function on a Run key."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-RunTests.DAT'])
+    test_file_entry = self._GetTestFileEntry([u'NTUSER-RunTests.DAT'])
     key_path = (
         u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         u'Run')
@@ -50,7 +50,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessNtuserRunOnce(self):
     """Tests the Process function on a Run key."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-RunTests.DAT'])
+    test_file_entry = self._GetTestFileEntry([u'NTUSER-RunTests.DAT'])
     key_path = (
         u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         u'RunOnce')
@@ -85,7 +85,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessSoftwareRun(self):
     """Tests the Process function on a Run key."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'SOFTWARE-RunTests'])
+    test_file_entry = self._GetTestFileEntry([u'SOFTWARE-RunTests'])
     key_path = (
         u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         u'Run')
@@ -124,7 +124,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessSoftwareRunOnce(self):
     """Tests the Process function on a RunOnce key."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'SOFTWARE-RunTests'])
+    test_file_entry = self._GetTestFileEntry([u'SOFTWARE-RunTests'])
     key_path = (
         u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         u'RunOnce')

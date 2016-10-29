@@ -253,7 +253,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
   def testProcessWindows7(self):
     """Tests the Process function for Windows 7 AppCompatCache data."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'SYSTEM'])
+    test_file_entry = self._GetTestFileEntry([u'SYSTEM'])
     key_path = (
         u'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Control\\'
         u'Session Manager\\AppCompatCache')

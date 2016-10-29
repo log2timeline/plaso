@@ -7,6 +7,7 @@ import unittest
 
 from plaso.analysis import chrome_extension
 
+from tests import test_lib as shared_test_lib
 from tests.analysis import test_lib
 
 
@@ -14,9 +15,6 @@ class MockChromeExtensionPlugin(chrome_extension.ChromeExtensionPlugin):
   """Chrome extension analysis plugin used for testing."""
 
   NAME = 'chrome_extension_test'
-
-  _TEST_DATA_PATH = os.path.join(
-      os.getcwd(), u'test_data', u'chrome_extensions')
 
   def _GetChromeWebStorePage(self, extension_identifier):
     """Retrieves the page for the extension from the Chrome store website.
@@ -27,8 +25,8 @@ class MockChromeExtensionPlugin(chrome_extension.ChromeExtensionPlugin):
     Returns:
       str: page content or None.
     """
-    chrome_web_store_file = os.path.join(
-        self._TEST_DATA_PATH, extension_identifier)
+    chrome_web_store_file = shared_test_lib.GetTestFilePath([
+        u'chrome_extensions', extension_identifier])
     if not os.path.exists(chrome_web_store_file):
       return
 
@@ -36,6 +34,19 @@ class MockChromeExtensionPlugin(chrome_extension.ChromeExtensionPlugin):
       page_content = file_object.read()
 
     return page_content.decode(u'utf-8')
+
+  def _GetTestFilePath(self, path_segments):
+    """Retrieves the path of a test file in the test data directory.
+
+    Args:
+    path_segments (list[str]): path segments inside the test data directory.
+
+    Returns:
+      str: path of the test file.
+    """
+    # Note that we need to pass the individual path segments to os.path.join
+    # and not a list.
+    return os.path.join(self._TEST_DATA_PATH, *path_segments)
 
 
 class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
