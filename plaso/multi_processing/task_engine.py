@@ -148,17 +148,20 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._merge_task_on_hold = None
     self._mount_path = None
     self._number_of_consumed_errors = 0
+    self._number_of_consumed_event_tags = 0
     self._number_of_consumed_events = 0
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
     self._number_of_produced_errors = 0
+    self._number_of_produced_event_tags = 0
     self._number_of_produced_events = 0
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
     self._number_of_worker_processes = 0
     self._parser_filter_expression = None
     self._preferred_year = None
-    self._process_archive_files = False
+    self._process_archives = False
+    self._process_compressed_streams = True
     self._processing_profiler = None
     self._resolver_context = context.Context()
     self._serializers_profiler = None
@@ -218,11 +221,25 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           self._merge_task_on_hold = self._merge_task
           self._storage_merge_reader_on_hold = self._storage_merge_reader
 
-        self._storage_merge_reader = storage_writer.StartMergeTaskStorage(task)
         self._merge_task = task
+        try:
+          self._storage_merge_reader = storage_writer.StartMergeTaskStorage(
+              task)
+        except IOError as exception:
+          logging.error(
+              (u'Unable to merge results of task: {0:s} '
+               u'with error: {1:s}').format(
+                   task.identifier, exception))
+          self._storage_merge_reader = None
 
-      fully_merged = self._storage_merge_reader.MergeAttributeContainers(
-          maximum_number_of_containers=self._MAXIMUM_NUMBER_OF_CONTAINERS)
+      if self._storage_merge_reader:
+        fully_merged = self._storage_merge_reader.MergeAttributeContainers(
+            maximum_number_of_containers=self._MAXIMUM_NUMBER_OF_CONTAINERS)
+      else:
+        # TODO: Do something more sensible when this happens, perhaps
+        # retrying the task once that is implemented. For now, we mark the task
+        # as fully merged because we can't continue with it.
+        fully_merged = True
 
       if self._processing_profiler:
         self._processing_profiler.StopTiming(u'merge')
@@ -262,10 +279,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     self._status = definitions.PROCESSING_STATUS_COLLECTING
     self._number_of_consumed_errors = 0
+    self._number_of_consumed_event_tags = 0
     self._number_of_consumed_events = 0
     self._number_of_consumed_reports = 0
     self._number_of_consumed_sources = 0
     self._number_of_produced_errors = 0
+    self._number_of_produced_event_tags = 0
     self._number_of_produced_events = 0
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
@@ -469,7 +488,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         mount_path=self._mount_path, name=process_name,
         parser_filter_expression=self._parser_filter_expression,
         preferred_year=self._preferred_year,
-        process_archive_files=self._process_archive_files,
+        process_archives=self._process_archives,
+        process_compressed_streams=self._process_compressed_streams,
         profiling_directory=self._profiling_directory,
         profiling_sample_rate=self._profiling_sample_rate,
         profiling_type=self._profiling_type,
@@ -520,6 +540,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           self._name, self._status, self._pid, display_name,
           self._number_of_consumed_sources, self._number_of_produced_sources,
           self._number_of_consumed_events, self._number_of_produced_events,
+          self._number_of_consumed_event_tags,
+          self._number_of_produced_event_tags,
           self._number_of_consumed_errors, self._number_of_produced_errors,
           self._number_of_consumed_reports, self._number_of_produced_reports)
 
@@ -612,14 +634,22 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         u'number_of_consumed_errors', None)
     number_of_produced_errors = process_status.get(
         u'number_of_produced_errors', None)
+
+    number_of_consumed_event_tags = process_status.get(
+        u'number_of_consumed_event_tags', None)
+    number_of_produced_event_tags = process_status.get(
+        u'number_of_produced_event_tags', None)
+
     number_of_consumed_events = process_status.get(
         u'number_of_consumed_events', None)
     number_of_produced_events = process_status.get(
         u'number_of_produced_events', None)
+
     number_of_consumed_reports = process_status.get(
         u'number_of_consumed_reports', None)
     number_of_produced_reports = process_status.get(
         u'number_of_produced_reports', None)
+
     number_of_consumed_sources = process_status.get(
         u'number_of_consumed_sources', None)
     number_of_produced_sources = process_status.get(
@@ -643,6 +673,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
         process.name, processing_status, pid, display_name,
         number_of_consumed_sources, number_of_produced_sources,
         number_of_consumed_events, number_of_produced_events,
+        number_of_consumed_event_tags, number_of_produced_event_tags,
         number_of_consumed_errors, number_of_produced_errors,
         number_of_consumed_reports, number_of_produced_reports)
 
@@ -653,20 +684,24 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     try:
       self._task_manager.UpdateTaskByIdentifier(task_identifier)
     except KeyError:
-      try:
-        self._task_manager.RescheduleTaskByIdentifier(task_identifier)
-      except KeyError:
-        logging.error(u'Worker {0:s} is processing unknown task: {1:s}.'.format(
-            process.name, task_identifier))
+      if self._task_manager.IsAbandonedTask(task_identifier):
+        logging.debug(
+            u'Worker {0:s} is processing abandoned task: {1:s}.'.format(
+                process.name, task_identifier))
+      else:
+        logging.debug(
+            u'Worker {0:s} is processing unknown task: {1:s}.'.format(
+                process.name, task_identifier))
 
   def ProcessSources(
       self, session_identifier, source_path_specs, storage_writer,
       enable_sigsegv_handler=False, filter_find_specs=None,
       filter_object=None, hasher_names_string=None, mount_path=None,
       number_of_worker_processes=0, parser_filter_expression=None,
-      preferred_year=None, process_archive_files=False,
-      status_update_callback=None, show_memory_usage=False,
-      temporary_directory=None, text_prepend=None, yara_rules_string=None):
+      preferred_year=None, process_archives=False,
+      process_compressed_streams=True, status_update_callback=None,
+      show_memory_usage=False, temporary_directory=None, text_prepend=None,
+      yara_rules_string=None):
     """Processes the sources and extract event objects.
 
     Args:
@@ -686,8 +721,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       parser_filter_expression (Optional[str]): parser filter expression,
           where None represents all parsers and plugins.
       preferred_year (Optional[int]): preferred year.
-      process_archive_files (Optional[bool]): True if archive files should be
+      process_archives (Optional[bool]): True if archive files should be
           scanned for file entries.
+      process_compressed_streams (Optional[bool]): True if file content in
+          compressed streams should be processed.
       show_memory_usage (Optional[bool]): True if memory information should be
           included in status updates.
       status_update_callback (Optional[function]): callback function for status
@@ -736,7 +773,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._mount_path = mount_path
     self._parser_filter_expression = parser_filter_expression
     self._preferred_year = preferred_year
-    self._process_archive_files = process_archive_files
+    self._process_archives = process_archives
+    self._process_compressed_streams = process_compressed_streams
     self._session_identifier = session_identifier
     self._status_update_callback = status_update_callback
     self._storage_writer = storage_writer
@@ -848,7 +886,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._mount_path = None
     self._parser_filter_expression = None
     self._preferred_year = None
-    self._process_archive_files = None
+    self._process_archives = None
+    self._process_compressed_streams = None
     self._session_identifier = None
     self._status_update_callback = None
     self._storage_writer = None

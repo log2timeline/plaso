@@ -22,10 +22,11 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       self, task_queue, storage_writer, knowledge_base, session_identifier,
       debug_output=False, enable_profiling=False, filter_object=None,
       hasher_names_string=None, mount_path=None, parser_filter_expression=None,
-      preferred_year=None, process_archive_files=False,
-      profiling_directory=None, profiling_sample_rate=1000,
-      profiling_type=u'all', temporary_directory=None, text_prepend=None,
-      yara_rules_string=None, **kwargs):
+      preferred_year=None, process_archives=False,
+      process_compressed_streams=True, profiling_directory=None,
+      profiling_sample_rate=1000, profiling_type=u'all',
+      temporary_directory=None, text_prepend=None, yara_rules_string=None,
+      **kwargs):
     """Initializes a worker process.
 
     Non-specified keyword arguments (kwargs) are directly passed to
@@ -46,8 +47,10 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       parser_filter_expression (Optional[str]): parser filter expression,
           where None represents all parsers and plugins.
       preferred_year (Optional[int]): preferred year.
-      process_archive_files (Optional[bool]): True if archive files should be
+      process_archives (Optional[bool]): True if archive files should be
           scanned for file entries.
+      process_compressed_streams (Optional[bool]): True if file content in
+          compressed streams should be processed.
       profiling_directory (Optional[str]): path to the directory where
           the profiling sample files should be stored.
       profiling_sample_rate (Optional[int]): the profiling sample rate.
@@ -85,7 +88,8 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._parser_mediator = None
     self._parsers_profiler = None
     self._preferred_year = preferred_year
-    self._process_archive_files = process_archive_files
+    self._process_archives = process_archives
+    self._process_compressed_streams = process_compressed_streams
     self._processing_profiler = None
     self._profiling_directory = profiling_directory
     self._profiling_sample_rate = profiling_sample_rate
@@ -131,9 +135,11 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
         u'display_name': self._current_display_name,
         u'identifier': self._name,
         u'number_of_consumed_errors': None,
+        u'number_of_consumed_event_tags': None,
         u'number_of_consumed_events': self._number_of_consumed_events,
         u'number_of_consumed_sources': self._number_of_consumed_sources,
         u'number_of_produced_errors': number_of_produced_errors,
+        u'number_of_produced_event_tags': None,
         u'number_of_produced_events': number_of_produced_events,
         u'number_of_produced_sources': number_of_produced_sources,
         u'last_activity_timestamp': last_activity_timestamp,
@@ -167,7 +173,8 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._extraction_worker = worker.EventExtractionWorker(
         resolver_context,
         parser_filter_expression=self._parser_filter_expression,
-        process_archive_files=self._process_archive_files)
+        process_archives=self._process_archives,
+        process_compressed_streams=self._process_compressed_streams)
 
     if self._hasher_names_string:
       self._extraction_worker.SetHashers(self._hasher_names_string)

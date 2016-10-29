@@ -52,15 +52,15 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
 
   def testAddEvent(self):
     """Tests the AddEvent function."""
-    event_objects = self._CreateTestEventObjects()
+    test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'storage.plaso')
       storage_file = gzip_file.GZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event_object in event_objects:
-        storage_file.AddEvent(event_object)
+      for event in test_events:
+        storage_file.AddEvent(event)
 
       storage_file.Close()
 
@@ -79,7 +79,7 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
 
   def testAddEventTag(self):
     """Tests the AddEventTag function."""
-    event_objects = self._CreateTestEventObjects()
+    test_events = self._CreateTestEvents()
     event_tags = self._CreateTestEventTags()
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -87,8 +87,8 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
       storage_file = gzip_file.GZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event_object in event_objects:
-        storage_file.AddEvent(event_object)
+      for event in test_events:
+        storage_file.AddEvent(event)
 
       for event_tag in event_tags:
         storage_file.AddEventTag(event_tag)
@@ -141,15 +141,15 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
 
   def testGetEvents(self):
     """Tests the GetEvents function."""
-    event_objects = self._CreateTestEventObjects()
+    test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'storage.plaso')
       storage_file = gzip_file.GZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event_object in event_objects:
-        storage_file.AddEvent(event_object)
+      for event in test_events:
+        storage_file.AddEvent(event)
 
       storage_file.Close()
 
@@ -184,7 +184,7 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
 
   def testGetEventTags(self):
     """Tests the GetEventTags function."""
-    event_objects = self._CreateTestEventObjects()
+    test_events = self._CreateTestEvents()
     event_tags = self._CreateTestEventTags()
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -192,8 +192,8 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
       storage_file = gzip_file.GZIPStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
-      for event_object in event_objects:
-        storage_file.AddEvent(event_object)
+      for event in test_events:
+        storage_file.AddEvent(event)
 
       for event_tag in event_tags:
         storage_file.AddEventTag(event_tag)

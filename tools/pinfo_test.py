@@ -91,8 +91,11 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
     test_tool = pinfo.PinfoTool(output_writer=output_writer)
 
     test_filename = u'pinfo_test.json.plaso'
-    session_identifier = u'65e59b3a-afa5-4aee-8d55-735cbd7b8686'
-    session_start_time = u'2016-07-18T05:37:58.992319+00:00'
+    format_version = u'20160715'
+    plaso_version = u'1.5.1_20161013'
+    session_identifier = u'3c552fe3-4e64-4871-8a7f-0f4c95dfc1fe'
+    session_start_time = u'2016-10-16T15:13:58.171984+00:00'
+    session_completion_time = u'2016-10-16T15:13:58.957462+00:00'
 
     command_line_arguments = (
         u'./tools/log2timeline.py --partition=all --quiet '
@@ -102,7 +105,7 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
         u'android_app_usage', u'asl_log', u'bencode',
         u'bencode/bencode_transmission', u'bencode/bencode_utorrent',
         u'binary_cookies', u'bsm_log', u'chrome_cache', u'chrome_preferences',
-        u'cups_ipp', u'custom_destinations', u'dockerjson', u'esedb',
+        u'cups_ipp', u'custom_destinations', u'dockerjson', u'dpkg', u'esedb',
         u'esedb/esedb_file_history', u'esedb/msie_webcache', u'filestat',
         u'firefox_cache', u'firefox_cache2', u'hachoir', u'java_idx', u'lnk',
         u'mac_appfirewall_log', u'mac_keychain', u'mac_securityd', u'mactime',
@@ -148,7 +151,7 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
         cli_views.ViewsFactory.FORMAT_TYPE_CLI,
         title=u'Plaso Storage Information')
     table_view.AddRow([u'Filename', test_filename])
-    table_view.AddRow([u'Format version', u'20160715'])
+    table_view.AddRow([u'Format version', format_version])
     table_view.AddRow([u'Serialization format', u'json'])
     table_view.Write(output_writer)
 
@@ -161,9 +164,9 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
     table_view = cli_views.ViewsFactory.GetTableView(
         cli_views.ViewsFactory.FORMAT_TYPE_CLI, title=title)
     table_view.AddRow([u'Start time', session_start_time])
-    table_view.AddRow([u'Completion time', u'2016-07-18T05:37:59.761184+00:00'])
+    table_view.AddRow([u'Completion time', session_completion_time])
     table_view.AddRow([u'Product name', u'plaso'])
-    table_view.AddRow([u'Product version', u'1.4.1_20160717'])
+    table_view.AddRow([u'Product version', plaso_version])
     table_view.AddRow([u'Command line arguments', command_line_arguments])
     table_view.AddRow([u'Parser filter expression', u'N/A'])
     table_view.AddRow([u'Enabled parser and plugins', enabled_parser_names])

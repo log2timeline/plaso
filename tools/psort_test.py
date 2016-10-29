@@ -89,40 +89,67 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
   """Tests for the psort tool."""
 
   _EXPECTED_ANALYSIS_PLUGIN_OPTIONS = u'\n'.join([
-      u'usage: psort_test.py [--nsrlsvr-host NSRLSVR_HOST]',
-      u'                     [--nsrlsvr-port NSRLVR_PORT]',
-      u'                     [--virustotal-api-key VIRUSTOTAL_API_KEY]',
-      u'                     [--virustotal-free-rate-limit]',
+      u'usage: psort_test.py [--nsrlsvr-hash HASH] [--nsrlsvr-host HOST]',
+      (u'                     [--nsrlsvr-port PORT] '
+       u'[--tagging-file TAGGING_FILE]'),
+      u'                     [--viper-hash HASH] [--viper-host HOST]',
+      u'                     [--viper-port PORT] [--viper-protocol PROTOCOL]',
+      u'                     [--virustotal-api-key API_KEY]',
+      (u'                     [--virustotal-free-rate-limit] '
+       u'[--virustotal-hash HASH]'),
       u'                     [--windows-services-output {text,yaml}]',
-      (u'                     [--viper-host VIPER_HOST] [--viper-protocol '
-       u'{http,https}]'),
-      u'                     [--tagging-file TAGGING_FILE]',
       u'',
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      u'  --nsrlsvr-host NSRLSVR_HOST',
-      u'                        Specify the host to query Nsrlsvr on.',
-      u'  --nsrlsvr-port NSRLVR_PORT',
-      u'                        Port to use to query Nsrlsvr.',
-      u'  --virustotal-api-key VIRUSTOTAL_API_KEY',
+      u'  --nsrlsvr-hash HASH, --nsrlsvr_hash HASH',
+      (u'                        Type of hash to use to query nsrlsvr '
+       u'instance, the'),
+      (u'                        default is: md5. Supported options: md5, '
+       u'sha1'),
+      u'  --nsrlsvr-host HOST, --nsrlsvr_host HOST',
+      (u'                        Hostname or IP address of the nsrlsvr '
+       u'instance to'),
+      u'                        query, the default is: localhost',
+      u'  --nsrlsvr-port PORT, --nsrlsvr_port PORT',
+      (u'                        Port number of the nsrlsvr instance to '
+       u'query, the'),
+      u'                        default is: 9120.',
+      u'  --tagging-file TAGGING_FILE, --tagging_file TAGGING_FILE',
+      u'                        Specify a file to read tagging criteria from.',
+      u'  --viper-hash HASH, --viper_hash HASH',
+      (u'                        Type of hash to use to query the Viper '
+       u'server, the'),
+      (u'                        default is: sha256. Supported options: md5, '
+       u'sha256'),
+      u'  --viper-host HOST, --viper_host HOST',
+      (u'                        Hostname of the Viper server to query, the '
+       u'default is:'),
+      u'                        localhost',
+      u'  --viper-port PORT, --viper_port PORT',
+      (u'                        Port of the Viper server to query, the '
+       u'default is:'),
+      u'                        8080.',
+      u'  --viper-protocol PROTOCOL, --viper_protocol PROTOCOL',
+      (u'                        Protocol to use to query Viper, the '
+       u'default is: http.'),
+      u'                        Supported options: http, https',
+      u'  --virustotal-api-key API_KEY, --virustotal_api_key API_KEY',
       u'                        Specify the API key for use with VirusTotal.',
-      u'  --virustotal-free-rate-limit',
+      u'  --virustotal-free-rate-limit, --virustotal_free_rate_limit',
       (u'                        Limit Virustotal requests to the default '
        u'free API key'),
       (u'                        rate of 4 requests per minute. Set this to '
        u'false if'),
       u'                        you have an key for the private API.',
+      u'  --virustotal-hash HASH, --virustotal_hash HASH',
+      (u'                        Type of hash to query VirusTotal, the '
+       u'default is:'),
+      u'                        sha256',
       u'  --windows-services-output {text,yaml}',
       (u'                        Specify how the results should be displayed. '
        u'Options'),
       u'                        are text and yaml.',
-      u'  --viper-host VIPER_HOST',
-      u'                        Specify the host to query Viper on.',
-      u'  --viper-protocol {http,https}',
-      u'                        Protocol to use to query Viper.',
-      u'  --tagging-file TAGGING_FILE, --tagging_file TAGGING_FILE',
-      u'                        Specify a file to read tagging criteria from.',
       u''])
 
   _EXPECTED_FILTER_OPTIONS = u'\n'.join([
@@ -201,8 +228,6 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       u'Test argument parser.',
       u'',
       u'optional arguments:',
-      (u'  --fields FIELDS       Defines which fields should be included in '
-       u'the output.'),
       u'  --additional_fields ADDITIONAL_FIELDS',
       (u'                        Defines extra fields to be included in the '
        u'output, in'),
@@ -211,6 +236,8 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       (u'                        estamp_desc,source,source_long,message,parser,'
        u'display_'),
       u'                        name,tag.',
+      (u'  --fields FIELDS       Defines which fields should be included in '
+       u'the output.'),
       u''])
 
   _EXPECTED_PROCESSING_OPTIONS = u'\n'.join([
@@ -241,7 +268,7 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'psort_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = psort.PsortTool()
     test_tool.AddAnalysisPluginOptions(argument_parser, [])
@@ -254,7 +281,7 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'psort_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = psort.PsortTool()
     test_tool.AddFilterOptions(argument_parser)
@@ -267,7 +294,7 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'psort_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = psort.PsortTool()
     test_tool.AddLanguageOptions(argument_parser)
@@ -280,7 +307,7 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'psort_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = psort.PsortTool()
     test_tool.AddOutputModuleOptions(argument_parser, [u'dynamic'])
@@ -293,7 +320,7 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
     argument_parser = argparse.ArgumentParser(
         prog=u'psort_test.py',
         description=u'Test argument parser.', add_help=False,
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=cli_test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = psort.PsortTool()
     test_tool.AddProcessingOptions(argument_parser)

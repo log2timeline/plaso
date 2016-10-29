@@ -20,6 +20,7 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       (u'                               [--parsers PARSER_LIST]'
        u' [--preferred_year YEAR]'),
       u'                               [-p] [--process_archives]',
+      u'                               [--skip_compressed_streams]',
       u'                               [--temporary_directory DIRECTORY]',
       u'',
       u'Test argument parser.',
@@ -37,9 +38,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       (u'                        hashers. Use "--hashers list" or '
        u'"--info" to list the'),
       u'                        available hashers.',
-      u'  --yara_rules PATH, --yara-rules PATH',
-      (u'                        Path to a file containing Yara rules '
-       u'definitions.'),
       u'  --parsers PARSER_LIST',
       (u'                        Define a list of parsers to use by the tool. '
        u'This is a'),
@@ -72,6 +70,22 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       (u'                        e.g. syslog, use this as the initial year '
        u'instead of'),
       u'                        attempting auto-detection.',
+      u'  --process_archives, --process-archives',
+      (u'                        Process file entries embedded within archive '
+       u'files,'),
+      (u'                        such as archive.tar and archive.zip. This '
+       u'can make'),
+      u'                        processing significantly slower.',
+      u'  --skip_compressed_streams, --skip-compressed-streams',
+      u'                        Skip processing file content within compressed',
+      u'                        streams, such as syslog.gz and syslog.bz2.',
+      u'  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY',
+      (u'                        Path to the directory that should be used to '
+       u'store'),
+      u'                        temporary files created during extraction.',
+      u'  --yara_rules PATH, --yara-rules PATH',
+      (u'                        Path to a file containing Yara rules '
+       u'definitions.'),
       (u'  -p, --preprocess      Turn on preprocessing. Preprocessing is '
        u'turned on by'),
       (u'                        default when parsing image files, however if '
@@ -79,15 +93,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       (u'                        point is being parsed then this parameter '
        u'needs to be'),
       u'                        set manually.',
-      u'  --process_archives, --process-archives',
-      (u'                        Process file entries embedded within archive '
-       u'files.'),
-      (u'                        This can make processing '
-       u'significantly slower.'),
-      u'  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY',
-      (u'                        Path to the directory that should be used to '
-       u'store'),
-      u'                        temporary files created during extraction.',
       u''])
 
   _EXPECTED_PERFORMANCE_OPTIONS = u'\n'.join([
@@ -139,7 +144,7 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
     """Tests the AddExtractionOptions function."""
     argument_parser = argparse.ArgumentParser(
         prog=u'extraction_tool_test.py', description=u'Test argument parser.',
-        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
+        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = extraction_tool.ExtractionTool()
     test_tool.AddExtractionOptions(argument_parser)
@@ -151,7 +156,7 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
     """Tests the AddPerformanceOptions function."""
     argument_parser = argparse.ArgumentParser(
         prog=u'extraction_tool_test.py', description=u'Test argument parser.',
-        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
+        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = extraction_tool.ExtractionTool()
     test_tool.AddPerformanceOptions(argument_parser)
@@ -163,7 +168,7 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
     """Tests the AddProfilingOptions function."""
     argument_parser = argparse.ArgumentParser(
         prog=u'extraction_tool_test.py', description=u'Test argument parser.',
-        add_help=False, formatter_class=argparse.RawDescriptionHelpFormatter)
+        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = extraction_tool.ExtractionTool()
     test_tool.AddProfilingOptions(argument_parser)

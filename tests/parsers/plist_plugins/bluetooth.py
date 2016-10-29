@@ -25,9 +25,13 @@ class TestBtPlugin(test_lib.PlistPluginTestCase):
 
     self.assertEqual(len(storage_writer.events), 14)
 
+    # The order in which PlistParser generates events is nondeterministic
+    # hence we sort the events.
+    events = self._GetSortedEvents(storage_writer.events)
+
     paired_event_objects = []
     timestamps = []
-    for event_object in storage_writer.events:
+    for event_object in events:
       timestamps.append(event_object.timestamp)
       if event_object.desc.startswith(u'Paired'):
         paired_event_objects.append(event_object)

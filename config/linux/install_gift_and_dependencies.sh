@@ -11,6 +11,7 @@ PLASO_DEPENDENCIES="ipython
                     libewf-python
                     libfsntfs-python
                     libfvde-python
+                    libfwnt-python
                     libfwsi-python
                     liblnk-python
                     libmsiecf-python
@@ -24,10 +25,12 @@ PLASO_DEPENDENCIES="ipython
                     libvhdi-python
                     libvmdk-python
                     libvshadow-python
+                    libvslvm-python
                     python-artifacts
                     python-bencode
                     python-binplist
                     python-construct
+                    python-crypto
                     python-dateutil
                     python-dfdatetime
                     python-dfvfs

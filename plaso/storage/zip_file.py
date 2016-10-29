@@ -135,12 +135,12 @@ import time
 import warnings
 import zipfile
 
-import construct
-
 try:
   import ConfigParser as configparser
 except ImportError:
   import configparser  # pylint: disable=import-error
+
+import construct
 
 from plaso.containers import sessions
 from plaso.lib import definitions
@@ -523,7 +523,7 @@ class _SerializedDataStream(object):
       skip_read_size = stream_offset - self._stream_offset
 
     if skip_read_size > 0:
-      # Since zipfile.ZipExtFile is not seekable we need to read upto
+      # Since zipfile.ZipExtFile is not seekable we need to read up to
       # the stream offset.
       self._file_object.read(skip_read_size)
       self._stream_offset += skip_read_size
@@ -1009,7 +1009,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
   # The maximum serialized report size (32 MiB).
   _MAXIMUM_SERIALIZED_REPORT_SIZE = 32 * 1024 * 1024
 
-  _MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES = 5
+  _MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS = 5
   _LOCKED_FILE_SLEEP_TIME = 0.5
 
   def __init__(
@@ -1353,7 +1353,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       offset_tables_lfu (list[_SerializedDataOffsetTable]): least frequently
           used (LFU) offset tables.
       stream_name_prefix (str): stream name prefix.
-      stream_number (str): number of the stream.
+      stream_number (int): number of the stream.
 
     Returns:
       _SerializedDataOffsetTable: serialized data offset table.
@@ -1372,7 +1372,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
       number_of_tables = len(offset_tables_cache)
       if number_of_tables >= self._MAXIMUM_NUMBER_OF_CACHED_TABLES:
-        lfu_stream_number = self._event_offset_tables_lfu.pop()
+        lfu_stream_number = offset_tables_lfu.pop()
         del offset_tables_cache[lfu_stream_number]
 
       offset_tables_cache[stream_number] = offset_table
@@ -1741,18 +1741,15 @@ class ZIPStorageFile(interface.BaseFileStorage):
       zipfile_path = os.path.join(directory_name, basename)
 
       if os.path.exists(path):
-        attempts = 1
-        # On Windows the file can sometimes be in use and we have to wait.
-        while attempts <= self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+        for attempt in range(1, self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS):
           try:
             os.rename(path, zipfile_path)
             break
 
           except OSError:
-            if attempts == self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+            if attempt == self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS:
               raise
             time.sleep(self._LOCKED_FILE_SLEEP_TIME)
-            attempts += 1
 
     try:
       self._zipfile = zipfile.ZipFile(
@@ -1828,7 +1825,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     data_stream = _SerializedDataStream(
         self._zipfile, self._zipfile_path, stream_name)
-    data_stream.SeekEntryAtOffset(entry_index, tag_index_value.store_index)
+    data_stream.SeekEntryAtOffset(entry_index, tag_index_value.offset)
 
     return self._ReadAttributeContainerFromStreamEntry(data_stream, u'event')
 
@@ -2466,26 +2463,28 @@ class ZIPStorageFile(interface.BaseFileStorage):
     self._zipfile = None
     self._is_open = False
 
-    attempts = 1
+    file_renamed = False
     if self._path != self._zipfile_path and os.path.exists(self._zipfile_path):
       # On Windows the file can sometimes be still in use and we have to wait.
-      while attempts <= self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+      for attempt in range(1, self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS):
         try:
           os.rename(self._zipfile_path, self._path)
+          file_renamed = True
           break
 
         except OSError:
+          if attempt == self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS:
+            raise
           time.sleep(self._LOCKED_FILE_SLEEP_TIME)
-          attempts += 1
 
-      if attempts <= self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+      if file_renamed:
         directory_name = os.path.dirname(self._zipfile_path)
         os.rmdir(directory_name)
 
     self._path = None
     self._zipfile_path = None
 
-    if attempts > self._MAXIMUM_NUMBER_OF_LOCKED_FILE_RETRIES:
+    if self._path != self._zipfile_path and not file_renamed:
       raise IOError(u'Unable to close storage file.')
 
   def Flush(self):
@@ -2982,6 +2981,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     report_identifier = analysis_report.plugin_name
     self._session.analysis_reports_counter[u'total'] += 1
     self._session.analysis_reports_counter[report_identifier] += 1
+    self.number_of_analysis_reports += 1
 
   def AddError(self, error):
     """Adds an error.
@@ -3047,6 +3047,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     self._session.event_labels_counter[u'total'] += 1
     for label in event_tag.labels:
       self._session.event_labels_counter[label] += 1
+    self.number_of_event_tags += 1
 
   def CheckTaskReadyForMerge(self, task):
     """Checks if a task is ready for merging with this session storage.
@@ -3271,7 +3272,8 @@ class ZIPStorageFileWriter(interface.StorageWriter):
       StorageMergeReader: storage merge reader of the task storage.
 
     Raises:
-      IOError: if the storage type is not supported or
+      IOError: if the storage file cannot be opened or
+               if the storage type is not supported or
                if the temporary path for the task storage does not exist or
                if the temporary path for the task storage doe not refers to
                a file.

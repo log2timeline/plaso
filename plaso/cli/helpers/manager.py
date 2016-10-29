@@ -24,7 +24,9 @@ class ArgumentHelperManager(object):
       module_list (Optional[list[str]]): names of argument helpers to apply,
           where None will apply the arguments to all helpers.
     """
-    for helper in cls._helper_classes.itervalues():
+    # Process the helper classes in alphabetical order this is needed to
+    # keep the argument order consistent.
+    for _, helper in sorted(cls._helper_classes.items()):
       if argument_category and helper.CATEGORY != argument_category:
         continue
 
@@ -57,9 +59,9 @@ class ArgumentHelperManager(object):
     """Retrieves the registered argument helper names.
 
     Returns:
-      list[str]: argument helper names.
+      list[str]: sorted argument helper names.
     """
-    return cls._helper_classes.keys()
+    return sorted(cls._helper_classes.keys())
 
   @classmethod
   def ParseOptions(cls, options, config_object):
@@ -69,7 +71,7 @@ class ArgumentHelperManager(object):
       options (argparse.Namespace): parser options.
       config_object (object): object to be configured by an argument helper.
     """
-    for helper in cls._helper_classes.itervalues():
+    for helper in iter(cls._helper_classes.values()):
       try:
         helper.ParseOptions(options, config_object)
       except errors.BadConfigObject:

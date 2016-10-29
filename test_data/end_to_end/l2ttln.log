@@ -1,20 +1,23 @@
 Time|Source|Host|User|Description|TZ|Notes
 1453449153|LOG|myhostname.myhost.com|-|2016-01-22T07:52:33+00:00; Content Modification Time; [client, pid: 30840] INFO No change in [/etc/netgroup]. Done|UTC|File: OS:/tmp/test/test_data/syslog inode: -
-1453449153|LOG|myhostname.myhost.com|-|2016-01-22T07:52:33+00:00; Content Modification Time; [client, pid: 30840] INFO No new content.|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1453449153|LOG|myhostname.myhost.com|-|2016-01-22T07:52:33+00:00; Content Modification Time; [client, pid: 30840] INFO No new content in ímynd.dd.|UTC|File: OS:/tmp/test/test_data/syslog inode: -
 1453449181|LOG|myhostname.myhost.com|root|2016-01-22T07:53:01+00:00; Content Modification Time; Cron ran: touch /var/run/crond.somecheck for user: root pid: 31051|UTC|File: OS:/tmp/test/test_data/syslog inode: -
 1453449241|LOG|myhostname.myhost.com|root|2016-01-22T07:54:01+00:00; Content Modification Time; Cron ran: /sbin/status.mycheck) for user: root pid: 31067|UTC|File: OS:/tmp/test/test_data/syslog inode: -
 1453449241|LOG|myhostname.myhost.com|root|2016-01-22T07:54:01+00:00; Content Modification Time; Cron ran: touch /var/run/crond.somecheck for user: root pid: 31068|UTC|File: OS:/tmp/test/test_data/syslog inode: -
 1453449272|LOG|myhostname.myhost.com|-|2016-01-22T07:54:32+00:00; Content Modification Time; [Job] `cron.daily' terminated|UTC|File: OS:/tmp/test/test_data/syslog inode: -
-1456708543|LOG|None|-|2016-02-29T01:15:43+00:00; Content Modification Time; testing leap year in parsing, events take place in 2012|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1454771790|LOG|victoria|-|2016-02-06T15:16:30+00:00; Content Modification Time; [process, pid: 2085] Test message with single character day|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1456708543|LOG|:|-|2016-02-29T01:15:43+00:00; Content Modification Time; [---] testing leap year in parsing, events take place in 2012 ---|UTC|File: OS:/tmp/test/test_data/syslog inode: -
 1458774078|LOG|myhostname.myhost.com|-|2016-03-23T23:01:18+00:00; Content Modification Time; [somrandomexe, pid: 19] This syslog message has a fractional value for seconds.|UTC|File: OS:/tmp/test/test_data/syslog inode: -
 1458774078|LOG|myhostname.myhost.com|-|2016-03-23T23:01:18+00:00; Content Modification Time; [somrandomexe, pid: 1915] This syslog message is brought to you by me (and not the other guy)|UTC|File: OS:/tmp/test/test_data/syslog inode: -
-1468820255|FILE|None|-|2016-07-18T05:37:35+00:00; atime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
-1468820255|FILE|None|-|2016-07-18T05:37:35+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
-1468820255|FILE|None|-|2016-07-18T05:37:35+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
-1468820255|FILE|None|-|2016-07-18T05:37:35+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
-1468820255|FILE|None|-|2016-07-18T05:37:35+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
-1468820256|FILE|None|-|2016-07-18T05:37:36+00:00; atime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1476630823|FILE|None|-|2016-10-16T15:13:43+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1476630823|FILE|None|-|2016-10-16T15:13:43+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1476630823|FILE|None|-|2016-10-16T15:13:43+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1476630823|FILE|None|-|2016-10-16T15:13:43+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1476630824|FILE|None|-|2016-10-16T15:13:44+00:00; atime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1476630824|FILE|None|-|2016-10-16T15:13:44+00:00; atime; OS:/tmp/test/test_data/syslog Type: file|UTC|File: OS:/tmp/test/test_data/syslog inode: -
 1479431720|LOG|myhostname.myhost.com|-|2016-11-18T01:15:20+00:00; Content Modification Time; [aprocess, pid: 10100] This is a multi-line message that screws up	many syslog parsers.|UTC|File: OS:/tmp/test/test_data/syslog inode: -
-1479431743|LOG|None|-|2016-11-18T01:15:43+00:00; Content Modification Time; last message repeated 5 times|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1479431743|LOG|:|-|2016-11-18T01:15:43+00:00; Content Modification Time; [---] last message repeated 5 times ---|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1479457820|LOG|None|-|2016-11-18T08:30:20+00:00; Content Modification Time; [kernel] [997.390602] sda2: rw=0, want=65, limit=2|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1479457880|LOG|victoria|-|2016-11-18T08:31:20+00:00; Content Modification Time; [kernel] [998.390602] sda2: rw=0, want=66, limit=2|UTC|File: OS:/tmp/test/test_data/syslog inode: -
 1482083672|LOG|myhostname.myhost.com|-|2016-12-18T17:54:32+00:00; Content Modification Time; [anacron, pid: 1234] No true exit can exist (124 job run)|UTC|File: OS:/tmp/test/test_data/syslog inode: -
-1483206872|LOG|myhostname.myhost.com|-|2016-12-31T17:54:32+00:00; Content Modification Time; [anacron, pid: 1234] Another one just like this (124 job run)|UTC|File: OS:/tmp/test/test_data/syslog inode: -
+1483206872|LOG|myhostname.myhost.com|-|2016-12-31T17:54:32+00:00; Content Modification Time; [/sbin/anacron, pid: 1234] Another one just like this (124 job run)|UTC|File: OS:/tmp/test/test_data/syslog inode: -

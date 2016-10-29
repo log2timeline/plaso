@@ -116,8 +116,9 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
       events.append(event)
 
     plugin = viper.ViperAnalysisPlugin()
-    plugin.SetProtocol(u'http')
     plugin.SetHost(u'localhost')
+    plugin.SetPort(8080)
+    plugin.SetProtocol(u'http')
 
     storage_writer = self._AnalyzeEvents(events, plugin)
 

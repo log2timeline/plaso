@@ -52,7 +52,8 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     self._output_module = None
     self._parser_filter_expression = None
     self._preferred_year = None
-    self._process_archive_files = False
+    self._process_archives = False
+    self._process_compressed_streams = True
     self._profiling_directory = None
     self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
     self._profiling_type = u'all'
@@ -119,7 +120,9 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
         raise errors.BadConfigOption(
             u'Invalid preferred year: {0:s}.'.format(self._preferred_year))
 
-    self._process_archive_files = getattr(options, u'process_archives', False)
+    self._process_archives = getattr(options, u'process_archives', False)
+    self._process_compressed_streams = getattr(
+        options, u'process_compressed_streams', True)
 
     self._temporary_directory = getattr(options, u'temporary_directory', None)
     if (self._temporary_directory and
@@ -259,8 +262,16 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     argument_group.add_argument(
         u'--process_archives', u'--process-archives', dest=u'process_archives',
         action=u'store_true', default=False, help=(
-            u'Process file entries embedded within archive files. This can '
-            u'make processing significantly slower.'))
+            u'Process file entries embedded within archive files, such as '
+            u'archive.tar and archive.zip. This can make processing '
+            u'significantly slower.'))
+
+    argument_group.add_argument(
+        u'--skip_compressed_streams', u'--skip-compressed-streams',
+        dest=u'process_compressed_streams', action=u'store_false', default=True,
+        help=(
+            u'Skip processing file content within compressed streams, such as '
+            u'syslog.gz and syslog.bz2.'))
 
     argument_group.add_argument(
         u'--temporary_directory', u'--temporary-directory',

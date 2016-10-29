@@ -31,7 +31,11 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
 
     self.assertEqual(len(storage_writer.events), 1)
 
-    event_object = storage_writer.events[0]
+    # The order in which PlistParser generates events is nondeterministic
+    # hence we sort the events.
+    events = self._GetSortedEvents(storage_writer.events)
+
+    event_object = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-11-02 01:21:38.997672')
@@ -77,7 +81,11 @@ class TestDefaultPlist(test_lib.PlistPluginTestCase):
 
     self.assertEqual(len(storage_writer.events), 5)
 
-    event_object = storage_writer.events[0]
+    # The order in which PlistParser generates events is nondeterministic
+    # hence we sort the events.
+    events = self._GetSortedEvents(storage_writer.events)
+
+    event_object = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-04-07 17:56:53.524275')
