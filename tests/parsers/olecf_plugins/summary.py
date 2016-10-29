@@ -8,12 +8,14 @@ from plaso.formatters import olecf as _  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.olecf_plugins import summary
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.olecf_plugins import test_lib
 
 
 class TestSummaryInfoOlecfPlugin(test_lib.OleCfPluginTestCase):
   """Tests for the OLECF summary information plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'Document.doc'])
   def testProcess(self):
     """Tests the Process function on a SummaryInformation stream."""
     plugin_object = summary.SummaryInfoOlecfPlugin()
@@ -66,6 +68,7 @@ class TestSummaryInfoOlecfPlugin(test_lib.OleCfPluginTestCase):
 class TestDocumentSummaryInfoOlecfPlugin(test_lib.OleCfPluginTestCase):
   """Tests for the OLECF document summary information plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'Document.doc'])
   def testProcess(self):
     """Tests the Process function on a DocumentSummaryInformation stream."""
     plugin_object = summary.DocumentSummaryOlecfPlugin()

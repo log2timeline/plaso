@@ -9,12 +9,14 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.esedb_plugins import msie_webcache
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.esedb_plugins import test_lib
 
 
 class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
   """Tests for the MSIE WebCache ESE database plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'WebCacheV01.dat'])
   def testProcess(self):
     """Tests the Process function."""
     plugin_object = msie_webcache.MsieWebCacheESEDBPlugin()

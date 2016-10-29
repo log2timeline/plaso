@@ -9,12 +9,15 @@ from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.olecf_plugins import automatic_destinations
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.olecf_plugins import test_lib
 
 
 class TestAutomaticDestinationsOlecfPlugin(test_lib.OleCfPluginTestCase):
   """Tests for the .automaticDestinations-ms OLECF parser plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([
+      u'1b4dd67f29cb1962.automaticDestinations-ms'])
   def testProcessVersion1(self):
     """Tests the Process function on version 1 .automaticDestinations-ms."""
     plugin_object = automatic_destinations.AutomaticDestinationsOlecfPlugin()
@@ -103,6 +106,8 @@ class TestAutomaticDestinationsOlecfPlugin(test_lib.OleCfPluginTestCase):
     self._TestGetMessageStrings(
         event_object, expected_message, expected_message_short)
 
+  @shared_test_lib.skipUnlessHasTestFile([
+      u'9d1f905ce5044aee.automaticDestinations-ms'])
   def testProcessVersion3(self):
     """Tests the Process function on version 3 .automaticDestinations-ms."""
     plugin_object = automatic_destinations.AutomaticDestinationsOlecfPlugin()
