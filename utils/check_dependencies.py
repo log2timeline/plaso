@@ -12,7 +12,7 @@ import plaso.dependencies
 
 
 if __name__ == u'__main__':
-  if not plaso.dependencies.CheckDependencies(latest_version_check=True):
+  if not plaso.dependencies.CheckDependencies():
     build_instructions_url = (
         u'https://github.com/log2timeline/plaso/wiki/Users-Guide')
 
