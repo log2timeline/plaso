@@ -4,8 +4,7 @@ include utils/check_dependencies.py
 recursive-include config *
 recursive-include data *
 recursive-include doc *
-# Do not include the test data otherwise the sdist will be too large for PyPi.
-recursive-exclude test_data *
+recursive-include test_data *
 exclude .gitignore
 exclude *.pyc
 recursive-exclude plaso *.pyc

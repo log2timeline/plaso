@@ -4,21 +4,21 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import pcap as pcap_formatter
+from plaso.formatters import pcap  # pylint: disable=unused-import
 from plaso.parsers import pcap
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class PcapParserTest(test_lib.ParserTestCase):
   """Tests for the PCAP parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'test.pcap'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = pcap.PcapParser()
-    storage_writer = self._ParseFile(
-        [u'test.pcap'], parser_object)
+    storage_writer = self._ParseFile([u'test.pcap'], parser_object)
 
     # PCAP information:
     #    Number of streams: 96 (TCP: 47, UDP: 39, ICMP: 0, Other: 10)

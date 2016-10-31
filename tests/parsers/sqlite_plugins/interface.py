@@ -7,6 +7,8 @@ import unittest
 
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
+
+from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
@@ -49,6 +51,8 @@ class TestSQLitePlugin(interface.SQLitePlugin):
 class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
   """Tests for the SQLite plugin interface."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'wal_database.db'])
+  @shared_test_lib.skipUnlessHasTestFile([u'wal_database.db-wal'])
   def testProcessWithWAL(self):
     """Tests the Process function on a database with WAL file."""
     plugin_object = TestSQLitePlugin()
@@ -75,6 +79,7 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
 
     self.assertEqual(expected_results, plugin_object.results)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'wal_database.db'])
   def testProcessWithoutWAL(self):
     """Tests the Process function on a database without WAL file."""
     plugin_object = TestSQLitePlugin()

@@ -2,18 +2,15 @@
 # -*- coding: utf-8 -*-
 """Tests for the binary library functions."""
 
-import os
 import unittest
 
 from plaso.lib import binary
 
+from tests import test_lib as shared_test_lib
 
-class BinaryTests(unittest.TestCase):
+
+class BinaryTests(shared_test_lib.BaseTestCase):
   """A unit test for the binary helper functions."""
-
-  # Show full diff results, part of TestCase so does not follow our naming
-  # conventions.
-  maxDiff = None
 
   def setUp(self):
     """Makes preparations before running an individual test."""
@@ -31,10 +28,12 @@ class BinaryTests(unittest.TestCase):
         b'\x57\x00\x68\x00\x61\x00\x74\x00\x20\x00\x69\x00\x73\x00'
         b'\x20\x00\x74\x00\x68\x00\x69\x00\x73\x00\x3F\x00')
 
+  @shared_test_lib.skipUnlessHasTestFile([u'PING.EXE-B29F6629.pf'])
   def testReadUTF16Stream(self):
     """Test reading an UTF-16 stream from a file-like object."""
-    path = os.path.join(u'test_data', u'PING.EXE-B29F6629.pf')
-    with open(path, 'rb') as file_object:
+    test_file_path = self._GetTestFilePath([u'PING.EXE-B29F6629.pf'])
+
+    with open(test_file_path, 'rb') as file_object:
       # Read a null char terminated string.
       file_object.seek(0x10)
       self.assertEqual(binary.ReadUTF16Stream(file_object), u'PING.EXE')
@@ -56,10 +55,12 @@ class BinaryTests(unittest.TestCase):
           binary.ReadUTF16Stream(file_object),
           u'\\DEVICE\\HARDDISKVOLUME1\\WINDOWS\\SYSTEM32\\NTDLL.DLL')
 
+  @shared_test_lib.skipUnlessHasTestFile([u'PING.EXE-B29F6629.pf'])
   def testUTF16StreamCopyToString(self):
     """Test copying an UTF-16 byte stream to a string."""
-    path = os.path.join(u'test_data', u'PING.EXE-B29F6629.pf')
-    with open(path, 'rb') as file_object:
+    test_file_path = self._GetTestFilePath([u'PING.EXE-B29F6629.pf'])
+
+    with open(test_file_path, 'rb') as file_object:
       byte_stream = file_object.read()
 
       # Read a null char terminated string.
@@ -84,10 +85,12 @@ class BinaryTests(unittest.TestCase):
       string = binary.UTF16StreamCopyToString(byte_stream[7236:])
       self.assertEqual(string, expected_string)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'PING.EXE-B29F6629.pf'])
   def testArrayOfUTF16StreamCopyToString(self):
     """Test copying an array of UTF-16 byte streams to strings."""
-    path = os.path.join(u'test_data', u'PING.EXE-B29F6629.pf')
-    with open(path, 'rb') as file_object:
+    test_file_path = self._GetTestFilePath([u'PING.EXE-B29F6629.pf'])
+
+    with open(test_file_path, 'rb') as file_object:
       byte_stream = file_object.read()
 
       strings_array = binary.ArrayOfUTF16StreamCopyToString(
@@ -123,10 +126,12 @@ class BinaryTests(unittest.TestCase):
 
       self.assertEqual(strings_array, expected_strings_array)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'PING.EXE-B29F6629.pf'])
   def testArrayOfUTF16StreamCopyToStringTable(self):
     """Test copying an array of UTF-16 byte streams to a string table."""
-    path = os.path.join(u'test_data', u'PING.EXE-B29F6629.pf')
-    with open(path, 'rb') as file_object:
+    test_file_path = self._GetTestFilePath([u'PING.EXE-B29F6629.pf'])
+
+    with open(test_file_path, 'rb') as file_object:
       byte_stream = file_object.read()
 
       string_table = binary.ArrayOfUTF16StreamCopyToStringTable(

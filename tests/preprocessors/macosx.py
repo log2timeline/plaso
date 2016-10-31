@@ -122,6 +122,7 @@ class MacOSXKeyboard(shared_test_lib.BaseTestCase):
     self._searcher = file_system_searcher.FileSystemSearcher(
         file_system_builder.file_system, mount_point)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'com.apple.HIToolbox.plist'])
   def testGetValue(self):
     """Tests the GetValue function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
@@ -174,6 +175,7 @@ class MacOSXUsersTest(shared_test_lib.BaseTestCase):
     self._searcher = file_system_searcher.FileSystemSearcher(
         file_system_builder.file_system, mount_point)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'nobody.plist'])
   def testGetValue(self):
     """Tests the GetValue function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()

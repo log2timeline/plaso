@@ -7,12 +7,14 @@ import unittest
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import android_webview
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class AndroidWebView(test_lib.SQLitePluginTestCase):
   """Tests for the AndroidWebView database plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'webview.db'])
   def testProcess(self):
     """Test the Process function on a WebView SQLite file."""
     plugin_object = android_webview.WebViewPlugin()

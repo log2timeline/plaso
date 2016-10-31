@@ -4,10 +4,11 @@
 
 import unittest
 
-from plaso.formatters import symantec as _  # pylint: disable=unused-import
+from plaso.formatters import symantec  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import symantec
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 import pytz  # pylint: disable=wrong-import-order
@@ -33,11 +34,11 @@ class SymantecAccessProtectionUnitTest(test_lib.ParserTestCase):
         u'2A0A1E0A2F1D', timezone=pytz.UTC)
     self.assertEqual(timestamp, expected_timestamp)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'Symantec.Log'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = symantec.SymantecParser()
-    storage_writer = self._ParseFile(
-        [u'Symantec.Log'], parser_object)
+    storage_writer = self._ParseFile([u'Symantec.Log'], parser_object)
 
     # The file contains 8 lines which should result in 8 event objects.
     self.assertEqual(len(storage_writer.events), 8)

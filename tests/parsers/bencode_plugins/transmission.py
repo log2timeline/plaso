@@ -4,24 +4,23 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import bencode_parser as bencode_formatter
+from plaso.formatters import bencode_parser  # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import bencode_parser
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.bencode_plugins import test_lib
 
 
 class BencodeTest(test_lib.BencodePluginTestCase):
   """Tests for bencode parser plugin for Transmission BitTorrent files."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'bencode_transmission'])
   def testProcess(self):
     """Tests the Process function."""
     parser_object = bencode_parser.BencodeParser()
-
-    storage_writer = self._ParseFile(
-        [u'bencode_transmission'], parser_object)
+    storage_writer = self._ParseFile([u'bencode_transmission'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 3)
 
