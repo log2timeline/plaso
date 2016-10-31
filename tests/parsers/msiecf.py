@@ -4,22 +4,23 @@
 
 import unittest
 
-from plaso.formatters import msiecf as _  # pylint: disable=unused-import
+from plaso.formatters import msiecf  # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import msiecf
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class MsiecfParserTest(test_lib.ParserTestCase):
   """Tests for the MSIE Cache Files (MSIECF) parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'index.dat'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = msiecf.MsiecfParser()
-    storage_writer = self._ParseFile(
-        [u'index.dat'], parser_object)
+    storage_writer = self._ParseFile([u'index.dat'], parser_object)
 
     # MSIE Cache File information:
     #   Version                         : 5.2
@@ -91,9 +92,11 @@ class MsiecfParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    # Test file with leak and redirected records.
-    storage_writer = self._ParseFile(
-        [u'nfury_index.dat'], parser_object)
+  @shared_test_lib.skipUnlessHasTestFile([u'nfury_index.dat'])
+  def testParseLeakAndRedirect(self):
+    """Tests the Parse function with leak and redirected records."""
+    parser_object = msiecf.MsiecfParser()
+    storage_writer = self._ParseFile([u'nfury_index.dat'], parser_object)
 
     # MSIE Cache File information:
     #   Version                         : 5.2

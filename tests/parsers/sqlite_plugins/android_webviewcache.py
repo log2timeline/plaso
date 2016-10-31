@@ -7,12 +7,14 @@ import unittest
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import android_webviewcache
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class AndroidWebViewCache(test_lib.SQLitePluginTestCase):
   """Tests for the Android WebViewCache database plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'webviewCache.db'])
   def testProcess(self):
     """Test the Process function on a WebViewCache file."""
     plugin_object = android_webviewcache.WebViewCachePlugin()

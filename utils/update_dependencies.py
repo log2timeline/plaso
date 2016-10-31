@@ -163,6 +163,14 @@ class SetupCfgWriter(object):
       u'Log2Timeline maintainers <log2timeline-maintainers@googlegroups.com>')
 
   _FILE_HEADER = [
+      u'[sdist]',
+      u'template = MANIFEST.in',
+      u'manifest = MANIFEST',
+      u'',
+      u'[sdist_test_data]',
+      u'template = MANIFEST.test_data.in',
+      u'manifest = MANIFEST.test_data',
+      u'',
       u'[bdist_rpm]',
       u'release = 1',
       u'packager = {0:s}'.format(_MAINTAINER),

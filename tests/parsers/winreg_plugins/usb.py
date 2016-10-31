@@ -4,10 +4,11 @@
 
 import unittest
 
-from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import usb
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -17,6 +18,7 @@ __author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
 class USBPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the USB Windows Registry plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
   def testProcess(self):
     """Tests the Process function."""
     test_file_entry = self._GetTestFileEntry([u'SYSTEM'])

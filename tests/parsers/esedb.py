@@ -7,12 +7,14 @@ import unittest
 from plaso.parsers import esedb
 from plaso.parsers import esedb_plugins  # pylint: disable=unused-import
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class ESEDBParserTest(test_lib.ParserTestCase):
   """Tests for the Extensible Storage Engine database (ESEDB) file parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'Windows.edb'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = esedb.ESEDBParser()

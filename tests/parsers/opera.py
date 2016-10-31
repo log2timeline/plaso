@@ -4,21 +4,22 @@
 
 import unittest
 
-from plaso.formatters import opera as _  # pylint: disable=unused-import
+from plaso.formatters import opera  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import opera
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class OperaTypedParserTest(test_lib.ParserTestCase):
   """Tests for the Opera Typed History parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'typed_history.xml'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = opera.OperaTypedHistoryParser()
-    storage_writer = self._ParseFile(
-        [u'typed_history.xml'], parser_object)
+    storage_writer = self._ParseFile([u'typed_history.xml'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 4)
 
@@ -48,11 +49,11 @@ class OperaTypedParserTest(test_lib.ParserTestCase):
 class OperaGlobalParserTest(test_lib.ParserTestCase):
   """Tests for the Opera Global History parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'global_history.dat'])
   def testParseFile(self):
     """Read a history file and run a few tests."""
     parser_object = opera.OperaGlobalHistoryParser()
-    storage_writer = self._ParseFile(
-        [u'global_history.dat'], parser_object)
+    storage_writer = self._ParseFile([u'global_history.dat'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 37)
 

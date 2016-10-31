@@ -4,16 +4,19 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import plist as plist_formatter
+from plaso.formatters import plist  # pylint: disable=unused-import
 from plaso.parsers.plist_plugins import appleaccount
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.plist_plugins import test_lib
 
 
 class AppleAccountPluginTest(test_lib.PlistPluginTestCase):
   """Tests for the Apple account plist plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([
+      u'com.apple.coreservices.appleidauthenticationinfo.'
+      u'ABC0ABC1-ABC0-ABC0-ABC0-ABC0ABC1ABC2.plist'])
   def testProcess(self):
     """Tests the Process function."""
     plist_file = (
