@@ -6,8 +6,12 @@ import re
 
 
 # Dictionary that contains version tuples per module name.
+#
 # A version tuple consists of:
 # (version_attribute_name, minimum_version, maximum_version)
+#
+# Where ersion_attribute_name is either a name of an attribute,
+# property or method.
 PYTHON_DEPENDENCIES = {
     u'artifacts': (u'__version__', u'20150409', None),
     # The bencode module does not appear to have version information.
