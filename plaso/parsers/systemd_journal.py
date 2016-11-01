@@ -235,7 +235,7 @@ class SystemdJournalParser(interface.FileObjectParser):
 
     event_class = SystemdJournalEvent
     syslog_identifier = fields.get(u'SYSLOG_IDENTIFIER', None)
-    if x and x != u'kernel':
+    if syslog_identifier and syslog_identifier != u'kernel':
       if u'_PID' not in fields:
         fields[u'_PID'] = fields[u'SYSLOG_PID']
       event_class = SystemdJournalUserlandEvent
