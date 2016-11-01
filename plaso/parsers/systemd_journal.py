@@ -40,7 +40,7 @@ class SystemdJournalParser(interface.FileObjectParser):
 
   # Unfortunately this doesn't help us knowing about the "dirtiness" or
   # "corrupted" file state.
-  # A file can be in any of these state and still be corrupted, for example, by
+  # A file can be in any of these states and still be corrupted, for example, by
   # an unexpected shut down. Once journald detects one of these, it will
   # "rotate" the corrupted journal file, an store it away, and change the status
   # to STATE_OFFLINE.
@@ -100,10 +100,11 @@ class SystemdJournalParser(interface.FileObjectParser):
       construct.ULInt64(u'seqnum'),
       construct.ULInt64(u'realtime'),
       construct.ULInt64(u'monotonic'),
-      construct.Struct(u'boot_id',
-                       construct.Bytes('bytes', 16),
-                       construct.ULInt64(u'qword1'),
-                       construct.ULInt64(u'qword2')),
+      construct.Struct(
+          u'boot_id',
+          construct.Bytes('bytes', 16),
+          construct.ULInt64(u'qword1'),
+          construct.ULInt64(u'qword2')),
       construct.ULInt64(u'xor_hash'),
       construct.Rename(u'object_items', construct.GreedyRange(_ENTRY_ITEM))
   )
