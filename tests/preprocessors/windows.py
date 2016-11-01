@@ -124,6 +124,7 @@ class WindowsSystemVersionPluginTest(test_lib.PreprocessPluginTestCase):
 class WindowsTimeZonePreprocessPluginTest(test_lib.PreprocessPluginTestCase):
   """Tests for the Windows timezone preprocess plug-in object."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
   def testRun(self):
     """Tests the Run function."""
     plugin = windows.WindowsTimeZonePreprocessPlugin()
