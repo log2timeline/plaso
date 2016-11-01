@@ -90,7 +90,7 @@ class SystemdJournalParser(interface.FileObjectParser):
   _DATA_OBJECT_SIZE = _DATA_OBJECT.sizeof()
 
   _ENTRY_ITEM = construct.Struct(
-      'entry_item',
+      u'entry_item',
       construct.ULInt64(u'object_offset'),
       construct.ULInt64(u'hash')
   )
@@ -102,7 +102,7 @@ class SystemdJournalParser(interface.FileObjectParser):
       construct.ULInt64(u'monotonic'),
       construct.Struct(
           u'boot_id',
-          construct.Bytes('bytes', 16),
+          construct.Bytes(u'bytes', 16),
           construct.ULInt64(u'qword1'),
           construct.ULInt64(u'qword2')),
       construct.ULInt64(u'xor_hash'),
@@ -145,12 +145,12 @@ class SystemdJournalParser(interface.FileObjectParser):
 
   _JOURNAL_HEADER_SIZE = _JOURNAL_HEADER.sizeof()
 
-
   def __init__(self):
+    """Initializes a parser object."""
     super(SystemdJournalParser, self).__init__()
+    self._max_journal_file_offset = 0
     self.journal_file = None
     self.journal_header = None
-    self._max_journal_file_offset = 0
 
   def _ParseObjectHeader(self, offset):
     """Parses a Systemd journal object header structure.
@@ -159,13 +159,12 @@ class SystemdJournalParser(interface.FileObjectParser):
       offset (int): offset to the object header.
 
     Returns:
-      tuple(_OBJECT_HEADER,int): the parsed object header and size of the
+      tuple[_OBJECT_HEADER,int]: the parsed object header and size of the
         followong object's payload.
 
     Raises:
       SystemdJournalParseException: When an unexpected object type is parsed.
     """
-
     self.journal_file.seek(offset)
     object_header_data = self.journal_file.read(self._OBJECT_HEADER_SIZE)
     object_header = self._OBJECT_HEADER.parse(object_header_data)
@@ -182,26 +181,24 @@ class SystemdJournalParser(interface.FileObjectParser):
       offset (int): offset to the DATA object.
 
     Returns:
-      tuple(str,str): the key and value of this item.
+      tuple[str,str]: key and value of this item.
 
     Raises:
       SystemdJournalParseException: When an unexpected object type is parsed.
     """
-
     object_header, payload_size = self._ParseObjectHeader(offset)
-    _ = self.journal_file.read(self._DATA_OBJECT_SIZE)
+    self.journal_file.read(self._DATA_OBJECT_SIZE)
 
-    if object_header.type == u'DATA':
-      event_data = self.journal_file.read(payload_size - self._DATA_OBJECT_SIZE)
-      if object_header.flags & self._OBJECT_COMPRESSED_FLAG:
-        xzd = XZDecompressor()
-        event_data = xzd.Decompress(event_data)[0]
-      return event_data.decode(u'utf-8').split(u'=', 1)
-
-    else:
+    if object_header.type != u'DATA':
       raise SystemdJournalParseException(
-          'Expected an object of type DATA, but got {0:s}'.format(
+          u'Expected an object of type DATA, but got {0:s}'.format(
               object_header.type))
+
+    event_data = self.journal_file.read(payload_size - self._DATA_OBJECT_SIZE)
+    if object_header.flags & self._OBJECT_COMPRESSED_FLAG:
+      xzd = XZDecompressor()
+      event_data, _ = xzd.Decompress(event_data)
+    return event_data.decode(u'utf-8').split(u'=', 1)
 
   def _ParseJournalEntry(self, parser_mediator, offset):
     """Parses a Systemd journal ENTRY object.
@@ -209,40 +206,39 @@ class SystemdJournalParser(interface.FileObjectParser):
     This method will generate an event per ENTRY object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator (ParserMediator): parser mediator.
       offset (int): offset of the ENTRY object.
 
     Raises:
       SystemdJournalParseException: When an unexpected object type is parsed.
     """
-
     object_header, payload_size = self._ParseObjectHeader(offset)
 
     entry_object_data = self.journal_file.read(payload_size)
     entry_object = self._ENTRY_OBJECT.parse(entry_object_data)
 
-    fields = dict()
-    if object_header.type == u'ENTRY':
-      for item in entry_object.object_items:
-        if item.object_offset < self._max_journal_file_offset:
-          raise SystemdJournalParseException(
-              u'object offset too small ({0:d})'.format(offset))
-        key, value = self._ParseItem(item.object_offset)
-        fields[key] = value
-    else:
+    if object_header.type != u'ENTRY':
       raise SystemdJournalParseException(
-          'Expected an object of type ENTRY, but got {0:s}'.format(
+          u'Expected an object of type ENTRY, but got {0:s}'.format(
               object_header.type))
+
+    fields = dict()
+    for item in entry_object.object_items:
+      if item.object_offset < self._max_journal_file_offset:
+        raise SystemdJournalParseException(
+            u'object offset too small ({0:d})'.format(offset))
+      key, value = self._ParseItem(item.object_offset)
+      fields[key] = value
 
     # Already a number of microseconds since 1970-01-01, in UTC
     timestamp = entry_object.realtime
 
     event_class = SystemdJournalEvent
-    if u'SYSLOG_IDENTIFIER' in fields:
-      if fields[u'SYSLOG_IDENTIFIER'] != u'kernel':
-        if u'_PID' not in fields:
-          fields[u'_PID'] = fields[u'SYSLOG_PID']
-        event_class = SystemdJournalUserlandEvent
+    syslog_identifier = fields.get(u'SYSLOG_IDENTIFIER', None)
+    if x and x != u'kernel':
+      if u'_PID' not in fields:
+        fields[u'_PID'] = fields[u'SYSLOG_PID']
+      event_class = SystemdJournalUserlandEvent
 
     parser_mediator.ProduceEvent(event_class(timestamp, offset, fields))
 
@@ -263,21 +259,22 @@ class SystemdJournalParser(interface.FileObjectParser):
       # First call
       offset = self.journal_header.entry_array_offset
     object_header, payload_size = self._ParseObjectHeader(offset)
-    if object_header.type == u'ENTRY_ARRAY':
-      next_array_offset = self._ULInt64.parse(self.journal_file.read(8)).int
-      entry_offests_numbers = (payload_size - 8) / 8
-      for entry_offset in range(entry_offests_numbers):
-        entry_offset = self._ULInt64.parse(self.journal_file.read(8)).int
-        if entry_offset != 0:
-          entry_offsets.append(entry_offset)
-      if next_array_offset == 0:
-        return entry_offsets
-      else:
-        return entry_offsets + self._ParseEntries(offset=next_array_offset)
-    else:
+
+    if object_header.type != u'ENTRY_ARRAY':
       raise SystemdJournalParseException(
-          'Expected an object of type ENTRY_ARRAY, but got {0:s}'.format(
+          u'Expected an object of type ENTRY_ARRAY, but got {0:s}'.format(
               object_header.type))
+
+    next_array_offset = self._ULInt64.parse(self.journal_file.read(8)).int
+    entry_offests_numbers = (payload_size - 8) / 8
+    for entry_offset in range(entry_offests_numbers):
+      entry_offset = self._ULInt64.parse(self.journal_file.read(8)).int
+      if entry_offset != 0:
+        entry_offsets.append(entry_offset)
+    if next_array_offset == 0:
+      return entry_offsets
+    else:
+      return entry_offsets + self._ParseEntries(offset=next_array_offset)
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Systemd journal file-like object.
@@ -289,7 +286,6 @@ class SystemdJournalParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the header cannot be parsed.
     """
-
     self.journal_file = file_object
 
     journal_header_data = self.journal_file.read(self._JOURNAL_HEADER_SIZE)
