@@ -5,65 +5,53 @@
 import unittest
 
 from dfvfs.helpers import fake_file_system_builder
-from dfvfs.helpers import file_system_searcher
 from dfvfs.path import fake_path_spec
 
-from plaso.engine import knowledge_base
 from plaso.preprocessors import linux
 
-from tests import test_lib as shared_test_lib
+from tests.preprocessors import test_lib
 
 
-class LinuxHostnameTest(shared_test_lib.BaseTestCase):
+class LinuxHostnamePreprocessPluginTest(test_lib.PreprocessPluginTestCase):
   """Tests for the Linux hostname preprocess plug-in object."""
 
   _FILE_DATA = 'plaso.kiddaland.net\n'
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
+  def testRun(self):
+    """Tests the Run function."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFile(u'/etc/hostname', self._FILE_DATA)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
-    self._searcher = file_system_searcher.FileSystemSearcher(
-        file_system_builder.file_system, mount_point)
 
-  def testGetValue(self):
-    """Tests the GetValue function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
+    plugin = linux.LinuxHostnamePreprocessPlugin()
+    knowledge_base = self._RunFileSystemPlugin(
+        file_system_builder.file_system, mount_point, plugin)
 
-    plugin = linux.LinuxHostname()
-    plugin.Run(self._searcher, knowledge_base_object)
-
-    self.assertEqual(knowledge_base_object.hostname, u'plaso.kiddaland.net')
+    self.assertEqual(knowledge_base.hostname, u'plaso.kiddaland.net')
 
 
-class LinuxTimezoneTest(shared_test_lib.BaseTestCase):
+class LinuxTimeZonePreprocessPluginTest(test_lib.PreprocessPluginTestCase):
   """Test for the Linux timezone preprocess plug-in object."""
 
   _FILE_DATA = 'Europe/Zurich\n'
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
+  def testRun(self):
+    """Test the Run function."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFile(u'/etc/timezone', self._FILE_DATA)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
-    self._searcher = file_system_searcher.FileSystemSearcher(
-        file_system_builder.file_system, mount_point)
 
-  def testGetValue(self):
-    """Test the GetValue function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
+    plugin = linux.LinuxTimeZonePreprocessPlugin()
+    knowledge_base = self._RunFileSystemPlugin(
+        file_system_builder.file_system, mount_point, plugin)
 
-    plugin = linux.LinuxTimezone()
-    plugin.Run(self._searcher, knowledge_base_object)
-
-    time_zone_str = knowledge_base_object.GetValue(u'time_zone_str')
+    time_zone_str = knowledge_base.GetValue(u'time_zone_str')
     self.assertEqual(time_zone_str, u'Europe/Zurich')
 
 
-class LinuxUsernamesTest(shared_test_lib.BaseTestCase):
+class LinuxUserAccountsPreprocessPluginTest(test_lib.PreprocessPluginTestCase):
   """Tests for the Linux usernames preprocess plug-in object."""
 
   # pylint: disable=protected-access
@@ -83,24 +71,19 @@ class LinuxUsernamesTest(shared_test_lib.BaseTestCase):
       'ftp:x:14:50:FTP User:/var/ftp:/sbin/nologin\n'
       'nobody:x:99:99:Nobody:/:/sbin/nologin\n')
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
+  def testRun(self):
+    """Tests the Run function."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFile(u'/etc/passwd', self._FILE_DATA)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
-    self._searcher = file_system_searcher.FileSystemSearcher(
-        file_system_builder.file_system, mount_point)
 
-  def testGetValue(self):
-    """Tests the GetValue function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
-    plugin = linux.LinuxUsernames()
-    plugin.Run(self._searcher, knowledge_base_object)
+    plugin = linux.LinuxUserAccountsPreprocessPlugin()
+    knowledge_base = self._RunFileSystemPlugin(
+        file_system_builder.file_system, mount_point, plugin)
 
     users = sorted(
-        knowledge_base_object._user_accounts[0].values(),
+        knowledge_base._user_accounts[0].values(),
         key=lambda user_account: user_account.identifier)
     self.assertEqual(len(users), 13)
 

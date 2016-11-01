@@ -81,7 +81,7 @@ class _EventsHeap(object):
 
 
 class ParserTestCase(shared_test_lib.BaseTestCase):
-  """The unit test case for a parser."""
+  """Parser test case."""
 
   def _CreateParserMediator(
       self, storage_writer, file_entry=None, knowledge_base_values=None,

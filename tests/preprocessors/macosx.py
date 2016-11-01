@@ -5,58 +5,15 @@
 import unittest
 
 from dfvfs.helpers import fake_file_system_builder
-from dfvfs.helpers import file_system_searcher
 from dfvfs.path import fake_path_spec
 
-from plaso.engine import knowledge_base
 from plaso.preprocessors import macosx
 
 from tests import test_lib as shared_test_lib
+from tests.preprocessors import test_lib
 
 
-class MacOSXSystemVersionPluginTest(shared_test_lib.BaseTestCase):
-  """Tests for the plugin to determine Mac OS X system version information."""
-
-  _FILE_DATA = (
-      '<?xml version="1.0" encoding="UTF-8"?>\n'
-      '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" '
-      '"http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n'
-      '<plist version="1.0">\n'
-      '<dict>\n'
-      '\t<key>ProductBuildVersion</key>\n'
-      '\t<string>13C64</string>\n'
-      '\t<key>ProductCopyright</key>\n'
-      '\t<string>1983-2014 Apple Inc.</string>\n'
-      '\t<key>ProductName</key>\n'
-      '\t<string>Mac OS X</string>\n'
-      '\t<key>ProductUserVisibleVersion</key>\n'
-      '\t<string>10.9.2</string>\n'
-      '\t<key>ProductVersion</key>\n'
-      '\t<string>10.9.2</string>\n'
-      '</dict>\n'
-      '</plist>\n')
-
-  def testGetValue(self):
-    """Tests the GetValue function."""
-    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    file_system_builder.AddFile(
-        u'/System/Library/CoreServices/SystemVersion.plist',
-        self._FILE_DATA)
-
-    mount_point = fake_path_spec.FakePathSpec(location=u'/')
-    searcher = file_system_searcher.FileSystemSearcher(
-        file_system_builder.file_system, mount_point)
-
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
-    plugin = macosx.MacOSXSystemVersionPlugin()
-    plugin.Run(searcher, knowledge_base_object)
-
-    build = knowledge_base_object.GetValue(u'operating_system_version')
-    self.assertEqual(build, u'10.9.2')
-
-
-class MacOSXHostname(shared_test_lib.BaseTestCase):
+class MacOSXHostnamePreprocessPluginTest(test_lib.PreprocessPluginTestCase):
   """Tests for the Mac OS X hostname preprocess plug-in object."""
 
   # Note that is only part of the normal preferences.plist file data.
@@ -87,84 +44,111 @@ class MacOSXHostname(shared_test_lib.BaseTestCase):
       '</dict>\n'
       '</plist>\n')
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
+  def testRun(self):
+    """Tests the Run function."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFile(
         u'/Library/Preferences/SystemConfiguration/preferences.plist',
         self._FILE_DATA)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
-    self._searcher = file_system_searcher.FileSystemSearcher(
-        file_system_builder.file_system, mount_point)
 
-  def testGetValue(self):
-    """Tests the GetValue function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
+    plugin = macosx.MacOSXHostnamePreprocessPlugin()
+    knowledge_base = self._RunFileSystemPlugin(
+        file_system_builder.file_system, mount_point, plugin)
 
-    plugin = macosx.MacOSXHostname()
-    plugin.Run(self._searcher, knowledge_base_object)
-
-    self.assertEqual(knowledge_base_object.hostname, u'Plaso\'s Mac mini')
+    self.assertEqual(knowledge_base.hostname, u'Plaso\'s Mac mini')
 
 
-class MacOSXKeyboard(shared_test_lib.BaseTestCase):
+class MacOSXKeyboardLayoutPreprocessPluginTest(
+    test_lib.PreprocessPluginTestCase):
   """Tests for the Mac OS X keyboard layout preprocess plug-in object."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
+  @shared_test_lib.skipUnlessHasTestFile([u'com.apple.HIToolbox.plist'])
+  def testRun(self):
+    """Tests the Run function."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     test_file_path = self._GetTestFilePath([u'com.apple.HIToolbox.plist'])
     file_system_builder.AddFileReadData(
         u'/Library/Preferences/com.apple.HIToolbox.plist', test_file_path)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
-    self._searcher = file_system_searcher.FileSystemSearcher(
-        file_system_builder.file_system, mount_point)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'com.apple.HIToolbox.plist'])
-  def testGetValue(self):
-    """Tests the GetValue function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
+    plugin = macosx.MacOSXKeyboardLayoutPreprocessPlugin()
+    knowledge_base = self._RunFileSystemPlugin(
+        file_system_builder.file_system, mount_point, plugin)
 
-    plugin = macosx.MacOSXKeyboard()
-    plugin.Run(self._searcher, knowledge_base_object)
-
-    keyboard_layout = knowledge_base_object.GetValue('keyboard_layout')
+    keyboard_layout = knowledge_base.GetValue('keyboard_layout')
     self.assertEqual(keyboard_layout, u'US')
 
 
-class MacOSXTimezone(shared_test_lib.BaseTestCase):
+class MacOSXSystemVersionPreprocessPluginTest(
+    test_lib.PreprocessPluginTestCase):
+  """Tests for the plugin to determine Mac OS X system version information."""
+
+  _FILE_DATA = (
+      '<?xml version="1.0" encoding="UTF-8"?>\n'
+      '<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" '
+      '"http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n'
+      '<plist version="1.0">\n'
+      '<dict>\n'
+      '\t<key>ProductBuildVersion</key>\n'
+      '\t<string>13C64</string>\n'
+      '\t<key>ProductCopyright</key>\n'
+      '\t<string>1983-2014 Apple Inc.</string>\n'
+      '\t<key>ProductName</key>\n'
+      '\t<string>Mac OS X</string>\n'
+      '\t<key>ProductUserVisibleVersion</key>\n'
+      '\t<string>10.9.2</string>\n'
+      '\t<key>ProductVersion</key>\n'
+      '\t<string>10.9.2</string>\n'
+      '</dict>\n'
+      '</plist>\n')
+
+  def testRun(self):
+    """Tests the Run function."""
+    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
+    file_system_builder.AddFile(
+        u'/System/Library/CoreServices/SystemVersion.plist',
+        self._FILE_DATA)
+
+    mount_point = fake_path_spec.FakePathSpec(location=u'/')
+
+    plugin = macosx.MacOSXSystemVersionPreprocessPlugin()
+    knowledge_base = self._RunFileSystemPlugin(
+        file_system_builder.file_system, mount_point, plugin)
+
+    build = knowledge_base.GetValue(u'operating_system_version')
+    self.assertEqual(build, u'10.9.2')
+
+
+class MacOSXTimeZonePreprocessPluginTest(test_lib.PreprocessPluginTestCase):
   """Tests for the Mac OS X timezone preprocess plug-in object."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
+  def testRun(self):
+    """Tests the Run function."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddSymbolicLink(
         u'/private/etc/localtime', u'/usr/share/zoneinfo/Europe/Amsterdam')
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
-    self._searcher = file_system_searcher.FileSystemSearcher(
-        file_system_builder.file_system, mount_point)
 
-  def testGetValue(self):
-    """Tests the GetValue function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
+    plugin = macosx.MacOSXTimeZonePreprocessPlugin()
+    knowledge_base = self._RunFileSystemPlugin(
+        file_system_builder.file_system, mount_point, plugin)
 
-    plugin = macosx.MacOSXTimeZone()
-    plugin.Run(self._searcher, knowledge_base_object)
-
-    time_zone_str = knowledge_base_object.GetValue('time_zone_str')
+    time_zone_str = knowledge_base.GetValue('time_zone_str')
     self.assertEqual(time_zone_str, u'Europe/Amsterdam')
 
 
-class MacOSXUsersTest(shared_test_lib.BaseTestCase):
+class MacOSXUserAccountsPreprocessPluginTest(test_lib.PreprocessPluginTestCase):
   """Tests for the Mac OS X usernames preprocess plug-in object."""
 
   # pylint: disable=protected-access
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
+  @shared_test_lib.skipUnlessHasTestFile([u'nobody.plist'])
+  def testRun(self):
+    """Tests the Run function."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     test_file_path = self._GetTestFilePath([u'nobody.plist'])
     file_system_builder.AddFileReadData(
@@ -172,19 +156,13 @@ class MacOSXUsersTest(shared_test_lib.BaseTestCase):
         test_file_path)
 
     mount_point = fake_path_spec.FakePathSpec(location=u'/')
-    self._searcher = file_system_searcher.FileSystemSearcher(
-        file_system_builder.file_system, mount_point)
 
-  @shared_test_lib.skipUnlessHasTestFile([u'nobody.plist'])
-  def testGetValue(self):
-    """Tests the GetValue function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
-    plugin = macosx.MacOSXUsers()
-    plugin.Run(self._searcher, knowledge_base_object)
+    plugin = macosx.MacOSXUserAccountsPreprocessPlugin()
+    knowledge_base = self._RunFileSystemPlugin(
+        file_system_builder.file_system, mount_point, plugin)
 
     users = sorted(
-        knowledge_base_object._user_accounts[0].values(),
+        knowledge_base._user_accounts[0].values(),
         key=lambda user_account: user_account.identifier)
     self.assertEqual(len(users), 1)
 

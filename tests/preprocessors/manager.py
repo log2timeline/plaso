@@ -8,24 +8,29 @@ from plaso.preprocessors import interface
 from plaso.preprocessors import manager
 
 
-class TestPreprocessPlugin(interface.PreprocessPlugin):
-  """Preprocess test plugin."""
+class TestFileSystemPreprocessPlugin(interface.FileSystemPreprocessPlugin):
+  """Test file system preprocess plugin."""
 
-  def GetValue(self, searcher, unused_knowledge_base):
-    """Returns the path as found by the searcher.
+  def Run(self, unused_searcher, unused_knowledge_base):
+    """Runs the plugin to determine the value of the preprocessing attribute.
 
     Args:
-      searcher: The file system searcher object (instance of
-                dfvfs.FileSystemSearcher).
-      knowledge_base: A knowledge base object (instance of KnowledgeBase),
-                      which contains information from the source data needed
-                      for parsing.
+      searcher (dfvfs.FileSystemSearcher): file system searcher.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+    """
+    return
 
-    Returns:
-      The first path location string.
 
-    Raises:
-      PreProcessFail: if the path could not be found.
+class TestWindowsRegistryKeyPreprocessPlugin(
+    interface.WindowsRegistryKeyPreprocessPlugin):
+  """Test Windows Registry key preprocess plugin."""
+
+  def _ParseKey(self, unused_knowledge_base, unused_registry_key):
+    """Parses a Windows Registry key for a preprocessing attribute.
+
+    Args:
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      registry_key (WinRegistryKey): Windows Registry key.
     """
     return
 
@@ -33,22 +38,48 @@ class TestPreprocessPlugin(interface.PreprocessPlugin):
 class PreprocessPluginsManagerTest(unittest.TestCase):
   """Tests for the preprocess plugins manager."""
 
-  def testRegistration(self):
-    """Tests the RegisterPlugin and DeregisterPlugin functions."""
-    # pylint: disable=protected-access
-    number_of_plugins = len(manager.PreprocessPluginsManager._plugin_classes)
+  # pylint: disable=protected-access
 
-    manager.PreprocessPluginsManager.RegisterPlugin(TestPreprocessPlugin)
+  def testRegistrationFileSystemPreprocessPlugin(self):
+    """Tests the RegisterPlugin and DeregisterPlugin functions."""
+    number_of_plugins = len(
+        manager.PreprocessPluginsManager._file_system_plugin_classes)
+
+    manager.PreprocessPluginsManager.RegisterPlugin(
+        TestFileSystemPreprocessPlugin)
     self.assertEqual(
-        len(manager.PreprocessPluginsManager._plugin_classes),
+        len(manager.PreprocessPluginsManager._file_system_plugin_classes),
         number_of_plugins + 1)
 
     with self.assertRaises(KeyError):
-      manager.PreprocessPluginsManager.RegisterPlugin(TestPreprocessPlugin)
+      manager.PreprocessPluginsManager.RegisterPlugin(
+          TestFileSystemPreprocessPlugin)
 
-    manager.PreprocessPluginsManager.DeregisterPlugin(TestPreprocessPlugin)
+    manager.PreprocessPluginsManager.DeregisterPlugin(
+        TestFileSystemPreprocessPlugin)
     self.assertEqual(
-        len(manager.PreprocessPluginsManager._plugin_classes),
+        len(manager.PreprocessPluginsManager._file_system_plugin_classes),
+        number_of_plugins)
+
+  def testRegistrationWindowsRegistryKeyPreprocessPlugin(self):
+    """Tests the RegisterPlugin and DeregisterPlugin functions."""
+    number_of_plugins = len(
+        manager.PreprocessPluginsManager._registry_plugin_classes)
+
+    manager.PreprocessPluginsManager.RegisterPlugin(
+        TestWindowsRegistryKeyPreprocessPlugin)
+    self.assertEqual(
+        len(manager.PreprocessPluginsManager._registry_plugin_classes),
+        number_of_plugins + 1)
+
+    with self.assertRaises(KeyError):
+      manager.PreprocessPluginsManager.RegisterPlugin(
+          TestWindowsRegistryKeyPreprocessPlugin)
+
+    manager.PreprocessPluginsManager.DeregisterPlugin(
+        TestWindowsRegistryKeyPreprocessPlugin)
+    self.assertEqual(
+        len(manager.PreprocessPluginsManager._registry_plugin_classes),
         number_of_plugins)
 
 
