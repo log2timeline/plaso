@@ -24,36 +24,35 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(len(storage_writer.events), 21)
 
-    clear_hist_event = storage_writer.events[0]
+    event = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-06-08 16:17:47.453766')
-    self.assertEqual(clear_hist_event.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
     expected_message = (u'Chrome history is deleted by user')
     expected_message_short = (u'Chrome history is deleted by user')
     self._TestGetMessageStrings(
-        clear_hist_event, expected_message, expected_message_short)
+        event, expected_message, expected_message_short)
 
-
-    event_object = storage_writer.events[15]
+    event = storage_writer.events[15]
 
     self.assertIsInstance(
-        event_object, chrome_preferences.ChromeExtensionInstallationEvent)
+        event, chrome_preferences.ChromeExtensionInstallationEvent)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-11-05 18:31:24.154837')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_id = u'mgndgikekgjfcpckkfioiadnlibdjbkf'
-    self.assertEqual(event_object.extension_id, expected_id)
+    self.assertEqual(event.extension_id, expected_id)
 
     expected_name = u'Chrome'
-    self.assertEqual(event_object.extension_name, expected_name)
+    self.assertEqual(event.extension_name, expected_name)
 
     expected_path = (
         u'C:\\Program Files\\Google\\Chrome\\Application\\38.0.2125.111\\'
         u'resources\\chrome_app')
-    self.assertEqual(event_object.path, expected_path)
+    self.assertEqual(event.path, expected_path)
 
     expected_message = (
         u'CRX ID: {0:s} CRX Name: {1:s} Path: {2:s}'.format(
@@ -63,7 +62,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
         u'C:\\Program Files\\Google\\Chrome\\Application\\3...').format(
             expected_id)
     self._TestGetMessageStrings(
-        event_object, expected_message, expected_message_short)
+        event, expected_message, expected_message_short)
 
 
 if __name__ == '__main__':
