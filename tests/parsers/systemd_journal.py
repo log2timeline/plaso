@@ -29,8 +29,9 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event.timestamp, expected_timestamp)
 
-    expected_message = (u'test-VirtualBox systemd-journald[577] Runtime journal '
-                        u'(/run/log/journal/) is 1.2M, max 9.9M, 8.6M free.')
+    expected_message = (
+        u'test-VirtualBox systemd-journald[577] Runtime journal '
+        u'(/run/log/journal/) is 1.2M, max 9.9M, 8.6M free.')
     expected_message_short = (u'test-VirtualBox systemd-journald[577] Runtime '
                               u'journal (/run/log/journal/) is ...')
     self._TestGetMessageStrings(event, expected_message, expected_message_short)
@@ -52,8 +53,9 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event.timestamp, expected_timestamp)
 
-    expected_message = (u'test-VirtualBox systemd-journald[569] Runtime journal '
-                        u'(/run/log/journal/) is 1.2M, max 9.9M, 8.6M free.')
+    expected_message = (
+        u'test-VirtualBox systemd-journald[569] Runtime journal '
+        u'(/run/log/journal/) is 1.2M, max 9.9M, 8.6M free.')
     expected_message_short = (u'test-VirtualBox systemd-journald[569] Runtime '
                               u'journal (/run/log/journal/) is ...')
     self._TestGetMessageStrings(event, expected_message, expected_message_short)
