@@ -7,16 +7,17 @@ from plaso.formatters import manager
 
 class ChromePreferencesClearHistoryEventFormatter(
     interface.ConditionalEventFormatter):
-  """Formatterfor Chrome history clearing events."""
+  """Formatter for Chrome history clearing events."""
 
   DATA_TYPE = u'chrome:preferences:clear_history'
 
-  FORMAT_STRING_PIECES = [u'{MESSAGE}']
+  FORMAT_STRING_PIECES = [u'{message}']
 
-  FORMAT_STRING_SHORT_PIECES = [u'{MESSAGE}']
+  FORMAT_STRING_SHORT_PIECES = [u'{message}']
 
   SOURCE_LONG = u'Chrome History Deletion'
   SOURCE_SHORT = u'LOG'
+
 
 class ChromeExtensionInstallationEventFormatter(
     interface.ConditionalEventFormatter):
