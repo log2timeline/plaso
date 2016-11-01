@@ -9,14 +9,15 @@ from plaso.parsers import systemd_journal
 
 from tests.parsers import test_lib
 
+
 class SystemdJournalParserTest(test_lib.ParserTestCase):
-  """ Tests for the Systemd Journal parser."""
+  """Tests for the Systemd Journal parser."""
 
   def testParse(self):
     """Tests the Parse function."""
     parser_object = systemd_journal.SystemdJournalParser()
-    journal = self._ParseFile([u'systemd', u'journal', u'system.journal'],
-                              parser_object)
+    journal = self._ParseFile([
+        u'systemd', u'journal', u'system.journal'], parser_object)
 
     self.assertEqual(
         len(journal.events), parser_object.journal_header.n_entries)
@@ -28,11 +29,11 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg = (u'test-VirtualBox systemd-journald[577] Runtime journal '
+    expected_message = (u'test-VirtualBox systemd-journald[577] Runtime journal '
                     u'(/run/log/journal/) is 1.2M, max 9.9M, 8.6M free.')
-    expected_msg_short = (u'test-VirtualBox systemd-journald[577] Runtime '
+    expected_message_short = (u'test-VirtualBox systemd-journald[577] Runtime '
                           u'journal (/run/log/journal/) is ...')
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(event_object, expected_message, expected_message_short)
 
   def testParseDirty(self):
     """Tests the Parse function on a 'dirty' journal file."""
@@ -52,11 +53,11 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    expected_msg = (u'test-VirtualBox systemd-journald[569] Runtime journal '
+    expected_message = (u'test-VirtualBox systemd-journald[569] Runtime journal '
                     u'(/run/log/journal/) is 1.2M, max 9.9M, 8.6M free.')
-    expected_msg_short = (u'test-VirtualBox systemd-journald[569] Runtime '
+    expected_message_short = (u'test-VirtualBox systemd-journald[569] Runtime '
                           u'journal (/run/log/journal/) is ...')
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(event_object, expected_message, expected_message_short)
 
 
 if __name__ == '__main__':
