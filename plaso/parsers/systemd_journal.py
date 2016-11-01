@@ -4,6 +4,7 @@
 import construct
 
 from dfvfs.compression.xz_decompressor import XZDecompressor
+
 from plaso.containers import text_events
 from plaso.lib import errors
 from plaso.parsers import interface
