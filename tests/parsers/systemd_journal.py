@@ -22,18 +22,18 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     self.assertEqual(
         len(journal.events), parser_object.journal_header.n_entries)
 
-    event_object = journal.events[0]
+    event = journal.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-10-24 13:45:19.373121')
 
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (u'test-VirtualBox systemd-journald[577] Runtime journal '
                     u'(/run/log/journal/) is 1.2M, max 9.9M, 8.6M free.')
     expected_message_short = (u'test-VirtualBox systemd-journald[577] Runtime '
                           u'journal (/run/log/journal/) is ...')
-    self._TestGetMessageStrings(event_object, expected_message, expected_message_short)
+    self._TestGetMessageStrings(event, expected_message, expected_message_short)
 
   def testParseDirty(self):
     """Tests the Parse function on a 'dirty' journal file."""
@@ -43,21 +43,20 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         u'system@00053f9c9a4c1e0e-2e18a70e8b327fed.journalTILDE'
     ], parser_object)
 
-    self.assertEqual(
-        len(journal.events), 2211)
+    self.assertEqual(len(journal.events), 2211)
 
-    event_object = journal.events[0]
+    event = journal.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-10-24 13:20:01.063423')
 
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (u'test-VirtualBox systemd-journald[569] Runtime journal '
                     u'(/run/log/journal/) is 1.2M, max 9.9M, 8.6M free.')
     expected_message_short = (u'test-VirtualBox systemd-journald[569] Runtime '
                           u'journal (/run/log/journal/) is ...')
-    self._TestGetMessageStrings(event_object, expected_message, expected_message_short)
+    self._TestGetMessageStrings(event, expected_message, expected_message_short)
 
 
 if __name__ == '__main__':
