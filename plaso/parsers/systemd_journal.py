@@ -9,6 +9,7 @@ from plaso.lib import errors
 from plaso.parsers import interface
 from plaso.parsers import manager
 
+
 class SystemdJournalParseException(Exception):
   """Exception indicating an unusual condition in the file being parsed."""
   pass
