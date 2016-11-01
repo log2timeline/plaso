@@ -63,10 +63,10 @@ from plaso.formatters import shell_items
 from plaso.formatters import shutdown
 from plaso.formatters import skydrivelog
 from plaso.formatters import skype
+from plaso.formatters import ssh
 from plaso.formatters import symantec
 from plaso.formatters import syslog
 from plaso.formatters import systemd_journal
-from plaso.formatters import ssh
 from plaso.formatters import task_scheduler
 from plaso.formatters import text
 from plaso.formatters import twitter_ios
