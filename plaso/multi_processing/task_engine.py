@@ -89,7 +89,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
   """
 
   # Maximum number of attribute containers to merge per loop.
-  _MAXIMUM_NUMBER_OF_CONTAINERS = 50
+  _MAXIMUM_NUMBER_OF_CONTAINERS = 20
 
   # Maximum number of concurrent tasks.
   _MAXIMUM_NUMBER_OF_TASKS = 10000
@@ -422,6 +422,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           task = self._task_manager.CreateTask(self._session_identifier)
           task.file_entry_type = event_source.file_entry_type
           task.path_spec = event_source.path_spec
+          logging.debug(u'Scheduled task {0:s} for path spec {1:s}'.format(
+              task.identifier, task.path_spec.comparable))
           event_source = None
 
           self._number_of_consumed_sources += 1
