@@ -9,6 +9,7 @@ from dfvfs.path import fake_path_spec
 
 from plaso.preprocessors import macosx
 
+from tests import test_lib as shared_test_lib
 from tests.preprocessors import test_lib
 
 
@@ -63,6 +64,7 @@ class MacOSXKeyboardLayoutPreprocessPluginTest(
     test_lib.PreprocessPluginTestCase):
   """Tests for the Mac OS X keyboard layout preprocess plug-in object."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'com.apple.HIToolbox.plist'])
   def testRun(self):
     """Tests the Run function."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
@@ -144,6 +146,7 @@ class MacOSXUserAccountsPreprocessPluginTest(test_lib.PreprocessPluginTestCase):
 
   # pylint: disable=protected-access
 
+  @shared_test_lib.skipUnlessHasTestFile([u'nobody.plist'])
   def testRun(self):
     """Tests the Run function."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
