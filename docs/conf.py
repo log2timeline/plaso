@@ -69,9 +69,7 @@ class Mock(MagicMock):
     return self
 
 
-# Mock all the dependencies! (except the ones we don't want to).
-modules_to_mock = [
-  dependency for dependency in dependencies.PYTHON_DEPENDENCIES.keys()]
+modules_to_mock = list(dependencies.PYTHON_DEPENDENCIES.keys())
 
 # We also need to mock some modules that we don't have explicit dependencies on
 # so that we can generated documentation for those components. We also need
