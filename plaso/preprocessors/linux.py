@@ -11,141 +11,97 @@ from plaso.preprocessors import interface
 from plaso.preprocessors import manager
 
 
-class LinuxHostname(interface.PreprocessPlugin):
-  """A preprocessing class that fetches hostname on Linux."""
+class LinuxHostnamePreprocessPlugin(interface.FilePreprocessPlugin):
+  """Linux hostname preprocessing plugin."""
 
-  SUPPORTED_OS = [u'Linux']
-  WEIGHT = 1
-  ATTRIBUTE = u'hostname'
+  _PATH = u'/etc/hostname'
 
-  def GetValue(self, searcher, unused_knowledge_base):
-    """Determines the hostname based on the contents of /etc/hostname.
+  def _ParseFileObject(self, knowledge_base, file_object):
+    """Parses a hostname file-like object.
 
     Args:
-      searcher (dfvfs.FileSystemSearcher): file system searcher.
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
-
-    Returns:
-      HostnameArtifact: hostname artifact or None.
-
-    Raises:
-      errors.PreProcessFail: if the preprocessing fails.
+      file_object (dfvfs.FileIO): file-like object.
     """
-    path = u'/etc/hostname'
-    file_entry = self._FindFileEntry(searcher, path)
-    if not file_entry:
-      raise errors.PreProcessFail(
-          u'Unable to find file entry for path: {0:s}.'.format(path))
+    text_file_object = text_file.TextFile(file_object)
+    hostname = text_file_object.readline()
 
-    file_object = file_entry.GetFileObject()
-    file_data = file_object.read(512)
-    file_object.close()
-
-    hostname, _, _ = file_data.partition(b'\n')
     try:
       hostname = hostname.decode(u'utf-8')
     except UnicodeDecodeError:
       # TODO: add and store preprocessing errors.
       hostname = hostname.decode(u'utf-8', errors=u'replace')
 
+    hostname = hostname.strip()
     if hostname:
-      return artifacts.HostnameArtifact(name=hostname)
+      hostname_artifact = artifacts.HostnameArtifact(name=hostname)
+      # TODO: refactor the use of store number.
+      hostname_artifact.store_number = 0
+      knowledge_base.SetHostname(hostname_artifact)
 
 
-class LinuxTimezone(interface.PreprocessPlugin):
-  """A preprocessing class that fetches the timezone on Linux."""
+class LinuxTimeZonePreprocessPlugin(interface.FilePreprocessPlugin):
+  """Linux time zone preprocessing plugin."""
 
-  ATTRIBUTE = u'time_zone_str'
-  DEFAULT_ATTRIBUTE_VALUE = u'UTC'
-  SUPPORTED_OS = [u'Linux']
-  WEIGHT = 1
+  _PATH = u'/etc/timezone'
 
-  def GetValue(self, searcher, unused_knowledge_base):
-    """Determines the timezone based on the contents of /etc/timezone.
+  def _ParseFileObject(self, knowledge_base, file_object):
+    """Parses a time zone file-like object.
 
     Args:
-      searcher (dfvfs.FileSystemSearcher): file system searcher.
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      file_object (dfvfs.FileIO): file-like object.
+    """
+    text_file_object = text_file.TextFile(file_object)
+    file_data = text_file_object.readline()
 
-    Returns:
-      str: an Olsen, or tzdata, timezone name, e.g. 'America/New_York'.
+    timezone = file_data.strip()
+    if timezone:
+      knowledge_base.SetValue(u'time_zone_str', timezone)
+
+
+class LinuxUserAccountsPreprocessPlugin(interface.FilePreprocessPlugin):
+  """Linux user accounts preprocessing plugin."""
+
+  _PATH = u'/etc/passwd'
+
+  def _ParseFileObject(self, knowledge_base, file_object):
+    """Parses a passwd file-like object.
+
+    A passwd file consist of colon seperated values in the format:
+    "username:password:uid:gid:full name:home directory:shell".
+
+    Args:
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      file_object (dfvfs.FileIO): file-like object.
 
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
-    path = u'/etc/timezone'
-    file_entry = self._FindFileEntry(searcher, path)
-    if not file_entry:
-      raise errors.PreProcessFail(
-          u'Unable to find file entry for path: {0:s}.'.format(path))
-
-    file_object = file_entry.GetFileObject()
-    try:
-      text_file_object = text_file.TextFile(file_object)
-      file_data = text_file_object.readline()
-    finally:
-      file_object.close()
-    return file_data.strip()
-
-
-class LinuxUsernames(interface.PreprocessPlugin):
-  """A preprocessing class that fetches usernames on Linux."""
-
-  SUPPORTED_OS = [u'Linux']
-  WEIGHT = 1
-  ATTRIBUTE = u'users'
-
-  def GetValue(self, searcher, unused_knowledge_base):
-    """Determines the user information based on the contents of /etc/passwd.
-
-    Args:
-      searcher (dfvfs.FileSystemSearcher): file system searcher.
-      knowledge_base (KnowledgeBase): to fill with preprocessing information.
-
-    Returns:
-      list[UserAccountArtifact]: user account artifacts.
-
-    Raises:
-      errors.PreProcessFail: if the preprocessing fails.
-    """
-    # TODO: Add passwd.cache, might be good if nss cache is enabled.
-
-    path = u'/etc/passwd'
-    file_entry = self._FindFileEntry(searcher, path)
-    if not file_entry:
-      raise errors.PreProcessFail(
-          u'Unable to find file entry for path: {0:s}.'.format(path))
-
-    file_object = file_entry.GetFileObject()
     text_file_object = text_file.TextFile(file_object)
 
-    # username:password:uid:gid:full name:home directory:shell
     try:
       reader = csv.reader(text_file_object, delimiter=b':')
     except csv.Error:
-      raise errors.PreProcessFail(u'Unable to read: {0:s}.'.format(path))
+      raise errors.PreProcessFail(u'Unable to read: {0:s}.'.format(self._PATH))
 
-    users = []
     for row in reader:
       if len(row) < 7 or not row[0] or not row[2]:
         # TODO: add and store preprocessing errors.
         continue
 
-      user_account_artifact = artifacts.UserAccountArtifact(
+      user_account = artifacts.UserAccountArtifact(
           identifier=row[2], username=row[0])
-      user_account_artifact.group_identifier = row[3] or None
-      user_account_artifact.full_name = row[4] or None
-      user_account_artifact.user_directory = row[5] or None
-      user_account_artifact.shell = row[6] or None
+      user_account.group_identifier = row[3] or None
+      user_account.full_name = row[4] or None
+      user_account.user_directory = row[5] or None
+      user_account.shell = row[6] or None
 
-      users.append(user_account_artifact)
-
-    file_object.close()
-
-    if not users:
-      raise errors.PreProcessFail(u'Unable to find any users on the system.')
-    return users
+      # TODO: refactor the use of store number.
+      user_account.store_number = 0
+      knowledge_base.SetUserAccount(user_account)
 
 
 manager.PreprocessPluginsManager.RegisterPlugins([
-    LinuxHostname, LinuxTimezone, LinuxUsernames])
+    LinuxHostnamePreprocessPlugin, LinuxTimeZonePreprocessPlugin,
+    LinuxUserAccountsPreprocessPlugin])

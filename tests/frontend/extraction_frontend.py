@@ -108,6 +108,7 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
 
   # Note: this test takes multiple seconds to complete due to
   # the behavior of the multi processing queue.
+  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
   def testProcessSources(self):
     """Tests the ProcessSources function."""
     session = sessions.Session()

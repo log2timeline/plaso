@@ -4,17 +4,19 @@
 
 import unittest
 
-from plaso.formatters import mactime as _  # pylint: disable=unused-import
+from plaso.formatters import mactime  # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import mactime
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class MactimeTest(test_lib.ParserTestCase):
   """Tests the for mactime parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'mactime.body'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = mactime.MactimeParser()

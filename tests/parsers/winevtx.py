@@ -4,22 +4,23 @@
 
 import unittest
 
-from plaso.formatters import winevtx as _  # pylint: disable=unused-import
+from plaso.formatters import winevtx  # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import winevtx
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class WinEvtxParserTest(test_lib.ParserTestCase):
   """Tests for the Windows XML EventLog (EVTX) parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'System.evtx'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = winevtx.WinEvtxParser()
-    storage_writer = self._ParseFile(
-        [u'System.evtx'], parser_object)
+    storage_writer = self._ParseFile([u'System.evtx'], parser_object)
 
     # Windows Event Viewer Log (EVTX) information:
     #   Version                     : 3.1
@@ -116,6 +117,9 @@ class WinEvtxParserTest(test_lib.ParserTestCase):
 
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'System2.evtx'])
+  def testParseTruncated(self):
+    """Tests the Parse function on a truncated file."""
     parser_object = winevtx.WinEvtxParser()
     # Be aware of System2.evtx file, it was manually shortened so it probably
     # contains invalid log at the end.

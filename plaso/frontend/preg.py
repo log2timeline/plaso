@@ -368,6 +368,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
             yield PregRegistryHelper(
                 file_entry, collector_name, self.knowledge_base_object,
                 codepage=codepage)
+
         else:
           path_attribute_value = path_attributes.get(u'systemroot', None)
           if path_attribute_value:
@@ -527,10 +528,12 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     if not self._single_file and not self._preprocess_completed:
       file_system, mount_point = self._GetSourceFileSystem(
           self._source_path_specs[0])
-      preprocess_manager.PreprocessPluginsManager.RunPlugins(
-          u'Windows', file_system, mount_point, self.knowledge_base_object)
-      self._preprocess_completed = True
-      file_system.Close()
+      try:
+        preprocess_manager.PreprocessPluginsManager.RunPlugins(
+            file_system, mount_point, self.knowledge_base_object)
+        self._preprocess_completed = True
+      finally:
+        file_system.Close()
 
     # TODO: fix issue handling Windows paths
     if registry_file_types is None:

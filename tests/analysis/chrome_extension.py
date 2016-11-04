@@ -87,6 +87,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
       {u'name': u'dude', u'path': u'C:\\Users\\dude', u'sid': u'S-1'},
       {u'name': u'frank', u'path': u'C:\\Users\\frank', u'sid': u'S-2'}]
 
+  @shared_test_lib.skipUnlessHasTestFile([u'chrome_extensions'])
   def testGetPathSegmentSeparator(self):
     """Tests the _GetPathSegmentSeparator function."""
     plugin = MockChromeExtensionPlugin()
@@ -99,6 +100,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
       path_segment_separator = plugin._GetPathSegmentSeparator(path)
       self.assertEqual(path_segment_separator, u'\\')
 
+  @shared_test_lib.skipUnlessHasTestFile([u'chrome_extensions'])
   def testExamineEventAndCompileReportMacOSXPaths(self):
     """Tests the ExamineEvent and CompileReport functions on Mac OS X paths."""
     events = []
@@ -139,6 +141,7 @@ class ChromeExtensionTest(test_lib.AnalysisPluginTestCase):
     expected_keys = set([u'frank', u'dude'])
     self.assertEqual(set(analysis_report.report_dict.keys()), expected_keys)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'chrome_extensions'])
   def testExamineEventAndCompileReportWindowsPaths(self):
     """Tests the ExamineEvent and CompileReport functions on Windows paths."""
     events = []

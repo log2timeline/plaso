@@ -5,205 +5,148 @@
 import unittest
 
 from dfvfs.helpers import fake_file_system_builder
-from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
-from dfwinreg import registry as dfwinreg_registry
 
-from plaso.engine import knowledge_base
-from plaso.preprocessors import manager
 from plaso.preprocessors import windows
 
 from tests import test_lib as shared_test_lib
+from tests.preprocessors import test_lib
 
 
-class WindowsSoftwareRegistryTest(shared_test_lib.BaseTestCase):
-  """Base class for tests that use the SOFTWARE Registry file."""
-
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    path_attributes = {u'systemroot': u'\\Windows'}
-
-    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    test_file_path = self._GetTestFilePath([u'SOFTWARE'])
-    file_system_builder.AddFileReadData(
-        u'/Windows/System32/config/SOFTWARE', test_file_path)
-
-    mount_point = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
-    registry_file_reader = manager.FileSystemWinRegistryFileReader(
-        file_system_builder.file_system, mount_point,
-        path_attributes=path_attributes)
-    self._win_registry = dfwinreg_registry.WinRegistry(
-        registry_file_reader=registry_file_reader)
-
-
-class WindowsSystemRegistryTest(shared_test_lib.BaseTestCase):
-  """Base class for tests that use the SYSTEM Registry file."""
-
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    path_attributes = {u'systemroot': u'\\Windows'}
-
-    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    test_file_path = self._GetTestFilePath([u'SYSTEM'])
-    file_system_builder.AddFileReadData(
-        u'/Windows/System32/config/SYSTEM', test_file_path)
-
-    mount_point = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
-    registry_file_reader = manager.FileSystemWinRegistryFileReader(
-        file_system_builder.file_system, mount_point,
-        path_attributes=path_attributes)
-    self._win_registry = dfwinreg_registry.WinRegistry(
-        registry_file_reader=registry_file_reader)
-
-
-class WindowsCodepageTest(WindowsSystemRegistryTest):
+class WindowsCodepagePreprocessPluginTest(test_lib.PreprocessPluginTestCase):
   """Tests for the Windows codepage preprocess plug-in object."""
 
-  def testGetValue(self):
-    """Tests the GetValue function."""
-    plugin = windows.WindowsCodepage()
+  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
+  def testRun(self):
+    """Tests the Run function."""
+    plugin = windows.WindowsCodepagePreprocessPlugin()
+    knowledge_base = self._RunWindowsRegistryPluginOnSystem(plugin)
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    plugin.Run(self._win_registry, knowledge_base_object)
-
-    self.assertEqual(knowledge_base_object.codepage, u'cp1252')
+    self.assertEqual(knowledge_base.codepage, u'cp1252')
 
 
-class WindowsHostnameTest(WindowsSystemRegistryTest):
+class WindowsHostnamePreprocessPluginTest(test_lib.PreprocessPluginTestCase):
   """Tests for the Windows hostname preprocess plug-in object."""
 
-  def testGetValue(self):
-    """Tests the GetValue function."""
-    plugin = windows.WindowsHostname()
+  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
+  def testRun(self):
+    """Tests the Run function."""
+    plugin = windows.WindowsHostnamePreprocessPlugin()
+    knowledge_base = self._RunWindowsRegistryPluginOnSystem(plugin)
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    plugin.Run(self._win_registry, knowledge_base_object)
-
-    self.assertEqual(knowledge_base_object.hostname, u'WKS-WIN732BITA')
+    self.assertEqual(knowledge_base.hostname, u'WKS-WIN732BITA')
 
 
-class WindowsProgramFilesEnvironmentVariableTest(WindowsSoftwareRegistryTest):
+class WindowsProgramFilesEnvironmentVariableTest(
+    test_lib.PreprocessPluginTestCase):
   """Tests for the %ProgramFiles% environment variable plug-in."""
 
-  def testGetValue(self):
-    """Tests the GetValue function."""
+  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE'])
+  def testRun(self):
+    """Tests the Run function."""
     plugin = windows.WindowsProgramFilesEnvironmentVariable()
+    knowledge_base = self._RunWindowsRegistryPluginOnSoftware(plugin)
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    plugin.Run(self._win_registry, knowledge_base_object)
-
-    environment_variable = knowledge_base_object.GetEnvironmentVariable(
+    environment_variable = knowledge_base.GetEnvironmentVariable(
         u'ProgramFiles')
-
     self.assertIsNotNone(environment_variable)
     self.assertEqual(environment_variable.value, u'\\Program Files')
 
 
 class WindowsProgramFilesX86EnvironmentVariableTest(
-    WindowsSoftwareRegistryTest):
+    test_lib.PreprocessPluginTestCase):
   """Tests for the %ProgramFilesX86% environment variable plug-in."""
 
-  def testGetValue(self):
-    """Tests the GetValue function."""
+  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE'])
+  def testRun(self):
+    """Tests the Run function."""
     plugin = windows.WindowsProgramFilesX86EnvironmentVariable()
+    knowledge_base = self._RunWindowsRegistryPluginOnSoftware(plugin)
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    plugin.Run(self._win_registry, knowledge_base_object)
-
-    environment_variable = knowledge_base_object.GetEnvironmentVariable(
+    environment_variable = knowledge_base.GetEnvironmentVariable(
         u'ProgramFilesX86')
-
     # The test SOFTWARE Registry file does not contain a value for
     # the Program Files X86 path.
     self.assertIsNone(environment_variable)
 
 
-class WindowsSystemRegistryPathTest(shared_test_lib.BaseTestCase):
-  """Tests for the Windows system Registry path preprocess plug-in object."""
-
-  _FILE_DATA = b'regf'
-
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    file_system_builder.AddFile(
-        u'/Windows/System32/config/SYSTEM', self._FILE_DATA)
-
-    mount_point = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
-    self._searcher = file_system_searcher.FileSystemSearcher(
-        file_system_builder.file_system, mount_point)
-
-  def testGetValue(self):
-    """Tests the GetValue function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
-    plugin = windows.WindowsSystemRegistryPath()
-    plugin.Run(self._searcher, knowledge_base_object)
-
-    path = knowledge_base_object.GetValue(u'sysregistry')
-    self.assertEqual(path, u'\\Windows\\System32\\config')
-
-
-class WindowsSystemRootEnvironmentVariableTest(shared_test_lib.BaseTestCase):
+class WindowsSystemRootEnvironmentVariableTest(
+    test_lib.PreprocessPluginTestCase):
   """Tests for the %SystemRoot% environment variable plug-in."""
 
   _FILE_DATA = b'regf'
 
-  def testGetValue(self):
-    """Tests the GetValue function."""
+  def testRun(self):
+    """Tests the Run function."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
     file_system_builder.AddFile(
         u'/Windows/System32/config/SYSTEM', self._FILE_DATA)
 
     mount_point = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
-    searcher = file_system_searcher.FileSystemSearcher(
-        file_system_builder.file_system, mount_point)
-
-    knowledge_base_object = knowledge_base.KnowledgeBase()
 
     plugin = windows.WindowsSystemRootEnvironmentVariable()
-    plugin.Run(searcher, knowledge_base_object)
+    knowledge_base = self._RunFileSystemPlugin(
+        file_system_builder.file_system, mount_point, plugin)
 
-    environment_variable = knowledge_base_object.GetEnvironmentVariable(
-        u'SystemRoot')
-
+    environment_variable = knowledge_base.GetEnvironmentVariable(u'SystemRoot')
     self.assertIsNotNone(environment_variable)
     self.assertEqual(environment_variable.value, u'\\Windows')
 
 
-class WindowsTimeZoneTest(WindowsSystemRegistryTest):
+class WindowsSystemProductPluginTest(test_lib.PreprocessPluginTestCase):
+  """Tests for the plugin to determine Windows system version information."""
+
+  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE'])
+  def testRun(self):
+    """Tests the Run function."""
+    plugin = windows.WindowsSystemProductPlugin()
+    knowledge_base = self._RunWindowsRegistryPluginOnSoftware(plugin)
+
+    osversion = knowledge_base.GetValue(u'operating_system_product')
+    self.assertEqual(osversion, u'Windows 7 Ultimate')
+
+
+class WindowsSystemVersionPluginTest(test_lib.PreprocessPluginTestCase):
+  """Tests for the plugin to determine Windows system version information."""
+
+  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE'])
+  def testRun(self):
+    """Tests the Run function."""
+    plugin = windows.WindowsSystemVersionPlugin()
+    knowledge_base = self._RunWindowsRegistryPluginOnSoftware(plugin)
+
+    osversion = knowledge_base.GetValue(u'operating_system_version')
+    self.assertEqual(osversion, u'6.1')
+
+
+class WindowsTimeZonePreprocessPluginTest(test_lib.PreprocessPluginTestCase):
   """Tests for the Windows timezone preprocess plug-in object."""
 
-  def testGetValue(self):
-    """Tests the GetValue function."""
-    plugin = windows.WindowsTimeZone()
+  def testRun(self):
+    """Tests the Run function."""
+    plugin = windows.WindowsTimeZonePreprocessPlugin()
+    knowledge_base = self._RunWindowsRegistryPluginOnSystem(plugin)
 
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    plugin.Run(self._win_registry, knowledge_base_object)
-
-    time_zone_str = knowledge_base_object.GetValue(u'time_zone_str')
+    time_zone_str = knowledge_base.GetValue(u'time_zone_str')
     self.assertEqual(time_zone_str, u'EST5EDT')
 
 
-class WindowsUsersTest(WindowsSoftwareRegistryTest):
+class WindowsUserAccountsPreprocessPluginTest(
+    test_lib.PreprocessPluginTestCase):
   """Tests for the Windows username preprocess plug-in object."""
 
   # pylint: disable=protected-access
 
-  def testGetValue(self):
-    """Tests the GetValue function."""
-    plugin = windows.WindowsUsers()
-
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    plugin.Run(self._win_registry, knowledge_base_object)
+  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE'])
+  def testRun(self):
+    """Tests the Run function."""
+    plugin = windows.WindowsUserAccountsPreprocessPlugin()
+    knowledge_base = self._RunWindowsRegistryPluginOnSoftware(plugin)
 
     users = sorted(
-        knowledge_base_object._user_accounts[0].values(),
+        knowledge_base._user_accounts[0].values(),
         key=lambda user_account: user_account.identifier)
     self.assertIsNotNone(users)
     self.assertEqual(len(users), 11)
@@ -214,34 +157,6 @@ class WindowsUsersTest(WindowsSoftwareRegistryTest):
     self.assertEqual(user_account.identifier, expected_sid)
     self.assertEqual(user_account.username, u'rsydow')
     self.assertEqual(user_account.user_directory, u'C:\\Users\\rsydow')
-
-
-class WindowsSystemProductPluginTest(WindowsSoftwareRegistryTest):
-  """Tests for the plugin to determine Windows system version information."""
-
-  def testGetValue(self):
-    """Tests the GetValue function."""
-    plugin = windows.WindowsSystemProductPlugin()
-
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    plugin.Run(self._win_registry, knowledge_base_object)
-
-    osversion = knowledge_base_object.GetValue(u'operating_system_product')
-    self.assertEqual(osversion, u'Windows 7 Ultimate')
-
-
-class WindowsSystemVersionPluginTest(WindowsSoftwareRegistryTest):
-  """Tests for the plugin to determine Windows system version information."""
-
-  def testGetValue(self):
-    """Tests the GetValue function."""
-    plugin = windows.WindowsSystemVersionPlugin()
-
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-    plugin.Run(self._win_registry, knowledge_base_object)
-
-    osversion = knowledge_base_object.GetValue(u'operating_system_version')
-    self.assertEqual(osversion, u'6.1')
 
 
 if __name__ == '__main__':

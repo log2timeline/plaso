@@ -7,12 +7,15 @@ import unittest
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import twitter_ios
+
+from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class TwitterIOSTest(test_lib.SQLitePluginTestCase):
   """Tests for Twitter on iOS 8+ database plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'twitter_ios.db'])
   def testProcess(self):
     """Test the Process function on a Twitter iOS file."""
     plugin_object = twitter_ios.TwitterIOSPlugin()
