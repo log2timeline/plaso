@@ -27,6 +27,7 @@ sys.path.insert(0, os.path.abspath('..'))
 import plaso
 from plaso import dependencies
 
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -38,11 +39,11 @@ from plaso import dependencies
 
 
 extensions = [
-  'sphinx.ext.autodoc',
-  'sphinx.ext.doctest',
-  'sphinx.ext.coverage',
-  'sphinx.ext.viewcode',
-  'sphinxcontrib.napoleon'
+    'sphinx.ext.autodoc',
+    'sphinx.ext.doctest',
+    'sphinx.ext.coverage',
+    'sphinx.ext.viewcode',
+    'sphinxcontrib.napoleon'
 ]
 
 
