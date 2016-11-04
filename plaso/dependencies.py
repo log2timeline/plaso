@@ -10,7 +10,7 @@ import re
 # A version tuple consists of:
 # (version_attribute_name, minimum_version, maximum_version)
 #
-# Where ersion_attribute_name is either a name of an attribute,
+# Where version_attribute_name is either a name of an attribute,
 # property or method.
 PYTHON_DEPENDENCIES = {
     u'artifacts': (u'__version__', u'20150409', None),

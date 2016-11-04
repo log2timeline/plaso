@@ -70,9 +70,7 @@ class Mock(MagicMock):
 
 # Mock all the dependencies! (except the ones we don't want to).
 modules_to_mock = [
-  dependency for dependency, _, _, _ in dependencies.PYTHON_DEPENDENCIES]
-for key, value in iter(dependencies.LIBYAL_DEPENDENCIES.items()):
-  modules_to_mock.append(key)
+  dependency for dependency in dependencies.PYTHON_DEPENDENCIES.keys()]
 
 # We also need to mock some modules that we don't have explicit dependencies on
 # so that we can generated documentation for those components. We also need
