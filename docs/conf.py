@@ -79,16 +79,17 @@ for key, value in iter(dependencies.LIBYAL_DEPENDENCIES.items()):
 # to explicitly mock each submodule.
 # TODO: Find a better way to do this
 ADDITIONAL_MODULES = set([
-  u'artifacts.knowledge_base', u'dateutil.parser', u'dfvfs.analyzer',
-  u'dfvfs.credentials', u'dfvfs.file_io', u'dfvfs.helpers', u'dfvfs.lib',
-  u'dfvfs.path', u'dfvfs.resolver', u'dfvfs.serializer',
-  u'dfvfs.serializer.json_serializer', u'dfvfs.vfs', u'dfvfs.volume',
-  u'dfwinreg.definitions', u'efilter.protocols', u'elasticsearch',
-  u'elasticsearch.exceptions', u'flask', u'hachoir_core',
-  u'hachoir_core.config', u'hachoir_parser', u'hachoir_metadata', u'MySQLdb',
-  u'pyelasticsearch', u'requests', u'timesketch', u'timesketch.lib',
-  u'timesketch.lib.datastores', u'timesketch.lib.datastores.elastic',
-  u'timesketch.models', u'timesketch.models.sketch', u'timesketch.models.user'])
+    u'artifacts.knowledge_base', u'dateutil.parser', u'dfvfs.analyzer',
+    u'dfvfs.credentials', u'dfvfs.file_io', u'dfvfs.helpers', u'dfvfs.lib',
+    u'dfvfs.path', u'dfvfs.resolver', u'dfvfs.serializer',
+    u'dfvfs.serializer.json_serializer', u'dfvfs.vfs', u'dfvfs.volume',
+    u'dfwinreg.definitions', u'efilter.protocols', u'elasticsearch',
+    u'elasticsearch.exceptions', u'flask', u'hachoir_core',
+    u'hachoir_core.config', u'hachoir_parser', u'hachoir_metadata', u'MySQLdb',
+    u'pyelasticsearch', u'requests', u'timesketch', u'timesketch.lib',
+    u'timesketch.lib.datastores', u'timesketch.lib.datastores.elastic',
+    u'timesketch.models', u'timesketch.models.sketch',
+    u'timesketch.models.user'])
 modules_to_mock = set(modules_to_mock).union(ADDITIONAL_MODULES)
 
 # There are some modules we install via pip on readthedocs that we don't need
