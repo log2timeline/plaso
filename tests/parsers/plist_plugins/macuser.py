@@ -4,16 +4,18 @@
 
 import unittest
 
-from plaso.formatters import plist as _  # pylint: disable=unused-import
+from plaso.formatters import plist  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.plist_plugins import macuser
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.plist_plugins import test_lib
 
 
 class MacUserPluginTest(test_lib.PlistPluginTestCase):
   """Tests for the Mac OS X local user plist plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'user.plist'])
   def testProcess(self):
     """Tests the Process function."""
     plist_name = u'user.plist'

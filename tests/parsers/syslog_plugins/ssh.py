@@ -7,12 +7,14 @@ from plaso.lib import timelib
 from plaso.parsers import syslog
 from plaso.parsers.syslog_plugins import ssh
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.syslog_plugins import test_lib
 
 
 class SSHSyslogParserTest(test_lib.SyslogPluginTestCase):
   """Tests for the SSH syslog plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'syslog_ssh.log'])
   def testParse(self):
     """Tests the Parse function."""
     storage_writer = self._ParseFileWithPlugin(

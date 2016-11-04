@@ -4,22 +4,23 @@
 
 import unittest
 
-from plaso.formatters import winlnk as _  # pylint: disable=unused-import
+from plaso.formatters import winlnk  # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import winlnk
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class WinLnkParserTest(test_lib.ParserTestCase):
   """Tests for the Windows Shortcut (LNK) parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'example.lnk'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = winlnk.WinLnkParser()
-    storage_writer = self._ParseFile(
-        [u'example.lnk'], parser_object)
+    storage_writer = self._ParseFile([u'example.lnk'], parser_object)
 
     # Link information:
     # 	Creation time			: Jul 13, 2009 23:29:02.849131000 UTC
@@ -101,11 +102,11 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.uuid, expected_uuid)
     self.assertEqual(event_object.mac_address, u'00:1d:09:fa:5a:1c')
 
+  @shared_test_lib.skipUnlessHasTestFile([u'NeroInfoTool.lnk'])
   def testParseLinkTargetIdentifier(self):
     """Tests the Parse function on an LNK with a link target identifier."""
     parser_object = winlnk.WinLnkParser()
-    storage_writer = self._ParseFile(
-        [u'NeroInfoTool.lnk'], parser_object)
+    storage_writer = self._ParseFile([u'NeroInfoTool.lnk'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 20)
 

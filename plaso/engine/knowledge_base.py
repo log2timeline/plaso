@@ -226,6 +226,15 @@ class KnowledgeBase(object):
     identifier = identifier.lower()
     return self._values.get(identifier, default_value)
 
+  def HasUserAccounts(self):
+    """Determines if the knowledge base contains user accounts.
+
+    Returns:
+      bool: True if the knowledge base contains user accounts.
+    """
+    # TODO: refactor the use of store number.
+    return self._user_accounts.get(0, {})
+
   def ReadSystemConfigurationArtifact(self, store_number, system_configuration):
     """Reads the knowledge base values from a system configuration artifact.
 

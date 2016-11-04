@@ -4,10 +4,11 @@
 
 import unittest
 
-from plaso.formatters import skydrivelog as _  # pylint: disable=unused-import
+from plaso.formatters import skydrivelog  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import skydrivelog
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
@@ -17,11 +18,11 @@ __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 class SkyDriveLogUnitTest(test_lib.ParserTestCase):
   """Tests for the SkyDrive log parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'skydriveerr.log'])
   def testParseErrorLog(self):
     """Tests the Parse function or error log."""
     parser_object = skydrivelog.SkyDriveLogParser()
-    storage_writer = self._ParseFile(
-        [u'skydriveerr.log'], parser_object)
+    storage_writer = self._ParseFile([u'skydriveerr.log'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 19)
 
@@ -70,6 +71,7 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event_object, expected_message, expected_message_short)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'skydriveerr-unicode.log'])
   def testParseErrorLogUnicode(self):
     """Tests the Parse function on Unicode error log."""
     parser_object = skydrivelog.SkyDriveLogParser()
@@ -86,11 +88,11 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
         u'No node found named Passport-Jméno-člena, no user name available,')
     self.assertEqual(event_object.detail, expected_detail)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'skydrive.log'])
   def testParseLog(self):
     """Tests the Parse function on normal log."""
     parser_object = skydrivelog.SkyDriveLogParser()
-    storage_writer = self._ParseFile(
-        [u'skydrive.log'], parser_object)
+    storage_writer = self._ParseFile([u'skydrive.log'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 17)
 
@@ -163,11 +165,11 @@ class SkyDriveLogUnitTest(test_lib.ParserTestCase):
 class SkyDriveOldLogUnitTest(test_lib.ParserTestCase):
   """Tests for the SkyDrive old log parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'skydrive_old.log'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = skydrivelog.SkyDriveOldLogParser()
-    storage_writer = self._ParseFile(
-        [u'skydrive_old.log'], parser_object)
+    storage_writer = self._ParseFile([u'skydrive_old.log'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 18)
 

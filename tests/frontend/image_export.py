@@ -47,6 +47,7 @@ class DateTimeFileEntryFilterTest(shared_test_lib.BaseTestCase):
     with self.assertRaises(ValueError):
       test_filter.AddDateTimeRange(u'atime')
 
+  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
   def testMatches(self):
     """Tests the Matches function."""
     test_path = self._GetTestFilePath([u'ímynd.dd'])
@@ -153,6 +154,7 @@ class DateTimeFileEntryFilterTest(shared_test_lib.BaseTestCase):
 class ExtensionsFileEntryFilterTest(shared_test_lib.BaseTestCase):
   """Tests the extensions file entry filter."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
   def testMatches(self):
     """Tests the Matches function."""
     test_path = self._GetTestFilePath([u'ímynd.dd'])
@@ -205,6 +207,7 @@ class ExtensionsFileEntryFilterTest(shared_test_lib.BaseTestCase):
 class NamesFileEntryFilterTest(shared_test_lib.BaseTestCase):
   """Tests the names file entry filter."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
   def testMatches(self):
     """Tests the Matches function."""
     test_path = self._GetTestFilePath([u'ímynd.dd'])
@@ -296,6 +299,8 @@ class SignaturesFileEntryFilterTest(shared_test_lib.BaseTestCase):
         specification_store, [u'positive_offset'])
     self.assertIsNotNone(file_scanner)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER.DAT'])
+  @shared_test_lib.skipUnlessHasTestFile([u'test_pe.exe'])
   def testMatches(self):
     """Tests the Matches function."""
     specification_store = specification.FormatSpecificationStore()
@@ -416,6 +421,7 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
 
     return results
 
+  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
   def testCalculateDigestHash(self):
     """Tests the _CalculateDigestHash function."""
     test_front_end = image_export.ImageExportFrontend()
@@ -447,6 +453,7 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
   # TODO: add test for _CreateSanitizedDestinationDirectory.
   # TODO: add test for _Extract.
 
+  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
   def testExtractDataStream(self):
     """Tests the _ExtractDataStream function."""
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
@@ -464,6 +471,7 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
       test_front_end._ExtractDataStream(
           file_entry, u'', temp_directory, output_writer)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
   def testExtractFileEntry(self):
     """Tests the _ExtractFileEntry function."""
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
@@ -484,6 +492,7 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
   # TODO: add test for _GetSourceFileSystem.
   # TODO: add test for _Preprocess.
 
+  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
   def testWriteFileEntry(self):
     """Tests the _WriteFileEntry function."""
     test_front_end = image_export.ImageExportFrontend()
@@ -563,6 +572,7 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
 
   # TODO: add test for PrintFilterCollection.
 
+  @shared_test_lib.skipUnlessHasTestFile([u'image.qcow2'])
   def testProcessSourcesExtractWithDateTimeFilter(self):
     """Tests the ProcessSources function with a date time filter."""
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
@@ -601,6 +611,7 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'image.qcow2'])
   def testProcessSourcesExtractWithExtensionsFilter(self):
     """Tests the ProcessSources function with an extensions filter."""
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
@@ -626,6 +637,7 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'image.qcow2'])
   def testProcessSourcesExtractWithNamesFilter(self):
     """Tests the ProcessSources function with a names filter."""
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
@@ -652,6 +664,7 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'image.qcow2'])
   def testProcessSourcesExtractWithFilter(self):
     """Tests the ProcessSources function with a filter file."""
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
@@ -684,6 +697,7 @@ class ImageExportFrontendTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(sorted(extracted_files), expected_extracted_files)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'syslog_image.dd'])
   def testProcessSourcesExtractWithSignaturesFilter(self):
     """Tests the ProcessSources function with a signatures filter."""
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')

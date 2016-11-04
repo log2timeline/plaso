@@ -8,6 +8,7 @@ from plaso.parsers import plist
 # Register all plugins.
 from plaso.parsers import plist_plugins  # pylint: disable=unused-import
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
@@ -26,11 +27,11 @@ class PlistParserTest(test_lib.ParserTestCase):
     self.assertNotEqual(parser_object._plugin_objects, [])
     self.assertEqual(len(parser_object._plugin_objects), 1)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'plist_binary'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = plist.PlistParser()
-    storage_writer = self._ParseFile(
-        [u'plist_binary'], parser_object)
+    storage_writer = self._ParseFile([u'plist_binary'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 12)
 

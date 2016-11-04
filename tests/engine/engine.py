@@ -93,6 +93,8 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
     with self.assertRaises(RuntimeError):
       test_engine.GetSourceFileSystem(None)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE'])
+  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
   def testPreprocessSources(self):
     """Tests the PreprocessSources function."""
     test_engine = TestEngine()

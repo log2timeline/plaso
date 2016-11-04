@@ -2,7 +2,6 @@
 """This file contains preprocessors for Mac OS X."""
 
 import abc
-import logging
 import plistlib
 
 from plaso.containers import artifacts
@@ -13,8 +12,10 @@ from plaso.preprocessors import interface
 from plaso.preprocessors import manager
 
 
-class PlistPreprocessPlugin(interface.PreprocessPlugin):
-  """Class that defines the plist preprocess plugin object."""
+class PlistPreprocessPlugin(interface.FileSystemPreprocessPlugin):
+  """The plist preprocess plugin interface."""
+
+  _PLIST_PATH = u''
 
   def _GetPlistRootKey(self, file_entry):
     """Opens a plist file entry.
@@ -30,8 +31,8 @@ class PlistPreprocessPlugin(interface.PreprocessPlugin):
     """
     file_object = file_entry.GetFileObject()
 
-    plist_file = plist.PlistFile()
     try:
+      plist_file = plist.PlistFile()
       plist_file.Read(file_object)
 
     except IOError as exception:
@@ -46,40 +47,27 @@ class PlistPreprocessPlugin(interface.PreprocessPlugin):
     return plist_file.root_key
 
   @abc.abstractmethod
-  def GetValue(self, searcher, knowledge_base):
-    """Parses a plist file for a preprocessing attribute.
+  def Run(self, searcher, knowledge_base):
+    """Determines the value of the preprocessing attributes.
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
-
-    Returns:
-      object: preprocess attribute value or None.
-
-    Raises:
-      errors.PreProcessFail: if the preprocessing fails.
     """
 
 
 class PlistKeyPreprocessPlugin(PlistPreprocessPlugin):
-  """Class that defines the plist key preprocess plugin object.
+  """The plist key preprocess plugin interface.
 
   The plist key preprocess plugin retieves values from key names,
-  defined in PLIST_KEYS, from a specific plist file, defined in
-  PLIST_PATH.
+  defined in _PLIST_KEYS, from a specific plist file, defined in
+  _PLIST_PATH.
   """
-
-  SUPPORTED_OS = [u'MacOSX']
-  WEIGHT = 2
-
-  # Path to the plist file to be parsed, can depend on paths discovered
-  # in previous preprocessors.
-  PLIST_PATH = u''
 
   # The key that's value should be returned back. It is an ordered list
   # of preference. If the first value is found it will be returned and no
   # others will be searched.
-  PLIST_KEYS = [u'']
+  _PLIST_KEYS = [u'']
 
   def _FindKeys(self, key, names, matches):
     """Searches the plist key hierarchy for keys with matching names.
@@ -100,25 +88,29 @@ class PlistKeyPreprocessPlugin(PlistPreprocessPlugin):
       if isinstance(subkey, plistlib._InternalDict):
         self._FindKeys(subkey, names, matches)
 
-  def GetValue(self, searcher, unused_knowledge_base):
-    """Returns a value retrieved from keys within a plist file.
+  @abc.abstractmethod
+  def _ParseValue(self, knowledge_base, name, value):
+    """Parses a plist key value.
 
-    Where the name of the keys are defined in PLIST_KEYS.
+    Args:
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      name (str): name of the plist key.
+      value (str): value of the plist key.
+    """
+
+  def Run(self, searcher, knowledge_base):
+    """Determines the value of the preprocessing attributes.
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
 
-    Returns:
-      object: value of the first key that is found.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
-    file_entry = self._FindFileEntry(searcher, self.PLIST_PATH)
+    file_entry = self._FindFileEntry(searcher, self._PLIST_PATH)
     if not file_entry:
-      raise errors.PreProcessFail(
-          u'Unable to open file: {0:s}'.format(self.PLIST_PATH))
+      return
 
     root_key = self._GetPlistRootKey(file_entry)
     if not root_key:
@@ -128,138 +120,129 @@ class PlistKeyPreprocessPlugin(PlistPreprocessPlugin):
 
     matches = []
 
-    self._FindKeys(root_key, self.PLIST_KEYS, matches)
+    self._FindKeys(root_key, self._PLIST_KEYS, matches)
     if not matches:
       raise errors.PreProcessFail(u'No such keys: {0:s}.'.format(
-          u', '.join(self.PLIST_KEYS)))
+          u', '.join(self._PLIST_KEYS)))
 
-    key_name = None
-    key_value = None
-    for key_name, key_value in matches:
-      if key_value:
+    name = None
+    value = None
+    for name, value in matches:
+      if value:
         break
 
-    if key_value is None:
+    if value is None:
       raise errors.PreProcessFail(u'No values found for keys: {0:s}.'.format(
-          u', '.join(self.PLIST_KEYS)))
+          u', '.join(self._PLIST_KEYS)))
 
-    return self.ParseValue(key_name, key_value)
+    self._ParseValue(knowledge_base, name, value)
 
-  def ParseValue(self, unused_key_name, key_value):
+
+class MacOSXHostnamePreprocessPlugin(PlistKeyPreprocessPlugin):
+  """Mac OS X hostname preprocessing plugin."""
+
+  _PLIST_PATH = u'/Library/Preferences/SystemConfiguration/preferences.plist'
+  _PLIST_KEYS = [u'ComputerName', u'LocalHostName']
+
+  def _ParseValue(self, knowledge_base, name, value):
     """Parses a plist key value.
 
     Args:
-      key_name (str): name of the plist key.
-      key_value (str): value of the plist key.
-
-    Returns:
-      object: preprocess attribute value or None.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      name (str): name of the plist key.
+      value (str): value of the plist key.
     """
-    return key_value
+    if name not in self._PLIST_KEYS:
+      return
+
+    hostname_artifact = artifacts.HostnameArtifact(name=value)
+    # TODO: refactor the use of store number.
+    hostname_artifact.store_number = 0
+    knowledge_base.SetHostname(hostname_artifact)
 
 
-class MacOSXSystemVersionPlugin(PlistKeyPreprocessPlugin):
-  """Plugin to determine Mac OS X system version information."""
+class MacOSXKeyboardLayoutPreprocessPlugin(PlistKeyPreprocessPlugin):
+  """Mac OS X keyboard layout preprocessing plugin."""
 
-  ATTRIBUTE = u'operating_system_version'
-  PLIST_PATH = u'/System/Library/CoreServices/SystemVersion.plist'
+  _PLIST_PATH = u'/Library/Preferences/com.apple.HIToolbox.plist'
+  _PLIST_KEYS = [u'AppleCurrentKeyboardLayoutInputSourceID']
 
-  PLIST_KEYS = [u'ProductUserVisibleVersion']
-
-
-class MacOSXHostname(PlistKeyPreprocessPlugin):
-  """Fetches hostname information about a Mac OS X system."""
-
-  ATTRIBUTE = u'hostname'
-  PLIST_PATH = u'/Library/Preferences/SystemConfiguration/preferences.plist'
-
-  PLIST_KEYS = [u'ComputerName', u'LocalHostName']
-
-  def ParseValue(self, unused_key_name, key_value):
-    """Parses a key value.
-
-    Args:
-      key_name (str): name of the plist key.
-      key_value (str): value of the plist key.
-
-    Returns:
-      HostnameArtifact: hostname artifact or None.
-    """
-    if key_value:
-      return artifacts.HostnameArtifact(name=key_value)
-
-
-class MacOSXKeyboard(PlistKeyPreprocessPlugin):
-  """Fetches keyboard information from a Mac OS X system."""
-
-  ATTRIBUTE = u'keyboard_layout'
-  PLIST_PATH = u'/Library/Preferences/com.apple.HIToolbox.plist'
-
-  PLIST_KEYS = [u'AppleCurrentKeyboardLayoutInputSourceID']
-
-  def ParseValue(self, unused_key_name, key_value):
+  def _ParseValue(self, knowledge_base, name, value):
     """Parses a plist key value.
 
     Args:
-      key_name (str): name of the plist key.
-      key_value (str): value of the plist key.
-
-    Returns:
-      object: preprocess attribute value or None.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      name (str): name of the plist key.
+      value (str): value of the plist key.
     """
-    if isinstance(key_value, (list, tuple)):
-      key_value = key_value[0]
-    _, _, keyboard_layout = key_value.rpartition(u'.')
+    if name not in self._PLIST_KEYS:
+      return
 
-    return keyboard_layout
+    if isinstance(value, (list, tuple)):
+      value = value[0]
+
+    _, _, keyboard_layout = value.rpartition(u'.')
+
+    knowledge_base.SetValue(u'keyboard_layout', keyboard_layout)
 
 
-class MacOSXTimeZone(interface.PreprocessPlugin):
-  """Gather timezone information from a Mac OS X system."""
+class MacOSXSystemVersionPreprocessPlugin(PlistKeyPreprocessPlugin):
+  """Mac OS X system version information preprocessing plugin."""
 
-  ATTRIBUTE = u'time_zone_str'
-  SUPPORTED_OS = [u'MacOSX']
+  _PLIST_PATH = u'/System/Library/CoreServices/SystemVersion.plist'
+  _PLIST_KEYS = [u'ProductUserVisibleVersion']
 
-  WEIGHT = 1
+  def _ParseValue(self, knowledge_base, name, value):
+    """Parses a plist key value.
 
-  ZONE_FILE_PATH = u'/private/etc/localtime'
+    Args:
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+      name (str): name of the plist key.
+      value (str): value of the plist key.
+    """
+    if name not in self._PLIST_KEYS:
+      return
 
-  def GetValue(self, searcher, unused_knowledge_base):
-    """Determines the local time zone settings.
+    knowledge_base.SetValue(u'operating_system_version', value)
+
+
+class MacOSXTimeZonePreprocessPlugin(interface.FileSystemPreprocessPlugin):
+  """Mac OS X time zone preprocessing plugin."""
+
+  _PATH = u'/private/etc/localtime'
+
+  def Run(self, searcher, knowledge_base):
+    """Determines the value of the preprocessing attributes.
 
     Args:
       searcher (dfvfs.FileSystemSearcher): file system searcher.
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
 
-    Returns:
-      str: local time zone settings.
-
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
-    path = self.ZONE_FILE_PATH
-    file_entry = self._FindFileEntry(searcher, path)
+    file_entry = self._FindFileEntry(searcher, self._PATH)
     if not file_entry:
-      raise errors.PreProcessFail(
-          u'Unable to find file: {0:s}'.format(path))
+      return
 
     if not file_entry.link:
       raise errors.PreProcessFail(
-          u'Unable to retrieve timezone information from: {0:s}.'.format(path))
+          u'Unable to retrieve timezone information from: {0:s}.'.format(
+              self._PATH))
 
-    _, _, zone = file_entry.link.partition(u'zoneinfo/')
-    return zone
+    _, _, timezone = file_entry.link.partition(u'zoneinfo/')
+    if timezone:
+      knowledge_base.SetValue(u'time_zone_str', timezone)
 
 
-class MacOSXUsers(PlistPreprocessPlugin):
-  """Get information about user accounts on a Mac OS X system."""
+class MacOSXUserAccountsPreprocessPlugin(PlistPreprocessPlugin):
+  """Mac OS X user accouns preprocessing plugin."""
 
-  SUPPORTED_OS = [u'MacOSX']
   ATTRIBUTE = u'users'
-  WEIGHT = 1
 
   # Define the path to the user account information.
-  USER_PATH = u'/private/var/db/dslocal/nodes/Default/users/[^_].+.plist'
+  _PLIST_PATH_REGEX = (
+      u'/private/var/db/dslocal/nodes/Default/users/[^_].+.plist')
 
   _KEYS = frozenset([u'gid', 'home', u'name', u'realname', u'shell', u'uid'])
 
@@ -296,64 +279,65 @@ class MacOSXUsers(PlistPreprocessPlugin):
             return match
     return match
 
-  def GetValue(self, searcher, unused_knowledge_base):
-    """Determines the user accounts.
+  def _ParsePlistFileEntry(self, knowledge_base, file_entry):
+    """Parses an user account plist file.
 
     Args:
-      searcher (dfvfs.FileSystemSearcher): file system searcher.
       knowledge_base (KnowledgeBase): to fill with preprocessing information.
-
-    Returns:
-      list[UserAccountArtifact]: user account artifacts.
+      file_entry (dfvfs.FileNetry): file entry of the user account plist file.
 
     Raises:
       errors.PreProcessFail: if the preprocessing fails.
     """
-    path_specs = self._FindPathSpecs(searcher, self.USER_PATH)
-    if not path_specs:
-      raise errors.PreProcessFail(u'Unable to find user plist files.')
+    root_key = self._GetPlistRootKey(file_entry)
+    if not root_key:
+      location = getattr(file_entry.path_spec, u'location', u'')
+      raise errors.PreProcessFail(
+          u'Missing root key in plist: {0:s}'.format(location))
 
-    users = []
+    try:
+      match = self._GetKeysDefaultEmpty(root_key, self._KEYS)
+    except KeyError as exception:
+      location = getattr(file_entry.path_spec, u'location', u'')
+      raise errors.PreProcessFail(
+          u'Unable to read user plist file: {0:s} with error: {1:s}'.format(
+              location, exception))
+
+    name = match.get(u'name', [None])[0]
+    uid = match.get(u'uid', [None])[0]
+
+    if not name or not uid:
+      # TODO: add and store preprocessing errors.
+      return
+
+    user_account = artifacts.UserAccountArtifact(
+        identifier=uid, username=name)
+    user_account.group_identifier = match.get(u'gid', [None])[0]
+    user_account.full_name = match.get(u'realname', [None])[0]
+    user_account.shell = match.get(u'shell', [None])[0]
+    user_account.user_directory = match.get(u'home', [None])[0]
+
+    # TODO: refactor the use of store number.
+    user_account.store_number = 0
+    knowledge_base.SetUserAccount(user_account)
+
+  def Run(self, searcher, knowledge_base):
+    """Determines the value of the preprocessing attributes.
+
+    Args:
+      searcher (dfvfs.FileSystemSearcher): file system searcher.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
+    """
+    path_specs = self._FindPathSpecs(searcher, self._PLIST_PATH_REGEX)
+    if not path_specs:
+      return
+
     for path_spec in path_specs:
       file_entry = searcher.GetFileEntryByPathSpec(path_spec)
-
-      root_key = self._GetPlistRootKey(file_entry)
-      if not root_key:
-        location = getattr(path_spec, u'location', u'')
-        logging.warning(u'Missing root key in plist: {0:s}'.format(location))
-        continue
-
-      try:
-        match = self._GetKeysDefaultEmpty(root_key, self._KEYS)
-      except KeyError as exception:
-        location = getattr(path_spec, u'location', u'')
-        logging.warning(
-            u'Unable to read user plist file: {0:s} with error: {1:s}'.format(
-                location, exception))
-        continue
-
-      name = match.get(u'name', [None])[0]
-      uid = match.get(u'uid', [None])[0]
-
-      if not name or not uid:
-        # TODO: add and store preprocessing errors.
-        continue
-
-      user_account_artifact = artifacts.UserAccountArtifact(
-          identifier=uid, username=name)
-
-      user_account_artifact.group_identifier = match.get(u'gid', [None])[0]
-      user_account_artifact.full_name = match.get(u'realname', [None])[0]
-      user_account_artifact.shell = match.get(u'shell', [None])[0]
-      user_account_artifact.user_directory = match.get(u'home', [None])[0]
-
-      users.append(user_account_artifact)
-
-    if not users:
-      raise errors.PreProcessFail(u'Unable to find any users on the system.')
-    return users
+      self._ParsePlistFileEntry(knowledge_base, file_entry)
 
 
 manager.PreprocessPluginsManager.RegisterPlugins([
-    MacOSXSystemVersionPlugin, MacOSXHostname, MacOSXKeyboard, MacOSXTimeZone,
-    MacOSXUsers])
+    MacOSXHostnamePreprocessPlugin, MacOSXKeyboardLayoutPreprocessPlugin,
+    MacOSXSystemVersionPreprocessPlugin, MacOSXTimeZonePreprocessPlugin,
+    MacOSXUserAccountsPreprocessPlugin])

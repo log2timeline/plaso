@@ -4,17 +4,19 @@
 
 import unittest
 
-from plaso.formatters import olecf as _  # pylint: disable=unused-import
+from plaso.formatters import olecf  # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.olecf_plugins import default
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.olecf_plugins import test_lib
 
 
 class TestDefaultPluginOleCf(test_lib.OleCfPluginTestCase):
   """Tests for the OLECF default plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'Document.doc'])
   def testProcess(self):
     """Tests the Process function."""
     plugin_object = default.DefaultOleCFPlugin()

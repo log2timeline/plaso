@@ -13,6 +13,7 @@ from plaso.lib import definitions
 from plaso.storage import fake_storage
 from plaso.storage import zip_file
 
+from tests import test_lib as shared_test_lib
 from tests.storage import test_lib
 
 
@@ -133,6 +134,8 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
   # TODO: add test for GetFirstWrittenEventSource and
   # GetNextWrittenEventSource.
 
+  @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
+  @shared_test_lib.skipUnlessHasTestFile([u'pinfo_test.json.plaso'])
   def testMergeFromStorage(self):
     """Tests the MergeFromStorage function."""
     session = sessions.Session()

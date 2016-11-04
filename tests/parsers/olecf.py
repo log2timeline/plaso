@@ -9,17 +9,18 @@ from plaso.lib import timelib
 from plaso.parsers import olecf
 from plaso.parsers import olecf_plugins  # pylint: disable=unused-import
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class OLECFParserTest(test_lib.ParserTestCase):
   """Tests for the OLE Compound Files (OLECF) parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'Document.doc'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = olecf.OLECFParser()
-    storage_writer = self._ParseFile(
-        [u'Document.doc'], parser_object)
+    storage_writer = self._ParseFile([u'Document.doc'], parser_object)
 
     # OLE Compound File information:
     #     Version             : 3.62
