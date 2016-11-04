@@ -47,7 +47,7 @@ PYTHON_DEPENDENCIES = {
     u'pyparsing': (u'__version__', u'2.0.3', None),
     u'pyqcow': (u'get_version()', u'20131204', None),
     u'pyregf': (u'get_version()', u'20150315', None),
-    u'pyscca': (u'get_version()', u'20151226', None),
+    u'pyscca': (u'get_version()', u'20161031', None),
     u'pysigscan': (u'get_version()', u'20150627', None),
     u'pysmdev': (u'get_version()', u'20140529', None),
     u'pysmraw': (u'get_version()', u'20140612', None),
