@@ -29,8 +29,8 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-06-08 16:17:47.453766')
     self.assertEqual(event.timestamp, expected_timestamp)
-    expected_message = (u'Chrome history is deleted by user')
-    expected_message_short = (u'Chrome history is deleted by user')
+    expected_message = (u'Chrome history was cleared by user')
+    expected_message_short = (u'Chrome history was cleared by user')
     self._TestGetMessageStrings(
         event, expected_message, expected_message_short)
 
