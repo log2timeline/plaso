@@ -135,8 +135,7 @@ class ParserMediator(object):
       inode_value (int|str): inode, such as 1 or '27-128-1'.
 
     Returns:
-      int: inode or -1 on error if the inode value cannot be converted
-          to an integer.
+      int: inode or -1 if the inode value cannot be converted to an integer.
     """
     if isinstance(inode_value, py2to3.INTEGER_TYPES):
       return inode_value

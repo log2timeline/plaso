@@ -68,14 +68,6 @@ plaso.engine.single_process module
     :undoc-members:
     :show-inheritance:
 
-plaso.engine.utils module
--------------------------
-
-.. automodule:: plaso.engine.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.engine.worker module
 --------------------------
 
