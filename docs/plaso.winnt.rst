@@ -4,14 +4,6 @@ plaso.winnt package
 Submodules
 ----------
 
-plaso.winnt.environ_expand module
----------------------------------
-
-.. automodule:: plaso.winnt.environ_expand
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.winnt.human_readable_service_enums module
 -----------------------------------------------
 

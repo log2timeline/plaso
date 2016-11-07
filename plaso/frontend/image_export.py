@@ -18,8 +18,8 @@ from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.engine import extractors
 from plaso.engine import knowledge_base
 from plaso.engine import path_helper
-from plaso.engine import utils as engine_utils
 from plaso.frontend import frontend
+from plaso.frontend import utils
 from plaso.lib import py2to3
 from plaso.lib import specification
 from plaso.lib import timelib
@@ -669,9 +669,9 @@ class ImageExportFrontend(frontend.Frontend):
       output_writer.Write(
           u'Extracting file entries from: {0:s}\n'.format(display_name))
 
-      path_attributes = self._knowledge_base.GetPathAttributes()
-      find_specs = engine_utils.BuildFindSpecsFromFile(
-          filter_file_path, path_attributes=path_attributes)
+      environment_variables = self._knowledge_base.GetEnvironmentVariables()
+      find_specs = utils.BuildFindSpecsFromFile(
+          filter_file_path, environment_variables=environment_variables)
 
       searcher = file_system_searcher.FileSystemSearcher(
           file_system, mount_point)

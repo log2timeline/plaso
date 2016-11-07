@@ -130,7 +130,8 @@ class WindowsPathEnvironmentVariablePlugin(FileSystemPreprocessPlugin):
           u'Missing relative path for: {0:s}'.format(self._PATH_REGEX))
 
     if relative_path.startswith(u'/'):
-      relative_path = u'\\'.join(relative_path.split(u'/'))
+      path_segments = relative_path.split(u'/')
+      relative_path = u'\\'.join(path_segments)
 
     evironment_variable_artifact = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name=self._NAME, value=relative_path)
@@ -241,9 +242,6 @@ class WindowsRegistryEnvironmentVariable(WindowsRegistryValuePreprocessPlugin):
           u'Unsupported Registry key: {0:s}, value: {1:s} type.'.format(
               self._REGISTRY_KEY_PATH, self._REGISTRY_VALUE_NAME))
 
-    # Remove the drive letter.
-    _, _, path = value_data.rpartition(u':')
-
     evironment_variable_artifact = artifacts.EnvironmentVariableArtifact(
-        case_sensitive=False, name=self._NAME, value=path)
+        case_sensitive=False, name=self._NAME, value=value_data)
     knowledge_base.SetEnvironmentVariable(evironment_variable_artifact)

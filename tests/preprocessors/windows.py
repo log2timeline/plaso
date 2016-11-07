@@ -51,7 +51,7 @@ class WindowsProgramFilesEnvironmentVariableTest(
     environment_variable = knowledge_base.GetEnvironmentVariable(
         u'ProgramFiles')
     self.assertIsNotNone(environment_variable)
-    self.assertEqual(environment_variable.value, u'\\Program Files')
+    self.assertEqual(environment_variable.value, u'C:\\Program Files')
 
 
 class WindowsProgramFilesX86EnvironmentVariableTest(
@@ -124,6 +124,7 @@ class WindowsSystemVersionPluginTest(test_lib.PreprocessPluginTestCase):
 class WindowsTimeZonePreprocessPluginTest(test_lib.PreprocessPluginTestCase):
   """Tests for the Windows timezone preprocess plug-in object."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
   def testRun(self):
     """Tests the Run function."""
     plugin = windows.WindowsTimeZonePreprocessPlugin()

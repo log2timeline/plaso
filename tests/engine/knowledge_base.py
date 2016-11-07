@@ -86,24 +86,6 @@ class KnowledgeBaseTest(shared_test_lib.BaseTestCase):
         u'Bogus')
     self.assertIsNone(test_environment_variable)
 
-  def testGetPathAttributes(self):
-    """Tests the GetPathAttributes function."""
-    knowledge_base_object = knowledge_base.KnowledgeBase()
-
-    environment_variable = artifacts.EnvironmentVariableArtifact(
-        case_sensitive=False, name=u'SystemRoot', value=u'C:\\Windows')
-    knowledge_base_object.SetEnvironmentVariable(environment_variable)
-
-    environment_variable = artifacts.EnvironmentVariableArtifact(
-        case_sensitive=False, name=u'WinDir', value=u'C:\\Windows')
-    knowledge_base_object.SetEnvironmentVariable(environment_variable)
-
-    expected_path_attributes = {
-        u'SystemRoot': u'C:\\Windows',
-        u'WinDir': u'C:\\Windows'}
-    path_attributes = knowledge_base_object.GetPathAttributes()
-    self.assertEqual(path_attributes, expected_path_attributes)
-
   def testGetUsernameForPath(self):
     """Tests the GetUsernameForPath function."""
     knowledge_base_object = knowledge_base.KnowledgeBase()
