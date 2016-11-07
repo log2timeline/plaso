@@ -27,7 +27,7 @@ class ChromePreferencesClearHistoryEvent(ChromePreferencesEvent):
     """Initialize the event."""
     super(ChromePreferencesClearHistoryEvent, self).__init__(
         timestamp, eventdata.EventTimestamp.DELETED_TIME)
-    self.message = u'Chrome history is deleted by user'
+    self.message = u'Chrome history was cleared by user'
 
 
 class ChromeExtensionInstallationEvent(time_events.WebKitTimeEvent):
