@@ -12,6 +12,24 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
+class ChromePreferencesEvent(time_events.WebKitTimeEvent):
+  """Convenience class for Chrome Preferences file events."""
+
+  DATA_TYPE = u'chrome:preferences'
+
+
+class ChromePreferencesClearHistoryEvent(ChromePreferencesEvent):
+  """Convenience class for Chrome history clearing events."""
+
+  DATA_TYPE = u'chrome:preferences:clear_history'
+
+  def __init__(self, timestamp):
+    """Initialize the event."""
+    super(ChromePreferencesClearHistoryEvent, self).__init__(
+        timestamp, eventdata.EventTimestamp.DELETED_TIME)
+    self.message = u'Chrome history was cleared by user'
+
+
 class ChromeExtensionInstallationEvent(time_events.WebKitTimeEvent):
   """Convenience class for Chrome Extension events."""
 
@@ -56,9 +74,9 @@ class ChromePreferencesParser(interface.FileObjectParser):
       else:
         extension_name = None
       path = extension.get(u'path')
-      event_object = ChromeExtensionInstallationEvent(
+      event = ChromeExtensionInstallationEvent(
           install_time, extension_id, extension_name, path)
-      parser_mediator.ProduceEvent(event_object)
+      parser_mediator.ProduceEvent(event)
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Chrome preferences file-like object.
@@ -111,6 +129,14 @@ class ChromePreferencesParser(interface.FileObjectParser):
           u'[{0:s}] {1:s} is not a valid Preference file, '
           u'does not contain extensions settings value.'.format(
               self.NAME, parser_mediator.GetDisplayName()))
+
+    browser_dict = json_dict.get(u'browser', None)
+    if browser_dict and u'last_clear_browsing_data_time' in browser_dict:
+      last_clear_history_timestamp = browser_dict.get(
+          u'last_clear_browsing_data_time', u'0')
+      last_clear_history = int(last_clear_history_timestamp, 10)
+      event = ChromePreferencesClearHistoryEvent(last_clear_history)
+      parser_mediator.ProduceEvent(event)
 
     self._ExtractExtensionInstallEvents(extensions_dict, parser_mediator)
 
