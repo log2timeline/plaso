@@ -142,6 +142,47 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._task_manager = task_manager.TaskManager()
     self._use_zeromq = use_zeromq
 
+  def _FillEventSourceHeap(
+      self, storage_writer, event_source_heap, start_with_first=False):
+    """Fills the event source heap with the available written event sources.
+
+    Args:
+      storage_writer (StorageWriter): storage writer for a session storage.
+      event_source_heap (_EventSourceHeap): event source heap.
+      start_with_first (Optional[bool]): True if the function should start
+          with the first written event source.
+    """
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'fill_event_source_heap')
+
+    if self._processing_profiler:
+      self._processing_profiler.StartTiming(u'get_event_source')
+
+    if start_with_first:
+      event_source = storage_writer.GetFirstWrittenEventSource()
+    else:
+      event_source = storage_writer.GetNextWrittenEventSource()
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'get_event_source')
+
+    while event_source:
+      try:
+        event_source_heap.PushEventSource(event_source)
+      except errors.HeapFull:
+        break
+
+      if self._processing_profiler:
+        self._processing_profiler.StartTiming(u'get_event_source')
+
+      event_source = storage_writer.GetNextWrittenEventSource()
+
+      if self._processing_profiler:
+        self._processing_profiler.StopTiming(u'get_event_source')
+
+    if self._processing_profiler:
+      self._processing_profiler.StopTiming(u'fill_event_source_heap')
+
   def _MergeTaskStorage(self, storage_writer):
     """Merges a task storage with the session storage.
 
@@ -156,7 +197,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if self._processing_profiler:
       self._processing_profiler.StartTiming(u'merge_check')
 
-    for task in self._task_manager.GetProcessingTasks():
+    for task in self._task_manager.GetTasksCheckMerge():
       if self._abort:
         break
 
@@ -309,47 +350,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._processing_profiler.StopTiming(u'schedule_task')
 
     return is_scheduled
-
-  def _FillEventSourceHeap(
-      self, storage_writer, event_source_heap, start_with_first=False):
-    """Fills the event source heap with the available written event sources.
-
-    Args:
-      storage_writer (StorageWriter): storage writer for a session storage.
-      event_source_heap (_EventSourceHeap): event source heap.
-      start_with_first (Optional[bool]): True if the function should start
-          with the first written event source.
-    """
-    if self._processing_profiler:
-      self._processing_profiler.StartTiming(u'fill_event_source_heap')
-
-    if self._processing_profiler:
-      self._processing_profiler.StartTiming(u'get_event_source')
-
-    if start_with_first:
-      event_source = storage_writer.GetFirstWrittenEventSource()
-    else:
-      event_source = storage_writer.GetNextWrittenEventSource()
-
-    if self._processing_profiler:
-      self._processing_profiler.StopTiming(u'get_event_source')
-
-    while event_source:
-      try:
-        event_source_heap.PushEventSource(event_source)
-      except errors.HeapFull:
-        break
-
-      if self._processing_profiler:
-        self._processing_profiler.StartTiming(u'get_event_source')
-
-      event_source = storage_writer.GetNextWrittenEventSource()
-
-      if self._processing_profiler:
-        self._processing_profiler.StopTiming(u'get_event_source')
-
-    if self._processing_profiler:
-      self._processing_profiler.StopTiming(u'fill_event_source_heap')
 
   def _ScheduleTasks(self, storage_writer):
     """Schedules tasks.

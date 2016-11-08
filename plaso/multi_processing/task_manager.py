@@ -180,16 +180,6 @@ class TaskManager(object):
       abandoned_tasks = list(self._abandoned_tasks.values())
     return abandoned_tasks
 
-  def GetProcessingTasks(self):
-    """Retrieves the tasks that are processing.
-
-    Returns:
-      list[Task]: tasks that are being processed by workers.
-    """
-    with self._lock:
-      processing_tasks = list(self._tasks_processing.values())
-    return processing_tasks
-
   def GetTaskPendingMerge(self, current_task):
     """Retrieves the first task that is pending merge or has a higher priority.
 
@@ -212,6 +202,17 @@ class TaskManager(object):
         return
 
     return self._tasks_pending_merge.PopTask()
+
+  def GetTasksCheckMerge(self):
+    """Retrieves the tasks that need to be checked if they are ready for merge.
+
+    Returns:
+      list[Task]: tasks that are being processed by workers or that have been
+          abandoned.
+    """
+    tasks_list = list(self._tasks_processing.values())
+    tasks_list.extend(self._abandoned_tasks.values())
+    return tasks_list
 
   def HasActiveTasks(self):
     """Determines if there are active tasks.
@@ -263,13 +264,21 @@ class TaskManager(object):
     Raises:
       KeyError: if the task was not processing.
     """
-    if task.identifier not in self._tasks_processing:
-      raise KeyError(u'Task {0:s} is not processing'.format(task.identifier))
+    if (task.identifier not in self._tasks_processing and
+        task.identifier not in self._abandoned_tasks):
+      raise KeyError(u'Task not processing or abandoned')
 
     with self._lock:
-      logging.debug(u'Task {0:s} is pending merge'.format(task.identifier))
+      logging.debug(u'Task {0:s} is pending merge'.format(
+          task.identifier))
+
       self._tasks_pending_merge.PushTask(task)
-      del self._tasks_processing[task.identifier]
+
+      if task.identifier in self._tasks_processing:
+        del self._tasks_processing[task.identifier]
+
+      if task.identifier in self._abandoned_tasks:
+        del self._abandoned_tasks[task.identifier]
 
   def UpdateTaskAsProcessing(self, task):
     """Updates the task manager to reflect the task is processing.
