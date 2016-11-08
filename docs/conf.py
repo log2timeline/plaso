@@ -27,6 +27,7 @@ sys.path.insert(0, os.path.abspath('..'))
 import plaso
 from plaso import dependencies
 
+
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -38,11 +39,11 @@ from plaso import dependencies
 
 
 extensions = [
-  'sphinx.ext.autodoc',
-  'sphinx.ext.doctest',
-  'sphinx.ext.coverage',
-  'sphinx.ext.viewcode',
-  'sphinxcontrib.napoleon'
+    'sphinx.ext.autodoc',
+    'sphinx.ext.doctest',
+    'sphinx.ext.coverage',
+    'sphinx.ext.viewcode',
+    'sphinxcontrib.napoleon'
 ]
 
 
@@ -68,11 +69,7 @@ class Mock(MagicMock):
     return self
 
 
-# Mock all the dependencies! (except the ones we don't want to).
-modules_to_mock = [
-  dependency for dependency, _, _, _ in dependencies.PYTHON_DEPENDENCIES]
-for key, value in iter(dependencies.LIBYAL_DEPENDENCIES.items()):
-  modules_to_mock.append(key)
+modules_to_mock = list(dependencies.PYTHON_DEPENDENCIES.keys())
 
 # We also need to mock some modules that we don't have explicit dependencies on
 # so that we can generated documentation for those components. We also need

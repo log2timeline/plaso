@@ -296,6 +296,35 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     """The Windows Registry plugin list (instance of PluginList)."""
     return self._registry_plugin_list
 
+  def _CreateWindowsPathResolver(
+      self, file_system, mount_point, environment_variables):
+    """Create a Windows path resolver and sets the evironment variables.
+
+    Args:
+      file_system (dfvfs.FileSytem): file system.
+      mount_point (dfvfs.PathSpec): mount point path specification.
+      environment_variables (list[EnvironmentVariableArtifact]): environment
+          variables.
+
+    Returns:
+      dfvfs.WindowsPathResolver: Windows path resolver.
+    """
+    if environment_variables is None:
+      environment_variables = []
+
+    path_resolver = windows_path_resolver.WindowsPathResolver(
+        file_system, mount_point)
+
+    for environment_variable in environment_variables:
+      name = environment_variable.name.lower()
+      if name != u'systemroot':
+        continue
+
+      path_resolver.SetEnvironmentVariable(
+          environment_variable.name, environment_variable.value)
+
+    return path_resolver
+
   def _GetRegistryHelperFromPath(self, path, codepage):
     """Return a Registry helper object from a path.
 
@@ -311,7 +340,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
     Yields:
       A Registry helper object (instance of PregRegistryHelper).
     """
-    path_attributes = self.knowledge_base_object.GetPathAttributes()
+    environment_variables = self.knowledge_base_object.GetEnvironmentVariables()
 
     for source_path_spec in self._source_path_specs:
       if source_path_spec.type_indicator == dfvfs_definitions.TYPE_INDICATOR_OS:
@@ -334,8 +363,8 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
       file_system, mount_point = self._GetSourceFileSystem(source_path_spec)
 
       try:
-        path_resolver = windows_path_resolver.WindowsPathResolver(
-            file_system, mount_point)
+        path_resolver = self._CreateWindowsPathResolver(
+            file_system, mount_point, environment_variables)
 
         if path.startswith(u'%UserProfile%\\'):
           searcher = file_system_searcher.FileSystemSearcher(
@@ -370,11 +399,6 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
                 codepage=codepage)
 
         else:
-          path_attribute_value = path_attributes.get(u'systemroot', None)
-          if path_attribute_value:
-            path_resolver.SetEnvironmentVariable(
-                u'SystemRoot', path_attribute_value)
-
           path_spec = path_resolver.ResolvePath(path)
           if not path_spec:
             continue

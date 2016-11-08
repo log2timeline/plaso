@@ -11,8 +11,8 @@ from plaso import parsers   # pylint: disable=unused-import
 from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.containers import sessions
 from plaso.engine import single_process
-from plaso.engine import utils as engine_utils
 from plaso.frontend import frontend
+from plaso.frontend import utils
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_processing import task_engine as multi_process_engine
@@ -438,9 +438,9 @@ class ExtractionFrontend(frontend.Frontend):
     self._SetTimezone(engine.knowledge_base, timezone)
 
     if session.filter_file:
-      path_attributes = engine.knowledge_base.GetPathAttributes()
-      filter_find_specs = engine_utils.BuildFindSpecsFromFile(
-          session.filter_file, path_attributes=path_attributes)
+      environment_variables = engine.knowledge_base.GetEnvironmentVariables()
+      filter_find_specs = utils.BuildFindSpecsFromFile(
+          session.filter_file, environment_variables=environment_variables)
     else:
       filter_find_specs = None
 
