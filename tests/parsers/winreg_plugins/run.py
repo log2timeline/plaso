@@ -4,19 +4,21 @@
 
 import unittest
 
-from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import run
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
 class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the auto rus Windows Registry plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER-RunTests.DAT'])
   def testProcessNtuserRun(self):
     """Tests the Process function on a Run key."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-RunTests.DAT'])
+    test_file_entry = self._GetTestFileEntry([u'NTUSER-RunTests.DAT'])
     key_path = (
         u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         u'Run')
@@ -48,9 +50,10 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER-RunTests.DAT'])
   def testProcessNtuserRunOnce(self):
     """Tests the Process function on a Run key."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-RunTests.DAT'])
+    test_file_entry = self._GetTestFileEntry([u'NTUSER-RunTests.DAT'])
     key_path = (
         u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         u'RunOnce')
@@ -83,9 +86,10 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE-RunTests'])
   def testProcessSoftwareRun(self):
     """Tests the Process function on a Run key."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'SOFTWARE-RunTests'])
+    test_file_entry = self._GetTestFileEntry([u'SOFTWARE-RunTests'])
     key_path = (
         u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         u'Run')
@@ -122,9 +126,10 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
         u'2011-09-16 20:57:09.067575')
     self.assertEqual(storage_writer.events[1].timestamp, expected_timestamp)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE-RunTests'])
   def testProcessSoftwareRunOnce(self):
     """Tests the Process function on a RunOnce key."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'SOFTWARE-RunTests'])
+    test_file_entry = self._GetTestFileEntry([u'SOFTWARE-RunTests'])
     key_path = (
         u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         u'RunOnce')

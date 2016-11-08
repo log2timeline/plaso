@@ -8,10 +8,11 @@ from dfdatetime import filetime as dfdatetime_filetime
 from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
-from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import services
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -114,9 +115,10 @@ class ServicesRegistryPluginTest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
   def testProcessFile(self):
     """Tests the Process function on a key in a file."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'SYSTEM'])
+    test_file_entry = self._GetTestFileEntry([u'SYSTEM'])
     key_path = u'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\services'
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)

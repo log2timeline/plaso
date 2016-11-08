@@ -9,6 +9,7 @@ from plaso.parsers import sqlite
 # Register all plugins.
 from plaso.parsers import sqlite_plugins  # pylint: disable=unused-import
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
@@ -27,16 +28,18 @@ class SQLiteParserTest(test_lib.ParserTestCase):
     self.assertNotEqual(parser_object._plugin_objects, [])
     self.assertEqual(len(parser_object._plugin_objects), 1)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'contacts2.db'])
   def testFileParserChainMaintenance(self):
     """Tests that the parser chain is correctly maintained by the parser."""
     parser_object = sqlite.SQLiteParser()
-    storage_writer = self._ParseFile(
-        [u'contacts2.db'], parser_object)
+    storage_writer = self._ParseFile([u'contacts2.db'], parser_object)
 
     for event in storage_writer.events:
       chain = event.parser
       self.assertEqual(1, chain.count(u'/'))
 
+  @shared_test_lib.skipUnlessHasTestFile([u'wal_database.db'])
+  @shared_test_lib.skipUnlessHasTestFile([u'wal_database.db-wal'])
   def testQueryDatabaseWithWAL(self):
     """Tests the Query function on a database with a WAL file."""
     database_file = self._GetTestFilePath([u'wal_database.db'])
@@ -74,6 +77,7 @@ class SQLiteParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(expected_results, row_results)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'wal_database.db'])
   def testQueryDatabaseWithoutWAL(self):
     """Tests the Query function on a database without a WAL file."""
     database_file = self._GetTestFilePath([u'wal_database.db'])

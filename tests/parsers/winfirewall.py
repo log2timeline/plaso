@@ -4,21 +4,22 @@
 
 import unittest
 
-from plaso.formatters import winfirewall as _  # pylint: disable=unused-import
+from plaso.formatters import winfirewall  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import winfirewall
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class WinFirewallParserTest(test_lib.ParserTestCase):
   """Tests for the Windows firewall log parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'firewall.log'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = winfirewall.WinFirewallParser()
-    storage_writer = self._ParseFile(
-        [u'firewall.log'], parser_object)
+    storage_writer = self._ParseFile([u'firewall.log'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 15)
 

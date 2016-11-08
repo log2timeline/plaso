@@ -4,20 +4,22 @@
 
 import unittest
 
-from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import programscache
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
 class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the Explorer ProgramsCache Windows Registry plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER.DAT'])
   def testProcessStartPage(self):
     """Tests the Process function on a StartPage key."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER.DAT'])
+    test_file_entry = self._GetTestFileEntry([u'NTUSER.DAT'])
     key_path = (
         u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         u'Explorer\\StartPage')
@@ -119,9 +121,10 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
     expected_data_type = u'windows:registry:key_value'
     self.assertEqual(event_object.data_type, expected_data_type)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER-WIN7.DAT'])
   def testProcessStartPage2(self):
     """Tests the Process function on a StartPage2 key."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
+    test_file_entry = self._GetTestFileEntry([u'NTUSER-WIN7.DAT'])
     key_path = (
         u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         u'Explorer\\StartPage2')

@@ -7,13 +7,15 @@ import unittest
 from plaso.analysis import interface
 from plaso.analysis import manager
 
+from tests import test_lib as shared_test_lib
+
 
 class TestAnalysisPlugin(interface.AnalysisPlugin):
   """Test analysis plugin."""
 
   NAME = 'test_plugin'
 
-  def CompileReport(self, unused_analysis_mediator):
+  def CompileReport(self, unused_mediator):
     """Compiles a report of the analysis.
 
     After the plugin has received every copy of an event to
@@ -21,32 +23,32 @@ class TestAnalysisPlugin(interface.AnalysisPlugin):
     can be assembled.
 
     Args:
-      analysis_mediator: The analysis mediator object (instance of
-                         AnalysisMediator).
+      mediator (AnalysisMediator): mediates interactions between analysis
+          plugins and other components, such as storage and dfvfs.
 
     Returns:
-      The analysis report (instance of AnalysisReport).
+      AnalysisReport: analysis report.
     """
     return
 
-  def ExamineEvent(
-      self, unused_analysis_mediator, unused_event_object, **unused_kwargs):
+  def ExamineEvent(self, unused_mediator, unused_event, **unused_kwargs):
     """Analyzes an event object.
 
     Args:
-      analysis_mediator: The analysis mediator object (instance of
-                         AnalysisMediator).
-      event_object: An event object (instance of EventObject).
+      mediator (AnalysisMediator): mediates interactions between analysis
+          plugins and other components, such as storage and dfvfs.
+      event (EventObject): event.
     """
     return
 
 
-class AnalysisPluginManagerTest(unittest.TestCase):
+class AnalysisPluginManagerTest(shared_test_lib.BaseTestCase):
   """Tests for the analysis plugin manager."""
+
+  # pylint: disable=protected-access
 
   def testPluginRegistration(self):
     """Tests the RegisterPlugin and DeregisterPlugin functions."""
-    # pylint: disable=protected-access
     number_of_plugins = len(manager.AnalysisPluginManager._plugin_classes)
 
     manager.AnalysisPluginManager.RegisterPlugin(TestAnalysisPlugin)

@@ -12,6 +12,13 @@ import plaso.dependencies
 
 
 if __name__ == '__main__':
+  fail_unless_has_test_file = '--fail-unless-has-test-file' in sys.argv
+  setattr(unittest, 'fail_unless_has_test_file', fail_unless_has_test_file)
+  if fail_unless_has_test_file:
+    # Remove --fail-unless-has-test-file otherwise it will conflict with
+    # the argparse tests.
+    sys.argv.remove('--fail-unless-has-test-file')
+
   if not plaso.dependencies.CheckTestDependencies():
     sys.exit(1)
 

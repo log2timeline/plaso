@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 """Analysis plugin related functions and classes for testing."""
 
-from dfvfs.lib import definitions
-from dfvfs.path import factory as path_spec_factory
-from dfvfs.resolver import resolver as path_spec_resolver
-
 from plaso.analysis import mediator as analysis_mediator
 from plaso.containers import artifacts
 from plaso.containers import events
@@ -113,11 +109,7 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
     mediator = parsers_mediator.ParserMediator(
         storage_writer, knowledge_base_object)
 
-    path = self._GetTestFilePath(path_segments)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        definitions.TYPE_INDICATOR_OS, location=path)
-
-    file_entry = path_spec_resolver.Resolver.OpenFileEntry(path_spec)
+    file_entry = self._GetTestFileEntry(path_segments)
     mediator.SetFileEntry(file_entry)
 
     if isinstance(parser, parsers_interface.FileEntryParser):

@@ -4,21 +4,22 @@
 
 import unittest
 
-from plaso.formatters import utmpx as _  # pylint: disable=unused-import
+from plaso.formatters import utmpx  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import utmpx
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class UtmpxParserTest(test_lib.ParserTestCase):
   """Tests for utmpx file parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'utmpx_mac'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = utmpx.UtmpxParser()
-    storage_writer = self._ParseFile(
-        [u'utmpx_mac'], parser_object)
+    storage_writer = self._ParseFile([u'utmpx_mac'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 6)
 

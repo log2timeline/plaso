@@ -8,10 +8,11 @@ from dfdatetime import filetime as dfdatetime_filetime
 from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
-from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import mrulistex
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -98,9 +99,10 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
 class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the shell item list MRUListEx plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER-WIN7.DAT'])
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
+    test_file_entry = self._GetTestFileEntry([u'NTUSER-WIN7.DAT'])
     key_path = (
         u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         u'Explorer\\ComDlg32\\OpenSavePidlMRU')
@@ -164,9 +166,10 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
 class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
   """Tests for the string and shell item MRUListEx plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER-WIN7.DAT'])
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
+    test_file_entry = self._GetTestFileEntry([u'NTUSER-WIN7.DAT'])
     key_path = (
         u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         u'Explorer\\RecentDocs')
@@ -244,9 +247,10 @@ class TestMRUListExStringAndShellItemListPlugin(
     test_lib.RegistryPluginTestCase):
   """Tests for the string and shell item list MRUListEx plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER-WIN7.DAT'])
   def testProcess(self):
     """Tests the Process function."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
+    test_file_entry = self._GetTestFileEntry([u'NTUSER-WIN7.DAT'])
     key_path = (
         u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         u'Explorer\\ComDlg32\\LastVisitedPidlMRU')

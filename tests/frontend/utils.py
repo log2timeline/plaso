@@ -12,7 +12,8 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
-from plaso.engine import utils
+from plaso.containers import artifacts
+from plaso.frontend import utils
 
 from tests import test_lib as shared_test_lib
 
@@ -20,6 +21,9 @@ from tests import test_lib as shared_test_lib
 class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
   """Tests for the BuildFindSpecsFromFile function."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'System.evtx'])
+  @shared_test_lib.skipUnlessHasTestFile([u'testdir', u'filter_1.txt'])
+  @shared_test_lib.skipUnlessHasTestFile([u'testdir', u'filter_3.txt'])
   def testBuildFindSpecsFromFile(self):
     """Tests the BuildFindSpecsFromFile function."""
     filter_file_path = u''
@@ -39,8 +43,11 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
       # This should not fail during initial loading, but fail later on.
       temp_file.write(b'bad re (no close on that parenthesis/file\n')
 
+    environment_variable = artifacts.EnvironmentVariableArtifact(
+        case_sensitive=False, name=u'SystemRoot', value=u'C:\\Windows')
+
     find_specs = utils.BuildFindSpecsFromFile(
-        filter_file_path, path_attributes={u'SystemRoot': u'\\Windows'})
+        filter_file_path, environment_variables=[environment_variable])
 
     try:
       os.remove(filter_file_path)
@@ -65,7 +72,7 @@ class BuildFindSpecsFromFileTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(path_specs), 5)
 
     with self.assertRaises(IOError):
-      _ = utils.BuildFindSpecsFromFile('thisfiledoesnotexist')
+      utils.BuildFindSpecsFromFile('thisfiledoesnotexist')
 
     file_system.Close()
 

@@ -4,16 +4,18 @@
 
 import unittest
 
-from plaso.formatters import mac_securityd as _  # pylint: disable=unused-import
+from plaso.formatters import mac_securityd  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import mac_securityd
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class MacSecurityUnitTest(test_lib.ParserTestCase):
   """A unit test for the ASL securityd log parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'security.log'])
   def testParseFile(self):
     """Test parsing of a ASL securityd log file."""
     parser_object = mac_securityd.MacSecuritydLogParser()

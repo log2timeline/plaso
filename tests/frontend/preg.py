@@ -44,6 +44,7 @@ class PregFrontendTest(shared_test_lib.BaseTestCase):
     front_end.SetKnowledgeBase(knowledge_base_object)
     return front_end
 
+  @shared_test_lib.skipUnlessHasTestFile([u'registry_test.dd'])
   def _ConfigureStorageMediaFileTest(self):
     """Configure a test against a storage media file.
 
@@ -72,6 +73,7 @@ class PregFrontendTest(shared_test_lib.BaseTestCase):
     front_end.SetSourcePathSpecs([scan_node.path_spec])
     return front_end
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
   def testExpandKeysRedirect(self):
     """Tests the ExpandKeysRedirect function."""
     front_end = self._ConfigureSingleFileTest()
@@ -89,6 +91,7 @@ class PregFrontendTest(shared_test_lib.BaseTestCase):
     for added_key_path in added_key_paths:
       self.assertIn(added_key_path, registry_key_paths)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
   def testGetRegistryFilePaths(self):
     """Tests the GetRegistryFilePaths function."""
     front_end = self._ConfigureSingleFileTest()
@@ -103,6 +106,8 @@ class PregFrontendTest(shared_test_lib.BaseTestCase):
     paths = front_end.GetRegistryFilePaths(registry_file_types)
     self.assertEqual(sorted(paths), sorted(expected_paths))
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
+  @shared_test_lib.skipUnlessHasTestFile([u'registry_test.dd'])
   def testGetRegistryHelpers(self):
     """Tests the GetRegistryHelpers function."""
     front_end = self._ConfigureSingleFileTest()
@@ -144,6 +149,7 @@ class PregFrontendTest(shared_test_lib.BaseTestCase):
     # TODO: Add a test for getting Registry helpers from a storage media file
     # that contains VSS stores.
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
   def testGetRegistryPlugins(self):
     """Tests the GetRegistryPlugin function."""
     front_end = self._ConfigureSingleFileTest()
@@ -160,6 +166,7 @@ class PregFrontendTest(shared_test_lib.BaseTestCase):
 
     self.assertIn(u'userassist', other_plugin_names)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
   def testParseRegistry(self):
     """Tests the ParseRegistryFile and ParseRegistryKey functions."""
     front_end = self._ConfigureSingleFileTest()

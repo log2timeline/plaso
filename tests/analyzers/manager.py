@@ -7,7 +7,7 @@ from plaso.analyzers import interface
 from plaso.analyzers import manager
 from plaso.containers import analyzer_result
 
-from tests.analyzers import test_lib
+from tests import test_lib as shared_test_lib
 
 
 class TestAnalyzer(interface.BaseAnalyzer):
@@ -21,7 +21,7 @@ class TestAnalyzer(interface.BaseAnalyzer):
     self._results = []
 
   def _AddResult(self):
-    """Adds a  result to the results object."""
+    """Adds a result to the results object."""
     if not self._results:
       result = analyzer_result.AnalyzerResult()
       result.attribute_name = u'test_result'
@@ -49,7 +49,7 @@ class TestAnalyzer(interface.BaseAnalyzer):
     self._results = []
 
 
-class AnalyzersManagerTest(test_lib.AnalyzerTestCase):
+class AnalyzersManagerTest(shared_test_lib.BaseTestCase):
   """Tests for the analyzers manager."""
 
   # pylint: disable=protected-access
@@ -57,6 +57,7 @@ class AnalyzersManagerTest(test_lib.AnalyzerTestCase):
   def tearDown(self):
     """Cleans up after running an individual test."""
     try:
+      # Deregister the test analyzer if the test failed.
       manager.AnalyzersManager.DeregisterAnalyzer(TestAnalyzer)
     except KeyError:
       pass

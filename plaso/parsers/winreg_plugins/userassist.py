@@ -6,10 +6,10 @@ import logging
 import construct
 
 from plaso.containers import time_events
+from plaso.engine import path_helper
 from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
-from plaso.winnt import environ_expand
 from plaso.winnt import known_folder_ids
 
 
@@ -184,9 +184,9 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
         value_name = u'\\'.join(path_segments)
         # Check if we might need to substitute values.
         if u'%' in value_name:
-          path_attributes = parser_mediator.knowledge_base.GetPathAttributes()
-          value_name = environ_expand.ExpandWindowsEnvironmentVariables(
-              value_name, path_attributes)
+          environment_variables = self._knowledge_base.GetEnvironmentVariables()
+          value_name = path_helper.PathHelper.ExpandWindowsPath(
+              value_name, environment_variables)
 
       value_data_size = len(registry_value.data)
       if not registry_value.DataIsBinaryData():

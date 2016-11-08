@@ -4,18 +4,19 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import chrome_cookies as chrome_cookies_formatter
+from plaso.formatters import chrome_cookies  # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import chrome_cookies
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class ChromeCookiesPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Google Chrome cookie database plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'cookies.db'])
   def testProcess(self):
     """Tests the Process function on a Chrome cookie database file."""
     plugin_object = chrome_cookies.ChromeCookiePlugin()

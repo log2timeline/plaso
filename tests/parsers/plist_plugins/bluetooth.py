@@ -4,16 +4,17 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import plist as plist_formatter
+from plaso.formatters import plist  # pylint: disable=unused-import
 from plaso.parsers.plist_plugins import bluetooth
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.plist_plugins import test_lib
 
 
 class TestBtPlugin(test_lib.PlistPluginTestCase):
   """Tests for the Bluetooth plist plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'plist_binary'])
   def testProcess(self):
     """Tests the Process function."""
     test_file_name = u'plist_binary'

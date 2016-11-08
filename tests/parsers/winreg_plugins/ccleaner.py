@@ -4,10 +4,11 @@
 
 import unittest
 
-from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import ccleaner
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -17,10 +18,11 @@ __author__ = 'Marc Seguin (segumarc@gmail.com)'
 class CCleanerRegistryPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the CCleaner Windows Registry plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER-CCLEANER.DAT'])
   def testProcess(self):
     """Tests the Process function."""
     plugin_object = ccleaner.CCleanerPlugin()
-    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-CCLEANER.DAT'])
+    test_file_entry = self._GetTestFileEntry([u'NTUSER-CCLEANER.DAT'])
     key_path = u'HKEY_CURRENT_USER\\Software\\Piriform\\CCleaner'
 
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)

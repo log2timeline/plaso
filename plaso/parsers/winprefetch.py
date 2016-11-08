@@ -20,17 +20,15 @@ class WinPrefetchExecutionEvent(time_events.FiletimeEvent):
   """Class that defines a Windows Prefetch execution event.
 
   Attributes:
-    executable: a string containing the executable filename.
-    format_version: an integer containing the format version.
-    mapped_files: a list of strings containing the mapped filenames.
-    number_of_volumes: an integer containing the number of volumes.
-    path: a path to the executable.
-    prefetch_hash: an integer containing the prefetch hash.
-    run_count: an integer containing the run count.
-    volume_device_paths: a list of strings containing volume device path
-                         strings.
-    volume_serial_numbers: a list of integers containing the volume serial
-                           numbers.
+    executable (str): executable filename.
+    format_version (int): format version.
+    mapped_files (list[str]): mapped filenames.
+    number_of_volumes (int): number of volumes.
+    path (str): path to the executable.
+    prefetch_hash (int): prefetch hash.
+    run_count (int): run count.
+    volume_device_paths (list[str]): volume device paths.
+    volume_serial_numbers (list[int]): volume serial numbers.
   """
 
   DATA_TYPE = u'windows:prefetch:execution'
@@ -42,19 +40,17 @@ class WinPrefetchExecutionEvent(time_events.FiletimeEvent):
     """Initializes the event.
 
     Args:
-      timestamp: the FILETIME timestamp value.
-      timestamp_description: the usage string for the timestamp value.
-      format_version: an integer containing the format version.
-      executable_filename: a string containing the executable filename.
-      prefetch_hash: an integer containing the prefetch hash.
-      run_count: an integer containing the run count.
-      mapped_files: a list of strings containing the mapped filenames.
-      path: a path to the executable.
-      number_of_volumes: an integer containing the number of volumes.
-      volume_serial_numbers: a list of integers containing volume serial
-                             numbers.
-      volume_device_paths: a list of strings containing volume device path
-                           strings.
+      timestamp (int): the FILETIME timestamp value.
+      timestamp_description (str): the usage string for the timestamp value.
+      format_version (int): format version.
+      executable_filename (str): executable filename.
+      prefetch_hash (int): prefetch hash.
+      run_count (int): run count.
+      mapped_files (list[str]): mapped filenames.
+      path (str): path to the executable.
+      number_of_volumes (int): number of volumes.
+      volume_serial_numbers (list[int]): volume serial numbers.
+      volume_device_paths (list[str]): volume device paths.
     """
     super(WinPrefetchExecutionEvent, self).__init__(
         timestamp, timestamp_description)
@@ -82,17 +78,15 @@ class WinPrefetchParser(interface.FileObjectParser):
     """Retrieves the format specification."""
     format_specification = specification.FormatSpecification(cls.NAME)
     format_specification.AddNewSignature(b'SCCA', offset=4)
+    format_specification.AddNewSignature(b'MAM\x04', offset=0)
     return format_specification
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows Prefetch file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
-
-    Raises:
-      UnableToParseFile: when the file cannot be parsed.
+      parser_mediator (ParserMediator): parser mediator.
+      file_object (dfvfs.FileIO): file-like object to be parsed.
     """
     scca_file = pyscca.file()
 

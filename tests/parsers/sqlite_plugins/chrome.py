@@ -4,18 +4,20 @@
 
 import unittest
 
-from plaso.formatters import chrome as _  # pylint: disable=unused-import
+from plaso.formatters import chrome  # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import chrome
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class ChromeHistoryPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Google Chrome History database plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'History'])
   def testProcess(self):
     """Tests the Process function on a Chrome History database file."""
     plugin_object = chrome.ChromeHistoryPlugin()

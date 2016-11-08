@@ -4,19 +4,20 @@
 
 import unittest
 
-# pylint: disable=unused-import
-from plaso.formatters import chrome_extension_activity as chrome_formatter
+from plaso.formatters import chrome_extension_activity  # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import chrome_extension_activity
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class ChromeExtensionActivityPluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Google Chrome extension activity database plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'Extension Activity'])
   def testProcess(self):
     """Tests the Process function on a Chrome extension activity database."""
     plugin_object = chrome_extension_activity.ChromeExtensionActivityPlugin()

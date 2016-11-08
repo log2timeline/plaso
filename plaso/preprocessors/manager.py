@@ -9,37 +9,52 @@ from dfwinreg import interface as dfwinreg_interface
 from dfwinreg import regf as dfwinreg_regf
 from dfwinreg import registry as dfwinreg_registry
 
-from plaso.lib import errors
-
 
 class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
   """A file system-based Windows Registry file reader."""
 
-  def __init__(self, file_system, mount_point, path_attributes=None):
+  def __init__(self, file_system, mount_point, environment_variables=None):
     """Initializes a Windows Registry file reader object.
 
     Args:
       file_system (dfvfs.FileSytem): file system.
       mount_point (dfvfs.PathSpec): mount point path specification.
-      path_attributes (Optional[dict[str, str]]): path attributes e.g.
-          {'SystemRoot': '\\Windows'}
+      environment_variables (Optional[list[EnvironmentVariableArtifact]]):
+          environment variables.
     """
     super(FileSystemWinRegistryFileReader, self).__init__()
     self._file_system = file_system
-    self._path_resolver = windows_path_resolver.WindowsPathResolver(
+    self._path_resolver = self._CreateWindowsPathResolver(
+        file_system, mount_point, environment_variables=environment_variables)
+
+  def _CreateWindowsPathResolver(
+      self, file_system, mount_point, environment_variables):
+    """Create a Windows path resolver and sets the evironment variables.
+
+    Args:
+      file_system (dfvfs.FileSytem): file system.
+      mount_point (dfvfs.PathSpec): mount point path specification.
+      environment_variables (list[EnvironmentVariableArtifact]): environment
+          variables.
+
+    Returns:
+      dfvfs.WindowsPathResolver: Windows path resolver.
+    """
+    if environment_variables is None:
+      environment_variables = []
+
+    path_resolver = windows_path_resolver.WindowsPathResolver(
         file_system, mount_point)
 
-    if path_attributes:
-      for attribute_name, attribute_value in iter(path_attributes.items()):
-        # TODO: fix the call to this class and make sure only relevant
-        # values are passed.
-        if attribute_name == u'systemroot':
-          self._path_resolver.SetEnvironmentVariable(
-              u'SystemRoot', attribute_value)
+    for environment_variable in environment_variables:
+      name = environment_variable.name.lower()
+      if name not in (u'systemroot', u'userprofile'):
+        continue
 
-        elif attribute_name == u'userprofile':
-          self._path_resolver.SetEnvironmentVariable(
-              u'UserProfile', attribute_value)
+      path_resolver.SetEnvironmentVariable(
+          environment_variable.name, environment_variable.value)
+
+    return path_resolver
 
   def _OpenPathSpec(self, path_specification, ascii_codepage=u'cp1252'):
     """Opens the Windows Registry file specified by the path specification.
@@ -96,70 +111,41 @@ class FileSystemWinRegistryFileReader(dfwinreg_interface.WinRegistryFileReader):
 class PreprocessPluginsManager(object):
   """Class that implements the preprocess plugins manager."""
 
-  _plugin_classes = {}
+  _file_system_plugin_classes = {}
   _registry_plugin_classes = {}
 
   @classmethod
-  def _GetPluginsByWeight(cls, plugin_classes, platform, weight):
-    """Returns all plugins for a specific platform of a certain weight.
+  def _GetPluginObjects(cls, plugin_classes):
+    """Returns all plugins.
 
     Args:
-      plugin_classes: A dictionary containing the plugin classes with
-                      their class name as the key.
-      platform: A string containing the supported operating system
-                of the plugin.
-      weight: An integer containing the weight of the plugin.
+      plugin_classes (dict[str, type]): plugin classes with their class
+          name as the key.
 
     Yields:
-      Preprocess plugin objects (instance of PreprocessPlugin) that
-      match the specified platform and weight.
+      PreprocessPlugin: preprocess plugin.
     """
     for plugin_class in iter(plugin_classes.values()):
-      plugin_supported_os = getattr(plugin_class, u'SUPPORTED_OS', [])
-      plugin_weight = getattr(plugin_class, u'WEIGHT', 0)
-      if platform in plugin_supported_os and weight == plugin_weight:
-        yield plugin_class()
-
-  @classmethod
-  def _GetWeights(cls, plugin_classes, platform):
-    """Returns a list of all weights that are used by preprocessing plugins.
-
-    Args:
-      plugin_classes: A dictionary containing the plugin classes with
-                      their class name as the key.
-      platform: A string containing the supported operating system
-                of the plugin.
-
-    Returns:
-      A list of weights.
-    """
-    weights = {}
-    for plugin_class in iter(plugin_classes.values()):
-      plugin_supported_os = getattr(plugin_class, u'SUPPORTED_OS', [])
-      plugin_weight = getattr(plugin_class, u'WEIGHT', 0)
-      if platform in plugin_supported_os:
-        weights[plugin_weight] = 1
-
-    return sorted(weights.keys())
+      yield plugin_class()
 
   @classmethod
   def DeregisterPlugin(cls, plugin_class):
     """Deregisters a plugin class.
 
     Args:
-      plugin_class: the class object of the plugin.
+      plugin_class (type): plugin class.
 
     Raises:
       KeyError: if plugin class is not set for the corresponding name.
     """
-    if (plugin_class.__name__ not in cls._plugin_classes and
+    if (plugin_class.__name__ not in cls._file_system_plugin_classes and
         plugin_class.__name__ not in cls._registry_plugin_classes):
       raise KeyError(
           u'Plugin class not set for name: {0:s}.'.format(
               plugin_class.__name__))
 
-    if plugin_class.__name__ in cls._plugin_classes:
-      del cls._plugin_classes[plugin_class.__name__]
+    if plugin_class.__name__ in cls._file_system_plugin_classes:
+      del cls._file_system_plugin_classes[plugin_class.__name__]
 
     if plugin_class.__name__ in cls._registry_plugin_classes:
       del cls._registry_plugin_classes[plugin_class.__name__]
@@ -169,29 +155,29 @@ class PreprocessPluginsManager(object):
     """Registers a plugin class.
 
     Args:
-      plugin_class: the class object of the plugin.
+      plugin_class (type): plugin class.
 
     Raises:
       KeyError: if plugin class is already set for the corresponding name.
     """
-    if (plugin_class.__name__ in cls._plugin_classes or
+    if (plugin_class.__name__ in cls._file_system_plugin_classes or
         plugin_class.__name__ in cls._registry_plugin_classes):
-      raise KeyError((
-          u'Plugin class already set for name: {0:s}.').format(
+      raise KeyError(
+          u'Plugin class already set for name: {0:s}.'.format(
               plugin_class.__name__))
 
-    # TODO: use type check instead of check for KEY_PATH.
-    if hasattr(plugin_class, u'KEY_PATH'):
+    if hasattr(plugin_class, u'_REGISTRY_KEY_PATH'):
       cls._registry_plugin_classes[plugin_class.__name__] = plugin_class
+
     else:
-      cls._plugin_classes[plugin_class.__name__] = plugin_class
+      cls._file_system_plugin_classes[plugin_class.__name__] = plugin_class
 
   @classmethod
   def RegisterPlugins(cls, plugin_classes):
     """Registers a plugin classes.
 
     Args:
-      plugin_classes: a list of class objects of the plugins.
+      plugin_classes (list[type]): plugin classses.
 
     Raises:
       KeyError: if plugin class is already set for the corresponding name.
@@ -200,60 +186,53 @@ class PreprocessPluginsManager(object):
       cls.RegisterPlugin(plugin_class)
 
   @classmethod
-  def RunPlugins(cls, platform, file_system, mount_point, knowledge_base):
-    """Runs the plugins for a specific platform.
+  def RunPlugins(cls, file_system, mount_point, knowledge_base):
+    """Runs the preprocessing plugins.
 
     Args:
-      platform: A string containing the supported operating system
-                of the plugin.
-      file_system: the file system object (instance of vfs.FileSystem)
-                   to be preprocessed.
-      mount_point: the mount point path specification (instance of
-                   path.PathSpec) that refers to the base location
-                   of the file system.
-      knowledge_base: A knowledge base object (instance of KnowledgeBase),
-                      which contains information from the source data needed
-                      for parsing.
+      file_system (dfvfs.FileSystem): file system to be preprocessed.
+      mount_point (dfvfs.PathSpec): mount point path specification that refers
+          to the base location of the file system.
+      knowledge_base (KnowledgeBase): to fill with preprocessing information.
     """
     # TODO: bootstrap the artifact preprocessor.
 
     searcher = file_system_searcher.FileSystemSearcher(file_system, mount_point)
 
-    for weight in cls._GetWeights(cls._plugin_classes, platform):
-      for plugin_object in cls._GetPluginsByWeight(
-          cls._plugin_classes, platform, weight):
-        try:
-          plugin_object.Run(searcher, knowledge_base)
+    for plugin_object in cls._GetPluginObjects(cls._file_system_plugin_classes):
+      try:
+        plugin_object.Run(searcher, knowledge_base)
 
-        except (IOError, errors.PreProcessFail) as exception:
-          logging.warning((
-              u'Unable to run preprocessor: {0:s} for attribute: {1:s} '
-              u'with error: {2:s}').format(
-                  plugin_object.plugin_name, plugin_object.ATTRIBUTE,
-                  exception))
+      # All exceptions need to be caught here to prevent the manager
+      # from being killed by an uncaught exception.
+      except Exception as exception:  # pylint: disable=broad-except
+        logging.warning(
+            u'Preprocess plugin: {0:s} run failed with error: {1:s}'.format(
+                plugin_object.plugin_name, exception))
 
     # Run the Registry plugins separately so we do not have to open
     # Registry files in every plugin.
 
-    path_attributes = None
+    environment_variables = None
     if knowledge_base:
-      path_attributes = knowledge_base.GetPathAttributes()
+      environment_variables = knowledge_base.GetEnvironmentVariables()
 
     registry_file_reader = FileSystemWinRegistryFileReader(
-        file_system, mount_point, path_attributes=path_attributes)
+        file_system, mount_point, environment_variables=environment_variables)
     win_registry = dfwinreg_registry.WinRegistry(
         registry_file_reader=registry_file_reader)
 
-    for weight in cls._GetWeights(cls._registry_plugin_classes, platform):
-      for plugin_object in cls._GetPluginsByWeight(
-          cls._registry_plugin_classes, platform, weight):
+    for plugin_object in cls._GetPluginObjects(cls._registry_plugin_classes):
+      try:
+        plugin_object.Run(win_registry, knowledge_base)
 
-        try:
-          plugin_object.Run(win_registry, knowledge_base)
+      # All exceptions need to be caught here to prevent the manager
+      # from being killed by an uncaught exception.
+      except Exception as exception:  # pylint: disable=broad-except
+        logging.warning(
+            u'Preprocess plugin: {0:s} run failed with error: {1:s}'.format(
+                plugin_object.plugin_name, exception))
 
-        except (IOError, errors.PreProcessFail) as exception:
-          logging.warning((
-              u'Unable to run preprocessor: {0:s} for attribute: {1:s} '
-              u'with error: {2:s}').format(
-                  plugin_object.plugin_name, plugin_object.ATTRIBUTE,
-                  exception))
+    if not knowledge_base.HasUserAccounts():
+      logging.warning(u'Unable to find any user accounts on the system.')
+

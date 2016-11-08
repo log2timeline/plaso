@@ -7,11 +7,11 @@ from plaso.containers import analyzer_result
 from plaso.analyzers import hashing_analyzer
 from plaso.analyzers.hashers import manager
 
-from tests.analyzers import test_lib
+from tests import test_lib as shared_test_lib
 from tests.analyzers.hashers import manager as manager_test
 
 
-class HashingAnalyzerTest(test_lib.AnalyzerTestCase):
+class HashingAnalyzerTest(shared_test_lib.BaseTestCase):
   """Test the Hashing analyzer."""
 
   # pylint: disable=protected-access
