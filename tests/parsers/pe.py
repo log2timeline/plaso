@@ -4,21 +4,22 @@
 
 import unittest
 
-from plaso.formatters import pe as _  # pylint: disable=unused-import
+from plaso.formatters import pe  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import pe
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class PECOFFTest(test_lib.ParserTestCase):
   """Tests for the PE file parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'test_pe.exe'])
   def testParseFileObjectOnExecutable(self):
     """Tests the ParseFileObject on a PE executable (EXE) file."""
     parser_object = pe.PEParser()
-    storage_writer = self._ParseFile(
-        [u'test_pe.exe'], parser_object)
+    storage_writer = self._ParseFile([u'test_pe.exe'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 3)
 
@@ -41,11 +42,11 @@ class PECOFFTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(event_object.data_type, u'pe:delay_import:import_time')
 
+  @shared_test_lib.skipUnlessHasTestFile([u'test_driver.sys'])
   def testParseFileObjectOnDriver(self):
     """Tests the ParseFileObject on a PE driver (SYS) file."""
     parser_object = pe.PEParser()
-    storage_writer = self._ParseFile(
-        [u'test_driver.sys'], parser_object)
+    storage_writer = self._ParseFile([u'test_driver.sys'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 1)
 

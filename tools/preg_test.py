@@ -260,7 +260,7 @@ class PregConsoleTest(cli_test_lib.CLIToolTestCase):
     self._output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     self._test_tool = preg.PregTool(output_writer=self._output_writer)
     self._test_console = preg.PregConsole(self._test_tool)
-    file_entry = self._GetTestFileEntryFromPath([u'NTUSER.DAT'])
+    file_entry = self._GetTestFileEntry([u'NTUSER.DAT'])
     self._file_path = self._GetTestFilePath([u'NTUSER.DAT'])
     self._registry_helper = preg_frontend.PregRegistryHelper(
         file_entry, u'OS', self._test_tool._knowledge_base_object)
@@ -368,7 +368,7 @@ class PregMagicClassTest(cli_test_lib.CLIToolTestCase):
     self._magic_obj.console = self._test_console
     self._magic_obj.output_writer = self._output_writer
 
-    registry_file_entry = self._GetTestFileEntryFromPath([u'NTUSER.DAT'])
+    registry_file_entry = self._GetTestFileEntry([u'NTUSER.DAT'])
     self._registry_helper = preg_frontend.PregRegistryHelper(
         registry_file_entry, u'OS', test_tool._knowledge_base_object)
 

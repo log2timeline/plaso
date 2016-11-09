@@ -4,16 +4,18 @@
 
 import unittest
 
-from plaso.formatters import ls_quarantine as _  # pylint: disable=unused-import
+from plaso.formatters import ls_quarantine  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import ls_quarantine
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class LSQuarantinePluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the LS Quarantine database plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'quarantine.db'])
   def testProcess(self):
     """Tests the Process function on a LS Quarantine database file."""
     plugin_object = ls_quarantine.LsQuarantinePlugin()

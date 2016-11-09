@@ -8,11 +8,12 @@ from dfdatetime import filetime as dfdatetime_filetime
 from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
-from plaso.formatters import winreg as _  # pylint: disable=unused-import
+from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import winver
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
@@ -124,9 +125,10 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE-RunTests'])
   def testProcessFile(self):
     """Tests the Process function on a Windows Registry file."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'SOFTWARE-RunTests'])
+    test_file_entry = self._GetTestFileEntry([u'SOFTWARE-RunTests'])
     key_path = (
         u'HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion')
 

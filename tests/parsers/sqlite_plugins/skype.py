@@ -4,17 +4,19 @@
 
 import unittest
 
-from plaso.formatters import skype as _  # pylint: disable=unused-import
+from plaso.formatters import skype  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import skype
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.sqlite_plugins import test_lib
 
 
 class SkypePluginTest(test_lib.SQLitePluginTestCase):
   """Tests for the Skype main.db history database plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'skype_main.db'])
   def testProcess(self):
     """Tests the Process function on a Skype History database file.
 

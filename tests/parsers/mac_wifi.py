@@ -4,16 +4,18 @@
 
 import unittest
 
-from plaso.formatters import mac_wifi as _  # pylint: disable=unused-import
+from plaso.formatters import mac_wifi  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import mac_wifi
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class MacWifiUnitTest(test_lib.ParserTestCase):
   """Tests for the Mac wifi.log parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'wifi.log'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = mac_wifi.MacWifiLogParser()

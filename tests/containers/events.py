@@ -6,6 +6,7 @@ import unittest
 
 from plaso.containers import events
 
+from tests import test_lib as shared_test_lib
 from tests.containers import test_lib
 
 
@@ -13,7 +14,7 @@ class InvalidEvent(events.EventObject):
   """An event without the required initialization."""
 
 
-class EventObjectTest(test_lib.AttributeContainerTestCase):
+class EventObjectTest(shared_test_lib.BaseTestCase):
   """Tests for the event attributes container."""
 
   def testCopyToDict(self):
@@ -231,7 +232,7 @@ class EventObjectTest(test_lib.AttributeContainerTestCase):
       getattr(event, u'format_string_short')
 
 
-class EventTagTest(test_lib.AttributeContainerTestCase):
+class EventTagTest(shared_test_lib.BaseTestCase):
   """Tests for the event tag attributes container."""
 
   def testCopyToDict(self):

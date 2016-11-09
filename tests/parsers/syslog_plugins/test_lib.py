@@ -29,7 +29,7 @@ class SyslogPluginTestCase(test_lib.ParserTestCase):
     storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()
 
-    file_entry = self._GetTestFileEntryFromPath(path_segments)
+    file_entry = self._GetTestFileEntry(path_segments)
     parser_mediator = self._CreateParserMediator(
         storage_writer, file_entry=file_entry,
         knowledge_base_values=knowledge_base_values)

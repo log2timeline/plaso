@@ -4,10 +4,11 @@
 
 import unittest
 
-from plaso.formatters import xchatlog as _  # pylint: disable=unused-import
+from plaso.formatters import xchatlog  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers import xchatlog
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
@@ -17,6 +18,7 @@ __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 class XChatLogUnitTest(test_lib.ParserTestCase):
   """Tests for the xchatlog parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'xchat.log'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = xchatlog.XChatLogParser()

@@ -4,20 +4,22 @@
 
 import unittest
 
-from plaso.formatters import userassist as _  # pylint: disable=unused-import
+from plaso.formatters import userassist  # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import userassist
 
+from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
 class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
   """Tests for the UserAssist Windows Registry plugin."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER.DAT'])
   def testProcessOnWinXP(self):
     """Tests the Process function on a Windows XP Registry file."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER.DAT'])
+    test_file_entry = self._GetTestFileEntry([u'NTUSER.DAT'])
     key_path = (
         u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         u'Explorer\\UserAssist\\{75048700-EF1F-11D0-9888-006097DEACF9}')
@@ -56,9 +58,10 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     self._TestGetMessageStrings(
         event_object, expected_message, userassist_value)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'NTUSER-WIN7.DAT'])
   def testProcessOnWin7(self):
     """Tests the Process function on a Windows 7 Registry file."""
-    test_file_entry = self._GetTestFileEntryFromPath([u'NTUSER-WIN7.DAT'])
+    test_file_entry = self._GetTestFileEntry([u'NTUSER-WIN7.DAT'])
     key_path = (
         u'HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\'
         u'Explorer\\UserAssist\\{CEBFF5CD-ACE2-4F4F-9178-9926F41749EA}')

@@ -4,22 +4,23 @@
 
 import unittest
 
-from plaso.formatters import oxml as _  # pylint: disable=unused-import
+from plaso.formatters import oxml  # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import oxml
 
+from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
 class OXMLTest(test_lib.ParserTestCase):
   """Tests for the OXML parser."""
 
+  @shared_test_lib.skipUnlessHasTestFile([u'Document.docx'])
   def testParse(self):
     """Tests the Parse function."""
     parser_object = oxml.OpenXMLParser()
-    storage_writer = self._ParseFile(
-        [u'Document.docx'], parser_object)
+    storage_writer = self._ParseFile([u'Document.docx'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 2)
 

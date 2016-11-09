@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Tests the engine."""
 
-import os
 import unittest
 
 try:
@@ -25,55 +24,38 @@ from tests import test_lib as shared_test_lib
 class TestEngine(engine.BaseEngine):
   """Class that defines the processing engine for testing."""
 
-  _TEST_DATA_PATH = os.path.join(os.getcwd(), u'test_data')
-
   def __init__(self):
-    """Initialize the engine object."""
-    super(TestEngine, self).__init__()
-
+    """Initialize a test engine object."""
     file_system_builder = fake_file_system_builder.FakeFileSystemBuilder()
-    test_file_path = self._GetTestFilePath([u'SOFTWARE'])
+    test_file_path = shared_test_lib.GetTestFilePath([u'SOFTWARE'])
     file_system_builder.AddFileReadData(
         u'/Windows/System32/config/SOFTWARE', test_file_path)
-    test_file_path = self._GetTestFilePath([u'SYSTEM'])
+    test_file_path = shared_test_lib.GetTestFilePath([u'SYSTEM'])
     file_system_builder.AddFileReadData(
         u'/Windows/System32/config/SYSTEM', test_file_path)
 
+    super(TestEngine, self).__init__()
     self._file_system = file_system_builder.file_system
     self._mount_point = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_FAKE, location=u'/')
-
-  def _GetTestFilePath(self, path_segments):
-    """Retrieves the path of a test file relative to the test data directory.
-
-    Args:
-      path_segments: the path segments inside the test data directory.
-
-    Returns:
-      A path of the test file.
-    """
-    # Note that we need to pass the individual path segments to os.path.join
-    # and not a list.
-    return os.path.join(self._TEST_DATA_PATH, *path_segments)
 
   def GetSourceFileSystem(self, source_path_spec, resolver_context=None):
     """Retrieves the file system of the source.
 
     Args:
-      source_path_spec: The source path specification (instance of
-                        dfvfs.PathSpec) of the file system.
-      resolver_context: Optional resolver context (instance of dfvfs.Context).
-                        The default is None which will use the built in context
-                        which is not multi process safe. Note that every thread
-                        or process must have its own resolver context.
+      source_path_spec (dfvfs.PathSpec): path specifications of the sources
+          to process.
+      resolver_context (dfvfs.Context): resolver context.
 
     Returns:
-      A tuple of the file system (instance of dfvfs.FileSystem) and
-      the mount point path specification (instance of path.PathSpec).
-      The mount point path specification refers to either a directory or
-      a volume on a storage media device or image. It is needed by the dfVFS
-      file system searcher (instance of FileSystemSearcher) to indicate
-      the base location of the file system.
+      tuple: containing:
+
+        dfvfs.FileSystem: file system
+        path.PathSpec: mount point path specification. The mount point path
+            specification refers to either a directory or a volume on a storage
+            media device or image. It is needed by the dfVFS file system
+            searcher (FileSystemSearcher) to indicate the base location of
+            the file system
     """
     self._file_system.Open(self._mount_point)
     return self._file_system, self._mount_point
@@ -84,11 +66,12 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
 
   # pylint: disable=protected-access
 
+  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
   def testGetSourceFileSystem(self):
     """Tests the GetSourceFileSystem function."""
     test_engine = engine.BaseEngine()
 
-    source_path = os.path.join(self._TEST_DATA_PATH, u'ímynd.dd')
+    source_path = self._GetTestFilePath([u'ímynd.dd'])
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=source_path)
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -110,6 +93,8 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
     with self.assertRaises(RuntimeError):
       test_engine.GetSourceFileSystem(None)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE'])
+  @shared_test_lib.skipUnlessHasTestFile([u'SYSTEM'])
   def testPreprocessSources(self):
     """Tests the PreprocessSources function."""
     test_engine = TestEngine()

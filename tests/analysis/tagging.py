@@ -8,6 +8,7 @@ from plaso.analysis import tagging
 from plaso.lib import timelib
 from plaso.containers import events
 
+from tests import test_lib as shared_test_lib
 from tests.analysis import test_lib
 
 
@@ -86,6 +87,7 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
       setattr(event_object, key, value)
     return event_object
 
+  @shared_test_lib.skipUnlessHasTestFile([u'test_tag_file.txt'])
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
     event_objects = []
@@ -100,15 +102,11 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
     storage_writer = self._AnalyzeEvents(event_objects, plugin)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
-
-    analysis_report = storage_writer.analysis_reports[0]
-
-    tags = analysis_report.GetTags()
-    self.assertEqual(len(tags), 4)
+    self.assertEqual(len(storage_writer.event_tags), 4)
 
     labels = []
-    for tag in tags:
-      labels.extend(tag.labels)
+    for event_tag in storage_writer.event_tags:
+      labels.extend(event_tag.labels)
     self.assertEqual(len(labels), 5)
 
     # This is from a tag rule declared in objectfilter syntax.
@@ -118,6 +116,8 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
     # This is from a rule using the "contains" operator
     self.assertIn(u'text_contains', labels)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'test_tag_file.txt'])
+  @shared_test_lib.skipUnlessHasTestFile([u'invalid_test_tag_file.txt'])
   def testParseTaggingFile(self):
     """Tests the _ParseTaggingFile function."""
     plugin = tagging.TaggingAnalysisPlugin()

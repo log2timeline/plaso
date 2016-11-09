@@ -1854,7 +1854,8 @@ class ReviewHelper(object):
 
     # TODO: determine why this alters the behavior of argparse.
     # Currently affects this script being used in plaso.
-    command = u'{0:s} run_tests.py'.format(sys.executable)
+    command = u'{0:s} run_tests.py --fail-unless-has-test-file'.format(
+        sys.executable)
     exit_code = subprocess.call(command, shell=True)
     if exit_code != 0:
       print(u'{0:s} aborted - unable to pass tests.'.format(

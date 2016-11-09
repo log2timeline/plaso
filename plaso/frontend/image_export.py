@@ -18,12 +18,11 @@ from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.engine import extractors
 from plaso.engine import knowledge_base
 from plaso.engine import path_helper
-from plaso.engine import utils as engine_utils
 from plaso.frontend import frontend
+from plaso.frontend import utils
 from plaso.lib import py2to3
 from plaso.lib import specification
 from plaso.lib import timelib
-from plaso.preprocessors import interface as preprocess_interface
 from plaso.preprocessors import manager as preprocess_manager
 
 
@@ -670,9 +669,9 @@ class ImageExportFrontend(frontend.Frontend):
       output_writer.Write(
           u'Extracting file entries from: {0:s}\n'.format(display_name))
 
-      path_attributes = self._knowledge_base.GetPathAttributes()
-      find_specs = engine_utils.BuildFindSpecsFromFile(
-          filter_file_path, path_attributes=path_attributes)
+      environment_variables = self._knowledge_base.GetEnvironmentVariables()
+      find_specs = utils.BuildFindSpecsFromFile(
+          filter_file_path, environment_variables=environment_variables)
 
       searcher = file_system_searcher.FileSystemSearcher(
           file_system, mount_point)
@@ -731,12 +730,8 @@ class ImageExportFrontend(frontend.Frontend):
 
     logging.debug(u'Preprocessing.')
 
-    searcher = file_system_searcher.FileSystemSearcher(file_system, mount_point)
-    platform = preprocess_interface.GuessOS(searcher)
-    logging.debug(u'operating system: {0:s}'.format(platform))
-
     preprocess_manager.PreprocessPluginsManager.RunPlugins(
-        platform, file_system, mount_point, self._knowledge_base)
+        file_system, mount_point, self._knowledge_base)
 
   def _WriteFileEntry(self, file_entry, data_stream_name, destination_file):
     """Writes the contents of the source file entry to a destination file.

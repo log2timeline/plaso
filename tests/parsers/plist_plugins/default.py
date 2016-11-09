@@ -5,7 +5,7 @@
 import datetime
 import unittest
 
-from plaso.formatters import plist as _  # pylint: disable=unused-import
+from plaso.formatters import plist  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.plist_plugins import default
 

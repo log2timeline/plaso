@@ -2,18 +2,16 @@
 # -*- coding: utf-8 -*-
 """Tests for the extractor classes."""
 
-import logging
 import os
 import shutil
-import tempfile
 import unittest
 
+from dfvfs.helpers import file_system_searcher
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 
 from plaso.engine import extractors
-from plaso.engine import utils as engine_utils
 
 from tests import test_lib as shared_test_lib
 
@@ -25,11 +23,13 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
   """Tests for the path specification extractor."""
 
   def _GetFilePaths(self, path_specs):
-    """Retrieves a list of file paths from path specifications.
+    """Retrieves file paths from path specifications.
 
     Args:
-      path_specs: a list of path specification objects (instances of
-                  dfvfs.PathSpec).
+      path_specs (list[dfvfs.PathSpec]): path specifications.
+
+    Returns:
+      list[str]: file paths.
     """
     file_paths = []
     for path_spec in path_specs:
@@ -42,12 +42,38 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
 
     return file_paths
 
+  def _GetFindSpecs(self, location_expressions):
+    """Retrieves find specifications from location expressions.
+
+    Args:
+      location_expressions (list[str]): location regular expressions.
+
+    Returns:
+      list[dfvfs.FindSpec]: find specifications for the file system searcher.
+    """
+    find_specs = []
+    for location_expression in location_expressions:
+      # Convert the filter paths into a list of path segments and strip
+      # the root path segment.
+      path_segments = location_expression.split(u'/')
+      path_segments.pop(0)
+
+      find_spec = file_system_searcher.FindSpec(
+          location_regex=path_segments, case_sensitive=False)
+      find_specs.append(find_spec)
+
+    return find_specs
+
+  @shared_test_lib.skipUnlessHasTestFile([u'syslog.bz2'])
+  @shared_test_lib.skipUnlessHasTestFile([u'syslog.tgz'])
+  @shared_test_lib.skipUnlessHasTestFile([u'syslog.zip'])
+  @shared_test_lib.skipUnlessHasTestFile([u'wtmp.1'])
   def testExtractPathSpecsFileSystem(self):
     """Tests the ExtractPathSpecs function on the file system."""
     test_files = [
+        self._GetTestFilePath([u'syslog.bz2']),
         self._GetTestFilePath([u'syslog.tgz']),
         self._GetTestFilePath([u'syslog.zip']),
-        self._GetTestFilePath([u'syslog.bz2']),
         self._GetTestFilePath([u'wtmp.1'])]
 
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -64,32 +90,26 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
 
       self.assertEqual(len(path_specs), 4)
 
-  def testExtractPathSpecsFileSystemWithFilter(self):
-    """Tests the ExtractPathSpecs function on the file system with a filter."""
+  @shared_test_lib.skipUnlessHasTestFile([u'System.evtx'])
+  @shared_test_lib.skipUnlessHasTestFile([u'testdir', u'filter_1.txt'])
+  @shared_test_lib.skipUnlessHasTestFile([u'testdir', u'filter_3.txt'])
+  def testExtractPathSpecsFileSystemWithFindSpecs(self):
+    """Tests the ExtractPathSpecs function with find specifications."""
+    location_expressions = [
+        u'/test_data/testdir/filter_.+.txt',
+        u'/test_data/.+evtx',
+        u'/AUTHORS',
+        u'/does_not_exist/some_file_[0-9]+txt']
+
     source_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location=u'.')
-
-    filter_name = u''
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-      filter_name = temp_file.name
-      temp_file.write(b'/test_data/testdir/filter_.+.txt\n')
-      temp_file.write(b'/test_data/.+evtx\n')
-      temp_file.write(b'/AUTHORS\n')
-      temp_file.write(b'/does_not_exist/some_file_[0-9]+txt\n')
 
     resolver_context = context.Context()
     test_extractor = extractors.PathSpecExtractor(resolver_context)
 
-    find_specs = engine_utils.BuildFindSpecsFromFile(filter_name)
+    find_specs = self._GetFindSpecs(location_expressions)
     path_specs = list(test_extractor.ExtractPathSpecs(
         [source_path_spec], find_specs=find_specs))
-
-    try:
-      os.remove(filter_name)
-    except (OSError, IOError) as exception:
-      logging.warning((
-          u'Unable to remove temporary file: {0:s} with error: {1:s}').format(
-              filter_name, exception))
 
     # Two files with test_data/testdir/filter_*.txt, AUTHORS
     # and test_data/System.evtx and test_data/System2.evtx.
@@ -115,23 +135,24 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
         current_directory, u'AUTHORS')
     self.assertTrue(expected_path in paths)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'syslog_image.dd'])
   def testExtractPathSpecsStorageMediaImage(self):
     """Tests the ExtractPathSpecs function an image file.
 
     The image file contains the following files:
-      + logs/hidden.zip
-      + logs/sys.tgz
+    * logs/hidden.zip
+    * logs/sys.tgz
 
     The hidden.zip file contains one file, syslog, which is the
     same for sys.tgz.
 
     The end results should therefore be:
-      + logs/hidden.zip (unchanged)
-      + logs/hidden.zip:syslog (the text file extracted out)
-      + logs/sys.tgz (unchanged)
-      + logs/sys.tgz (read as a GZIP file, so not compressed)
-      + logs/sys.tgz:syslog.gz (A GZIP file from the TAR container)
-      + logs/sys.tgz:syslog.gz:syslog (the extracted syslog file)
+    * logs/hidden.zip (unchanged)
+    * logs/hidden.zip:syslog (the text file extracted out)
+    * logs/sys.tgz (unchanged)
+    * logs/sys.tgz (read as a GZIP file, so not compressed)
+    * logs/sys.tgz:syslog.gz (A GZIP file from the TAR container)
+    * logs/sys.tgz:syslog.gz:syslog (the extracted syslog file)
 
     This means that the collection script should collect 6 files in total.
     """
@@ -150,8 +171,14 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
 
     self.assertEqual(len(path_specs), 3)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
   def testExtractPathSpecsStorageMediaImageWithFilter(self):
     """Tests the ExtractPathSpecs function on an image file with a filter."""
+    location_expressions = [
+        u'/a_directory/.+zip',
+        u'/a_directory/another.+',
+        u'/passwords.txt']
+
     test_file = self._GetTestFilePath([u'ímynd.dd'])
 
     volume_path_spec = path_spec_factory.Factory.NewPathSpec(
@@ -160,26 +187,12 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_TSK, location=u'/',
         parent=volume_path_spec)
 
-    filter_name = u''
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-      filter_name = temp_file.name
-      temp_file.write(b'/a_directory/.+zip\n')
-      temp_file.write(b'/a_directory/another.+\n')
-      temp_file.write(b'/passwords.txt\n')
-
     resolver_context = context.Context()
     test_extractor = extractors.PathSpecExtractor(resolver_context)
 
-    find_specs = engine_utils.BuildFindSpecsFromFile(filter_name)
+    find_specs = self._GetFindSpecs(location_expressions)
     path_specs = list(test_extractor.ExtractPathSpecs(
         [source_path_spec], find_specs=find_specs))
-
-    try:
-      os.remove(filter_name)
-    except (OSError, IOError) as exception:
-      logging.warning((
-          u'Unable to remove temporary file: {0:s} with error: {1:s}').format(
-              filter_name, exception))
 
     self.assertEqual(len(path_specs), 2)
 
@@ -199,6 +212,7 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
     # image_offset: 0
     self.assertEqual(paths[1], u'/passwords.txt')
 
+  @shared_test_lib.skipUnlessHasTestFile([u'multi_partition_image.vmdk'])
   def testExtractPathSpecsStorageMediaImageWithPartitions(self):
     """Tests the ExtractPathSpecs function an image file with partitions.
 

@@ -81,7 +81,7 @@ class _EventsHeap(object):
 
 
 class ParserTestCase(shared_test_lib.BaseTestCase):
-  """The unit test case for a parser."""
+  """Parser test case."""
 
   def _CreateParserMediator(
       self, storage_writer, file_entry=None, knowledge_base_values=None,
@@ -155,25 +155,9 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
 
     return message_string
 
-  def _GetTestFileEntryFromPath(self, path_segments):
-    """Retrieves the file entry of a file in the test directory.
-
-    Args:
-      path_segments (list[str]): path segments inside the test data directory.
-
-    Returns:
-      dfvfs.FileEntry: file entry.
-    """
-    path = self._GetTestFilePath(path_segments)
-    path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=path)
-    return path_spec_resolver.Resolver.OpenFileEntry(path_spec)
-
-  def _ParseFile(self,
-                 path_segments,
-                 parser,
-                 knowledge_base_values=None,
-                 timezone=u'UTC'):
+  def _ParseFile(
+      self, path_segments, parser, knowledge_base_values=None,
+      timezone=u'UTC'):
     """Parses a file with a parser and writes results to a storage writer.
 
     Args:

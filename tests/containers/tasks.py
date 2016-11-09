@@ -8,10 +8,10 @@ import uuid
 
 from plaso.containers import tasks
 
-from tests.containers import test_lib
+from tests import test_lib as shared_test_lib
 
 
-class TaskTest(test_lib.AttributeContainerTestCase):
+class TaskTest(shared_test_lib.BaseTestCase):
   """Tests for the task attributes container."""
 
   def testCopyToDict(self):
@@ -36,7 +36,7 @@ class TaskTest(test_lib.AttributeContainerTestCase):
   # TODO: add more tests.
 
 
-class TaskCompletionTest(test_lib.AttributeContainerTestCase):
+class TaskCompletionTest(shared_test_lib.BaseTestCase):
   """Tests for the task completion attributes container."""
 
   def testCopyToDict(self):
@@ -63,7 +63,7 @@ class TaskCompletionTest(test_lib.AttributeContainerTestCase):
   # TODO: add more tests.
 
 
-class TaskStartTest(test_lib.AttributeContainerTestCase):
+class TaskStartTest(shared_test_lib.BaseTestCase):
   """Tests for the task start attributes container."""
 
   def testCopyToDict(self):
