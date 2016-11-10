@@ -172,8 +172,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._storage_writer = None
     self._task_queue = None
     self._task_queue_port = None
-    self._task_manager = task_manager.TaskManager(
-        maximum_number_of_tasks=maximum_number_of_tasks)
+    self._task_manager = task_manager.TaskManager()
     self._temporary_directory = None
     self._text_prepend = None
     self._use_zeromq = use_zeromq
