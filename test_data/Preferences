@@ -32,6 +32,7 @@
          "initialized": true
       },
       "autoupdate": {
+         "last_check": "13060270903926143",
          "next_check": "13060290021519200"
       },
       "chrome_url_overrides": {

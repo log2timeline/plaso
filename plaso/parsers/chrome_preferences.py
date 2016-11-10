@@ -30,6 +30,18 @@ class ChromePreferencesClearHistoryEvent(ChromePreferencesEvent):
     self.message = u'Chrome history was cleared by user'
 
 
+class ChromeExtensionsAutoupdaterEvent(time_events.WebKitTimeEvent):
+  """Convenience class for Chrome Extensions Autoupdater events."""
+
+  DATA_TYPE = u'chrome:preferences:extensions_autoupdater'
+
+  def __init__(self, timestamp):
+    """Initialize the event."""
+    super(ChromeExtensionsAutoupdaterEvent, self).__init__(
+        timestamp, eventdata.EventTimestamp.ADDED_TIME)
+    self.message = u'Chrome extensions autoupdater last run'
+
+
 class ChromeExtensionInstallationEvent(time_events.WebKitTimeEvent):
   """Convenience class for Chrome Extension events."""
 
@@ -123,6 +135,15 @@ class ChromePreferencesParser(interface.FileObjectParser):
           u'[{0:s}] {1:s} is not a valid Preference file, '
           u'does not contain extensions value.'.format(
               self.NAME, parser_mediator.GetDisplayName()))
+
+    extensions_autoupdate_dict = extensions_setting_dict.get(u'autoupdate')
+    if extensions_autoupdate_dict:
+      autoupdate_lastcheck_timestamp = extensions_autoupdate_dict.get(u'last_check', None)
+      if autoupdate_lastcheck_timestamp:
+        autoupdate_lastcheck = int(autoupdate_lastcheck_timestamp, 10)
+        event = ChromeExtensionsAutoupdaterEvent(autoupdate_lastcheck)
+        parser_mediator.ProduceEvent(event)
+
     extensions_dict = extensions_setting_dict.get(u'settings')
     if not extensions_dict:
       raise errors.UnableToParseFile(
