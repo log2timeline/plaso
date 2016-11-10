@@ -138,7 +138,8 @@ class ChromePreferencesParser(interface.FileObjectParser):
 
     extensions_autoupdate_dict = extensions_setting_dict.get(u'autoupdate')
     if extensions_autoupdate_dict:
-      autoupdate_lastcheck_timestamp = extensions_autoupdate_dict.get(u'last_check', None)
+      autoupdate_lastcheck_timestamp = extensions_autoupdate_dict.get(
+          u'last_check', None)
       if autoupdate_lastcheck_timestamp:
         autoupdate_lastcheck = int(autoupdate_lastcheck_timestamp, 10)
         event = ChromeExtensionsAutoupdaterEvent(autoupdate_lastcheck)
