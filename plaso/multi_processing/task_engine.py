@@ -89,7 +89,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
   """
 
   # Maximum number of attribute containers to merge per loop.
-  _MAXIMUM_NUMBER_OF_CONTAINERS = 20
+  _MAXIMUM_NUMBER_OF_CONTAINERS = 50
 
   # Maximum number of concurrent tasks.
   _MAXIMUM_NUMBER_OF_TASKS = 10000

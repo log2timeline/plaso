@@ -90,24 +90,19 @@ class TaskManager(object):
   # Consider a task inactive after 5 minutes of no activity.
   _TASK_INACTIVE_TIME = 5 * 60 * 1000000
 
-  def __init__(self, maximum_number_of_tasks=0):
-    """Initializes a task manager object.
-
-    Args:
-      maximum_number_of_tasks (Optional[int]): maximum number of concurrent
-          tasks, where 0 represents no limit.
-    """
+  def __init__(self):
+    """Initializes a task manager."""
     super(TaskManager, self).__init__()
     # Dictionary mapping task identifiers to tasks which have been abandoned.
     self._abandoned_tasks = {}
     # Dictionary mapping task identifiers to tasks that are active.
     self._active_tasks = {}
     self._lock = threading.Lock()
-    self._maximum_number_of_tasks = maximum_number_of_tasks
     self._tasks_pending_merge = _PendingMergeTaskHeap()
     # Use ordered dictionaries to preserve the order in which tasks were added.
     # This dictionary maps task identifiers to tasks.
     self._tasks_processing = collections.OrderedDict()
+    # TODO: implement a limit on the number of tasks.
 
   # TODO: add support for task types.
   def CreateTask(self, session_identifier):
@@ -286,7 +281,6 @@ class TaskManager(object):
       raise KeyError(u'Task {0:s} already processing'.format(task.identifier))
 
     with self._lock:
-      # TODO: add check for maximum_number_of_tasks.
       logging.debug(u'Task {0:s} is processing'.format(
           task.identifier))
       task.UpdateProcessingTime()
