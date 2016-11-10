@@ -34,8 +34,8 @@ class XLSXOutputModule(interface.OutputModule):
 
   # Illegal Unicode characters for XML.
   _ILLEGAL_XML_RE = re.compile((
-      r'[\x00-\x08\x0b-\x1f\x7f-\x84\x86-\x9f\ud800-\udfff\ufdd0-\ufddf'
-      r'\ufffe-\uffff]'))
+      ur'[\x00-\x08\x0b-\x1f\x7f-\x84\x86-\x9f\ud800-\udfff\ufdd0-\ufddf'
+      ur'\ufffe-\uffff]'))
 
   def __init__(self, output_mediator):
     """Initializes the output module object.

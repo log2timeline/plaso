@@ -4,13 +4,14 @@
 import abc
 import collections
 import logging
-if sys.version_info[0] < 3:
-  import Queue
-else:
-  import queue as Queue
 import sys
 import threading
 import time
+
+if sys.version_info[0] < 3:
+  import Queue
+else:
+  import queue as Queue  # pylint: disable=import-error
 
 import requests
 

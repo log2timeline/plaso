@@ -15,9 +15,8 @@ import logging
 import time
 
 import construct
-import pytz
-
 import dateutil.parser
+import pytz
 
 from plaso.lib import errors
 from plaso.lib import py2to3

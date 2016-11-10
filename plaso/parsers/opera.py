@@ -4,11 +4,12 @@
 import logging
 import os
 import sys
+from xml.etree import ElementTree
+
 if sys.version_info[0] < 3:
   import urlparse
 else:
-  from urllib import parse as urlparse
-from xml.etree import ElementTree
+  from urllib import parse as urlparse  # pylint: disable=no-name-in-module
 
 from dfvfs.helpers import text_file
 
