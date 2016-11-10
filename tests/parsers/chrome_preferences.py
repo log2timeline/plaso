@@ -22,7 +22,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         [u'Preferences'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 22)
+    self.assertEqual(len(storage_writer.events), 23)
 
     event = storage_writer.events[0]
     expected_timestamp = timelib.Timestamp.CopyFromString(
@@ -35,6 +35,15 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
 
     event = storage_writer.events[1]
     expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2014-11-12 18:20:21.519200')
+    self.assertEqual(event.timestamp, expected_timestamp)
+    expected_message = (u'Chrome extensions autoupdater next run')
+    expected_message_short = (u'Chrome extensions autoupdater next run')
+    self._TestGetMessageStrings(
+        event, expected_message, expected_message_short)
+
+    event = storage_writer.events[2]
+    expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-06-08 16:17:47.453766')
     self.assertEqual(event.timestamp, expected_timestamp)
     expected_message = (u'Chrome history was cleared by user')
@@ -42,7 +51,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event, expected_message, expected_message_short)
 
-    event = storage_writer.events[16]
+    event = storage_writer.events[17]
 
     self.assertIsInstance(
         event, chrome_preferences.ChromeExtensionInstallationEvent)
