@@ -28,7 +28,7 @@ class EventObjectTest(shared_test_lib.BaseTestCase):
     event.another_attribute = False
     event.metadata = {
         u'author': u'Some Random Dude',
-        u'version': 1245L,
+        u'version': 1245,
         u'last_changed': u'Long time ago'}
     event.strings = [u'This ', u'is a ', u'long string']
     event.uuid = u'11fca043ea224a688137deaa8d162807'
@@ -41,7 +41,7 @@ class EventObjectTest(shared_test_lib.BaseTestCase):
         u'metadata': {
             u'author': u'Some Random Dude',
             u'last_changed': u'Long time ago',
-            u'version': 1245L},
+            u'version': 1245},
         u'strings': [u'This ', u'is a ', u'long string'],
         u'timestamp': 123,
         u'timestamp_desc': u'LAST WRITTEN',
@@ -67,7 +67,7 @@ class EventObjectTest(shared_test_lib.BaseTestCase):
     event_a.another_attribute = False
     event_a.metadata = {
         u'author': u'Some Random Dude',
-        u'version': 1245L,
+        u'version': 1245,
         u'last_changed': u'Long time ago'}
     event_a.strings = [
         u'This ', u'is a ', u'long string']
@@ -80,7 +80,7 @@ class EventObjectTest(shared_test_lib.BaseTestCase):
     event_b.another_attribute = False
     event_b.metadata = {
         u'author': u'Some Random Dude',
-        u'version': 1245L,
+        u'version': 1245,
         u'last_changed': u'Long time ago'}
     event_b.strings = [
         u'This ', u'is a ', u'long string']

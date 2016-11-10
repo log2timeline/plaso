@@ -2,10 +2,17 @@
 """XML RPC proxy server and client."""
 
 import logging
-import SimpleXMLRPCServer
-import SocketServer
+import sys
 import threading
-import xmlrpclib
+
+if sys.version_info[0] < 3:
+  import xmlrpclib
+  import SimpleXMLRPCServer
+  import SocketServer
+else:
+  from xmlrpc import client as xmlrpclib
+  from xmlrpc.server import SimpleXMLRPCServer
+  import socketserver as SocketServer
 
 from xml.parsers import expat
 

@@ -47,16 +47,16 @@ class Timestamp(object):
     The timestamp is not necessarily in UTC.
   """
   # The minimum timestamp in seconds
-  TIMESTAMP_MIN_SECONDS = -(((1 << 63L) - 1) / 1000000)
+  TIMESTAMP_MIN_SECONDS = -(((1 << 63) - 1) / 1000000)
 
   # The maximum timestamp in seconds
-  TIMESTAMP_MAX_SECONDS = ((1 << 63L) - 1) / 1000000
+  TIMESTAMP_MAX_SECONDS = ((1 << 63) - 1) / 1000000
 
   # The minimum timestamp in micro seconds
-  TIMESTAMP_MIN_MICRO_SECONDS = -((1 << 63L) - 1)
+  TIMESTAMP_MIN_MICRO_SECONDS = -((1 << 63) - 1)
 
   # The maximum timestamp in micro seconds
-  TIMESTAMP_MAX_MICRO_SECONDS = (1 << 63L) - 1
+  TIMESTAMP_MAX_MICRO_SECONDS = (1 << 63) - 1
 
   # Timestamp that represents the timestamp representing not
   # a date and time value.
@@ -79,13 +79,13 @@ class Timestamp(object):
   FAT_DATE_TO_POSIX_BASE = 315532800
 
   # The difference between Jan 1, 1601 and Jan 1, 1970 in micro seconds
-  WEBKIT_TIME_TO_POSIX_BASE = 11644473600L * 1000000
+  WEBKIT_TIME_TO_POSIX_BASE = 11644473600 * 1000000
 
   # The difference between Jan 1, 1601 and Jan 1, 1970 in 100 nanoseconds.
-  FILETIME_TO_POSIX_BASE = 11644473600L * 10000000
+  FILETIME_TO_POSIX_BASE = 11644473600 * 10000000
 
   # The difference between Nov 10, 1582 and Jan 1, 1970 in 100 nanoseconds.
-  UUID_TIME_TO_POSIX_BASE = 12219292800L * 10000000
+  UUID_TIME_TO_POSIX_BASE = 12219292800 * 10000000
 
   # The number of seconds between January 1, 1904 and Jan 1, 1970.
   # Value confirmed with sleuthkit:

@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 """A plugin to generate a list of domains visited."""
 
-import urlparse
+import sys
+if sys.version_info[0] < 3:
+  import urlparse
+else:
+  from urllib import parse as urlparse
 
 from plaso.analysis import interface
 from plaso.analysis import manager

@@ -25,7 +25,7 @@ class OleCfSummaryInfoEvent(time_events.FiletimeEvent):
 
     self.name = u'Summary Information'
 
-    for attribute_name, attribute_value in attributes.iteritems():
+    for attribute_name, attribute_value in iter(attributes.items()):
       setattr(self, attribute_name, attribute_value)
 
 

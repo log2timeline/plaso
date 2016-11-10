@@ -4,7 +4,10 @@
 import abc
 import collections
 import logging
-import Queue
+if sys.version_info[0] < 3:
+  import Queue
+else:
+  import queue as Queue
 import sys
 import threading
 import time

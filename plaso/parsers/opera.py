@@ -3,7 +3,11 @@
 
 import logging
 import os
-import urllib2
+import sys
+if sys.version_info[0] < 3:
+  import urlparse
+else:
+  from urllib import parse as urlparse
 from xml.etree import ElementTree
 
 from dfvfs.helpers import text_file
@@ -131,7 +135,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
 
   def _IsValidUrl(self, url):
     """A simple test to see if an URL is considered valid."""
-    parsed_url = urllib2.urlparse.urlparse(url)
+    parsed_url = urlparse.urlparse(url)
 
     # Few supported first URL entries.
     if parsed_url.scheme in self._SUPPORTED_URL_SCHEMES:
