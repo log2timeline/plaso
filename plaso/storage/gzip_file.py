@@ -330,6 +330,35 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
     self._serializer = json_serializer.JSONAttributeContainerSerializer
     self._serializers_profiler = None
 
+  def _AddAttributeContainer(self, attribute_container):
+    """Adds a single attribute container to the storage writer.
+
+    Args:
+      attribute_container (AttributeContainer): container
+
+    Raises:
+      RuntimeError: if the attribute container type is not supported.
+    """
+    container_type = attribute_container.CONTAINER_TYPE
+    if container_type == 'event_source':
+      self._storage_writer.AddEventSource(attribute_container)
+
+    elif container_type == 'event':
+      self._storage_writer.AddEvent(attribute_container)
+
+    elif container_type == 'event_tag':
+      self._storage_writer.AddEventTag(attribute_container)
+
+    elif container_type == 'extraction_error':
+      self._storage_writer.AddError(attribute_container)
+
+    elif container_type == 'analysis_report':
+      self._storage_writer.AddAnalysisReport(attribute_container)
+
+    elif container_type not in (u'task_completion', u'task_start'):
+      raise RuntimeError(u'Unsupported container type: {0:s}'.format(
+          container_type))
+
   def _DeserializeAttributeContainer(self, container_data, container_type):
     """Deserializes an attribute container.
 
@@ -365,49 +394,29 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
 
     Raises:
       OSError: if the task storage file cannot be deleted.
-      RuntimeError: if the attribute container type is not supported.
     """
     if not self._data_buffer:
       # Do not use gzip.readlines() here since it can consume a large amount
       # of memory.
       self._data_buffer = self._gzip_file.read(self._DATA_BUFFER_SIZE)
 
+
     number_of_containers = 0
     while self._data_buffer:
-      while b'\n' in self._data_buffer:
-        line, _, self._data_buffer = self._data_buffer.partition(b'\n')
-        attribute_container = self._DeserializeAttributeContainer(
-            line, u'attribute_container')
-
-        container_type = attribute_container.CONTAINER_TYPE
-        # Note the else statements below are sorted from more frequent
-        # container type to less frequent container type.
-        # TODO: consider lookup table approach.
-        if container_type == 'event_source':
-          self._storage_writer.AddEventSource(attribute_container)
-
-        elif container_type == 'event':
-          self._storage_writer.AddEvent(attribute_container)
-
-        elif container_type == 'event_tag':
-          self._storage_writer.AddEventTag(attribute_container)
-
-        elif container_type == 'extraction_error':
-          self._storage_writer.AddError(attribute_container)
-
-        elif container_type == 'analysis_report':
-          self._storage_writer.AddAnalysisReport(attribute_container)
-
-        elif container_type not in (u'task_completion', u'task_start'):
-          raise RuntimeError(u'Unsupported container type: {0:s}'.format(
-              container_type))
-
-        number_of_containers += 1
-
-        if (maximum_number_of_containers > 0 and
-            number_of_containers >= maximum_number_of_containers):
-          return False
-
+      lines = self._data_buffer.splitlines(True)
+      self._data_buffer = b''
+      for index, line in enumerate(lines):
+        if line.endswith(b'\n'):
+          attribute_container = self._DeserializeAttributeContainer(
+              line, u'attribute_container')
+          self._AddAttributeContainer(attribute_container)
+          number_of_containers += 1
+          if (maximum_number_of_containers > 0 and
+              number_of_containers >= maximum_number_of_containers):
+            self._data_buffer = b''.join(lines[index+1:])
+            return False
+        else:
+          self._data_buffer = b''.join(lines[index:])
       additional_data_buffer = self._gzip_file.read(self._DATA_BUFFER_SIZE)
       self._data_buffer = b''.join([self._data_buffer, additional_data_buffer])
 
