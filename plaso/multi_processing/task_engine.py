@@ -686,11 +686,14 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     try:
       self._task_manager.UpdateTaskByIdentifier(task_identifier)
     except KeyError:
-      if self._task_manager.IsAbandonedTask(task_identifier):
+      try:
+        task = self._task_manager.GetAbandonedTask(task_identifier)
         logging.debug(
-            u'Worker {0:s} is processing abandoned task: {1:s}.'.format(
-                process.name, task_identifier))
-      else:
+            (u'Worker {0:s} is processing abandoned task: {1:s}. It was last '
+             u'updated at {2!s}.').format(
+                 process.name, task.identifier, task.last_processing_time))
+        task_manager.UnabandonTask(task)
+      except KeyError:
         logging.debug(
             u'Worker {0:s} is processing unknown task: {1:s}.'.format(
                 process.name, task_identifier))

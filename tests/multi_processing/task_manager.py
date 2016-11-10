@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 """This file contains tests for the task manager."""
 
+import time
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -80,6 +81,27 @@ class TaskManagerTestCase(shared_test_lib.BaseTestCase):
     manager.UpdateTaskAsPendingMerge(large_task)
     merging_task = manager.GetTaskPendingMerge(small_task)
     self.assertEqual(merging_task, small_task)
+
+  def testTaskAbandonment(self):
+    """Tests the abandoning and unabandoning of tasks"""
+    manager = task_manager.TaskManager()
+    task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
+    self.assertEqual(manager.GetAbandonedTasks(), [])
+    self.assertTrue(manager.HasActiveTasks())
+
+    manager.UpdateTaskAsProcessing(task)
+    timestamp = int(time.time() * 1000000)
+    # pylint: disable=protected-access
+    inactive_time = timestamp - task_manager.TaskManager._TASK_INACTIVE_TIME
+    task.last_processing_time = inactive_time - 1
+    # HasActiveTasks is responsible for marking tasks as abandoned.
+    self.assertFalse(manager.HasActiveTasks())
+    abandoned_tasks = manager.GetAbandonedTasks()
+    self.assertIn(task, abandoned_tasks)
+
+    manager.UnabandonTask(task)
+    self.assertEqual(manager.GetAbandonedTasks(), [])
+    self.assertTrue(manager.HasActiveTasks())
 
   # TODO: Add tests for rescheduling, updating and abandoning tasks.
 
