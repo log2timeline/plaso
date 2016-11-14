@@ -100,6 +100,11 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
             u'values': json_list
         }
 
+    elif isinstance(attribute_value, dict):
+      return {
+          key: cls._ConvertAttributeValueToDict(value)
+          for key, value in iter(attribute_value.items())}
+
     elif isinstance(attribute_value, collections.Counter):
       attribute_value = cls._ConvertCollectionsCounterToDict(attribute_value)
 
@@ -186,8 +191,14 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     # Use __type__ to indicate the object class type.
     class_type = json_dict.get(u'__type__', None)
     if not class_type:
-      # Dealing with a regular dict.
-      return json_dict
+      result_dict = {}
+      for key, value in iter(json_dict.items()):
+        if isinstance(value, list):
+          value = cls._ConvertListToObject(value)
+        elif isinstance(value, dict):
+          value = cls._ConvertDictToObject(value)
+        result_dict[key] = value
+      return result_dict
 
     if class_type == u'bytes':
       return binascii.a2b_qp(json_dict[u'stream'])
@@ -321,14 +332,19 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     if type_indicator:
       del json_dict[u'type_indicator']
 
-    if u'parent' in json_dict:
-      json_dict[u'parent'] = cls._ConvertDictToPathSpec(json_dict[u'parent'])
-
     # Remove the class type from the JSON dict since we cannot pass it.
     del json_dict[u'__type__']
 
+    kwargs = {}
+    for attribute_name, attribute_value in iter(json_dict.items()):
+      if isinstance(attribute_value, list):
+        attribute_value = cls._ConvertListToObject(attribute_value)
+      elif isinstance(attribute_value, dict):
+        attribute_value = cls._ConvertDictToObject(attribute_value)
+      kwargs[attribute_name] = attribute_value
+
     return dfvfs_path_spec_factory.Factory.NewPathSpec(
-        type_indicator, **json_dict)
+        type_indicator, **kwargs)
 
   @classmethod
   def _ConvertPathSpecToDict(cls, path_spec_object):
@@ -365,7 +381,8 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     for property_name in dfvfs_path_spec_factory.Factory.PROPERTY_NAMES:
       property_value = getattr(path_spec_object, property_name, None)
       if property_value is not None:
-        json_dict[property_name] = property_value
+        json_dict[property_name] = cls._ConvertAttributeValueToDict(
+            property_value)
 
     if path_spec_object.HasParent():
       json_dict[u'parent'] = cls._ConvertPathSpecToDict(path_spec_object.parent)
