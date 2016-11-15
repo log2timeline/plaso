@@ -69,7 +69,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-11-14 14:12:50.588973')
     self.assertEqual(event.timestamp, expected_timestamp)
-    expected_message = (u'Permission: \'geolocation\' used by a local file')
+    expected_message = (u'Permission geolocation used by a local file')
     self._TestGetMessageStrings(
         event, expected_message, expected_message)
 
@@ -78,7 +78,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
         u'2016-11-11 16:20:09.866137')
     self.assertEqual(event.timestamp, expected_timestamp)
     expected_message = (
-        u'Permission: \'midi_sysex\' used by URL https://rawgit.com:443')
+        u'Permission midi_sysex used by https://rawgit.com:443')
     expected_message_short = expected_message
     self._TestGetMessageStrings(
         event, expected_message, expected_message_short)
@@ -87,9 +87,9 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-11-14 14:13:00.639332')
     self.assertEqual(event.timestamp, expected_timestamp)
-    expected_message = (u'Permission: \'notifications\' used by URL '
+    expected_message = (u'Permission notifications used by '
                         u'https://rawgit.com:443')
-    expected_message_short = (u'Permission: \'notifications\' used by URL '
+    expected_message_short = (u'Permission notifications used by '
                               u'https://rawgit.com:443')
     self._TestGetMessageStrings(
         event, expected_message, expected_message_short)
@@ -99,7 +99,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
         u'2016-11-14 14:13:00.627093')
     self.assertEqual(event.timestamp, expected_timestamp)
     expected_message = (
-        u'Permission: \'notifications\' used by URL https://rawgit.com:443')
+        u'Permission notifications used by https://rawgit.com:443')
     expected_message_short = expected_message
     self._TestGetMessageStrings(
         event, expected_message, expected_message_short)
@@ -109,7 +109,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
         u'2016-11-14 14:12:54.899473')
     self.assertEqual(event.timestamp, expected_timestamp)
     expected_message = (
-        u'Permission: \'media_stream_mic\' used by a local file')
+        u'Permission media_stream_mic used by a local file')
     expected_message_short = expected_message
     self._TestGetMessageStrings(
         event, expected_message, expected_message_short)
@@ -119,7 +119,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
         u'2016-11-14 14:12:53.667838')
     self.assertEqual(event.timestamp, expected_timestamp)
     expected_message = (
-        u'Permission: \'media_stream_mic\' used by URL https://rawgit.com:443')
+        u'Permission media_stream_mic used by https://rawgit.com:443')
     expected_message_short = expected_message
     self._TestGetMessageStrings(
         event, expected_message, expected_message_short)

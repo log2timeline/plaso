@@ -60,23 +60,23 @@ class ChromeContentSettingsExceptionsEvent(time_events.PosixTimeEvent):
     #
     if primary_url == u'':
       # Workaround the above issue.
-      self.message = u'Permission: \'{0:s}\' used by a local file'.format(
+      self.message = u'Permission {0:s} used by a local file'.format(
           permission)
     else:
       if secondary_url == u'*':
-        self.message = u'Permission: \'{0:s}\' used by URL {1:s}'.format(
+        self.message = u'Permission {0:s} used by {1:s}'.format(
             permission, primary_url)
       elif secondary_url == u'':
         # Workaround the above issue.
-        self.message = (u'Permission: \'{0:s}\' used by URL {1:s} embedded on a'
+        self.message = (u'Permission {0:s} used by {1:s} embedded in a'
                         u' local file').format(permission, primary_url)
       else:
         if primary_url == secondary_url:
-          self.message = u'Permission: \'{0:s}\' used by URL {1:s}'.format(
+          self.message = u'Permission {0:s} used by {1:s}'.format(
               permission, primary_url)
         else:
           self.message = (
-              u'Permission: \'{0:s}\' used by URL {1:s} embedded on '
+              u'Permission: \'{0:s}\' used by {1:s} embedded on '
               u'{2:s}').format(permission, primary_url, secondary_url)
 
 
