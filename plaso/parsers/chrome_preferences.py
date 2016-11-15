@@ -34,7 +34,8 @@ class ChromeContentSettingsExceptionsEvent(time_events.PosixTimeEvent):
 
   DATA_TYPE = u'chrome:preferences:content_settings:exceptions'
 
-  def __init__(self, seconds, microseconds, permission, primary_url, secondary_url):
+  def __init__(self, seconds, microseconds, permission, primary_url,
+               secondary_url):
     """Initialize the event.
 
     Args:

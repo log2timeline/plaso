@@ -38,7 +38,8 @@ class ChromeExtensionInstallationEventFormatter(
   SOURCE_SHORT = u'LOG'
 
 
-class ChromeContentSettingsExceptionsFormatter(interface.ConditionalEventFormatter):
+class ChromeContentSettingsExceptionsFormatter(
+    interface.ConditionalEventFormatter):
   """Formatter for a Chrome content_settings exceptions event."""
 
   DATA_TYPE = u'chrome:preferences:content_settings:exceptions'
