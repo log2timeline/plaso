@@ -34,8 +34,8 @@ class ChromeContentSettingsExceptionsEvent(time_events.PosixTimeEvent):
 
   DATA_TYPE = u'chrome:preferences:content_settings:exceptions'
 
-  def __init__(self, seconds, microseconds, permission, primary_url,
-               secondary_url):
+  def __init__(
+      self, seconds, microseconds, permission, primary_url, secondary_url):
     """Initialize the event.
 
     Args:
@@ -68,8 +68,9 @@ class ChromeContentSettingsExceptionsEvent(time_events.PosixTimeEvent):
             permission, primary_url)
       elif secondary_url == u'':
         # Workaround the above issue.
-        self.message = (u'Permission {0:s} used by {1:s} embedded in a'
-                        u' local file').format(permission, primary_url)
+        self.message = (
+            u'Permission {0:s} used by {1:s} embedded in a local file').format(
+                permission, primary_url)
       else:
         if primary_url == secondary_url:
           self.message = u'Permission {0:s} used by {1:s}'.format(
@@ -117,8 +118,8 @@ class ChromePreferencesParser(interface.FileObjectParser):
     """Extract extension installation events.
 
     Args:
-      settings_dict: A dictionary of settings data from Preferences file.
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      settings_dict (dict): Settings data from Preferences file.
+      parser_mediator (ParserMediator): parser mediator.
     """
     for extension_id, extension in sorted(settings_dict.items()):
       try:
@@ -157,18 +158,16 @@ class ChromePreferencesParser(interface.FileObjectParser):
             # If secondary_url is a valid URL, the permission applies to
             # elements loaded from secondary_url being embedded in primary_url.
             primary_url, secondary_url = urls.split(u',')
-            event = ChromeContentSettingsExceptionsEvent(seconds, microseconds,
-                                                         permission,
-                                                         primary_url,
-                                                         secondary_url)
+            event = ChromeContentSettingsExceptionsEvent(
+                seconds, microseconds, permission, primary_url, secondary_url)
             parser_mediator.ProduceEvent(event)
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Chrome preferences file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): parser mediator.
+      file_object (dfvfs.FileIO): file-like object
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -231,8 +230,8 @@ class ChromePreferencesParser(interface.FileObjectParser):
       if content_settings_dict:
         exceptions_dict = content_settings_dict.get(u'exceptions', None)
         if exceptions_dict:
-          self._ExtractContentSettingsExceptions(exceptions_dict,
-                                                 parser_mediator)
+          self._ExtractContentSettingsExceptions(
+              exceptions_dict, parser_mediator)
 
 
 manager.ParsersManager.RegisterParser(ChromePreferencesParser)

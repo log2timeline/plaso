@@ -87,10 +87,10 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-11-14 14:13:00.639332')
     self.assertEqual(event.timestamp, expected_timestamp)
-    expected_message = (u'Permission notifications used by '
-                        u'https://rawgit.com:443')
-    expected_message_short = (u'Permission notifications used by '
-                              u'https://rawgit.com:443')
+    expected_message = (
+        u'Permission notifications used by https://rawgit.com:443')
+    expected_message_short = (
+        u'Permission notifications used by https://rawgit.com:443')
     self._TestGetMessageStrings(
         event, expected_message, expected_message_short)
 
