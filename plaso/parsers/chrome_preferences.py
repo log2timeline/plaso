@@ -143,8 +143,8 @@ class ChromePreferencesParser(interface.FileObjectParser):
     """Extracts site specific events.
 
     Args:
-      exceptions_dict: A dictionary of exceptions data from Preferences file.
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      exceptions_dict (dict): Permission exceptions data from Preferences file.
+      parser_mediator (ParserMediator): parser mediator.
     """
     for permission in exceptions_dict:
       if permission in self._EXCEPTIONS_KEYS:
