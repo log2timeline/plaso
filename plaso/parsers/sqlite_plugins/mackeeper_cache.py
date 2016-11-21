@@ -138,14 +138,30 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
       u'cfurl_cache_blob_data', u'cfurl_cache_receiver_data',
       u'cfurl_cache_response'])
 
+  SCHEMAS = [
+      {u'cfurl_cache_blob_data':
+          u'CREATE TABLE cfurl_cache_blob_data(entry_ID INTEGER PRIMARY KEY, '
+          u'response_object BLOB, request_object BLOB, 					 proto_props '
+          u'BLOB, user_info BLOB)',
+      u'cfurl_cache_receiver_data':
+          u'CREATE TABLE cfurl_cache_receiver_data(entry_ID INTEGER PRIMARY '
+          u'KEY, receiver_data BLOB)',
+      u'cfurl_cache_response':
+          u'CREATE TABLE cfurl_cache_response(entry_ID INTEGER PRIMARY KEY '
+          u'AUTOINCREMENT UNIQUE, 					 version INTEGER, hash_value '
+          u'INTEGER, storage_policy INTEGER, request_key TEXT UNIQUE, 				'
+          u'	 time_stamp NOT NULL DEFAULT CURRENT_TIMESTAMP, partition TEXT)',
+      u'cfurl_cache_schema_version':
+          u'CREATE TABLE cfurl_cache_schema_version(schema_version INTEGER)'}]
+
   def ParseReceiverData(
       self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a single row from the receiver and cache response table.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): parser mediator.
+      row (sqlite3.Row): row resulting from the query.
+      query (Optional[str]): query string.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".

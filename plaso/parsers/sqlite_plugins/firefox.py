@@ -218,6 +218,96 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       u'moz_places', u'moz_historyvisits', u'moz_bookmarks',
       u'moz_items_annos'])
 
+  SCHEMAS = [
+      {u'moz_anno_attributes':
+          u'CREATE TABLE moz_anno_attributes (  id INTEGER PRIMARY KEY, name '
+          u'VARCHAR(32) UNIQUE NOT NULL)',
+      u'moz_annos':
+          u'CREATE TABLE moz_annos (  id INTEGER PRIMARY KEY, place_id '
+          u'INTEGER NOT NULL, anno_attribute_id INTEGER, mime_type '
+          u'VARCHAR(32) DEFAULT NULL, content LONGVARCHAR, flags INTEGER '
+          u'DEFAULT 0, expiration INTEGER DEFAULT 0, type INTEGER DEFAULT 0, '
+          u'dateAdded INTEGER DEFAULT 0, lastModified INTEGER DEFAULT 0)',
+      u'moz_bookmarks':
+          u'CREATE TABLE moz_bookmarks (  id INTEGER PRIMARY KEY, type '
+          u'INTEGER, fk INTEGER DEFAULT NULL, parent INTEGER, position '
+          u'INTEGER, title LONGVARCHAR, keyword_id INTEGER, folder_type TEXT, '
+          u'dateAdded INTEGER, lastModified INTEGER)',
+      u'moz_bookmarks_roots':
+          u'CREATE TABLE moz_bookmarks_roots (  root_name VARCHAR(16) UNIQUE, '
+          u'folder_id INTEGER)',
+      u'moz_favicons':
+          u'CREATE TABLE moz_favicons (  id INTEGER PRIMARY KEY, url '
+          u'LONGVARCHAR UNIQUE, data BLOB, mime_type VARCHAR(32), expiration '
+          u'LONG)',
+      u'moz_historyvisits':
+          u'CREATE TABLE moz_historyvisits (  id INTEGER PRIMARY KEY, '
+          u'from_visit INTEGER, place_id INTEGER, visit_date INTEGER, '
+          u'visit_type INTEGER, session INTEGER)',
+      u'moz_inputhistory':
+          u'CREATE TABLE moz_inputhistory (  place_id INTEGER NOT NULL, input '
+          u'LONGVARCHAR NOT NULL, use_count INTEGER, PRIMARY KEY (place_id, '
+          u'input))',
+      u'moz_items_annos':
+          u'CREATE TABLE moz_items_annos (  id INTEGER PRIMARY KEY, item_id '
+          u'INTEGER NOT NULL, anno_attribute_id INTEGER, mime_type '
+          u'VARCHAR(32) DEFAULT NULL, content LONGVARCHAR, flags INTEGER '
+          u'DEFAULT 0, expiration INTEGER DEFAULT 0, type INTEGER DEFAULT 0, '
+          u'dateAdded INTEGER DEFAULT 0, lastModified INTEGER DEFAULT 0)',
+      u'moz_keywords':
+          u'CREATE TABLE moz_keywords (  id INTEGER PRIMARY KEY '
+          u'AUTOINCREMENT, keyword TEXT UNIQUE)',
+      u'moz_places':
+          u'CREATE TABLE moz_places (   id INTEGER PRIMARY KEY, url '
+          u'LONGVARCHAR, title LONGVARCHAR, rev_host LONGVARCHAR, visit_count '
+          u'INTEGER DEFAULT 0, hidden INTEGER DEFAULT 0 NOT NULL, typed '
+          u'INTEGER DEFAULT 0 NOT NULL, favicon_id INTEGER, frecency INTEGER '
+          u'DEFAULT -1 NOT NULL, last_visit_date INTEGER )'},
+      {u'moz_anno_attributes':
+          u'CREATE TABLE moz_anno_attributes (  id INTEGER PRIMARY KEY, name '
+          u'VARCHAR(32) UNIQUE NOT NULL)',
+      u'moz_annos':
+          u'CREATE TABLE moz_annos (  id INTEGER PRIMARY KEY, place_id '
+          u'INTEGER NOT NULL, anno_attribute_id INTEGER, mime_type '
+          u'VARCHAR(32) DEFAULT NULL, content LONGVARCHAR, flags INTEGER '
+          u'DEFAULT 0, expiration INTEGER DEFAULT 0, type INTEGER DEFAULT 0, '
+          u'dateAdded INTEGER DEFAULT 0, lastModified INTEGER DEFAULT 0)',
+      u'moz_bookmarks':
+          u'CREATE TABLE moz_bookmarks (  id INTEGER PRIMARY KEY, type '
+          u'INTEGER, fk INTEGER DEFAULT NULL, parent INTEGER, position '
+          u'INTEGER, title LONGVARCHAR, keyword_id INTEGER, folder_type TEXT, '
+          u'dateAdded INTEGER, lastModified INTEGER)',
+      u'moz_bookmarks_roots':
+          u'CREATE TABLE moz_bookmarks_roots (  root_name VARCHAR(16) UNIQUE, '
+          u'folder_id INTEGER)',
+      u'moz_favicons':
+          u'CREATE TABLE moz_favicons (  id INTEGER PRIMARY KEY, url '
+          u'LONGVARCHAR UNIQUE, data BLOB, mime_type VARCHAR(32), expiration '
+          u'LONG)',
+      u'moz_historyvisits':
+          u'CREATE TABLE moz_historyvisits (  id INTEGER PRIMARY KEY, '
+          u'from_visit INTEGER, place_id INTEGER, visit_date INTEGER, '
+          u'visit_type INTEGER, session INTEGER)',
+      u'moz_inputhistory':
+          u'CREATE TABLE moz_inputhistory (  place_id INTEGER NOT NULL, input '
+          u'LONGVARCHAR NOT NULL, use_count INTEGER, PRIMARY KEY (place_id, '
+          u'input))',
+      u'moz_items_annos':
+          u'CREATE TABLE moz_items_annos (  id INTEGER PRIMARY KEY, item_id '
+          u'INTEGER NOT NULL, anno_attribute_id INTEGER, mime_type '
+          u'VARCHAR(32) DEFAULT NULL, content LONGVARCHAR, flags INTEGER '
+          u'DEFAULT 0, expiration INTEGER DEFAULT 0, type INTEGER DEFAULT 0, '
+          u'dateAdded INTEGER DEFAULT 0, lastModified INTEGER DEFAULT 0)',
+      u'moz_keywords':
+          u'CREATE TABLE moz_keywords (  id INTEGER PRIMARY KEY '
+          u'AUTOINCREMENT, keyword TEXT UNIQUE)',
+      u'moz_places':
+          u'CREATE TABLE moz_places (   id INTEGER PRIMARY KEY, url '
+          u'LONGVARCHAR, title LONGVARCHAR, rev_host LONGVARCHAR, visit_count '
+          u'INTEGER DEFAULT 0, hidden INTEGER DEFAULT 0 NOT NULL, typed '
+          u'INTEGER DEFAULT 0 NOT NULL, favicon_id INTEGER, frecency INTEGER '
+          u'DEFAULT -1 NOT NULL, last_visit_date INTEGER )'}]
+
   # Cache queries.
   URL_CACHE_QUERY = (
       u'SELECT h.id AS id, p.url, p.rev_host FROM moz_places p, '
@@ -228,9 +318,9 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     """Parses a bookmark annotation row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): parser mediator.
+      row (sqlite3.Row): row resulting from the query.
+      query (Optional[str]): query string.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
@@ -252,9 +342,9 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     """Parses a bookmark folder row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): parser mediator.
+      row (sqlite3.Row): row resulting from the query.
+      query (Optional[str]): query string.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
@@ -281,9 +371,9 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     """Parses a bookmark row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): parser mediator.
+      row (sqlite3.Row): row resulting from the query.
+      query (Optional[str]): query string.
     """
     if row['dateAdded']:
       event_object = FirefoxPlacesBookmark(
@@ -307,11 +397,11 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     """Parses a page visited row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
-      cache: A cache object (instance of SQLiteCache).
-      database: A database object (instance of SQLiteDatabase).
+      parser_mediator (ParserMediator): parser mediator.
+      row (sqlite3.Row): row resulting from the query.
+      query (Optional[str]): query string.
+      cache (Optional[SQLiteCache]): cache object.
+      database (Optional[SQLiteDatabase]): database object.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
@@ -402,6 +492,16 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
         u'FROM moz_downloads'),
        u'ParseDownloadsRow')]
 
+  SCHEMAS = [
+      {u'moz_downloads':
+          u'CREATE TABLE moz_downloads (id INTEGER PRIMARY KEY, name TEXT, '
+          u'source TEXT, target TEXT, tempPath TEXT, startTime INTEGER, '
+          u'endTime INTEGER, state INTEGER, referrer TEXT, entityID TEXT, '
+          u'currBytes INTEGER NOT NULL DEFAULT 0, maxBytes INTEGER NOT NULL '
+          u'DEFAULT -1, mimeType TEXT, preferredApplication TEXT, '
+          u'preferredAction INTEGER NOT NULL DEFAULT 0, autoResume INTEGER '
+          u'NOT NULL DEFAULT 0)'}]
+
   # The required tables.
   REQUIRED_TABLES = frozenset([u'moz_downloads'])
 
@@ -410,9 +510,9 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
     """Parses a downloads row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): parser mediator.
+      row (sqlite3.Row): row resulting from the query.
+      query (Optional[str]): query string.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".

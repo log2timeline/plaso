@@ -53,13 +53,23 @@ class WebViewCachePlugin(interface.SQLitePlugin):
       (u'SELECT url, contentlength, expires, lastmodify FROM cache',
        u'ParseRow')])
 
+  SCHEMAS = [
+      {u'android_metadata':
+          u'CREATE TABLE android_metadata (locale TEXT)',
+      u'cache':
+          u'CREATE TABLE cache (_id INTEGER PRIMARY KEY, url TEXT, filepath '
+          u'TEXT, lastmodify TEXT, etag TEXT, expires INTEGER, expiresstring '
+          u'TEXT, mimetype TEXT, encoding TEXT,httpstatus INTEGER, location '
+          u'TEXT, contentlength INTEGER, contentdisposition TEXT,  UNIQUE '
+          u'(url) ON CONFLICT REPLACE)'}]
+
   def ParseRow(self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a row from the database.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): parser mediator.
+      row (sqlite3.Row): row resulting from the query.
+      query (Optional[str]): query string.
     """
     # Note that pysqlite does not accept a Unicode string in row['string']
     # and will raise "IndexError: Index must be int or string". All indexes are

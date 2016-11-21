@@ -70,6 +70,15 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
   # The required tables common to Archived History and History.
   REQUIRED_TABLES = frozenset([u'moz_cookies'])
 
+  SCHEMAS = [
+      {u'moz_cookies':
+          u'CREATE TABLE moz_cookies (id INTEGER PRIMARY KEY, baseDomain '
+          u'TEXT, appId INTEGER DEFAULT 0, inBrowserElement INTEGER DEFAULT '
+          u'0, name TEXT, value TEXT, host TEXT, path TEXT, expiry INTEGER, '
+          u'lastAccessed INTEGER, creationTime INTEGER, isSecure INTEGER, '
+          u'isHttpOnly INTEGER, CONSTRAINT moz_uniqueid UNIQUE (name, host, '
+          u'path, appId, inBrowserElement))'}]
+
   # Point to few sources for URL information.
   URLS = [
       (u'https://hg.mozilla.org/mozilla-central/file/349a2f003529/netwerk/'
@@ -85,10 +94,9 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
     """Parses a cookie row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-
-      query: Optional query string.
+      parser_mediator (ParserMediator): parser mediator.
+      row (sqlite3.Row): row resulting from the query.
+      query (Optional[str]): query string.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".

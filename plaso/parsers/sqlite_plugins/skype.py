@@ -242,14 +242,293 @@ class SkypePlugin(interface.SQLitePlugin):
       u'Chats', u'Accounts', u'Conversations', u'Contacts', u'SMSes',
       u'Transfers', u'CallMembers', u'Calls'])
 
+  SCHEMAS = [
+      {u'Accounts':
+          u'CREATE TABLE Accounts (id INTEGER NOT NULL PRIMARY KEY, '
+          u'is_permanent INTEGER, status INTEGER, pwdchangestatus INTEGER, '
+          u'logoutreason INTEGER, commitstatus INTEGER, suggested_skypename '
+          u'TEXT, skypeout_balance_currency TEXT, skypeout_balance INTEGER, '
+          u'skypeout_precision INTEGER, skypein_numbers TEXT, subscriptions '
+          u'TEXT, cblsyncstatus INTEGER, offline_callforward TEXT, '
+          u'chat_policy INTEGER, skype_call_policy INTEGER, pstn_call_policy '
+          u'INTEGER, avatar_policy INTEGER, buddycount_policy INTEGER, '
+          u'timezone_policy INTEGER, webpresence_policy INTEGER, '
+          u'phonenumbers_policy INTEGER, voicemail_policy INTEGER, '
+          u'authrequest_policy INTEGER, ad_policy INTEGER, partner_optedout '
+          u'TEXT, service_provider_info TEXT, registration_timestamp INTEGER, '
+          u'nr_of_other_instances INTEGER, partner_channel_status TEXT, '
+          u'flamingo_xmpp_status INTEGER, federated_presence_policy INTEGER, '
+          u'liveid_membername TEXT, roaming_history_enabled INTEGER, '
+          u'cobrand_id INTEGER, owner_under_legal_age INTEGER, type INTEGER, '
+          u'skypename TEXT, pstnnumber TEXT, fullname TEXT, birthday INTEGER, '
+          u'gender INTEGER, languages TEXT, country TEXT, province TEXT, city '
+          u'TEXT, phone_home TEXT, phone_office TEXT, phone_mobile TEXT, '
+          u'emails TEXT, homepage TEXT, about TEXT, profile_timestamp '
+          u'INTEGER, received_authrequest TEXT, displayname TEXT, refreshing '
+          u'INTEGER, given_authlevel INTEGER, aliases TEXT, authreq_timestamp '
+          u'INTEGER, mood_text TEXT, timezone INTEGER, nrof_authed_buddies '
+          u'INTEGER, ipcountry TEXT, given_displayname TEXT, availability '
+          u'INTEGER, lastonline_timestamp INTEGER, capabilities BLOB, '
+          u'avatar_image BLOB, assigned_speeddial TEXT, lastused_timestamp '
+          u'INTEGER, authrequest_count INTEGER, assigned_comment TEXT, '
+          u'alertstring TEXT, avatar_timestamp INTEGER, mood_timestamp '
+          u'INTEGER, rich_mood_text TEXT, synced_email BLOB, set_availability '
+          u'INTEGER, options_change_future BLOB, cbl_profile_blob BLOB, '
+          u'authorized_time INTEGER, sent_authrequest TEXT, '
+          u'sent_authrequest_time INTEGER, sent_authrequest_serial INTEGER, '
+          u'buddyblob BLOB, cbl_future BLOB, node_capabilities INTEGER, '
+          u'node_capabilities_and INTEGER, revoked_auth INTEGER, '
+          u'added_in_shared_group INTEGER, in_shared_group INTEGER, '
+          u'authreq_history BLOB, profile_attachments BLOB, stack_version '
+          u'INTEGER, offline_authreq_id INTEGER, verified_email BLOB, '
+          u'verified_company BLOB, uses_jcs INTEGER)',
+      u'Alerts':
+          u'CREATE TABLE Alerts (id INTEGER NOT NULL PRIMARY KEY, '
+          u'is_permanent INTEGER, timestamp INTEGER, partner_name TEXT, '
+          u'is_unseen INTEGER, partner_id INTEGER, partner_event TEXT, '
+          u'partner_history TEXT, partner_header TEXT, partner_logo TEXT, '
+          u'meta_expiry INTEGER, message_header_caption TEXT, '
+          u'message_header_title TEXT, message_header_subject TEXT, '
+          u'message_header_cancel TEXT, message_header_later TEXT, '
+          u'message_content TEXT, message_footer TEXT, message_button_caption '
+          u'TEXT, message_button_uri TEXT, message_type INTEGER, window_size '
+          u'INTEGER, chatmsg_guid BLOB, notification_id INTEGER, event_flags '
+          u'INTEGER, extprop_hide_from_history INTEGER)',
+      u'AppSchemaVersion':
+          u'CREATE TABLE AppSchemaVersion (ClientVersion TEXT NOT NULL, '
+          u'SQLiteSchemaVersion INTEGER NOT NULL, SchemaUpdateType INTEGER '
+          u'NOT NULL)',
+      u'CallMembers':
+          u'CREATE TABLE CallMembers (id INTEGER NOT NULL PRIMARY KEY, '
+          u'is_permanent INTEGER, identity TEXT, dispname TEXT, languages '
+          u'TEXT, call_duration INTEGER, price_per_minute INTEGER, '
+          u'price_precision INTEGER, price_currency TEXT, payment_category '
+          u'TEXT, type INTEGER, status INTEGER, failurereason INTEGER, '
+          u'sounderror_code INTEGER, soundlevel INTEGER, pstn_statustext '
+          u'TEXT, pstn_feedback TEXT, forward_targets TEXT, forwarded_by '
+          u'TEXT, debuginfo TEXT, videostatus INTEGER, target_identity TEXT, '
+          u'mike_status INTEGER, is_read_only INTEGER, quality_status '
+          u'INTEGER, call_name TEXT, transfer_status INTEGER, transfer_active '
+          u'INTEGER, transferred_by TEXT, transferred_to TEXT, guid TEXT, '
+          u'next_redial_time INTEGER, nrof_redials_done INTEGER, '
+          u'nrof_redials_left INTEGER, transfer_topic TEXT, real_identity '
+          u'TEXT, start_timestamp INTEGER, is_conference INTEGER, '
+          u'quality_problems TEXT, identity_type INTEGER, country TEXT, '
+          u'creation_timestamp INTEGER, stats_xml TEXT, '
+          u'is_premium_video_sponsor INTEGER, is_multiparty_video_capable '
+          u'INTEGER, recovery_in_progress INTEGER, nonse_word TEXT, '
+          u'nr_of_delivered_push_notifications INTEGER, call_session_guid '
+          u'TEXT, version_string TEXT, pk_status INTEGER, call_db_id INTEGER, '
+          u'prime_status INTEGER)',
+      u'Calls':
+          u'CREATE TABLE Calls (id INTEGER NOT NULL PRIMARY KEY, is_permanent '
+          u'INTEGER, begin_timestamp INTEGER, topic TEXT, is_muted INTEGER, '
+          u'is_unseen_missed INTEGER, host_identity TEXT, mike_status '
+          u'INTEGER, duration INTEGER, soundlevel INTEGER, access_token TEXT, '
+          u'active_members INTEGER, is_active INTEGER, name TEXT, '
+          u'video_disabled INTEGER, joined_existing INTEGER, server_identity '
+          u'TEXT, vaa_input_status INTEGER, is_incoming INTEGER, '
+          u'is_conference INTEGER, is_on_hold INTEGER, start_timestamp '
+          u'INTEGER, quality_problems TEXT, current_video_audience TEXT, '
+          u'premium_video_status INTEGER, premium_video_is_grace_period '
+          u'INTEGER, is_premium_video_sponsor INTEGER, '
+          u'premium_video_sponsor_list TEXT, old_members BLOB, partner_handle '
+          u'TEXT, partner_dispname TEXT, type INTEGER, status INTEGER, '
+          u'failurereason INTEGER, failurecode INTEGER, pstn_number TEXT, '
+          u'old_duration INTEGER, conf_participants BLOB, pstn_status TEXT, '
+          u'members BLOB, conv_dbid INTEGER)',
+      u'ChatMembers':
+          u'CREATE TABLE ChatMembers (id INTEGER NOT NULL PRIMARY KEY, '
+          u'is_permanent INTEGER, chatname TEXT, identity TEXT, role INTEGER, '
+          u'is_active INTEGER, cur_activities INTEGER, adder TEXT)',
+      u'Chats':
+          u'CREATE TABLE Chats (id INTEGER NOT NULL PRIMARY KEY, is_permanent '
+          u'INTEGER, name TEXT, options INTEGER, friendlyname TEXT, '
+          u'description TEXT, timestamp INTEGER, activity_timestamp INTEGER, '
+          u'dialog_partner TEXT, adder TEXT, type INTEGER, mystatus INTEGER, '
+          u'myrole INTEGER, posters TEXT, participants TEXT, applicants TEXT, '
+          u'banned_users TEXT, name_text TEXT, topic TEXT, topic_xml TEXT, '
+          u'guidelines TEXT, picture BLOB, alertstring TEXT, is_bookmarked '
+          u'INTEGER, passwordhint TEXT, unconsumed_suppressed_msg INTEGER, '
+          u'unconsumed_normal_msg INTEGER, unconsumed_elevated_msg INTEGER, '
+          u'unconsumed_msg_voice INTEGER, activemembers TEXT, state_data '
+          u'BLOB, lifesigns INTEGER, last_change INTEGER, '
+          u'first_unread_message INTEGER, pk_type INTEGER, dbpath TEXT, '
+          u'split_friendlyname TEXT, conv_dbid INTEGER)',
+      u'ContactGroups':
+          u'CREATE TABLE ContactGroups (id INTEGER NOT NULL PRIMARY KEY, '
+          u'is_permanent INTEGER, type INTEGER, custom_group_id INTEGER, '
+          u'given_displayname TEXT, nrofcontacts INTEGER, nrofcontacts_online '
+          u'INTEGER, given_sortorder INTEGER, type_old INTEGER, proposer '
+          u'TEXT, description TEXT, associated_chat TEXT, members TEXT, '
+          u'cbl_id INTEGER, cbl_blob BLOB, fixed INTEGER, '
+          u'keep_sharedgroup_contacts INTEGER, chats TEXT, extprop_is_hidden '
+          u'INTEGER, extprop_sortorder_value INTEGER, extprop_is_expanded '
+          u'INTEGER)',
+      u'Contacts':
+          u'CREATE TABLE Contacts (id INTEGER NOT NULL PRIMARY KEY, '
+          u'is_permanent INTEGER, type INTEGER, skypename TEXT, pstnnumber '
+          u'TEXT, aliases TEXT, fullname TEXT, birthday INTEGER, gender '
+          u'INTEGER, languages TEXT, country TEXT, province TEXT, city TEXT, '
+          u'phone_home TEXT, phone_office TEXT, phone_mobile TEXT, emails '
+          u'TEXT, hashed_emails TEXT, homepage TEXT, about TEXT, avatar_image '
+          u'BLOB, mood_text TEXT, rich_mood_text TEXT, timezone INTEGER, '
+          u'capabilities BLOB, profile_timestamp INTEGER, nrof_authed_buddies '
+          u'INTEGER, ipcountry TEXT, avatar_timestamp INTEGER, mood_timestamp '
+          u'INTEGER, received_authrequest TEXT, authreq_timestamp INTEGER, '
+          u'lastonline_timestamp INTEGER, availability INTEGER, displayname '
+          u'TEXT, refreshing INTEGER, given_authlevel INTEGER, '
+          u'given_displayname TEXT, assigned_speeddial TEXT, assigned_comment '
+          u'TEXT, alertstring TEXT, lastused_timestamp INTEGER, '
+          u'authrequest_count INTEGER, assigned_phone1 TEXT, '
+          u'assigned_phone1_label TEXT, assigned_phone2 TEXT, '
+          u'assigned_phone2_label TEXT, assigned_phone3 TEXT, '
+          u'assigned_phone3_label TEXT, buddystatus INTEGER, isauthorized '
+          u'INTEGER, popularity_ord INTEGER, external_id TEXT, '
+          u'external_system_id TEXT, isblocked INTEGER, '
+          u'authorization_certificate BLOB, certificate_send_count INTEGER, '
+          u'account_modification_serial_nr INTEGER, saved_directory_blob '
+          u'BLOB, nr_of_buddies INTEGER, server_synced INTEGER, '
+          u'contactlist_track INTEGER, last_used_networktime INTEGER, '
+          u'authorized_time INTEGER, sent_authrequest TEXT, '
+          u'sent_authrequest_time INTEGER, sent_authrequest_serial INTEGER, '
+          u'buddyblob BLOB, cbl_future BLOB, node_capabilities INTEGER, '
+          u'revoked_auth INTEGER, added_in_shared_group INTEGER, '
+          u'in_shared_group INTEGER, authreq_history BLOB, '
+          u'profile_attachments BLOB, stack_version INTEGER, '
+          u'offline_authreq_id INTEGER, node_capabilities_and INTEGER, '
+          u'authreq_crc INTEGER, authreq_src INTEGER, pop_score INTEGER, '
+          u'authreq_nodeinfo BLOB, main_phone TEXT, unified_servants TEXT, '
+          u'phone_home_normalized TEXT, phone_office_normalized TEXT, '
+          u'phone_mobile_normalized TEXT, sent_authrequest_initmethod '
+          u'INTEGER, authreq_initmethod INTEGER, verified_email BLOB, '
+          u'verified_company BLOB, sent_authrequest_extrasbitmask INTEGER, '
+          u'liveid_cid TEXT, extprop_seen_birthday INTEGER, '
+          u'extprop_sms_target INTEGER, extprop_external_data TEXT, '
+          u'extprop_must_hide_avatar INTEGER)',
+      u'Conversations':
+          u'CREATE TABLE Conversations (id INTEGER NOT NULL PRIMARY KEY, '
+          u'is_permanent INTEGER, identity TEXT, type INTEGER, live_host '
+          u'TEXT, live_start_timestamp INTEGER, live_is_muted INTEGER, '
+          u'alert_string TEXT, is_bookmarked INTEGER, given_displayname TEXT, '
+          u'displayname TEXT, local_livestatus INTEGER, inbox_timestamp '
+          u'INTEGER, inbox_message_id INTEGER, unconsumed_suppressed_messages '
+          u'INTEGER, unconsumed_normal_messages INTEGER, '
+          u'unconsumed_elevated_messages INTEGER, unconsumed_messages_voice '
+          u'INTEGER, active_vm_id INTEGER, context_horizon INTEGER, '
+          u'consumption_horizon INTEGER, last_activity_timestamp INTEGER, '
+          u'active_invoice_message INTEGER, spawned_from_convo_id INTEGER, '
+          u'pinned_order INTEGER, creator TEXT, creation_timestamp INTEGER, '
+          u'my_status INTEGER, opt_joining_enabled INTEGER, opt_access_token '
+          u'TEXT, opt_entry_level_rank INTEGER, opt_disclose_history INTEGER, '
+          u'opt_history_limit_in_days INTEGER, opt_admin_only_activities '
+          u'INTEGER, passwordhint TEXT, meta_name TEXT, meta_topic TEXT, '
+          u'meta_guidelines TEXT, meta_picture BLOB, picture TEXT, '
+          u'is_p2p_migrated INTEGER, premium_video_status INTEGER, '
+          u'premium_video_is_grace_period INTEGER, guid TEXT, dialog_partner '
+          u'TEXT, meta_description TEXT, premium_video_sponsor_list TEXT, '
+          u'mcr_caller TEXT, chat_dbid INTEGER, history_horizon INTEGER, '
+          u'history_sync_state TEXT, thread_version TEXT, '
+          u'consumption_horizon_set_at INTEGER, alt_identity TEXT, '
+          u'extprop_profile_height INTEGER, extprop_chat_width INTEGER, '
+          u'extprop_chat_left_margin INTEGER, extprop_chat_right_margin '
+          u'INTEGER, extprop_entry_height INTEGER, extprop_windowpos_x '
+          u'INTEGER, extprop_windowpos_y INTEGER, extprop_windowpos_w '
+          u'INTEGER, extprop_windowpos_h INTEGER, extprop_window_maximized '
+          u'INTEGER, extprop_window_detached INTEGER, extprop_pinned_order '
+          u'INTEGER, extprop_new_in_inbox INTEGER, extprop_tab_order INTEGER, '
+          u'extprop_video_layout INTEGER, extprop_video_chat_height INTEGER, '
+          u'extprop_chat_avatar INTEGER, extprop_consumption_timestamp '
+          u'INTEGER, extprop_form_visible INTEGER, extprop_recovery_mode '
+          u'INTEGER)',
+      u'DbMeta':
+          u'CREATE TABLE DbMeta (key TEXT NOT NULL PRIMARY KEY, value TEXT)',
+      u'LegacyMessages':
+          u'CREATE TABLE LegacyMessages (id INTEGER NOT NULL PRIMARY KEY, '
+          u'is_permanent INTEGER)',
+      u'Messages':
+          u'CREATE TABLE Messages (id INTEGER NOT NULL PRIMARY KEY, '
+          u'is_permanent INTEGER, convo_id INTEGER, chatname TEXT, author '
+          u'TEXT, from_dispname TEXT, author_was_live INTEGER, guid BLOB, '
+          u'dialog_partner TEXT, timestamp INTEGER, type INTEGER, '
+          u'sending_status INTEGER, consumption_status INTEGER, edited_by '
+          u'TEXT, edited_timestamp INTEGER, param_key INTEGER, param_value '
+          u'INTEGER, body_xml TEXT, identities TEXT, reason TEXT, leavereason '
+          u'INTEGER, participant_count INTEGER, error_code INTEGER, '
+          u'chatmsg_type INTEGER, chatmsg_status INTEGER, body_is_rawxml '
+          u'INTEGER, oldoptions INTEGER, newoptions INTEGER, newrole INTEGER, '
+          u'pk_id INTEGER, crc INTEGER, remote_id INTEGER, call_guid TEXT, '
+          u'extprop_contact_review_date TEXT, extprop_contact_received_stamp '
+          u'INTEGER, extprop_contact_reviewed INTEGER)',
+      u'Participants':
+          u'CREATE TABLE Participants (id INTEGER NOT NULL PRIMARY KEY, '
+          u'is_permanent INTEGER, convo_id INTEGER, identity TEXT, rank '
+          u'INTEGER, requested_rank INTEGER, text_status INTEGER, '
+          u'voice_status INTEGER, video_status INTEGER, live_identity TEXT, '
+          u'live_price_for_me TEXT, live_fwd_identities TEXT, '
+          u'live_start_timestamp INTEGER, sound_level INTEGER, debuginfo '
+          u'TEXT, next_redial_time INTEGER, nrof_redials_left INTEGER, '
+          u'last_voice_error TEXT, quality_problems TEXT, live_type INTEGER, '
+          u'live_country TEXT, transferred_by TEXT, transferred_to TEXT, '
+          u'adder TEXT, last_leavereason INTEGER, is_premium_video_sponsor '
+          u'INTEGER, is_multiparty_video_capable INTEGER, '
+          u'live_identity_to_use TEXT, livesession_recovery_in_progress '
+          u'INTEGER, is_multiparty_video_updatable INTEGER, real_identity '
+          u'TEXT, extprop_default_identity INTEGER)',
+      u'SMSes':
+          u'CREATE TABLE SMSes (id INTEGER NOT NULL PRIMARY KEY, is_permanent '
+          u'INTEGER, type INTEGER, outgoing_reply_type INTEGER, status '
+          u'INTEGER, failurereason INTEGER, is_failed_unseen INTEGER, '
+          u'timestamp INTEGER, price INTEGER, price_precision INTEGER, '
+          u'price_currency TEXT, reply_to_number TEXT, target_numbers TEXT, '
+          u'target_statuses BLOB, body TEXT, chatmsg_id INTEGER, identity '
+          u'TEXT, notification_id INTEGER, event_flags INTEGER, '
+          u'reply_id_number TEXT, convo_name TEXT, extprop_hide_from_history '
+          u'INTEGER, extprop_extended INTEGER)',
+      u'Transfers':
+          u'CREATE TABLE Transfers (id INTEGER NOT NULL PRIMARY KEY, '
+          u'is_permanent INTEGER, type INTEGER, partner_handle TEXT, '
+          u'partner_dispname TEXT, status INTEGER, failurereason INTEGER, '
+          u'starttime INTEGER, finishtime INTEGER, filepath TEXT, filename '
+          u'TEXT, filesize TEXT, bytestransferred TEXT, bytespersecond '
+          u'INTEGER, chatmsg_guid BLOB, chatmsg_index INTEGER, convo_id '
+          u'INTEGER, pk_id INTEGER, nodeid BLOB, last_activity INTEGER, flags '
+          u'INTEGER, old_status INTEGER, old_filepath INTEGER, accepttime '
+          u'INTEGER, parent_id INTEGER, offer_send_list TEXT, '
+          u'extprop_localfilename TEXT, extprop_hide_from_history INTEGER, '
+          u'extprop_window_visible INTEGER, extprop_handled_by_chat INTEGER)',
+      u'VideoMessages':
+          u'CREATE TABLE VideoMessages (id INTEGER NOT NULL PRIMARY KEY, '
+          u'is_permanent INTEGER, qik_id BLOB, attached_msg_ids TEXT, '
+          u'sharing_id TEXT, status INTEGER, vod_status INTEGER, vod_path '
+          u'TEXT, local_path TEXT, public_link TEXT, progress INTEGER, title '
+          u'TEXT, description TEXT, author TEXT, creation_timestamp INTEGER)',
+      u'Videos':
+          u'CREATE TABLE Videos (id INTEGER NOT NULL PRIMARY KEY, '
+          u'is_permanent INTEGER, status INTEGER, error TEXT, debuginfo TEXT, '
+          u'dimensions TEXT, media_type INTEGER, duration_1080 INTEGER, '
+          u'duration_720 INTEGER, duration_hqv INTEGER, duration_vgad2 '
+          u'INTEGER, duration_ltvgad2 INTEGER, timestamp INTEGER, hq_present '
+          u'INTEGER, duration_ss INTEGER, ss_timestamp INTEGER, convo_id '
+          u'INTEGER, device_path TEXT)',
+      u'Voicemails':
+          u'CREATE TABLE Voicemails (id INTEGER NOT NULL PRIMARY KEY, '
+          u'is_permanent INTEGER, type INTEGER, partner_handle TEXT, '
+          u'partner_dispname TEXT, status INTEGER, failurereason INTEGER, '
+          u'subject TEXT, timestamp INTEGER, duration INTEGER, '
+          u'allowed_duration INTEGER, playback_progress INTEGER, convo_id '
+          u'INTEGER, chatmsg_guid BLOB, notification_id INTEGER, flags '
+          u'INTEGER, size INTEGER, path TEXT, failures INTEGER, vflags '
+          u'INTEGER, xmsg TEXT, extprop_hide_from_history INTEGER)'}]
+
   def ParseAccountInformation(
       self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses the Accounts database.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): parser mediator.
+      row (sqlite3.Row): row resulting from the query.
+      query (Optional[str]): query string.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
@@ -300,9 +579,9 @@ class SkypePlugin(interface.SQLitePlugin):
     """Parses a chat message row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): parser mediator.
+      row (sqlite3.Row): row resulting from the query.
+      query (Optional[str]): query string.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
@@ -330,9 +609,9 @@ class SkypePlugin(interface.SQLitePlugin):
     """Parse SMS.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): parser mediator.
+      row (sqlite3.Row): row resulting from the query.
+      query (Optional[str]): query string.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
@@ -418,11 +697,11 @@ class SkypePlugin(interface.SQLitePlugin):
      who accepts the file.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: the row with all information related with the file transfers.
-      query: Optional query string.
-      cache: a cache object (instance of SQLiteCache).
-      database: A database object (instance of SQLiteDatabase).
+      parser_mediator (ParserMediator): parser mediator.
+      row (sqlite3.Row): row resulting from the query.
+      query (Optional[str]): query string.
+      cache (Optional[SQLiteCache]): cache object.
+      database (Optional[SQLiteDatabase]): database object.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".

@@ -50,14 +50,24 @@ class LsQuarantinePlugin(interface.SQLitePlugin):
   # The required tables.
   REQUIRED_TABLES = frozenset([u'LSQuarantineEvent'])
 
+  SCHEMAS = [
+      {u'LSQuarantineEvent':
+          u'CREATE TABLE LSQuarantineEvent (  LSQuarantineEventIdentifier '
+          u'TEXT PRIMARY KEY NOT NULL,  LSQuarantineTimeStamp REAL, '
+          u'LSQuarantineAgentBundleIdentifier TEXT,  LSQuarantineAgentName '
+          u'TEXT,  LSQuarantineDataURLString TEXT,  LSQuarantineSenderName '
+          u'TEXT,  LSQuarantineSenderAddress TEXT,  LSQuarantineTypeNumber '
+          u'INTEGER,  LSQuarantineOriginTitle TEXT, '
+          u'LSQuarantineOriginURLString TEXT,  LSQuarantineOriginAlias BLOB )'}]
+
   def ParseLSQuarantineRow(
       self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a launch services quarantine event row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): parser mediator.
+      row (sqlite3.Row): row resulting from the query.
+      query (Optional[str]): query string.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
