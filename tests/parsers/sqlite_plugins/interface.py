@@ -27,8 +27,8 @@ class TestSQLitePlugin(interface.SQLitePlugin):
 
   SCHEMAS = [
       {u'MyTable':
-          u'CREATE TABLE "MyTable" '
-          u'(\n\t`Field1`\tTEXT,\n\t`Field2`\tINTEGER,\n\t`Field3`\tBLOB\n)'}]
+          u'CREATE TABLE "MyTable" ( `Field1` TEXT, `Field2` INTEGER, '
+          u'`Field3` BLOB )'}]
 
   def __init__(self):
     """Initializes SQLite plugin."""
@@ -146,9 +146,8 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
     # Add schema change from WAL file and test again.
     plugin_object.SCHEMAS.append(
         {u'MyTable':
-            u'CREATE TABLE "MyTable" '
-            u'(\n\t`Field1`\tTEXT,\n\t`Field2`\tINTEGER,\n\t`Field3`\tBLOB\n, '
-            u'NewField TEXT)',
+            u'CREATE TABLE "MyTable" ( `Field1` TEXT, `Field2` INTEGER, '
+            u'`Field3` BLOB , NewField TEXT)',
         u'NewTable':
             u'CREATE TABLE NewTable(NewTableField1 TEXT, NewTableField2 TEXT)'})
     storage_writer = self._ParseDatabaseFileWithPlugin(

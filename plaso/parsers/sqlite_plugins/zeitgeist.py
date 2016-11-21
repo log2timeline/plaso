@@ -47,93 +47,62 @@ class ZeitgeistPlugin(interface.SQLitePlugin):
 
   SCHEMAS = [
       {u'actor':
-          u'CREATE TABLE actor (\n                    id INTEGER PRIMARY KEY '
-          u'AUTOINCREMENT,\n                    value VARCHAR UNIQUE\n '
-          u')',
+          u'CREATE TABLE actor ( id INTEGER PRIMARY KEY AUTOINCREMENT, value '
+          u'VARCHAR UNIQUE )',
       u'event':
-          u'CREATE TABLE event (\n                    id INTEGER,\n '
-          u'timestamp INTEGER,\n                    interpretation INTEGER,\n '
-          u'manifestation INTEGER,\n                    actor INTEGER,\n '
-          u'payload INTEGER,\n                    subj_id INTEGER,\n '
-          u'subj_interpretation INTEGER,\n '
-          u'subj_manifestation INTEGER,\n                    subj_origin '
-          u'INTEGER,\n                    subj_mimetype INTEGER,\n '
-          u'subj_text INTEGER,\n                    subj_storage INTEGER,\n '
-          u'origin INTEGER,\n                    subj_id_current INTEGER,\n '
-          u'CONSTRAINT interpretation_fk\n                        FOREIGN '
-          u'KEY(interpretation)\n                        REFERENCES '
-          u'interpretation(id)\n                        ON DELETE CASCADE,\n '
-          u'CONSTRAINT manifestation_fk\n                        FOREIGN '
-          u'KEY(manifestation)\n                        REFERENCES '
-          u'manifestation(id)\n                        ON DELETE CASCADE,\n '
-          u'CONSTRAINT actor_fk\n                        FOREIGN KEY(actor)\n '
-          u'REFERENCES actor(id)\n                        ON DELETE '
-          u'CASCADE,\n                    CONSTRAINT origin_fk\n '
-          u'FOREIGN KEY(origin)\n                        REFERENCES uri(id)\n '
-          u'ON DELETE CASCADE,\n                    CONSTRAINT payload_fk\n '
-          u'FOREIGN KEY(payload)\n                        REFERENCES '
-          u'payload(id)\n                        ON DELETE CASCADE,\n '
-          u'CONSTRAINT subj_id_fk\n                        FOREIGN '
-          u'KEY(subj_id)\n                        REFERENCES uri(id)\n '
-          u'ON DELETE CASCADE,\n                    CONSTRAINT '
-          u'subj_id_current_fk\n                        FOREIGN '
-          u'KEY(subj_id_current)\n                        REFERENCES '
-          u'uri(id)\n                        ON DELETE CASCADE,\n '
-          u'CONSTRAINT subj_interpretation_fk\n '
-          u'FOREIGN KEY(subj_interpretation)\n '
-          u'REFERENCES interpretation(id)\n                        ON DELETE '
-          u'CASCADE,\n                    CONSTRAINT subj_manifestation_fk\n '
-          u'FOREIGN KEY(subj_manifestation)\n '
-          u'REFERENCES manifestation(id)\n                        ON DELETE '
-          u'CASCADE,\n                    CONSTRAINT subj_origin_fk\n '
-          u'FOREIGN KEY(subj_origin)\n                        REFERENCES '
-          u'uri(id)\n                        ON DELETE CASCADE,\n '
-          u'CONSTRAINT subj_mimetype_fk\n                        FOREIGN '
-          u'KEY(subj_mimetype)\n                        REFERENCES '
-          u'mimetype(id)\n                        ON DELETE CASCADE,\n '
-          u'CONSTRAINT subj_text_fk\n                        FOREIGN '
-          u'KEY(subj_text)\n                        REFERENCES text(id)\n '
-          u'ON DELETE CASCADE,\n                    CONSTRAINT '
-          u'subj_storage_fk\n                        FOREIGN '
-          u'KEY(subj_storage)\n                        REFERENCES '
-          u'storage(id)\n                        ON DELETE CASCADE,\n '
-          u'CONSTRAINT unique_event UNIQUE (timestamp, interpretation,\n '
-          u'manifestation, actor, subj_id)\n                )',
+          u'CREATE TABLE event ( id INTEGER, timestamp INTEGER, '
+          u'interpretation INTEGER, manifestation INTEGER, actor INTEGER, '
+          u'payload INTEGER, subj_id INTEGER, subj_interpretation INTEGER, '
+          u'subj_manifestation INTEGER, subj_origin INTEGER, subj_mimetype '
+          u'INTEGER, subj_text INTEGER, subj_storage INTEGER, origin INTEGER, '
+          u'subj_id_current INTEGER, CONSTRAINT interpretation_fk FOREIGN '
+          u'KEY(interpretation) REFERENCES interpretation(id) ON DELETE '
+          u'CASCADE, CONSTRAINT manifestation_fk FOREIGN KEY(manifestation) '
+          u'REFERENCES manifestation(id) ON DELETE CASCADE, CONSTRAINT '
+          u'actor_fk FOREIGN KEY(actor) REFERENCES actor(id) ON DELETE '
+          u'CASCADE, CONSTRAINT origin_fk FOREIGN KEY(origin) REFERENCES '
+          u'uri(id) ON DELETE CASCADE, CONSTRAINT payload_fk FOREIGN '
+          u'KEY(payload) REFERENCES payload(id) ON DELETE CASCADE, CONSTRAINT '
+          u'subj_id_fk FOREIGN KEY(subj_id) REFERENCES uri(id) ON DELETE '
+          u'CASCADE, CONSTRAINT subj_id_current_fk FOREIGN '
+          u'KEY(subj_id_current) REFERENCES uri(id) ON DELETE CASCADE, '
+          u'CONSTRAINT subj_interpretation_fk FOREIGN '
+          u'KEY(subj_interpretation) REFERENCES interpretation(id) ON DELETE '
+          u'CASCADE, CONSTRAINT subj_manifestation_fk FOREIGN '
+          u'KEY(subj_manifestation) REFERENCES manifestation(id) ON DELETE '
+          u'CASCADE, CONSTRAINT subj_origin_fk FOREIGN KEY(subj_origin) '
+          u'REFERENCES uri(id) ON DELETE CASCADE, CONSTRAINT subj_mimetype_fk '
+          u'FOREIGN KEY(subj_mimetype) REFERENCES mimetype(id) ON DELETE '
+          u'CASCADE, CONSTRAINT subj_text_fk FOREIGN KEY(subj_text) '
+          u'REFERENCES text(id) ON DELETE CASCADE, CONSTRAINT subj_storage_fk '
+          u'FOREIGN KEY(subj_storage) REFERENCES storage(id) ON DELETE '
+          u'CASCADE, CONSTRAINT unique_event UNIQUE (timestamp, '
+          u'interpretation, manifestation, actor, subj_id) )',
       u'extensions_conf':
-          u'CREATE TABLE extensions_conf (\n                    extension '
-          u'VARCHAR,\n                    key VARCHAR,\n '
-          u'value BLOB,\n                    CONSTRAINT unique_extension '
-          u'UNIQUE (extension, key)\n                )',
+          u'CREATE TABLE extensions_conf ( extension VARCHAR, key VARCHAR, '
+          u'value BLOB, CONSTRAINT unique_extension UNIQUE (extension, key) )',
       u'interpretation':
-          u'CREATE TABLE interpretation (\n                    id INTEGER '
-          u'PRIMARY KEY AUTOINCREMENT,\n                    value VARCHAR '
-          u'UNIQUE\n                )',
+          u'CREATE TABLE interpretation ( id INTEGER PRIMARY KEY '
+          u'AUTOINCREMENT, value VARCHAR UNIQUE )',
       u'manifestation':
-          u'CREATE TABLE manifestation (\n                    id INTEGER '
-          u'PRIMARY KEY AUTOINCREMENT,\n                    value VARCHAR '
-          u'UNIQUE\n                )',
+          u'CREATE TABLE manifestation ( id INTEGER PRIMARY KEY '
+          u'AUTOINCREMENT, value VARCHAR UNIQUE )',
       u'mimetype':
-          u'CREATE TABLE mimetype (\n                    id INTEGER PRIMARY '
-          u'KEY AUTOINCREMENT,\n                    value VARCHAR UNIQUE\n '
-          u')',
+          u'CREATE TABLE mimetype ( id INTEGER PRIMARY KEY AUTOINCREMENT, '
+          u'value VARCHAR UNIQUE )',
       u'payload':
-          u'CREATE TABLE payload\n                    (id INTEGER PRIMARY '
-          u'KEY, value BLOB)',
+          u'CREATE TABLE payload (id INTEGER PRIMARY KEY, value BLOB)',
       u'schema_version':
-          u'CREATE TABLE schema_version (\n                    schema VARCHAR '
-          u'PRIMARY KEY ON CONFLICT REPLACE,\n                    version '
-          u'INT\n                )',
+          u'CREATE TABLE schema_version ( schema VARCHAR PRIMARY KEY ON '
+          u'CONFLICT REPLACE, version INT )',
       u'storage':
-          u'CREATE TABLE storage (\n                    id INTEGER PRIMARY '
-          u'KEY,\n                    value VARCHAR UNIQUE,\n '
-          u'state INTEGER,\n                    icon VARCHAR,\n '
-          u'display_name VARCHAR\n                )',
+          u'CREATE TABLE storage ( id INTEGER PRIMARY KEY, value VARCHAR '
+          u'UNIQUE, state INTEGER, icon VARCHAR, display_name VARCHAR )',
       u'text':
-          u'CREATE TABLE text (\n                    id INTEGER PRIMARY '
-          u'KEY,\n                    value VARCHAR UNIQUE\n                )',
+          u'CREATE TABLE text ( id INTEGER PRIMARY KEY, value VARCHAR UNIQUE '
+          u')',
       u'uri':
-          u'CREATE TABLE uri (\n                    id INTEGER PRIMARY KEY,\n '
-          u'value VARCHAR UNIQUE\n                )'}]
+          u'CREATE TABLE uri ( id INTEGER PRIMARY KEY, value VARCHAR UNIQUE )'}]
 
   def ParseZeitgeistEventRow(
       self, parser_mediator, row, query=None, **unused_kwargs):

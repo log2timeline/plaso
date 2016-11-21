@@ -195,14 +195,7 @@ class ParserMediator(object):
     Args:
       attribute_name (str): name of the attribute to set.
       attribute_value (str): value of the attribute to set.
-
-    Raises:
-      KeyError: If an attribute with the given name is already set.
     """
-    if attribute_name in self._extra_event_attributes:
-      raise KeyError(u'Value already set for attribute {0:s}'.format(
-          attribute_name))
-
     self._extra_event_attributes[attribute_name] = attribute_value
 
   def AppendToParserChain(self, plugin_or_parser):

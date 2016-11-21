@@ -52,13 +52,13 @@ class LsQuarantinePlugin(interface.SQLitePlugin):
 
   SCHEMAS = [
       {u'LSQuarantineEvent':
-          u'CREATE TABLE LSQuarantineEvent (  LSQuarantineEventIdentifier '
-          u'TEXT PRIMARY KEY NOT NULL,  LSQuarantineTimeStamp REAL, '
-          u'LSQuarantineAgentBundleIdentifier TEXT,  LSQuarantineAgentName '
-          u'TEXT,  LSQuarantineDataURLString TEXT,  LSQuarantineSenderName '
-          u'TEXT,  LSQuarantineSenderAddress TEXT,  LSQuarantineTypeNumber '
-          u'INTEGER,  LSQuarantineOriginTitle TEXT, '
-          u'LSQuarantineOriginURLString TEXT,  LSQuarantineOriginAlias BLOB )'}]
+          u'CREATE TABLE LSQuarantineEvent ( LSQuarantineEventIdentifier TEXT '
+          u'PRIMARY KEY NOT NULL, LSQuarantineTimeStamp REAL, '
+          u'LSQuarantineAgentBundleIdentifier TEXT, LSQuarantineAgentName '
+          u'TEXT, LSQuarantineDataURLString TEXT, LSQuarantineSenderName '
+          u'TEXT, LSQuarantineSenderAddress TEXT, LSQuarantineTypeNumber '
+          u'INTEGER, LSQuarantineOriginTitle TEXT, '
+          u'LSQuarantineOriginURLString TEXT, LSQuarantineOriginAlias BLOB )'}]
 
   def ParseLSQuarantineRow(
       self, parser_mediator, row, query=None, **unused_kwargs):

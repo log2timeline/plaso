@@ -234,7 +234,9 @@ class SQLiteDatabase(object):
 
       sql_results = cursor.execute(self.SCHEMA_QUERY)
 
-      self._schema = {table_name: query for table_name, query in sql_results}
+      self._schema = {
+          table_name: u' '.join(query.split())
+          for table_name, query in sql_results}
 
     except sqlite3.DatabaseError as exception:
       self._database.close()

@@ -141,17 +141,16 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
   SCHEMAS = [
       {u'cfurl_cache_blob_data':
           u'CREATE TABLE cfurl_cache_blob_data(entry_ID INTEGER PRIMARY KEY, '
-          u'response_object BLOB, request_object BLOB, \t\t\t\t\t proto_props '
-          u'BLOB, user_info BLOB)',
+          u'response_object BLOB, request_object BLOB, proto_props BLOB, '
+          u'user_info BLOB)',
       u'cfurl_cache_receiver_data':
           u'CREATE TABLE cfurl_cache_receiver_data(entry_ID INTEGER PRIMARY '
           u'KEY, receiver_data BLOB)',
       u'cfurl_cache_response':
           u'CREATE TABLE cfurl_cache_response(entry_ID INTEGER PRIMARY KEY '
-          u'AUTOINCREMENT UNIQUE, \t\t\t\t\t version INTEGER, hash_value '
-          u'INTEGER, storage_policy INTEGER, request_key TEXT UNIQUE, '
-          u'\t\t\t\t\t time_stamp NOT NULL DEFAULT CURRENT_TIMESTAMP, '
-          u'partition TEXT)',
+          u'AUTOINCREMENT UNIQUE, version INTEGER, hash_value INTEGER, '
+          u'storage_policy INTEGER, request_key TEXT UNIQUE, time_stamp NOT '
+          u'NULL DEFAULT CURRENT_TIMESTAMP, partition TEXT)',
       u'cfurl_cache_schema_version':
           u'CREATE TABLE cfurl_cache_schema_version(schema_version INTEGER)'}]
 

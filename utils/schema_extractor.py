@@ -51,11 +51,7 @@ if __name__ == u'__main__':
         wal_file_object.close()
 
   schema = {
-      table: query
-          .replace(u'\'', u'\\\'')
-          .replace(u'\n', u'\\n')
-          .replace(u'\t', u'\\t')
-          .replace(u'\r', u'\\r')
+      table: u' '.join(query.split()).replace(u'\'', u'\\\'')
       for table, query in schema.items()}
   env = jinja2.Environment(trim_blocks=True, lstrip_blocks=True)
   template = env.from_string('''
@@ -65,7 +61,7 @@ if __name__ == u'__main__':
     {% else %}
       u'{{ table }}':
     {% endif %}
-          u'{{ query|wordwrap(65, wrapstring="'\n          u'") }}'
+          u'{{ query|wordwrap(65, wrapstring=" '\n          u'") }}'
             {%- if not loop.last -%}
               ,
             {% else -%}
