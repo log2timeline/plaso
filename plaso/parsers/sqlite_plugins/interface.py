@@ -27,8 +27,9 @@ class SQLitePlugin(plugins.BasePlugin):
   # List of tables that should be present in the database, for verification.
   REQUIRED_TABLES = frozenset([])
 
-  # Dictionary of table names mapped to their creation query.
-  SCHEMA = {}
+  # Database schemas this plugin was originally designed for.
+  # Should be a list of dictionaries with {table_name: SQLCommand} format.
+  SCHEMAS = []
 
   @classmethod
   def _HashRow(cls, row):
@@ -65,9 +66,10 @@ class SQLitePlugin(plugins.BasePlugin):
           with WAL file commited.
     """
     # Check for full schema match.
-    schema_match = database.schema == self.SCHEMA
+    schema_match = any(schema == database.schema for schema in self.SCHEMAS)
     if database_wal:
-      wal_schema_match = database_wal.schema == self.SCHEMA
+      wal_schema_match = any(
+          schema == database_wal.schema for schema in self.SCHEMAS)
     else:
       wal_schema_match = None
 
