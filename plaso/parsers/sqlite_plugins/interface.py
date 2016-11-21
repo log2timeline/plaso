@@ -93,39 +93,45 @@ class SQLitePlugin(plugins.BasePlugin):
 
         # Process database with WAL file.
         if database_wal and wal_sql_results:
-          parser_mediator.AddEventAttribute(u'schema_match', schema_match)
-          row_cache = set()
-          for row in sql_results:
-            if parser_mediator.abort:
-              break
-            callback(
-                parser_mediator, row, query=query, cache=cache,
-                database=database)
-            row_cache.add(self._HashRow(row))
-          parser_mediator.RemoveEventAttribute(u'schema_match')
-
-          # Process unique rows in WAL file.
-          parser_mediator.AddEventAttribute(u'schema_match', wal_schema_match)
-          file_entry = parser_mediator.GetFileEntry()
-          parser_mediator.SetFileEntry(wal_file_entry)
-          for row in wal_sql_results:
-            if self._HashRow(row) not in row_cache:
+          try:
+            parser_mediator.AddEventAttribute(u'schema_match', schema_match)
+            row_cache = set()
+            for row in sql_results:
+              if parser_mediator.abort:
+                break
               callback(
                   parser_mediator, row, query=query, cache=cache,
-                  database=database_wal)
-          parser_mediator.SetFileEntry(file_entry)
-          parser_mediator.RemoveEventAttribute(u'schema_match')
+                  database=database)
+              row_cache.add(self._HashRow(row))
+          finally:
+            parser_mediator.RemoveEventAttribute(u'schema_match')
+
+          # Process unique rows in WAL file.
+          try:
+            parser_mediator.AddEventAttribute(u'schema_match', wal_schema_match)
+            file_entry = parser_mediator.GetFileEntry()
+            parser_mediator.SetFileEntry(wal_file_entry)
+            for row in wal_sql_results:
+              if self._HashRow(row) not in row_cache:
+                callback(
+                    parser_mediator, row, query=query, cache=cache,
+                    database=database_wal)
+            parser_mediator.SetFileEntry(file_entry)
+          finally:
+            parser_mediator.RemoveEventAttribute(u'schema_match')
 
         # Process database without WAL file.
         else:
-          parser_mediator.AddEventAttribute(u'schema_match', schema_match)
-          for row in sql_results:
-            if parser_mediator.abort:
-              break
-            callback(
-                parser_mediator, row, query=query, cache=cache,
-                database=database)
-          parser_mediator.RemoveEventAttribute(u'schema_match')
+          try:
+            parser_mediator.AddEventAttribute(u'schema_match', schema_match)
+            for row in sql_results:
+              if parser_mediator.abort:
+                break
+              callback(
+                  parser_mediator, row, query=query, cache=cache,
+                  database=database)
+          finally:
+            parser_mediator.RemoveEventAttribute(u'schema_match')
 
       except sqlite3.DatabaseError as exception:
         logging.debug(

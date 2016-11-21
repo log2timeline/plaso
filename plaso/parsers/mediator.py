@@ -199,7 +199,7 @@ class ParserMediator(object):
     Raises:
       KeyError: If an attribute with the given name is already set.
     """
-    if hasattr(self._extra_event_attributes, attribute_name):
+    if attribute_name in self._extra_event_attributes:
       raise KeyError(u'Value already set for attribute {0:s}'.format(
           attribute_name))
 
@@ -489,7 +489,7 @@ class ParserMediator(object):
     Args:
       attribute_name (str): name of the attribute to set.
     """
-    if hasattr(self._extra_event_attributes, attribute_name):
+    if attribute_name in self._extra_event_attributes:
       del self._extra_event_attributes[attribute_name]
 
   def ResetFileEntry(self):
