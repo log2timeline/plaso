@@ -53,22 +53,25 @@ class AndroidSMSPlugin(interface.SQLitePlugin):
   REQUIRED_TABLES = frozenset([u'sms'])
 
   SCHEMAS = [
-      {u'canonical_addresses':
-          u'CREATE TABLE canonical_addresses (_id INTEGER PRIMARY KEY '
-          u'AUTOINCREMENT,address TEXT)',
-      u'addr':
+      {u'addr':
           u'CREATE TABLE addr (_id INTEGER PRIMARY KEY,msg_id '
           u'INTEGER,contact_id INTEGER,address TEXT,type INTEGER,charset '
           u'INTEGER)',
-      u'threads':
-          u'CREATE TABLE threads (_id INTEGER PRIMARY KEY AUTOINCREMENT,date '
-          u'INTEGER DEFAULT 0,message_count INTEGER DEFAULT 0,recipient_ids '
-          u'TEXT,snippet TEXT,snippet_cs INTEGER DEFAULT 0,read INTEGER '
-          u'DEFAULT 1,type INTEGER DEFAULT 0,error INTEGER DEFAULT '
-          u'0,has_attachment INTEGER DEFAULT 0)',
+      u'android_metadata':
+          u'CREATE TABLE android_metadata (locale TEXT)',
       u'attachments':
           u'CREATE TABLE attachments (sms_id INTEGER,content_url TEXT,offset '
           u'INTEGER)',
+      u'canonical_addresses':
+          u'CREATE TABLE canonical_addresses (_id INTEGER PRIMARY KEY '
+          u'AUTOINCREMENT,address TEXT)',
+      u'drm':
+          u'CREATE TABLE drm (_id INTEGER PRIMARY KEY,_data TEXT)',
+      u'part':
+          u'CREATE TABLE part (_id INTEGER PRIMARY KEY AUTOINCREMENT,mid '
+          u'INTEGER,seq INTEGER DEFAULT 0,ct TEXT,name TEXT,chset INTEGER,cd '
+          u'TEXT,fn TEXT,cid TEXT,cl TEXT,ctt_s INTEGER,ctt_t TEXT,_data '
+          u'TEXT,text TEXT)',
       u'pdu':
           u'CREATE TABLE pdu (_id INTEGER PRIMARY KEY AUTOINCREMENT,thread_id '
           u'INTEGER,date INTEGER,date_sent INTEGER DEFAULT 0,msg_box '
@@ -80,6 +83,17 @@ class AndroidSMSPlugin(interface.SQLitePlugin):
           u'INTEGER,ct_cls INTEGER,resp_txt TEXT,d_tm INTEGER,d_rpt '
           u'INTEGER,locked INTEGER DEFAULT 0,seen INTEGER DEFAULT 0,text_only '
           u'INTEGER DEFAULT 0)',
+      u'pending_msgs':
+          u'CREATE TABLE pending_msgs (_id INTEGER PRIMARY KEY,proto_type '
+          u'INTEGER,msg_id INTEGER,msg_type INTEGER,err_type INTEGER,err_code '
+          u'INTEGER,retry_index INTEGER NOT NULL DEFAULT 0,due_time '
+          u'INTEGER,last_try INTEGER)',
+      u'rate':
+          u'CREATE TABLE rate (sent_time INTEGER)',
+      u'raw':
+          u'CREATE TABLE raw (_id INTEGER PRIMARY KEY,date '
+          u'INTEGER,reference_number INTEGER,count INTEGER,sequence '
+          u'INTEGER,destination_port INTEGER,address TEXT,pdu TEXT)',
       u'sms':
           u'CREATE TABLE sms (_id INTEGER PRIMARY KEY,thread_id '
           u'INTEGER,address TEXT,person INTEGER,date INTEGER,date_sent '
@@ -87,42 +101,28 @@ class AndroidSMSPlugin(interface.SQLitePlugin):
           u'INTEGER DEFAULT -1,type INTEGER,reply_path_present '
           u'INTEGER,subject TEXT,body TEXT,service_center TEXT,locked INTEGER '
           u'DEFAULT 0,error_code INTEGER DEFAULT 0,seen INTEGER DEFAULT 0)',
-      u'words_segments':
-          u'CREATE TABLE \'words_segments\'(blockid INTEGER PRIMARY KEY, '
-          u'block BLOB)',
-      u'raw':
-          u'CREATE TABLE raw (_id INTEGER PRIMARY KEY,date '
-          u'INTEGER,reference_number INTEGER,count INTEGER,sequence '
-          u'INTEGER,destination_port INTEGER,address TEXT,pdu TEXT)',
-      u'rate':
-          u'CREATE TABLE rate (sent_time INTEGER)',
-      u'part':
-          u'CREATE TABLE part (_id INTEGER PRIMARY KEY AUTOINCREMENT,mid '
-          u'INTEGER,seq INTEGER DEFAULT 0,ct TEXT,name TEXT,chset INTEGER,cd '
-          u'TEXT,fn TEXT,cid TEXT,cl TEXT,ctt_s INTEGER,ctt_t TEXT,_data '
-          u'TEXT,text TEXT)',
-      u'words_content':
-          u'CREATE TABLE \'words_content\'(docid INTEGER PRIMARY KEY, '
-          u'\'c0_id\', \'c1index_text\', \'c2source_id\', \'c3table_to_use\')',
       u'sr_pending':
           u'CREATE TABLE sr_pending (reference_number INTEGER,action '
           u'TEXT,data TEXT)',
+      u'threads':
+          u'CREATE TABLE threads (_id INTEGER PRIMARY KEY AUTOINCREMENT,date '
+          u'INTEGER DEFAULT 0,message_count INTEGER DEFAULT 0,recipient_ids '
+          u'TEXT,snippet TEXT,snippet_cs INTEGER DEFAULT 0,read INTEGER '
+          u'DEFAULT 1,type INTEGER DEFAULT 0,error INTEGER DEFAULT '
+          u'0,has_attachment INTEGER DEFAULT 0)',
+      u'words':
+          u'CREATE VIRTUAL TABLE words USING FTS3 (_id INTEGER PRIMARY KEY, '
+          u'index_text TEXT, source_id INTEGER, table_to_use INTEGER)',
+      u'words_content':
+          u'CREATE TABLE \'words_content\'(docid INTEGER PRIMARY KEY, '
+          u'\'c0_id\', \'c1index_text\', \'c2source_id\', \'c3table_to_use\')',
       u'words_segdir':
           u'CREATE TABLE \'words_segdir\'(level INTEGER,idx '
           u'INTEGER,start_block INTEGER,leaves_end_block INTEGER,end_block '
           u'INTEGER,root BLOB,PRIMARY KEY(level, idx))',
-      u'drm':
-          u'CREATE TABLE drm (_id INTEGER PRIMARY KEY,_data TEXT)',
-      u'words':
-          u'CREATE VIRTUAL TABLE words USING FTS3 (_id INTEGER PRIMARY KEY, '
-          u'index_text TEXT, source_id INTEGER, table_to_use INTEGER)',
-      u'pending_msgs':
-          u'CREATE TABLE pending_msgs (_id INTEGER PRIMARY KEY,proto_type '
-          u'INTEGER,msg_id INTEGER,msg_type INTEGER,err_type INTEGER,err_code '
-          u'INTEGER,retry_index INTEGER NOT NULL DEFAULT 0,due_time '
-          u'INTEGER,last_try INTEGER)',
-      u'android_metadata':
-          u'CREATE TABLE android_metadata (locale TEXT)'}]
+      u'words_segments':
+          u'CREATE TABLE \'words_segments\'(blockid INTEGER PRIMARY KEY, '
+          u'block BLOB)'}]
 
   # TODO: Move this functionality to the formatter.
   SMS_TYPE = {

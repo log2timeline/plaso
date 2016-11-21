@@ -56,7 +56,7 @@ class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
       u'activitylog_compressed', u'string_ids', u'url_ids'])
 
   SCHEMAS = [
-    {u'activitylog_compressed':
+      {u'activitylog_compressed':
           u'CREATE TABLE activitylog_compressed (count INTEGER NOT NULL '
           u'DEFAULT 1, extension_id_x INTEGER NOT NULL, time INTEGER, '
           u'action_type INTEGER, api_name_x INTEGER, args_x INTEGER, '

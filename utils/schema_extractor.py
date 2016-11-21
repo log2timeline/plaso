@@ -29,17 +29,33 @@ if __name__ == u'__main__':
   arg_parser.add_argument(
       u'database_path', type=_existing_path,
       help=u'The path to the database file to extract schema from.')
+  arg_parser.add_argument(
+      u'wal_path', type=_existing_path, nargs=u'?', default=None,
+      help=u'Optional path to a wal file to commit into the database.')
 
   options = arg_parser.parse_args()
 
   # Get database schema.
-  database = sqlite.SQLiteDatabase('bogus')
+  database = sqlite.SQLiteDatabase('database.db')
   with open(options.database_path, u'rb') as file_object:
-    database.Open(file_object)
-    schema = database.schema
+    if options.wal_path:
+      wal_file_object = open(options.wal_path, u'rb')
+    else:
+      wal_file_object = None
+
+    try:
+      database.Open(file_object, wal_file_object=wal_file_object)
+      schema = database.schema
+    finally:
+      if wal_file_object:
+        wal_file_object.close()
 
   schema = {
-      table: query.replace(u'\n', u'\\n').replace(u'\'', u'\\\'')
+      table: query
+          .replace(u'\'', u'\\\'')
+          .replace(u'\n', u'\\n')
+          .replace(u'\t', u'\\t')
+          .replace(u'\r', u'\\r')
       for table, query in schema.items()}
   env = jinja2.Environment(trim_blocks=True, lstrip_blocks=True)
   template = env.from_string('''
@@ -49,7 +65,7 @@ if __name__ == u'__main__':
     {% else %}
       u'{{ table }}':
     {% endif %}
-          u'{{ query|wordwrap(65, wrapstring=" '\n          u'") }}'
+          u'{{ query|wordwrap(65, wrapstring="'\n          u'") }}'
             {%- if not loop.last -%}
               ,
             {% else -%}
