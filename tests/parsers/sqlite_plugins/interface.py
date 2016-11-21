@@ -5,6 +5,9 @@
 import sys
 import unittest
 
+from plaso.containers import time_events
+from plaso.lib import eventdata
+from plaso.lib import timelib
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -21,6 +24,11 @@ class TestSQLitePlugin(interface.SQLitePlugin):
       u'SELECT Field1, Field2, Field3 FROM MyTable', u'ParseMyTableRow')]
 
   REQUIRED_TABLES = frozenset([u'MyTable'])
+
+  SCHEMAS = [
+      {u'MyTable':
+          u'CREATE TABLE "MyTable" '
+          u'(\n\t`Field1`\tTEXT,\n\t`Field2`\tINTEGER,\n\t`Field3`\tBLOB\n)'}]
 
   def __init__(self):
     """Initializes SQLite plugin."""
@@ -46,6 +54,15 @@ class TestSQLitePlugin(interface.SQLitePlugin):
     if sys.version_info[0] < 3:
       field3 = str(field3)
     self.results.append(((row['Field1'], row['Field2'], field3), from_wal))
+
+    event = time_events.TimestampEvent(
+        timelib.Timestamp.NONE_TIMESTAMP, eventdata.EventTimestamp.NOT_A_TIME,
+        data_type=u'fake')
+    event.field1 = row['Field1']
+    event.field2 = row['Field2']
+    event.field3 = field3
+    event.from_wal = location.endswith(u'-wal')
+    parser_mediator.ProduceEvent(event)
 
 
 class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
@@ -100,6 +117,56 @@ class SQLiteInterfaceTest(test_lib.SQLitePluginTestCase):
         ((u'Unhashable Row 1', 10, b'Binary Text!\x01\x02\x03'), False)]
 
     self.assertEqual(expected_results, plugin_object.results)
+
+  @shared_test_lib.skipUnlessHasTestFile([u'wal_database.db'])
+  @shared_test_lib.skipUnlessHasTestFile([u'wal_database.db-wal'])
+  def testSchemaMatching(self):
+    """Tests the Schema matching capabilities."""
+    plugin_object = TestSQLitePlugin()
+    cache = sqlite.SQLiteCache()
+
+    # Test matching schema.
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'wal_database.db'], plugin_object, cache=cache)
+    self.assertTrue(storage_writer.events)
+    for event in storage_writer.events:
+      self.assertTrue(event.schema_match)
+
+    # Test schema change with WAL.
+    wal_file = self._GetTestFilePath([u'wal_database.db-wal'])
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'wal_database.db'], plugin_object, cache=cache, wal_path=wal_file)
+    self.assertTrue(storage_writer.events)
+    for event in storage_writer.events:
+      if event.from_wal:
+        self.assertFalse(event.schema_match)
+      else:
+        self.assertTrue(event.schema_match)
+
+    # Add schema change from WAL file and test again.
+    plugin_object.SCHEMAS.append(
+        {u'MyTable':
+            u'CREATE TABLE "MyTable" '
+            u'(\n\t`Field1`\tTEXT,\n\t`Field2`\tINTEGER,\n\t`Field3`\tBLOB\n, '
+            u'NewField TEXT)',
+        u'NewTable':
+            u'CREATE TABLE NewTable(NewTableField1 TEXT, NewTableField2 TEXT)'})
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'wal_database.db'], plugin_object, cache=cache, wal_path=wal_file)
+    self.assertTrue(storage_writer.events)
+    for event in storage_writer.events:
+      self.assertTrue(event.schema_match)
+
+    # Test without original schema.
+    del plugin_object.SCHEMAS[0]
+    storage_writer = self._ParseDatabaseFileWithPlugin(
+        [u'wal_database.db'], plugin_object, cache=cache, wal_path=wal_file)
+    self.assertTrue(storage_writer.events)
+    for event in storage_writer.events:
+      if event.from_wal:
+        self.assertTrue(event.schema_match)
+      else:
+        self.assertFalse(event.schema_match)
 
 
 if __name__ == '__main__':
