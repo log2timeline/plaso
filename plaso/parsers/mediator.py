@@ -483,6 +483,15 @@ class ParserMediator(object):
     self._storage_writer.AddError(extraction_error)
     self._number_of_errors += 1
 
+  def RemoveEventAttribute(self, attribute_name):
+    """Removes an attribute from being set on all events produced.
+
+    Args:
+      attribute_name (str): name of the attribute to set.
+    """
+    if hasattr(self._extra_event_attributes, attribute_name):
+      del self._extra_event_attributes[attribute_name]
+
   def ResetFileEntry(self):
     """Resets the active file entry."""
     self._file_entry = None
