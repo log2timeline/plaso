@@ -77,24 +77,22 @@ class WebViewPlugin(interface.SQLitePlugin):
 
   SCHEMAS = [
       {u'android_metadata':
-          u'CREATE TABLE android_metadata (locale TEXT)',
-      u'cookies':
-          u'CREATE TABLE cookies (_id INTEGER PRIMARY KEY, name TEXT, value '
-          u'TEXT, domain TEXT, path TEXT, expires INTEGER, secure INTEGER)',
-      u'formdata':
-          u'CREATE TABLE formdata (_id INTEGER PRIMARY KEY, urlid INTEGER, '
-          u'name TEXT, value TEXT, UNIQUE (urlid, name, value) ON CONFLICT '
-          u'IGNORE)',
-      u'formurl':
-          u'CREATE TABLE formurl (_id INTEGER PRIMARY KEY, url TEXT)',
-      u'httpauth':
-          u'CREATE TABLE httpauth (_id INTEGER PRIMARY KEY, host TEXT, realm '
-          u'TEXT, username TEXT, password TEXT, UNIQUE (host, realm) ON '
-          u'CONFLICT REPLACE)',
-      u'password':
-          u'CREATE TABLE password (_id INTEGER PRIMARY KEY, host TEXT, '
-          u'username TEXT, password TEXT, UNIQUE (host, username) ON CONFLICT '
-          u'REPLACE)'}]
+       u'CREATE TABLE android_metadata (locale TEXT)',
+       u'cookies':
+       u'CREATE TABLE cookies (_id INTEGER PRIMARY KEY, name TEXT, value '
+       u'TEXT, domain TEXT, path TEXT, expires INTEGER, secure INTEGER)',
+       u'formdata':
+       u'CREATE TABLE formdata (_id INTEGER PRIMARY KEY, urlid INTEGER, name '
+       u'TEXT, value TEXT, UNIQUE (urlid, name, value) ON CONFLICT IGNORE)',
+       u'formurl':
+       u'CREATE TABLE formurl (_id INTEGER PRIMARY KEY, url TEXT)',
+       u'httpauth':
+       u'CREATE TABLE httpauth (_id INTEGER PRIMARY KEY, host TEXT, realm '
+       u'TEXT, username TEXT, password TEXT, UNIQUE (host, realm) ON '
+       u'CONFLICT REPLACE)',
+       u'password':
+       u'CREATE TABLE password (_id INTEGER PRIMARY KEY, host TEXT, username '
+       u'TEXT, password TEXT, UNIQUE (host, username) ON CONFLICT REPLACE)'}]
 
   def __init__(self):
     """Initializes a plugin object."""

@@ -65,9 +65,9 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
 
   SCHEMAS = [
       {u'application_usage':
-          u'CREATE TABLE application_usage (event TEXT,bundle_id '
-          u'TEXT,app_version TEXT,app_path TEXT,last_time INTEGER DEFAULT '
-          u'0,number_times INTEGER DEFAULT 0,PRIMARY KEY (event, bundle_id))'}]
+       u'CREATE TABLE application_usage (event TEXT,bundle_id '
+       u'TEXT,app_version TEXT,app_path TEXT,last_time INTEGER DEFAULT '
+       u'0,number_times INTEGER DEFAULT 0,PRIMARY KEY (event, bundle_id))'}]
 
   def ParseApplicationUsageRow(
       self, parser_mediator, row, query=None, **unused_kwargs):

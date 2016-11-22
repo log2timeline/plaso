@@ -146,84 +146,81 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
 
   SCHEMAS = [
       {u'Lists':
-          u'CREATE TABLE Lists ( \'id\' INTEGER PRIMARY KEY, \'name\' TEXT, '
-          u'\'slug\' TEXT, \'desc\' TEXT, \'private\' INTEGER, '
-          u'\'subscriberCount\' INTEGER, \'memberCount\' INTEGER, \'userId\' '
-          u'INTEGER, \'updatedAt\' REAL )',
-      u'ListsShadow':
-          u'CREATE TABLE ListsShadow ( \'id\' INTEGER PRIMARY KEY, \'name\' '
-          u'TEXT, \'slug\' TEXT, \'desc\' TEXT, \'private\' INTEGER, '
-          u'\'subscriberCount\' INTEGER, \'memberCount\' INTEGER, \'userId\' '
-          u'INTEGER, \'updatedAt\' REAL )',
-      u'MyRetweets':
-          u'CREATE TABLE MyRetweets ( \'statusId\' INTEGER PRIMARY KEY, '
-          u'\'myRetweetId\' INTEGER )',
-      u'Statuses':
-          u'CREATE TABLE Statuses ( \'id\' INTEGER PRIMARY KEY, \'text\' '
-          u'TEXT, \'date\' REAL, \'userId\' INTEGER, \'inReplyToStatusId\' '
-          u'INTEGER, \'retweetedStatusId\' INTEGER, \'geotag\' BLOB, '
-          u'\'entities\' BLOB, \'card\' BLOB, \'cardUsers\' BLOB, '
-          u'\'primaryCardType\' INTEGER, \'cardVersion\' INTEGER, '
-          u'\'retweetCount\' INTEGER, \'favoriteCount\' INTEGER, '
-          u'\'favorited\' INTEGER, \'updatedAt\' REAL, \'extraScribeItem\' '
-          u'BLOB, \'withheldScope\' TEXT, \'withheldInCountries\' TEXT, '
-          u'\'inReplyToUsername\' TEXT, \'possiblySensitive\' INTEGER, '
-          u'\'isPossiblySensitiveAppealable\' INTEGER, \'isLifelineAlert\' '
-          u'INTEGER, \'isTruncated\' INTEGER, \'previewLength\' INTEGER, '
-          u'\'fullTextLength\' INTEGER, \'lang\' TEXT, '
-          u'\'supplmentalLanguage\' TEXT, \'includeInProfileTimeline\' '
-          u'INTEGER, \'quotedStatusId\' INTEGER, \'source\' TEXT )',
-      u'StatusesShadow':
-          u'CREATE TABLE StatusesShadow ( \'id\' INTEGER PRIMARY KEY, '
-          u'\'text\' TEXT, \'date\' REAL, \'userId\' INTEGER, '
-          u'\'inReplyToStatusId\' INTEGER, \'retweetedStatusId\' INTEGER, '
-          u'\'geotag\' BLOB, \'entities\' BLOB, \'card\' BLOB, \'cardUsers\' '
-          u'BLOB, \'primaryCardType\' INTEGER, \'cardVersion\' INTEGER, '
-          u'\'retweetCount\' INTEGER, \'favoriteCount\' INTEGER, '
-          u'\'favorited\' INTEGER, \'updatedAt\' REAL, \'extraScribeItem\' '
-          u'BLOB, \'withheldScope\' TEXT, \'withheldInCountries\' TEXT, '
-          u'\'inReplyToUsername\' TEXT, \'possiblySensitive\' INTEGER, '
-          u'\'isPossiblySensitiveAppealable\' INTEGER, \'isLifelineAlert\' '
-          u'INTEGER, \'isTruncated\' INTEGER, \'previewLength\' INTEGER, '
-          u'\'fullTextLength\' INTEGER, \'lang\' TEXT, '
-          u'\'supplementalLanguage\' TEXT, \'includeInProfileTimeline\' '
-          u'INTEGER, \'quotedStatusId\' INTEGER, \'source\' TEXT )',
-      u'Users':
-          u'CREATE TABLE Users ( \'id\' INTEGER PRIMARY KEY, \'screenName\' '
-          u'TEXT COLLATE NOCASE, \'profileImageUrl\' TEXT, '
-          u'\'profileBannerUrl\' TEXT, \'profileLinkColorHexTriplet\' '
-          u'INTEGER, \'name\' TEXT, \'location\' TEXT, \'structuredLocation\' '
-          u'BLOB, \'description\' TEXT, \'url\' TEXT, \'urlEntities\' BLOB, '
-          u'\'bioEntities\' BLOB, \'protected\' INTEGER, \'verified\' '
-          u'INTEGER, \'following\' INTEGER, \'deviceFollowing\' INTEGER, '
-          u'\'advertiserAccountType\' INTEGER, \'statusesCount\' INTEGER, '
-          u'\'mediaCount\' INTEGER, \'favoritesCount\' INTEGER, '
-          u'\'followingCount\' INTEGER, \'followersCount\' INTEGER, '
-          u'\'followersCountFast\' INTEGER, \'followersCountNormal\' INTEGER, '
-          u'\'couldBeStale\' INTEGER, \'isLifelineInstitution\' INTEGER, '
-          u'\'hasCollections\' INTEGER, \'updatedAt\' REAL, \'createdDate\' '
-          u'REAL, \'isTranslator\' INTEGER, \'hasExtendedProfileFields\' '
-          u'INTEGER, \'extendedProfileFields\' BLOB, \'pinnedTweetId\' '
-          u'INTEGER, \'businessProfileState\' INTEGER, \'analyticsType\' '
-          u'INTEGER )',
-      u'UsersShadow':
-          u'CREATE TABLE UsersShadow ( \'id\' INTEGER PRIMARY KEY, '
-          u'\'screenName\' TEXT COLLATE NOCASE, \'profileImageUrl\' TEXT, '
-          u'\'profileBannerUrl\' TEXT, \'profileLinkColorHexTriplet\' '
-          u'INTEGER, \'name\' TEXT, \'location\' TEXT, \'structuredLocation\' '
-          u'BLOB, \'description\' TEXT, \'url\' TEXT, \'urlEntities\' BLOB, '
-          u'\'bioEntities\' BLOB, \'protected\' INTEGER, \'verified\' '
-          u'INTEGER, \'following\' INTEGER, \'deviceFollowing\' INTEGER, '
-          u'\'advertiserAccountType\' INTEGER, \'statusesCount\' INTEGER, '
-          u'\'mediaCount\' INTEGER, \'favoritesCount\' INTEGER, '
-          u'\'followingCount\' INTEGER, \'followersCount\' INTEGER, '
-          u'\'followersCountFast\' INTEGER, \'followersCountNormal\' INTEGER, '
-          u'\'couldBeStale\' INTEGER, \'isLifelineInstitution\' INTEGER, '
-          u'\'hasCollections\' INTEGER, \'updatedAt\' REAL, \'createdDate\' '
-          u'REAL, \'isTranslator\' INTEGER, \'hasExtendedProfileFields\' '
-          u'INTEGER, \'extendedProfileFields\' BLOB, \'pinnedTweetId\' '
-          u'INTEGER, \'businessProfileState\' INTEGER, \'analyticsType\' '
-          u'INTEGER )'}]
+       u'CREATE TABLE Lists ( \'id\' INTEGER PRIMARY KEY, \'name\' TEXT, '
+       u'\'slug\' TEXT, \'desc\' TEXT, \'private\' INTEGER, '
+       u'\'subscriberCount\' INTEGER, \'memberCount\' INTEGER, \'userId\' '
+       u'INTEGER, \'updatedAt\' REAL )',
+       u'ListsShadow':
+       u'CREATE TABLE ListsShadow ( \'id\' INTEGER PRIMARY KEY, \'name\' '
+       u'TEXT, \'slug\' TEXT, \'desc\' TEXT, \'private\' INTEGER, '
+       u'\'subscriberCount\' INTEGER, \'memberCount\' INTEGER, \'userId\' '
+       u'INTEGER, \'updatedAt\' REAL )',
+       u'MyRetweets':
+       u'CREATE TABLE MyRetweets ( \'statusId\' INTEGER PRIMARY KEY, '
+       u'\'myRetweetId\' INTEGER )',
+       u'Statuses':
+       u'CREATE TABLE Statuses ( \'id\' INTEGER PRIMARY KEY, \'text\' TEXT, '
+       u'\'date\' REAL, \'userId\' INTEGER, \'inReplyToStatusId\' INTEGER, '
+       u'\'retweetedStatusId\' INTEGER, \'geotag\' BLOB, \'entities\' BLOB, '
+       u'\'card\' BLOB, \'cardUsers\' BLOB, \'primaryCardType\' INTEGER, '
+       u'\'cardVersion\' INTEGER, \'retweetCount\' INTEGER, '
+       u'\'favoriteCount\' INTEGER, \'favorited\' INTEGER, \'updatedAt\' '
+       u'REAL, \'extraScribeItem\' BLOB, \'withheldScope\' TEXT, '
+       u'\'withheldInCountries\' TEXT, \'inReplyToUsername\' TEXT, '
+       u'\'possiblySensitive\' INTEGER, \'isPossiblySensitiveAppealable\' '
+       u'INTEGER, \'isLifelineAlert\' INTEGER, \'isTruncated\' INTEGER, '
+       u'\'previewLength\' INTEGER, \'fullTextLength\' INTEGER, \'lang\' '
+       u'TEXT, \'supplmentalLanguage\' TEXT, \'includeInProfileTimeline\' '
+       u'INTEGER, \'quotedStatusId\' INTEGER, \'source\' TEXT )',
+       u'StatusesShadow':
+       u'CREATE TABLE StatusesShadow ( \'id\' INTEGER PRIMARY KEY, \'text\' '
+       u'TEXT, \'date\' REAL, \'userId\' INTEGER, \'inReplyToStatusId\' '
+       u'INTEGER, \'retweetedStatusId\' INTEGER, \'geotag\' BLOB, '
+       u'\'entities\' BLOB, \'card\' BLOB, \'cardUsers\' BLOB, '
+       u'\'primaryCardType\' INTEGER, \'cardVersion\' INTEGER, '
+       u'\'retweetCount\' INTEGER, \'favoriteCount\' INTEGER, \'favorited\' '
+       u'INTEGER, \'updatedAt\' REAL, \'extraScribeItem\' BLOB, '
+       u'\'withheldScope\' TEXT, \'withheldInCountries\' TEXT, '
+       u'\'inReplyToUsername\' TEXT, \'possiblySensitive\' INTEGER, '
+       u'\'isPossiblySensitiveAppealable\' INTEGER, \'isLifelineAlert\' '
+       u'INTEGER, \'isTruncated\' INTEGER, \'previewLength\' INTEGER, '
+       u'\'fullTextLength\' INTEGER, \'lang\' TEXT, \'supplementalLanguage\' '
+       u'TEXT, \'includeInProfileTimeline\' INTEGER, \'quotedStatusId\' '
+       u'INTEGER, \'source\' TEXT )',
+       u'Users':
+       u'CREATE TABLE Users ( \'id\' INTEGER PRIMARY KEY, \'screenName\' '
+       u'TEXT COLLATE NOCASE, \'profileImageUrl\' TEXT, \'profileBannerUrl\' '
+       u'TEXT, \'profileLinkColorHexTriplet\' INTEGER, \'name\' TEXT, '
+       u'\'location\' TEXT, \'structuredLocation\' BLOB, \'description\' '
+       u'TEXT, \'url\' TEXT, \'urlEntities\' BLOB, \'bioEntities\' BLOB, '
+       u'\'protected\' INTEGER, \'verified\' INTEGER, \'following\' INTEGER, '
+       u'\'deviceFollowing\' INTEGER, \'advertiserAccountType\' INTEGER, '
+       u'\'statusesCount\' INTEGER, \'mediaCount\' INTEGER, '
+       u'\'favoritesCount\' INTEGER, \'followingCount\' INTEGER, '
+       u'\'followersCount\' INTEGER, \'followersCountFast\' INTEGER, '
+       u'\'followersCountNormal\' INTEGER, \'couldBeStale\' INTEGER, '
+       u'\'isLifelineInstitution\' INTEGER, \'hasCollections\' INTEGER, '
+       u'\'updatedAt\' REAL, \'createdDate\' REAL, \'isTranslator\' INTEGER, '
+       u'\'hasExtendedProfileFields\' INTEGER, \'extendedProfileFields\' '
+       u'BLOB, \'pinnedTweetId\' INTEGER, \'businessProfileState\' INTEGER, '
+       u'\'analyticsType\' INTEGER )',
+       u'UsersShadow':
+       u'CREATE TABLE UsersShadow ( \'id\' INTEGER PRIMARY KEY, '
+       u'\'screenName\' TEXT COLLATE NOCASE, \'profileImageUrl\' TEXT, '
+       u'\'profileBannerUrl\' TEXT, \'profileLinkColorHexTriplet\' INTEGER, '
+       u'\'name\' TEXT, \'location\' TEXT, \'structuredLocation\' BLOB, '
+       u'\'description\' TEXT, \'url\' TEXT, \'urlEntities\' BLOB, '
+       u'\'bioEntities\' BLOB, \'protected\' INTEGER, \'verified\' INTEGER, '
+       u'\'following\' INTEGER, \'deviceFollowing\' INTEGER, '
+       u'\'advertiserAccountType\' INTEGER, \'statusesCount\' INTEGER, '
+       u'\'mediaCount\' INTEGER, \'favoritesCount\' INTEGER, '
+       u'\'followingCount\' INTEGER, \'followersCount\' INTEGER, '
+       u'\'followersCountFast\' INTEGER, \'followersCountNormal\' INTEGER, '
+       u'\'couldBeStale\' INTEGER, \'isLifelineInstitution\' INTEGER, '
+       u'\'hasCollections\' INTEGER, \'updatedAt\' REAL, \'createdDate\' '
+       u'REAL, \'isTranslator\' INTEGER, \'hasExtendedProfileFields\' '
+       u'INTEGER, \'extendedProfileFields\' BLOB, \'pinnedTweetId\' INTEGER, '
+       u'\'businessProfileState\' INTEGER, \'analyticsType\' INTEGER )'}]
 
   def ParseContactRow(self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a contact row from the database.

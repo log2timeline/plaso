@@ -72,12 +72,12 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
 
   SCHEMAS = [
       {u'moz_cookies':
-          u'CREATE TABLE moz_cookies (id INTEGER PRIMARY KEY, baseDomain '
-          u'TEXT, appId INTEGER DEFAULT 0, inBrowserElement INTEGER DEFAULT '
-          u'0, name TEXT, value TEXT, host TEXT, path TEXT, expiry INTEGER, '
-          u'lastAccessed INTEGER, creationTime INTEGER, isSecure INTEGER, '
-          u'isHttpOnly INTEGER, CONSTRAINT moz_uniqueid UNIQUE (name, host, '
-          u'path, appId, inBrowserElement))'}]
+       u'CREATE TABLE moz_cookies (id INTEGER PRIMARY KEY, baseDomain TEXT, '
+       u'appId INTEGER DEFAULT 0, inBrowserElement INTEGER DEFAULT 0, name '
+       u'TEXT, value TEXT, host TEXT, path TEXT, expiry INTEGER, '
+       u'lastAccessed INTEGER, creationTime INTEGER, isSecure INTEGER, '
+       u'isHttpOnly INTEGER, CONSTRAINT moz_uniqueid UNIQUE (name, host, '
+       u'path, appId, inBrowserElement))'}]
 
   # Point to few sources for URL information.
   URLS = [

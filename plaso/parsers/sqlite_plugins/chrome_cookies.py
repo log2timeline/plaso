@@ -63,15 +63,14 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
 
   SCHEMAS = [
       {u'cookies':
-          u'CREATE TABLE cookies (creation_utc INTEGER NOT NULL UNIQUE '
-          u'PRIMARY KEY,host_key TEXT NOT NULL,name TEXT NOT NULL,value TEXT '
-          u'NOT NULL,path TEXT NOT NULL,expires_utc INTEGER NOT NULL,secure '
-          u'INTEGER NOT NULL,httponly INTEGER NOT NULL,last_access_utc '
-          u'INTEGER NOT NULL, has_expires INTEGER DEFAULT 1, persistent '
-          u'INTEGER DEFAULT 1)',
-      u'meta':
-          u'CREATE TABLE meta(key LONGVARCHAR NOT NULL UNIQUE PRIMARY '
-          u'KEY,value LONGVARCHAR)'}]
+       u'CREATE TABLE cookies (creation_utc INTEGER NOT NULL UNIQUE PRIMARY '
+       u'KEY,host_key TEXT NOT NULL,name TEXT NOT NULL,value TEXT NOT '
+       u'NULL,path TEXT NOT NULL,expires_utc INTEGER NOT NULL,secure INTEGER '
+       u'NOT NULL,httponly INTEGER NOT NULL,last_access_utc INTEGER NOT '
+       u'NULL, has_expires INTEGER DEFAULT 1, persistent INTEGER DEFAULT 1)',
+       u'meta':
+       u'CREATE TABLE meta(key LONGVARCHAR NOT NULL UNIQUE PRIMARY KEY,value '
+       u'LONGVARCHAR)'}]
 
   # Point to few sources for URL information.
   URLS = [

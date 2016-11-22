@@ -140,19 +140,19 @@ class MacKeeperCachePlugin(interface.SQLitePlugin):
 
   SCHEMAS = [
       {u'cfurl_cache_blob_data':
-          u'CREATE TABLE cfurl_cache_blob_data(entry_ID INTEGER PRIMARY KEY, '
-          u'response_object BLOB, request_object BLOB, proto_props BLOB, '
-          u'user_info BLOB)',
-      u'cfurl_cache_receiver_data':
-          u'CREATE TABLE cfurl_cache_receiver_data(entry_ID INTEGER PRIMARY '
-          u'KEY, receiver_data BLOB)',
-      u'cfurl_cache_response':
-          u'CREATE TABLE cfurl_cache_response(entry_ID INTEGER PRIMARY KEY '
-          u'AUTOINCREMENT UNIQUE, version INTEGER, hash_value INTEGER, '
-          u'storage_policy INTEGER, request_key TEXT UNIQUE, time_stamp NOT '
-          u'NULL DEFAULT CURRENT_TIMESTAMP, partition TEXT)',
-      u'cfurl_cache_schema_version':
-          u'CREATE TABLE cfurl_cache_schema_version(schema_version INTEGER)'}]
+       u'CREATE TABLE cfurl_cache_blob_data(entry_ID INTEGER PRIMARY KEY, '
+       u'response_object BLOB, request_object BLOB, proto_props BLOB, '
+       u'user_info BLOB)',
+       u'cfurl_cache_receiver_data':
+       u'CREATE TABLE cfurl_cache_receiver_data(entry_ID INTEGER PRIMARY '
+       u'KEY, receiver_data BLOB)',
+       u'cfurl_cache_response':
+       u'CREATE TABLE cfurl_cache_response(entry_ID INTEGER PRIMARY KEY '
+       u'AUTOINCREMENT UNIQUE, version INTEGER, hash_value INTEGER, '
+       u'storage_policy INTEGER, request_key TEXT UNIQUE, time_stamp NOT '
+       u'NULL DEFAULT CURRENT_TIMESTAMP, partition TEXT)',
+       u'cfurl_cache_schema_version':
+       u'CREATE TABLE cfurl_cache_schema_version(schema_version INTEGER)'}]
 
   def ParseReceiverData(
       self, parser_mediator, row, query=None, **unused_kwargs):

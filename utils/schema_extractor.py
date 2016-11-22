@@ -7,10 +7,9 @@ Requires jinja2 and pyperclip python modules.
 """
 
 import argparse
+import jinja2  # pylint: disable=import-error
 import os
-import jinja2
-import pyperclip
-import sqlite3
+import pyperclip  # pylint: disable=import-error
 
 from plaso.parsers import sqlite
 
@@ -59,14 +58,14 @@ if __name__ == u'__main__':
     {% if loop.first %}
       {u'{{ table }}':
     {% else %}
-      u'{{ table }}':
+       u'{{ table }}':
     {% endif %}
-          u'{{ query|wordwrap(65, wrapstring=" '\n          u'") }}'
-            {%- if not loop.last -%}
-              ,
-            {% else -%}
-              }
-            {%- endif %}
+       u'{{ query|wordwrap(67, wrapstring=" '\n       u'") }}'
+         {%- if not loop.last -%}
+          ,
+         {% else -%}
+          }
+         {%- endif %}
   {%- endfor %}''')
   schema = template.render(schema=schema)
 
