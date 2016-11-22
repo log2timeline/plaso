@@ -7,8 +7,8 @@ Requires jinja2 and pyperclip python modules.
 """
 
 import argparse
-import jinja2  # pylint: disable=import-error
 import os
+import jinja2  # pylint: disable=import-error
 import pyperclip  # pylint: disable=import-error
 
 from plaso.parsers import sqlite

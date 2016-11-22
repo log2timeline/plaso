@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """This file contains a parser for the Mozilla Firefox history."""
 
+# pylint: disable=wrong-import-order
 try:
   from pysqlite2 import dbapi2 as sqlite3
 except ImportError:
