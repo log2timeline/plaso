@@ -518,7 +518,7 @@ class PathFilterScanTree(object):
 
     scan_object = self._root_node
     while scan_object:
-      if isinstance(scan_object, basestring):
+      if isinstance(scan_object, py2to3.STRING_TYPES):
         break
 
       if scan_object.path_segment_index >= number_of_path_segments:
@@ -528,7 +528,7 @@ class PathFilterScanTree(object):
       path_segment = path_segments[scan_object.path_segment_index]
       scan_object = scan_object.GetScanObject(path_segment)
 
-    if not isinstance(scan_object, basestring):
+    if not isinstance(scan_object, py2to3.STRING_TYPES):
       return False
 
     filter_path_segments = scan_object.split(self._path_segment_separator)
@@ -644,7 +644,7 @@ class PathFilterScanTreeNode(object):
         text_parts.append(u'{0:s}scan tree node:\n'.format(indentation))
         text_parts.append(scan_object.ToDebugString(indentation_level + 1))
 
-      elif isinstance(scan_object, basestring):
+      elif isinstance(scan_object, py2to3.STRING_TYPES):
         text_parts.append(u'{0:s}path: {1:s}\n'.format(
             indentation, scan_object))
 
@@ -654,7 +654,7 @@ class PathFilterScanTreeNode(object):
       text_parts.append(u'{0:s}scan tree node:\n'.format(indentation))
       text_parts.append(self.default_value.ToDebugString(indentation_level + 1))
 
-    elif isinstance(self.default_value, basestring):
+    elif isinstance(self.default_value, py2to3.STRING_TYPES):
       text_parts.append(u'{0:s}pattern: {1:s}\n'.format(
           indentation, self.default_value))
 

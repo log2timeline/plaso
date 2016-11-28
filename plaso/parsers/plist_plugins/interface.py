@@ -250,7 +250,7 @@ def RecurseKey(recur_item, depth=15, key_path=u''):
   # if recur_item.iteritems() should be replaced with iter(recur_item.items()).
   # Note that testing breaks when explictly only allowing
   # plistlib._InternalDict.
-  for subkey, value in recur_item.iteritems():
+  for subkey, value in iter(recur_item.items()):
     yield key_path, subkey, value
 
     if isinstance(value, dict):

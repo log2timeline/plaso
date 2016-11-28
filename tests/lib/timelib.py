@@ -315,7 +315,7 @@ class TimeLibTest(unittest.TestCase):
     self.assertEqual(timestamp, expected_timestamp)
 
     # WebKit time that exceeds lower bound.
-    webkit_time = -((1 << 63L) - 1)
+    webkit_time = -((1 << 63) - 1)
     self.assertEqual(timelib.Timestamp.FromWebKitTime(webkit_time), 0)
 
   def testMonthDict(self):

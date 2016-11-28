@@ -34,7 +34,7 @@ class OpenXMLParserEvent(time_events.TimestampEvent):
       metadata: A dict object containing extracted metadata.
     """
     super(OpenXMLParserEvent, self).__init__(timestamp, usage)
-    for key, value in metadata.iteritems():
+    for key, value in iter(metadata.items()):
       setattr(self, key, value)
 
 
