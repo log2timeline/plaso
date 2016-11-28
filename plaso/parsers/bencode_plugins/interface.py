@@ -100,7 +100,7 @@ class BencodePlugin(plugins.BasePlugin):
     if not hasattr(recur_item, u'iteritems'):
       return
 
-    for key, value in recur_item.iteritems():
+    for key, value in iter(recur_item.items()):
       yield root, key, value
       if isinstance(value, dict):
         value = [value]

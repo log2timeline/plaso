@@ -142,7 +142,7 @@ class WinPrefetchParser(interface.FileObjectParser):
       if file_reference:
         mapped_file_string = (
             u'{0:s} [MFT entry: {1:d}, sequence: {2:d}]').format(
-                mapped_file_string, file_reference & 0xffffffffffffL,
+                mapped_file_string, file_reference & 0xffffffffffff,
                 file_reference >> 48)
 
       mapped_files.append(mapped_file_string)

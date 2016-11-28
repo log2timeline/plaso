@@ -166,7 +166,7 @@ class BagMRUPlugin(interface.WindowsRegistryPlugin):
         offset=key.offset, source_append=self._SOURCE_APPEND, urls=self.URLS)
     parser_mediator.ProduceEvent(event_object)
 
-    for entry_number, path_segment in entry_numbers.iteritems():
+    for entry_number, path_segment in iter(entry_numbers.items()):
       sub_key = key.GetSubkeyByName(u'{0:d}'.format(entry_number))
       if not sub_key:
         parser_mediator.ProduceExtractionError(
