@@ -340,19 +340,19 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
       RuntimeError: if the attribute container type is not supported.
     """
     container_type = attribute_container.CONTAINER_TYPE
-    if container_type == 'event_source':
+    if container_type == u'event_source':
       self._storage_writer.AddEventSource(attribute_container)
 
-    elif container_type == 'event':
+    elif container_type == u'event':
       self._storage_writer.AddEvent(attribute_container)
 
-    elif container_type == 'event_tag':
+    elif container_type == u'event_tag':
       self._storage_writer.AddEventTag(attribute_container)
 
-    elif container_type == 'extraction_error':
+    elif container_type == u'extraction_error':
       self._storage_writer.AddError(attribute_container)
 
-    elif container_type == 'analysis_report':
+    elif container_type == u'analysis_report':
       self._storage_writer.AddAnalysisReport(attribute_container)
 
     elif container_type not in (u'task_completion', u'task_start'):
@@ -406,17 +406,17 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
       lines = self._data_buffer.splitlines(True)
       self._data_buffer = b''
       for index, line in enumerate(lines):
-        if line.endswith(b'\n'):
-          attribute_container = self._DeserializeAttributeContainer(
-              line, u'attribute_container')
-          self._AddAttributeContainer(attribute_container)
-          number_of_containers += 1
-          if (maximum_number_of_containers > 0 and
-              number_of_containers >= maximum_number_of_containers):
-            self._data_buffer = b''.join(lines[index+1:])
-            return False
-        else:
+        if not line.endswith(b'\n'):
           self._data_buffer = b''.join(lines[index:])
+          continue
+        attribute_container = self._DeserializeAttributeContainer(
+            line, u'attribute_container')
+        self._AddAttributeContainer(attribute_container)
+        number_of_containers += 1
+        if (maximum_number_of_containers > 0 and
+            number_of_containers >= maximum_number_of_containers):
+          self._data_buffer = b''.join(lines[index+1:])
+          return False
       additional_data_buffer = self._gzip_file.read(self._DATA_BUFFER_SIZE)
       self._data_buffer = b''.join([self._data_buffer, additional_data_buffer])
 
