@@ -318,6 +318,7 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
       except IOError:
         if attempt == (self._MAXIMUM_NUMBER_OF_LOCKED_FILE_ATTEMPTS - 1):
           raise
+        time.sleep(self._LOCKED_FILE_SLEEP_TIME)
 
     if platform_specific.PlatformIsWindows():
       file_handle = gzip_file.fileno()
