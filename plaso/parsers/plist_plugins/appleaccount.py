@@ -54,7 +54,7 @@ class AppleAccountPlugin(interface.PlistPlugin):
     if not u'Accounts' in match:
       return
 
-    for name_account, account in match[u'Accounts'].iteritems():
+    for name_account, account in iter(match[u'Accounts'].items()):
       general_description = u'{0:s} ({1:s} {2:s})'.format(
           name_account, account.get(u'FirstName', u'<FirstName>'),
           account.get(u'LastName', u'<LastName>'))
