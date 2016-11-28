@@ -117,5 +117,5 @@ class TestEvent(events.EventObject):
     super(TestEvent, self).__init__()
     self.timestamp = timestamp
     self.timestamp_desc = u'Some time in the future'
-    for attribute, value in attributes.iteritems():
+    for attribute, value in iter(attributes.items()):
       setattr(self, attribute, value)

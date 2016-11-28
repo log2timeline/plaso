@@ -16,7 +16,7 @@ from plaso.parsers.sqlite_plugins import interface
 def DictToList(data_dict):
   """Take a dict object and return a list of strings back."""
   ret_list = []
-  for key, value in data_dict.iteritems():
+  for key, value in iter(data_dict.items()):
     if key in [u'body', u'datetime', u'type', u'room', u'rooms', u'id']:
       continue
     ret_list.append(u'{0:s} = {1!s}'.format(key, value))

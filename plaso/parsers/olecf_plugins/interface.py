@@ -50,7 +50,7 @@ class OlecfPlugin(plugins.BasePlugin):
 
     # Office template documents sometimes contain a creation time
     # of -1 (0xffffffffffffffff).
-    if creation_time == 0xffffffffffffffffL:
+    if creation_time == 0xffffffffffffffff:
       creation_time = 0
 
     return creation_time, modification_time
