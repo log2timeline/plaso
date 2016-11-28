@@ -81,6 +81,7 @@ The popularity-contest output looks like this:
 """
 
 import logging
+import sys
 
 import pyparsing
 
@@ -148,9 +149,14 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
   DESCRIPTION = u'Parser for popularity contest log files.'
 
   _ASCII_PRINTABLES = pyparsing.printables
-  _UNICODE_PRINTABLES = u''.join(
-      unichr(character) for character in xrange(65536)
-      if not unichr(character).isspace())
+  if sys.version_info[0] < 3:
+    _UNICODE_PRINTABLES = u''.join(
+        unichr(character) for character in xrange(65536)
+        if not unichr(character).isspace())
+  else:
+    _UNICODE_PRINTABLES = u''.join(
+        chr(character) for character in range(65536)
+        if not chr(character).isspace())
 
   MRU = pyparsing.Word(_UNICODE_PRINTABLES).setResultsName(u'mru')
   PACKAGE = pyparsing.Word(_ASCII_PRINTABLES).setResultsName(u'package')
