@@ -233,7 +233,6 @@ class TaskManager(object):
       self._active_tasks[task.identifier] = task
       self._tasks_processing[task.identifier] = task
 
-
   def UpdateTaskByIdentifier(self, task_identifier):
     """Updates a task.
 
