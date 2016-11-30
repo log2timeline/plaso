@@ -26,7 +26,7 @@ class IPodPlistEvent(time_events.PythonDatetimeEvent):
     self.device_id = device_id
 
     # Save the other attributes.
-    for key, value in device_info.iteritems():
+    for key, value in iter(device_info.items()):
       if key == u'Connected':
         continue
       attribute_name = key.lower().replace(u' ', u'_')
@@ -56,7 +56,7 @@ class IPodPlugin(interface.PlistPlugin):
     if not devices:
       return
 
-    for device, device_info in devices.iteritems():
+    for device, device_info in iter(devices.items()):
       if u'Connected' not in device_info:
         continue
       event_object = IPodPlistEvent(

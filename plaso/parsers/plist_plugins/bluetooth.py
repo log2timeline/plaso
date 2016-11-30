@@ -43,7 +43,7 @@ class BluetoothPlugin(interface.PlistPlugin):
     if u'DeviceCache' not in match:
       return
 
-    for device, value in match[u'DeviceCache'].iteritems():
+    for device, value in iter(match[u'DeviceCache'].items()):
       name = value.get(u'Name', u'')
       if name:
         name = u''.join((u'Name:', name))

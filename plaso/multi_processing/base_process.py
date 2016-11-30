@@ -9,7 +9,7 @@ import random
 import signal
 import time
 
-from plaso.multi_processing import xmlrpc
+from plaso.multi_processing import plaso_xmlrpc
 
 
 class MultiProcessBaseProcess(multiprocessing.Process):
@@ -107,7 +107,7 @@ class MultiProcessBaseProcess(multiprocessing.Process):
     if self._rpc_server:
       return
 
-    self._rpc_server = xmlrpc.XMLProcessStatusRPCServer(self._GetStatus)
+    self._rpc_server = plaso_xmlrpc.XMLProcessStatusRPCServer(self._GetStatus)
 
     hostname = u'localhost'
 

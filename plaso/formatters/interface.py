@@ -85,7 +85,7 @@ class EventFormatter(object):
       logging.error(error_message)
 
       attribute_values = []
-      for attribute, value in event_values.iteritems():
+      for attribute, value in iter(event_values.items()):
         attribute_values.append(u'{0:s}: {1!s}'.format(attribute, value))
 
       message_string = u' '.join(attribute_values)

@@ -2,12 +2,19 @@
 """XML RPC proxy server and client."""
 
 import logging
-import SimpleXMLRPCServer
-import SocketServer
+import sys
 import threading
-import xmlrpclib
 
-from xml.parsers import expat
+if sys.version_info[0] < 3:
+  import xmlrpclib
+  import SimpleXMLRPCServer
+  import SocketServer
+else:
+  from xmlrpc.server import SimpleXMLRPCServer  # pylint: disable=import-error
+  from xmlrpc import client as xmlrpclib  # pylint: disable=import-error
+  import socketserver as SocketServer  # pylint: disable=import-error
+
+from xml.parsers import expat # pylint: disable=wrong-import-order
 
 from plaso.multi_processing import rpc
 

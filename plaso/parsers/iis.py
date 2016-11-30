@@ -38,7 +38,7 @@ class IISEventObject(time_events.TimestampEvent):
     super(IISEventObject, self).__init__(
         timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
 
-    for key, value in structure.iteritems():
+    for key, value in iter(structure.items()):
       if key in [u'time', u'date']:
         continue
       if value == u'-':
