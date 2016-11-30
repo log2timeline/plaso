@@ -9,18 +9,18 @@ from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
-class ProdBashTest(test_lib.ParserTestCase):
+class BashHistoryTest(test_lib.ParserTestCase):
   """Test for the bash history parser."""
 
   def setUp(self):
-    """Sets up the needed objects used throughout the test."""
+    """Makes preparations before running an individual test."""
     self._parser_object = bash_history.BashParser()
 
   @shared_test_lib.skipUnlessHasTestFile([u'bash_history_desync'])
   def testParsingExtractionDesync(self):
-    """Test that the parser correctly handles a desynchronised file.
+    """Tests that the parser correctly handles a desynchronized file.
 
-    A desynchronised file is one with half an event at the top. ie, it starts
+    A desynchronized file is one with half an event at the top. ie, it starts
     with a command line instead of a timestamp.
     """
     storage_writer = self._ParseFile(
@@ -30,19 +30,21 @@ class ProdBashTest(test_lib.ParserTestCase):
 
   @shared_test_lib.skipUnlessHasTestFile([u'bash_history'])
   def testParsingExtractionSync(self):
-    """Test that the parser correctly handles a synchronised file.
+    """Tests that the parser correctly handles a synchronised file.
 
     A synchronised file is one with an event at the top. ie, it starts
     with a timestamp line.
     """
-    storage_writer = self._ParseFile(
-        [u'bash_history'], self._parser_object)
+    storage_writer = self._ParseFile([u'bash_history'], self._parser_object)
     events = storage_writer.events
     self._TestEventsFromFile(events)
 
-
-
   def _TestEventsFromFile(self, events):
+    """Validates that all events are as expected.
+
+    Args:
+      events: events to check values of.
+    """
     # There are three events in the test log
     self.assertEqual(len(events), 3)
 

@@ -5,13 +5,14 @@ import re
 import pyparsing
 
 from plaso.containers import time_events
+from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
 class BashEvent(time_events.PosixTimeEvent):
-  """Convenience class for events from a ProdBash history file."""
+  """Convenience class for events from a Bash history file."""
 
   DATA_TYPE = u'bash:history:command'
 
@@ -19,8 +20,9 @@ class BashEvent(time_events.PosixTimeEvent):
     """Initializes the event object.
 
     Args:
-      timestamp: The timestamp time value, epoch.
-      command: The command that was run
+      timestamp (int): number of seconds after January 1, 1970, 00:00:00 UTC
+          that the command was run.
+      command (str): command that was executed.
     """
     super(BashEvent, self).__init__(
         timestamp, eventdata.EventTimestamp.ADDED_TIME)
@@ -28,54 +30,63 @@ class BashEvent(time_events.PosixTimeEvent):
 
 
 class BashParser(text_parser.PyparsingMultiLineTextParser):
-  """Parses event from Bash history on production machines."""
+  """Parses events from Bash history files."""
 
   NAME = u'bash'
+
   DESCRIPTION = u'Parser for Bash history files'
+
+  _ENCODING = u'utf-8'
 
   # Matches timestamps between ~2001 and ~2033, by which time this code
   # has hopefully been deprecated.
-  TIMESTAMP = pyparsing.Suppress('#') + pyparsing.Word(
+  _TIMESTAMP = pyparsing.Suppress('#') + pyparsing.Word(
       pyparsing.nums, exact=10).setParseAction(
           text_parser.PyParseIntCast).setResultsName(u'timestamp')
-  COMMAND = pyparsing.Regex(
+
+  _COMMAND = pyparsing.Regex(
       r'.*?(?=($|\n#\d{10}))', re.DOTALL).setResultsName(u'command')
-  LINE_GRAMMAR = TIMESTAMP + COMMAND + pyparsing.lineEnd()
-  VERIFICATION_GRAMMAR = (pyparsing.Regex(r'^\s?[^#].*?$', re.MULTILINE) +
-                          TIMESTAMP +
-                          pyparsing.NotAny(pyparsing.pythonStyleComment))
-  LINE_STRUCTURES = [(u'log_entry', LINE_GRAMMAR)]
 
-  def VerifyStructure(self, parser_mediator, line):
-    """Verify that this file is a bash history file.
+  _LINE_GRAMMAR = _TIMESTAMP + _COMMAND + pyparsing.lineEnd()
 
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      line: A single line from the text file.
+  _VERIFICATION_GRAMMAR = (pyparsing.Regex(r'^\s?[^#].*?$', re.MULTILINE) +
+                           _TIMESTAMP +
+                           pyparsing.NotAny(pyparsing.pythonStyleComment))
 
-    Returns:
-      True if this is the correct parser, False otherwise.
-    """
-    matches = self.VERIFICATION_GRAMMAR.scanString(line, maxMatches=1)
-    if list(matches):
-      return True
+  LINE_STRUCTURES = [(u'log_entry', _LINE_GRAMMAR)]
 
-
-  def ParseRecord(self, parser_mediator, key, structure):
+  def ParseRecord(self, mediator, key, structure):
     """Parses a record and produces a Bash history event.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      key: an string indicating the name of the parsed structure.
-      structure: the elements parsed from the file (instance of
-                 pyparsing.ParseResults).
+      mediator (ParserMediator): mediates the interactions between
+          parsers and other components, such as storage and abort signals.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): elements parsed from the file.
 
     Raises:
       UnableToParseFile: if an unsupported key is provided.
     """
     if key == u'log_entry':
       event_object = BashEvent(structure.timestamp, structure.command)
-      parser_mediator.ProduceEvent(event_object)
+      mediator.ProduceEvent(event_object)
+    else:
+      raise errors.UnableToParseFile(u'Unsupported key: {0:s}'.format(key))
+
+  def VerifyStructure(self, unused_mediator, line):
+    """Verifies that this is a bash history file.
+
+    Args:
+      mediator (ParserMediator): mediates the interactions between
+          parsers and other components, such as storage and abort signals.
+      line (str): single line from the text file.
+
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
+    """
+    matches = self._VERIFICATION_GRAMMAR.scanString(line, maxMatches=1)
+    if list(matches):
+      return True
 
 
 manager.ParsersManager.RegisterParser(BashParser)

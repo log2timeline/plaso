@@ -4,7 +4,7 @@ from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-class BashFormatter(interface.EventFormatter):
+class BashHistoryFormatter(interface.EventFormatter):
   """Formatter for Bash history events."""
 
   # Identifier for event data
@@ -16,4 +16,5 @@ class BashFormatter(interface.EventFormatter):
   SOURCE_SHORT = u'LOG'
   SOURCE_LONG = u'Bash History'
 
-manager.FormattersManager.RegisterFormatter(BashFormatter)
+
+manager.FormattersManager.RegisterFormatter(BashHistoryFormatter)
