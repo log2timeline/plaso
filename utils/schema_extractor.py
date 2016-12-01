@@ -89,6 +89,6 @@ if __name__ == u'__main__':
       help=u'Optional path to a wal file to commit into the database.')
   options = arg_parser.parse_args()
 
-  schema = GetDatabaseSchema(options.database_path, options.wal_path)
-  schema = FormatSchema(schema)
-  pyperclip.copy(schema)
+  database_schema = GetDatabaseSchema(options.database_path, options.wal_path)
+  database_schema = GetFormattedSchema(database_schema)
+  pyperclip.copy(database_schema)
