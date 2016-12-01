@@ -103,7 +103,7 @@ class SQLiteDatabase(object):
     self._database = None
     self._filename = filename
     self._is_open = False
-    self._schema = {}
+    self.schema = {}
     self._temp_db_file_path = u''
     self._temporary_directory = temporary_directory
     self._temp_wal_file_path = u''
@@ -111,12 +111,7 @@ class SQLiteDatabase(object):
   @property
   def tables(self):
     """list[str]: names of all the tables."""
-    return self._schema.keys()
-
-  @property
-  def schema(self):
-    """dict[str, str]: table names mapped to creation query"""
-    return self._schema
+    return self.schema.keys()
 
   def _CopyFileObjectToTemporaryFile(self, file_object, temporary_file):
     """Copies the contents of the file-like object to a temporary file.
@@ -133,7 +128,7 @@ class SQLiteDatabase(object):
 
   def Close(self):
     """Closes the database connection and clean up the temporary file."""
-    self._schema = {}
+    self.schema = {}
 
     if self._is_open:
       self._database.close()
@@ -234,7 +229,7 @@ class SQLiteDatabase(object):
 
       sql_results = cursor.execute(self.SCHEMA_QUERY)
 
-      self._schema = {
+      self.schema = {
           table_name: u' '.join(query.split())
           for table_name, query in sql_results}
 

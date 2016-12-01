@@ -22,23 +22,20 @@ def _existing_path(path):
   return path
 
 
-if __name__ == u'__main__':
+def GetDatabaseSchema(database_path, wal_path=None):
+  """Retrieves schema from given database.
 
-  arg_parser = argparse.ArgumentParser()
-  arg_parser.add_argument(
-      u'database_path', type=_existing_path,
-      help=u'The path to the database file to extract schema from.')
-  arg_parser.add_argument(
-      u'wal_path', type=_existing_path, nargs=u'?', default=None,
-      help=u'Optional path to a wal file to commit into the database.')
+  Args:
+    database_path (str): file path to database.
+    wal_path (Optional[str]): file path to wal file.
 
-  options = arg_parser.parse_args()
-
-  # Get database schema.
+  Returns:
+    database schema as a dictionary of {table_name: SQLCommand}
+  """
   database = sqlite.SQLiteDatabase('database.db')
-  with open(options.database_path, u'rb') as file_object:
-    if options.wal_path:
-      wal_file_object = open(options.wal_path, u'rb')
+  with open(database_path, u'rb') as file_object:
+    if wal_path:
+      wal_file_object = open(wal_path, u'rb')
     else:
       wal_file_object = None
 
@@ -46,9 +43,21 @@ if __name__ == u'__main__':
       database.Open(file_object, wal_file_object=wal_file_object)
       schema = database.schema
     finally:
+      database.Close()
       if wal_file_object:
         wal_file_object.close()
+  return schema
 
+
+def GetFormattedSchema(schema):
+  """Formats schema into a properly wordwrapped string.
+
+  Args:
+    schema (dict): database schema
+
+  Returns:
+    formatted string
+  """
   schema = {
       table: u' '.join(query.split()).replace(u'\'', u'\\\'')
       for table, query in schema.items()}
@@ -67,9 +76,19 @@ if __name__ == u'__main__':
           }
          {%- endif %}
   {%- endfor %}''')
-  schema = template.render(schema=schema)
+  return template.render(schema=schema)
 
+
+if __name__ == u'__main__':
+  arg_parser = argparse.ArgumentParser()
+  arg_parser.add_argument(
+      u'database_path', type=_existing_path,
+      help=u'The path to the database file to extract schema from.')
+  arg_parser.add_argument(
+      u'wal_path', type=_existing_path, nargs=u'?', default=None,
+      help=u'Optional path to a wal file to commit into the database.')
+  options = arg_parser.parse_args()
+
+  schema = GetDatabaseSchema(options.database_path, options.wal_path)
+  schema = FormatSchema(schema)
   pyperclip.copy(schema)
-
-
-
