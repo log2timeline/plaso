@@ -22,7 +22,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         [u'Preferences'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 28)
+    self.assertEqual(len(storage_writer.events), 30)
 
     event = storage_writer.events[0]
     expected_timestamp = timelib.Timestamp.CopyFromString(
@@ -82,7 +82,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
         event, expected_message, expected_message_short)
 
 
-    event = storage_writer.events[22]
+    event = storage_writer.events[24]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-11-14 14:12:50.588973')
     self.assertEqual(event.timestamp, expected_timestamp)
@@ -90,7 +90,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event, expected_message, expected_message)
 
-    event = storage_writer.events[23]
+    event = storage_writer.events[25]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-11-11 16:20:09.866137')
     self.assertEqual(event.timestamp, expected_timestamp)
@@ -100,7 +100,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event, expected_message, expected_message_short)
 
-    event = storage_writer.events[24]
+    event = storage_writer.events[26]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-11-14 14:13:00.639332')
     self.assertEqual(event.timestamp, expected_timestamp)
@@ -111,7 +111,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event, expected_message, expected_message_short)
 
-    event = storage_writer.events[25]
+    event = storage_writer.events[27]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-11-14 14:13:00.627093')
     self.assertEqual(event.timestamp, expected_timestamp)
@@ -121,7 +121,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event, expected_message, expected_message_short)
 
-    event = storage_writer.events[26]
+    event = storage_writer.events[28]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-11-14 14:12:54.899473')
     self.assertEqual(event.timestamp, expected_timestamp)
@@ -131,7 +131,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event, expected_message, expected_message_short)
 
-    event = storage_writer.events[27]
+    event = storage_writer.events[29]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-11-14 14:12:53.667838')
     self.assertEqual(event.timestamp, expected_timestamp)
