@@ -81,6 +81,21 @@ class ChromeContentSettingsExceptionsEvent(time_events.PosixTimeEvent):
               u'{2:s}').format(permission, primary_url, secondary_url)
 
 
+class ChromeExtensionsAutoupdaterEvent(time_events.WebKitTimeEvent):
+  """Convenience class for Chrome Extensions Autoupdater events."""
+
+  DATA_TYPE = u'chrome:preferences:extensions_autoupdater'
+
+  def __init__(self, timestamp, next_update=False):
+    """Initialize the event."""
+    super(ChromeExtensionsAutoupdaterEvent, self).__init__(
+        timestamp, eventdata.EventTimestamp.ADDED_TIME)
+    if next_update:
+      self.message = u'Chrome extensions autoupdater next run'
+    else:
+      self.message = u'Chrome extensions autoupdater last run'
+
+
 class ChromeExtensionInstallationEvent(time_events.WebKitTimeEvent):
   """Convenience class for Chrome Extension events."""
 
@@ -207,12 +222,28 @@ class ChromePreferencesParser(interface.FileObjectParser):
           u'[{0:s}] {1:s} is not a valid Preference file, '
           u'does not contain extensions value.'.format(
               self.NAME, parser_mediator.GetDisplayName()))
+
     extensions_dict = extensions_setting_dict.get(u'settings')
     if not extensions_dict:
       raise errors.UnableToParseFile(
           u'[{0:s}] {1:s} is not a valid Preference file, '
           u'does not contain extensions settings value.'.format(
               self.NAME, parser_mediator.GetDisplayName()))
+
+    extensions_autoupdate_dict = extensions_setting_dict.get(u'autoupdate')
+    if extensions_autoupdate_dict:
+      autoupdate_lastcheck_timestamp = extensions_autoupdate_dict.get(
+          u'last_check', None)
+      if autoupdate_lastcheck_timestamp:
+        autoupdate_lastcheck = int(autoupdate_lastcheck_timestamp, 10)
+        event = ChromeExtensionsAutoupdaterEvent(autoupdate_lastcheck, False)
+        parser_mediator.ProduceEvent(event)
+      autoupdate_nextcheck_timestamp = extensions_autoupdate_dict.get(
+          u'next_check', None)
+      if autoupdate_nextcheck_timestamp:
+        autoupdate_nextcheck = int(autoupdate_nextcheck_timestamp, 10)
+        event = ChromeExtensionsAutoupdaterEvent(autoupdate_nextcheck, True)
+        parser_mediator.ProduceEvent(event)
 
     browser_dict = json_dict.get(u'browser', None)
     if browser_dict and u'last_clear_browsing_data_time' in browser_dict:

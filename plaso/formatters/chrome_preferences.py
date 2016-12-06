@@ -19,6 +19,19 @@ class ChromePreferencesClearHistoryEventFormatter(
   SOURCE_SHORT = u'LOG'
 
 
+class ChromeExtensionsAutoupdaterEvent(interface.ConditionalEventFormatter):
+  """Formatter for Chrome Extensions Autoupdater events."""
+
+  DATA_TYPE = u'chrome:preferences:extensions_autoupdater'
+
+  FORMAT_STRING_PIECES = [u'{message}']
+
+  FORMAT_STRING_SHORT_PIECES = [u'{message}']
+
+  SOURCE_LONG = u'Chrome Extensions Autoupdater'
+  SOURCE_SHORT = u'LOG'
+
+
 class ChromeExtensionInstallationEventFormatter(
     interface.ConditionalEventFormatter):
   """Formatter for a Chrome extension installation event."""
@@ -56,4 +69,5 @@ manager.FormattersManager.RegisterFormatters([
     ChromeExtensionInstallationEventFormatter,
     ChromePreferencesClearHistoryEventFormatter,
     ChromeContentSettingsExceptionsFormatter,
+    ChromeExtensionsAutoupdaterEvent
 ])

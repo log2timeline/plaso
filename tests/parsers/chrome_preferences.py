@@ -22,10 +22,27 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         [u'Preferences'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 28)
+    self.assertEqual(len(storage_writer.events), 30)
 
     event = storage_writer.events[0]
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2014-11-12 13:01:43.926143')
+    self.assertEqual(event.timestamp, expected_timestamp)
+    expected_message = (u'Chrome extensions autoupdater last run')
+    expected_message_short = (u'Chrome extensions autoupdater last run')
+    self._TestGetMessageStrings(
+        event, expected_message, expected_message_short)
 
+    event = storage_writer.events[1]
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2014-11-12 18:20:21.519200')
+    self.assertEqual(event.timestamp, expected_timestamp)
+    expected_message = (u'Chrome extensions autoupdater next run')
+    expected_message_short = (u'Chrome extensions autoupdater next run')
+    self._TestGetMessageStrings(
+        event, expected_message, expected_message_short)
+
+    event = storage_writer.events[2]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-06-08 16:17:47.453766')
     self.assertEqual(event.timestamp, expected_timestamp)
@@ -34,7 +51,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event, expected_message, expected_message_short)
 
-    event = storage_writer.events[15]
+    event = storage_writer.events[17]
 
     self.assertIsInstance(
         event, chrome_preferences.ChromeExtensionInstallationEvent)
@@ -65,7 +82,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
         event, expected_message, expected_message_short)
 
 
-    event = storage_writer.events[22]
+    event = storage_writer.events[24]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-11-14 14:12:50.588973')
     self.assertEqual(event.timestamp, expected_timestamp)
@@ -73,7 +90,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event, expected_message, expected_message)
 
-    event = storage_writer.events[23]
+    event = storage_writer.events[25]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-11-11 16:20:09.866137')
     self.assertEqual(event.timestamp, expected_timestamp)
@@ -83,7 +100,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event, expected_message, expected_message_short)
 
-    event = storage_writer.events[24]
+    event = storage_writer.events[26]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-11-14 14:13:00.639332')
     self.assertEqual(event.timestamp, expected_timestamp)
@@ -94,7 +111,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event, expected_message, expected_message_short)
 
-    event = storage_writer.events[25]
+    event = storage_writer.events[27]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-11-14 14:13:00.627093')
     self.assertEqual(event.timestamp, expected_timestamp)
@@ -104,7 +121,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event, expected_message, expected_message_short)
 
-    event = storage_writer.events[26]
+    event = storage_writer.events[28]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-11-14 14:12:54.899473')
     self.assertEqual(event.timestamp, expected_timestamp)
@@ -114,7 +131,7 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     self._TestGetMessageStrings(
         event, expected_message, expected_message_short)
 
-    event = storage_writer.events[27]
+    event = storage_writer.events[29]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-11-14 14:12:53.667838')
     self.assertEqual(event.timestamp, expected_timestamp)
