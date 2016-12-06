@@ -38,7 +38,22 @@ class ChromeExtensionInstallationEventFormatter(
   SOURCE_SHORT = u'LOG'
 
 
+class ChromeContentSettingsExceptionsFormatter(
+    interface.ConditionalEventFormatter):
+  """Formatter for a Chrome content_settings exceptions event."""
+
+  DATA_TYPE = u'chrome:preferences:content_settings:exceptions'
+
+  FORMAT_STRING_PIECES = [u'{message}']
+
+  FORMAT_STRING_SHORT_PIECES = [u'{message}']
+
+  SOURCE_LONG = u'Chrome Permission Event'
+  SOURCE_SHORT = u'LOG'
+
+
 manager.FormattersManager.RegisterFormatters([
     ChromeExtensionInstallationEventFormatter,
-    ChromePreferencesClearHistoryEventFormatter
+    ChromePreferencesClearHistoryEventFormatter,
+    ChromeContentSettingsExceptionsFormatter,
 ])
