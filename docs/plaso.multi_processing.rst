@@ -36,6 +36,14 @@ plaso.multi_processing.multi_process_queue module
     :undoc-members:
     :show-inheritance:
 
+plaso.multi_processing.plaso_xmlrpc module
+------------------------------------------
+
+.. automodule:: plaso.multi_processing.plaso_xmlrpc
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.multi_processing.process_info module
 ------------------------------------------
 
@@ -80,14 +88,6 @@ plaso.multi_processing.worker_process module
 --------------------------------------------
 
 .. automodule:: plaso.multi_processing.worker_process
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.multi_processing.xmlrpc module
-------------------------------------
-
-.. automodule:: plaso.multi_processing.xmlrpc
     :members:
     :undoc-members:
     :show-inheritance:

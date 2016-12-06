@@ -13,7 +13,7 @@ import time
 from plaso.engine import engine
 from plaso.lib import definitions
 from plaso.multi_processing import process_info
-from plaso.multi_processing import xmlrpc
+from plaso.multi_processing import plaso_xmlrpc
 
 
 class MultiProcessEngine(engine.BaseEngine):
@@ -303,7 +303,7 @@ class MultiProcessEngine(engine.BaseEngine):
           u'RPC client (PID: {0:d}) already exists'.format(pid))
 
     process = self._processes_per_pid[pid]
-    rpc_client = xmlrpc.XMLProcessStatusRPCClient()
+    rpc_client = plaso_xmlrpc.XMLProcessStatusRPCClient()
 
     # Make sure that a process has started its RPC server. RPC port will
     # be 0 if no server is available.

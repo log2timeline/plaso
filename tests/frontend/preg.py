@@ -38,7 +38,7 @@ class PregFrontendTest(shared_test_lib.BaseTestCase):
 
     knowledge_base_object = knowledge_base.KnowledgeBase()
     if knowledge_base_values:
-      for identifier, value in knowledge_base_values.iteritems():
+      for identifier, value in iter(knowledge_base_values.items()):
         knowledge_base_object.SetValue(identifier, value)
 
     front_end.SetKnowledgeBase(knowledge_base_object)

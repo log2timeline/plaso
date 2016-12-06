@@ -1420,8 +1420,81 @@
       "avatar_index": 26,
       "content_settings": {
          "clear_on_exit_migrated": true,
-         "pattern_pairs": {
-
+         "pattern_pairs": {},
+         "exceptions": {
+           "app_banner": {},
+           "auto_select_certificate": {},
+           "automatic_downloads": {},
+           "autoplay": {},
+           "background_sync": {},
+           "bluetooth_guard": {},
+           "cookies": {},
+           "durable_storage": {},
+           "fullscreen": {},
+           "geolocation": {
+             ",": {
+               "last_used": 1479132770.588974
+             },
+             "https://rawgit.com:443,": {
+               "last_used": 1479132768.934328
+             }
+           },
+           "images": {},
+           "javascript": {},
+           "keygen": {},
+           "media_stream_camera": {},
+           "media_stream_mic": {
+             ",*": {
+               "last_used": 1479132774.899474
+             },
+             "https://rawgit.com:443,*": {
+               "last_used": 1479132773.667838,
+               "setting": 1
+             }
+           },
+           "midi_sysex": {
+             "https://rawgit.com:443,*": {
+               "last_used": 1478881209.866137,
+               "setting": 1
+             }
+           },
+           "mixed_script": {},
+           "mouselock": {},
+           "notifications": {
+             "https://rawgit.com:443,*": {
+               "last_used": 1479132780.627093,
+               "setting": 1
+             },
+             "https://rawgit.com:443,https://rawgit.com:443": {
+               "last_used": 1479132780.639332
+             }
+           },
+           "plugins": {},
+           "popups": {},
+           "ppapi_broker": {},
+           "prompt_no_decision_count": {},
+           "protocol_handler": {},
+           "push_messaging": {},
+           "site_engagement": {
+             "https://github.com:443,*": {
+               "setting": {
+                 "lastEngagementTime": 13123606614618330,
+                 "lastShortcutLaunchTime": 0,
+                 "pointsAddedToday": 0.7,
+                 "rawScore": 0.7
+               }
+             },
+             "https://www.w3.org:443,*": {
+               "setting": {
+                 "lastEngagementTime": 13123606580033300,
+                 "lastShortcutLaunchTime": 0,
+                 "pointsAddedToday": 1.2,
+                 "rawScore": 1.2
+               }
+             }
+           },
+           "ssl_cert_decisions": {},
+           "usb_chooser_data": {}
          },
          "pref_version": 1
       },
