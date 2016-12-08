@@ -21,7 +21,6 @@ class SyslogCommentEvent(text_events.TextEvent):
   DATA_TYPE = u'syslog:comment'
 
 
-# noinspection PyPackageRequirements
 class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   """Parses syslog formatted log files"""
   NAME = u'syslog'
