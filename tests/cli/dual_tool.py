@@ -14,6 +14,8 @@ from tests.cli import test_lib
 class ExtractionAndAnalysisToolTest(test_lib.CLIToolTestCase):
   """Tests for the extraction and analysis tool object."""
 
+  # pylint: disable=protected-access
+
   _EXPECTED_OUTPUT_STORAGE_FILE_OPTIONS = u'\n'.join([
       u'usage: extract_analyze_tool_test.py [--storage_file [STORAGE_FILE]]',
       u'',
