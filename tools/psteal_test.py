@@ -70,8 +70,8 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
     expected_error = u'ERROR: Missing source path'
     self.assertIn(expected_error, output)
 
-  def testProcessSourcesDirectory(self):
-    """Tests the ProcessSources function on a directory."""
+  def testExtractEventsFromSourceDirectory(self):
+    """Tests the ExtractEventsFromSources function on a directory."""
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_tool = psteal.PstealTool(output_writer=output_writer)
 
@@ -87,7 +87,7 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ExtractEventsFromSources()
 
       expected_output = [
           b'',
@@ -102,8 +102,8 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output.split(b'\n'), expected_output)
 
-  def testProcessSourcesBDEImage(self):
-    """Tests the ProcessSources function on an image containing BDE."""
+  def testExtractEventsFromSourceBDEImage(self):
+    """Tests the ExtractEventsFromSources function on an image with BDE."""
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_tool = psteal.PstealTool(output_writer=output_writer)
 
@@ -120,7 +120,7 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ExtractEventsFromSources()
 
       expected_output = [
           b'',
@@ -135,8 +135,9 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output.split(b'\n'), expected_output)
 
-  def testProcessSourcesImage(self):
-    """Tests the ProcessSources function on a single partition image."""
+  def testExtractEventsFromSourcesImage(self):
+    """Tests the ExtractEventsFromSources function on a single partition
+    image."""
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_tool = psteal.PstealTool(output_writer=output_writer)
 
@@ -152,7 +153,7 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ExtractEventsFromSources()
 
       expected_output = [
           b'',
@@ -167,8 +168,9 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output.split(b'\n'), expected_output)
 
-  def testProcessSourcesPartitionedImage(self):
-    """Tests the ProcessSources function on a multi partition image."""
+  def testExtractEventsFromSourcePartitionedImage(self):
+    """Tests the ExtractEventsFromSources function on a multi partition
+    image."""
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_tool = psteal.PstealTool(output_writer=output_writer)
 
@@ -187,7 +189,7 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ExtractEventsFromSources()
 
       expected_output = [
           b'',
@@ -202,8 +204,8 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output.split(b'\n'), expected_output)
 
-  def testProcessSourcesVSSImage(self):
-    """Tests the ProcessSources function on an image containing VSS."""
+  def testExtractEventsFromSourceVSSImage(self):
+    """Tests the ExtractEventsFromSources function on an image with VSS."""
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_tool = psteal.PstealTool(output_writer=output_writer)
 
@@ -221,7 +223,7 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ExtractEventsFromSources()
 
       expected_output = [
           b'',
@@ -240,8 +242,8 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
       output = output_writer.ReadOutput()
       self.assertEqual(output.split(b'\n'), expected_output)
 
-  def testProcessSourcesSingleFile(self):
-    """Tests the ProcessSources function on a single file."""
+  def testExtractEventsFromSourceSingleFile(self):
+    """Tests the ExtractEventsFromSources function on a single file."""
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_tool = psteal.PstealTool(output_writer=output_writer)
 
@@ -257,7 +259,7 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
 
       test_tool.ParseOptions(options)
 
-      test_tool.ProcessSources()
+      test_tool.ExtractEventsFromSources()
 
       expected_output = [
           b'',
@@ -273,7 +275,7 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
       self.assertEqual(output.split(b'\n'), expected_output)
 
   def testProcessStorage(self):
-    """Test the ProcessStorage function"""
+    """Test the AnalyzeEvents function"""
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_tool = psteal.PstealTool(output_writer=output_writer)
 
@@ -286,7 +288,7 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
       options.analysis_output_file = result_file_name
 
       test_tool.ParseOptions(options)
-      test_tool.ProcessStorage()
+      test_tool.AnalyzeEvents()
 
       expected_output_file_name = self._GetTestFilePath(
           [u'end_to_end', u'dynamic.log'])
