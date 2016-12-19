@@ -29,13 +29,13 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_tool = psteal.PstealTool(output_writer=output_writer)
 
-    # No source nor output file specified
+    # Test when no source nor output file specified.
     options = cli_test_lib.TestOptions()
     expected_error = u'Missing source path.'
     with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
       test_tool.ParseOptions(options)
 
-    # Source missing
+    # Test when the source is missing.
     options = cli_test_lib.TestOptions()
     expected_error = u'Missing source path.'
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -44,14 +44,13 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
       with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
         test_tool.ParseOptions(options)
 
-    # output file missing
-    options = cli_test_lib.TestOptions()
+    # Test when the output file is missing.
     options.source = self._GetTestFilePath([u'testdir'])
     expected_error = (u'Output format: dynamic requires an output file.')
     with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
       test_tool.ParseOptions(options)
 
-    # Both source and output are specified
+    # Test when both source and output are specified.
     options = cli_test_lib.TestOptions()
     options.source = self._GetTestFilePath([u'testdir'])
     with shared_test_lib.TempDirectory() as temp_directory:
@@ -64,7 +63,7 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_tool = psteal.PstealTool(output_writer=output_writer)
 
-    # ParseArguments with no output file nor source
+    # Test ParseArguments with no output file nor source.
     result = test_tool.ParseArguments()
     self.assertFalse(result)
     output = output_writer.ReadOutput()
@@ -298,7 +297,8 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
         self.assertEqual(expected_output, result)
 
     output = output_writer.ReadOutput()
-    self.assertIn("Events processed : 38", output)
+    self.assertIn(u'Events processed : 38', output)
+
 
 if __name__ == '__main__':
   unittest.main()

@@ -19,6 +19,14 @@ class StatusViewTool(storage_media_tool.StorageMediaTool):
   """A tool that reports extraction status."""
 
   def __init__(self, input_reader=None, output_writer=None):
+    """Initializes the status view tool object.
+
+    Args:
+      input_reader (Optional[InputReader]): input reader, where None indicates
+          that the stdin input reader should be used.
+      output_writer (Optional[OutputWriter]): output writer, where None
+          indicates that the stdout output writer should be used.
+    """
     super(StatusViewTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
 

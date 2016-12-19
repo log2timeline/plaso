@@ -11,10 +11,12 @@ from plaso.engine import processing_status
 
 from tests.cli import test_lib
 
+
 class TestStatusViewTool(StatusViewTool):
   """Class that implements a status view for testing."""
 
   def __init__(self, input_reader=None, output_writer=None):
+    """Initializes a mock StatusViewTool object used for testing."""
     super(TestStatusViewTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
 
@@ -39,9 +41,10 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
     status_view_tool._PrintStatusHeader()
 
     process_status = processing_status.ProcessingStatus()
-    process_status.UpdateForemanStatus(u'f_identifier', u'f_status', 123,
-                                       u'f_test_file', 1, 29, 3, 456, 5, 6, 7,
-                                       8, 9, 10)
+    process_status.UpdateForemanStatus(
+        u'f_identifier', u'f_status', 123,
+        u'f_test_file', 1, 29, 3, 456, 5, 6, 7,
+        8, 9, 10)
     status_view_tool._PrintStatusUpdate(process_status)
 
     string = output_writer.ReadOutput()
@@ -61,9 +64,10 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
     ).format(plaso.GetVersion())
     self.assertEqual(string.split(b'\n'), expected_string.split(b'\n'))
 
-    process_status.UpdateWorkerStatus(u'w_identifier', u'w_status', 123,
-                                      u'w_test_file', 1, 2, 3, 4, 5, 6, 7, 8, 9,
-                                      10)
+    process_status.UpdateWorkerStatus(
+        u'w_identifier', u'w_status', 123,
+        u'w_test_file', 1, 2, 3, 4, 5, 6, 7, 8, 9,
+        10)
     status_view_tool._PrintStatusUpdate(process_status)
     string = output_writer.ReadOutput()
 
@@ -91,9 +95,10 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
     status_view_tool._PrintStatusHeader()
 
     process_status = processing_status.ProcessingStatus()
-    process_status.UpdateForemanStatus(u'f_identifier', u'f_status', 123,
-                                       u'f_test_file', 1, 29, 3, 456, 5, 6, 7,
-                                       8, 9, 10)
+    process_status.UpdateForemanStatus(
+        u'f_identifier', u'f_status', 123,
+        u'f_test_file', 1, 29, 3, 456, 5, 6, 7,
+        8, 9, 10)
     status_view_tool._PrintStatusUpdateStream(process_status)
 
     string = output_writer.ReadOutput()
@@ -105,14 +110,16 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
     )
     self.assertEqual(string.split(b'\n'), expected_string.split(b'\n'))
 
-    process_status.UpdateWorkerStatus(u'w_identifier', u'w_status', 123,
-                                      u'w_test_file', 1, 2, 3, 4, 5, 6, 7, 8, 9,
-                                      10)
+    process_status.UpdateWorkerStatus(
+        u'w_identifier', u'w_status', 123,
+        u'w_test_file', 1, 2, 3, 4, 5, 6, 7, 8, 9,
+        10)
     status_view_tool._PrintStatusUpdateStream(process_status)
     string = output_writer.ReadOutput()
 
-    expected_string = (u'w_identifier (PID: 123) - events produced: 4 - '
-                       u'file: w_test_file - running: True\n')
+    expected_string = (
+        u'w_identifier (PID: 123) - events produced: 4 - '
+        u'file: w_test_file - running: True\n')
     self.assertEqual(string, expected_string)
 
 

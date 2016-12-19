@@ -1,15 +1,15 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Psteal (Plaso SýndarheimsTímalína sem Er ALgjörlega sjálfvirk) - Combines
-the log2timeline and psort tools into a single tool. Currently doesn't support
-any of the two tools flags.
+"""Psteal (Plaso SýndarheimsTímalína sem Er ALgjörlega sjálfvirk).
+
+Psteal Combines the log2timeline and psort tools into a single tool.
+Currently doesn't support any of the two tools flags.
 
 Sample Usage:
   psteal.py --source=/tmp/mystorage.dump --write=/tmp/mystorage_timeline.csv
 
 See additional details here:
   https://github.com/log2timeline/plaso/wiki/Using-psteal
-
 """
 
 import argparse
@@ -20,8 +20,10 @@ import os
 import sys
 import textwrap
 
+from dfvfs.lib import definitions as dfvfs_definitions
+
 # The following import makes sure the filters are registered.
-from plaso.cli import dual_tool
+from plaso.cli import extract_analyze_tool
 from plaso.cli import tools as cli_tools
 from plaso.cli import views as cli_views
 from plaso.cli.helpers import manager as helpers_manager
@@ -30,14 +32,15 @@ from plaso.frontend import psort
 from plaso.output import interface as output_interface
 from plaso.lib import errors
 
-from dfvfs.lib import definitions as dfvfs_definitions
 
-class PstealTool(dual_tool.DualTool):
+class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
   """Implements the psteal CLI tool.
 
-  It instantiates the log2timeline and psort frontends, and builds an
-  intermediate storage file. The tool currently doesn't support any of the
-  log2timeline or psort tools' flags.
+  Psteal extract events from the provided source and stores them in an
+  intermediate storage file. After extraction an output log file is created.
+  This mimics the behaviour of the log2timeline.pl.
+  The tool currently doesn't support any of the log2timeline or psort tools'
+  flags.
 
   Attributes:
     dependencies_check (bool): True if the availability and versions of
@@ -74,10 +77,10 @@ class PstealTool(dual_tool.DualTool):
     """Initializes the CLI tool object.
 
     Args:
-      input_reader: the input reader (instance of InputReader).
+      input_reader (InputReader): the input reader.
                     The default is None which indicates the use of the stdin
                     input reader.
-      output_writer: the output writer (instance of OutputWriter).
+      output_writer (OutputWriter): the output writer.
                      The default is None which indicates the use of the stdout
                      output writer.
     """
@@ -93,7 +96,7 @@ class PstealTool(dual_tool.DualTool):
     self._hasher_names_string = None
     self._number_of_extraction_workers = 0
     self._options = None
-    self._output_format = "dynamic"
+    self._output_format = u'dynamic'
     self._output_filename = None
     self._output_module = None
     self._parser_filter_expression = None
@@ -105,8 +108,8 @@ class PstealTool(dual_tool.DualTool):
     self._use_time_slicer = False
     self._yara_rules_string = None
 
-  def ProcessSources(self):
-    """Processes the sources.
+  def ExtractEventsFromSources(self):
+    """Processes the sources and extract events.
 
     This is a stripped down copy of tools/log2timeline.py that doesn't support
     the full set of flags. The defaults for these are hard coded in the
@@ -204,15 +207,12 @@ class PstealTool(dual_tool.DualTool):
 
     self._output_writer.Write(u'\n')
 
-  # We do this to check earlier that everything is okay
-  def _MakeOutputModule(self):
-    """Instantiates an output module.
-
-    Creates a default output module
+  def _CreateOutputModule(self):
+    """Creates a default output module
 
     Raises:
       BadConfigOption: when the output_filename already exists or hasn't been
-        set.
+                       set.
     """
     self._output_module = self._analysis_front_end.CreateOutputModule(
         self._output_format, preferred_encoding=self.preferred_encoding,
@@ -220,13 +220,13 @@ class PstealTool(dual_tool.DualTool):
 
     if isinstance(self._output_module, output_interface.LinearOutputModule):
       if not self._output_filename:
-        raise errors.BadConfigOption((
-            u'Output format: {0:s} requires an output file.').format(
+        raise errors.BadConfigOption(
+            u'Output format: {0:s} requires an output file.'.format(
                 self._output_format))
 
       if self._output_filename and os.path.exists(self._output_filename):
-        raise errors.BadConfigOption((
-            u'Output file already exists: {0:s}. Aborting.').format(
+        raise errors.BadConfigOption(
+            u'Output file already exists: {0:s}. Aborting.'.format(
                 self._output_filename))
 
       output_file_object = open(self._output_filename, u'wb')
@@ -234,14 +234,13 @@ class PstealTool(dual_tool.DualTool):
 
       self._output_module.SetOutputWriter(output_writer)
 
-  def ProcessStorage(self):
-    """Processes a plaso storage file.
+  def AnalyzeEvents(self):
+    """Analyzes events from a plaso storage file and generate a report.
 
     Raises:
       BadConfigOption: when a configuration parameter fails validation.
       RuntimeError: if a non-recoverable situation is encountered.
     """
-
     helpers_manager.ArgumentHelperManager.ParseOptions(
         self._options, self._output_module)
 
@@ -357,7 +356,7 @@ class PstealTool(dual_tool.DualTool):
 
     self._options = options
 
-    self._MakeOutputModule()
+    self._CreateOutputModule()
 
 
 def Main():
@@ -369,8 +368,8 @@ def Main():
     return False
 
   try:
-    tool.ProcessSources()
-    tool.ProcessStorage()
+    tool.ExtractEventsFromSources()
+    tool.AnalyzeEvents()
 
   except (KeyboardInterrupt, errors.UserAbort):
     logging.warning(u'Aborted by user.')
