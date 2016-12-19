@@ -35,6 +35,12 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
     with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
       test_tool.ParseOptions(options)
 
+    # Test when the output file is missing.
+    options.source = self._GetTestFilePath([u'testdir'])
+    expected_error = (u'Output format: dynamic requires an output file.')
+    with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
+      test_tool.ParseOptions(options)
+
     # Test when the source is missing.
     options = cli_test_lib.TestOptions()
     expected_error = u'Missing source path.'
@@ -43,12 +49,6 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
                                                   u'unused_output.txt')
       with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
         test_tool.ParseOptions(options)
-
-    # Test when the output file is missing.
-    options.source = self._GetTestFilePath([u'testdir'])
-    expected_error = (u'Output format: dynamic requires an output file.')
-    with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
-      test_tool.ParseOptions(options)
 
     # Test when both source and output are specified.
     options = cli_test_lib.TestOptions()
