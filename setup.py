@@ -41,6 +41,7 @@ def GetScripts():
       'image_export.py',
       'log2timeline.py',
       'pinfo.py',
+      'psteal.py',
       'preg.py',
       'psort.py'])
 
