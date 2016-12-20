@@ -47,12 +47,9 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       u'                        system CPUs minus one].',
       u''])
 
-  # TODO: add test for _FormatStatusTableRow.
   # TODO: add test for _GetMatcher.
   # TODO: add test for _ParseOutputOptions.
   # TODO: add test for _ParseProcessingOptions.
-  # TODO: add test for _PrintStatusUpdate.
-  # TODO: add test for _PrintStatusUpdateStream.
 
   def testAddProcessingOptions(self):
     """Tests the AddProcessingOptions function."""

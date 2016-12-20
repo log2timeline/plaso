@@ -9,20 +9,13 @@ import sys
 import time
 import textwrap
 
-try:
-  import win32console
-except ImportError:
-  win32console = None
-
 from dfvfs.lib import definitions as dfvfs_definitions
 
-import plaso
 from plaso import dependencies
 from plaso.cli import extraction_tool
 from plaso.cli import tools as cli_tools
 from plaso.cli import views as cli_views
 from plaso.frontend import log2timeline
-from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import pfilter
 
@@ -94,48 +87,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self.list_output_modules = False
     self.show_info = False
 
-  def _FormatStatusTableRow(self, process_status):
-    """Formats a status table row.
-
-    Args:
-      process_status (ProcessStatus): processing status.
-    """
-    # This check makes sure the columns are tab aligned.
-    identifier = process_status.identifier
-    if len(identifier) < 8:
-      identifier = u'{0:s}\t'.format(identifier)
-
-    status = process_status.status
-    if len(status) < 8:
-      status = u'{0:s}\t'.format(status)
-
-    sources = u''
-    if (process_status.number_of_produced_sources is not None and
-        process_status.number_of_produced_sources_delta is not None):
-      sources = u'{0:d} ({1:d})'.format(
-          process_status.number_of_produced_sources,
-          process_status.number_of_produced_sources_delta)
-
-    # This check makes sure the columns are tab aligned.
-    if len(sources) < 8:
-      sources = u'{0:s}\t'.format(sources)
-
-    events = u''
-    if (process_status.number_of_produced_events is not None and
-        process_status.number_of_produced_events_delta is not None):
-      events = u'{0:d} ({1:d})'.format(
-          process_status.number_of_produced_events,
-          process_status.number_of_produced_events_delta)
-
-    # This check makes sure the columns are tab aligned.
-    if len(events) < 8:
-      events = u'{0:s}\t'.format(events)
-
-    # TODO: shorten display name to fit in 80 chars and show the filename.
-    return u'{0:s}\t{1:d}\t{2:s}\t{3:s}\t{4:s}\t{5:s}'.format(
-        identifier, process_status.pid, status, sources, events,
-        process_status.display_name)
-
   def _GetMatcher(self, filter_expression):
     """Retrieves a filter object for a specific filter expression.
 
@@ -190,81 +141,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._number_of_extraction_workers = getattr(options, u'workers', 0)
 
     # TODO: add code to parse the worker options.
-
-  def _PrintStatusHeader(self):
-    """Prints the processing status header."""
-    self._output_writer.Write(
-        u'Source path\t: {0:s}\n'.format(self._source_path))
-    self._output_writer.Write(
-        u'Source type\t: {0:s}\n'.format(self._source_type_string))
-
-    if self._filter_file:
-      self._output_writer.Write(u'Filter file\t: {0:s}\n'.format(
-          self._filter_file))
-
-    self._output_writer.Write(u'\n')
-
-  def _PrintStatusUpdate(self, processing_status):
-    """Prints the processing status.
-
-    Args:
-      processing_status (ProcessingStatus): processing status.
-    """
-    if self._stdout_output_writer:
-      self._ClearScreen()
-
-    self._output_writer.Write(
-        u'plaso - {0:s} version {1:s}\n'.format(
-            self.NAME, plaso.GetVersion()))
-    self._output_writer.Write(u'\n')
-
-    self._PrintStatusHeader()
-
-    # TODO: for win32console get current color and set intensity,
-    # write the header separately then reset intensity.
-    status_header = u'Identifier\tPID\tStatus\t\tSources\t\tEvents\t\tFile'
-    if not win32console:
-      status_header = u'\x1b[1m{0:s}\x1b[0m'.format(status_header)
-
-    status_table = [status_header]
-
-    status_row = self._FormatStatusTableRow(processing_status.foreman_status)
-    status_table.append(status_row)
-
-    for worker_status in processing_status.workers_status:
-      status_row = self._FormatStatusTableRow(worker_status)
-      status_table.append(status_row)
-
-    status_table.append(u'')
-    self._output_writer.Write(u'\n'.join(status_table))
-    self._output_writer.Write(u'\n')
-
-    if processing_status.aborted:
-      self._output_writer.Write(
-          u'Processing aborted - waiting for clean up.\n\n')
-
-    # TODO: remove update flicker. For win32console we could set the cursor
-    # top left, write the table, clean the remainder of the screen buffer
-    # and set the cursor at the end of the table.
-    if self._stdout_output_writer:
-      # We need to explicitly flush stdout to prevent partial status updates.
-      sys.stdout.flush()
-
-  def _PrintStatusUpdateStream(self, processing_status):
-    """Prints the processing status as a stream of output.
-
-    Args:
-      processing_status (ProcessingStatus): processing status.
-    """
-    for worker_status in processing_status.workers_status:
-      status_line = (
-          u'{0:s} (PID: {1:d}) - events produced: {2:d} - file: {3:s} '
-          u'- running: {4!s}\n').format(
-              worker_status.identifier, worker_status.pid,
-              worker_status.number_of_produced_events,
-              worker_status.display_name,
-              worker_status.status not in definitions.PROCESSING_ERROR_STATUS)
-      self._output_writer.Write(status_line)
 
   def AddOutputOptions(self, argument_group):
     """Adds the output options to the argument group.

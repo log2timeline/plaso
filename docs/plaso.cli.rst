@@ -19,6 +19,14 @@ plaso.cli.analysis_tool module
     :undoc-members:
     :show-inheritance:
 
+plaso.cli.extract_analyze_tool module
+-------------------------------------
+
+.. automodule:: plaso.cli.extract_analyze_tool
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.cli.extraction_tool module
 --------------------------------
 
@@ -31,6 +39,14 @@ plaso.cli.hexdump module
 ------------------------
 
 .. automodule:: plaso.cli.hexdump
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.cli.status_view_tool module
+---------------------------------
+
+.. automodule:: plaso.cli.status_view_tool
     :members:
     :undoc-members:
     :show-inheritance:
