@@ -212,7 +212,7 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
 
     Raises:
       BadConfigOption: when the output_filename already exists or hasn't been
-                       set.
+          set.
     """
     self._output_module = self._analysis_front_end.CreateOutputModule(
         self._output_format, preferred_encoding=self.preferred_encoding,

@@ -9,35 +9,24 @@ from plaso.lib import errors
 
 
 class ExtractionAndAnalysisTool(status_view_tool.StatusViewTool):
-  """Class that implements an extraction and analysis CLI tool."""
+  """Class that implements a combined extraction and analysis CLI tool."""
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
 
     Args:
-      input_reader (InputReader): the input reader.
-                    The default is None which indicates the use of the stdin
-                    input reader.
-      output_writer (OutputWriter): the output writer.
-                     The default is None which indicates the use of the stdout
-                     output writer.
+      input_reader (InputReader): the input reader, where None represents stdin.
+      output_writer (OutputWriter): the output writer, where None represents
+          stdout.
     """
     super(ExtractionAndAnalysisTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._storage_file_path = None
 
-  def SetSourcePath(self, path):
-    """Set the path of the source to process.
-
-    Args:
-      path (str): the path to the source.
-    """
-    self._source_path = path
-
   def _GenerateStorageFileName(self):
     """Generates a name for the storage file.
 
-    This uses the MD5 hex digest of the source path plus a timestamp.
+    The result use a timestamp and the basename of the source path.
 
     Raises:
       BadConfigOption: raised if the source path is not set.
@@ -46,16 +35,15 @@ class ExtractionAndAnalysisTool(status_view_tool.StatusViewTool):
       raise errors.BadConfigOption(u'Please define a source (--source).')
 
     timestamp = datetime.datetime.now()
-    timestamp_text = timestamp.strftime(u'%Y%m%dT%H%M%S')
+    datetime_string = timestamp.strftime(u'%Y%m%dT%H%M%S')
     source_name = os.path.basename(self._source_path)
-    filename = u'{0:s}-{1:s}.plaso'.format(timestamp_text, source_name)
-    return filename
+    return u'{0:s}-{1:s}.plaso'.format(datetime_string, source_name)
 
   def _ParseStorageFileOptions(self, options):
     """Parses the storage file options.
 
     Args:
-      options (argparse.Namespace): the command line arguments.
+      options (argparse.Namespace): command line arguments.
 
     Raises:
       BadConfigOption: if the options are invalid.
@@ -69,7 +57,7 @@ class ExtractionAndAnalysisTool(status_view_tool.StatusViewTool):
 
     Args:
       argument_group (argparse._ArgumentGroup or argparse.ArgumentParser):
-                     the argument group our argument parser.
+          argument group or argument parser.
     """
     argument_group.add_argument(
         u'--storage_file', action=u'store', metavar=u'STORAGE_FILE', nargs=u'?',
