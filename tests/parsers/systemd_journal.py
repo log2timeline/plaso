@@ -20,7 +20,7 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
         u'systemd', u'journal', u'system.journal'], parser_object)
 
     self.assertEqual(
-        len(journal.events), parser_object.journal_header.n_entries)
+        len(journal.events), parser_object._journal_header.n_entries)
 
     event = journal.events[0]
 
@@ -32,8 +32,9 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     expected_message = (
         u'test-VirtualBox systemd-journald[577] Runtime journal '
         u'(/run/log/journal/) is 1.2M, max 9.9M, 8.6M free.')
-    expected_message_short = (u'test-VirtualBox systemd-journald[577] Runtime '
-                              u'journal (/run/log/journal/) is ...')
+    expected_message_short = (
+        u'test-VirtualBox systemd-journald[577] Runtime journal '
+        u'(/run/log/journal/) is ...')
     self._TestGetMessageStrings(event, expected_message, expected_message_short)
 
   def testParseDirty(self):
@@ -56,8 +57,9 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     expected_message = (
         u'test-VirtualBox systemd-journald[569] Runtime journal '
         u'(/run/log/journal/) is 1.2M, max 9.9M, 8.6M free.')
-    expected_message_short = (u'test-VirtualBox systemd-journald[569] Runtime '
-                              u'journal (/run/log/journal/) is ...')
+    expected_message_short = (
+        u'test-VirtualBox systemd-journald[569] Runtime journal '
+        u'(/run/log/journal/) is ...')
     self._TestGetMessageStrings(event, expected_message, expected_message_short)
 
 
