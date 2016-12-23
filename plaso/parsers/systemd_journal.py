@@ -277,7 +277,7 @@ class SystemdJournalParser(interface.FileObjectParser):
         entry_offsets.append(entry_offset)
 
     if next_array_offset != 0:
-      return entry_offsets.extends(self._ParseEntries(offset=next_array_offset))
+      entry_offsets.extend(self._ParseEntries(offset=next_array_offset))
 
     return entry_offsets
 
@@ -300,10 +300,12 @@ class SystemdJournalParser(interface.FileObjectParser):
       raise errors.UnableToParseFile(
           u'Unable to parse journal header with error: {0:s}'.format(exception))
 
-    max_data_hash_table_offset = self._journal_header.data_hash_table_offset +
-            self._journal_header.data_hash_table_size
-    max_field_hash_table_offset = self._journal_header.field_hash_table_offset +
-        self._journal_header.field_hash_table_size
+    max_data_hash_table_offset = (
+        self._journal_header.data_hash_table_offset +
+        self._journal_header.data_hash_table_size)
+    max_field_hash_table_offset = (
+        self._journal_header.field_hash_table_offset +
+        self._journal_header.field_hash_table_size)
     self._max_journal_file_offset = max(
         max_data_hash_table_offset, max_field_hash_table_offset)
 
