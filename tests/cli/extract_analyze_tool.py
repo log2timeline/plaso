@@ -80,7 +80,6 @@ class ExtractionAndAnalysisToolTest(test_lib.CLIToolTestCase):
         filename=u'bar')
     self.assertRegexpMatches(storage_filename, expected_storage_filename)
 
-
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     test_tool = extract_analyze_tool.ExtractionAndAnalysisTool()
