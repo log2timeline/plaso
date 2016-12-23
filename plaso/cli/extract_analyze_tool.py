@@ -37,6 +37,10 @@ class ExtractionAndAnalysisTool(status_view_tool.StatusViewTool):
     timestamp = datetime.datetime.now()
     datetime_string = timestamp.strftime(u'%Y%m%dT%H%M%S')
     source_name = os.path.basename(self._source_path)
+    if source_name == '':
+      source_path_parent = os.path.dirname(self._source_path)
+      source_name = os.path.basename(source_path_parent)
+
     return u'{0:s}-{1:s}.plaso'.format(datetime_string, source_name)
 
   def _ParseStorageFileOptions(self, options):

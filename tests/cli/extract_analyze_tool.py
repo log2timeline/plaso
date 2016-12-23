@@ -14,6 +14,8 @@ from tests.cli import test_lib
 class ExtractionAndAnalysisToolTest(test_lib.CLIToolTestCase):
   """Tests for the extraction and analysis tool object."""
 
+  _STORAGE_FILENAME_TEMPLATE = u'\d{{8}}T\d{{6}}-{filename}.plaso'
+
   # pylint: disable=protected-access
 
   _EXPECTED_OUTPUT_STORAGE_FILE_OPTIONS = u'\n'.join([
@@ -39,6 +41,24 @@ class ExtractionAndAnalysisToolTest(test_lib.CLIToolTestCase):
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT_STORAGE_FILE_OPTIONS)
 
+  def testGenerateStorageFileName(self):
+    test_tool = extract_analyze_tool.ExtractionAndAnalysisTool()
+
+    source_path = u'/test/storage/path'
+    test_tool.SetSourcePath(source_path)
+    storage_filename = test_tool._GenerateStorageFileName()
+    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
+        filename=u'path')
+    self.assertRegexpMatches(storage_filename, expected_storage_filename)
+
+    source_path = u'/test/storage/path/'
+    test_tool.SetSourcePath(source_path)
+    storage_filename = test_tool._GenerateStorageFileName()
+    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
+        filename=u'path')
+    self.assertRegexpMatches(storage_filename, expected_storage_filename)
+
+
   def testParseOptions(self):
     """Tests the ParseOptions function."""
     test_tool = extract_analyze_tool.ExtractionAndAnalysisTool()
@@ -52,7 +72,8 @@ class ExtractionAndAnalysisToolTest(test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath([u'ímynd.dd'])
 
     test_tool.ParseOptions(options)
-    storage_path_regex = ur'\d{8}T\d{6}-ímynd.dd.plaso'
+    storage_path_regex = self._STORAGE_FILENAME_TEMPLATE.format(
+        filename=u'ímynd.dd')
     self.assertRegexpMatches(test_tool._storage_file_path, storage_path_regex)
 
 
