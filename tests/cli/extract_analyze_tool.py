@@ -59,6 +59,27 @@ class ExtractionAndAnalysisToolTest(test_lib.CLIToolTestCase):
         filename=u'path')
     self.assertRegexpMatches(storage_filename, expected_storage_filename)
 
+    source_path = u'/'
+    test_tool.SetSourcePath(source_path)
+    storage_filename = test_tool._GenerateStorageFileName()
+    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
+        filename=u'ROOT')
+    self.assertRegexpMatches(storage_filename, expected_storage_filename)
+
+    source_path = u'/foo/..'
+    test_tool.SetSourcePath(source_path)
+    storage_filename = test_tool._GenerateStorageFileName()
+    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
+        filename=u'ROOT')
+    self.assertRegexpMatches(storage_filename, expected_storage_filename)
+
+    source_path = u'foo/../bar'
+    test_tool.SetSourcePath(source_path)
+    storage_filename = test_tool._GenerateStorageFileName()
+    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
+        filename=u'bar')
+    self.assertRegexpMatches(storage_filename, expected_storage_filename)
+
 
   def testParseOptions(self):
     """Tests the ParseOptions function."""
