@@ -222,7 +222,8 @@ class SystemdJournalParser(interface.FileObjectParser):
     for item in entry_object.object_items:
       if item.object_offset < self._max_journal_file_offset:
         raise errors.ParseError(
-            u'object offset should be after hash tables ({0:d} < {1:d})'.format(offset, self._max_journal_file_offset))
+            u'object offset should be after hash tables ({0:d} < {1:d})'.format(
+                offset, self._max_journal_file_offset))
       key, value = self._ParseItem(item.object_offset)
       fields[key] = value
 

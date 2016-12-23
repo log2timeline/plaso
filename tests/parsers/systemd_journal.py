@@ -14,6 +14,8 @@ from tests.parsers import test_lib
 class SystemdJournalParserTest(test_lib.ParserTestCase):
   """Tests for the Systemd Journal parser."""
 
+  # pylint: disable=protected-access
+
   def testParse(self):
     """Tests the Parse function."""
     parser_object = systemd_journal.SystemdJournalParser()
