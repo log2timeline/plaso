@@ -14,7 +14,7 @@ from tests.cli import test_lib
 class ExtractionAndAnalysisToolTest(test_lib.CLIToolTestCase):
   """Tests for the extraction and analysis tool object."""
 
-  _STORAGE_FILENAME_TEMPLATE = u'\d{{8}}T\d{{6}}-{filename}.plaso'
+  _STORAGE_FILENAME_TEMPLATE = ur'\d{{8}}T\d{{6}}-{filename}.plaso'
 
   # pylint: disable=protected-access
 
@@ -42,6 +42,7 @@ class ExtractionAndAnalysisToolTest(test_lib.CLIToolTestCase):
     self.assertEqual(output, self._EXPECTED_OUTPUT_STORAGE_FILE_OPTIONS)
 
   def testGenerateStorageFileName(self):
+    """Tests the _GenerateStorageFileName function."""
     test_tool = extract_analyze_tool.ExtractionAndAnalysisTool()
 
     source_path = u'/test/storage/path'
