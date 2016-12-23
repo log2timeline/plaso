@@ -269,10 +269,10 @@ class SystemdJournalParser(interface.FileObjectParser):
           u'Expected an object of type ENTRY_ARRAY, but got {0:s}'.format(
               object_header.type))
 
-    next_array_offset = self._ULInt64.parse(self._journal_file.read(8))
+    next_array_offset = self._ULInt64.parse_stream(self._journal_file)
     entry_offests_numbers = (payload_size - 8) / 8
     for entry_offset in range(entry_offests_numbers):
-      entry_offset = self._ULInt64.parse(self._journal_file.read(8))
+      entry_offset = self._ULInt64.parse_stream(self._journal_file)
       if entry_offset != 0:
         entry_offsets.append(entry_offset)
 
