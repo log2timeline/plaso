@@ -47,6 +47,52 @@ class SyslogParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(len(storage_writer.events), 2)
 
+  @shared_test_lib.skipUnlessHasTestFile([u'syslog_chromeos'])
+  def testParseChromeOS(self):
+    """Tests the Parse function."""
+    parser_object = syslog.SyslogParser()
+    knowledge_base_values = {u'year': 2016}
+    storage_writer = self._ParseFile(
+        [u'syslog_chromeos'], parser_object,
+        knowledge_base_values=knowledge_base_values)
+
+    self.assertEqual(len(storage_writer.events), 8)
+
+    event = storage_writer.events[0]
+    event_timestamp = timelib.Timestamp.CopyToIsoFormat(
+        event.timestamp)
+    self.assertEqual(event_timestamp, u'2016-10-25T19:37:23.297265+00:00')
+
+    expected_string = (
+        u'INFO [periodic_scheduler, pid: 13707] cleanup_logs: job completed')
+    self._TestGetMessageStrings(
+        event, expected_string, expected_string)
+
+    event = storage_writer.events[2]
+    event_timestamp = timelib.Timestamp.CopyToIsoFormat(
+        event.timestamp)
+    self.assertEqual(event_timestamp, u'2016-10-25T19:37:24.987014+00:00')
+
+    # Testing year increment.
+    event = storage_writer.events[4]
+    event_timestamp = timelib.Timestamp.CopyToIsoFormat(
+        event.timestamp)
+    self.assertEqual(event_timestamp, u'2016-10-25T19:37:24.993079+00:00')
+
+    event = storage_writer.events[6]
+    expected_reporter = u'kernel'
+    self.assertEqual(event.reporter, expected_reporter)
+
+    event = storage_writer.events[7]
+    expected_message = (
+        u'INFO [aprocess] [  316.587330] cfg80211: This is a multi-line\t'
+        u'message that screws up many syslog parsers.')
+    expected_message_short = (
+        u'INFO [aprocess] [  316.587330] cfg80211: This is a multi-line\t'
+        u'message that sc...')
+    self._TestGetMessageStrings(
+        event, expected_message, expected_message_short)
+
   @shared_test_lib.skipUnlessHasTestFile([u'syslog'])
   def testParse(self):
     """Tests the Parse function."""

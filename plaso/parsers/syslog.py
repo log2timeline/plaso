@@ -21,6 +21,7 @@ class SyslogCommentEvent(text_events.TextEvent):
   DATA_TYPE = u'syslog:comment'
 
 
+# noinspection PyPackageRequirements
 class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   """Parses syslog formatted log files"""
   NAME = u'syslog'
@@ -28,8 +29,6 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   DESCRIPTION = u'Syslog Parser'
 
   _ENCODING = u'utf-8'
-
-  _VERIFICATION_REGEX = re.compile(r'^\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2}\s')
 
   _plugin_classes = {}
 
@@ -42,7 +41,32 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   _FACILITY_CHARACTERS = u''.join(
       [c for c in pyparsing.printables if c not in [u':', u'>']])
 
+  _SYSLOG_SEVERITY = [
+      u'EMERG',
+      u'ALERT',
+      u'CRIT',
+      u'ERR',
+      u'WARNING',
+      u'NOTICE',
+      u'INFO',
+      u'DEBUG']
+
+  _OFFSET_PREFIX = [
+      u'-',
+      u'+']
+
+  _VERIFICATION_REGEX = \
+      re.compile(r'^\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2}\s')
+
+  _CHROMEOS_VERIFICATION_REGEX = \
+      re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.'
+                 r'\d{6}[\+|-]\d{2}:\d{2}\s'
+                 r'(EMERG|ALERT|CRIT|ERR|WARNING|NOTICE|INFO|DEBUG)')
+
   _PYPARSING_COMPONENTS = {
+      u'year': text_parser.PyparsingConstants.YEAR.setResultsName(u'year'),
+      u'two_digit_month': text_parser.PyparsingConstants.TWO_DIGITS
+                          .setResultsName(u'two_digit_month'),
       u'month': text_parser.PyparsingConstants.MONTH.setResultsName(u'month'),
       u'day': text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(
           u'day'),
@@ -61,11 +85,20 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       u'pid': text_parser.PyparsingConstants.PID.setResultsName(u'pid'),
       u'facility': pyparsing.Word(_FACILITY_CHARACTERS).setResultsName(
           u'facility'),
+      u'severity': pyparsing.oneOf(_SYSLOG_SEVERITY).setResultsName(
+          u'severity'),
       u'body': pyparsing.Regex(
-          r'.*?(?=($|\n\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2}))', re.DOTALL).
-               setResultsName(u'body'),
+          r'.*?(?=($|\n\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2})|'
+          r'($|\n\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}'
+          r'[\+|-]\d{2}:\d{2}\s))',
+          re.DOTALL).setResultsName(u'body'),
       u'comment_body': pyparsing.SkipTo(u' ---').setResultsName(
-          u'body')
+          u'body'),
+      u'iso_8601_offset' : pyparsing.oneOf(_OFFSET_PREFIX) +
+                           text_parser.PyparsingConstants.TWO_DIGITS +
+                           pyparsing.Optional(
+                               pyparsing.Literal(u':') +
+                               text_parser.PyparsingConstants.TWO_DIGITS)
   }
 
   _PYPARSING_COMPONENTS[u'date'] = (
@@ -76,6 +109,28 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       _PYPARSING_COMPONENTS[u'second'] + pyparsing.Optional(
           pyparsing.Suppress(u'.') +
           _PYPARSING_COMPONENTS[u'fractional_seconds']))
+
+  _PYPARSING_COMPONENTS[u'iso_8601_date'] = pyparsing.Combine(
+      _PYPARSING_COMPONENTS[u'year'] + pyparsing.Literal(u'-') +
+      _PYPARSING_COMPONENTS[u'two_digit_month'] + pyparsing.Literal(u'-') +
+      _PYPARSING_COMPONENTS[u'day'] + pyparsing.Literal(u'T') +
+      _PYPARSING_COMPONENTS[u'hour'] + pyparsing.Literal(u':') +
+      _PYPARSING_COMPONENTS[u'minute'] + pyparsing.Literal(u':') +
+      _PYPARSING_COMPONENTS[u'second'] + pyparsing.Literal(u'.') +
+      _PYPARSING_COMPONENTS[u'fractional_seconds'] +
+      _PYPARSING_COMPONENTS[u'iso_8601_offset'],
+      joinString=u'', adjacent=True).setResultsName(u'iso_8601_date')
+
+  _CHROMEOS_SYSLOG_LINE = (
+      _PYPARSING_COMPONENTS[u'iso_8601_date'] +
+      _PYPARSING_COMPONENTS[u'severity'] +
+      _PYPARSING_COMPONENTS[u'reporter'] +
+      pyparsing.Optional(pyparsing.Suppress(u':')) +
+      pyparsing.Optional(
+          pyparsing.Suppress(u'[') + _PYPARSING_COMPONENTS[u'pid'] +
+          pyparsing.Suppress(u']')) +
+      pyparsing.Optional(pyparsing.Suppress(u':')) +
+      _PYPARSING_COMPONENTS[u'body'] + pyparsing.lineEnd())
 
   _SYSLOG_LINE = (
       _PYPARSING_COMPONENTS[u'date'] +
@@ -104,7 +159,8 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   LINE_STRUCTURES = [
       (u'syslog_line', _SYSLOG_LINE),
       (u'syslog_line', _KERNEL_SYSLOG_LINE),
-      (u'syslog_comment', _SYSLOG_COMMENT)]
+      (u'syslog_comment', _SYSLOG_COMMENT),
+      (u'chromeos_syslog_line', _CHROMEOS_SYSLOG_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
@@ -167,20 +223,23 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       UnableToParseFile: if an unsupported key is provided.
     """
+
     if key not in self._SUPPORTED_KEYS:
       raise errors.UnableToParseFile(u'Unsupported key: {0:s}'.format(key))
 
-    month = timelib.MONTH_DICT.get(structure.month.lower(), None)
-    if not month:
-      mediator.ProduceParserError(
-          u'Invalid month value: {0:s}'.format(month))
-      return
+    if key == u'chromeos_syslog_line':
+      timestamp = timelib.Timestamp.FromTimeString(structure.iso_8601_date[0])
+    else:
+      month = timelib.MONTH_DICT.get(structure.month.lower(), None)
+      if not month:
+        mediator.ProduceParserError(u'Invalid month value: {0:s}'.format(month))
+        return
 
-    self._UpdateYear(mediator, month)
-    timestamp = timelib.Timestamp.FromTimeParts(
-        year=self._year_use, month=month, day=structure.day,
-        hour=structure.hour, minutes=structure.minute,
-        seconds=structure.second, timezone=mediator.timezone)
+      self._UpdateYear(mediator, month)
+      timestamp = timelib.Timestamp.FromTimeParts(
+          year=self._year_use, month=month, day=structure.day,
+          hour=structure.hour, minutes=structure.minute,
+          seconds=structure.second, timezone=mediator.timezone)
 
     if key == u'syslog_comment':
       comment_attributes = {u'body': structure.body}
@@ -191,6 +250,7 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     reporter = structure.reporter
     attributes = {
         u'hostname': structure.hostname,
+        u'severity': structure.severity,
         u'reporter': reporter,
         u'pid': structure.pid,
         u'body': structure.body}
@@ -199,7 +259,6 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     if not plugin_object:
       event_object = SyslogLineEvent(timestamp, 0, attributes)
       mediator.ProduceEvent(event_object)
-
     else:
       try:
         plugin_object.Process(mediator, timestamp, attributes)
@@ -219,7 +278,9 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     Returns:
       bool: whether the line appears to contain syslog content.
     """
-    return re.match(self._VERIFICATION_REGEX, line) is not None
+
+    return (re.match(self._VERIFICATION_REGEX, line) or
+            re.match(self._CHROMEOS_VERIFICATION_REGEX, line)) is not None
 
 
 manager.ParsersManager.RegisterParser(SyslogParser)
