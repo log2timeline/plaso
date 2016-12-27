@@ -57,6 +57,14 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
   _VERIFICATION_REGEX = \
       re.compile(r'^\w{3}\s+\d{1,2}\s\d{2}:\d{2}:\d{2}\s')
 
+  # The Chrome OS syslog messages are of a format begininng with an
+  # ISO 8601 combined date and time expression with timezone designator:
+  #   2016-10-25T12:37:23.297265-07:00
+  #
+  # This will then be followed by the SYSLOG Severity which will be one of:
+  #   EMERG,ALERT,CRIT,ERR,WARNING,NOTICE,INFO,DEBUG
+  #
+  # 2016-10-25T12:37:23.297265-07:00 INFO
   _CHROMEOS_VERIFICATION_REGEX = \
       re.compile(r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.'
                  r'\d{6}[\+|-]\d{2}:\d{2}\s'
@@ -94,10 +102,9 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       u'comment_body': pyparsing.SkipTo(u' ---').setResultsName(
           u'body'),
       u'iso_8601_offset' : pyparsing.oneOf(_OFFSET_PREFIX) +
-                           text_parser.PyparsingConstants.TWO_DIGITS +
-                           pyparsing.Optional(
-                               pyparsing.Literal(u':') +
-                               text_parser.PyparsingConstants.TWO_DIGITS)
+          text_parser.PyparsingConstants.TWO_DIGITS +
+          pyparsing.Optional(pyparsing.Literal(u':') +
+              text_parser.PyparsingConstants.TWO_DIGITS)
   }
 
   _PYPARSING_COMPONENTS[u'date'] = (
