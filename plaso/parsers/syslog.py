@@ -102,9 +102,10 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       u'comment_body': pyparsing.SkipTo(u' ---').setResultsName(
           u'body'),
       u'iso_8601_offset' : pyparsing.oneOf(_OFFSET_PREFIX) +
-          text_parser.PyparsingConstants.TWO_DIGITS +
-          pyparsing.Optional(pyparsing.Literal(u':') +
-              text_parser.PyparsingConstants.TWO_DIGITS)
+                           text_parser.PyparsingConstants.TWO_DIGITS +
+                           pyparsing.Optional(
+                               pyparsing.Literal(u':') +
+                               text_parser.PyparsingConstants.TWO_DIGITS)
   }
 
   _PYPARSING_COMPONENTS[u'date'] = (
