@@ -9,6 +9,29 @@ from plaso.containers import manager
 from plaso.lib import py2to3
 
 
+class EventData(interface.AttributeContainer):
+  """Class to represent an event data attribute container.
+
+  Attributes:
+    data_type (str): event data type indicator.
+    offset (int): offset relative to the start of the data stream where
+        the event data is stored.
+    query (str): query that was used to obtain the event data.
+  """
+  CONTAINER_TYPE = u'event_data'
+
+  def __init__(self, data_type=None):
+    """Initializes an event data attribute container.
+
+    Args:
+      data_type (Optional[str]): event data type indicator.
+    """
+    super(EventData, self).__init__()
+    self.data_type = data_type
+    self.offset = None
+    self.query = None
+
+
 # TODO: split event into source and event components.
 # https://github.com/log2timeline/plaso/wiki/Scribbles-about-events
 
@@ -203,7 +226,7 @@ class EventObject(interface.AttributeContainer):
       list[str]: attribute names.
     """
     attribute_names = []
-    for attribute_name in iter(self.__dict__.keys()):
+    for attribute_name in self.__dict__.keys():
       attribute_value = getattr(self, attribute_name, None)
       if attribute_value is not None:
         attribute_names.append(attribute_name)
@@ -363,4 +386,4 @@ class EventTag(interface.AttributeContainer):
 
 
 manager.AttributeContainersManager.RegisterAttributeContainers([
-    EventObject, EventTag])
+    EventData, EventObject, EventTag])
