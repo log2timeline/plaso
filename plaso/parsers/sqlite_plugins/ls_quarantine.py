@@ -1,40 +1,41 @@
 # -*- coding: utf-8 -*-
 """Plugin for the Mac OS X launch services quarantine events."""
 
+from dfdatetime import cocoa_time as dfdatetime_cocoa_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class LsQuarantineEvent(time_events.CocoaTimeEvent):
-  """Convenience class for a Mac OS X launch services quarantine event."""
+# TODO: describe more clearly what the data value contains.
+class LsQuarantineEventData(events.EventData):
+  """Mac OS X launch services quarantine event data.
+
+  Attributes:
+    data (bytes): data.
+    url (str): original URL of the file.
+    user_agent (str): user agent that was used to download the file.
+  """
+
   DATA_TYPE = u'macosx:lsquarantine'
 
-  # TODO: describe more clearly what the data value contains.
-  def __init__(self, cocoa_time, url, user_agent, data):
-    """Initializes the event object.
-
-    Args:
-      cocoa_time: The Cocoa time value.
-      url: The original URL of the file.
-      user_agent: The user agent that was used to download the file.
-      data: The data.
-    """
-    super(LsQuarantineEvent, self).__init__(
-        cocoa_time, eventdata.EventTimestamp.FILE_DOWNLOADED)
-
-    self.url = url
-    self.agent = user_agent
-    self.data = data
+  def __init__(self):
+    """Initializes event data."""
+    super(LsQuarantineEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.agent = None
+    self.data = None
+    self.url = None
 
 
 class LsQuarantinePlugin(interface.SQLitePlugin):
   """Parses the launch services quarantine events database.
 
-     The LS quarantine events are stored in SQLite database files named
-     /Users/<username>/Library/Preferences/\
-         QuarantineEvents.com.apple.LaunchServices
+  The LS quarantine events are stored in SQLite database files named
+  /Users/<username>/Library/Preferences/
+       QuarantineEvents.com.apple.LaunchServices
   """
 
   NAME = u'ls_quarantine'
@@ -55,16 +56,25 @@ class LsQuarantinePlugin(interface.SQLitePlugin):
     """Parses a launch services quarantine event row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row.
+      query (Optional[str]): query.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
 
-    event_object = LsQuarantineEvent(
-        row['Time'], row['URL'], row['Agent'], row['Data'])
-    parser_mediator.ProduceEvent(event_object, query=query)
+    event_data = LsQuarantineEventData()
+    event_data.agent = row['Agent']
+    event_data.data = row['Data']
+    event_data.query = query
+    event_data.url = row['URL']
+
+    timestamp = row['Time']
+    date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.FILE_DOWNLOADED)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(LsQuarantinePlugin)

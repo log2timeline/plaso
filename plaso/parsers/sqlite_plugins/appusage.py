@@ -1,39 +1,38 @@
 # -*- coding: utf-8 -*-
 """This file contains a parser for the Mac OS X application usage.
 
-   The application usage is stored in SQLite database files named
-   /var/db/application_usage.sqlite
+The application usage is stored in SQLite database files named
+/var/db/application_usage.sqlite
 """
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class MacOSXApplicationUsageEvent(time_events.PosixTimeEvent):
-  """Convenience class for a Mac OS X application usage event."""
+class MacOSXApplicationUsageEventData(events.EventData):
+  """Mac OS X application usage event data.
+
+  Attributes:
+    application (str): name of the application.
+    app_version (str): version of the application.
+    bundle_id (str): bundle identifier of the application.
+    count (int): TODO: number of times what?
+  """
 
   DATA_TYPE = u'macosx:application_usage'
 
-  def __init__(
-      self, posix_time, usage, application_name, application_version,
-      bundle_id, number_of_times):
-    """Initializes the event object.
-
-    Args:
-      posix_time: The POSIX time value.
-      usage: The description of the usage of the time value.
-      application_name: The name of the application.
-      application_version: The version of the application.
-      bundle_id: The bundle identifier of the application.
-      number_of_times: TODO: number of times what?
-    """
-    super(MacOSXApplicationUsageEvent, self).__init__(posix_time, usage)
-
-    self.application = application_name
-    self.app_version = application_version
-    self.bundle_id = bundle_id
-    self.count = number_of_times
+  def __init__(self):
+    """Initializes event data."""
+    super(MacOSXApplicationUsageEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.application = None
+    self.app_version = None
+    self.bundle_id = None
+    self.count = None
 
 
 class ApplicationUsagePlugin(interface.SQLitePlugin):
@@ -68,9 +67,10 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
     """Parses an application usage row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row.
+      query (Optional[str]): query.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
@@ -79,10 +79,16 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
     # it will hold here.
     usage = u'Application {0:s}'.format(row['event'])
 
-    event_object = MacOSXApplicationUsageEvent(
-        row['last_time'], usage, row['app_path'], row['app_version'],
-        row['bundle_id'], row['number_times'])
-    parser_mediator.ProduceEvent(event_object, query=query)
+    event_data = MacOSXApplicationUsageEventData()
+    event_data.application = row['app_path']
+    event_data.app_version = row['app_version']
+    event_data.bundle_id = row['bundle_id']
+    event_data.count = row['number_times']
+    event_data.query = query
+
+    date_time = dfdatetime_posix_time.PosixTime(timestamp=row['last_time'])
+    event = time_events.DateTimeValuesEvent(date_time, usage)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(ApplicationUsagePlugin)

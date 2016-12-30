@@ -1,48 +1,34 @@
 # -*- coding: utf-8 -*-
 """Parser for Android WebviewCache databases."""
 
+from dfdatetime import java_time as dfdatetime_java_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
-class WebViewCacheEvent(time_events.JavaTimeEvent):
-  """Parent class for WebViewCache events.
+
+class AndroidWebViewCacheEventData(events.EventData):
+  """Android WebViewCache event data.
 
   Attributes:
-    content_length: an integer type containing the number of bytes in the cached
-                    content.
-    url: a string containing the URL the content was cached from.
+    content_length (int): size of the cached content.
+    url (str): URL the content was retrieved from.
   """
 
-  def __init__(self, timestamp, url, content_length):
-    """Initalizes a WebViewCache event.
+  DATA_TYPE = u'android:webviewcache'
 
-    Args:
-      timestamp: the Java timestamp which is an integer containing the number
-                 of milliseconds since January 1, 1970, 00:00:00 UTC.
-      content_length: a integer type containing the number of bytes in the
-                      cached content.
-      url: a string containing the URL the content was cached from.
-    """
-    super(WebViewCacheEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.MODIFICATION_TIME)
-    self.content_length = content_length
-    self.url = url
-
-
-class WebViewCacheURLModificationEvent(WebViewCacheEvent):
-  """Convenience class for a WebViewCache modification event."""
-  DATA_TYPE = u'android:webviewcache:url_modification'
-
-
-class WebViewCacheURLExpirationEvent(WebViewCacheEvent):
-  """Convenience class for WebView cache expiry event."""
-  DATA_TYPE = u'android:webviewcache:url_expiry'
+  def __init__(self):
+    """Initializes event data."""
+    super(AndroidWebViewCacheEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.content_length = None
+    self.url = None
 
 
 class WebViewCachePlugin(interface.SQLitePlugin):
-  """Parser for WebViewCache databases."""
+  """Parser for Android WebViewCache databases."""
 
   NAME = u'android_webviewcache'
   DESCRIPTION = u'Parser for Android WebViewCache databases'
@@ -57,22 +43,30 @@ class WebViewCachePlugin(interface.SQLitePlugin):
     """Parses a row from the database.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row.
+      query (Optional[str]): query.
     """
     # Note that pysqlite does not accept a Unicode string in row['string']
     # and will raise "IndexError: Index must be int or string". All indexes are
     # thus raw strings.
+    event_data = AndroidWebViewCacheEventData()
+    event_data.content_length = row['contentlength']
+    event_data.query = query
+    event_data.url = row['url']
+
     if row['expires'] is not None:
-      expires_event = WebViewCacheURLExpirationEvent(
-          row['expires'], row['url'], row['contentlength'])
-      parser_mediator.ProduceEvent(expires_event, query=query)
+      date_time = dfdatetime_java_time.JavaTime(timestamp=row['expires'])
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.EXPIRATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if row['lastmodify'] is not None:
-      modification_event = WebViewCacheURLModificationEvent(
-          row['lastmodify'], row['url'], row['contentlength'])
-      parser_mediator.ProduceEvent(modification_event, query=query)
+      date_time = dfdatetime_java_time.JavaTime(timestamp=row['lastmodify'])
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(WebViewCachePlugin)
