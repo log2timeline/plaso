@@ -45,7 +45,7 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
         u'[{0:s}] '
         u'Index: 1 [MRU Value 0]: '
         u'Shell item path: <My Computer>').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
@@ -60,7 +60,7 @@ class TestBagMRUPlugin(test_lib.RegistryPluginTestCase):
         u'[{0:s}\\0] '
         u'Index: 1 [MRU Value 0]: '
         u'Shell item path: <My Computer> C:\\').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

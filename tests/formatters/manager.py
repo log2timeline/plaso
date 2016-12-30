@@ -8,11 +8,12 @@ from plaso.formatters import manager
 from plaso.formatters import mediator
 from plaso.formatters import winreg  # pylint: disable=unused-import
 
+from tests import test_lib as shared_test_lib
 from tests.containers import test_lib as containers_test_lib
 from tests.formatters import test_lib
 
 
-class FormattersManagerTest(unittest.TestCase):
+class FormattersManagerTest(shared_test_lib.BaseTestCase):
   """Tests for the event formatters manager."""
 
   def testFormatterRegistration(self):
@@ -60,15 +61,15 @@ class FormattersManagerTest(unittest.TestCase):
 
     self.assertIn((
         u'1334961526929596,REG,UNKNOWN,[MY AutoRun key] '
-        u'Run: c:/Temp/evil.exe'), message_strings)
+        u'Value: c:/Temp/evil.exe'), message_strings)
 
     self.assertIn(
         (u'1334966206929596,REG,UNKNOWN,'
-         u'[HKCU\\Secret\\EvilEmpire\\Malicious_key] '
+         u'[HKEY_CURRENT_USER\\Secret\\EvilEmpire\\Malicious_key] '
          u'Value: send all the exes to the other world'), message_strings)
     self.assertIn(
         (u'1334940286000000,REG,UNKNOWN,'
-         u'[HKCU\\Windows\\Normal] '
+         u'[HKEY_CURRENT_USER\\Windows\\Normal] '
          u'Value: run all the benign stuff'), message_strings)
     self.assertIn(
         (u'1335781787929596,FILE,Weird Log File,This log line reads '

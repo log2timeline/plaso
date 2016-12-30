@@ -17,7 +17,7 @@ class CCleanerUpdateEvent(time_events.TimestampEvent):
   """Convenience class for a Windows installation event.
 
   Attributes:
-    key_path: the Windows Registry key path.
+    key_path (str): Windows Registry key path.
   """
 
   DATA_TYPE = u'ccleaner:update'
@@ -51,13 +51,13 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
 
   _SOURCE_APPEND = u': CCleaner Registry key'
 
-  def GetEntries(self, parser_mediator, registry_key, **kwargs):
-    """Extracts event objects from a CCleaner Registry key.
+  def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
+    """Extracts events from a Windows Registry key.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      registry_key: A Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     update_key_value = None
     values_dict = {}
@@ -86,13 +86,19 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
             u'unable to parse time string: {0:s}'.format(date_time_string))
 
       if timestamp is not None:
-        event_object = CCleanerUpdateEvent(timestamp, registry_key.path)
-        parser_mediator.ProduceEvent(event_object)
+        event = CCleanerUpdateEvent(timestamp, registry_key.path)
+        parser_mediator.ProduceEvent(event)
 
-    event_object = windows_events.WindowsRegistryEvent(
-        registry_key.last_written_time, registry_key.path, values_dict,
-        offset=registry_key.offset, source_append=self._SOURCE_APPEND)
-    parser_mediator.ProduceEvent(event_object)
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = registry_key.path
+    event_data.offset = registry_key.offset
+    event_data.regvalue = values_dict
+    event_data.source_append = self._SOURCE_APPEND
+    event_data.urls = self.URLS
+
+    event = time_events.DateTimeValuesEvent(
+        registry_key.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 winreg.WinRegistryParser.RegisterPlugin(CCleanerPlugin)

@@ -101,7 +101,7 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
         u'17: Utility Manager.lnk '
         u'18: Programs Accessories\\System Tools '
         u'19: Internet Explorer (No Add-ons).lnk]').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

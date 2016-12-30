@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """Plug-in to collect information about the Windows timezone settings."""
 
+from plaso.containers import time_events
 from plaso.containers import windows_events
+from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -20,53 +22,42 @@ class WinRegTimezonePlugin(interface.WindowsRegistryPlugin):
           u'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\'
           u'TimeZoneInformation')])
 
-  URLS = []
-
   _VALUE_NAMES = frozenset([
       u'ActiveTimeBias', u'Bias', u'DaylightBias', u'DaylightName',
       u'DynamicDaylightTimeDisabled', u'StandardBias', u'StandardName',
       u'TimeZoneKeyName'])
 
-  def _GetValueData(self, registry_key, value_name):
-    """Retrieves the value data.
-
-    Given the Registry key and the value_name it returns the data in the value
-    or None if value_name does not exist.
+  def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
+    """Extracts events from a Windows Registry key.
 
     Args:
-      registry_key: A Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
-      value_name: the name of the value.
-
-    Returns:
-      The data inside a Windows Registry value or None.
-    """
-    registry_value = registry_key.GetValueByName(value_name)
-    if registry_value:
-      return registry_value.GetDataAsObject()
-
-  def GetEntries(self, parser_mediator, registry_key, **kwargs):
-    """Collect values and return an event.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      registry_key: A Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     if registry_key is None:
       return
 
     values_dict = {}
     for value_name in self._VALUE_NAMES:
-      value_data = self._GetValueData(registry_key, value_name)
+      registry_value = registry_key.GetValueByName(value_name)
+      if not registry_value:
+        continue
+
+      value_data = registry_value.GetDataAsObject()
       if value_data is None:
         continue
+
       values_dict[value_name] = value_data
 
-    event_object = windows_events.WindowsRegistryEvent(
-        registry_key.last_written_time, registry_key.path, values_dict,
-        offset=registry_key.offset)
-    parser_mediator.ProduceEvent(event_object)
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = registry_key.path
+    event_data.offset = registry_key.offset
+    event_data.regvalue = values_dict
+
+    event = time_events.DateTimeValuesEvent(
+        registry_key.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 winreg.WinRegistryParser.RegisterPlugin(WinRegTimezonePlugin)

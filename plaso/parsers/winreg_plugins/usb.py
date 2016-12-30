@@ -3,6 +3,7 @@
 
 import logging
 
+from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import eventdata
 from plaso.parsers import winreg
@@ -28,13 +29,13 @@ class USBPlugin(interface.WindowsRegistryPlugin):
 
   _SOURCE_APPEND = u': USB Entries'
 
-  def GetEntries(self, parser_mediator, registry_key, **kwargs):
-    """Collect SubKeys under USB and produce an event object for each one.
+  def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
+    """Extracts events from a Windows Registry key.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      registry_key: A Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     for subkey in registry_key.GetSubkeys():
       values_dict = {}
@@ -59,12 +60,17 @@ class USBPlugin(interface.WindowsRegistryPlugin):
       for devicekey in subkey.GetSubkeys():
         values_dict[u'serial'] = devicekey.name
 
+        event_data = windows_events.WindowsRegistryEventData()
+        event_data.key_path = registry_key.path
+        event_data.offset = registry_key.offset
+        event_data.regvalue = values_dict
+        event_data.source_append = self._SOURCE_APPEND
+
         # Last USB connection per USB device recorded in the Registry.
-        event_object = windows_events.WindowsRegistryEvent(
-            devicekey.last_written_time, registry_key.path, values_dict,
-            offset=registry_key.offset, source_append=self._SOURCE_APPEND,
-            usage=eventdata.EventTimestamp.LAST_CONNECTED)
-        parser_mediator.ProduceEvent(event_object)
+        event = time_events.DateTimeValuesEvent(
+            devicekey.last_written_time,
+            eventdata.EventTimestamp.LAST_CONNECTED)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 winreg.WinRegistryParser.RegisterPlugin(USBPlugin)

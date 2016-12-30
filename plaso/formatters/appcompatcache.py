@@ -11,7 +11,7 @@ class AppCompatCacheFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = u'windows:registry:appcompatcache'
 
   FORMAT_STRING_PIECES = [
-      u'[{keyname}]',
+      u'[{key_path}]',
       u'Cached entry: {entry_index}',
       u'Path: {path}']
 

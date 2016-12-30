@@ -133,7 +133,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         u'StandardBias: 0 '
         u'StandardName: @tzres.dll,-322 '
         u'TimeZoneKeyName: W. Europe Standard Time').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
@@ -171,7 +171,7 @@ class WinRegTimezonePluginTest(test_lib.RegistryPluginTestCase):
         u'StandardBias: 0 '
         u'StandardName: @tzres.dll,-112 '
         u'TimeZoneKeyName: Eastern Standard Time').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
