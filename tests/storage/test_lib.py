@@ -4,7 +4,6 @@
 from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
-from plaso.containers import text_events
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import eventdata
@@ -63,15 +62,19 @@ class StorageTestCase(shared_test_lib.BaseTestCase):
     test_events.append(event)
 
     timestamp = timelib.Timestamp.CopyFromString(u'2009-04-05 12:27:39')
-    text_dict = {
-        u'hostname': u'nomachine',
-        u'text': (
-            u'This is a line by someone not reading the log line properly. And '
-            u'since this log line exceeds the accepted 80 chars it will be '
-            u'shortened.'),
-        u'username': u'johndoe'}
-    event = text_events.TextEvent(timestamp, 12, text_dict)
+
+    # TODO: refactor to use event data.
+    event = time_events.TimestampEvent(
+        timestamp, eventdata.EventTimestamp.WRITTEN_TIME,
+        data_type=u'text:entry')
+    event.hostname = u'nomachine'
+    event.offset = 12
     event.parser = u'UNKNOWN'
+    event.text = (
+        u'This is a line by someone not reading the log line properly. And '
+        u'since this log line exceeds the accepted 80 chars it will be '
+        u'shortened.')
+    event.username = u'johndoe'
     test_events.append(event)
 
     return test_events

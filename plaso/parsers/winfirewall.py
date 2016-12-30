@@ -1,26 +1,65 @@
 # -*- coding: utf-8 -*-
 """Parser for Windows Firewall Log file."""
 
-import logging
-
 import pyparsing
 
+from dfdatetime import time_elements as dfdatetime_time_elements
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
-from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 import pytz  # pylint: disable=wrong-import-order
 
 
-class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
-  """Parses the Windows Firewall Log file.
+class WinFirewallEventData(events.EventData):
+  """Windows Firewall event data.
 
-  More information can be read here:
-    http://technet.microsoft.com/en-us/library/cc758040(v=ws.10).aspx
+  Attributes:
+    action (str): action taken.
+    protocol (str): IP protocol.
+    source_ip (str): source IP address.
+    dest_ip (str): destination IP address.
+    source_port (str): TCP or UDP source port.
+    dest_port (str): TCP or UDP destination port.
+    size (str): size of ???
+    flags (str): TCP flags.
+    tcp_seq (str): TCP sequence number.
+    tcp_ack (str): TCP ACK ???
+    tcp_win (str): TCP window size ???
+    icmp_type (str): ICMP type.
+    icmp_code (str): ICMP code.
+    info (str): ???
+    path (str): ???
   """
+
+  DATA_TYPE = u'windows:firewall:log_entry'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(WinFirewallEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.action = None
+    self.dest_ip = None
+    self.dest_port = None
+    self.flags = None
+    self.icmp_code = None
+    self.icmp_type = None
+    self.info = None
+    self.path = None
+    self.protocol = None
+    self.size = None
+    self.source_ip = None
+    self.source_port = None
+    self.tcp_ack = None
+    self.tcp_seq = None
+    self.tcp_win = None
+
+
+class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
+  """Parses the Windows Firewall Log file."""
 
   NAME = u'winfirewall'
   DESCRIPTION = u'Parser for Windows Firewall Log files.'
@@ -30,35 +69,50 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
   #   date time action protocol src-ip dst-ip src-port dst-port size
   #   tcpflags tcpsyn tcpack tcpwin icmptype icmpcode info path
 
-  # Define common structures.
-  BLANK = pyparsing.Literal(u'-')
-  WORD = pyparsing.Word(pyparsing.alphanums + u'-') | BLANK
-  INT = pyparsing.Word(pyparsing.nums, min=1) | BLANK
-  IP = (
-      text_parser.PyparsingConstants.IPV4_ADDRESS |
-      text_parser.PyparsingConstants.IPV6_ADDRESS | BLANK)
-  PORT = pyparsing.Word(pyparsing.nums, min=1, max=6) | BLANK
+  BLANK = pyparsing.Suppress(pyparsing.Literal(u'-'))
 
-  # Define how a log line should look like.
+  WORD = (
+      pyparsing.Word(pyparsing.alphanums, min=1) |
+      pyparsing.Word(pyparsing.alphanums + u'-', min=2) |
+      BLANK)
+
+  INTEGER = (
+      pyparsing.Word(pyparsing.nums, min=1).setParseAction(
+          text_parser.ConvertTokenToInteger) |
+      BLANK)
+
+  IP_ADDRESS = (
+      text_parser.PyparsingConstants.IPV4_ADDRESS |
+      text_parser.PyparsingConstants.IPV6_ADDRESS |
+      BLANK)
+
+  PORT = (
+      pyparsing.Word(pyparsing.nums, min=1, max=6).setParseAction(
+          text_parser.ConvertTokenToInteger) |
+      BLANK)
+
   LOG_LINE = (
-      text_parser.PyparsingConstants.DATE.setResultsName(u'date') +
-      text_parser.PyparsingConstants.TIME.setResultsName(u'time') +
-      WORD.setResultsName(u'action') + WORD.setResultsName(u'protocol') +
-      IP.setResultsName(u'source_ip') + IP.setResultsName(u'dest_ip') +
-      PORT.setResultsName(u'source_port') + INT.setResultsName(u'dest_port') +
-      INT.setResultsName(u'size') + WORD.setResultsName(u'flags') +
-      INT.setResultsName(u'tcp_seq') + INT.setResultsName(u'tcp_ack') +
-      INT.setResultsName(u'tcp_win') + INT.setResultsName(u'icmp_type') +
-      INT.setResultsName(u'icmp_code') + WORD.setResultsName(u'info') +
+      text_parser.PyparsingConstants.DATE_TIME.setResultsName(u'date_time') +
+      WORD.setResultsName(u'action') +
+      WORD.setResultsName(u'protocol') +
+      IP_ADDRESS.setResultsName(u'source_ip') +
+      IP_ADDRESS.setResultsName(u'dest_ip') +
+      PORT.setResultsName(u'source_port') +
+      INTEGER.setResultsName(u'dest_port') +
+      INTEGER.setResultsName(u'size') +
+      WORD.setResultsName(u'flags') +
+      INTEGER.setResultsName(u'tcp_seq') +
+      INTEGER.setResultsName(u'tcp_ack') +
+      INTEGER.setResultsName(u'tcp_win') +
+      INTEGER.setResultsName(u'icmp_type') +
+      INTEGER.setResultsName(u'icmp_code') +
+      WORD.setResultsName(u'info') +
       WORD.setResultsName(u'path'))
 
-  # Define the available log line structures.
   LINE_STRUCTURES = [
       (u'comment', text_parser.PyparsingConstants.COMMENT_LINE_HASH),
       (u'logline', LOG_LINE),
   ]
-
-  DATA_TYPE = u'windows:firewall:log_entry'
 
   def __init__(self):
     """Initializes a parser object."""
@@ -88,85 +142,78 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
     """Parse a single log line and and produce an event object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      structure: A pyparsing.ParseResults object from a line in the
-                 log file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a text file.
     """
-    log_dict = structure.asDict()
-
-    date = log_dict.get(u'date', None)
-    time = log_dict.get(u'time', None)
-
-    if not date and not time:
+    try:
+      date_time = dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=structure.date_time)
+    except ValueError:
       parser_mediator.ProduceExtractionError(
-          u'unable to extract timestamp from logline.')
+          u'invalid date time value: {0!s}'.format(structure.date_time))
       return
+
+    event_data = WinFirewallEventData()
+    event_data.action = structure.action
+    event_data.dest_ip = structure.dest_ip
+    event_data.dest_port = structure.dest_port
+    event_data.flags = structure.flags
+    event_data.icmp_code = structure.icmp_code
+    event_data.icmp_type = structure.icmp_type
+    event_data.info = structure.info
+    event_data.path = structure.path
+    event_data.protocol = structure.protocol
+    event_data.size = structure.size
+    event_data.source_ip = structure.source_ip
+    event_data.source_port = structure.source_port
+    event_data.tcp_ack = structure.tcp_ack
+    event_data.tcp_seq = structure.tcp_seq
+    event_data.tcp_win = structure.tcp_win
 
     if self._use_local_timezone:
-      zone = parser_mediator.timezone
+      time_zone = parser_mediator.timezone
     else:
-      zone = pytz.UTC
+      time_zone = pytz.UTC
 
-    try:
-      timestamp = timelib.Timestamp.FromTimeParts(
-          date[0], date[1], date[2], time[0], time[1], time[2], timezone=zone)
-    except errors.TimestampError as exception:
-      parser_mediator.ProduceExtractionError(
-          u'unable to determine timestamp with error: {0:s}'.format(
-              exception))
-      return
-
-    # TODO: refactor this into a WinFirewall specific event object.
-    event_object = time_events.TimestampEvent(
-        timestamp, eventdata.EventTimestamp.WRITTEN_TIME, self.DATA_TYPE)
-
-    for key, value in log_dict.items():
-      if key in (u'time', u'date') or value == u'-':
-        continue
-
-      if isinstance(value, pyparsing.ParseResults):
-        setattr(event_object, key, u''.join(value))
-
-      else:
-        # TODO: determine why this code construction is needed.
-        try:
-          save_value = int(value)
-        except ValueError:
-          save_value = value
-
-        setattr(event_object, key, save_value)
-
-    parser_mediator.ProduceEvent(event_object)
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.WRITTEN_TIME, time_zone=time_zone)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: An identification string indicating the name of the parsed
-           structure.
-      structure: A pyparsing.ParseResults object from a line in the
-                 log file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      key (str): identifier of the structure of tokens.
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a text file.
+
+    Raises:
+      ParseError: when the structure type is unknown.
     """
+    if key not in (u'comment', u'logline'):
+      raise errors.ParseError(
+          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+
     if key == u'comment':
       self._ParseCommentRecord(structure)
 
     elif key == u'logline':
       self._ParseLogLine(parser_mediator, structure)
 
-    else:
-      logging.warning(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
-
   def VerifyStructure(self, unused_parser_mediator, line):
     """Verify that this file is a firewall log file.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      line: A single line from the text file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      line (bytes): line from a text file.
 
     Returns:
-      True if this is the correct parser, False otherwise.
+      bool: True if the line is in the expected format, False if not.
     """
     # TODO: Examine other versions of the file format and if this parser should
     # support them.

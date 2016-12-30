@@ -27,53 +27,53 @@ class XChatLogUnitTest(test_lib.ParserTestCase):
 
     self.assertEqual(len(storage_writer.events), 9)
 
-    event_object = storage_writer.events[0]
+    event = storage_writer.events[0]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-12-31 21:11:55+01:00')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_string = u'XChat start logging'
-    self._TestGetMessageStrings(event_object, expected_string, expected_string)
+    self._TestGetMessageStrings(event, expected_string, expected_string)
 
-    event_object = storage_writer.events[1]
+    event = storage_writer.events[1]
     expected_string = u'--> You are now talking on #gugle'
-    self._TestGetMessageStrings(event_object, expected_string, expected_string)
+    self._TestGetMessageStrings(event, expected_string, expected_string)
 
-    event_object = storage_writer.events[2]
+    event = storage_writer.events[2]
     expected_string = u'--- Topic for #gugle is plaso, a difficult word'
-    self._TestGetMessageStrings(event_object, expected_string, expected_string)
+    self._TestGetMessageStrings(event, expected_string, expected_string)
 
-    event_object = storage_writer.events[3]
+    event = storage_writer.events[3]
     expected_string = u'Topic for #gugle set by Kristinn'
-    self._TestGetMessageStrings(event_object, expected_string, expected_string)
+    self._TestGetMessageStrings(event, expected_string, expected_string)
 
-    event_object = storage_writer.events[4]
+    event = storage_writer.events[4]
     expected_string = u'--- Joachim gives voice to fpi'
-    self._TestGetMessageStrings(event_object, expected_string, expected_string)
+    self._TestGetMessageStrings(event, expected_string, expected_string)
 
-    event_object = storage_writer.events[5]
+    event = storage_writer.events[5]
     expected_string = u'* XChat here'
-    self._TestGetMessageStrings(event_object, expected_string, expected_string)
+    self._TestGetMessageStrings(event, expected_string, expected_string)
 
-    event_object = storage_writer.events[6]
+    event = storage_writer.events[6]
     expected_string = u'[nickname: fpi] ola plas-ing guys!'
-    self._TestGetMessageStrings(event_object, expected_string, expected_string)
+    self._TestGetMessageStrings(event, expected_string, expected_string)
 
-    event_object = storage_writer.events[7]
+    event = storage_writer.events[7]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-12-31 23:00:00+01:00')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_string = u'[nickname: STRANGER] \u65e5\u672c'
-    self._TestGetMessageStrings(event_object, expected_string, expected_string)
+    self._TestGetMessageStrings(event, expected_string, expected_string)
 
-    event_object = storage_writer.events[8]
+    event = storage_writer.events[8]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2011-12-31 23:59:00+01:00')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_string = u'XChat end logging'
-    self._TestGetMessageStrings(event_object, expected_string, expected_string)
+    self._TestGetMessageStrings(event, expected_string, expected_string)
 
 
 if __name__ == '__main__':

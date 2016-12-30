@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 
+from dfdatetime import filetime as dfdatetime_filetime
 from dfvfs.analyzer import analyzer as dfvfs_analyzer
 from dfvfs.analyzer import fvde_analyzer_helper
 from dfvfs.credentials import manager as credentials_manager
@@ -732,8 +733,9 @@ class StorageMediaTool(tools.CLITool):
                     volume_identifier))
 
           vss_creation_time = volume.GetAttribute(u'creation_time')
-          vss_creation_time = timelib.Timestamp.FromFiletime(
-              vss_creation_time.value)
+          filetime = dfdatetime_filetime.Filetime(
+              timestamp=vss_creation_time.value)
+          vss_creation_time = filetime.GetPlasoTimestamp()
           vss_creation_time = timelib.Timestamp.CopyToIsoFormat(
               vss_creation_time)
 

@@ -73,14 +73,18 @@ class EventFormatter(object):
       message_string = format_string.format(**event_values)
 
     except KeyError as exception:
+      data_type = event_values.get(u'data_type', u'N/A')
+      display_name = event_values.get(u'display_name', u'N/A')
+      event_identifier = event_values.get(u'uuid', u'N/A')
+      parser_chain = event_values.get(u'parser', u'N/A')
+
       error_message = (
           u'unable to format string: "{0:s}" event object is missing required '
           u'attributes: {1:s}').format(format_string, exception)
       error_message = (
           u'Event: {0:s} data type: {1:s} display name: {2:s} '
           u'parser chain: {3:s} with error: {4:s}').format(
-              event_values[u'uuid'], event_values[u'data_type'],
-              event_values[u'display_name'], event_values[u'parser'],
+              event_identifier, data_type, display_name, parser_chain,
               error_message)
       logging.error(error_message)
 
@@ -91,12 +95,16 @@ class EventFormatter(object):
       message_string = u' '.join(attribute_values)
 
     except UnicodeDecodeError as exception:
+      data_type = event_values.get(u'data_type', u'N/A')
+      display_name = event_values.get(u'display_name', u'N/A')
+      event_identifier = event_values.get(u'uuid', u'N/A')
+      parser_chain = event_values.get(u'parser', u'N/A')
+
       error_message = u'Unicode decode error: {0:s}'.format(exception)
       error_message = (
           u'Event: {0:s} data type: {1:s} display name: {2:s} '
           u'parser chain: {3:s} with error: {4:s}').format(
-              event_values[u'uuid'], event_values[u'data_type'],
-              event_values[u'display_name'], event_values[u'parser'],
+              event_identifier, data_type, display_name, parser_chain,
               error_message)
       logging.error(error_message)
 
@@ -128,7 +136,7 @@ class EventFormatter(object):
 
     # Truncate the short message string if necessary.
     if len(short_message_string) > 80:
-      short_message_string = u'{0:s}...'.format(short_message_string[0:77])
+      short_message_string = u'{0:s}...'.format(short_message_string[:77])
 
     return message_string, short_message_string
 

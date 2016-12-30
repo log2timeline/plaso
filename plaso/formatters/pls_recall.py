@@ -5,17 +5,24 @@ from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-class PlsRecallFormatter(interface.EventFormatter):
+class PlsRecallFormatter(interface.ConditionalEventFormatter):
   """Formatter for a PL/SQL Recall file container event."""
+
   DATA_TYPE = u'PLSRecall:event'
   SOURCE_LONG = u'PL/SQL Developer Recall file'
   SOURCE_SHORT = u'PLSRecall'
 
-  # The format string.
-  FORMAT_STRING = (
-      u'Sequence #{sequence} User: {username} Database Name: {database_name} '
-      u'Query: {query}')
-  FORMAT_STRING_SHORT = u'{sequence} {username} {database_name} {query}'
+  FORMAT_STRING_PIECES = [
+      u'Sequence number: {sequence_number}',
+      u'Username: {username}',
+      u'Database name: {database_name}',
+      u'Query: {query}']
+
+  FORMAT_STRING_SHORT_PIECES = [
+      u'{sequence_number}',
+      u'{username}',
+      u'{database_name}',
+      u'{query}']
 
 
 manager.FormattersManager.RegisterFormatter(PlsRecallFormatter)

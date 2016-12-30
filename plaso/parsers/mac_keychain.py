@@ -19,6 +19,7 @@ import os
 
 import construct
 
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -30,67 +31,59 @@ from plaso.parsers import manager
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 
-class KeychainInternetRecordEvent(time_events.TimestampEvent):
-  """Convenience class for an keychain internet record event."""
+class KeychainInternetRecordEventData(events.EventData):
+  """Mac OS X keychain internet record event data.
+
+  Attributes:
+    account_name (str): name of the account.
+    comments (str): comments added by the user.
+    entry_name (str): name of the entry.
+    protocol (str): internet protocol used, for example "https".
+    ssgp_hash (str): hexadecimal values from the password / cert hash.
+    text_description (str): description.
+    type_protocol (str): sub-protocol used, for example "form".
+    where (str): domain name or IP where the password is used.
+  """
 
   DATA_TYPE = u'mac:keychain:internet'
 
-  def __init__(
-      self, timestamp, timestamp_description, entry_name, account_name,
-      text_description, comments, where, protocol, type_protocol, ssgp_hash):
-    """Initializes the event object.
-
-    Args:
-      timestamp: The timestamp which is an integer containing the number
-                 of micro seconds since January 1, 1970, 00:00:00 UTC.
-      timestamp_description: The usage string for the timestamp value.
-      entry_name: Name of the entry.
-      account_name: Name of the account.
-      text_description: Short description about the entry.
-      comments: String that contains the comments added by the user.
-      where: The domain name or IP where the password is used.
-      protocol: The internet protocol used (eg. https).
-      type_protocol: The sub-protocol used (eg. form).
-      ssgp_hash: String with hexadecimal values from the password / cert hash.
-    """
-    super(KeychainInternetRecordEvent, self).__init__(
-        timestamp, timestamp_description)
-    self.account_name = account_name
-    self.comments = comments
-    self.entry_name = entry_name
-    self.protocol = protocol
-    self.ssgp_hash = ssgp_hash
-    self.text_description = text_description
-    self.type_protocol = type_protocol
-    self.where = where
+  def __init__(self):
+    """Initializes event data."""
+    super(KeychainInternetRecordEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.account_name = None
+    self.comments = None
+    self.entry_name = None
+    self.protocol = None
+    self.ssgp_hash = None
+    self.text_description = None
+    self.type_protocol = None
+    self.where = None
 
 
-class KeychainApplicationRecordEvent(time_events.TimestampEvent):
-  """Convenience class for an keychain application password record event."""
+# TODO: merge with KeychainInternetRecordEventData.
+class KeychainApplicationRecordEventData(events.EventData):
+  """Mac OS X keychain application password record event data.
+
+  Attributes:
+    account_name (str): name of the account.
+    comments (str): comments added by the user.
+    entry_name (str): name of the entry.
+    ssgp_hash (str): hexadecimal values from the password / cert hash.
+    text_description (str): description.
+  """
+
   DATA_TYPE = u'mac:keychain:application'
 
-  def __init__(
-      self, timestamp, timestamp_description, entry_name, account_name,
-      text_description, comments, ssgp_hash):
-    """Initializes the event object.
-
-    Args:
-      timestamp: The timestamp which is an integer containing the number
-                 of micro seconds since January 1, 1970, 00:00:00 UTC.
-      timestamp_description: The usage string for the timestamp value.
-      entry_name: Name of the entry.
-      account_name: Name of the account.
-      text_description: Short description about the entry.
-      comments: String that contains the comments added by the user.
-      ssgp_hash: String with hexadecimal values from the password / cert hash.
-    """
-    super(KeychainApplicationRecordEvent, self).__init__(
-        timestamp, timestamp_description)
-    self.account_name = account_name
-    self.comments = comments
-    self.entry_name = entry_name
-    self.ssgp_hash = ssgp_hash
-    self.text_description = text_description
+  def __init__(self):
+    """Initializes event data."""
+    super(KeychainApplicationRecordEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.account_name = None
+    self.comments = None
+    self.entry_name = None
+    self.ssgp_hash = None
+    self.text_description = None
 
 
 class KeychainParser(interface.FileObjectParser):
@@ -229,8 +222,9 @@ class KeychainParser(interface.FileObjectParser):
     """Extracts the information from an application password entry.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object that points to an Keychain file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): a file-like object.
     """
     offset = file_object.tell()
     try:
@@ -251,26 +245,35 @@ class KeychainParser(interface.FileObjectParser):
         record.record_header.entry_length + offset - file_object.tell())
     file_object.seek(next_record_offset, os.SEEK_CUR)
 
-    event_object = KeychainApplicationRecordEvent(
-        creation_time, eventdata.EventTimestamp.CREATION_TIME,
-        entry_name, account_name, text_description, comments, ssgp_hash)
-    parser_mediator.ProduceEvent(event_object)
+    event_data = KeychainApplicationRecordEventData()
+    event_data.account_name = account_name
+    event_data.comments = comments
+    event_data.entry_name = entry_name
+    event_data.ssgp_hash = ssgp_hash
+    event_data.text_description = text_description
 
+    # TODO: refactor to use DateTimeValuesEvent.
+    event = time_events.TimestampEvent(
+        creation_time, eventdata.EventTimestamp.CREATION_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    # TODO: remove this check.
     if creation_time != last_modification_time:
-      event_object = KeychainApplicationRecordEvent(
-          last_modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
-          entry_name, account_name, text_description, comments, ssgp_hash)
-      parser_mediator.ProduceEvent(event_object)
+      # TODO: refactor to use DateTimeValuesEvent.
+      event = time_events.TimestampEvent(
+          last_modification_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ReadEntryHeader(self, parser_mediator, file_object, record, offset):
     """Read the common record attributes.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      file_object: A file-like object that points to an Keychain file.
-      record: Structure with the header of the record.
-      offset: First byte of the record.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_entry (dfvfs.FileEntry): a file entry object.
+      file_object (dfvfs.FileIO): a file-like object.
+      record (construct.Struct): record header structure.
+      offset (int): first byte of the record.
 
     Returns:
       A tuple containing:
@@ -365,8 +368,9 @@ class KeychainParser(interface.FileObjectParser):
     """Extracts the information from an Internet password entry.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object that points to an Keychain file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): a file-like object.
     """
     offset = file_object.tell()
     try:
@@ -408,27 +412,36 @@ class KeychainParser(interface.FileObjectParser):
         record.record_header.entry_length + offset - file_object.tell(),
         os.SEEK_CUR)
 
-    event_object = KeychainInternetRecordEvent(
-        creation_time, eventdata.EventTimestamp.CREATION_TIME,
-        entry_name, account_name, text_description,
-        comments, where, protocol, type_protocol, ssgp_hash)
-    parser_mediator.ProduceEvent(event_object)
+    event_data = KeychainInternetRecordEventData()
+    event_data.account_name = account_name
+    event_data.comments = comments
+    event_data.entry_name = entry_name
+    event_data.protocol = protocol
+    event_data.ssgp_hash = ssgp_hash
+    event_data.text_description = text_description
+    event_data.type_protocol = type_protocol
+    event_data.where = where
 
+    # TODO: refactor to use DateTimeValuesEvent.
+    event = time_events.TimestampEvent(
+        creation_time, eventdata.EventTimestamp.CREATION_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    # TODO: remove this check.
     if creation_time != last_modification_time:
-      event_object = KeychainInternetRecordEvent(
-          last_modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
-          entry_name, account_name, text_description,
-          comments, where, protocol, type_protocol, ssgp_hash)
-      parser_mediator.ProduceEvent(event_object)
+      # TODO: refactor to use DateTimeValuesEvent.
+      event = time_events.TimestampEvent(
+          last_modification_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _VerifyStructure(self, file_object):
     """Verify that we are dealing with an Keychain entry.
 
     Args:
-      file_object: A file-like object that points to an Keychain file.
+      file_object (dfvfs.FileIO): a file-like object.
 
     Returns:
-      A list of table positions if it is a keychain, None otherwise.
+      list[int]: table positions if it is a keychain, None otherwise.
     """
     # INFO: The HEADER KEYCHAIN:
     # [DBHEADER] + [DBSCHEMA] + [OFFSET TABLE A] + ... + [OFFSET TABLE Z]
@@ -462,8 +475,9 @@ class KeychainParser(interface.FileObjectParser):
     """Parses a Mac OS X keychain file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.

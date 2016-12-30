@@ -3,6 +3,9 @@
 
 import construct
 
+from dfdatetime import cocoa_time as dfdatetime_cocoa_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -14,32 +17,27 @@ from plaso.parsers import manager
 from plaso.parsers.cookie_plugins import manager as cookie_plugins_manager
 
 
-class BinaryCookieEvent(time_events.CocoaTimeEvent):
-  """A convenience class for a binary cookie event."""
+class SafariBinaryCookieEventData(events.EventData):
+  """Safari binary cookie event data.
+
+  Attributes:
+    cookie_name (str): cookie name.
+    cookie_value (str): cookie value.
+    flags (int): cookie flags.
+    path (str): path of the cookie.
+    url (str): URL where this cookie is valid.
+  """
 
   DATA_TYPE = u'safari:cookie:entry'
 
-  def __init__(
-      self, cocoa_time, timestamp_description, flags, url, cookie_name,
-      cookie_value, path):
-    """Initialize a binary cookie event.
-
-    Args:
-      cocoa_time (int): Cocoa time value.
-      timestamp_description (str): description of the meaning of the timestamp
-          value.
-      flags (int): cookie flags.
-      url (str): URL where this cookie is valid.
-      cookie_name (str): cookie name.
-      cookie_value (str): cookie value.
-      path (str): path of the cookie.
-    """
-    super(BinaryCookieEvent, self).__init__(cocoa_time, timestamp_description)
-    self.cookie_name = cookie_name
-    self.cookie_value = cookie_value
-    self.flags = flags
-    self.path = path
-    self.url = url
+  def __init__(self):
+    """Initializes event data."""
+    super(SafariBinaryCookieEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.cookie_name = None
+    self.cookie_value = None
+    self.flags = None
+    self.path = None
+    self.url = None
 
 
 class BinaryCookieParser(interface.FileObjectParser):
@@ -123,35 +121,39 @@ class BinaryCookieParser(interface.FileObjectParser):
       data, _, _ = data_all.partition(b'\x00')
       data_dict[value] = data
 
-    url = data_dict.get(u'url')
-    cookie_name = data_dict.get(u'name')
-    cookie_value = data_dict.get(u'value')
-    path = data_dict.get(u'path')
+    event_data = SafariBinaryCookieEventData()
+    event_data.cookie_name = data_dict.get(u'name')
+    event_data.cookie_value = data_dict.get(u'value')
+    event_data.flags = cookie.flags
+    event_data.path = data_dict.get(u'path')
+    event_data.url = data_dict.get(u'url')
 
     if cookie.creation_date:
-      event_object = BinaryCookieEvent(
-          cookie.creation_date, eventdata.EventTimestamp.CREATION_TIME,
-          cookie.flags, url, cookie_name, cookie_value, path)
-      parser_mediator.ProduceEvent(event_object)
+      date_time = dfdatetime_cocoa_time.CocoaTime(
+          timestamp=cookie.creation_date)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.CREATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
     # TODO: generate event if no timestamp is set.
     if cookie.expiration_date:
-      event_object = BinaryCookieEvent(
-          cookie.expiration_date, eventdata.EventTimestamp.EXPIRATION_TIME,
-          cookie.flags, url, cookie_name, cookie_value, path)
-      parser_mediator.ProduceEvent(event_object)
+      date_time = dfdatetime_cocoa_time.CocoaTime(
+          timestamp=cookie.expiration_date)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.EXPIRATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
     for plugin in self._cookie_plugins:
       if parser_mediator.abort:
         break
 
-      if cookie_name != plugin.COOKIE_NAME:
+      if event_data.cookie_name != plugin.COOKIE_NAME:
         continue
 
       try:
         plugin.UpdateChainAndProcess(
-            parser_mediator, cookie_name=cookie_name, cookie_data=cookie_value,
-            url=url)
+            parser_mediator, cookie_name=event_data.cookie_name,
+            cookie_data=event_data.cookie_value, url=event_data.url)
 
       except Exception as exception:  # pylint: disable=broad-except
         parser_mediator.ProduceExtractionError(

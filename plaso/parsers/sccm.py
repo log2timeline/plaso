@@ -33,15 +33,16 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
 
   _MICRO_SECONDS_PER_MINUTE = 60 * 1000000
 
+  FOUR_DIGITS = text_parser.PyparsingConstants.FOUR_DIGITS
+  ONE_OR_TWO_DIGITS = text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS
+
   # PyParsing Components used to construct grammars for parsing lines.
   _PARSING_COMPONENTS = {
       u'msg_left_delimiter': pyparsing.Literal(u'<![LOG['),
       u'msg_right_delimiter': pyparsing.Literal(u']LOG]!><time="'),
-      u'year': text_parser.PyparsingConstants.YEAR.setResultsName(u'year'),
-      u'month': text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.
-                setResultsName(u'month'),
-      u'day': text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.
-              setResultsName(u'day'),
+      u'year': FOUR_DIGITS.setResultsName(u'year'),
+      u'month': ONE_OR_TWO_DIGITS.setResultsName(u'month'),
+      u'day': ONE_OR_TWO_DIGITS.setResultsName(u'day'),
       u'microsecond': pyparsing.Regex(r'\d{3,7}').
                       setResultsName(u'microsecond'),
       u'utc_offset_minutes': pyparsing.Regex(r'[-+]\d{3}').

@@ -5,6 +5,9 @@ import uuid
 
 import pylnk
 
+from dfdatetime import filetime as dfdatetime_filetime
+from dfdatetime import semantic_time as dfdatetime_semantic_time
+
 from plaso import dependencies
 from plaso.containers import time_events
 from plaso.containers import windows_events
@@ -18,71 +21,70 @@ from plaso.parsers.shared import shell_items
 dependencies.CheckModuleVersion(u'pylnk')
 
 
-class WinLnkLinkEvent(time_events.FiletimeEvent):
+class WinLnkLinkEvent(time_events.DateTimeValuesEvent):
   """Convenience class for a Windows Shortcut (LNK) link event.
 
   Attributes:
-    birth_droid_file_identifier: the distributed link tracking brith droid
-                                 file identifier.
-    birth_droid_volume_identifier: the distributed link tracking brith droid
-                                   volume identifier.
-    command_line_arguments: the command line arguments.
-    description: the description of the linked item.
-    drive_serial_number: the drive serial number where the linked item resides.
-    drive_type: the drive type where the linked item resided.
-    droid_file_identifier: the distributed link tracking droid file
-                           identifier.
-    droid_volume_identifier: the distributed link tracking droid volume
-                             identifier.
-    env_var_location: the evironment variables loction.
-    file_attribute_flags: the file attribute flags of the linked item.
-    file_size: the size of the linked item.
-    icon_location: the icon location..
-    link_target: shell item list of the link target.
-    local_path: the local path of the linked item.
-    network_path: the local path of the linked item.
-    offset: the data offset of the event.
-    relative_path: the relative path.
-    volume_label: the volume label where the linked item resided.
-    working_directory: the working directory.
+    birth_droid_file_identifier (str): distributed link tracking brith droid
+        file identifier.
+    birth_droid_volume_identifier (str): distributed link tracking brith droid
+        volume identifier.
+    command_line_arguments (str): command line arguments.
+    description (str): description of the linked item.
+    drive_serial_number (int): drive serial number where the linked item
+        resides.
+    drive_type (str): drive type where the linked item resided.
+    droid_file_identifier (str): distributed link tracking droid file
+        identifier.
+    droid_volume_identifier (str): distributed link tracking droid volume
+        identifier.
+    env_var_location (str): evironment variables loction.
+    file_attribute_flags (int): file attribute flags of the linked item.
+    file_size (int): size of the linked item.
+    icon_location (str): icon location.
+    link_target (str): shell item list of the link target.
+    local_path (str): local path of the linked item.
+    network_path (str): local path of the linked item.
+    offset (int): data offset of the event.
+    relative_path (str): relative path.
+    volume_label (str): volume label where the linked item resided.
+    working_directory (str): working directory.
   """
 
   DATA_TYPE = u'windows:lnk:link'
 
-  def __init__(self, timestamp, timestamp_description, lnk_file, link_target):
-    """Initializes the event object.
+  def __init__(
+      self, date_time, date_time_description, lnk_file, link_target, offset=0):
+    """Initializes an event.
 
     Args:
-      timestamp: The FILETIME value for the timestamp.
-      timestamp_description: The usage string for the timestamp value.
-      lnk_file: The LNK file (instance of pylnk.file).
-      link_target: String representation of the link target shell item list
-                   or None.
+      date_time (dfdatetime.DateTimeValues): date and time values.
+      date_time_description (str): description of the meaning of the date
+          and time values.
+      lnk_file (pylnk.file): LNK file.
+      link_target (str): link target shell item list.
+      offset (Optional[int]): data offset of the event.
     """
-    super(WinLnkLinkEvent, self).__init__(timestamp, timestamp_description)
-
-    self.offset = 0
-    self.file_size = lnk_file.file_size
-    self.file_attribute_flags = lnk_file.file_attribute_flags
-    self.drive_type = lnk_file.drive_type
-    self.drive_serial_number = lnk_file.drive_serial_number
+    super(WinLnkLinkEvent, self).__init__(date_time, date_time_description)
+    self.birth_droid_file_identifier = lnk_file.birth_droid_file_identifier
+    self.birth_droid_volume_identifier = lnk_file.birth_droid_volume_identifier
+    self.command_line_arguments = lnk_file.command_line_arguments
     self.description = lnk_file.description
-    self.volume_label = lnk_file.volume_label
+    self.drive_serial_number = lnk_file.drive_serial_number
+    self.drive_type = lnk_file.drive_type
+    self.droid_file_identifier = lnk_file.droid_file_identifier
+    self.droid_volume_identifier = lnk_file.droid_volume_identifier
+    self.env_var_location = lnk_file.environment_variables_location
+    self.file_attribute_flags = lnk_file.file_attribute_flags
+    self.file_size = lnk_file.file_size
+    self.icon_location = lnk_file.icon_location
+    self.link_target = link_target
     self.local_path = lnk_file.local_path
     self.network_path = lnk_file.network_path
-    self.command_line_arguments = lnk_file.command_line_arguments
-    self.env_var_location = lnk_file.environment_variables_location
+    self.offset = offset
     self.relative_path = lnk_file.relative_path
+    self.volume_label = lnk_file.volume_label
     self.working_directory = lnk_file.working_directory
-    self.icon_location = lnk_file.icon_location
-
-    if link_target:
-      self.link_target = link_target
-
-    self.droid_volume_identifier = lnk_file.droid_volume_identifier
-    self.droid_file_identifier = lnk_file.droid_file_identifier
-    self.birth_droid_volume_identifier = lnk_file.birth_droid_volume_identifier
-    self.birth_droid_file_identifier = lnk_file.birth_droid_file_identifier
 
 
 class WinLnkParser(interface.FileObjectParser):
@@ -95,7 +97,11 @@ class WinLnkParser(interface.FileObjectParser):
 
   @classmethod
   def GetFormatSpecification(cls):
-    """Retrieves the format specification."""
+    """Retrieves the format specification.
+
+    Returns:
+      FormatSpecification: format specification.
+    """
     format_specification = specification.FormatSpecification(cls.NAME)
     format_specification.AddNewSignature(
         b'\x01\x14\x02\x00\x00\x00\x00\x00\xc0\x00\x00\x00\x00\x00\x00\x46',
@@ -107,9 +113,10 @@ class WinLnkParser(interface.FileObjectParser):
     """Parses a Windows Shortcut (LNK) file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
-      display_name: Optional display name.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
+      display_name (Optional[str]): display name.
     """
     if not display_name:
       display_name = parser_mediator.GetDisplayName()
@@ -137,48 +144,50 @@ class WinLnkParser(interface.FileObjectParser):
       link_target = shell_items_parser.CopyToPath()
 
     access_time = lnk_file.get_file_access_time_as_integer()
-    if access_time > 0:
-      parser_mediator.ProduceEvent(
-          WinLnkLinkEvent(
-              access_time, eventdata.EventTimestamp.ACCESS_TIME, lnk_file,
-              link_target))
+    if access_time != 0:
+      date_time = dfdatetime_filetime.Filetime(timestamp=access_time)
+      event = WinLnkLinkEvent(
+          date_time, eventdata.EventTimestamp.ACCESS_TIME, lnk_file,
+          link_target)
+      parser_mediator.ProduceEvent(event)
 
     creation_time = lnk_file.get_file_creation_time_as_integer()
-    if creation_time > 0:
-      parser_mediator.ProduceEvent(
-          WinLnkLinkEvent(
-              creation_time, eventdata.EventTimestamp.CREATION_TIME, lnk_file,
-              link_target))
+    if creation_time != 0:
+      date_time = dfdatetime_filetime.Filetime(timestamp=creation_time)
+      event = WinLnkLinkEvent(
+          date_time, eventdata.EventTimestamp.CREATION_TIME, lnk_file,
+          link_target)
+      parser_mediator.ProduceEvent(event)
 
     modification_time = lnk_file.get_file_modification_time_as_integer()
-    if modification_time > 0:
-      parser_mediator.ProduceEvent(
-          WinLnkLinkEvent(
-              modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
-              lnk_file, link_target))
+    if modification_time != 0:
+      date_time = dfdatetime_filetime.Filetime(timestamp=modification_time)
+      event = WinLnkLinkEvent(
+          date_time, eventdata.EventTimestamp.MODIFICATION_TIME,
+          lnk_file, link_target)
+      parser_mediator.ProduceEvent(event)
 
     if access_time == 0 and creation_time == 0 and modification_time == 0:
-      parser_mediator.ProduceEvent(
-          WinLnkLinkEvent(
-              0, eventdata.EventTimestamp.NOT_A_TIME, lnk_file, link_target))
+      date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+      event = WinLnkLinkEvent(
+          date_time, eventdata.EventTimestamp.NOT_A_TIME, lnk_file, link_target)
+      parser_mediator.ProduceEvent(event)
 
     try:
       uuid_object = uuid.UUID(lnk_file.droid_file_identifier)
       if uuid_object.version == 1:
-        event_object = (
-            windows_events.WindowsDistributedLinkTrackingCreationEvent(
-                uuid_object, display_name))
-        parser_mediator.ProduceEvent(event_object)
+        event = windows_events.WindowsDistributedLinkTrackingCreationEvent(
+            uuid_object, display_name)
+        parser_mediator.ProduceEvent(event)
     except (TypeError, ValueError):
       pass
 
     try:
       uuid_object = uuid.UUID(lnk_file.birth_droid_file_identifier)
       if uuid_object.version == 1:
-        event_object = (
-            windows_events.WindowsDistributedLinkTrackingCreationEvent(
-                uuid_object, display_name))
-        parser_mediator.ProduceEvent(event_object)
+        event = windows_events.WindowsDistributedLinkTrackingCreationEvent(
+            uuid_object, display_name)
+        parser_mediator.ProduceEvent(event)
     except (TypeError, ValueError):
       pass
 

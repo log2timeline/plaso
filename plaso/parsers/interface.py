@@ -8,7 +8,7 @@ from plaso.lib import errors
 
 
 class BaseFileEntryFilter(object):
-  """Class that defines the file entry filter interface."""
+  """The file entry filter interface."""
 
   @abc.abstractmethod
   def Match(self, file_entry):
@@ -23,7 +23,7 @@ class BaseFileEntryFilter(object):
 
 
 class FileNameFileEntryFilter(BaseFileEntryFilter):
-  """Class that defines a file name file entry filter."""
+  """A file name file entry filter."""
 
   def __init__(self, filename):
     """Initializes a file entry filter object.
@@ -51,7 +51,7 @@ class FileNameFileEntryFilter(BaseFileEntryFilter):
 
 
 class BaseParser(object):
-  """Class that defines the parser object interface."""
+  """The parser interface."""
 
   NAME = u'base_parser'
   DESCRIPTION = u''
@@ -207,7 +207,7 @@ class BaseParser(object):
 
 
 class FileEntryParser(BaseParser):
-  """Class that defines the file entry parser interface."""
+  """The file entry parser interface."""
 
   def Parse(self, parser_mediator, **kwargs):
     """Parsers the file entry and extracts event objects.
@@ -242,7 +242,7 @@ class FileEntryParser(BaseParser):
 
 
 class FileObjectParser(BaseParser):
-  """Class that defines the file-like object parser interface."""
+  """The file-like object parser interface."""
 
   # The initial file offset. Set this value to None if no initial
   # file offset seek needs to be performed.

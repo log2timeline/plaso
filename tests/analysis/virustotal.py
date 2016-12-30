@@ -5,11 +5,14 @@
 import unittest
 
 import mock
+
+from dfdatetime import posix_time as dfdatetime_posix_time
 from dfvfs.path import fake_path_spec
 
 from plaso.analysis import virustotal
+from plaso.containers import time_events
+from plaso.lib import eventdata
 from plaso.lib import timelib
-from plaso.parsers import pe
 
 from tests.analysis import test_lib
 
@@ -71,8 +74,13 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
     Returns:
       EventObject: event with the appropriate attributes for testing.
     """
-    event = pe.PECompilationEvent(
-        event_dictionary[u'timestamp'], u'Executable (EXE)', [], u'')
+    date_time = dfdatetime_posix_time.PosixTime(
+        timestamp=event_dictionary[u'timestamp'])
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.CREATION_TIME)
+
+    event.data_type = u'pe:compilation:compilation_time'
+    event.pe_type = u'Executable (EXE)'
 
     for attribute_name, attribute_value in event_dictionary.items():
       if attribute_name == u'timestamp':

@@ -28,33 +28,33 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-11-12 13:01:43.926143')
     self.assertEqual(event.timestamp, expected_timestamp)
-    expected_message = (u'Chrome extensions autoupdater last run')
-    expected_message_short = (u'Chrome extensions autoupdater last run')
+    expected_message = u'Chrome extensions autoupdater last run'
+    expected_short_message = u'Chrome extensions autoupdater last run'
     self._TestGetMessageStrings(
-        event, expected_message, expected_message_short)
+        event, expected_message, expected_short_message)
 
     event = storage_writer.events[1]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-11-12 18:20:21.519200')
     self.assertEqual(event.timestamp, expected_timestamp)
-    expected_message = (u'Chrome extensions autoupdater next run')
-    expected_message_short = (u'Chrome extensions autoupdater next run')
+    expected_message = u'Chrome extensions autoupdater next run'
+    expected_short_message = u'Chrome extensions autoupdater next run'
     self._TestGetMessageStrings(
-        event, expected_message, expected_message_short)
+        event, expected_message, expected_short_message)
 
     event = storage_writer.events[2]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-06-08 16:17:47.453766')
     self.assertEqual(event.timestamp, expected_timestamp)
-    expected_message = (u'Chrome history was cleared by user')
-    expected_message_short = (u'Chrome history was cleared by user')
+    expected_message = u'Chrome history was cleared by user'
+    expected_short_message = u'Chrome history was cleared by user'
     self._TestGetMessageStrings(
-        event, expected_message, expected_message_short)
+        event, expected_message, expected_short_message)
 
     event = storage_writer.events[17]
 
-    self.assertIsInstance(
-        event, chrome_preferences.ChromeExtensionInstallationEvent)
+    self.assertEqual(
+        event.data_type, u'chrome:preferences:extension_installation')
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-11-05 18:31:24.154837')
@@ -74,19 +74,18 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     expected_message = (
         u'CRX ID: {0:s} CRX Name: {1:s} Path: {2:s}'.format(
             expected_id, expected_name, expected_path))
-    expected_message_short = (
+    expected_short_message = (
         u'{0:s} '
         u'C:\\Program Files\\Google\\Chrome\\Application\\3...').format(
             expected_id)
     self._TestGetMessageStrings(
-        event, expected_message, expected_message_short)
-
+        event, expected_message, expected_short_message)
 
     event = storage_writer.events[24]
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2016-11-14 14:12:50.588973')
+        u'2016-11-14 14:12:50.588974')
     self.assertEqual(event.timestamp, expected_timestamp)
-    expected_message = (u'Permission geolocation used by a local file')
+    expected_message = u'Permission geolocation used by local file'
     self._TestGetMessageStrings(
         event, expected_message, expected_message)
 
@@ -96,9 +95,9 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.timestamp, expected_timestamp)
     expected_message = (
         u'Permission midi_sysex used by https://rawgit.com:443')
-    expected_message_short = expected_message
+    expected_short_message = expected_message
     self._TestGetMessageStrings(
-        event, expected_message, expected_message_short)
+        event, expected_message, expected_short_message)
 
     event = storage_writer.events[26]
     expected_timestamp = timelib.Timestamp.CopyFromString(
@@ -106,10 +105,10 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.timestamp, expected_timestamp)
     expected_message = (
         u'Permission notifications used by https://rawgit.com:443')
-    expected_message_short = (
+    expected_short_message = (
         u'Permission notifications used by https://rawgit.com:443')
     self._TestGetMessageStrings(
-        event, expected_message, expected_message_short)
+        event, expected_message, expected_short_message)
 
     event = storage_writer.events[27]
     expected_timestamp = timelib.Timestamp.CopyFromString(
@@ -117,19 +116,19 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.timestamp, expected_timestamp)
     expected_message = (
         u'Permission notifications used by https://rawgit.com:443')
-    expected_message_short = expected_message
+    expected_short_message = expected_message
     self._TestGetMessageStrings(
-        event, expected_message, expected_message_short)
+        event, expected_message, expected_short_message)
 
     event = storage_writer.events[28]
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2016-11-14 14:12:54.899473')
+        u'2016-11-14 14:12:54.899474')
     self.assertEqual(event.timestamp, expected_timestamp)
     expected_message = (
-        u'Permission media_stream_mic used by a local file')
-    expected_message_short = expected_message
+        u'Permission media_stream_mic used by local file')
+    expected_short_message = expected_message
     self._TestGetMessageStrings(
-        event, expected_message, expected_message_short)
+        event, expected_message, expected_short_message)
 
     event = storage_writer.events[29]
     expected_timestamp = timelib.Timestamp.CopyFromString(
@@ -137,9 +136,9 @@ class ChromePreferencesParserTest(test_lib.ParserTestCase):
     self.assertEqual(event.timestamp, expected_timestamp)
     expected_message = (
         u'Permission media_stream_mic used by https://rawgit.com:443')
-    expected_message_short = expected_message
+    expected_short_message = expected_message
     self._TestGetMessageStrings(
-        event, expected_message, expected_message_short)
+        event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

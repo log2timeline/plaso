@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """Bencode parser plugin for uTorrent files."""
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -8,25 +11,23 @@ from plaso.parsers import bencode_parser
 from plaso.parsers.bencode_plugins import interface
 
 
-class UTorrentEvent(time_events.PosixTimeEvent):
-  """Convenience class for a uTorrent active torrents history entries."""
+class UTorrentEventData(events.EventData):
+  """uTorrent event data.
+
+  Attributes:
+    caption (str): official name of package
+    path (str): Torrent download location
+    seedtime (int): number of seconds client seeded torrent
+  """
 
   DATA_TYPE = u'p2p:bittorrent:utorrent'
 
-  def __init__(
-      self, timestamp, timestamp_description, path, caption, seedtime):
-    """Initialize the event.
-
-    Args:
-      path: Torrent download location
-      caption: Official name of package
-      seedtime: Number of seconds client seeded torrent
-    """
-    super(UTorrentEvent, self).__init__(timestamp, timestamp_description)
-    self.path = path
-    self.caption = caption
-    # Convert seconds to minutes.
-    self.seedtime, _ = divmod(seedtime, 60)
+  def __init__(self):
+    """Initializes event data."""
+    super(UTorrentEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.caption = None
+    self.path = None
+    self.seedtime = None
 
 
 class UTorrentPlugin(interface.BencodePlugin):
@@ -62,8 +63,9 @@ class UTorrentPlugin(interface.BencodePlugin):
     extension.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      data: Optional bencode data in dictionary form.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      data (Optional[dict[str, object]]): bencode data values.
     """
     # Walk through one of the torrent keys to ensure it's from a valid file.
     for key, value in iter(data.items()):
@@ -80,23 +82,27 @@ class UTorrentPlugin(interface.BencodePlugin):
       if not u'.torrent' in torrent:
         continue
 
-      path = value.get(u'path', None)
-      caption = value.get(u'caption', None)
+      event_data = UTorrentEventData()
+      event_data.caption = value.get(u'caption', None)
+      event_data.path = value.get(u'path', None)
+
+      # Convert seconds to minutes.
       seedtime = value.get(u'seedtime', None)
+      event_data.seedtime, _ = divmod(seedtime, 60)
 
       # Create timeline events based on extracted values.
       for event_key, event_value in iter(value.items()):
         if event_key == u'added_on':
-          event_object = UTorrentEvent(
-              event_value, eventdata.EventTimestamp.ADDED_TIME,
-              path, caption, seedtime)
-          parser_mediator.ProduceEvent(event_object)
+          date_time = dfdatetime_posix_time.PosixTime(timestamp=event_value)
+          event = time_events.DateTimeValuesEvent(
+              date_time, eventdata.EventTimestamp.ADDED_TIME)
+          parser_mediator.ProduceEventWithEventData(event, event_data)
 
         elif event_key == u'completed_on':
-          event_object = UTorrentEvent(
-              event_value, eventdata.EventTimestamp.FILE_DOWNLOADED,
-              path, caption, seedtime)
-          parser_mediator.ProduceEvent(event_object)
+          date_time = dfdatetime_posix_time.PosixTime(timestamp=event_value)
+          event = time_events.DateTimeValuesEvent(
+              date_time, eventdata.EventTimestamp.FILE_DOWNLOADED)
+          parser_mediator.ProduceEventWithEventData(event, event_data)
 
         elif event_key == u'modtimes':
           for modtime in event_value:
@@ -104,10 +110,10 @@ class UTorrentPlugin(interface.BencodePlugin):
             if not modtime:
               continue
 
-            event_object = UTorrentEvent(
-                modtime, eventdata.EventTimestamp.MODIFICATION_TIME,
-                path, caption, seedtime)
-            parser_mediator.ProduceEvent(event_object)
+            date_time = dfdatetime_posix_time.PosixTime(timestamp=modtime)
+            event = time_events.DateTimeValuesEvent(
+                date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+            parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 bencode_parser.BencodeParser.RegisterPlugin(UTorrentPlugin)

@@ -9,17 +9,17 @@ from plaso.storage import fake_storage
 from tests.parsers import test_lib
 
 
-class OleCfPluginTestCase(test_lib.ParserTestCase):
+class OLECFPluginTestCase(test_lib.ParserTestCase):
   """The unit test case for OLE CF based plugins."""
 
-  def _ParseOleCfFileWithPlugin(
+  def _ParseOLECFFileWithPlugin(
       self, path_segments, plugin_object, codepage=u'cp1252',
       knowledge_base_values=None):
     """Parses a file as an OLE compound file and returns an event generator.
 
     Args:
       path_segments: a list of strings containinge the path segments inside
-      plugin_object: an OLE CF plugin object (instance of OleCfPlugin).
+      plugin_object: an OLE CF plugin object (instance of OLECFPlugin).
       codepage: optional string containing the codepage.
       knowledge_base_values: optional dictionary containing the knowledge base
                              values.

@@ -126,30 +126,21 @@ class WindowsRegistryServiceEventData(events.EventData):
     self.urls = None
 
 
-class WindowsVolumeCreationEvent(time_events.FiletimeEvent):
-  """Convenience class for a Windows volume creation event.
+class WindowsVolumeEventData(events.EventData):
+  """Windows volume event data.
 
   Attributes:
-    device_path: a string containing the volume device path.
-    origin: a string containing the origin of the event (event source).
-            E.g. corresponding Prefetch file name.
-    serial_number: a string containing the volume serial number.
+    device_path (str): volume device path.
+    origin (str): origin of the event (event source), for example
+        the corresponding Prefetch file name.
+    serial_number (str): volume serial number.
   """
   DATA_TYPE = u'windows:volume:creation'
 
-  def __init__(self, filetime, device_path, serial_number, origin):
-    """Initializes an event object.
-
-    Args:
-      filetime: an integer containing the FILETIME timestamp value.
-      device_path: a string containing the volume device path.
-      origin: a string containing the origin of the event (event source).
-              E.g. corresponding Prefetch file name.
-      serial_number: a string containing the volume serial number.
-    """
-    super(WindowsVolumeCreationEvent, self).__init__(
-        filetime, eventdata.EventTimestamp.CREATION_TIME)
-
-    self.device_path = device_path
-    self.origin = origin
-    self.serial_number = serial_number
+  def __init__(self):
+    """Initializes event data."""
+    super(WindowsVolumeEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.device_path = None
+    # TODO: replace origin my something machine readable.
+    self.origin = None
+    self.serial_number = None

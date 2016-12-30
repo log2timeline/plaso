@@ -1,49 +1,234 @@
 # -*- coding: utf-8 -*-
 """Plugin to parse the OLECF summary/document summary information items."""
 
+from dfdatetime import filetime as dfdatetime_filetime
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.parsers import olecf
 from plaso.parsers.olecf_plugins import interface
 
 
-class OleCfSummaryInfoEvent(time_events.FiletimeEvent):
-  """Convenience class for an OLECF Summary info event."""
+class OLECFPropertySetStream(object):
+  """OLECF property set stream.
+
+  Attributes:
+    date_time_properties (dict[str, dfdatetime.DateTimeValues]): date and time
+        properties and values.
+  """
+  # OLE variant types.
+  VT_I2 = 0x0002
+  VT_I4 = 0x0003
+  VT_BOOL = 0x000b
+  VT_LPSTR = 0x001e
+  VT_LPWSTR = 0x001e
+  VT_FILETIME = 0x0040
+  VT_CF = 0x0047
+
+  _CLASS_IDENTIFIER = None
+
+  _INTEGER_TYPES = frozenset([VT_I2, VT_I4, VT_FILETIME])
+  _STRING_TYPES = frozenset([VT_LPSTR, VT_LPWSTR])
+
+  _DATE_TIME_PROPERTIES = frozenset([])
+  _PROPERTY_NAMES = None
+  _PROPERTY_VALUE_MAPPINGS = None
+
+  def __init__(self, olecf_item):
+    """Initialize an OLECF property set stream.
+
+    Args:
+      olecf_item (pyolecf.property_set_stream): OLECF item.
+    """
+    super(OLECFPropertySetStream, self).__init__()
+    self._properties = {}
+    self.date_time_properties = {}
+
+    self._ReadPropertySet(olecf_item.set)
+
+  def _GetValueAsObject(self, property_value):
+    """Retrieves the property value as a Python object.
+
+    Args:
+      property_value (pyolecf.property_value): OLECF property value.
+
+    Returns:
+      object: property value as a Python object.
+    """
+    if property_value.type == self.VT_BOOL:
+      return property_value.data_as_boolean
+
+    elif property_value.type in self._INTEGER_TYPES:
+      return property_value.data_as_integer
+
+    elif property_value.type in self._STRING_TYPES:
+      return property_value.data_as_string
+
+    try:
+      data = property_value.data
+    except IOError:
+      data = None
+
+    return data
+
+  def _ReadPropertySet(self, property_set):
+    """Reads properties from a property set.
+
+    Args:
+      property_set (pyolecf.property_set): OLECF property set.
+    """
+    # Combine the values of multiple property sections
+    # but do not override properties that are already set.
+    for property_section in property_set.sections:
+      if property_section.class_identifier != self._CLASS_IDENTIFIER:
+        continue
+
+      for property_value in property_section.properties:
+        property_name = self._PROPERTY_NAMES.get(
+            property_value.identifier, None)
+        if not property_name:
+          property_name = u'0x{0:04}'.format(property_value.identifier)
+
+        value = self._GetValueAsObject(property_value)
+        if self._PROPERTY_VALUE_MAPPINGS:
+          value_callback_name = self._PROPERTY_VALUE_MAPPINGS.get(
+              property_name, None)
+          if value_callback_name:
+            value_callback_method = getattr(self, value_callback_name, None)
+            if value_callback_method:
+              value = value_callback_method(value)
+
+        if property_name in self._DATE_TIME_PROPERTIES:
+          properties_dict = self.date_time_properties
+          value = dfdatetime_filetime.Filetime(timestamp=value)
+        else:
+          properties_dict = self._properties
+
+        if property_name not in properties_dict:
+          properties_dict[property_name] = value
+
+  def GetEventData(self, data_type):
+    """Retrieves the properties as event data.
+
+    Args:
+      data_type (str): event data type.
+
+    Returns:
+      EventData: event data.
+    """
+    event_data = events.EventData(data_type=data_type)
+    for property_name, property_value in iter(self._properties.items()):
+      setattr(event_data, property_name, property_value)
+
+    return event_data
+
+
+class OLECFDocumentSummaryInformationEvent(time_events.DateTimeValuesEvent):
+  """Convenience class for an OLECF Document summary information event.
+
+  Attributes:
+    name (str): name of the OLECF item.
+  """
+
+  DATA_TYPE = u'olecf:document_summary_info'
+
+  def __init__(self, date_time, date_time_description):
+    """Initializes an event.
+
+    Args:
+      date_time (dfdatetime.DateTimeValues): date and time values.
+      date_time_description (str): description of the meaning of the date
+          and time values.
+    """
+    super(OLECFDocumentSummaryInformationEvent, self).__init__(
+        date_time, date_time_description)
+    self.name = u'Document Summary Information'
+
+
+class OLECFSummaryInformationEvent(time_events.DateTimeValuesEvent):
+  """Convenience class for an OLECF Summary information event.
+
+  Attributes:
+    name (str): name of the OLECF item.
+  """
 
   DATA_TYPE = u'olecf:summary_info'
 
-  def __init__(self, timestamp, usage, attributes):
-    """Initializes the event.
+  def __init__(self, date_time, date_time_description):
+    """Initializes an event.
 
     Args:
-      timestamp: The FILETIME timestamp value.
-      usage: The usage string, describing the timestamp value.
-      attributes: A dict object containing all extracted attributes.
+      date_time (dfdatetime.DateTimeValues): date and time values.
+      date_time_description (str): description of the meaning of the date
+          and time values.
     """
-    super(OleCfSummaryInfoEvent, self).__init__(
-        timestamp, usage)
-
+    super(OLECFSummaryInformationEvent, self).__init__(
+        date_time, date_time_description)
     self.name = u'Summary Information'
 
-    for attribute_name, attribute_value in iter(attributes.items()):
-      setattr(self, attribute_name, attribute_value)
+
+class OLECFDocumentSummaryInformation(OLECFPropertySetStream):
+  """OLECF Document Summary information property set."""
+
+  _CLASS_IDENTIFIER = u'd5cdd502-2e9c-101b-9397-08002b2cf9ae'
+
+  _PROPERTY_NAMES = {
+      0x0001: u'codepage',  # PIDDSI_CODEPAGE
+      0x0002: u'category',  # PIDDSI_CATEGORY
+      0x0003: u'presentation_format',  # PIDDSI_PRESFORMAT
+      0x0004: u'number_of_bytes',  # PIDDSI_BYTECOUNT
+      0x0005: u'number_of_lines',  # PIDDSI_LINECOUNT
+      0x0006: u'number_of_paragraphs',  # PIDDSI_PARCOUNT
+      0x0007: u'number_of_slides',  # PIDDSI_SLIDECOUNT
+      0x0008: u'number_of_notes',  # PIDDSI_NOTECOUNT
+      0x0009: u'number_of_hidden_slides',  # PIDDSI_HIDDENCOUNT
+      0x000a: u'number_of_clips',  # PIDDSI_MMCLIPCOUNT
+      0x000b: u'scale',  # PIDDSI_SCALE
+      0x000c: u'heading_pair',  # PIDDSI_HEADINGPAIR
+      0x000d: u'document_parts',  # PIDDSI_DOCPARTS
+      0x000e: u'manager',  # PIDDSI_MANAGER
+      0x000f: u'company',  # PIDDSI_COMPANY
+      0x0010: u'links_dirty',  # PIDDSI_LINKSDIRTY
+      0x0011: u'number_of_characters_with_white_space',  # PIDDSI_CCHWITHSPACES
+      0x0013: u'shared_document',  # PIDDSI_SHAREDDOC
+      0x0017: u'application_version',  # PIDDSI_VERSION
+      0x001a: u'content_type',  # PIDDSI_CONTENTTYPE
+      0x001b: u'content_status',  # PIDDSI_CONTENTSTATUS
+      0x001c: u'language',  # PIDDSI_LANGUAGE
+      0x001d: u'document_version',  # PIDDSI_DOCVERSION
+  }
+
+  _PROPERTY_VALUE_MAPPINGS = {
+      u'application_version': u'_FormatApplicationVersion',
+  }
+
+  def _FormatApplicationVersion(self, application_version):
+    """Formats the application version.
+
+    Args:
+      application_version (int): application version.
+
+    Returns:
+      str: fomratted application version.
+    """
+    # The application version consists of 2 16-bit values that make up
+    # the version number. Where the upper 16-bit is the major number
+    # and the lower 16-bit the minor number.
+    return u'{0:d}.{1:d}'.format(
+        application_version >> 16, application_version & 0xffff)
 
 
-# TODO: Move this class to a higher level (to the interface)
-# so the these functions can be shared by other plugins.
-class OleCfSummaryInfo(object):
-  """An OLECF Summary Info object."""
+class OLECFSummaryInformation(OLECFPropertySetStream):
+  """OLECF Summary information property set."""
 
   _CLASS_IDENTIFIER = u'f29f85e0-4ff9-1068-ab91-08002b27b3d9'
 
-  _PROPERTY_NAMES_INT32 = {
-      0x000e: u'number_of_pages',  # PIDSI_PAGECOUNT
-      0x000f: u'number_of_words',  # PIDSI_WORDCOUNT
-      0x0010: u'number_of_characters',  # PIDSI_CHARCOUNT
-      0x0013: u'security',  # PIDSI_SECURITY
-  }
+  _DATE_TIME_PROPERTIES = frozenset([
+      u'creation_time', u'last_printed_time', u'last_save_time'])
 
-  _PROPERTY_NAMES_STRING = {
+  _PROPERTY_NAMES = {
+      0x0001: u'codepage',  # PIDSI_CODEPAGE
       0x0002: u'title',  # PIDSI_TITLE
       0x0003: u'subject',  # PIDSI_SUBJECT
       0x0004: u'author',  # PIDSI_AUTHOR
@@ -52,276 +237,20 @@ class OleCfSummaryInfo(object):
       0x0007: u'template',  # PIDSI_TEMPLATE
       0x0008: u'last_saved_by',  # PIDSI_LASTAUTHOR
       0x0009: u'revision_number',  # PIDSI_REVNUMBER
+      0x000a: u'edit_time',  # PIDSI_EDITTIME
+      0x000b: u'last_printed_time',  # PIDSI_LASTPRINTED
+      0x000c: u'creation_time',  # PIDSI_CREATE_DTM
+      0x000d: u'last_save_time',  # PIDSI_LASTSAVE_DTM
+      0x000e: u'number_of_pages',  # PIDSI_PAGECOUNT
+      0x000f: u'number_of_words',  # PIDSI_WORDCOUNT
+      0x0010: u'number_of_characters',  # PIDSI_CHARCOUNT
+      0x0011: u'thumbnail',  # PIDSI_THUMBNAIL
       0x0012: u'application',  # PIDSI_APPNAME
+      0x0013: u'security',  # PIDSI_SECURITY
   }
 
-  PIDSI_CODEPAGE = 0x0001
-  PIDSI_EDITTIME = 0x000a
-  PIDSI_LASTPRINTED = 0x000b
-  PIDSI_CREATE_DTM = 0x000c
-  PIDSI_LASTSAVE_DTM = 0x000d
-  PIDSI_THUMBNAIL = 0x0011
 
-  def __init__(self, olecf_item):
-    """Initialize the OLECF summary object.
-
-    Args:
-      olecf_item: The OLECF item (instance of pyolecf.property_set_stream).
-    """
-    super(OleCfSummaryInfo, self).__init__()
-    self.attributes = {}
-    self.events = []
-
-    self._InitFromPropertySet(olecf_item.set)
-
-  def _InitFromPropertySet(self, property_set):
-    """Initializes the object from a property set.
-
-    Args:
-      property_set: The OLECF property set (pyolecf.property_set).
-    """
-    # Combine the values of multiple property sections
-    # but do not override properties that are already set.
-    for property_section in property_set.sections:
-      if property_section.class_identifier != self._CLASS_IDENTIFIER:
-        continue
-      for property_value in property_section.properties:
-        self._InitFromPropertyValue(property_value)
-
-  def _InitFromPropertyValue(self, property_value):
-    """Initializes the object from a property value.
-
-    Args:
-      property_value: The OLECF property value (pyolecf.property_value).
-    """
-    if property_value.type == interface.OleDefinitions.VT_I2:
-      self._InitFromPropertyValueTypeInt16(property_value)
-
-    elif property_value.type == interface.OleDefinitions.VT_I4:
-      self._InitFromPropertyValueTypeInt32(property_value)
-
-    elif (property_value.type == interface.OleDefinitions.VT_LPSTR or
-          property_value.type == interface.OleDefinitions.VT_LPWSTR):
-      self._InitFromPropertyValueTypeString(property_value)
-
-    elif property_value.type == interface.OleDefinitions.VT_FILETIME:
-      self._InitFromPropertyValueTypeFiletime(property_value)
-
-  def _InitFromPropertyValueTypeInt16(self, property_value):
-    """Initializes the object from a 16-bit int type property value.
-
-    Args:
-      property_value: The OLECF property value (pyolecf.property_value
-                      of type VT_I2).
-    """
-    if property_value.identifier == self.PIDSI_CODEPAGE:
-      # TODO: can the codepage vary per property section?
-      # And is it needed to interpret the ASCII strings?
-      # codepage = property_value.data_as_integer
-      pass
-
-  def _InitFromPropertyValueTypeInt32(self, property_value):
-    """Initializes the object from a 32-bit int type property value.
-
-    Args:
-      property_value: The OLECF property value (pyolecf.property_value
-                      of type VT_I4).
-    """
-    property_name = self._PROPERTY_NAMES_INT32.get(
-        property_value.identifier, None)
-
-    if property_name and property_name not in self.attributes:
-      self.attributes[property_name] = property_value.data_as_integer
-
-  def _InitFromPropertyValueTypeString(self, property_value):
-    """Initializes the object from a string type property value.
-
-    Args:
-      property_value: The OLECF property value (pyolecf.property_value
-                      of type VT_LPSTR or VT_LPWSTR).
-    """
-    property_name = self._PROPERTY_NAMES_STRING.get(
-        property_value.identifier, None)
-
-    if property_name and property_name not in self.attributes:
-      self.attributes[property_name] = property_value.data_as_string
-
-  def _InitFromPropertyValueTypeFiletime(self, property_value):
-    """Initializes the object from a filetime type property value.
-
-    Args:
-      property_value: The OLECF property value (pyolecf.property_value
-                      of type VT_FILETIME).
-    """
-    if property_value.identifier == self.PIDSI_LASTPRINTED:
-      self.events.append(
-          (property_value.data_as_integer, u'Document Last Printed Time'))
-
-    elif property_value.identifier == self.PIDSI_CREATE_DTM:
-      self.events.append(
-          (property_value.data_as_integer, u'Document Creation Time'))
-
-    elif property_value.identifier == self.PIDSI_LASTSAVE_DTM:
-      self.events.append(
-          (property_value.data_as_integer, u'Document Last Save Time'))
-
-    elif property_value.identifier == self.PIDSI_EDITTIME:
-      # property_name = u'total_edit_time'
-      # TODO: handle duration.
-      pass
-
-
-class OleCfDocumentSummaryInfoEvent(time_events.FiletimeEvent):
-  """Convenience class for an OLECF Document Summary info event."""
-
-  DATA_TYPE = u'olecf:document_summary_info'
-
-  _CLASS_IDENTIFIER = u'd5cdd502-2e9c-101b-9397-08002b2cf9ae'
-
-  _PROPERTY_NAMES_BOOL = {
-      0x0013: u'shared_document',  # PIDDSI_SHAREDDOC
-  }
-
-  _PROPERTY_NAMES_INT32 = {
-      0x0004: u'number_of_bytes',  # PIDDSI_BYTECOUNT
-      0x0005: u'number_of_lines',  # PIDDSI_LINECOUNT
-      0x0006: u'number_of_paragraphs',  # PIDDSI_PARCOUNT
-      0x0007: u'number_of_slides',  # PIDDSI_SLIDECOUNT
-      0x0008: u'number_of_notes',  # PIDDSI_NOTECOUNT
-      0x0009: u'number_of_hidden_slides',  # PIDDSI_HIDDENCOUNT
-      0x000a: u'number_of_clips',  # PIDDSI_MMCLIPCOUNT
-      0x0011: u'number_of_characters_with_white_space',  # PIDDSI_CCHWITHSPACES
-      0x0017: u'application_version',  # PIDDSI_VERSION
-  }
-
-  _PROPERTY_NAMES_STRING = {
-      0x000e: u'manager',  # PIDDSI_MANAGER
-      0x000f: u'company',  # PIDDSI_COMPANY
-      0x001a: u'content_type',  # PIDDSI_CONTENTTYPE
-      0x001b: u'content_status',  # PIDDSI_CONTENTSTATUS
-      0x001c: u'language',  # PIDDSI_LANGUAGE
-      0x001d: u'document_version',  # PIDDSI_DOCVERSION
-  }
-
-  PIDDSI_CODEPAGE = 0x0001
-  PIDDSI_CATEGORY = 0x0002
-  PIDDSI_PRESFORMAT = 0x0003
-  PIDDSI_SCALE = 0x000b
-  PIDDSI_HEADINGPAIR = 0x000c
-  PIDDSI_DOCPARTS = 0x000d
-  PIDDSI_LINKSDIRTY = 0x0010
-  PIDDSI_VERSION = 0x0017
-
-  def __init__(self, timestamp, usage, olecf_item):
-    """Initializes the event.
-
-    Args:
-      timestamp: The FILETIME timestamp value.
-      usage: The usage string, describing the timestamp value.
-      olecf_item: The OLECF item (pyolecf.property_set_stream).
-    """
-    super(OleCfDocumentSummaryInfoEvent, self).__init__(
-        timestamp, usage)
-
-    self.name = u'Document Summary Information'
-
-    self._InitFromPropertySet(olecf_item.set)
-
-  def _InitFromPropertySet(self, property_set):
-    """Initializes the event from a property set.
-
-    Args:
-      property_set: The OLECF property set (pyolecf.property_set).
-    """
-    # Combine the values of multiple property sections
-    # but do not override properties that are already set.
-    for property_section in property_set.sections:
-      if property_section.class_identifier != self._CLASS_IDENTIFIER:
-        continue
-      for property_value in property_section.properties:
-        self._InitFromPropertyValue(property_value)
-
-  def _InitFromPropertyValue(self, property_value):
-    """Initializes the event from a property value.
-
-    Args:
-      property_value: The OLECF property value (pyolecf.property_value).
-    """
-    if property_value.type == interface.OleDefinitions.VT_I2:
-      self._InitFromPropertyValueTypeInt16(property_value)
-
-    elif property_value.type == interface.OleDefinitions.VT_I4:
-      self._InitFromPropertyValueTypeInt32(property_value)
-
-    elif property_value.type == interface.OleDefinitions.VT_BOOL:
-      self._InitFromPropertyValueTypeBool(property_value)
-
-    elif (property_value.type == interface.OleDefinitions.VT_LPSTR or
-          property_value.type == interface.OleDefinitions.VT_LPWSTR):
-      self._InitFromPropertyValueTypeString(property_value)
-
-  def _InitFromPropertyValueTypeInt16(self, property_value):
-    """Initializes the event from a 16-bit int type property value.
-
-    Args:
-      property_value: The OLECF property value (pyolecf.property_value
-                      of type VT_I2).
-    """
-    if property_value.identifier == self.PIDDSI_CODEPAGE:
-      # TODO: can the codepage vary per property section?
-      # And is it needed to interpret the ASCII strings?
-      # codepage = property_value.data_as_integer
-      pass
-
-  def _InitFromPropertyValueTypeInt32(self, property_value):
-    """Initializes the event from a 32-bit int type property value.
-
-    Args:
-      property_value: The OLECF property value (pyolecf.property_value
-                      of type VT_I4).
-    """
-    property_name = self._PROPERTY_NAMES_INT32.get(
-        property_value.identifier, None)
-
-    # The application version consists of 2 16-bit values that make up
-    # the version number. Where the upper 16-bit is the major number
-    # and the lower 16-bit the minor number.
-    if property_value.identifier == self.PIDDSI_VERSION:
-      application_version = property_value.data_as_integer
-      setattr(self, property_name, u'{0:d}.{1:d}'.format(
-          application_version >> 16, application_version & 0xffff))
-
-    elif property_name and not hasattr(self, property_name):
-      setattr(self, property_name, property_value.data_as_integer)
-
-  def _InitFromPropertyValueTypeBool(self, property_value):
-    """Initializes the event from a boolean type property value.
-
-    Args:
-      property_value: The OLECF property value (pyolecf.property_value
-                      of type VT_BOOL).
-    """
-    property_name = self._PROPERTY_NAMES_BOOL.get(
-        property_value.identifier, None)
-
-    if property_name and not hasattr(self, property_name):
-      setattr(self, property_name, property_value.data_as_boolean)
-
-  def _InitFromPropertyValueTypeString(self, property_value):
-    """Initializes the event from a string type property value.
-
-    Args:
-      property_value: The OLECF property value (pyolecf.property_value
-                      of type VT_LPSTR or VT_LPWSTR).
-    """
-    property_name = self._PROPERTY_NAMES_STRING.get(
-        property_value.identifier, None)
-
-    if property_name and not hasattr(self, property_name):
-      setattr(self, property_name, property_value.data_as_string)
-
-
-class DocumentSummaryOlecfPlugin(interface.OlecfPlugin):
+class DocumentSummaryInformationOLECFPlugin(interface.OLECFPlugin):
   """Plugin that parses DocumentSummaryInformation item from an OLECF file."""
 
   NAME = u'olecf_document_summary'
@@ -330,31 +259,50 @@ class DocumentSummaryOlecfPlugin(interface.OlecfPlugin):
   # pylint: disable=anomalous-backslash-in-string
   REQUIRED_ITEMS = frozenset([u'\005DocumentSummaryInformation'])
 
-  def ParseItems(
-      self, parser_mediator, root_item=None, items=None, **unused_kwargs):
+  def Process(self, parser_mediator, root_item=None, **kwargs):
     """Parses a document summary information OLECF item.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      root_item: Optional root item of the OLECF file.
-      item_names: Optional list of all items discovered in the root.
-    """
-    root_creation_time, root_modification_time = self.GetTimestamps(root_item)
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      root_item (Optional[pyolecf.item]): root item of the OLECF file.
 
-    for item in items:
+    Raises:
+      ValueError: If the root item is not set.
+    """
+    # This will raise if unhandled keyword arguments are passed.
+    super(DocumentSummaryInformationOLECFPlugin, self).Process(
+        parser_mediator, **kwargs)
+
+    if not root_item:
+      raise ValueError(u'Root item not set.')
+
+    root_creation_time, root_modification_time = self._GetTimestamps(root_item)
+
+    for item_name in self.REQUIRED_ITEMS:
+      item = root_item.get_sub_item_by_name(item_name)
+
+      summary_information = OLECFDocumentSummaryInformation(item)
+      event_data = summary_information.GetEventData(
+          data_type=u'olecf:document_summary_info')
+      event_data.name = u'Document Summary Information'
+
       if root_creation_time:
-        event_object = OleCfDocumentSummaryInfoEvent(
-            root_creation_time, eventdata.EventTimestamp.CREATION_TIME, item)
-        parser_mediator.ProduceEvent(event_object)
+        date_time = dfdatetime_filetime.Filetime(
+            timestamp=root_creation_time)
+        event = OLECFDocumentSummaryInformationEvent(
+            date_time, eventdata.EventTimestamp.CREATION_TIME)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
       if root_modification_time:
-        event_object = OleCfDocumentSummaryInfoEvent(
-            root_modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
-            item)
-        parser_mediator.ProduceEvent(event_object)
+        date_time = dfdatetime_filetime.Filetime(
+            timestamp=root_modification_time)
+        event = OLECFDocumentSummaryInformationEvent(
+            date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-class SummaryInfoOlecfPlugin(interface.OlecfPlugin):
+class SummaryInformationOLECFPlugin(interface.OLECFPlugin):
   """Plugin that parses the SummaryInformation item from an OLECF file."""
 
   NAME = u'olecf_summary'
@@ -363,38 +311,61 @@ class SummaryInfoOlecfPlugin(interface.OlecfPlugin):
   # pylint: disable=anomalous-backslash-in-string
   REQUIRED_ITEMS = frozenset([u'\005SummaryInformation'])
 
-  def ParseItems(
-      self, parser_mediator, root_item=None, items=None, **unused_kwargs):
+  _DATE_TIME_DESCRIPTIONS = {
+      u'creation_time': u'Document Creation Time',
+      u'last_printed_time': u'Document Last Printed Time',
+      u'last_save_time': u'Document Last Save Time',
+  }
+
+  def Process(self, parser_mediator, root_item=None, **kwargs):
     """Parses a summary information OLECF item.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      root_item: Optional root item of the OLECF file.
-      item_names: Optional list of all items discovered in the root.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      root_item (Optional[pyolecf.item]): root item of the OLECF file.
+
+    Raises:
+      ValueError: If the root item is not set.
     """
-    root_creation_time, root_modification_time = self.GetTimestamps(root_item)
+    # This will raise if unhandled keyword arguments are passed.
+    super(SummaryInformationOLECFPlugin, self).Process(
+        parser_mediator, **kwargs)
 
-    for item in items:
-      summary_information_object = OleCfSummaryInfo(item)
+    if not root_item:
+      raise ValueError(u'Root item not set.')
 
-      for timestamp, timestamp_description in summary_information_object.events:
-        event_object = OleCfSummaryInfoEvent(
-            timestamp, timestamp_description,
-            summary_information_object.attributes)
-        parser_mediator.ProduceEvent(event_object)
+    root_creation_time, root_modification_time = self._GetTimestamps(root_item)
+
+    for item_name in self.REQUIRED_ITEMS:
+      item = root_item.get_sub_item_by_name(item_name)
+
+      summary_information = OLECFSummaryInformation(item)
+      event_data = summary_information.GetEventData(
+          data_type=u'olecf:summary_info')
+      event_data.name = u'Summary Information'
+
+      for property_name, date_time in iter(
+          summary_information.date_time_properties.items()):
+        date_time_description = self._DATE_TIME_DESCRIPTIONS.get(
+            property_name, eventdata.EventTimestamp.UNKNOWN)
+        event = OLECFSummaryInformationEvent(date_time, date_time_description)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
       if root_creation_time:
-        event_object = OleCfSummaryInfoEvent(
-            root_creation_time, eventdata.EventTimestamp.CREATION_TIME,
-            summary_information_object.attributes)
-        parser_mediator.ProduceEvent(event_object)
+        date_time = dfdatetime_filetime.Filetime(
+            timestamp=root_creation_time)
+        event = OLECFSummaryInformationEvent(
+            date_time, eventdata.EventTimestamp.CREATION_TIME)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
       if root_modification_time:
-        event_object = OleCfSummaryInfoEvent(
-            root_modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
-            summary_information_object.attributes)
-        parser_mediator.ProduceEvent(event_object)
+        date_time = dfdatetime_filetime.Filetime(
+            timestamp=root_modification_time)
+        event = OLECFSummaryInformationEvent(
+            date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 olecf.OLECFParser.RegisterPlugins([
-    DocumentSummaryOlecfPlugin, SummaryInfoOlecfPlugin])
+    DocumentSummaryInformationOLECFPlugin, SummaryInformationOLECFPlugin])

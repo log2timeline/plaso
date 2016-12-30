@@ -77,7 +77,8 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
                  _BODY_CONTENT)
 
   _PYPARSING_COMPONENTS = {
-      u'year': text_parser.PyparsingConstants.YEAR.setResultsName(u'year'),
+      u'year': text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName(
+          u'year'),
       u'two_digit_month': (
           text_parser.PyparsingConstants.TWO_DIGITS.setResultsName(
               u'two_digit_month')),

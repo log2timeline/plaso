@@ -12,20 +12,20 @@ from tests import test_lib as shared_test_lib
 from tests.parsers.olecf_plugins import test_lib
 
 
-class TestSummaryInfoOlecfPlugin(test_lib.OleCfPluginTestCase):
+class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
   """Tests for the OLECF summary information plugin."""
 
   @shared_test_lib.skipUnlessHasTestFile([u'Document.doc'])
   def testProcess(self):
-    """Tests the Process function on a SummaryInformation stream."""
-    plugin_object = summary.SummaryInfoOlecfPlugin()
-    storage_writer = self._ParseOleCfFileWithPlugin(
+    """Tests the Process function on a Summary Information stream."""
+    plugin_object = summary.SummaryInformationOLECFPlugin()
+    storage_writer = self._ParseOLECFFileWithPlugin(
         [u'Document.doc'], plugin_object)
 
     # There is one summary info stream with three event objects.
     self.assertEqual(len(storage_writer.events), 3)
 
-    event_object = storage_writer.events[0]
+    event_object = storage_writer.events[1]
     self.assertEqual(event_object.name, u'Summary Information')
 
     self.assertEqual(event_object.title, u'Table of Context')
@@ -65,14 +65,14 @@ class TestSummaryInfoOlecfPlugin(test_lib.OleCfPluginTestCase):
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
 
-class TestDocumentSummaryInfoOlecfPlugin(test_lib.OleCfPluginTestCase):
+class TestDocumentSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
   """Tests for the OLECF document summary information plugin."""
 
   @shared_test_lib.skipUnlessHasTestFile([u'Document.doc'])
   def testProcess(self):
-    """Tests the Process function on a DocumentSummaryInformation stream."""
-    plugin_object = summary.DocumentSummaryOlecfPlugin()
-    storage_writer = self._ParseOleCfFileWithPlugin(
+    """Tests the Process function on a Document Summary Information stream."""
+    plugin_object = summary.DocumentSummaryInformationOLECFPlugin()
+    storage_writer = self._ParseOLECFFileWithPlugin(
         [u'Document.doc'], plugin_object)
 
     # There should only be one summary info stream with one event.

@@ -6,8 +6,12 @@ import uuid
 import construct
 import pyfsntfs  # pylint: disable=wrong-import-order
 
+from dfdatetime import filetime as dfdatetime_filetime
+from dfdatetime import semantic_time as dfdatetime_semantic_time
+
 from plaso import dependencies
-from plaso.containers import file_system_events
+from plaso.containers import events
+from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import eventdata
 from plaso.lib import specification
@@ -16,6 +20,63 @@ from plaso.parsers import manager
 
 
 dependencies.CheckModuleVersion(u'pyfsntfs')
+
+
+class NTFSFileStatEventData(events.EventData):
+  """NTFS file system stat event data.
+
+  Attributes:
+    attribute_type (int): attribute type e.g. 0x00000030 which represents
+        $FILE_NAME.
+    file_attribute_flags (int): NTFS file attribute flags.
+    file_reference (int): NTFS file reference.
+    file_system_type (str): file system type.
+    is_allocated (bool): True if the MFT entry is allocated (marked as in use).
+    name (str): name associated with the stat event, e.g. that of
+        a $FILE_NAME attribute or None if not available.
+    parent_file_reference (int): NTFS file reference of the parent.
+  """
+
+  DATA_TYPE = u'fs:stat:ntfs'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(NTFSFileStatEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.attribute_type = None
+    self.file_attribute_flags = None
+    self.file_reference = None
+    self.file_system_type = u'NTFS'
+    self.is_allocated = None
+    self.name = None
+    self.parent_file_reference = None
+
+
+class NTFSUSNChangeEventData(events.EventData):
+  """NTFS USN change event data.
+
+  Attributes:
+    file_attribute_flags (int): NTFS file attribute flags.
+    filename (str): name of the file associated with the event.
+    file_reference (int): NTFS file reference.
+    file_system_type (str): file system type.
+    parent_file_reference (int): NTFS file reference of the parent.
+    update_reason_flags (int): update reason flags.
+    update_sequence_number (int): update sequence number.
+    update_source_flags (int): update source flags.
+  """
+
+  DATA_TYPE = u'fs:ntfs:usn_change'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(NTFSUSNChangeEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.file_attribute_flags = None
+    self.filename = None
+    self.file_reference = None
+    self.parent_file_reference = None
+    self.update_reason_flags = None
+    self.update_sequence_number = None
+    self.update_source_flags = None
 
 
 class NTFSMFTParser(interface.FileObjectParser):
@@ -32,7 +93,11 @@ class NTFSMFTParser(interface.FileObjectParser):
 
   @classmethod
   def GetFormatSpecification(cls):
-    """Retrieves the format specification."""
+    """Retrieves the format specification.
+
+    Returns:
+      FormatSpecification: format specification.
+    """
     format_specification = specification.FormatSpecification(cls.NAME)
     format_specification.AddNewSignature(b'BAAD', offset=0)
     format_specification.AddNewSignature(b'FILE', offset=0)
@@ -42,9 +107,10 @@ class NTFSMFTParser(interface.FileObjectParser):
     """Extract data from a NFTS $MFT attribute.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      mft_entry: The MFT entry (instance of pyfsntfs.file_entry).
-      mft_attribute: The MFT attribute (instance of pyfsntfs.attribute).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      mft_entry (pyfsntfs.file_entry): MFT entry.
+      mft_attribute (pyfsntfs.attribute): MFT attribute.
     """
     if mft_entry.is_empty() or mft_entry.base_record_file_reference != 0:
       return
@@ -59,6 +125,14 @@ class NTFSMFTParser(interface.FileObjectParser):
       parent_file_reference = getattr(
           mft_attribute, u'parent_file_reference', None)
 
+      event_data = NTFSFileStatEventData()
+      event_data.attribute_type = mft_attribute.attribute_type
+      event_data.file_attribute_flags = file_attribute_flags
+      event_data.file_reference = mft_entry.file_reference
+      event_data.is_allocated = mft_entry.is_allocated()
+      event_data.name = name
+      event_data.parent_file_reference = parent_file_reference
+
       try:
         creation_time = mft_attribute.get_creation_time_as_integer()
       except OverflowError as exception:
@@ -69,13 +143,14 @@ class NTFSMFTParser(interface.FileObjectParser):
         creation_time = None
 
       if creation_time is not None:
-        event_object = file_system_events.NTFSFileStatEvent(
-            creation_time, eventdata.EventTimestamp.CREATION_TIME,
-            mft_entry.file_reference, mft_attribute.attribute_type,
-            file_attribute_flags=file_attribute_flags,
-            is_allocated=mft_entry.is_allocated(), name=name,
-            parent_file_reference=parent_file_reference)
-        parser_mediator.ProduceEvent(event_object)
+        if not creation_time:
+          date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+        else:
+          date_time = dfdatetime_filetime.Filetime(timestamp=creation_time)
+
+        event = time_events.DateTimeValuesEvent(
+            date_time, eventdata.EventTimestamp.CREATION_TIME)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
       try:
         modification_time = mft_attribute.get_modification_time_as_integer()
@@ -87,13 +162,14 @@ class NTFSMFTParser(interface.FileObjectParser):
         modification_time = None
 
       if modification_time is not None:
-        event_object = file_system_events.NTFSFileStatEvent(
-            modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
-            mft_entry.file_reference, mft_attribute.attribute_type,
-            file_attribute_flags=file_attribute_flags,
-            is_allocated=mft_entry.is_allocated(), name=name,
-            parent_file_reference=parent_file_reference)
-        parser_mediator.ProduceEvent(event_object)
+        if not modification_time:
+          date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+        else:
+          date_time = dfdatetime_filetime.Filetime(timestamp=modification_time)
+
+        event = time_events.DateTimeValuesEvent(
+            date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
       try:
         access_time = mft_attribute.get_access_time_as_integer()
@@ -105,13 +181,14 @@ class NTFSMFTParser(interface.FileObjectParser):
         access_time = None
 
       if access_time is not None:
-        event_object = file_system_events.NTFSFileStatEvent(
-            access_time, eventdata.EventTimestamp.ACCESS_TIME,
-            mft_entry.file_reference, mft_attribute.attribute_type,
-            file_attribute_flags=file_attribute_flags,
-            is_allocated=mft_entry.is_allocated(), name=name,
-            parent_file_reference=parent_file_reference)
-        parser_mediator.ProduceEvent(event_object)
+        if not access_time:
+          date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+        else:
+          date_time = dfdatetime_filetime.Filetime(timestamp=access_time)
+
+        event = time_events.DateTimeValuesEvent(
+            date_time, eventdata.EventTimestamp.ACCESS_TIME)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
       try:
         entry_modification_time = (
@@ -124,14 +201,15 @@ class NTFSMFTParser(interface.FileObjectParser):
         entry_modification_time = None
 
       if entry_modification_time is not None:
-        event_object = file_system_events.NTFSFileStatEvent(
-            entry_modification_time,
-            eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME,
-            mft_entry.file_reference, mft_attribute.attribute_type,
-            file_attribute_flags=file_attribute_flags,
-            is_allocated=mft_entry.is_allocated(), name=name,
-            parent_file_reference=parent_file_reference)
-        parser_mediator.ProduceEvent(event_object)
+        if not entry_modification_time:
+          date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+        else:
+          date_time = dfdatetime_filetime.Filetime(
+              timestamp=entry_modification_time)
+
+        event = time_events.DateTimeValuesEvent(
+            date_time, eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
     elif mft_attribute.attribute_type == self._MFT_ATTRIBUTE_OBJECT_ID:
       display_name = u'$MFT: {0:d}-{1:d}'.format(
@@ -172,8 +250,9 @@ class NTFSMFTParser(interface.FileObjectParser):
     """Extract data from a NFTS $MFT entry.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      mft_entry: The MFT entry (instance of pyfsntfs.file_entry).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      mft_entry (pyfsntfs.file_entry): MFT entry.
     """
     for attribute_index in range(0, mft_entry.number_of_attributes):
       try:
@@ -189,8 +268,9 @@ class NTFSMFTParser(interface.FileObjectParser):
     """Parses a NTFS $MFT metadata file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
     """
     mft_metadata_file = pyfsntfs.mft_metadata_file()
 
@@ -244,9 +324,9 @@ class NTFSUsnJrnlParser(interface.FileObjectParser):
     """Parses an USN change journal.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      usn_change_journal: An USN change journal object (instance of
-                          pyfsntsfs.usn_change_journal).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      usn_change_journal (pyfsntsfs.usn_change_journal): USN change journal.
     """
     if not usn_change_journal:
       return
@@ -276,15 +356,26 @@ class NTFSUsnJrnlParser(interface.FileObjectParser):
             u'{0:s}. Characters that cannot be decoded will be replaced '
             u'with "?" or "\\ufffd".').format(exception))
 
-      event_object = file_system_events.NTFSUSNChangeEvent(
-          usn_record_struct.update_date_time, current_offset,
-          name_string, usn_record_struct.file_reference,
-          usn_record_struct.update_sequence_number,
-          usn_record_struct.update_source_flags,
-          usn_record_struct.update_reason_flags,
-          file_attribute_flags=usn_record_struct.file_attribute_flags,
-          parent_file_reference=usn_record_struct.parent_file_reference)
-      parser_mediator.ProduceEvent(event_object)
+      event_data = NTFSUSNChangeEventData()
+      event_data.file_attribute_flags = usn_record_struct.file_attribute_flags
+      event_data.file_reference = usn_record_struct.file_reference
+      event_data.filename = name_string
+      event_data.offset = current_offset
+      event_data.parent_file_reference = usn_record_struct.parent_file_reference
+      event_data.update_reason_flags = usn_record_struct.update_reason_flags
+      event_data.update_sequence_number = (
+          usn_record_struct.update_sequence_number)
+      event_data.update_source_flags = usn_record_struct.update_source_flags
+
+      if not usn_record_struct.update_date_time:
+        date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+      else:
+        date_time = dfdatetime_filetime.Filetime(
+            timestamp=usn_record_struct.update_date_time)
+
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
       usn_record_data = usn_change_journal.read_usn_record()
 
@@ -292,8 +383,9 @@ class NTFSUsnJrnlParser(interface.FileObjectParser):
     """Parses a NTFS $UsnJrnl metadata file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
     """
     volume = pyfsntfs.volume()
     try:
