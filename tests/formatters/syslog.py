@@ -24,7 +24,8 @@ class SyslogLineFormatterTest(test_lib.EventFormatterTestCase):
     expected_attribute_names = [
         u'reporter',
         u'pid',
-        u'body']
+        u'body',
+        u'severity']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
