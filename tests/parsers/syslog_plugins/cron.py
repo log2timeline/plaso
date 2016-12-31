@@ -5,7 +5,6 @@
 import unittest
 
 from plaso.lib import timelib
-from plaso.parsers.syslog_plugins import cron
 
 from tests import test_lib as shared_test_lib
 from tests.parsers.syslog_plugins import test_lib

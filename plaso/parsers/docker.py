@@ -7,7 +7,6 @@ import os
 from dfvfs.helpers import text_file
 
 from plaso.containers import events
-from plaso.containers import text_events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
