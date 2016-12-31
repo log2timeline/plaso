@@ -19,6 +19,8 @@ import os
 
 import construct
 
+from dfdatetime import time_elements as dfdatetime_time_elements
+
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
@@ -89,12 +91,10 @@ class KeychainApplicationRecordEventData(events.EventData):
 class KeychainParser(interface.FileObjectParser):
   """Parser for Keychain files."""
 
-  _INITIAL_FILE_OFFSET = None
-
   NAME = u'mac_keychain'
   DESCRIPTION = u'Parser for Mac OS X Keychain files.'
 
-  KEYCHAIN_MAGIC_HEADER = b'kych'
+  KEYCHAIN_SIGNATURE = b'kych'
   KEYCHAIN_MAJOR_VERSION = 1
   KEYCHAIN_MINOR_VERSION = 0
 
@@ -104,7 +104,7 @@ class KeychainParser(interface.FileObjectParser):
   # DB HEADER.
   KEYCHAIN_DB_HEADER = construct.Struct(
       u'db_header',
-      construct.String(u'magic', 4),
+      construct.Bytes(u'signature', 4),
       construct.UBInt16(u'major_version'),
       construct.UBInt16(u'minor_version'),
       construct.UBInt32(u'header_size'),
@@ -184,40 +184,6 @@ class KeychainParser(interface.FileObjectParser):
       u'imap': u'imap',
       u'http': u'http'}
 
-  def _GetTimestampFromEntry(self, structure):
-    """Parses a timestamp from a TIME entry structure.
-
-    Args:
-      structure: TIME entry structure:
-                 year: String with the number of the year.
-                 month: String with the number of the month.
-                 day: String with the number of the day.
-                 hour: String with the number of the month.
-                 minute: String with the number of the minute.
-                 second: String with the number of the second.
-
-    Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC.
-
-    Raises:
-      TimestampError: if the timestamp cannot be created from the date and
-                      time values.
-    """
-    try:
-      year = int(structure.year, 10)
-      month = int(structure.month, 10)
-      day = int(structure.day, 10)
-      hours = int(structure.hour, 10)
-      minutes = int(structure.minute, 10)
-      seconds = int(structure.second, 10)
-    except ValueError:
-      raise errors.TimestampError(
-          u'Invalid keychain time {0!s}'.format(structure))
-
-    return timelib.Timestamp.FromTimeParts(
-        year, month, day, hours, minutes, seconds)
-
   def _ReadEntryApplication(self, parser_mediator, file_object):
     """Extracts the information from an application password entry.
 
@@ -226,24 +192,24 @@ class KeychainParser(interface.FileObjectParser):
           and other components, such as storage and dfvfs.
       file_object (dfvfs.FileIO): a file-like object.
     """
-    offset = file_object.tell()
+    record_offset = file_object.tell()
     try:
-      record = self.RECORD_HEADER_APP.parse_stream(file_object)
+      record_struct = self.RECORD_HEADER_APP.parse_stream(file_object)
     except (IOError, construct.FieldError):
-      logging.warning((
-          u'[{0:s}] Unsupported record header at 0x{1:08x} in file: '
-          u'{2:s}').format(
-              self.NAME, offset, parser_mediator.GetDisplayName()))
+      parser_mediator.ProduceExtractionError(
+          u'unable to parse record structure at offset: 0x{0:08x}'.format(
+              record_offset))
       return
 
     (ssgp_hash, creation_time, last_modification_time, text_description,
      comments, entry_name, account_name) = self._ReadEntryHeader(
-         parser_mediator, file_object, record.record_header, offset)
+         parser_mediator, file_object, record_struct.record_header,
+         record_offset)
 
-    # Move to the end of the record, and then, prepared for the next record.
+    # Move to the end of the record.
     next_record_offset = (
-        record.record_header.entry_length + offset - file_object.tell())
-    file_object.seek(next_record_offset, os.SEEK_CUR)
+        record_offset + record_struct.record_header.entry_length)
+    file_object.seek(next_record_offset, os.SEEK_SET)
 
     event_data = KeychainApplicationRecordEventData()
     event_data.account_name = account_name
@@ -252,19 +218,18 @@ class KeychainParser(interface.FileObjectParser):
     event_data.ssgp_hash = ssgp_hash
     event_data.text_description = text_description
 
-    # TODO: refactor to use DateTimeValuesEvent.
-    event = time_events.TimestampEvent(
-        creation_time, eventdata.EventTimestamp.CREATION_TIME)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    if creation_time:
+      event = time_events.DateTimeValuesEvent(
+          creation_time, eventdata.EventTimestamp.CREATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    # TODO: remove this check.
-    if creation_time != last_modification_time:
-      # TODO: refactor to use DateTimeValuesEvent.
-      event = time_events.TimestampEvent(
+    if last_modification_time:
+      event = time_events.DateTimeValuesEvent(
           last_modification_time, eventdata.EventTimestamp.MODIFICATION_TIME)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def _ReadEntryHeader(self, parser_mediator, file_object, record, offset):
+  def _ReadEntryHeader(
+      self, parser_mediator, file_object, record, record_offset):
     """Read the common record attributes.
 
     Args:
@@ -273,13 +238,14 @@ class KeychainParser(interface.FileObjectParser):
       file_entry (dfvfs.FileEntry): a file entry object.
       file_object (dfvfs.FileIO): a file-like object.
       record (construct.Struct): record header structure.
-      offset (int): first byte of the record.
+      record_offset (int): offset of the start of the record.
 
     Returns:
       A tuple containing:
         ssgp_hash: Hash of the encrypted data (passwd, cert, note).
-        creation_time: When the entry was created.
-        last_modification_time: Last time the entry was updated.
+        creation_time (dfdatetime.TimeElements): entry creation time or None.
+        last_modification_time ((dfdatetime.TimeElements): entry last
+            modification time or None.
         text_description: A brief description of the entry.
         entry_name: Name of the entry
         account_name: Name of the account.
@@ -292,35 +258,64 @@ class KeychainParser(interface.FileObjectParser):
     #       Then if it is not multiple the value is padded by 0x00.
     ssgp_hash = binascii.hexlify(file_object.read(record.ssgp_length)[4:])
 
-    structure_offset = record.creation_time - file_object.tell() + offset - 1
-    file_object.seek(structure_offset, os.SEEK_CUR)
+    creation_time = None
+
+    structure_offset = record_offset + record.creation_time - 1
+    file_object.seek(structure_offset, os.SEEK_SET)
+
     try:
       time_structure = self.TIME.parse_stream(file_object)
-      creation_time = self._GetTimestampFromEntry(time_structure)
-    except (construct.FieldError, errors.TimestampError) as exception:
-      creation_time = timelib.Timestamp.NONE_TIMESTAMP
+    except construct.FieldError as exception:
+      time_structure = None
       parser_mediator.ProduceExtractionError(
-          u'unable to determine creation time with error: {0:s}'.format(
+          u'unable to parse creation time with error: {0:s}'.format(exception))
+
+    if time_structure:
+      time_elements_tuple = (
+          time_structure.year, time_structure.month, time_structure.day,
+          time_structure.hour, time_structure.minute, time_structure.second)
+
+      creation_time = dfdatetime_time_elements.TimeElements()
+      try:
+        creation_time.CopyFromStringTuple(
+            time_elements_tuple=time_elements_tuple)
+      except ValueError:
+        creation_time = None
+        parser_mediator.ProduceExtractionError(
+            u'invalid creation time value: {0!s}'.format(time_elements_tuple))
+
+    last_modification_time = None
+
+    structure_offset = record_offset + record.last_modification_time - 1
+    file_object.seek(structure_offset, os.SEEK_SET)
+
+    try:
+      time_structure = self.TIME.parse_stream(file_object)
+    except construct.FieldError as exception:
+      time_structure = None
+      parser_mediator.ProduceExtractionError(
+          u'unable to parse last modification time with error: {0:s}'.format(
               exception))
 
-    structure_offset = (
-        record.last_modification_time - file_object.tell() + offset - 1)
-    file_object.seek(structure_offset, os.SEEK_CUR)
+    if time_structure:
+      time_elements_tuple = (
+          time_structure.year, time_structure.month, time_structure.day,
+          time_structure.hour, time_structure.minute, time_structure.second)
 
-    try:
-      time_structure = self.TIME.parse_stream(file_object)
-      last_modification_time = self._GetTimestampFromEntry(time_structure)
-    except (construct.FieldError, errors.TimestampError) as exception:
-      last_modification_time = timelib.Timestamp.NONE_TIMESTAMP
-      parser_mediator.ProduceExtractionError((
-          u'unable to determine last modification time with error: '
-          u'{0:s}').format(exception))
+      last_modification_time = dfdatetime_time_elements.TimeElements()
+      try:
+        last_modification_time.CopyFromStringTuple(
+            time_elements_tuple=time_elements_tuple)
+      except ValueError:
+        last_modification_time = None
+        parser_mediator.ProduceExtractionError(
+            u'invalid last modification time value: {0!s}'.format(
+                time_elements_tuple))
 
     text_description = u'N/A'
     if record.text_description:
-      structure_offset = (
-          record.text_description - file_object.tell() + offset - 1)
-      file_object.seek(structure_offset, os.SEEK_CUR)
+      structure_offset = record_offset + record.text_description - 1
+      file_object.seek(structure_offset, os.SEEK_SET)
 
       try:
         text_description = self.TEXT.parse_stream(file_object)
@@ -331,8 +326,8 @@ class KeychainParser(interface.FileObjectParser):
 
     comments = u'N/A'
     if record.comments:
-      structure_offset = record.comments - file_object.tell() + offset - 1
-      file_object.seek(structure_offset, os.SEEK_CUR)
+      structure_offset = record_offset + record.comments - 1
+      file_object.seek(structure_offset, os.SEEK_SET)
 
       try:
         comments = self.TEXT.parse_stream(file_object)
@@ -340,8 +335,8 @@ class KeychainParser(interface.FileObjectParser):
         parser_mediator.ProduceExtractionError(
             u'unable to parse comments with error: {0:s}'.format(exception))
 
-    structure_offset = record.entry_name - file_object.tell() + offset - 1
-    file_object.seek(structure_offset, os.SEEK_CUR)
+    structure_offset = record_offset + record.entry_name - 1
+    file_object.seek(structure_offset, os.SEEK_SET)
 
     try:
       entry_name = self.TEXT.parse_stream(file_object)
@@ -350,8 +345,8 @@ class KeychainParser(interface.FileObjectParser):
       parser_mediator.ProduceExtractionError(
           u'unable to parse entry name with error: {0:s}'.format(exception))
 
-    structure_offset = record.account_name - file_object.tell() + offset - 1
-    file_object.seek(structure_offset, os.SEEK_CUR)
+    structure_offset = record_offset + record.account_name - 1
+    file_object.seek(structure_offset, os.SEEK_SET)
 
     try:
       account_name = self.TEXT.parse_stream(file_object)
@@ -372,45 +367,50 @@ class KeychainParser(interface.FileObjectParser):
           and other components, such as storage and dfvfs.
       file_object (dfvfs.FileIO): a file-like object.
     """
-    offset = file_object.tell()
+    record_offset = file_object.tell()
     try:
-      record = self.RECORD_HEADER_INET.parse_stream(file_object)
+      record_header_struct = self.RECORD_HEADER_INET.parse_stream(file_object)
     except (IOError, construct.FieldError):
-      logging.warning((
-          u'[{0:s}] Unsupported record header at 0x{1:08x} in file: '
-          u'{2:s}').format(
-              self.NAME, offset, parser_mediator.GetDisplayName()))
+      parser_mediator.ProduceExtractionError((
+          u'unable to parse record header structure at offset: '
+          u'0x{0:08x}').format(record_offset))
       return
 
     (ssgp_hash, creation_time, last_modification_time, text_description,
      comments, entry_name, account_name) = self._ReadEntryHeader(
-         parser_mediator, file_object, record.record_header, offset)
-    if not record.where:
+         parser_mediator, file_object, record_header_struct.record_header,
+         record_offset)
+
+    if not record_header_struct.where:
       where = u'N/A'
       protocol = u'N/A'
       type_protocol = u'N/A'
+
     else:
-      file_object.seek(
-          record.where - file_object.tell() + offset - 1, os.SEEK_CUR)
+      offset = record_offset + record_header_struct.where - 1
+      file_object.seek(offset, os.SEEK_SET)
       where = self.TEXT.parse_stream(file_object)
-      file_object.seek(
-          record.protocol - file_object.tell() + offset - 1, os.SEEK_CUR)
+
+      offset = record_offset + record_header_struct.protocol - 1
+      file_object.seek(offset, os.SEEK_SET)
       protocol = self.TYPE_TEXT.parse_stream(file_object)
-      file_object.seek(
-          record.type - file_object.tell() + offset - 1, os.SEEK_CUR)
+
+      offset = record_offset + record_header_struct.type - 1
+      file_object.seek(offset, os.SEEK_SET)
       type_protocol = self.TEXT.parse_stream(file_object)
       type_protocol = self._PROTOCOL_TRANSLATION_DICT.get(
           type_protocol, type_protocol)
-      if record.url:
-        file_object.seek(
-            record.url - file_object.tell() + offset - 1, os.SEEK_CUR)
+
+      if record_header_struct.url:
+        offset = record_offset + record_header_struct.url - 1
+        file_object.seek(offset, os.SEEK_SET)
         url = self.TEXT.parse_stream(file_object)
         where = u'{0:s}{1:s}'.format(where, url)
 
-    # Move to the end of the record, and then, prepared for the next record.
-    file_object.seek(
-        record.record_header.entry_length + offset - file_object.tell(),
-        os.SEEK_CUR)
+    # Move to the end of the record.
+    next_record_offset = (
+        record_offset + record_header_struct.record_header.entry_length)
+    file_object.seek(next_record_offset, os.SEEK_SET)
 
     event_data = KeychainInternetRecordEventData()
     event_data.account_name = account_name
@@ -422,54 +422,65 @@ class KeychainParser(interface.FileObjectParser):
     event_data.type_protocol = type_protocol
     event_data.where = where
 
-    # TODO: refactor to use DateTimeValuesEvent.
-    event = time_events.TimestampEvent(
-        creation_time, eventdata.EventTimestamp.CREATION_TIME)
-    parser_mediator.ProduceEventWithEventData(event, event_data)
+    if creation_time:
+      event = time_events.DateTimeValuesEvent(
+          creation_time, eventdata.EventTimestamp.CREATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    # TODO: remove this check.
-    if creation_time != last_modification_time:
-      # TODO: refactor to use DateTimeValuesEvent.
-      event = time_events.TimestampEvent(
+    if last_modification_time:
+      event = time_events.DateTimeValuesEvent(
           last_modification_time, eventdata.EventTimestamp.MODIFICATION_TIME)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def _VerifyStructure(self, file_object):
-    """Verify that we are dealing with an Keychain entry.
+  def _ReadTableOffsets(self, parser_mediator, file_object):
+    """Reads the table offsets.
 
     Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       file_object (dfvfs.FileIO): a file-like object.
 
     Returns:
-      list[int]: table positions if it is a keychain, None otherwise.
+      list[int]: table offsets.
     """
     # INFO: The HEADER KEYCHAIN:
     # [DBHEADER] + [DBSCHEMA] + [OFFSET TABLE A] + ... + [OFFSET TABLE Z]
     # Where the table offset is relative to the first byte of the DB Schema,
     # then we must add to this offset the size of the [DBHEADER].
-    try:
-      db_header = self.KEYCHAIN_DB_HEADER.parse_stream(file_object)
-    except (IOError, construct.FieldError):
-      return
-    if (db_header.minor_version != self.KEYCHAIN_MINOR_VERSION or
-        db_header.major_version != self.KEYCHAIN_MAJOR_VERSION or
-        db_header.magic != self.KEYCHAIN_MAGIC_HEADER):
-      return
-
     # Read the database schema and extract the offset for all the tables.
     # They are ordered by file position from the top to the bottom of the file.
-    try:
-      db_schema = self.KEYCHAIN_DB_SCHEMA.parse_stream(file_object)
-    except (IOError, construct.FieldError):
-      return
     table_offsets = []
-    for _ in range(db_schema.number_of_tables):
+
+    try:
+      db_schema_struct = self.KEYCHAIN_DB_SCHEMA.parse_stream(file_object)
+    except (IOError, construct.FieldError):
+      parser_mediator.ProduceExtractionError(
+          u'unable to parse database schema structure')
+      return []
+
+    for index in range(db_schema_struct.number_of_tables):
       try:
         table_offset = self.TABLE_OFFSET.parse_stream(file_object)
       except (IOError, construct.FieldError):
+        parser_mediator.ProduceExtractionError(
+            u'unable to parse table offsets: {0:d}'.format(index))
         return
+
       table_offsets.append(table_offset + self.KEYCHAIN_DB_HEADER.sizeof())
+
     return table_offsets
+
+  @classmethod
+  def GetFormatSpecification(cls):
+    """Retrieves the format specification.
+
+    Returns:
+      FormatSpecification: format specification.
+    """
+    format_specification = specification.FormatSpecification(cls.NAME)
+    format_specification.AddNewSignature(
+        cls.KEYCHAIN_SIGNATURE, offset=0)
+    return format_specification
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Mac OS X keychain file-like object.
@@ -482,30 +493,39 @@ class KeychainParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_object.seek(0, os.SEEK_SET)
+    try:
+      db_header = self.KEYCHAIN_DB_HEADER.parse_stream(file_object)
+    except (IOError, construct.FieldError):
+      raise errors.UnableToParseFile(u'Unable to parse file header.')
 
-    table_offsets = self._VerifyStructure(file_object)
-    if not table_offsets:
-      raise errors.UnableToParseFile(u'The file is not a Keychain file.')
+    if db_header.signature != self.KEYCHAIN_SIGNATURE:
+      raise errors.UnableToParseFile(u'Not a Mac OS X keychain file.')
 
+    if (db_header.major_version != self.KEYCHAIN_MAJOR_VERSION or
+        db_header.minor_version != self.KEYCHAIN_MINOR_VERSION):
+      parser_mediator.ProduceExtractionError(
+          u'unsupported format version: {0:s}.{1:s}'.format(
+              db_header.major_version, db_header.minor_version))
+      return
+
+    # TODO: document format and deterime if -1 offset correction is needed.
+    table_offsets = self._ReadTableOffsets(parser_mediator, file_object)
     for table_offset in table_offsets:
       # Skipping X bytes, unknown data at this point.
-      file_object.seek(table_offset - file_object.tell(), os.SEEK_CUR)
+      file_object.seek(table_offset, os.SEEK_SET)
+
       try:
         table = self.TABLE_HEADER.parse_stream(file_object)
-      except construct.FieldError as exception:
-        logging.warning((
-            u'[{0:s}] Unable to parse table header in file: {1:s} '
-            u'with error: {2:s}.').format(
-                self.NAME, parser_mediator.GetDisplayName(),
-                exception))
+      except (IOError, construct.FieldError):
+        parser_mediator.ProduceExtractionError(
+            u'unable to parse table structure at offset: 0x{0:08x}'.format(
+                table_offset))
         continue
 
       # Table_offset: absolute byte in the file where the table starts.
       # table.first_record: first record in the table, relative to the
       #                     first byte of the table.
-      file_object.seek(
-          table_offset + table.first_record - file_object.tell(), os.SEEK_CUR)
+      file_object.seek(table_offset + table.first_record, os.SEEK_SET)
 
       if table.record_type == self.RECORD_TYPE_INTERNET:
         for _ in range(table.number_of_records):
