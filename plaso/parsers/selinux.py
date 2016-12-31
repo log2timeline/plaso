@@ -27,8 +27,10 @@ import logging
 
 import pyparsing
 
-from plaso.containers import text_events
+from plaso.containers import events
+from plaso.containers import time_events
 from plaso.lib import errors
+from plaso.lib import eventdata
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -36,35 +38,23 @@ from plaso.parsers import text_parser
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
 
-class SELinuxLineEvent(text_events.TextEvent):
-  """Convenience class for a SELinux log line event.
+class SELinuxLogEventData(events.EventData):
+  """SELinux log event data.
 
   Attributes:
     audit_type (str): audit type.
     body (str): body of the log line.
-    pid (int): identifier of the process (PID) that created the SELinux
-        log line.
+    pid (int): process identifier (PID) that created the SELinux log line.
   """
 
   DATA_TYPE = u'selinux:line'
 
-  def __init__(self, timestamp, offset, audit_type, pid, body):
-    """Initializes an event.
-
-    Args:
-      timestamp (int): timestamp, which contains the number of microseconds
-          since January 1, 1970, 00:00:00 UTC.
-      offset (int): offset of the text event within the event source.
-      audit_type (str): audit type.
-      pid (int): identifier of the process (PID) that created the SELinux
-          log line.
-      body (str): body of the log line.
-    """
-    # TODO: remove the need to pass an empty dict.
-    super(SELinuxLineEvent, self).__init__(timestamp, offset, {})
-    self.audit_type = audit_type
-    self.body = body
-    self.pid = pid
+  def __init__(self):
+    """Initializes event data."""
+    super(SELinuxLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.audit_type = None
+    self.body = None
+    self.pid = None
 
 
 class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
@@ -120,8 +110,9 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
     """Parses a structure of tokens derived from a line of a text file.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
-      key (str): identifier of the structure of tokens.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): a file-like object.
       structure (pyparsing.ParseResults): structure of tokens derived from
           a line of a text file.
 
@@ -164,21 +155,27 @@ class SELinuxParser(text_parser.PyparsingSingleLineTextParser):
     except pyparsing.ParseException:
       key_value_dict = {}
 
-    audit_type = structure.get(u'type')
-    pid = key_value_dict.get(u'pid')
+    event_data = SELinuxLogEventData()
+    event_data.audit_type = structure.get(u'type', None)
+    event_data.body = body_text
+    event_data.pid = key_value_dict.get(u'pid', None)
+    # TODO: pass line number to offset or remove.
+    event_data.offset = 0
 
-    event_object = SELinuxLineEvent(timestamp, 0, audit_type, pid, body_text)
-    parser_mediator.ProduceEvent(event_object)
+    event = time_events.TimestampEvent(
+        timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyStructure(self, parser_mediator, line):
     """Verifies if a line from a text file is in the expected format.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       line (bytes): line from a text file.
 
     Returns:
-      bool: True if the line is in the expected format.
+      bool: True if the line is in the expected format, False if not.
     """
     try:
       structure = self._SELINUX_LOG_LINE.parseString(line)
