@@ -111,7 +111,6 @@ def CreateTestEvents():
 
   test_events.append(event)
 
-  # TODO: move this to a TextEvent unit test.
   timestamp = timelib.Timestamp.CopyFromString(u'2012-06-05 22:14:19.000000')
   # TODO: refactor to use event data.
   event = time_events.TimestampEvent(

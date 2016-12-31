@@ -4,30 +4,38 @@
 McAfee AV uses 4 logs to track when scans were run, when virus databases were
 updated, and when files match the virus database."""
 
-from plaso.containers import text_events
+from plaso.containers import events
+from plaso.containers import time_events
 from plaso.lib import errors
+from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
-class McafeeAVEvent(text_events.TextEvent):
-  """Convenience class for McAfee AV Log events """
+class McafeeAVEventData(events.EventData):
+  """McAfee AV Log event data.
+
+  Attributes:
+    action (str): action.
+    filename (str): filename.
+    rule (str): rule.
+    status (str): status.
+    trigger_location (str): trigger loction.
+    username (str): username.
+  """
+
   DATA_TYPE = u'av:mcafee:accessprotectionlog'
 
-  def __init__(self, timestamp, offset, attributes):
-    """Initializes a McAfee AV Log Event.
-
-    Args:
-      timestamp: the timestamp time value. The timestamp contains the
-                 number of seconds since Jan 1, 1970 00:00:00 UTC.
-      offset: the offset of the attributes.
-      attributes: dict of elements from the AV log line.
-    """
-    del attributes[u'time']
-    del attributes[u'date']
-    super(McafeeAVEvent, self).__init__(timestamp, offset, attributes)
-    self.full_path = attributes[u'filename']
+  def __init__(self):
+    """Initializes event data."""
+    super(McafeeAVEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.action = None
+    self.filename = None
+    self.rule = None
+    self.status = None
+    self.trigger_location = None
+    self.username = None
 
 
 class McafeeAccessProtectionParser(text_parser.TextCSVParser):
@@ -37,9 +45,9 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
   DESCRIPTION = u'Parser for McAfee AV Access Protection log files.'
 
   VALUE_SEPARATOR = b'\t'
-  # Define the columns of the McAfee AV Access Protection Log.
-  COLUMNS = [u'date', u'time', u'status', u'username', u'filename',
-             u'trigger_location', u'rule', u'action']
+  COLUMNS = [
+      u'date', u'time', u'status', u'username', u'filename',
+      u'trigger_location', u'rule', u'action']
 
   def _ConvertToTimestamp(self, date, time, timezone):
     """Converts date and time values into a timestamp.
@@ -81,10 +89,10 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     """Parses a row and extract event objects.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      row_offset: the offset of the row.
-      row: a dictionary containing all the fields as denoted in the
-           COLUMNS class list.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row_offset (int): line number of the row.
+      row (dict[str, str]): row of the fields specified in COLUMNS.
     """
     try:
       timestamp = self._ConvertToTimestamp(
@@ -98,18 +106,29 @@ class McafeeAccessProtectionParser(text_parser.TextCSVParser):
     if timestamp is None:
       return
 
-    event_object = McafeeAVEvent(timestamp, row_offset, row)
-    parser_mediator.ProduceEvent(event_object)
+    event_data = McafeeAVEventData()
+    event_data.action = row[u'action']
+    event_data.filename = row[u'filename']
+    event_data.offset = row_offset
+    event_data.rule = row[u'rule']
+    event_data.status = row[u'status']
+    event_data.trigger_location = row[u'trigger_location']
+    event_data.username = row[u'username']
+
+    event = time_events.TimestampEvent(
+        timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyRow(self, parser_mediator, row):
     """Verify that this is a McAfee AV Access Protection Log file.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      row: a single row from the CSV file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (dict[str, str]): row of the fields specified in COLUMNS.
 
     Returns:
-      True if this is the correct parser, False otherwise.
+      bool: True if the row is in the expected format, False if not.
     """
     if len(row) != 8:
       return False
