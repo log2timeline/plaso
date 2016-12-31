@@ -3,7 +3,9 @@
 
 import construct
 
+from dfdatetime import definitions as dfdatetime_definitions
 from dfdatetime import systemtime as dfdatetime_systemtime
+from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -148,21 +150,6 @@ class WinJobParser(interface.FileObjectParser):
       construct.ULInt16(u'trigger_reserved2'),
       construct.ULInt16(u'trigger_reserved3'))
 
-  def _CopySystemTimeToTimestamp(self, system_time_struct, timezone):
-    """Copies a system time to a timestamp.
-
-    Args:
-      system_time_struct (construct.Struct): structure representing the system
-          time.
-      timezone (datetime.tzinfo): timezone.
-    """
-    return timelib.Timestamp.FromTimeParts(
-        system_time_struct.year, system_time_struct.month,
-        system_time_struct.day, system_time_struct.hours,
-        system_time_struct.minutes, system_time_struct.seconds,
-        microseconds=system_time_struct.milliseconds * 1000,
-        timezone=timezone)
-
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows job file-like object.
 
@@ -219,8 +206,7 @@ class WinJobParser(interface.FileObjectParser):
       try:
         date_time = dfdatetime_systemtime.Systemtime(
             system_time_tuple=system_time_tuple)
-      except ValueError as e:
-        print("CP1", e)
+      except ValueError:
         parser_mediator.ProduceExtractionError(
             u'invalid last run time: {0!s}'.format(system_time_tuple))
 
@@ -233,43 +219,54 @@ class WinJobParser(interface.FileObjectParser):
       try:
         trigger_struct = self._TRIGGER_STRUCT.parse_stream(file_object)
       except (IOError, construct.FieldError) as exception:
-        raise errors.UnableToParseFile(
-            u'Unable to parse trigger: {0:d} with error: {1:s}'.format(
-                index, exception))
-
-      try:
-        trigger_start_time = timelib.Timestamp.FromTimeParts(
-            trigger_struct.start_year, trigger_struct.start_month,
-            trigger_struct.start_day, trigger_struct.start_hour,
-            trigger_struct.start_minute, 0, timezone=parser_mediator.timezone)
-      except errors.TimestampError as exception:
-        trigger_start_time = None
         parser_mediator.ProduceExtractionError(
-            u'unable to determine scheduled date with error: {0:s}'.format(
-                exception))
+            u'unable to parse trigger: {0:d} with error: {1:s}'.format(
+                index, exception))
+        return
 
       event_data.trigger_type = trigger_struct.trigger_type
 
-      if trigger_start_time is not None:
-        event = time_events.TimestampEvent(
-            trigger_start_time, u'Scheduled to start')
-        parser_mediator.ProduceEventWithEventData(event, event_data)
+      time_elements_tuple = (
+          trigger_struct.start_year, trigger_struct.start_month,
+          trigger_struct.start_day, trigger_struct.start_hour,
+          trigger_struct.start_minute, 0)
 
-      if trigger_struct.end_year:
+      if time_elements_tuple != (0, 0, 0, 0, 0, 0):
         try:
-          trigger_end_time = timelib.Timestamp.FromTimeParts(
-              trigger_struct.end_year, trigger_struct.end_month,
-              trigger_struct.end_day, 0, 0, 0,
-              timezone=parser_mediator.timezone)
-        except errors.TimestampError as exception:
-          trigger_end_time = None
-          parser_mediator.ProduceExtractionError((
-              u'unable to determine scheduled end date with error: '
-              u'{0:s}').format(exception))
+          date_time = dfdatetime_time_elements.TimeElements(
+              time_elements_tuple=time_elements_tuple)
+          date_time.is_local_time = True
+          date_time.precision = dfdatetime_definitions.PRECISION_1_MINUTE
+        except ValueError:
+          date_time = None
+          parser_mediator.ProduceExtractionError(
+              u'invalid trigger start time: {0!s}'.format(time_elements_tuple))
 
-        if trigger_end_time is not None:
-          event = time_events.TimestampEvent(
-              trigger_end_time, u'Scheduled to end')
+        if date_time:
+          event = time_events.DateTimeValuesEvent(
+              date_time, u'Scheduled to start',
+              time_zone=parser_mediator.timezone)
+          parser_mediator.ProduceEventWithEventData(event, event_data)
+
+      time_elements_tuple = (
+          trigger_struct.end_year, trigger_struct.end_month,
+          trigger_struct.end_day, 0, 0, 0)
+
+      if time_elements_tuple != (0, 0, 0, 0, 0, 0):
+        try:
+          date_time = dfdatetime_time_elements.TimeElements(
+              time_elements_tuple=time_elements_tuple)
+          date_time.is_local_time = True
+          date_time.precision = dfdatetime_definitions.PRECISION_1_DAY
+        except ValueError:
+          date_time = None
+          parser_mediator.ProduceExtractionError(
+              u'invalid trigger end time: {0!s}'.format(time_elements_tuple))
+
+        if date_time:
+          event = time_events.DateTimeValuesEvent(
+              date_time, u'Scheduled to end',
+              time_zone=parser_mediator.timezone)
           parser_mediator.ProduceEventWithEventData(event, event_data)
 
     # TODO: create a timeless event object if last_run_time and

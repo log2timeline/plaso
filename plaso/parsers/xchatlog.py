@@ -202,6 +202,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     try:
       date_time = dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
+      date_time.is_local_time = True
     except ValueError:
       parser_mediator.ProduceExtractionError(
           u'invalid date time value: {0!s}'.format(structure.date_time))
@@ -246,6 +247,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     try:
       date_time = dfdatetime_time_elements.TimeElements(
           time_elements_tuple=time_elements_tuple)
+      date_time.is_local_time = True
     except ValueError:
       parser_mediator.ProduceExtractionError(
           u'invalid date time value: {0!s}'.format(structure.date_time))
