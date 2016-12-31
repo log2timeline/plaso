@@ -6,8 +6,9 @@ import os
 
 from dfvfs.helpers import text_file
 
-from plaso.containers import time_events
+from plaso.containers import events
 from plaso.containers import text_events
+from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
 from plaso.lib import timelib
@@ -15,19 +16,27 @@ from plaso.parsers import manager
 from plaso.parsers import interface
 
 
-class DockerJSONBaseEvent(time_events.TimestampEvent):
-  """Class for common Docker event information."""
+class DockerJSONContainerLogEventData(events.EventData):
+  """Docker container's log event data.
 
-  DATA_TYPE = u'docker:json'
-
-
-class DockerJSONContainerLogEvent(text_events.TextEvent):
-  """Event parsed from a Docker container's log files."""
+  Attributes:
+    container_id (str): identifier of the container (sha256).
+    log_line (str): log line.
+    log_source (str): log source.
+  """
 
   DATA_TYPE = u'docker:json:container:log'
 
+  def __init__(self):
+    """Initializes event data."""
+    super(DockerJSONContainerLogEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.container_id = None
+    self.log_line = None
+    self.log_source = None
 
-class DockerJSONContainerEvent(DockerJSONBaseEvent):
+
+class DockerJSONContainerEvent(time_events.TimestampEvent):
   """Event parsed from a Docker container's configuration file.
 
   Attributes:
@@ -46,7 +55,7 @@ class DockerJSONContainerEvent(DockerJSONBaseEvent):
     self.action = attributes[u'action']
 
 
-class DockerJSONLayerEvent(DockerJSONBaseEvent):
+class DockerJSONLayerEvent(time_events.TimestampEvent):
   """Event parsed from a Docker filesystem layer configuration file
 
   Attributes:
@@ -209,18 +218,28 @@ class DockerJSONParser(interface.FileObjectParser):
           and other components, such as storage and dfvfs.
       file_object (dfvfs.FileIO): a file-like object.
     """
-    event_attributes = {u'container_id': self._GetIDFromPath(parser_mediator)}
+    container_id = self._GetIDFromPath(parser_mediator)
 
     text_file_object = text_file.TextFile(file_object)
-
     for log_line in text_file_object:
       json_log_line = json.loads(log_line)
-      if u'log' in json_log_line and u'time' in json_log_line:
-        event_attributes[u'log_line'] = json_log_line[u'log']
-        event_attributes[u'log_source'] = json_log_line[u'stream']
-        timestamp = timelib.Timestamp.FromTimeString(json_log_line[u'time'])
-        parser_mediator.ProduceEvent(
-            DockerJSONContainerLogEvent(timestamp, 0, event_attributes))
+
+      time = json_log_line.get(u'time', None)
+      if not time:
+        continue
+
+      event_data = DockerJSONContainerLogEventData()
+      event_data.container_id = container_id
+      event_data.log_line = json_log_line.get(u'log', None)
+      event_data.log_source = json_log_line.get(u'stream', None)
+      # TODO: pass line number to offset or remove.
+      event_data.offset = 0
+
+      timestamp = timelib.Timestamp.FromTimeString(time)
+
+      event = time_events.TimestampEvent(
+          timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseFileObject(self, parser_mediator, file_object):
     """Parses various Docker configuration and log files in JSON format.
