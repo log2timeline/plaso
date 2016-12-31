@@ -29,7 +29,7 @@ class SyslogCronPluginTest(test_lib.SyslogPluginTestCase):
 
     event = events[1]
 
-    self.assertEqual(event.data_type, cron.CronTaskRunEvent.DATA_TYPE)
+    self.assertEqual(event.data_type, u'syslog:cron:task_run')
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-03-11 19:26:39')

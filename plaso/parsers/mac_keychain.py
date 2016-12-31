@@ -14,7 +14,6 @@
 
 
 import binascii
-import logging
 import os
 
 import construct
@@ -24,8 +23,8 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
+from plaso.lib import specification
 from plaso.lib import eventdata
-from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import manager
 

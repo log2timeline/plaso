@@ -320,6 +320,8 @@ class PyparsingConstants(object):
   IPV6_ADDRESS = pyparsing.Word(':' + pyparsing.hexnums).setParseAction(
       PyParseJoinList)
 
+  IP_ADDRESS = (IPV4_ADDRESS | IPV6_ADDRESS)
+
   # TODO: deprecate and remove, use THREE_LETTERS instead.
   MONTH = pyparsing.Word(
       pyparsing.string.uppercase, pyparsing.string.lowercase, exact=3)

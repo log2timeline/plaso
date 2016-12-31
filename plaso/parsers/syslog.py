@@ -4,21 +4,51 @@ import re
 
 import pyparsing
 
-from plaso.containers import text_events
+from plaso.containers import events
+from plaso.containers import time_events
 from plaso.lib import errors
+from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
-class SyslogLineEvent(text_events.TextEvent):
-  """Convenience class for a syslog line event."""
+class SyslogLineEventData(events.EventData):
+  """Syslog line event data.
+
+  Attributes:
+    body (str): message body.
+    hostname (str): hostname of the reporter.
+    pid (str): process identifier of the reporter.
+    reporter (str): reporter.
+    severity (str): severity.
+  """
+
   DATA_TYPE = u'syslog:line'
 
+  def __init__(self):
+    """Initializes event data."""
+    super(SyslogLineEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.body = None
+    self.hostname = None
+    self.pid = None
+    self.reporter = None
+    self.severity = None
 
-class SyslogCommentEvent(text_events.TextEvent):
-  """Convenience class for a syslog comment."""
+
+class SyslogCommentEventData(events.EventData):
+  """Syslog comment event data.
+
+  Attributes:
+    body (str): message body.
+  """
+
   DATA_TYPE = u'syslog:comment'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(SyslogCommentEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.body = None
 
 
 class SyslogParser(text_parser.PyparsingMultiLineTextParser):
@@ -254,31 +284,45 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
           hour=structure.hour, minutes=structure.minute,
           seconds=structure.second, timezone=mediator.timezone)
 
+    plugin_object = None
     if key == u'syslog_comment':
-      comment_attributes = {u'body': structure.body}
-      event = SyslogCommentEvent(timestamp, 0, comment_attributes)
-      mediator.ProduceEvent(event)
-      return
+      event_data = SyslogCommentEventData()
+      event_data.body = structure.body
+      # TODO: pass line number to offset or remove.
+      event_data.offset = 0
 
-    reporter = structure.reporter
-    attributes = {
-        u'hostname': structure.hostname,
-        u'severity': structure.severity,
-        u'reporter': reporter,
-        u'pid': structure.pid,
-        u'body': structure.body}
-
-    plugin_object = self._plugin_objects_by_reporter.get(reporter, None)
-    if not plugin_object:
-      event_object = SyslogLineEvent(timestamp, 0, attributes)
-      mediator.ProduceEvent(event_object)
     else:
-      try:
-        plugin_object.Process(mediator, timestamp, attributes)
+      reporter = structure.reporter
 
-      except errors.WrongPlugin:
-        event_object = SyslogLineEvent(timestamp, 0, attributes)
-        mediator.ProduceEvent(event_object)
+      event_data = SyslogLineEventData()
+      event_data.body = structure.body
+      event_data.hostname = structure.hostname or None
+      # TODO: pass line number to offset or remove.
+      event_data.offset = 0
+      event_data.pid = structure.pid
+      event_data.reporter = reporter
+      event_data.severity = structure.severity
+
+      plugin_object = self._plugin_objects_by_reporter.get(reporter, None)
+      if plugin_object:
+        attributes = {
+            u'hostname': structure.hostname,
+            u'severity': structure.severity,
+            u'reporter': reporter,
+            u'pid': structure.pid,
+            u'body': structure.body}
+
+        try:
+          # TODO: pass event_data instead of attributes.
+          plugin_object.Process(mediator, timestamp, attributes)
+
+        except errors.WrongPlugin:
+          plugin_object = None
+
+    if not plugin_object:
+      event = time_events.TimestampEvent(
+          timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
+      mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyStructure(self, unused_mediator, line):
     """Verifies that this is a syslog-formatted file.

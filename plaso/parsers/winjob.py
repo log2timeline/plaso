@@ -12,7 +12,6 @@ from plaso.containers import time_events
 from plaso.lib import binary
 from plaso.lib import errors
 from plaso.lib import eventdata
-from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import manager
 

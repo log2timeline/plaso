@@ -3,23 +3,63 @@
 
 import pyparsing
 
+from plaso.containers import events
+from plaso.containers import time_events
+from plaso.lib import eventdata
 from plaso.parsers import syslog
 from plaso.parsers import text_parser
 from plaso.parsers.syslog_plugins import interface
 
 
-class SSHLoginEvent(syslog.SyslogLineEvent):
-  """Convenience class for a SSH login event."""
+class SSHEventData(events.EventData):
+  """SSH event data.
+
+  Attributes:
+    address (str): IP address.
+    authentication_method (str): authentication method.
+    body (str): message body.
+    fingerprint (str): fingerprint.
+    hostname (str): hostname of the reporter.
+    pid (str): process identifier of the reporter.
+    port (str): port.
+    protocol (str): protocol.
+    reporter (str): reporter.
+    severity (str): severity.
+    username (str): name of user the command was executed.
+  """
+
+  def __init__(self):
+    """Initializes event data."""
+    super(SSHEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.address = None
+    self.authentication_method = None
+    self.body = None
+    self.fingerprint = None
+    self.hostname = None
+    self.pid = None
+    self.port = None
+    self.protocol = None
+    self.reporter = None
+    self.severity = None
+    self.username = None
+
+
+# TODO: merge separate SSHEventData classes.
+class SSHLoginEventData(SSHEventData):
+  """SSH login event data."""
+
   DATA_TYPE = u'syslog:ssh:login'
 
 
-class SSHFailedConnectionEvent(syslog.SyslogLineEvent):
-  """Convenience class for a SSH failed connection event."""
+class SSHFailedConnectionEventData(SSHEventData):
+  """SSH failed connection event data."""
+
   DATA_TYPE = u'syslog:ssh:failed_connection'
 
 
-class SSHOpenedConnectionEvent(syslog.SyslogLineEvent):
-  """Convenience class for a SSH opened connection event."""
+class SSHOpenedConnectionEventData(SSHEventData):
+  """SSH opened connection event data."""
+
   DATA_TYPE = u'syslog:ssh:opened_connection'
 
 
@@ -29,23 +69,22 @@ class SSHPlugin(interface.SyslogPlugin):
   DESCRIPTION = u'Parser for SSH syslog entries.'
   REPORTER = u'sshd'
 
+  _AUTHENTICATION_METHOD = (
+      pyparsing.Keyword(u'password') | pyparsing.Keyword(u'publickey'))
+
   _PYPARSING_COMPONENTS = {
+      u'address': text_parser.PyparsingConstants.IP_ADDRESS.setResultsName(
+          u'address'),
+      u'authentication_method': _AUTHENTICATION_METHOD.setResultsName(
+          u'authentication_method'),
+      u'fingerprint': pyparsing.Combine(
+          pyparsing.Literal(u'RSA ') +
+          pyparsing.Word(u':' + pyparsing.hexnums)).setResultsName(
+              u'fingerprint'),
+      u'port': pyparsing.Word(pyparsing.nums, max=5).setResultsName(u'port'),
+      u'protocol': pyparsing.Literal(u'ssh2').setResultsName(u'protocol'),
       u'username': pyparsing.Word(pyparsing.alphanums).setResultsName(
           u'username'),
-      u'address': pyparsing.Or([
-          text_parser.PyparsingConstants.IPV4_ADDRESS,
-          text_parser.PyparsingConstants.IPV6_ADDRESS]).
-                  setResultsName(u'address'),
-      u'port': pyparsing.Word(pyparsing.nums, max=5).setResultsName(u'port'),
-      u'authentication_method': pyparsing.Or([
-          pyparsing.Literal(u'password'),
-          pyparsing.Literal(u'publickey')]).setResultsName(
-              u'authentication_method'),
-      u'protocol': pyparsing.Literal(u'ssh2').setResultsName(u'protocol'),
-      u'fingerprint': (pyparsing.Combine(
-          pyparsing.Literal(u'RSA ') +
-          pyparsing.Word(u':' + pyparsing.hexnums))).
-                      setResultsName(u'fingerprint'),
   }
 
   _LOGIN_GRAMMAR = (
@@ -85,30 +124,48 @@ class SSHPlugin(interface.SyslogPlugin):
     """Produces an event from a syslog body that matched one of the grammars.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      key: an string indicating the name of the matching grammar.
-      timestamp: the timestamp, which is an integer containing the number
-                  of micro seconds since January 1, 1970, 00:00:00 UTC or 0
-                  on error.
-      tokens: a dictionary containing the results of the syslog grammar, and the
-              ssh grammar.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      key (str): name of the matching grammar.
+      timestamp (int): the timestamp, which contains the number of micro seconds
+          since January 1, 1970, 00:00:00 UTC or 0 on error.
+      tokens (dict[str, str]): tokens derived from a syslog message based on
+          the defined grammar.
 
     Raises:
       AttributeError: If an unknown key is provided.
     """
-    if key == u'login':
-      event_object = SSHLoginEvent(timestamp, 0, tokens)
-
-    elif key == u'failed_connection':
-      event_object = SSHFailedConnectionEvent(timestamp, 0, tokens)
-
-    elif key == u'opened_connection':
-      event_object = SSHOpenedConnectionEvent(timestamp, 0, tokens)
-
-    else:
+    # TODO: change AttributeError into ValueError or equiv.
+    if key not in (u'failed_connection', u'login', u'opened_connection'):
       raise AttributeError(u'Unknown grammar key: {0:s}'.format(key))
 
-    parser_mediator.ProduceEvent(event_object)
+    if key == u'login':
+      event_data = SSHLoginEventData()
+
+    elif key == u'failed_connection':
+      event_data = SSHFailedConnectionEventData()
+
+    elif key == u'opened_connection':
+      event_data = SSHOpenedConnectionEventData()
+
+    event_data.address = tokens.get(u'address', None)
+    event_data.authentication_method = tokens.get(
+        u'authentication_method', None)
+    event_data.body = tokens.get(u'body', None)
+    event_data.fingerprint = tokens.get(u'fingerprint', None)
+    event_data.hostname = tokens.get(u'hostname', None)
+    # TODO: pass line number to offset or remove.
+    event_data.offset = 0
+    event_data.pid = tokens.get(u'pid', None)
+    event_data.protocol = tokens.get(u'protocol', None)
+    event_data.port = tokens.get(u'port', None)
+    event_data.reporter = tokens.get(u'reporter', None)
+    event_data.severity = tokens.get(u'severity', None)
+    event_data.username = tokens.get(u'username', None)
+
+    event = time_events.TimestampEvent(
+        timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 syslog.SyslogParser.RegisterPlugin(SSHPlugin)

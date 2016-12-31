@@ -4,7 +4,6 @@
 import unittest
 
 from plaso.lib import timelib
-from plaso.parsers import syslog
 from plaso.parsers.syslog_plugins import ssh
 
 from tests import test_lib as shared_test_lib
@@ -28,11 +27,10 @@ class SSHSyslogParserTest(test_lib.SyslogPluginTestCase):
     events = self._GetSortedEvents(storage_writer.events)
 
     event = events[0]
-    self.assertEqual(event.data_type, syslog.SyslogLineEvent.DATA_TYPE)
+    self.assertEqual(event.data_type, u'syslog:line')
 
     event = events[1]
-
-    self.assertEqual(event.data_type, ssh.SSHLoginEvent.DATA_TYPE)
+    self.assertEqual(event.data_type, u'syslog:ssh:login')
     self.assertEqual(event.address, u'192.168.0.1')
 
     expected_body = (
@@ -49,12 +47,12 @@ class SSHSyslogParserTest(test_lib.SyslogPluginTestCase):
     self.assertEqual(expected_fingerprint, event.fingerprint)
 
     event = events[2]
-    self.assertEqual(event.data_type, ssh.SSHFailedConnectionEvent.DATA_TYPE)
+    self.assertEqual(event.data_type, u'syslog:ssh:failed_connection')
     self.assertEqual(event.address, u'001:db8:a0b:12f0::1')
     self.assertEqual(event.port, u'8759')
 
     event = events[4]
-    self.assertEqual(event.data_type, ssh.SSHOpenedConnectionEvent.DATA_TYPE)
+    self.assertEqual(event.data_type, u'syslog:ssh:opened_connection')
     self.assertEqual(event.address, u'188.124.3.41')
 
     event = events[7]
