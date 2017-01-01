@@ -10,7 +10,7 @@ from plaso.parsers.plist_plugins import interface
 
 
 # TODO: add more attributes.
-class IPodPlistEventData(events.Eventdata):
+class IPodPlistEventData(events.EventData):
   """iPod plist event data.
 
   Attributes:
