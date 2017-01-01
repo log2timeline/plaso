@@ -56,7 +56,7 @@ class IPodPlugin(interface.PlistPlugin):
         if key == u'Connected':
           continue
         attribute_name = key.lower().replace(u' ', u'_')
-        setattr(self, attribute_name, value)
+        setattr(event_data, attribute_name, value)
 
       timestamp = timelib.Timestamp.FromPythonDatetime(connected_time)
       event = time_events.TimestampEvent(
