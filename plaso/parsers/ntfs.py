@@ -8,6 +8,7 @@ import pyfsntfs  # pylint: disable=wrong-import-order
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
+from dfdatetime import uuid_time as dfdatetime_uuid_time
 
 from plaso import dependencies
 from plaso.containers import events
@@ -102,6 +103,26 @@ class NTFSMFTParser(interface.FileObjectParser):
     format_specification.AddNewSignature(b'BAAD', offset=0)
     format_specification.AddNewSignature(b'FILE', offset=0)
     return format_specification
+
+  def _ParseDistributedTrackingIdentifier(
+      self, parser_mediator, uuid_string, origin):
+    """Extracts data from a Distributed Tracking identifier.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      uuid_string (str): UUID string of the Distributed Tracking identifier.
+      origin (str): origin of the event (event source).
+    """
+    uuid_object = uuid.UUID(uuid_string)
+
+    if uuid_object.version == 1:
+      event_data = windows_events.WindowsDistributedLinkTrackingEventData(
+          uuid_object, origin)
+      date_time = dfdatetime_uuid_time.UUIDTime(timestamp=uuid_object.time)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.CREATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseMFTAttribute(self, parser_mediator, mft_entry, mft_attribute):
     """Extract data from a NFTS $MFT attribute.
@@ -218,12 +239,9 @@ class NTFSMFTParser(interface.FileObjectParser):
 
       if mft_attribute.droid_file_identifier:
         try:
-          uuid_object = uuid.UUID(mft_attribute.droid_file_identifier)
-          if uuid_object.version == 1:
-            event_object = (
-                windows_events.WindowsDistributedLinkTrackingCreationEvent(
-                    uuid_object, display_name))
-            parser_mediator.ProduceEvent(event_object)
+          self._ParseDistributedTrackingIdentifier(
+              parser_mediator, mft_attribute.droid_file_identifier,
+              display_name)
 
         except (TypeError, ValueError) as exception:
           parser_mediator.ProduceExtractionError((
@@ -233,12 +251,9 @@ class NTFSMFTParser(interface.FileObjectParser):
 
       if mft_attribute.birth_droid_file_identifier:
         try:
-          uuid_object = uuid.UUID(mft_attribute.birth_droid_file_identifier)
-          if uuid_object.version == 1:
-            event_object = (
-                windows_events.WindowsDistributedLinkTrackingCreationEvent(
-                    uuid_object, display_name))
-            parser_mediator.ProduceEvent(event_object)
+          self._ParseDistributedTrackingIdentifier(
+              parser_mediator, mft_attribute.droid_file_identifier,
+              display_name)
 
         except (TypeError, ValueError) as exception:
           parser_mediator.ProduceExtractionError((
@@ -247,7 +262,7 @@ class NTFSMFTParser(interface.FileObjectParser):
                   mft_attribute.attribute_type, exception))
 
   def _ParseMFTEntry(self, parser_mediator, mft_entry):
-    """Extract data from a NFTS $MFT entry.
+    """Extracts data from a NFTS $MFT entry.
 
     Args:
       parser_mediator (ParserMediator): mediates interactions between parsers

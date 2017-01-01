@@ -7,6 +7,7 @@ import pylnk
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
+from dfdatetime import uuid_time as dfdatetime_uuid_time
 
 from plaso import dependencies
 from plaso.containers import time_events
@@ -108,6 +109,26 @@ class WinLnkParser(interface.FileObjectParser):
         offset=4)
     return format_specification
 
+  def _ParseDistributedTrackingIdentifier(
+      self, parser_mediator, uuid_string, origin):
+    """Extracts data from a Distributed Tracking identifier.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      uuid_string (str): UUID string of the Distributed Tracking identifier.
+      origin (str): origin of the event (event source).
+    """
+    uuid_object = uuid.UUID(uuid_string)
+
+    if uuid_object.version == 1:
+      event_data = windows_events.WindowsDistributedLinkTrackingEventData(
+          uuid_object, origin)
+      date_time = dfdatetime_uuid_time.UUIDTime(timestamp=uuid_object.time)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.CREATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
   def ParseFileObject(
       self, parser_mediator, file_object, display_name=None, **kwargs):
     """Parses a Windows Shortcut (LNK) file-like object.
@@ -173,23 +194,23 @@ class WinLnkParser(interface.FileObjectParser):
           date_time, eventdata.EventTimestamp.NOT_A_TIME, lnk_file, link_target)
       parser_mediator.ProduceEvent(event)
 
-    try:
-      uuid_object = uuid.UUID(lnk_file.droid_file_identifier)
-      if uuid_object.version == 1:
-        event = windows_events.WindowsDistributedLinkTrackingCreationEvent(
-            uuid_object, display_name)
-        parser_mediator.ProduceEvent(event)
-    except (TypeError, ValueError):
-      pass
+    if lnk_file.droid_file_identifier:
+      try:
+        self._ParseDistributedTrackingIdentifier(
+            parser_mediator, lnk_file.droid_file_identifier, display_name)
+      except (TypeError, ValueError) as exception:
+        parser_mediator.ProduceExtractionError(
+            u'unable to read droid file identifier with error: {0:s}.'.format(
+                exception))
 
-    try:
-      uuid_object = uuid.UUID(lnk_file.birth_droid_file_identifier)
-      if uuid_object.version == 1:
-        event = windows_events.WindowsDistributedLinkTrackingCreationEvent(
-            uuid_object, display_name)
-        parser_mediator.ProduceEvent(event)
-    except (TypeError, ValueError):
-      pass
+    if lnk_file.birth_droid_file_identifier:
+      try:
+        self._ParseDistributedTrackingIdentifier(
+            parser_mediator, lnk_file.birth_droid_file_identifier, display_name)
+      except (TypeError, ValueError) as exception:
+        parser_mediator.ProduceExtractionError((
+            u'unable to read birth droid file identifier with error: '
+            u'{0:s}.').format(exception))
 
     lnk_file.close()
 

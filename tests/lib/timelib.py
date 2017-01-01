@@ -4,7 +4,6 @@
 
 import datetime
 import unittest
-import uuid
 
 from plaso.lib import errors
 from plaso.lib import timelib
@@ -181,25 +180,6 @@ class TimeLibTest(unittest.TestCase):
 
     # POSIX time that exceeds lower bound.
     self.assertEqual(timelib.Timestamp.FromPosixTime(-9223372036855), 0)
-
-  def testTimestampFromUUIDTime(self):
-    """Test the UUID time conversion."""
-    uuid_object = uuid.UUID(u'00911b54-9ef4-11e1-be53-525400123456')
-
-    timestamp = timelib.Timestamp.FromUUIDTime(uuid_object.time)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-05-16 01:11:01.654408')
-    self.assertEqual(timestamp, expected_timestamp)
-
-    uuid_time = 86400 * 10000000
-    timestamp = timelib.Timestamp.FromUUIDTime(uuid_time)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'1582-10-16 00:00:00')
-    self.assertEqual(timestamp, expected_timestamp)
-
-    # UUID time that exceeds lower bound.
-    uuid_time = -1
-    self.assertEqual(timelib.Timestamp.FromUUIDTime(uuid_time), 0)
 
   def testMonthDict(self):
     """Test the month dict, both inside and outside of scope."""

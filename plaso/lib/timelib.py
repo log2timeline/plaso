@@ -70,9 +70,6 @@ class Timestamp(object):
   # The multiplication factor to change milliseconds to micro seconds.
   MILLI_SECONDS_TO_MICRO_SECONDS = 1000
 
-  # The difference between Nov 10, 1582 and Jan 1, 1970 in 100 nanoseconds.
-  UUID_TIME_TO_POSIX_BASE = 12219292800 * 10000000
-
   @classmethod
   def CopyFromString(cls, time_string):
     """Copies a timestamp from a string containing a date and time value.
@@ -529,29 +526,6 @@ class Timestamp(object):
       datetime_object = timezone.localize(datetime_object)
 
     return cls.FromPythonDatetime(datetime_object)
-
-  @classmethod
-  def FromUUIDTime(cls, uuid_time):
-    """Converts a UUID verion 1 time into a timestamp.
-
-    The UUID version 1 time is a 60-bit value containing:
-      100th nano seconds since 1582-10-15 00:00:00
-
-    Args:
-      uuid_time: The 60-bit UUID version 1 timestamp.
-
-    Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC or 0 on error.
-    """
-    # TODO: Add a handling for if the timestamp equals to zero.
-    if uuid_time < 0:
-      return 0
-    timestamp = (uuid_time - cls.UUID_TIME_TO_POSIX_BASE) / 10
-
-    if timestamp > cls.TIMESTAMP_MAX_MICRO_SECONDS:
-      return 0
-    return timestamp
 
   @classmethod
   def GetNow(cls):

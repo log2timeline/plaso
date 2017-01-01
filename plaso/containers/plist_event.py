@@ -4,14 +4,15 @@
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import eventdata
+from plaso.lib import timelib
 
 
-class PlistEvent(time_events.PythonDatetimeEvent):
+class PlistEvent(time_events.TimestampEvent):
   """Convenience class for a plist events."""
 
   DATA_TYPE = u'plist:key'
 
-  def __init__(self, root, key, timestamp, desc=None, host=None, user=None):
+  def __init__(self, root, key, datetime_time, desc=None, host=None, user=None):
     """Template for creating a Plist EventObject for returning data to Plaso.
 
     All events extracted from files get passed around Plaso internally as an
@@ -21,13 +22,14 @@ class PlistEvent(time_events.PythonDatetimeEvent):
     the appropriate formatter for converting these attributes to output.
 
     Args:
-      root: A string representing the path from the root to this key.
-      key: A string representing the name of key.
-      timestamp: The date object (instance of datetime.datetime).
-      desc: An optional string intended for the user describing the event.
-      host: An optional host name if one is available within the log file.
-      user: An optional user name if one is available within the log file.
+      root (str): path from the root to this key.
+      key (str): name of key.
+      datetime_time (datetime.datetime): datetime.
+      desc (Optional[str]): description.
+      host (Optional[str]): name of host.
+      user (Optional[str]): name of user.
     """
+    timestamp = timelib.Timestamp.FromPythonDatetime(datetime_time)
     super(PlistEvent, self).__init__(
         timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
 

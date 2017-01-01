@@ -8,6 +8,7 @@ import construct
 
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
+from dfdatetime import uuid_time as dfdatetime_uuid_time
 
 from plaso.containers import time_events
 from plaso.containers import windows_events
@@ -134,6 +135,31 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
       construct.String(u'path', lambda ctx: ctx.path_size * 2),
       construct.Padding(4))
 
+  def _ParseDistributedTrackingIdentifier(
+      self, parser_mediator, uuid_data, origin):
+    """Extracts data from a Distributed Tracking identifier.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      uuid_data (bytes): UUID data of the Distributed Tracking identifier.
+      origin (str): origin of the event (event source).
+
+    Returns:
+      str: UUID string of the Distributed Tracking identifier.
+    """
+    uuid_object = uuid.UUID(bytes_le=uuid_data)
+
+    if uuid_object.version == 1:
+      event_data = windows_events.WindowsDistributedLinkTrackingEventData(
+          uuid_object, origin)
+      date_time = dfdatetime_uuid_time.UUIDTime(timestamp=uuid_object.time)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.CREATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    return u'{{{0!s}}}'.format(uuid_object)
+
   def ParseDestList(self, parser_mediator, olecf_item):
     """Parses the DestList OLECF item.
 
@@ -173,13 +199,8 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
       display_name = u'DestList entry at offset: 0x{0:08x}'.format(entry_offset)
 
       try:
-        uuid_object = uuid.UUID(bytes_le=entry.droid_volume_identifier)
-        droid_volume_identifier = u'{{{0!s}}}'.format(uuid_object)
-
-        if uuid_object.version == 1:
-          event = windows_events.WindowsDistributedLinkTrackingCreationEvent(
-              uuid_object, display_name)
-          parser_mediator.ProduceEvent(event)
+        droid_volume_identifier = self._ParseDistributedTrackingIdentifier(
+            parser_mediator, entry.droid_volume_identifier, display_name)
 
       except (TypeError, ValueError) as exception:
         droid_volume_identifier = u''
@@ -188,13 +209,8 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
                 exception))
 
       try:
-        uuid_object = uuid.UUID(bytes_le=entry.droid_file_identifier)
-        droid_file_identifier = u'{{{0!s}}}'.format(uuid_object)
-
-        if uuid_object.version == 1:
-          event = windows_events.WindowsDistributedLinkTrackingCreationEvent(
-              uuid_object, display_name)
-          parser_mediator.ProduceEvent(event)
+        droid_file_identifier = self._ParseDistributedTrackingIdentifier(
+            parser_mediator, entry.droid_file_identifier, display_name)
 
       except (TypeError, ValueError) as exception:
         droid_file_identifier = u''
@@ -203,13 +219,10 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
                 exception))
 
       try:
-        uuid_object = uuid.UUID(bytes_le=entry.birth_droid_volume_identifier)
-        birth_droid_volume_identifier = u'{{{0!s}}}'.format(uuid_object)
-
-        if uuid_object.version == 1:
-          event = windows_events.WindowsDistributedLinkTrackingCreationEvent(
-              uuid_object, display_name)
-          parser_mediator.ProduceEvent(event)
+        birth_droid_volume_identifier = (
+            self._ParseDistributedTrackingIdentifier(
+                parser_mediator, entry.birth_droid_volume_identifier,
+                display_name))
 
       except (TypeError, ValueError) as exception:
         birth_droid_volume_identifier = u''
@@ -219,13 +232,8 @@ class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
                 exception))
 
       try:
-        uuid_object = uuid.UUID(bytes_le=entry.birth_droid_file_identifier)
-        birth_droid_file_identifier = u'{{{0!s}}}'.format(uuid_object)
-
-        if uuid_object.version == 1:
-          event = windows_events.WindowsDistributedLinkTrackingCreationEvent(
-              uuid_object, display_name)
-          parser_mediator.ProduceEvent(event)
+        birth_droid_file_identifier = self._ParseDistributedTrackingIdentifier(
+            parser_mediator, entry.birth_droid_file_identifier, display_name)
 
       except (TypeError, ValueError) as exception:
         birth_droid_file_identifier = u''
