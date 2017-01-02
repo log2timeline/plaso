@@ -17,7 +17,7 @@ class SyslogCronPluginTest(test_lib.SyslogPluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'syslog_cron.log'])
   def testParse(self):
     """Tests the parsing functionality on a sample file."""
-    knowledge_base_values = {u'year': 2016}
+    knowledge_base_values = {u'year': 2015}
 
     storage_writer = self._ParseFileWithPlugin(
         [u'syslog_cron.log'], u'cron',
@@ -27,12 +27,12 @@ class SyslogCronPluginTest(test_lib.SyslogPluginTestCase):
 
     events = self._GetSortedEvents(storage_writer.events)
 
-    event = events[4]
+    event = events[1]
 
     self.assertEqual(event.data_type, cron.CronTaskRunEvent.DATA_TYPE)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2016-03-11 19:26:39')
+        u'2015-03-11 19:26:39')
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_command = u'sleep $(( 1 * 60 )); touch /tmp/afile.txt'
@@ -40,7 +40,7 @@ class SyslogCronPluginTest(test_lib.SyslogPluginTestCase):
 
     self.assertEqual(event.username, u'root')
 
-    event = events[1]
+    event = events[7]
     self.assertEqual(event.command, u'/sbin/status.mycheck')
     self.assertEqual(event.pid, 31067)
 
