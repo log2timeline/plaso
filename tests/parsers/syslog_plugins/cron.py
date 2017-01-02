@@ -17,27 +17,32 @@ class SyslogCronPluginTest(test_lib.SyslogPluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'syslog_cron.log'])
   def testParse(self):
     """Tests the parsing functionality on a sample file."""
+    knowledge_base_values = {u'year': 2016}
+
     storage_writer = self._ParseFileWithPlugin(
-        [u'syslog_cron.log'], u'cron')
+        [u'syslog_cron.log'], u'cron',
+        knowledge_base_values=knowledge_base_values)
 
     self.assertEqual(len(storage_writer.events), 9)
-    test_events = sorted(storage_writer.events)
 
-    event = storage_writer.events[1]
-    self.assertEqual(cron.CronTaskRunEvent.DATA_TYPE, event.DATA_TYPE)
+    events = self._GetSortedEvents(storage_writer.events)
+
+    event = events[4]
+
+    self.assertEqual(event.data_type, cron.CronTaskRunEvent.DATA_TYPE)
+
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-03-11 19:26:39')
-    self.assertEqual(expected_timestamp, event.timestamp)
-    expected_command = u'sleep $(( 1 * 60 )); touch /tmp/afile.txt'
-    self.assertEqual(expected_command, event.command)
-    expected_username = u'root'
-    self.assertEqual(expected_username, event.username)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    event = storage_writer.events[8]
-    expected_command = u'/sbin/status.mycheck'
-    self.assertEqual(expected_command, event.command)
-    expected_pid = 31067
-    self.assertEqual(expected_pid, event.pid)
+    expected_command = u'sleep $(( 1 * 60 )); touch /tmp/afile.txt'
+    self.assertEqual(event.command, expected_command)
+
+    self.assertEqual(event.username, u'root')
+
+    event = events[1]
+    self.assertEqual(event.command, u'/sbin/status.mycheck')
+    self.assertEqual(event.pid, 31067)
 
 
 if __name__ == '__main__':

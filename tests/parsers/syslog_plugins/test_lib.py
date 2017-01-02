@@ -16,14 +16,12 @@ class SyslogPluginTestCase(test_lib.ParserTestCase):
     """Parses a syslog file with a specific plugin.
 
     Args:
-      path_segments: a list of strings containinge the path segments inside
-                     the test data directory.
-      plugin_name: a string containing the name of the plugin.
-      knowledge_base_values: optional dictionary containing the knowledge base
-                             values.
+      path_segments (list[str]): path segments inside the test data directory.
+      plugin_name (str): name of the plugin.
+      knowledge_base_values (Optional[dict]): knowledge base values.
 
     Returns:
-      A storage writer object (instance of FakeStorageWriter).
+      FakeStorageWriter: storage writer.
     """
     session = sessions.Session()
     storage_writer = fake_storage.FakeStorageWriter(session)
