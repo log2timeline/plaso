@@ -38,7 +38,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     """
     knowledge_base_object = knowledge_base.KnowledgeBase()
     mediator = parsers_mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        storage_writer, knowledge_base_object, preferred_year=2016)
 
     if not extraction_worker:
       resolver_context = context.Context()
@@ -65,7 +65,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     storage_writer = fake_storage.FakeStorageWriter(session)
     knowledge_base_object = knowledge_base.KnowledgeBase()
     mediator = parsers_mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        storage_writer, knowledge_base_object, preferred_year=2016)
 
     resolver_context = context.Context()
     extraction_worker = worker.EventExtractionWorker(resolver_context)
