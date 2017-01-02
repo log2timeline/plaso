@@ -21,6 +21,7 @@ class SyslogCronPluginTest(test_lib.SyslogPluginTestCase):
         [u'syslog_cron.log'], u'cron')
 
     self.assertEqual(len(storage_writer.events), 9)
+    test_events = sorted(storage_writer.events)
 
     event = storage_writer.events[1]
     self.assertEqual(cron.CronTaskRunEvent.DATA_TYPE, event.DATA_TYPE)
