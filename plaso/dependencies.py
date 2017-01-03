@@ -20,7 +20,7 @@ PYTHON_DEPENDENCIES = {
     u'construct': (u'__version__', u'2.5.2', u'2.5.3'),
     u'Crypto': (u'__version__', u'2.6.0', None),
     u'dateutil': (u'__version__', u'1.5', None),
-    u'dfdatetime': (u'__version__', u'20161228', None),
+    u'dfdatetime': (u'__version__', u'20170103', None),
     u'dfvfs': (u'__version__', u'20160803', None),
     u'dfwinreg': (u'__version__', u'20160320', None),
     u'dpkt': (u'__version__', u'1.8', None),
