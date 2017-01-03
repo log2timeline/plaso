@@ -36,7 +36,19 @@ class ExtractionAndAnalysisTool(status_view_tool.StatusViewTool):
 
     timestamp = datetime.datetime.now()
     datetime_string = timestamp.strftime(u'%Y%m%dT%H%M%S')
-    source_name = os.path.basename(self._source_path)
+
+    source_path = os.path.abspath(self._source_path)
+    source_name = os.path.basename(source_path)
+
+    if source_path.endswith(os.path.sep):
+      source_path = os.path.dirname(source_path)
+
+    if source_path == os.path.sep:
+      # The user passed the filesystem's root as source
+      source_name = u'ROOT'
+    else:
+      source_name = os.path.basename(source_path)
+
     return u'{0:s}-{1:s}.plaso'.format(datetime_string, source_name)
 
   def _ParseStorageFileOptions(self, options):
