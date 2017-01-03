@@ -31,34 +31,9 @@ class MultiProcessEngine(engine.BaseEngine):
 
   _ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS = 300
 
-  def __init__(
-      self, debug_output=False, enable_profiling=False,
-      profiling_directory=None, profiling_sample_rate=1000,
-      profiling_type=u'all'):
-    """Initializes an engine object.
-
-    Args:
-      debug_output (Optional[bool]): True if debug output should be enabled.
-      enable_profiling (Optional[bool]): True if profiling should be enabled.
-      profiling_directory (Optional[str]): path to the directory where
-          the profiling sample files should be stored.
-      profiling_sample_rate (Optional[int]): the profiling sample rate.
-          Contains the number of event sources processed.
-      profiling_type (Optional[str]): type of profiling.
-          Supported types are:
-
-          * 'memory' to profile memory usage;
-          * 'parsers' to profile CPU time consumed by individual parsers;
-          * 'processing' to profile CPU time consumed by different parts of
-            the processing;
-          * 'serializers' to profile CPU time consumed by individual
-            serializers.
-    """
-    super(MultiProcessEngine, self).__init__(
-        debug_output=debug_output, enable_profiling=enable_profiling,
-        profiling_directory=profiling_directory,
-        profiling_sample_rate=profiling_sample_rate,
-        profiling_type=profiling_type)
+  def __init__(self):
+    """Initializes a multi-process engine object."""
+    super(MultiProcessEngine, self).__init__()
     self._name = u'Main'
     self._pid = os.getpid()
     self._process_information = process_info.ProcessInfo(self._pid)
@@ -69,6 +44,7 @@ class MultiProcessEngine(engine.BaseEngine):
     self._status_update_active = False
     self._status_update_callback = None
     self._status_update_thread = None
+    self._storage_writer = None
 
   def _AbortJoin(self, timeout=None):
     """Aborts all registered processes by joining with the parent process.
@@ -168,8 +144,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
       logging.info(u'Starting replacement worker process for {0:s}'.format(
           process.name))
-      replacement_process = self._StartExtractionWorkerProcess(
-          self._storage_writer)
+      replacement_process = self._StartWorkerProcess(self._storage_writer)
       self._StartMonitoringProcess(replacement_process.pid)
 
   def _GetProcessStatus(self, process):
@@ -254,6 +229,18 @@ class MultiProcessEngine(engine.BaseEngine):
               process.name, process.pid))
 
     self._processes_per_pid[process.pid] = process
+
+  @abc.abstractmethod
+  def _StartWorkerProcess(self, storage_writer):
+    """Creates, starts and registers a worker process.
+
+    Args:
+      storage_writer (StorageWriter): storage writer for a session storage used
+          to create task storage.
+
+    Returns:
+      MultiProcessWorkerProcess: extraction worker process.
+    """
 
   def _StartMonitoringProcess(self, pid):
     """Starts monitoring a process.
@@ -375,3 +362,16 @@ class MultiProcessEngine(engine.BaseEngine):
       self._KillProcess(pid)
 
     self._StopMonitoringProcess(pid)
+
+  @abc.abstractmethod
+  def _UpdateProcessingStatus(self, pid, process_status):
+    """Updates the processing status.
+
+    Args:
+      pid (int): process identifier (PID) of the worker process.
+      process_status (dict[str, object]): status values received from
+          the worker process.
+
+    Raises:
+      KeyError: if the process is not registered with the engine.
+    """

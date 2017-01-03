@@ -487,6 +487,31 @@ class ParserMediator(object):
     """Resets the active file entry."""
     self._file_entry = None
 
+  def SetEventExtractionConfiguration(self, configuration):
+    """Sets the event extraction configuration settings.
+
+    Args:
+      configuration (EventExtractionConfiguration): event extraction
+          configuration.
+    """
+    self._filter_object = configuration.filter_object
+    self._text_prepend = configuration.text_prepend
+
+  def SetInputSourceConfiguration(self, configuration):
+    """Sets the input source configuration settings.
+
+    Args:
+      configuration (InputSourceConfiguration): input source configuration.
+    """
+    mount_path = configuration.mount_path
+
+    # Remove a trailing path separator from the mount path so the relative
+    # paths will start with a path separator.
+    if mount_path and mount_path.endswith(os.sep):
+      mount_path = mount_path[:-1]
+
+    self._mount_path = mount_path
+
   def SetFileEntry(self, file_entry):
     """Sets the active file entry.
 
@@ -495,27 +520,6 @@ class ParserMediator(object):
     """
     self._file_entry = file_entry
 
-  def SetFilterObject(self, filter_object):
-    """Sets the filter object.
-
-    Args:
-      filter_object (objectfilter.Filter): filter object.
-    """
-    self._filter_object = filter_object
-
-  def SetMountPath(self, mount_path):
-    """Sets the mount path.
-
-    Args:
-      mount_path (str): mount path.
-    """
-    # Remove a trailing path separator from the mount path so the relative
-    # paths will start with a path separator.
-    if mount_path and mount_path.endswith(os.sep):
-      mount_path = mount_path[:-1]
-
-    self._mount_path = mount_path
-
   def SetStorageWriter(self, storage_writer):
     """Sets the storage writer.
 
@@ -523,14 +527,6 @@ class ParserMediator(object):
       storage_writer (StorageWriter): storage writer.
     """
     self._storage_writer = storage_writer
-
-  def SetTextPrepend(self, text_prepend):
-    """Sets the text prepend.
-
-    Args:
-      text_prepend (str): text to prepend to every event.
-    """
-    self._text_prepend = text_prepend
 
   def SignalAbort(self):
     """Signals the parsers to abort."""

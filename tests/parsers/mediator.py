@@ -9,6 +9,7 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import resolver as path_spec_resolver
 
 from plaso.containers import sessions
+from plaso.engine import processing_configuration
 from plaso.storage import fake_storage
 
 from tests import test_lib as shared_test_lib
@@ -68,7 +69,10 @@ class ParsersMediatorTest(test_lib.ParserTestCase):
     expected_display_name = u'VSS2:TSK:/syslog.gz'
     self.assertEqual(display_name, expected_display_name)
 
-    parsers_mediator.SetTextPrepend(u'C:')
+    configuration = processing_configuration.EventExtractionConfiguration()
+    configuration.text_prepend = u'C:'
+
+    parsers_mediator.SetEventExtractionConfiguration(configuration)
     display_name = parsers_mediator.GetDisplayName(file_entry=file_entry)
     expected_display_name = u'VSS2:TSK:C:/syslog.gz'
     self.assertEqual(display_name, expected_display_name)

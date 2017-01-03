@@ -76,8 +76,7 @@ class EventExtractionWorker(object):
       dfvfs_definitions.TYPE_INDICATOR_GZIP])
 
   def __init__(
-      self, resolver_context, parser_filter_expression=None,
-      process_archives=False, process_compressed_streams=True):
+      self, resolver_context, parser_filter_expression=None):
     """Initializes the event extraction worker object.
 
     Args:
@@ -93,11 +92,6 @@ class EventExtractionWorker(object):
             plaso/frontend/presets.py for a full list of available presets).
           * A name of a single parser (case insensitive), e.g. msiecf.
           * A glob name for a single parser, e.g. '*msie*' (case insensitive).
-
-      process_archives (Optional[bool]): True if the worker should scan
-          for file entries inside archive files.
-      process_compressed_streams (Optional[bool]): True if file content in
-          compressed streams should be processed.
     """
     super(EventExtractionWorker, self).__init__()
     self._abort = False
@@ -105,8 +99,8 @@ class EventExtractionWorker(object):
     self._event_extractor = extractors.EventExtractor(
         resolver_context, parser_filter_expression=parser_filter_expression)
     self._hasher_names = None
-    self._process_archives = process_archives
-    self._process_compressed_streams = process_compressed_streams
+    self._process_archives = None
+    self._process_compressed_streams = None
     self._processing_profiler = None
     self._resolver_context = resolver_context
 
@@ -706,6 +700,35 @@ class EventExtractionWorker(object):
 
     self.last_activity_timestamp = time.time()
 
+  def _SetHashers(self, hasher_names_string):
+    """Sets the hasher names.
+
+    Args:
+      hasher_names_string (str): comma separated names of the hashers
+          to enable, where 'none' disables the hashing analyzer.
+    """
+    if not hasher_names_string or hasher_names_string == u'none':
+      return
+
+    analyzer_object = analyzers_manager.AnalyzersManager.GetAnalyzerInstance(
+        u'hashing')
+    analyzer_object.SetHasherNames(hasher_names_string)
+    self._analyzers.append(analyzer_object)
+
+  def _SetYaraRules(self, yara_rules_string):
+    """Sets the Yara rules.
+
+    Args:
+      yara_rules_string(str): unparsed Yara rule definitions.
+    """
+    if not yara_rules_string:
+      return
+
+    analyzer_object = analyzers_manager.AnalyzersManager.GetAnalyzerInstance(
+        u'yara')
+    analyzer_object.SetRules(yara_rules_string)
+    self._analyzers.append(analyzer_object)
+
   def GetAnalyzerNames(self):
     """Gets the names of the active analyzers.
 
@@ -749,20 +772,16 @@ class EventExtractionWorker(object):
       self.last_activity_timestamp = time.time()
       self.processing_status = definitions.PROCESSING_STATUS_IDLE
 
-  def SetHashers(self, hasher_names_string):
-    """Sets the hasher names.
+  def SetExtractionConfiguration(self, configuration):
+    """Sets the extraction configuration settings.
 
     Args:
-      hasher_names_string (str): comma separated names of the hashers
-          to enable, where 'none' disables the hashing analyzer.
+      configuration (ExtractionConfiguration): extraction configuration.
     """
-    if not hasher_names_string or hasher_names_string == u'none':
-      return
-
-    analyzer_object = analyzers_manager.AnalyzersManager.GetAnalyzerInstance(
-        u'hashing')
-    analyzer_object.SetHasherNames(hasher_names_string)
-    self._analyzers.append(analyzer_object)
+    self._SetHashers(configuration.hasher_names_string)
+    self._process_archives = configuration.process_archives
+    self._process_compressed_streams = configuration.process_compressed_streams
+    self._SetYaraRules(configuration.yara_rules_string)
 
   def SetParsersProfiler(self, parsers_profiler):
     """Sets the parsers profiler.
@@ -779,17 +798,6 @@ class EventExtractionWorker(object):
       processing_profiler (ProcessingProfiler): processing profile.
     """
     self._processing_profiler = processing_profiler
-
-  def SetYaraRules(self, yara_rules_string):
-    """Sets the Yara rules.
-
-    Args:
-      yara_rules_string(str): unparsed Yara rule definitions.
-    """
-    analyzer_object = analyzers_manager.AnalyzersManager.GetAnalyzerInstance(
-        u'yara')
-    analyzer_object.SetRules(yara_rules_string)
-    self._analyzers.append(analyzer_object)
 
   def SignalAbort(self):
     """Signals the extraction worker to abort."""

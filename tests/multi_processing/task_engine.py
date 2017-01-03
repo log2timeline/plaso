@@ -9,6 +9,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.containers import sessions
+from plaso.engine import processing_configuration
 from plaso.multi_processing import task_engine
 from plaso.storage import zip_file as storage_zip_file
 
@@ -35,14 +36,16 @@ class TaskMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     session = sessions.Session()
 
+    configuration = processing_configuration.ProcessingConfiguration()
+    configuration.parser_filter_expression = u'filestat'
+
     with shared_test_lib.TempDirectory() as temp_directory:
       temp_file = os.path.join(temp_directory, u'storage.plaso')
       storage_writer = storage_zip_file.ZIPStorageFileWriter(
           session, temp_file)
 
       test_engine.ProcessSources(
-          session.identifier, [source_path_spec], storage_writer,
-          parser_filter_expression=u'filestat')
+          session.identifier, [source_path_spec], storage_writer, configuration)
 
     # TODO: implement a way to obtain the results without relying
     # on multi-process primitives e.g. by writing to a file.

@@ -21,34 +21,9 @@ from plaso.parsers import mediator as parsers_mediator
 class SingleProcessEngine(engine.BaseEngine):
   """Class that defines the single process engine."""
 
-  def __init__(
-      self, debug_output=False, enable_profiling=False,
-      profiling_directory=None, profiling_sample_rate=1000,
-      profiling_type=u'all'):
-    """Initializes an engine object.
-
-    Args:
-      debug_output (Optional[bool]): True if debug output should be enabled.
-      enable_profiling (Optional[bool]): True if profiling should be enabled.
-      profiling_directory (Optional[str]): path to the directory where
-          the profiling sample files should be stored.
-      profiling_sample_rate (Optional[int]): the profiling sample rate.
-          Contains the number of event sources processed.
-      profiling_type (Optional[str]): type of profiling.
-          Supported types are:
-
-          * 'memory' to profile memory usage;
-          * 'parsers' to profile CPU time consumed by individual parsers;
-          * 'processing' to profile CPU time consumed by different parts of
-            the processing;
-          * 'serializers' to profile CPU time consumed by individual
-            serializers.
-    """
-    super(SingleProcessEngine, self).__init__(
-        debug_output=debug_output, enable_profiling=enable_profiling,
-        profiling_directory=profiling_directory,
-        profiling_sample_rate=profiling_sample_rate,
-        profiling_type=profiling_type)
+  def __init__(self):
+    """Initializes an engine object."""
+    super(SingleProcessEngine, self).__init__()
     self._current_display_name = u''
     self._last_status_update_timestamp = 0.0
     self._memory_profiler = None
@@ -56,10 +31,10 @@ class SingleProcessEngine(engine.BaseEngine):
     self._parsers_profiler = None
     self._pid = os.getpid()
     self._process_information = process_info.ProcessInfo(self._pid)
+    self._processing_configuration = None
     self._processing_profiler = None
     self._serializers_profiler = None
     self._status_update_callback = None
-    self._yara_rules_string = None
 
   def _ProcessPathSpec(self, extraction_worker, parser_mediator, path_spec):
     """Processes a path specification.
@@ -98,7 +73,7 @@ class SingleProcessEngine(engine.BaseEngine):
           u'unable to process path specification with error: '
           u'{0:s}').format(exception), path_spec=path_spec)
 
-      if self._debug_output:
+      if self._processing_configuration.debug_output:
         logging.warning(
             u'Unhandled exception while processing path spec: {0:s}.'.format(
                 self._current_display_name))
@@ -205,32 +180,33 @@ class SingleProcessEngine(engine.BaseEngine):
     Args:
       extraction_worker (worker.ExtractionWorker): extraction worker.
     """
-    if not self._enable_profiling:
+    if not self._processing_configuration:
       return
 
-    if self._profiling_type in (u'all', u'memory'):
+    if self._processing_configuration.profiling.HaveProfileMemory():
       identifier = u'{0:s}-memory'.format(self._name)
       self._memory_profiler = profiler.GuppyMemoryProfiler(
-          identifier, path=self._profiling_directory,
-          profiling_sample_rate=self._profiling_sample_rate)
+          identifier, path=self._processing_configuration.profiling.directory,
+          profiling_sample_rate=(
+              self._processing_configuration.profiling.sample_rate))
       self._memory_profiler.Start()
 
-    if self._profiling_type in (u'all', u'parsers'):
+    if self._processing_configuration.profiling.HaveProfileParsers():
       identifier = u'{0:s}-parsers'.format(self._name)
       self._parsers_profiler = profiler.ParsersProfiler(
-          identifier, path=self._profiling_directory)
+          identifier, path=self._processing_configuration.profiling.directory)
       extraction_worker.SetParsersProfiler(self._parsers_profiler)
 
-    if self._profiling_type in (u'all', u'processing'):
+    if self._processing_configuration.profiling.HaveProfileProcessing():
       identifier = u'{0:s}-processing'.format(self._name)
       self._processing_profiler = profiler.ProcessingProfiler(
-          identifier, path=self._profiling_directory)
+          identifier, path=self._processing_configuration.profiling.directory)
       extraction_worker.SetProcessingProfiler(self._processing_profiler)
 
-    if self._profiling_type in (u'all', u'serializers'):
+    if self._processing_configuration.profiling.HaveProfileSerializers():
       identifier = u'{0:s}-serializers'.format(self._name)
       self._serializers_profiler = profiler.SerializersProfiler(
-          identifier, path=self._profiling_directory)
+          identifier, path=self._processing_configuration.profiling.directory)
 
   def _StopProfiling(self, extraction_worker):
     """Stops profiling.
@@ -238,24 +214,21 @@ class SingleProcessEngine(engine.BaseEngine):
     Args:
       extraction_worker (worker.ExtractionWorker): extraction worker.
     """
-    if not self._enable_profiling:
-      return
-
-    if self._profiling_type in (u'all', u'memory'):
+    if self._memory_profiler:
       self._memory_profiler.Sample()
       self._memory_profiler = None
 
-    if self._profiling_type in (u'all', u'parsers'):
+    if self._parsers_profiler:
       extraction_worker.SetParsersProfiler(None)
       self._parsers_profiler.Write()
       self._parsers_profiler = None
 
-    if self._profiling_type in (u'all', u'processing'):
+    if self._processing_profiler:
       extraction_worker.SetProcessingProfiler(None)
       self._processing_profiler.Write()
       self._processing_profiler = None
 
-    if self._profiling_type in (u'all', u'serializers'):
+    if self._serializers_profiler:
       self._serializers_profiler.Write()
       self._serializers_profiler = None
 
@@ -298,11 +271,8 @@ class SingleProcessEngine(engine.BaseEngine):
 
   def ProcessSources(
       self, source_path_specs, storage_writer, resolver_context,
-      filter_find_specs=None, filter_object=None, hasher_names_string=None,
-      mount_path=None, parser_filter_expression=None, preferred_year=None,
-      process_archives=False, process_compressed_streams=True,
-      status_update_callback=None, temporary_directory=None,
-      text_prepend=None, yara_rules_string=None):
+      processing_configuration, filter_find_specs=None,
+      status_update_callback=None):
     """Processes the sources.
 
     Args:
@@ -310,51 +280,33 @@ class SingleProcessEngine(engine.BaseEngine):
           the sources to process.
       storage_writer (StorageWriter): storage writer for a session storage.
       resolver_context (dfvfs.Context): resolver context.
+      processing_configuration (ProcessingConfiguration): processing
+          configuration.
       filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
           used in path specification extraction.
-      filter_object (Optional[objectfilter.Filter]): filter object.
-      hasher_names_string (Optional[str]): comma separated string of names
-          of hashers to use during processing.
-      mount_path (Optional[str]): mount path.
-      parser_filter_expression (Optional[str]): parser filter expression.
-      preferred_year (Optional[int]): preferred year.
-      process_archives (Optional[bool]): True if archive files should be
-          scanned for file entries.
-      process_compressed_streams (Optional[bool]): True if file content in
-          compressed streams should be processed.
       status_update_callback (Optional[function]): callback function for status
           updates.
-      temporary_directory (Optional[str]): path of the directory for temporary
-          files.
-      text_prepend (Optional[str]): text to prepend to every event.
-      yara_rules_string (Optional[str]): unparsed yara rule definitions.
 
     Returns:
       ProcessingStatus: processing status.
     """
     parser_mediator = parsers_mediator.ParserMediator(
-        storage_writer, self.knowledge_base, preferred_year=preferred_year,
-        temporary_directory=temporary_directory)
+        storage_writer, self.knowledge_base,
+        preferred_year=processing_configuration.preferred_year,
+        temporary_directory=processing_configuration.temporary_directory)
 
-    if filter_object:
-      parser_mediator.SetFilterObject(filter_object)
+    parser_mediator.SetEventExtractionConfiguration(
+        processing_configuration.event_extraction)
 
-    if mount_path:
-      parser_mediator.SetMountPath(mount_path)
-
-    if text_prepend:
-      parser_mediator.SetTextPrepend(text_prepend)
+    parser_mediator.SetInputSourceConfiguration(
+        processing_configuration.input_source)
 
     extraction_worker = worker.EventExtractionWorker(
-        resolver_context, parser_filter_expression=parser_filter_expression,
-        process_archives=process_archives,
-        process_compressed_streams=process_compressed_streams)
+        resolver_context, parser_filter_expression=(
+            processing_configuration.parser_filter_expression))
 
-    if hasher_names_string:
-      extraction_worker.SetHashers(hasher_names_string)
-
-    if yara_rules_string:
-      extraction_worker.SetYaraRules(yara_rules_string)
+    extraction_worker.SetExtractionConfiguration(
+        processing_configuration.extraction)
 
     self._status_update_callback = status_update_callback
 

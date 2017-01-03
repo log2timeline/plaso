@@ -65,19 +65,14 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       raise errors.BadConfigOption(
           u'Unable to write to storage file: {0:s}'.format(storage_file_path))
 
-  # TODO: add single processing support.
   def _CreateEngine(self):
     """Creates an engine based on the front end settings.
 
     Returns:
       BaseEngine: engine.
     """
-    return psort.PsortMultiProcessEngine(
-        debug_output=self._debug_mode,
-        enable_profiling=self._enable_profiling,
-        profiling_directory=self._profiling_directory,
-        profiling_sample_rate=self._profiling_sample_rate,
-        profiling_type=self._profiling_type, use_zeromq=self._use_zeromq)
+    # TODO: add single processing support.
+    return psort.PsortMultiProcessEngine(use_zeromq=self._use_zeromq)
 
   def AnalyzeEvents(
       self, storage_writer, analysis_plugins, status_update_callback=None):
@@ -96,6 +91,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     engine = self._CreateEngine()
 
     # TODO: add single processing support.
+    # TODO: pass configuration object.
     engine.AnalyzeEvents(
         self._knowledge_base, storage_writer, self._data_location,
         analysis_plugins, event_filter=self._event_filter,
@@ -211,6 +207,7 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     """
     engine = self._CreateEngine()
 
+    # TODO: pass configuration object.
     return engine.ExportEvents(
         self._knowledge_base, storage_reader, output_module,
         deduplicate_events=deduplicate_events, event_filter=self._event_filter,

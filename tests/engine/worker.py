@@ -10,6 +10,7 @@ from dfvfs.resolver import context
 
 from plaso.containers import sessions
 from plaso.engine import knowledge_base
+from plaso.engine import processing_configuration
 from plaso.engine import worker
 from plaso.parsers import mediator as parsers_mediator
 from plaso.storage import fake_storage
@@ -48,8 +49,11 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     if not extraction_worker:
       resolver_context = context.Context()
 
-      extraction_worker = worker.EventExtractionWorker(
-          resolver_context, process_archives=process_archives)
+      configuration = processing_configuration.ExtractionConfiguration()
+      configuration.process_archives = process_archives
+
+      extraction_worker = worker.EventExtractionWorker(resolver_context)
+      extraction_worker.SetExtractionConfiguration(configuration)
 
     storage_writer.Open()
     storage_writer.WriteSessionStart()
@@ -233,7 +237,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     resolver_context = context.Context()
     extraction_worker = worker.EventExtractionWorker(resolver_context)
 
-    extraction_worker.SetHashers(u'md5')
+    extraction_worker._SetHashers(u'md5')
     self.assertIn(u'hashing', extraction_worker.GetAnalyzerNames())
 
     knowledge_base_values = {u'year': 2016}
@@ -261,7 +265,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     with open(rule_path, 'r') as rule_file:
       rule_string = rule_file.read()
 
-    extraction_worker.SetYaraRules(rule_string)
+    extraction_worker._SetYaraRules(rule_string)
     self.assertIn(u'yara', extraction_worker.GetAnalyzerNames())
 
     knowledge_base_values = {u'year': 2016}
