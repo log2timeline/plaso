@@ -311,7 +311,6 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     test_tool = log2timeline.Log2TimelineTool(output_writer=output_writer)
 
     options = cli_test_lib.TestOptions()
-    # TODO: refactor to partitions.
     options.partitions = u'all'
     options.quiet = True
     options.single_process = True

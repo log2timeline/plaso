@@ -45,8 +45,8 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
     options = cli_test_lib.TestOptions()
     expected_error = u'Missing source path.'
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.analysis_output_file = os.path.join(temp_directory,
-                                                  u'unused_output.txt')
+      options.analysis_output_file = os.path.join(
+          temp_directory, u'unused_output.txt')
       with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
         test_tool.ParseOptions(options)
 
@@ -54,8 +54,8 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
     options = cli_test_lib.TestOptions()
     options.source = self._GetTestFilePath([u'testdir'])
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.analysis_output_file = os.path.join(temp_directory,
-                                                  u'unused_output.txt')
+      options.analysis_output_file = os.path.join(
+          temp_directory, u'unused_output.txt')
       test_tool.ParseOptions(options)
 
   def testParseArguments(self):
@@ -81,8 +81,8 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath([u'testdir'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.analysis_output_file = os.path.join(temp_directory,
-                                                  u'unused_output.txt')
+      options.analysis_output_file = os.path.join(
+          temp_directory, u'unused_output.txt')
       options.storage_file = os.path.join(temp_directory, u'storage.plaso')
 
       test_tool.ParseOptions(options)
@@ -110,12 +110,14 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
     options = cli_test_lib.TestOptions()
     options.credentials = [u'password:{0:s}'.format(self._BDE_PASSWORD)]
     options.quiet = True
-    options.status_view_mode = u'none'
+    # TODO: remove work-around after fixing #1112
+    options.single_process = True
     options.source = self._GetTestFilePath([u'bdetogo.raw'])
+    options.status_view_mode = u'none'
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.analysis_output_file = os.path.join(temp_directory,
-                                                  u'unused_output.txt')
+      options.analysis_output_file = os.path.join(
+          temp_directory, u'unused_output.txt')
       options.storage_file = os.path.join(temp_directory, u'storage.plaso')
 
       test_tool.ParseOptions(options)
@@ -147,8 +149,8 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath([u'ímynd.dd'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.analysis_output_file = os.path.join(temp_directory,
-                                                  u'unused_output.txt')
+      options.analysis_output_file = os.path.join(
+          temp_directory, u'unused_output.txt')
       options.storage_file = os.path.join(temp_directory, u'storage.plaso')
 
       test_tool.ParseOptions(options)
@@ -175,7 +177,6 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
     test_tool = psteal.PstealTool(output_writer=output_writer)
 
     options = cli_test_lib.TestOptions()
-    # TODO: refactor to partitions.
     options.partitions = u'all'
     options.quiet = True
     options.status_view_mode = u'none'
@@ -183,8 +184,8 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath([u'multi_partition_image.vmdk'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.analysis_output_file = os.path.join(temp_directory,
-                                                  u'unused_output.txt')
+      options.analysis_output_file = os.path.join(
+          temp_directory, u'unused_output.txt')
       options.storage_file = os.path.join(temp_directory, u'storage.plaso')
 
       test_tool.ParseOptions(options)
@@ -217,8 +218,8 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
     options.vss_stores = u'all'
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.analysis_output_file = os.path.join(temp_directory,
-                                                  u'unused_output.txt')
+      options.analysis_output_file = os.path.join(
+          temp_directory, u'unused_output.txt')
       options.storage_file = os.path.join(temp_directory, u'storage.plaso')
 
       test_tool.ParseOptions(options)
@@ -253,8 +254,8 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath([u'System.evtx'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.analysis_output_file = os.path.join(temp_directory,
-                                                  u'unused_output.txt')
+      options.analysis_output_file = os.path.join(
+          temp_directory, u'unused_output.txt')
       options.storage_file = os.path.join(temp_directory, u'storage.plaso')
 
       test_tool.ParseOptions(options)
