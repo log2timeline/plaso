@@ -3,8 +3,10 @@
 """Tests for the StatusView tool object."""
 
 import unittest
+import sys
 
 import plaso
+
 from plaso.cli.status_view_tool import StatusViewTool
 from plaso.cli import tools
 from plaso.engine import processing_status
@@ -49,20 +51,26 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
 
     string = output_writer.ReadOutput()
 
-    expected_string = (
-        b'Source path\t: /test/source/path\n'
-        b'Source type\t: TESTSOURCE\n'
-        b'\n'
-        b'plaso -  version {0:s}\n'
-        b'\n'
-        b'Source path\t: /test/source/path\n'
-        b'Source type\t: TESTSOURCE\n'
-        b'\n'
-        b'\x1b[1mIdentifier\tPID\tStatus\t\tSources\t\tEvents\t\tFile\x1b[0m\n'
-        b'f_identifier\t123\tf_status\t29 (29)\t\t456 (456)\tf_test_file\n'
-        b'\n'
-    ).format(plaso.GetVersion())
-    self.assertEqual(string.split(b'\n'), expected_string.split(b'\n'))
+    plaso_version = plaso.GetVersion()
+
+    table_header = b'Identifier\tPID\tStatus\t\tSources\t\tEvents\t\tFile'
+    if not sys.platform.startswith(u'win'):
+      table_header = b'\x1b[1m{0:s}\x1b[0m'.format(table_header)
+
+    expected_lines = [
+        b'Source path\t: /test/source/path',
+        b'Source type\t: TESTSOURCE',
+        b'',
+        b'plaso -  version {0:s}'.format(plaso_version),
+        b'',
+        b'Source path\t: /test/source/path',
+        b'Source type\t: TESTSOURCE',
+        b'',
+        table_header,
+        b'f_identifier\t123\tf_status\t29 (29)\t\t456 (456)\tf_test_file',
+        b'',
+        b'']
+    self.assertEqual(string.split(b'\n'), expected_lines)
 
     process_status.UpdateWorkerStatus(
         u'w_identifier', u'w_status', 123,
@@ -71,18 +79,18 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
     status_view_tool._PrintStatusUpdate(process_status)
     string = output_writer.ReadOutput()
 
-    expected_string = (
-        b'plaso -  version {0:s}\n'
-        b'\n'
-        b'Source path\t: /test/source/path\n'
-        b'Source type\t: TESTSOURCE\n'
-        b'\n'
-        b'\x1b[1mIdentifier\tPID\tStatus\t\tSources\t\tEvents\t\tFile\x1b[0m\n'
-        b'f_identifier\t123\tf_status\t29 (29)\t\t456 (456)\tf_test_file\n'
-        b'w_identifier\t123\tw_status\t2 (2)\t\t4 (4)\t\tw_test_file\n'
-        b'\n'
-    ).format(plaso.GetVersion())
-    self.assertEqual(string.split(b'\n'), expected_string.split(b'\n'))
+    expected_lines = [
+        b'plaso -  version {0:s}'.format(plaso_version),
+        b'',
+        b'Source path\t: /test/source/path',
+        b'Source type\t: TESTSOURCE',
+        b'',
+        table_header,
+        b'f_identifier\t123\tf_status\t29 (29)\t\t456 (456)\tf_test_file',
+        b'w_identifier\t123\tw_status\t2 (2)\t\t4 (4)\t\tw_test_file',
+        b'',
+        b'']
+    self.assertEqual(string.split(b'\n'), expected_lines)
 
   def testPrintStatusUpdateStream(self):
     """Tests the PrintStatusUpdateStream function."""
@@ -103,12 +111,12 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
 
     string = output_writer.ReadOutput()
 
-    expected_string = (
-        b'Source path\t: /test/source/path\n'
-        b'Source type\t: TESTSOURCE\n'
-        b'\n'
-    )
-    self.assertEqual(string.split(b'\n'), expected_string.split(b'\n'))
+    expected_lines = [
+        b'Source path\t: /test/source/path',
+        b'Source type\t: TESTSOURCE',
+        b'',
+        b'']
+    self.assertEqual(string.split(b'\n'), expected_lines)
 
     process_status.UpdateWorkerStatus(
         u'w_identifier', u'w_status', 123,
