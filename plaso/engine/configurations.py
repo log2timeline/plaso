@@ -119,6 +119,7 @@ class ProcessingConfiguration(object):
   """Configuration settings for processing.
 
   Attributes:
+    data_location (str): path of the location of the data files.
     debug_output (bool): True if debug output should be enabled.
     event_extraction (EventExtractionConfiguration): event extraction
         configuration.
@@ -135,6 +136,7 @@ class ProcessingConfiguration(object):
   def __init__(self):
     """Initializes a process configuration object."""
     super(ProcessingConfiguration, self).__init__()
+    self.data_location = None
     self.debug_output = False
     self.event_extraction = EventExtractionConfiguration()
     self.extraction = ExtractionConfiguration()

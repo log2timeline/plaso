@@ -9,8 +9,8 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 
 from plaso.containers import sessions
+from plaso.engine import configurations
 from plaso.engine import knowledge_base
-from plaso.engine import processing_configuration
 from plaso.engine import worker
 from plaso.parsers import mediator as parsers_mediator
 from plaso.storage import fake_storage
@@ -49,7 +49,7 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
     if not extraction_worker:
       resolver_context = context.Context()
 
-      configuration = processing_configuration.ExtractionConfiguration()
+      configuration = configurations.ExtractionConfiguration()
       configuration.process_archives = process_archives
 
       extraction_worker = worker.EventExtractionWorker(resolver_context)

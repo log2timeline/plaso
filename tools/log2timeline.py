@@ -16,7 +16,7 @@ from plaso.cli import extraction_tool
 from plaso.cli import tools as cli_tools
 from plaso.cli import views as cli_views
 from plaso.frontend import log2timeline
-from plaso.engine import processing_configuration
+from plaso.engine import configurations
 from plaso.lib import errors
 from plaso.lib import pfilter
 
@@ -525,7 +525,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     # TODO: handle errors.BadConfigOption
 
     # TODO: pass preferred_encoding.
-    configuration = processing_configuration.ProcessingConfiguration()
+    configuration = configurations.ProcessingConfiguration()
     configuration.debug_output = self._debug_mode
     configuration.event_extraction.text_prepend = self._text_prepend
     configuration.extraction.hasher_names_string = self._hasher_names_string

@@ -9,7 +9,7 @@ from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
 
 from plaso.containers import sessions
-from plaso.engine import processing_configuration
+from plaso.engine import configurations
 from plaso.engine import single_process
 from plaso.storage import fake_storage
 
@@ -39,7 +39,7 @@ class SingleProcessEngineTest(shared_test_lib.BaseTestCase):
 
     storage_writer = fake_storage.FakeStorageWriter(session)
 
-    configuration = processing_configuration.ProcessingConfiguration()
+    configuration = configurations.ProcessingConfiguration()
     configuration.parser_filter_expression = u'filestat'
 
     test_engine.ProcessSources(

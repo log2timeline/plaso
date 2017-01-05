@@ -9,7 +9,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.containers import sessions
-from plaso.engine import processing_configuration
+from plaso.engine import configurations
 from plaso.frontend import extraction_frontend
 from plaso.storage import zip_file as storage_zip_file
 
@@ -112,7 +112,7 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
 
     source_type = dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE
 
-    configuration = processing_configuration.ProcessingConfiguration()
+    configuration = configurations.ProcessingConfiguration()
 
     with shared_test_lib.TempDirectory() as temp_directory:
       storage_file_path = os.path.join(temp_directory, u'storage.plaso')

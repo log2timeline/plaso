@@ -29,7 +29,7 @@ from plaso.cli import views as cli_views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.frontend import log2timeline
 from plaso.frontend import psort
-from plaso.engine import processing_configuration
+from plaso.engine import configurations
 from plaso.output import interface as output_interface
 from plaso.lib import errors
 
@@ -172,7 +172,7 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     # TODO: handle errors.BadConfigOption
 
     # TODO: pass preferred_encoding.
-    configuration = processing_configuration.ProcessingConfiguration()
+    configuration = configurations.ProcessingConfiguration()
     configuration.debug_output = self._debug_mode
     configuration.extraction.hasher_names_string = self._hasher_names_string
     configuration.extraction.yara_rules_string = self._yara_rules_string
@@ -271,13 +271,15 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
         storage_reader.GetNumberOfAnalysisReports())
     storage_reader.Close()
 
+    configuration = configurations.ProcessingConfiguration()
+
     counter = collections.Counter()
     if self._output_format != u'null':
       storage_reader = self._analysis_front_end.CreateStorageReader(
           self._storage_file_path)
 
       events_counter = self._analysis_front_end.ExportEvents(
-          storage_reader, self._output_module,
+          storage_reader, self._output_module, configuration,
           deduplicate_events=self._deduplicate_events,
           time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
 

@@ -75,13 +75,16 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     return psort.PsortMultiProcessEngine(use_zeromq=self._use_zeromq)
 
   def AnalyzeEvents(
-      self, storage_writer, analysis_plugins, status_update_callback=None):
+      self, storage_writer, analysis_plugins, processing_configuration,
+      status_update_callback=None):
     """Analyzes events in a plaso storage.
 
     Args:
       storage_writer (StorageWriter): storage writer.
       analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
           be run.
+      processing_configuration (ProcessingConfiguration): processing
+          configuration.
       status_update_callback (Optional[function]): callback function for status
           updates.
 
@@ -92,6 +95,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
 
     # TODO: add single processing support.
     # TODO: pass configuration object.
+    _ = processing_configuration
+
     engine.AnalyzeEvents(
         self._knowledge_base, storage_writer, self._data_location,
         analysis_plugins, event_filter=self._event_filter,
@@ -185,13 +190,16 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     return storage_zip_file.ZIPStorageFileWriter(session, storage_file_path)
 
   def ExportEvents(
-      self, storage_reader, output_module, deduplicate_events=True,
-      status_update_callback=None, time_slice=None, use_time_slicer=False):
+      self, storage_reader, output_module, processing_configuration,
+      deduplicate_events=True, status_update_callback=None, time_slice=None,
+      use_time_slicer=False):
     """Exports events using an output module.
 
     Args:
       storage_reader (StorageReader): storage reader.
       output_module (OutputModule): output module.
+      processing_configuration (ProcessingConfiguration): processing
+          configuration.
       deduplicate_events (Optional[bool]): True if events should be
           deduplicated.
       status_update_callback (Optional[function]): callback function for status
@@ -208,6 +216,8 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     engine = self._CreateEngine()
 
     # TODO: pass configuration object.
+    _ = processing_configuration
+
     return engine.ExportEvents(
         self._knowledge_base, storage_reader, output_module,
         deduplicate_events=deduplicate_events, event_filter=self._event_filter,

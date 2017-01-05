@@ -9,7 +9,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.containers import sessions
-from plaso.engine import processing_configuration
+from plaso.engine import configurations
 from plaso.multi_processing import task_engine
 from plaso.storage import zip_file as storage_zip_file
 
@@ -36,7 +36,7 @@ class TaskMultiProcessEngineTest(shared_test_lib.BaseTestCase):
 
     session = sessions.Session()
 
-    configuration = processing_configuration.ProcessingConfiguration()
+    configuration = configurations.ProcessingConfiguration()
     configuration.parser_filter_expression = u'filestat'
 
     with shared_test_lib.TempDirectory() as temp_directory:
