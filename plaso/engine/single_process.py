@@ -29,6 +29,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._memory_profiler = None
     self._name = u'Main'
     self._parsers_profiler = None
+    self._path_spec_extractor = extractors.PathSpecExtractor()
     self._pid = os.getpid()
     self._process_information = process_info.ProcessInfo(self._pid)
     self._processing_configuration = None
@@ -82,14 +83,13 @@ class SingleProcessEngine(engine.BaseEngine):
         pdb.post_mortem()
 
   def _ProcessSources(
-      self, source_path_specs, resolver_context, extraction_worker,
-      parser_mediator, storage_writer, filter_find_specs=None):
+      self, source_path_specs, extraction_worker, parser_mediator,
+      storage_writer, filter_find_specs=None):
     """Processes the sources.
 
     Args:
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
-      resolver_context (dfvfs.Context): resolver context.
       extraction_worker (worker.ExtractionWorker): extraction worker.
       parser_mediator (ParserMediator): parser mediator.
       storage_writer (StorageWriter): storage writer for a session storage.
@@ -105,12 +105,13 @@ class SingleProcessEngine(engine.BaseEngine):
         definitions.PROCESSING_STATUS_COLLECTING, u'',
         number_of_consumed_sources, storage_writer)
 
-    path_spec_extractor = extractors.PathSpecExtractor(resolver_context)
-
     display_name = u''
-    for path_spec in path_spec_extractor.ExtractPathSpecs(
+    path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
         source_path_specs, find_specs=filter_find_specs,
-        recurse_file_system=False):
+        recurse_file_system=False,
+        resolver_context=parser_mediator.resolver_context)
+
+    for path_spec in path_spec_generator:
       if self._abort:
         break
 
@@ -293,6 +294,7 @@ class SingleProcessEngine(engine.BaseEngine):
     parser_mediator = parsers_mediator.ParserMediator(
         storage_writer, self.knowledge_base,
         preferred_year=processing_configuration.preferred_year,
+        resolver_context=resolver_context,
         temporary_directory=processing_configuration.temporary_directory)
 
     parser_mediator.SetEventExtractionConfiguration(
@@ -302,7 +304,7 @@ class SingleProcessEngine(engine.BaseEngine):
         processing_configuration.input_source)
 
     extraction_worker = worker.EventExtractionWorker(
-        resolver_context, parser_filter_expression=(
+        parser_filter_expression=(
             processing_configuration.parser_filter_expression))
 
     extraction_worker.SetExtractionConfiguration(
@@ -324,8 +326,8 @@ class SingleProcessEngine(engine.BaseEngine):
       storage_writer.WritePreprocessingInformation(self.knowledge_base)
 
       self._ProcessSources(
-          source_path_specs, resolver_context, extraction_worker,
-          parser_mediator, storage_writer, filter_find_specs=filter_find_specs)
+          source_path_specs, extraction_worker, parser_mediator,
+          storage_writer, filter_find_specs=filter_find_specs)
 
     finally:
       storage_writer.WriteSessionCompletion(aborted=self._abort)

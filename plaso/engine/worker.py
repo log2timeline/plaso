@@ -75,14 +75,12 @@ class EventExtractionWorker(object):
   _TYPES_WITH_ROOT_METADATA = frozenset([
       dfvfs_definitions.TYPE_INDICATOR_GZIP])
 
-  def __init__(
-      self, resolver_context, parser_filter_expression=None):
+  def __init__(self, parser_filter_expression=None):
     """Initializes the event extraction worker object.
 
     Args:
-      resolver_context (dfvfs.Context): resolver context.
-      parser_filter_expression (Optional[str]): parser filter expression.
-          None represents all parsers and plugins.
+      parser_filter_expression (Optional[str]): parser filter expression,
+          where None represents all parsers and plugins.
 
           The parser filter expression is a comma separated value string that
           denotes a list of parser names to include and/or exclude. Each entry
@@ -97,12 +95,12 @@ class EventExtractionWorker(object):
     self._abort = False
     self._analyzers = []
     self._event_extractor = extractors.EventExtractor(
-        resolver_context, parser_filter_expression=parser_filter_expression)
+        parser_filter_expression=parser_filter_expression)
     self._hasher_names = None
+    self._path_spec_extractor = extractors.PathSpecExtractor()
     self._process_archives = None
     self._process_compressed_streams = None
     self._processing_profiler = None
-    self._resolver_context = resolver_context
 
     self.last_activity_timestamp = 0.0
     self.processing_status = definitions.PROCESSING_STATUS_IDLE
@@ -345,7 +343,7 @@ class EventExtractionWorker(object):
     """
     try:
       type_indicators = analyzer.Analyzer.GetArchiveTypeIndicators(
-          path_spec, resolver_context=self._resolver_context)
+          path_spec, resolver_context=mediator.resolver_context)
     except IOError as exception:
       type_indicators = []
 
@@ -370,7 +368,7 @@ class EventExtractionWorker(object):
     """
     try:
       type_indicators = analyzer.Analyzer.GetCompressedStreamTypeIndicators(
-          path_spec, resolver_context=self._resolver_context)
+          path_spec, resolver_context=mediator.resolver_context)
     except IOError as exception:
       type_indicators = []
 
@@ -440,11 +438,10 @@ class EventExtractionWorker(object):
 
       if archive_path_spec:
         try:
-          path_spec_extractor = extractors.PathSpecExtractor(
-              self._resolver_context)
+          path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
+              [archive_path_spec], resolver_context=mediator.resolver_context)
 
-          for path_spec in path_spec_extractor.ExtractPathSpecs(
-              [archive_path_spec]):
+          for path_spec in path_spec_generator:
             if self._abort:
               break
 
@@ -578,7 +575,7 @@ class EventExtractionWorker(object):
     logging.debug(
         u'[ProcessFileEntry] processing file entry: {0:s}'.format(display_name))
 
-    reference_count = self._resolver_context.GetFileObjectReferenceCount(
+    reference_count = mediator.resolver_context.GetFileObjectReferenceCount(
         file_entry.path_spec)
 
     try:
@@ -601,10 +598,13 @@ class EventExtractionWorker(object):
           self._ProcessFileEntryDataStream(mediator, file_entry, u'')
 
     finally:
-      if reference_count != self._resolver_context.GetFileObjectReferenceCount(
-          file_entry.path_spec):
+      new_reference_count = (
+          mediator.resolver_context.GetFileObjectReferenceCount(
+              file_entry.path_spec))
+      if reference_count != new_reference_count:
         # Clean up after parsers that do not call close explicitly.
-        if self._resolver_context.ForceRemoveFileObject(file_entry.path_spec):
+        if mediator.resolver_context.ForceRemoveFileObject(
+            file_entry.path_spec):
           logging.warning(
               u'File-object not explicitly closed for file: {0:s}'.format(
                   display_name))
@@ -749,7 +749,7 @@ class EventExtractionWorker(object):
     self.processing_status = definitions.PROCESSING_STATUS_RUNNING
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-        path_spec, resolver_context=self._resolver_context)
+        path_spec, resolver_context=mediator.resolver_context)
 
     if file_entry is None:
       display_name = mediator.GetDisplayNameForPathSpec(path_spec)

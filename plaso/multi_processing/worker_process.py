@@ -102,9 +102,14 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
   def _Main(self):
     """The main loop."""
+    # We need a resolver context per process to prevent multi processing
+    # issues with file objects stored in images.
+    resolver_context = context.Context()
+
     self._parser_mediator = parsers_mediator.ParserMediator(
         None, self._knowledge_base,
         preferred_year=self._processing_configuration.preferred_year,
+        resolver_context=resolver_context,
         temporary_directory=self._processing_configuration.temporary_directory)
 
     self._parser_mediator.SetEventExtractionConfiguration(
@@ -113,15 +118,11 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._parser_mediator.SetInputSourceConfiguration(
         self._processing_configuration.input_source)
 
-    # We need a resolver context per process to prevent multi processing
-    # issues with file objects stored in images.
-    resolver_context = context.Context()
-
     # We need to initialize the parser and hasher objects after the process
     # has forked otherwise on Windows the "fork" will fail with
     # a PickleError for Python modules that cannot be pickled.
     self._extraction_worker = worker.EventExtractionWorker(
-        resolver_context, parser_filter_expression=(
+        parser_filter_expression=(
             self._processing_configuration.parser_filter_expression))
 
     self._extraction_worker.SetExtractionConfiguration(

@@ -15,7 +15,7 @@ class ParserMediator(object):
 
   def __init__(
       self, storage_writer, knowledge_base, preferred_year=None,
-      temporary_directory=None):
+      resolver_context=None, temporary_directory=None):
     """Initializes a parser mediator.
 
     Args:
@@ -23,6 +23,7 @@ class ParserMediator(object):
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for parsing.
       preferred_year (Optional[int]): preferred year.
+      resolver_context (Optional[dfvfs.Context]): resolver context.
       temporary_directory (Optional[str]): path of the directory for temporary
           files.
     """
@@ -38,6 +39,7 @@ class ParserMediator(object):
     self._number_of_events = 0
     self._parser_chain_components = []
     self._preferred_year = preferred_year
+    self._resolver_context = resolver_context
     self._storage_writer = storage_writer
     self._temporary_directory = temporary_directory
     self._text_prepend = None
@@ -81,6 +83,11 @@ class ParserMediator(object):
   def platform(self):
     """str: platform."""
     return self._knowledge_base.platform
+
+  @property
+  def resolver_context(self):
+    """dfvfs.Context: resolver context."""
+    return self._resolver_context
 
   @property
   def temporary_directory(self):

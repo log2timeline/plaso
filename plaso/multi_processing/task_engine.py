@@ -133,6 +133,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
     self._number_of_worker_processes = 0
+    self._path_spec_extractor = extractors.PathSpecExtractor()
     self._processing_configuration = None
     self._processing_profiler = None
     self._resolver_context = context.Context()
@@ -256,11 +257,11 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
 
-    path_spec_extractor = extractors.PathSpecExtractor(self._resolver_context)
-
-    for path_spec in path_spec_extractor.ExtractPathSpecs(
+    path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
         source_path_specs, find_specs=filter_find_specs,
-        recurse_file_system=False):
+        recurse_file_system=False, resolver_context=self._resolver_context)
+
+    for path_spec in path_spec_generator:
       if self._abort:
         break
 
