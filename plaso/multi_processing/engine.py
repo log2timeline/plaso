@@ -11,8 +11,8 @@ import threading
 import time
 
 from plaso.engine import engine
+from plaso.engine import process_info
 from plaso.lib import definitions
-from plaso.multi_processing import process_info
 from plaso.multi_processing import plaso_xmlrpc
 
 
@@ -54,13 +54,16 @@ class MultiProcessEngine(engine.BaseEngine):
           * 'serializers' to profile CPU time consumed by individual
             serializers.
     """
+    pid = os.getpid()
+
     super(MultiProcessEngine, self).__init__(
         debug_output=debug_output, enable_profiling=enable_profiling,
         profiling_directory=profiling_directory,
         profiling_sample_rate=profiling_sample_rate,
         profiling_type=profiling_type)
     self._name = u'Main'
-    self._pid = os.getpid()
+    self._pid = pid
+    self._process_information = process_info.ProcessInfo(pid)
     self._process_information_per_pid = {}
     self._processes_per_pid = {}
     self._rpc_clients_per_pid = {}
@@ -262,7 +265,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     Raises:
       KeyError: if the process is not registered with the engine or
-                if the process if the processed is already being monitored.
+          if the process if the processed is already being monitored.
       IOError: if the RPC client cannot connect to the server.
     """
     self._RaiseIfNotRegistered(pid)

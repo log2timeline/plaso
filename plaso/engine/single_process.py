@@ -11,6 +11,7 @@ from dfvfs.lib import errors as dfvfs_errors
 from plaso.containers import event_sources
 from plaso.engine import engine
 from plaso.engine import extractors
+from plaso.engine import process_info
 from plaso.engine import profiler
 from plaso.engine import worker
 from plaso.lib import definitions
@@ -54,6 +55,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._name = u'Main'
     self._parsers_profiler = None
     self._pid = os.getpid()
+    self._process_information = process_info.ProcessInfo(pid)
     self._processing_profiler = None
     self._serializers_profiler = None
     self._status_update_callback = None
@@ -279,8 +281,10 @@ class SingleProcessEngine(engine.BaseEngine):
     if status == definitions.PROCESSING_STATUS_IDLE:
       status = definitions.PROCESSING_STATUS_RUNNING
 
+    used_memory = self._process_information.GetUsedMemory()
+
     self._processing_status.UpdateForemanStatus(
-        self._name, status, self._pid, 0, display_name,
+        self._name, status, self._pid, used_memory, display_name,
         number_of_consumed_sources, storage_writer.number_of_event_sources,
         0, storage_writer.number_of_events,
         0, 0,
