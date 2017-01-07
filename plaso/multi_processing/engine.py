@@ -65,7 +65,6 @@ class MultiProcessEngine(engine.BaseEngine):
     self._processes_per_pid = {}
     self._rpc_clients_per_pid = {}
     self._rpc_errors_per_pid = {}
-    self._show_memory_usage = False
     self._status_update_active = False
     self._status_update_callback = None
     self._status_update_thread = None
@@ -172,9 +171,6 @@ class MultiProcessEngine(engine.BaseEngine):
           self._storage_writer)
       self._StartMonitoringProcess(replacement_process.pid)
 
-    elif self._show_memory_usage:
-      self._LogMemoryUsage(pid)
-
   def _GetProcessStatus(self, process):
     """Queries a process to determine its status.
 
@@ -211,29 +207,6 @@ class MultiProcessEngine(engine.BaseEngine):
       except OSError as exception:
         logging.error(u'Unable to kill process {0:d} with error: {1:s}'.format(
             pid, exception))
-
-  # TODO: refactor this function.
-  def _LogMemoryUsage(self, pid):
-    """Logs memory information gathered from a process.
-
-    Args:
-      pid (int): process identifier (PID).
-
-    Raises:
-      KeyError: if the process is not registered with the engine.
-    """
-    self._RaiseIfNotRegistered(pid)
-    self._RaiseIfNotMonitored(pid)
-
-    process = self._processes_per_pid[pid]
-    process_information = self._process_information_per_pid[pid]
-    memory_info = process_information.GetMemoryInformation()
-    logging.debug((
-        u'{0:s} - RSS: {1:d}, VMS: {2:d}, Shared: {3:d}, Text: {4:d}, lib: '
-        u'{5:d}, data: {6:d}, dirty: {7:d}, Memory Percent: {8:0.2f}%').format(
-            process.name, memory_info.rss, memory_info.vms,
-            memory_info.shared, memory_info.text, memory_info.lib,
-            memory_info.data, memory_info.dirty, memory_info.percent * 100))
 
   def _RaiseIfNotMonitored(self, pid):
     """Raises if the process is not monitored by the engine.

@@ -210,13 +210,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
             u'Indicate that the tool should run in a single process.'))
 
     argument_group.add_argument(
-        u'--show_memory_usage', u'--show-memory-usage', action=u'store_true',
-        default=False, dest=u'foreman_verbose', help=(
-            u'Indicates that basic memory usage should be included in the '
-            u'output of the process monitor. If this option is not set the '
-            u'tool only displays basic status and counter information.'))
-
-    argument_group.add_argument(
         u'--disable_zeromq', u'--disable-zeromq', action=u'store_false',
         dest=u'use_zeromq', default=True, help=(
             u'Disable queueing using ZeroMQ. A Multiprocessing queue will be '
@@ -516,7 +509,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           profiling_directory=self._profiling_directory,
           profiling_sample_rate=self._profiling_sample_rate,
           profiling_type=self._profiling_type)
-    self._front_end.SetShowMemoryInformation(show_memory=self._foreman_verbose)
 
     self._DetermineSourceType()
 

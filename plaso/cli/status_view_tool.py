@@ -87,9 +87,26 @@ class StatusViewTool(storage_media_tool.StorageMediaTool):
     if len(events) < 8:
       events = u'{0:s}\t'.format(events)
 
+    magnitude_1024 = 0
+    used_memory_1024 = float(process_status.used_memory)
+    while used_memory_1024 >= 1024:
+      used_memory_1024 /= 1024
+      magnitude_1024 += 1
+
+    used_memory = None
+    if magnitude_1024 > 0 and magnitude_1024 <= 7:
+      used_memory = u'{0:.1f} {1:s}'.format(
+          used_memory_1024, self._UNITS_1024[magnitude_1024])
+
+    if not used_memory:
+      used_memory = u'{0:d} B'.format(process_status.used_memory)
+
+    if len(used_memory) < 8:
+      used_memory = u'{0:s}\t'.format(used_memory)
+
     # TODO: shorten display name to fit in 80 chars and show the filename.
-    return u'{0:s}\t{1:d}\t{2:s}\t{3:s}\t{4:s}\t{5:s}'.format(
-        identifier, process_status.pid, status, sources, events,
+    return u'{0:s}\t{1:d}\t{2:s}\t{3:s}\t{4:s}\t{5:s}\t{6:s}'.format(
+        identifier, process_status.pid, status, used_memory, sources, events,
         process_status.display_name)
 
   def _PrintStatusUpdate(self, processing_status):
@@ -110,7 +127,8 @@ class StatusViewTool(storage_media_tool.StorageMediaTool):
 
     # TODO: for win32console get current color and set intensity,
     # write the header separately then reset intensity.
-    status_header = u'Identifier\tPID\tStatus\t\tSources\t\tEvents\t\tFile'
+    status_header = (
+        u'Identifier\tPID\tStatus\t\tMemory\t\tSources\t\tEvents\t\tFile')
     if not win32console:
       status_header = u'\x1b[1m{0:s}\x1b[0m'.format(status_header)
 

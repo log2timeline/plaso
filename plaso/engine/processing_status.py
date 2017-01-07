@@ -55,6 +55,7 @@ class ProcessStatus(object):
         by the process since the last status update.
     pid (int): process identifier (PID).
     status (str): human readable status indication e.g. 'Hashing', 'Idle'.
+    used_memory (int): size of used memory in bytes.
   """
 
   def __init__(self):
@@ -85,6 +86,7 @@ class ProcessStatus(object):
     self.number_of_produced_sources_delta = 0
     self.pid = None
     self.status = None
+    self.used_memory = 0
 
   def UpdateNumberOfErrors(
       self, number_of_consumed_errors, number_of_produced_errors):
@@ -328,7 +330,7 @@ class ProcessingStatus(object):
             for identifier in sorted(self._workers_status.keys())]
 
   def _UpdateProcessStatus(
-      self, process_status, identifier, status, pid, display_name,
+      self, process_status, identifier, status, pid, used_memory, display_name,
       number_of_consumed_sources, number_of_produced_sources,
       number_of_consumed_events, number_of_produced_events,
       number_of_consumed_event_tags, number_of_produced_event_tags,
@@ -341,6 +343,7 @@ class ProcessingStatus(object):
       identifier (str): process identifier.
       status (str): human readable status of the process e.g. 'Idle'.
       pid (int): process identifier (PID).
+      used_memory (int): size of used memory in bytes.
       display_name (str): human readable of the file entry currently being
           processed by the process.
       number_of_consumed_sources (int): total number of event sources consumed
@@ -383,13 +386,14 @@ class ProcessingStatus(object):
     process_status.identifier = identifier
     process_status.pid = pid
     process_status.status = status
+    process_status.used_memory = used_memory
 
     if (new_sources or new_events or new_event_tags or new_errors or
         new_reports):
       process_status.last_running_time = time.time()
 
   def UpdateForemanStatus(
-      self, identifier, status, pid, display_name,
+      self, identifier, status, pid, used_memory, display_name,
       number_of_consumed_sources, number_of_produced_sources,
       number_of_consumed_events, number_of_produced_events,
       number_of_consumed_event_tags, number_of_produced_event_tags,
@@ -401,6 +405,7 @@ class ProcessingStatus(object):
       identifier (str): foreman identifier.
       status (str): human readable status of the foreman e.g. 'Idle'.
       pid (int): process identifier (PID).
+      used_memory (int): size of used memory in bytes.
       display_name (str): human readable of the file entry currently being
           processed by the foreman.
       number_of_consumed_sources (int): total number of event sources consumed
@@ -428,7 +433,7 @@ class ProcessingStatus(object):
       self.foreman_status = ProcessStatus()
 
     self._UpdateProcessStatus(
-        self.foreman_status, identifier, status, pid, display_name,
+        self.foreman_status, identifier, status, pid, used_memory, display_name,
         number_of_consumed_sources, number_of_produced_sources,
         number_of_consumed_events, number_of_produced_events,
         number_of_consumed_event_tags, number_of_produced_event_tags,
@@ -436,7 +441,7 @@ class ProcessingStatus(object):
         number_of_consumed_reports, number_of_produced_reports)
 
   def UpdateWorkerStatus(
-      self, identifier, status, pid, display_name,
+      self, identifier, status, pid, used_memory, display_name,
       number_of_consumed_sources, number_of_produced_sources,
       number_of_consumed_events, number_of_produced_events,
       number_of_consumed_event_tags, number_of_produced_event_tags,
@@ -448,6 +453,7 @@ class ProcessingStatus(object):
       identifier (str): worker identifier.
       status (str): human readable status of the worker e.g. 'Idle'.
       pid (int): process identifier (PID).
+      used_memory (int): size of used memory in bytes.
       display_name (str): human readable of the file entry currently being
           processed by the worker.
       number_of_consumed_sources (int): total number of event sources consumed
@@ -476,7 +482,7 @@ class ProcessingStatus(object):
 
     process_status = self._workers_status[identifier]
     self._UpdateProcessStatus(
-        process_status, identifier, status, pid, display_name,
+        process_status, identifier, status, pid, used_memory, display_name,
         number_of_consumed_sources, number_of_produced_sources,
         number_of_consumed_events, number_of_produced_events,
         number_of_consumed_event_tags, number_of_produced_event_tags,

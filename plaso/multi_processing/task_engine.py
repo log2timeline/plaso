@@ -539,7 +539,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       display_name = getattr(self._merge_task, u'identifier', u'')
 
       self._processing_status.UpdateForemanStatus(
-          self._name, self._status, self._pid, display_name,
+          self._name, self._status, self._pid, 0, display_name,
           self._number_of_consumed_sources, self._number_of_produced_sources,
           self._number_of_consumed_events, self._number_of_produced_events,
           self._number_of_consumed_event_tags,
@@ -671,8 +671,13 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
               u'the timeout period.').format(process.name, pid))
           processing_status = definitions.PROCESSING_STATUS_NOT_RESPONDING
 
+    process = self._processes_per_pid[pid]
+    process_information = self._process_information_per_pid[pid]
+    memory_info = process_information.GetMemoryInformation()
+    used_memory = memory_info.data + memory_info.shared
+
     self._processing_status.UpdateWorkerStatus(
-        process.name, processing_status, pid, display_name,
+        process.name, processing_status, pid, used_memory, display_name,
         number_of_consumed_sources, number_of_produced_sources,
         number_of_consumed_events, number_of_produced_events,
         number_of_consumed_event_tags, number_of_produced_event_tags,
@@ -709,7 +714,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       number_of_worker_processes=0, parser_filter_expression=None,
       preferred_year=None, process_archives=False,
       process_compressed_streams=True, status_update_callback=None,
-      show_memory_usage=False, temporary_directory=None, text_prepend=None,
+      temporary_directory=None, text_prepend=None,
       yara_rules_string=None):
     """Processes the sources and extract event objects.
 
@@ -734,8 +739,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           scanned for file entries.
       process_compressed_streams (Optional[bool]): True if file content in
           compressed streams should be processed.
-      show_memory_usage (Optional[bool]): True if memory information should be
-          included in status updates.
       status_update_callback (Optional[function]): callback function for status
           updates.
       temporary_directory (Optional[str]): path of the directory for temporary
@@ -773,7 +776,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     self._enable_sigsegv_handler = enable_sigsegv_handler
     self._number_of_worker_processes = number_of_worker_processes
-    self._show_memory_usage = show_memory_usage
 
     # Keep track of certain values so we can spawn new extraction workers.
     self._filter_find_specs = filter_find_specs
@@ -887,7 +889,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     # Reset values.
     self._enable_sigsegv_handler = None
     self._number_of_worker_processes = None
-    self._show_memory_usage = None
 
     self._filter_find_specs = None
     self._filter_object = None

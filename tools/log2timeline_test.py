@@ -21,8 +21,8 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
   _BDE_PASSWORD = u'bde-TEST'
 
   _EXPECTED_PROCESSING_OPTIONS = u'\n'.join([
-      u'usage: log2timeline_test.py [--single_process] [--show_memory_usage]',
-      u'                            [--disable_zeromq] [--workers WORKERS]',
+      u'usage: log2timeline_test.py [--single_process] [--disable_zeromq]',
+      u'                            [--workers WORKERS]',
       u'',
       u'Test argument parser.',
       u'',
@@ -31,14 +31,6 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       (u'                        Disable queueing using ZeroMQ. A '
        u'Multiprocessing queue'),
       u'                        will be used instead.',
-      u'  --show_memory_usage, --show-memory-usage',
-      (u'                        Indicates that basic memory usage should '
-       u'be included'),
-      (u'                        in the output of the process monitor. If '
-       u'this option'),
-      (u'                        is not set the tool only displays basic '
-       u'status and'),
-      u'                        counter information.',
       u'  --single_process, --single-process',
       (u'                        Indicate that the tool should run in a '
        u'single process.'),

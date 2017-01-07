@@ -280,7 +280,7 @@ class SingleProcessEngine(engine.BaseEngine):
       status = definitions.PROCESSING_STATUS_RUNNING
 
     self._processing_status.UpdateForemanStatus(
-        self._name, status, self._pid, display_name,
+        self._name, status, self._pid, 0, display_name,
         number_of_consumed_sources, storage_writer.number_of_event_sources,
         0, storage_writer.number_of_events,
         0, 0,
