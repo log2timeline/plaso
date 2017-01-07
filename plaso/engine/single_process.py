@@ -55,7 +55,7 @@ class SingleProcessEngine(engine.BaseEngine):
     self._name = u'Main'
     self._parsers_profiler = None
     self._pid = os.getpid()
-    self._process_information = process_info.ProcessInfo(pid)
+    self._process_information = process_info.ProcessInfo(self._pid)
     self._processing_profiler = None
     self._serializers_profiler = None
     self._status_update_callback = None

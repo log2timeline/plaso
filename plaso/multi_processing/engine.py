@@ -54,16 +54,14 @@ class MultiProcessEngine(engine.BaseEngine):
           * 'serializers' to profile CPU time consumed by individual
             serializers.
     """
-    pid = os.getpid()
-
     super(MultiProcessEngine, self).__init__(
         debug_output=debug_output, enable_profiling=enable_profiling,
         profiling_directory=profiling_directory,
         profiling_sample_rate=profiling_sample_rate,
         profiling_type=profiling_type)
     self._name = u'Main'
-    self._pid = pid
-    self._process_information = process_info.ProcessInfo(pid)
+    self._pid = os.getpid()
+    self._process_information = process_info.ProcessInfo(self._pid)
     self._process_information_per_pid = {}
     self._processes_per_pid = {}
     self._rpc_clients_per_pid = {}

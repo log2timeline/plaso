@@ -68,7 +68,8 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
         b'Source type\t: TESTSOURCE',
         b'',
         table_header,
-        b'f_identifier\t123\tf_status\t0 B\t\t29 (29)\t\t456 (456)\tf_test_file',
+        (b'f_identifier\t123\tf_status\t0 B\t\t29 (29)\t\t456 (456)\t'
+         b'f_test_file'),
         b'',
         b'']
     self.assertEqual(string.split(b'\n'), expected_lines)
@@ -87,7 +88,8 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
         b'Source type\t: TESTSOURCE',
         b'',
         table_header,
-        b'f_identifier\t123\tf_status\t0 B\t\t29 (29)\t\t456 (456)\tf_test_file',
+        (b'f_identifier\t123\tf_status\t0 B\t\t29 (29)\t\t456 (456)\t'
+         b'f_test_file'),
         b'w_identifier\t123\tw_status\t0 B\t\t2 (2)\t\t4 (4)\t\tw_test_file',
         b'',
         b'']
