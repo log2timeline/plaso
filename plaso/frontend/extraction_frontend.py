@@ -393,12 +393,12 @@ class ExtractionFrontend(frontend.Frontend):
 
     self._SetTimezone(engine.knowledge_base, timezone)
 
-    if session.filter_file:
+    filter_find_specs = None
+    if processing_configuration.filter_file:
       environment_variables = engine.knowledge_base.GetEnvironmentVariables()
       filter_find_specs = utils.BuildFindSpecsFromFile(
-          session.filter_file, environment_variables=environment_variables)
-    else:
-      filter_find_specs = None
+          processing_configuration.filter_file,
+          environment_variables=environment_variables)
 
     processing_status = None
     if single_process_mode:

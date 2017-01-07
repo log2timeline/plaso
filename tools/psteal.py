@@ -176,6 +176,7 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     configuration.debug_output = self._debug_mode
     configuration.extraction.hasher_names_string = self._hasher_names_string
     configuration.extraction.yara_rules_string = self._yara_rules_string
+    configuration.filter_file = self._filter_file
     configuration.parser_filter_expression = self._parser_filter_expression
     configuration.preferred_year = self._preferred_year
 

@@ -124,6 +124,7 @@ class ProcessingConfiguration(object):
     event_extraction (EventExtractionConfiguration): event extraction
         configuration.
     extraction (ExtractionConfiguration): extraction configuration.
+    filter_file (str): path to a file with find specifications.
     input_source (InputSourceConfiguration): input source configuration.
     parser_filter_expression (str): parser filter expression,
         where None represents all parsers and plugins.
@@ -140,6 +141,7 @@ class ProcessingConfiguration(object):
     self.debug_output = False
     self.event_extraction = EventExtractionConfiguration()
     self.extraction = ExtractionConfiguration()
+    self.filter_file = None
     self.input_source = InputSourceConfiguration()
     self.parser_filter_expression = None
     self.preferred_year = None

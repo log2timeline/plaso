@@ -527,12 +527,14 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     # TODO: pass preferred_encoding.
     configuration = configurations.ProcessingConfiguration()
     configuration.debug_output = self._debug_mode
+    configuration.event_extraction.filter_object = self._filter_object
     configuration.event_extraction.text_prepend = self._text_prepend
     configuration.extraction.hasher_names_string = self._hasher_names_string
     configuration.extraction.process_archives = self._process_archives
     configuration.extraction.process_compressed_streams = (
         self._process_compressed_streams)
     configuration.extraction.yara_rules_string = self._yara_rules_string
+    configuration.filter_file = self._filter_file
     configuration.filter_object = self._filter_object
     configuration.input_source.mount_path = self._mount_path
     configuration.parser_filter_expression = self._parser_filter_expression

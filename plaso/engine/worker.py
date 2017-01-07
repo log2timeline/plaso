@@ -772,6 +772,7 @@ class EventExtractionWorker(object):
       self.last_activity_timestamp = time.time()
       self.processing_status = definitions.PROCESSING_STATUS_IDLE
 
+  # TODO: move the functionality of this method into the constructor.
   def SetExtractionConfiguration(self, configuration):
     """Sets the extraction configuration settings.
 
