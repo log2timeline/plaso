@@ -531,7 +531,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           processing_status = definitions.PROCESSING_STATUS_NOT_RESPONDING
 
     self._processing_status.UpdateWorkerStatus(
-        process.name, processing_status, pid, display_name,
+        process.name, processing_status, pid, 0, display_name,
         number_of_consumed_sources, number_of_produced_sources,
         number_of_consumed_events, number_of_produced_events,
         number_of_consumed_event_tags, number_of_produced_event_tags,
