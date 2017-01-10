@@ -409,10 +409,12 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       for pid in list(self._process_information_per_pid.keys()):
         self._CheckStatusAnalysisProcess(pid)
 
+      used_memory = self._process_information.GetUsedMemory()
+
       display_name = getattr(self._merge_task, u'identifier', u'')
 
       self._processing_status.UpdateForemanStatus(
-          self._name, self._status, self._pid, display_name,
+          self._name, self._status, self._pid, 0, display_name,
           self._number_of_consumed_sources, self._number_of_produced_sources,
           self._number_of_consumed_events, self._number_of_produced_events,
           self._number_of_consumed_event_tags,
@@ -530,8 +532,11 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
               u'the timeout period.').format(process.name, pid))
           processing_status = definitions.PROCESSING_STATUS_NOT_RESPONDING
 
+    process_information = self._process_information_per_pid[pid]
+    used_memory = process_information.GetUsedMemory()
+
     self._processing_status.UpdateWorkerStatus(
-        process.name, processing_status, pid, 0, display_name,
+        process.name, processing_status, pid, used_memory, display_name,
         number_of_consumed_sources, number_of_produced_sources,
         number_of_consumed_events, number_of_produced_events,
         number_of_consumed_event_tags, number_of_produced_event_tags,
