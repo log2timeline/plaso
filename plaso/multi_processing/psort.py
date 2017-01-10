@@ -414,7 +414,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       display_name = getattr(self._merge_task, u'identifier', u'')
 
       self._processing_status.UpdateForemanStatus(
-          self._name, self._status, self._pid, 0, display_name,
+          self._name, self._status, self._pid, used_memory, display_name,
           self._number_of_consumed_sources, self._number_of_produced_sources,
           self._number_of_consumed_events, self._number_of_produced_events,
           self._number_of_consumed_event_tags,
