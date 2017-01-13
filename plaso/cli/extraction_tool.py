@@ -5,14 +5,14 @@ import os
 
 import yara
 
-from plaso.cli import storage_media_tool
+from plaso.cli import status_view_tool
 from plaso.engine import engine
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import py2to3
 
 
-class ExtractionTool(storage_media_tool.StorageMediaTool):
+class ExtractionTool(status_view_tool.StatusViewTool):
   """Class that implements an extraction CLI tool.
 
   Attributes:
