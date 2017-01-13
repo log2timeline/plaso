@@ -104,6 +104,22 @@ class TaskManager(object):
     self._tasks_processing = collections.OrderedDict()
     # TODO: implement a limit on the number of tasks.
 
+  def AdoptTask(self, task):
+    """Updates a task that was formerly abandoned.
+
+    Args:
+      task (Task): task.
+    """
+    with self._lock:
+      task = self._abandoned_tasks.get(task.identifier, None)
+      if not task:
+        raise KeyError(u'Task {0:s} is not abandoned.'.format(task.identifier))
+      logging.debug(u'Task {0:s} has been adopted'.format(task.identifier))
+      task.UpdateProcessingTime()
+      del self._abandoned_tasks[task.identifier]
+      self._active_tasks[task.identifier] = task
+      self._tasks_processing[task.identifier] = task
+
   # TODO: add support for task types.
   def CreateTask(self, session_identifier):
     """Creates a task.
@@ -217,21 +233,6 @@ class TaskManager(object):
 
     return bool(self._active_tasks)
 
-  def UnabandonTask(self, task):
-    """Updates a task that was formerly abandoned.
-
-    Args:
-      task (Task): task.
-    """
-    with self._lock:
-      task = self._abandoned_tasks.get(task.identifier, None)
-      if not task:
-        raise KeyError(u'Task {0:s} is not abandoned.'.format(task.identifier))
-      logging.debug(u'Task {0:s} has been unabandoned'.format(task.identifier))
-      task.UpdateProcessingTime()
-      del self._abandoned_tasks[task.identifier]
-      self._active_tasks[task.identifier] = task
-      self._tasks_processing[task.identifier] = task
 
   def UpdateTaskByIdentifier(self, task_identifier):
     """Updates a task.

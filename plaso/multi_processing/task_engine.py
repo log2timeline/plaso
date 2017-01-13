@@ -696,7 +696,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           (u'Worker {0:s} is processing abandoned task: {1:s}. It was last '
            u'updated at {2!s}.').format(
                process.name, task.identifier, task.last_processing_time))
-      task_manager.UnabandonTask(task)
+      task_manager.AdoptTask(task)
     except KeyError:
       logging.debug(
           u'Worker {0:s} is processing unknown task: {1:s}.'.format(

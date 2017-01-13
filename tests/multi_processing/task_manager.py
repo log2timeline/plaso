@@ -83,7 +83,7 @@ class TaskManagerTestCase(shared_test_lib.BaseTestCase):
     self.assertEqual(merging_task, small_task)
 
   def testTaskAbandonment(self):
-    """Tests the abandoning and unabandoning of tasks"""
+    """Tests the abandoning and adoption of tasks"""
     manager = task_manager.TaskManager()
     task = manager.CreateTask(self._TEST_SESSION_IDENTIFIER)
     self.assertEqual(manager.GetAbandonedTasks(), [])
@@ -99,11 +99,11 @@ class TaskManagerTestCase(shared_test_lib.BaseTestCase):
     abandoned_tasks = manager.GetAbandonedTasks()
     self.assertIn(task, abandoned_tasks)
 
-    manager.UnabandonTask(task)
+    manager.AdoptTask(task)
     self.assertEqual(manager.GetAbandonedTasks(), [])
     self.assertTrue(manager.HasActiveTasks())
 
-  # TODO: Add tests for rescheduling, updating and abandoning tasks.
+  # TODO: Add tests for updating tasks.
 
 
 if __name__ == '__main__':
