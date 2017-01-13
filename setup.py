@@ -42,7 +42,8 @@ def GetScripts():
       'log2timeline.py',
       'pinfo.py',
       'preg.py',
-      'psort.py'])
+      'psort.py',
+      'psteal.py'])
 
   for filename in script_filenames:
     scripts.append(os.path.join('tools', filename))
