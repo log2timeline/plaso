@@ -77,16 +77,13 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     """Initializes the CLI tool object.
 
     Args:
-      input_reader (InputReader): the input reader.
-                    The default is None which indicates the use of the stdin
-                    input reader.
-      output_writer (OutputWriter): the output writer.
-                     The default is None which indicates the use of the stdout
-                     output writer.
+      input_reader (Optional[InputReader]): input reader, where None indicates
+          that the stdin input reader should be used.
+      output_writer (Optional[OutputWriter]): output writer, where None
+          indicates that the stdout output writer should be used.
     """
     super(PstealTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
-
     self._analysis_front_end = psort.PsortFrontend()
     self._command_line_arguments = None
     self._deduplicate_events = True
@@ -108,18 +105,8 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     self._use_time_slicer = False
     self._yara_rules_string = None
 
-  def ExtractEventsFromSources(self):
-    """Processes the sources and extract events.
-
-    This is a stripped down copy of tools/log2timeline.py that doesn't support
-    the full set of flags. The defaults for these are hard coded in the
-    constructor of this class.
-
-    Raises:
-      SourceScannerError: if the source scanner could not find a supported
-                          file system.
-      UserAbort: if the user initiated an abort.
-    """
+  def _DetermineSourceType(self):
+    """Determines the source type."""
     scan_context = self.ScanSource()
     self._source_type = scan_context.source_type
 
@@ -140,17 +127,37 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     else:
       self._source_type_string = u'UNKNOWN'
 
+  def _GetStatusUpdateCallback(self):
+    """Retrieves the status update callback function.
+
+    Returns:
+      function: status update callback function or None.
+    """
+    if self._status_view_mode == u'linear':
+      return self._PrintStatusUpdateStream
+    elif self._status_view_mode == u'window':
+      return self._PrintStatusUpdate
+
+  def ExtractEventsFromSources(self):
+    """Processes the sources and extract events.
+
+    This is a stripped down copy of tools/log2timeline.py that doesn't support
+    the full set of flags. The defaults for these are hard coded in the
+    constructor of this class.
+
+    Raises:
+      SourceScannerError: if the source scanner could not find a supported
+          file system.
+      UserAbort: if the user initiated an abort.
+    """
+    self._DetermineSourceType()
+
     self._output_writer.Write(u'\n')
     self._PrintStatusHeader()
 
     self._output_writer.Write(u'Processing started.\n')
 
-    if self._status_view_mode == u'linear':
-      status_update_callback = self._PrintStatusUpdateStream
-    elif self._status_view_mode == u'window':
-      status_update_callback = self._PrintStatusUpdate
-    else:
-      status_update_callback = None
+    status_update_callback = self._GetStatusUpdateCallback()
 
     session = self._extraction_front_end.CreateSession(
         command_line_arguments=self._command_line_arguments,
@@ -304,16 +311,21 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     self.AddBasicOptions(argument_parser)
     self.AddStorageFileOptions(argument_parser)
 
+    extraction_group = argument_parser.add_argument_group(
+        u'Extraction Arguments')
+
+    self.AddCredentialOptions(extraction_group)
+
     input_group = argument_parser.add_argument_group(u'Input Arguments')
     input_group.add_argument(
         u'--source', dest=u'source', action=u'store',
-        type=str, help=(u'The source to process'))
+        type=str, help=u'The source to process')
 
     output_group = argument_parser.add_argument_group(u'Output Arguments')
     output_group.add_argument(
         u'-w', u'--write', dest=u'analysis_output_file', action=u'store',
-        type=str, default=None, help=(u'The destination file, storing the '
-                                      u'output of analysis'))
+        type=str, default=None, help=(
+            u'The destination file, storing the output of analysis'))
 
     try:
       options = argument_parser.parse_args()
