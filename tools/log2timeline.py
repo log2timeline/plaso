@@ -87,6 +87,28 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self.list_output_modules = False
     self.show_info = False
 
+  def _DetermineSourceType(self):
+    """Determines the source type."""
+    scan_context = self.ScanSource()
+    self._source_type = scan_context.source_type
+
+    if self._source_type == dfvfs_definitions.SOURCE_TYPE_DIRECTORY:
+      self._source_type_string = u'directory'
+
+    elif self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
+      self._source_type_string = u'single file'
+
+    elif self._source_type == (
+        dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE):
+      self._source_type_string = u'storage media device'
+
+    elif self._source_type == (
+        dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE):
+      self._source_type_string = u'storage media image'
+
+    else:
+      self._source_type_string = u'UNKNOWN'
+
   def _GetMatcher(self, filter_expression):
     """Retrieves a filter object for a specific filter expression.
 
@@ -104,6 +126,17 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       logging.error(
           u'Unable to create filter: {0:s} with error: {1:s}'.format(
               filter_expression, exception))
+
+  def _GetStatusUpdateCallback(self):
+    """Retrieves the status update callback function.
+
+    Returns:
+      function: status update callback function or None.
+    """
+    if self._status_view_mode == u'linear':
+      return self._PrintStatusUpdateStream
+    elif self._status_view_mode == u'window':
+      return self._PrintStatusUpdate
 
   def _ParseOutputOptions(self, options):
     """Parses the output options.
@@ -474,7 +507,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     Raises:
       SourceScannerError: if the source scanner could not find a supported
-                          file system.
+          file system.
       UserAbort: if the user initiated an abort.
     """
     self._front_end.SetDebugMode(self._debug_mode)
@@ -485,37 +518,14 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           profiling_type=self._profiling_type)
     self._front_end.SetShowMemoryInformation(show_memory=self._foreman_verbose)
 
-    scan_context = self.ScanSource()
-    self._source_type = scan_context.source_type
-
-    if self._source_type == dfvfs_definitions.SOURCE_TYPE_DIRECTORY:
-      self._source_type_string = u'directory'
-
-    elif self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
-      self._source_type_string = u'single file'
-
-    elif self._source_type == (
-        dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE):
-      self._source_type_string = u'storage media device'
-
-    elif self._source_type == (
-        dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE):
-      self._source_type_string = u'storage media image'
-
-    else:
-      self._source_type_string = u'UNKNOWN'
+    self._DetermineSourceType()
 
     self._output_writer.Write(u'\n')
     self._PrintStatusHeader()
 
     self._output_writer.Write(u'Processing started.\n')
 
-    if self._status_view_mode == u'linear':
-      status_update_callback = self._PrintStatusUpdateStream
-    elif self._status_view_mode == u'window':
-      status_update_callback = self._PrintStatusUpdate
-    else:
-      status_update_callback = None
+    status_update_callback = self._GetStatusUpdateCallback()
 
     session = self._front_end.CreateSession(
         command_line_arguments=self._command_line_arguments,
