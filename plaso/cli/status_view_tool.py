@@ -50,6 +50,27 @@ class StatusViewTool(storage_media_tool.StorageMediaTool):
 
     self._output_writer.Write(u'\n')
 
+  def _FormatSizeInUnitsOf1024(self, process_status):
+    """Represents a number of bytes in units of 1024.
+
+    Args:
+      size (int): size in bytes.
+
+    Returns:
+      str: human readable string of the size.
+    """
+    magnitude_1024 = 0
+    used_memory_1024 = float(process_status.used_memory)
+    while used_memory_1024 >= 1024:
+      used_memory_1024 /= 1024
+      magnitude_1024 += 1
+
+    if magnitude_1024 > 0 and magnitude_1024 <= 7:
+      return u'{0:.1f} {1:s}'.format(
+          used_memory_1024, self._UNITS_1024[magnitude_1024])
+
+    return u'{0:d} B'.format(process_status.used_memory)
+
   def _FormatStatusTableRow(self, process_status):
     """Formats a status table row.
 
@@ -87,20 +108,7 @@ class StatusViewTool(storage_media_tool.StorageMediaTool):
     if len(events) < 8:
       events = u'{0:s}\t'.format(events)
 
-    magnitude_1024 = 0
-    used_memory_1024 = float(process_status.used_memory)
-    while used_memory_1024 >= 1024:
-      used_memory_1024 /= 1024
-      magnitude_1024 += 1
-
-    used_memory = None
-    if magnitude_1024 > 0 and magnitude_1024 <= 7:
-      used_memory = u'{0:.1f} {1:s}'.format(
-          used_memory_1024, self._UNITS_1024[magnitude_1024])
-
-    if not used_memory:
-      used_memory = u'{0:d} B'.format(process_status.used_memory)
-
+    used_memory = self._FormatSizeInUnitsOf1024(process_status.used_memory)
     if len(used_memory) < 8:
       used_memory = u'{0:s}\t'.format(used_memory)
 

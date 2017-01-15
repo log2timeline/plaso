@@ -263,7 +263,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     Raises:
       KeyError: if the process is not registered with the engine or
-          if the process if the processed is already being monitored.
+          if the process is already being monitored.
       IOError: if the RPC client cannot connect to the server.
     """
     self._RaiseIfNotRegistered(pid)

@@ -5,10 +5,10 @@ import psutil
 
 
 class ProcessInfo(object):
-  """Class that provides information about a running process."""
+  """Provides information about a running process."""
 
   def __init__(self, pid):
-    """Initialize a process information object.
+    """Initializes process information.
 
     Args:
       pid (int): process identifier (PID).
@@ -32,7 +32,8 @@ class ProcessInfo(object):
     """Retrieves the amount of memory used by the process.
 
     Returns:
-      int: amount of memory used by the process or None if not available.
+      int: amount of memory in bytes used by the process or None
+          if not available.
     """
     try:
       memory_info = self._memory_info_function()
