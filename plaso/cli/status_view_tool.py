@@ -50,7 +50,7 @@ class StatusViewTool(storage_media_tool.StorageMediaTool):
 
     self._output_writer.Write(u'\n')
 
-  def _FormatSizeInUnitsOf1024(self, process_status):
+  def _FormatSizeInUnitsOf1024(self, size):
     """Represents a number of bytes in units of 1024.
 
     Args:
@@ -60,7 +60,7 @@ class StatusViewTool(storage_media_tool.StorageMediaTool):
       str: human readable string of the size.
     """
     magnitude_1024 = 0
-    used_memory_1024 = float(process_status.used_memory)
+    used_memory_1024 = float(size)
     while used_memory_1024 >= 1024:
       used_memory_1024 /= 1024
       magnitude_1024 += 1
@@ -69,7 +69,7 @@ class StatusViewTool(storage_media_tool.StorageMediaTool):
       return u'{0:.1f} {1:s}'.format(
           used_memory_1024, self._UNITS_1024[magnitude_1024])
 
-    return u'{0:d} B'.format(process_status.used_memory)
+    return u'{0:d} B'.format(size)
 
   def _FormatStatusTableRow(self, process_status):
     """Formats a status table row.
