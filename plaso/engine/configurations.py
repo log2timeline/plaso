@@ -1,14 +1,17 @@
 # -*- coding: utf-8 -*-
 """Processing configuration classes."""
 
-# TODO: should these be attribute containers?
+from plaso.containers import interface
 
 
-class EventExtractionConfiguration(object):
+class EventExtractionConfiguration(interface.AttributeContainer):
   """Configuration settings for event extraction.
 
+  These settings are primarily used by the parser mediator.
+
   Attributes:
-    filter_object (objectfilter.Filter): filter object.
+    filter_object (objectfilter.Filter): filter that specifies which
+        events to include.
     text_prepend (str): text to prepend to every event.
   """
 
@@ -19,8 +22,10 @@ class EventExtractionConfiguration(object):
     self.text_prepend = None
 
 
-class ExtractionConfiguration(object):
+class ExtractionConfiguration(interface.AttributeContainer):
   """Configuration settings for extraction.
+
+  These settings are primarily used by the extraction worker.
 
   Attributes:
     hasher_names_string (str): comma separated string of names
@@ -41,7 +46,7 @@ class ExtractionConfiguration(object):
     self.yara_rules_string = None
 
 
-class InputSourceConfiguration(object):
+class InputSourceConfiguration(interface.AttributeContainer):
   """Configuration settings of an input source.
 
   Attributes:
@@ -54,7 +59,7 @@ class InputSourceConfiguration(object):
     self.mount_path = None
 
 
-class ProfilingConfiguration(object):
+class ProfilingConfiguration(interface.AttributeContainer):
   """Configuration settings for profiling.
 
   Attributes:
@@ -115,11 +120,11 @@ class ProfilingConfiguration(object):
     return self.enable and self.profiling_type in (u'all', u'serializers')
 
 
-class ProcessingConfiguration(object):
+class ProcessingConfiguration(interface.AttributeContainer):
   """Configuration settings for processing.
 
   Attributes:
-    data_location (str): path of the location of the data files.
+    data_location (str): path to the data files.
     debug_output (bool): True if debug output should be enabled.
     event_extraction (EventExtractionConfiguration): event extraction
         configuration.

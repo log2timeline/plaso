@@ -26,7 +26,7 @@ class BaseEngine(object):
   _STATUS_UPDATE_INTERVAL = 0.5
 
   def __init__(self):
-    """Initializes an engine object."""
+    """Initializes an engine."""
     super(BaseEngine, self).__init__()
     self._abort = False
     self._processing_status = processing_status.ProcessingStatus()

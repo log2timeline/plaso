@@ -22,7 +22,7 @@ class SingleProcessEngine(engine.BaseEngine):
   """Class that defines the single process engine."""
 
   def __init__(self):
-    """Initializes an engine object."""
+    """Initializes a single process engine."""
     super(SingleProcessEngine, self).__init__()
     self._current_display_name = u''
     self._last_status_update_timestamp = 0.0
