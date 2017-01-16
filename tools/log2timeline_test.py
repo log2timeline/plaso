@@ -22,8 +22,8 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
   _EXPECTED_PROCESSING_OPTIONS = u'\n'.join([
       u'usage: log2timeline_test.py [--single_process] [--disable_zeromq]',
-      u'                            [--worker-memory-limit SIZE]',
-      u'                            [--workers WORKERS]',
+      (u'                            [--worker-memory-limit SIZE] '
+       u'[--workers WORKERS]'),
       u'',
       u'Test argument parser.',
       u'',
