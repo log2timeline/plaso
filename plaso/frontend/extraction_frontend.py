@@ -46,7 +46,6 @@ class ExtractionFrontend(frontend.Frontend):
     self._profiling_type = u'all'
     self._use_zeromq = True
     self._resolver_context = context.Context()
-    self._show_worker_memory_information = False
     self._text_prepend = None
 
   def _CheckStorageFile(self, storage_file_path):
@@ -481,7 +480,6 @@ class ExtractionFrontend(frontend.Frontend):
           process_archives=process_archives,
           process_compressed_streams=process_compressed_streams,
           status_update_callback=status_update_callback,
-          show_memory_usage=self._show_worker_memory_information,
           temporary_directory=temporary_directory,
           text_prepend=self._text_prepend,
           yara_rules_string=yara_rules_string)
@@ -495,15 +493,6 @@ class ExtractionFrontend(frontend.Frontend):
       enable_debug (Optional[bool]): True if debugging mode should be enabled.
     """
     self._debug_mode = enable_debug
-
-  def SetShowMemoryInformation(self, show_memory=True):
-    """Sets a flag telling the worker monitor to show memory information.
-
-    Args:
-      show_memory (bool): True if the foreman should include memory information
-          as part of the worker monitoring.
-    """
-    self._show_worker_memory_information = show_memory
 
   def SetTextPrepend(self, text_prepend):
     """Sets the text prepend.

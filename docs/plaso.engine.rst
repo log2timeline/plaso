@@ -44,6 +44,14 @@ plaso.engine.plaso_queue module
     :undoc-members:
     :show-inheritance:
 
+plaso.engine.process_info module
+--------------------------------
+
+.. automodule:: plaso.engine.process_info
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.engine.processing_status module
 -------------------------------------
 

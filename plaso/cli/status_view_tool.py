@@ -50,6 +50,27 @@ class StatusViewTool(storage_media_tool.StorageMediaTool):
 
     self._output_writer.Write(u'\n')
 
+  def _FormatSizeInUnitsOf1024(self, size):
+    """Represents a number of bytes in units of 1024.
+
+    Args:
+      size (int): size in bytes.
+
+    Returns:
+      str: human readable string of the size.
+    """
+    magnitude_1024 = 0
+    used_memory_1024 = float(size)
+    while used_memory_1024 >= 1024:
+      used_memory_1024 /= 1024
+      magnitude_1024 += 1
+
+    if magnitude_1024 > 0 and magnitude_1024 <= 7:
+      return u'{0:.1f} {1:s}'.format(
+          used_memory_1024, self._UNITS_1024[magnitude_1024])
+
+    return u'{0:d} B'.format(size)
+
   def _FormatStatusTableRow(self, process_status):
     """Formats a status table row.
 
@@ -87,9 +108,13 @@ class StatusViewTool(storage_media_tool.StorageMediaTool):
     if len(events) < 8:
       events = u'{0:s}\t'.format(events)
 
+    used_memory = self._FormatSizeInUnitsOf1024(process_status.used_memory)
+    if len(used_memory) < 8:
+      used_memory = u'{0:s}\t'.format(used_memory)
+
     # TODO: shorten display name to fit in 80 chars and show the filename.
-    return u'{0:s}\t{1:d}\t{2:s}\t{3:s}\t{4:s}\t{5:s}'.format(
-        identifier, process_status.pid, status, sources, events,
+    return u'{0:s}\t{1:d}\t{2:s}\t{3:s}\t{4:s}\t{5:s}\t{6:s}'.format(
+        identifier, process_status.pid, status, used_memory, sources, events,
         process_status.display_name)
 
   def _PrintStatusUpdate(self, processing_status):
@@ -110,7 +135,8 @@ class StatusViewTool(storage_media_tool.StorageMediaTool):
 
     # TODO: for win32console get current color and set intensity,
     # write the header separately then reset intensity.
-    status_header = u'Identifier\tPID\tStatus\t\tSources\t\tEvents\t\tFile'
+    status_header = (
+        u'Identifier\tPID\tStatus\t\tMemory\t\tSources\t\tEvents\t\tFile')
     if not win32console:
       status_header = u'\x1b[1m{0:s}\x1b[0m'.format(status_header)
 

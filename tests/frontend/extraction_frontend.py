@@ -151,11 +151,6 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
     test_front_end = extraction_frontend.ExtractionFrontend()
     test_front_end.SetDebugMode(enable_debug=True)
 
-  def testSetShowMemoryInformation(self):
-    """Tests the SetShowMemoryInformation function."""
-    test_front_end = extraction_frontend.ExtractionFrontend()
-    test_front_end.SetShowMemoryInformation(show_memory=False)
-
   def testSetTextPrepend(self):
     """Tests the SetTextPrepend function."""
     test_front_end = extraction_frontend.ExtractionFrontend()
