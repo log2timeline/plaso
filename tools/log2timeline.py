@@ -84,6 +84,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._stdout_output_writer = isinstance(
         self._output_writer, cli_tools.StdoutOutputWriter)
     self._text_prepend = None
+    self._worker_memory_limit = None
 
     self.dependencies_check = True
     self.list_output_modules = False
@@ -172,6 +173,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._front_end.SetUseZeroMQ(use_zeromq)
 
     self._number_of_extraction_workers = getattr(options, u'workers', 0)
+    self._worker_memory_limit = getattr(options, u'worker_memory_limit', None)
 
     # TODO: add code to parse the worker options.
 
@@ -214,6 +216,12 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         dest=u'use_zeromq', default=True, help=(
             u'Disable queueing using ZeroMQ. A Multiprocessing queue will be '
             u'used instead.'))
+
+    argument_group.add_argument(
+        u'--worker-memory-limit', u'--worker_memory_limit',
+        dest=u'worker_memory_limit', action=u'store', type=int, help=(
+            u'Maximum amount of memory a worker is allowed to consume. '
+            u'[defaults to 2 GiB]'))
 
     argument_group.add_argument(
         u'--workers', dest=u'workers', action=u'store', type=int, default=0,
@@ -503,8 +511,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           file system.
       UserAbort: if the user initiated an abort.
     """
-    self._front_end.SetShowMemoryInformation(show_memory=self._foreman_verbose)
-
     self._DetermineSourceType()
 
     self._output_writer.Write(u'\n')
@@ -551,7 +557,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         force_preprocessing=self._force_preprocessing,
         number_of_extraction_workers=self._number_of_extraction_workers,
         single_process_mode=self._single_process_mode,
-        status_update_callback=status_update_callback)
+        status_update_callback=status_update_callback,
+        worker_memory_limit=self._worker_memory_limit)
 
     if not processing_status:
       self._output_writer.Write(

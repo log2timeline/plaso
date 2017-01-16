@@ -45,7 +45,6 @@ class ExtractionFrontend(frontend.Frontend):
     self._profiling_type = u'all'
     self._use_zeromq = True
     self._resolver_context = context.Context()
-    self._show_worker_memory_information = False
     self._text_prepend = None
 
   def _CheckStorageFile(self, storage_file_path):
@@ -287,7 +286,8 @@ class ExtractionFrontend(frontend.Frontend):
       self, session, storage_writer, source_path_specs, source_type,
       processing_configuration, enable_sigsegv_handler=False,
       force_preprocessing=False, number_of_extraction_workers=0,
-      single_process_mode=False, status_update_callback=None):
+      single_process_mode=False, status_update_callback=None,
+      worker_memory_limit=None):
     """Processes the sources.
 
     Args:
@@ -308,6 +308,8 @@ class ExtractionFrontend(frontend.Frontend):
           run in single process mode.
       status_update_callback (Optional[function]): callback function for status
           updates.
+      worker_memory_limit (Optional[int]): maximum amount of memory a worker is
+          allowed to consume, where None represents 2 GiB.
 
     Returns:
       ProcessingStatus: processing status or None.
@@ -386,18 +388,9 @@ class ExtractionFrontend(frontend.Frontend):
           filter_find_specs=filter_find_specs,
           number_of_worker_processes=number_of_extraction_workers,
           status_update_callback=status_update_callback,
-          show_memory_usage=self._show_worker_memory_information)
+          worker_memory_limit=worker_memory_limit)
 
     return processing_status
-
-  def SetShowMemoryInformation(self, show_memory=True):
-    """Sets a flag telling the worker monitor to show memory information.
-
-    Args:
-      show_memory (bool): True if the foreman should include memory information
-          as part of the worker monitoring.
-    """
-    self._show_worker_memory_information = show_memory
 
   def SetUseZeroMQ(self, use_zeromq=True):
     """Sets whether the frontend is using ZeroMQ for queueing or not.

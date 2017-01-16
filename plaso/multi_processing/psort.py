@@ -21,13 +21,12 @@ from plaso.storage import time_range as storage_time_range
 class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
   """Class that defines the psort multi-processing engine."""
 
+  _DEFAULT_WORKER_MEMORY_LIMIT = 2048 * 1024 * 1024
+
   _PROCESS_JOIN_TIMEOUT = 5.0
   _PROCESS_WORKER_TIMEOUT = 15.0 * 60.0
 
   _QUEUE_TIMEOUT = 10 * 60
-
-  # TODO: change to runtime configurable setting.
-  _ANALYSIS_PROCESS_MEMORY_LIMIT = 2048 * 1024 * 1024
 
   def __init__(self, use_zeromq=True):
     """Initializes an engine object.
@@ -53,6 +52,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._status = definitions.PROCESSING_STATUS_IDLE
     self._status_update_callback = None
     self._use_zeromq = use_zeromq
+    self._worker_memory_limit = self._DEFAULT_WORKER_MEMORY_LIMIT
 
   def _AnalyzeEvents(self, storage_writer, analysis_plugins, event_filter=None):
     """Analyzes events in a plaso storage.
@@ -190,11 +190,11 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       process_information = self._process_information_per_pid[pid]
       used_memory = process_information.GetUsedMemory()
 
-      if used_memory > self._ANALYSIS_PROCESS_MEMORY_LIMIT:
+      if used_memory > self._worker_memory_limit:
         logging.debug((
             u'Process: {0:s} (PID: {1:d}) killed because it exceeded the '
             u'memory limit: {2:d}.').format(
-                process.name, pid, self._ANALYSIS_PROCESS_MEMORY_LIMIT))
+                process.name, pid, self._worker_memory_limit))
         self._KillProcess(pid)
 
       if isinstance(process_status, dict):
@@ -547,7 +547,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
   def AnalyzeEvents(
       self, knowledge_base_object, storage_writer, data_location,
       analysis_plugins, event_filter=None, event_filter_expression=None,
-      status_update_callback=None):
+      status_update_callback=None, worker_memory_limit=None):
     """Analyzes events in a plaso storage.
 
     Args:
@@ -562,11 +562,15 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       event_filter_expression (Optional[str]): event filter expression.
       status_update_callback (Optional[function]): callback function for status
           updates.
+      worker_memory_limit (Optional[int]): maximum amount of memory a worker is
+          allowed to consume, where None represents 2 GiB.
     """
     if not analysis_plugins:
       return
 
     self._status_update_callback = status_update_callback
+    self._worker_memory_limit = (
+        worker_memory_limit or self._DEFAULT_WORKER_MEMORY_LIMIT)
 
     # Set up the storage writer before the analysis processes.
     storage_writer.StartTaskStorage()
@@ -622,6 +626,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     # Reset values.
     self._status_update_callback = None
+    self._worker_memory_limit = self._DEFAULT_WORKER_MEMORY_LIMIT
 
   def ExportEvents(
       self, knowledge_base_object, storage_reader, output_module,
