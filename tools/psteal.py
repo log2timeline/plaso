@@ -163,7 +163,6 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     session = self._extraction_front_end.CreateSession(
         command_line_arguments=self._command_line_arguments,
         filter_file=self._filter_file,
-        parser_filter_expression=self._parser_filter_expression,
         preferred_encoding=self.preferred_encoding,
         preferred_year=self._preferred_year)
 
