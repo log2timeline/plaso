@@ -71,9 +71,9 @@ class StorageMediaTool(tools.CLITool):
     self._vss_only = False
     self._vss_stores = None
 
-  def _AddCredentialConfiguation(
+  def _AddCredentialConfiguration(
       self, path_spec, credential_type, credential_data):
-    """Adds a credential configuation.
+    """Adds a credential configuration.
 
     Args:
       path_spec (dfvfs.PathSpec): path specification.
@@ -606,7 +606,7 @@ class StorageMediaTool(tools.CLITool):
             scan_context, locked_scan_node.path_spec, credential_type,
             credential_data)
 
-        self._AddCredentialConfiguation(
+        self._AddCredentialConfiguration(
             locked_scan_node.path_spec, credential_type, credential_data)
 
       except IOError as exception:
@@ -898,7 +898,7 @@ class StorageMediaTool(tools.CLITool):
             credential_data)
 
         if result:
-          self._AddCredentialConfiguation(
+          self._AddCredentialConfiguration(
               volume_scan_node.path_spec, credential_type, credential_data)
           break
 
