@@ -18,6 +18,7 @@ from dfvfs.volume import tsk_volume_system
 from dfvfs.volume import vshadow_volume_system
 
 from plaso.cli import tools
+from plaso.engine import configurations
 from plaso.lib import errors
 from plaso.lib import py2to3
 from plaso.lib import timelib
@@ -59,6 +60,7 @@ class StorageMediaTool(tools.CLITool):
     super(StorageMediaTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._credentials = []
+    self._credential_configurations = []
     self._filter_file = None
     self._partitions = None
     self._partition_offset = None
@@ -68,6 +70,21 @@ class StorageMediaTool(tools.CLITool):
     self._source_path_specs = []
     self._vss_only = False
     self._vss_stores = None
+
+  def _AddCredentialConfiguation(
+      self, path_spec, credential_type, credential_data):
+    """Adds a credential configuation.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+      credential_type (str): credential type.
+      credential_data (bytes): credential data.
+    """
+    credential_configuration = configurations.CredentialConfiguration(
+        credential_data=credential_data, credential_type=credential_type,
+        path_spec=path_spec)
+
+    self._credential_configurations.append(credential_configuration)
 
   def _FormatHumanReadableSize(self, size):
     """Represents a number of bytes as a human readable string.
@@ -588,6 +605,10 @@ class StorageMediaTool(tools.CLITool):
         result = self._source_scanner.Unlock(
             scan_context, locked_scan_node.path_spec, credential_type,
             credential_data)
+
+        self._AddCredentialConfiguation(
+            locked_scan_node.path_spec, credential_type, credential_data)
+
       except IOError as exception:
         logging.debug(u'Unable to unlock volume with error: {0:s}'.format(
             exception))
@@ -875,7 +896,10 @@ class StorageMediaTool(tools.CLITool):
         result = self._source_scanner.Unlock(
             scan_context, volume_scan_node.path_spec, credential_type,
             credential_data)
+
         if result:
+          self._AddCredentialConfiguation(
+              volume_scan_node.path_spec, credential_type, credential_data)
           break
 
       if self._credentials and not result:
