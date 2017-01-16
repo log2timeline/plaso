@@ -4,6 +4,14 @@ plaso.engine package
 Submodules
 ----------
 
+plaso.engine.configurations module
+----------------------------------
+
+.. automodule:: plaso.engine.configurations
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.engine.engine module
 --------------------------
 

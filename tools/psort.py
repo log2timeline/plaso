@@ -32,6 +32,7 @@ from plaso.cli.helpers import manager as helpers_manager
 from plaso.filters import manager as filters_manager
 from plaso.frontend import frontend
 from plaso.frontend import psort
+from plaso.engine import configurations
 from plaso.output import interface as output_interface
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -788,13 +789,16 @@ class PsortTool(analysis_tool.AnalysisTool):
         storage_reader.GetNumberOfAnalysisReports())
     storage_reader.Close()
 
+    configuration = configurations.ProcessingConfiguration()
+    configuration.data_location = self._options.data_location
+
     if analysis_plugins:
       storage_writer = self._front_end.CreateStorageWriter(
           session, self._storage_file_path)
       # TODO: handle errors.BadConfigOption
 
       self._front_end.AnalyzeEvents(
-          storage_writer, analysis_plugins,
+          storage_writer, analysis_plugins, configuration,
           status_update_callback=status_update_callback)
 
     counter = collections.Counter()
@@ -803,7 +807,7 @@ class PsortTool(analysis_tool.AnalysisTool):
           self._storage_file_path)
 
       events_counter = self._front_end.ExportEvents(
-          storage_reader, output_module,
+          storage_reader, output_module, configuration,
           deduplicate_events=self._deduplicate_events,
           status_update_callback=status_update_callback,
           time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)

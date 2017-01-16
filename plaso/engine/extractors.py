@@ -26,12 +26,11 @@ class EventExtractor(object):
   An event extractor extracts events from event sources.
   """
 
-  def __init__(self, resolver_context, parser_filter_expression=None):
+  def __init__(self, parser_filter_expression=None):
     """Initializes an event extractor object.
 
     Args:
-      resolver_context (dfvfs.Context): resolver context.
-      parser_filter_expression (Optional[str]): the parser filter expression.
+      parser_filter_expression (Optional[str]): the parser filter expression,
           None represents all parsers and plugins.
 
           The parser filter expression is a comma separated value string that
@@ -48,14 +47,13 @@ class EventExtractor(object):
     self._filestat_parser = None
     self._mft_parser = None
     self._non_sigscan_parser_names = None
-    self._parser_filter_expression = parser_filter_expression
     self._parsers = None
     self._parsers_profiler = None
-    self._resolver_context = resolver_context
     self._specification_store = None
     self._usnjrnl_parser = None
 
-    self._InitializeParserObjects()
+    self._InitializeParserObjects(
+        parser_filter_expression=parser_filter_expression)
 
   def _CheckParserCanProcessFileEntry(self, parser, file_entry):
     """Determines if a parser can process a file entry.
@@ -77,12 +75,12 @@ class EventExtractor(object):
     """Determines if a file-like object matches one of the known signatures.
 
     Args:
-      file_object (file):
-          file-like object whose contents will be checked for known signatures.
+      file_object (file): file-like object whose contents will be checked
+          for known signatures.
 
     Returns:
       list[str]: parser names for which the contents of the file-like object
-                 matches their known signatures.
+          matches their known signatures.
     """
     parser_names = []
     scan_state = pysigscan.scan_state()
@@ -98,11 +96,25 @@ class EventExtractor(object):
 
     return parser_names
 
-  def _InitializeParserObjects(self):
-    """Initializes the parser objects."""
+  def _InitializeParserObjects(self, parser_filter_expression=None):
+    """Initializes the parser objects.
+
+    Args:
+      parser_filter_expression (Optional[str]): the parser filter expression,
+          None represents all parsers and plugins.
+
+          The parser filter expression is a comma separated value string that
+          denotes a list of parser names to include and/or exclude. Each entry
+          can have the value of:
+
+          * An exact match of a list of parsers, or a preset (see
+            plaso/frontend/presets.py for a full list of available presets).
+          * A name of a single parser (case insensitive), e.g. msiecf.
+          * A glob name for a single parser, e.g. '*msie*' (case insensitive).
+    """
     self._specification_store, non_sigscan_parser_names = (
         parsers_manager.ParsersManager.GetSpecificationStore(
-            parser_filter_expression=self._parser_filter_expression))
+            parser_filter_expression=parser_filter_expression))
 
     self._non_sigscan_parser_names = []
     for parser_name in non_sigscan_parser_names:
@@ -114,7 +126,7 @@ class EventExtractor(object):
         self._specification_store)
 
     self._parsers = parsers_manager.ParsersManager.GetParserObjects(
-        parser_filter_expression=self._parser_filter_expression)
+        parser_filter_expression=parser_filter_expression)
 
     self._filestat_parser = self._parsers.get(u'filestat', None)
     if u'filestat' in self._parsers:
@@ -176,8 +188,9 @@ class EventExtractor(object):
 
     parser_mediator.ClearParserChain()
 
-    reference_count = self._resolver_context.GetFileObjectReferenceCount(
-        file_entry.path_spec)
+    reference_count = (
+        parser_mediator.resolver_context.GetFileObjectReferenceCount(
+            file_entry.path_spec))
 
     if self._parsers_profiler:
       self._parsers_profiler.StartTiming(parser.NAME)
@@ -207,8 +220,10 @@ class EventExtractor(object):
       if self._parsers_profiler:
         self._parsers_profiler.StopTiming(parser.NAME)
 
-      if reference_count != self._resolver_context.GetFileObjectReferenceCount(
-          file_entry.path_spec):
+      new_reference_count = (
+          parser_mediator.resolver_context.GetFileObjectReferenceCount(
+              file_entry.path_spec))
+      if reference_count != new_reference_count:
         display_name = parser_mediator.GetDisplayName(file_entry)
         logging.warning((
             u'[{0:s}] did not explicitly close file-object for file: '
@@ -317,7 +332,7 @@ class EventExtractor(object):
       # To be able to ignore the sparse data ranges the UsnJrnl parser
       # needs to read directly from the volume.
       volume_file_object = path_spec_resolver.Resolver.OpenFileObject(
-          parent_path_spec, resolver_context=self._resolver_context)
+          parent_path_spec, resolver_context=parser_mediator.resolver_context)
 
       try:
         self._ParseFileEntryWithParser(
@@ -344,7 +359,7 @@ class PathSpecExtractor(object):
 
   _MAXIMUM_DEPTH = 255
 
-  def __init__(self, resolver_context, duplicate_file_check=False):
+  def __init__(self, duplicate_file_check=False):
     """Initializes a path specification extractor object.
 
     The source collector discovers all the file entries in the source.
@@ -352,14 +367,12 @@ class PathSpecExtractor(object):
     a storage media image or device.
 
     Args:
-      resolver_context (dfvfs.Context): resolver context.
-      duplicate_file_check (Optional[bool]):
-          True if duplicate files should be ignored.
+      duplicate_file_check (Optional[bool]): True if duplicate files should
+          be ignored.
     """
     super(PathSpecExtractor, self).__init__()
     self._duplicate_file_check = duplicate_file_check
     self._hashlist = {}
-    self._resolver_context = resolver_context
 
   def _CalculateNTFSTimeHash(self, file_entry):
     """Returns a hash value calculated from a NTFS file entry.
@@ -400,7 +413,8 @@ class PathSpecExtractor(object):
     return ret_hash.hexdigest()
 
   def _ExtractPathSpecs(
-      self, path_spec, find_specs=None, recurse_file_system=True):
+      self, path_spec, find_specs=None, recurse_file_system=True,
+      resolver_context=None):
     """Extracts path specification from a specific source.
 
     Args:
@@ -409,13 +423,14 @@ class PathSpecExtractor(object):
           used in path specification extraction.
       recurse_file_system (Optional[bool]): True if extraction should
           recurse into a file system.
+      resolver_context (Optional[dfvfs.Context]): resolver context.
 
     Yields:
       dfvfs.PathSpec: path specification of a file entry found in the source.
     """
     try:
       file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-          path_spec, resolver_context=self._resolver_context)
+          path_spec, resolver_context=resolver_context)
     except (
         dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
         dfvfs_errors.PathSpecError) as exception:
@@ -440,7 +455,8 @@ class PathSpecExtractor(object):
     else:
       for path_spec in self._ExtractPathSpecsFromFileSystem(
           path_spec, find_specs=find_specs,
-          recurse_file_system=recurse_file_system):
+          recurse_file_system=recurse_file_system,
+          resolver_context=resolver_context):
         yield path_spec
 
   def _ExtractPathSpecsFromDirectory(self, file_entry, depth=0):
@@ -536,23 +552,25 @@ class PathSpecExtractor(object):
       yield file_entry.path_spec
 
   def _ExtractPathSpecsFromFileSystem(
-      self, path_spec, find_specs=None, recurse_file_system=True):
+      self, path_spec, find_specs=None, recurse_file_system=True,
+      resolver_context=None):
     """Extracts path specification from a file system within a specific source.
 
     Args:
       path_spec (dfvfs.PathSpec): path specification of the root of
-                                  the file system.
+          the file system.
       find_specs (Optional[list[dfvfs.FindSpec]]): find specifications.
-      recurse_file_system (Optional[bool]):
-          True if extraction should recurse into a file system.
+      recurse_file_system (Optional[bool]): True if extraction should
+          recurse into a file system.
+      resolver_context (Optional[dfvfs.Context]): resolver context.
 
     Yields:
       dfvfs.PathSpec: path specification of a file entry found in
-                      the file system.
+          the file system.
     """
     try:
       file_system = path_spec_resolver.Resolver.OpenFileSystem(
-          path_spec, resolver_context=self._resolver_context)
+          path_spec, resolver_context=resolver_context)
     except (
         dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
         dfvfs_errors.PathSpecError) as exception:
@@ -585,14 +603,16 @@ class PathSpecExtractor(object):
       file_system.Close()
 
   def ExtractPathSpecs(
-      self, path_specs, find_specs=None, recurse_file_system=True):
+      self, path_specs, find_specs=None, recurse_file_system=True,
+      resolver_context=None):
     """Extracts path specification from a specific source.
 
     Args:
       path_specs (Optional[list[dfvfs.PathSpec]]): path specifications.
       find_specs (Optional[list[dfvfs.FindSpec]]): find specifications.
-      recurse_file_system (Optional[bool]):
-          True if extraction should recurse into a file system.
+      recurse_file_system (Optional[bool]): True if extraction should
+          recurse into a file system.
+      resolver_context (Optional[dfvfs.Context]): resolver context.
 
     Yields:
       dfvfs.PathSpec: path specification of a file entry found in the source.
@@ -600,5 +620,6 @@ class PathSpecExtractor(object):
     for path_spec in path_specs:
       for extracted_path_spec in self._ExtractPathSpecs(
           path_spec, find_specs=find_specs,
-          recurse_file_system=recurse_file_system):
+          recurse_file_system=recurse_file_system,
+          resolver_context=resolver_context):
         yield extracted_path_spec

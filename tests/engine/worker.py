@@ -5,10 +5,11 @@
 import unittest
 
 from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.path import factory as path_spec_factory
 from dfvfs.resolver import context
+from dfvfs.path import factory as path_spec_factory
 
 from plaso.containers import sessions
+from plaso.engine import configurations
 from plaso.engine import knowledge_base
 from plaso.engine import worker
 from plaso.parsers import mediator as parsers_mediator
@@ -42,14 +43,17 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
       for identifier, value in iter(knowledge_base_values.items()):
         knowledge_base_object.SetValue(identifier, value)
 
+    resolver_context = context.Context()
     mediator = parsers_mediator.ParserMediator(
-        storage_writer, knowledge_base_object)
+        storage_writer, knowledge_base_object,
+        resolver_context=resolver_context)
 
     if not extraction_worker:
-      resolver_context = context.Context()
+      configuration = configurations.ExtractionConfiguration()
+      configuration.process_archives = process_archives
 
-      extraction_worker = worker.EventExtractionWorker(
-          resolver_context, process_archives=process_archives)
+      extraction_worker = worker.EventExtractionWorker()
+      extraction_worker.SetExtractionConfiguration(configuration)
 
     storage_writer.Open()
     storage_writer.WriteSessionStart()
@@ -76,11 +80,12 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
       for identifier, value in iter(knowledge_base_values.items()):
         knowledge_base_object.SetValue(identifier, value)
 
-    mediator = parsers_mediator.ParserMediator(
-        storage_writer, knowledge_base_object, preferred_year=2016)
-
     resolver_context = context.Context()
-    extraction_worker = worker.EventExtractionWorker(resolver_context)
+    mediator = parsers_mediator.ParserMediator(
+        storage_writer, knowledge_base_object, preferred_year=2016,
+        resolver_context=resolver_context)
+
+    extraction_worker = worker.EventExtractionWorker()
 
     test_analyzer = analyzers_manager_test.TestAnalyzer()
     self.assertEqual(len(test_analyzer.GetResults()), 0)
@@ -230,10 +235,9 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'empty_file'])
   def testExtractionWorkerHashing(self):
     """Test that the worker sets up and runs hashing code correctly."""
-    resolver_context = context.Context()
-    extraction_worker = worker.EventExtractionWorker(resolver_context)
+    extraction_worker = worker.EventExtractionWorker()
 
-    extraction_worker.SetHashers(u'md5')
+    extraction_worker._SetHashers(u'md5')
     self.assertIn(u'hashing', extraction_worker.GetAnalyzerNames())
 
     knowledge_base_values = {u'year': 2016}
@@ -254,14 +258,13 @@ class EventExtractionWorkerTest(shared_test_lib.BaseTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'test_pe.exe'])
   def testExtractionWorkerYara(self):
     """Tests that the worker applies Yara matching code correctly."""
-    resolver_context = context.Context()
-    extraction_worker = worker.EventExtractionWorker(resolver_context)
+    extraction_worker = worker.EventExtractionWorker()
 
     rule_path = self._GetTestFilePath([u'yara.rules'])
     with open(rule_path, 'r') as rule_file:
       rule_string = rule_file.read()
 
-    extraction_worker.SetYaraRules(rule_string)
+    extraction_worker._SetYaraRules(rule_string)
     self.assertIn(u'yara', extraction_worker.GetAnalyzerNames())
 
     knowledge_base_values = {u'year': 2016}

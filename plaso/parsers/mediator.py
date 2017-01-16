@@ -15,7 +15,7 @@ class ParserMediator(object):
 
   def __init__(
       self, storage_writer, knowledge_base, preferred_year=None,
-      temporary_directory=None):
+      resolver_context=None, temporary_directory=None):
     """Initializes a parser mediator.
 
     Args:
@@ -23,6 +23,7 @@ class ParserMediator(object):
       knowledge_base (KnowledgeBase): contains information from the source
           data needed for parsing.
       preferred_year (Optional[int]): preferred year.
+      resolver_context (Optional[dfvfs.Context]): resolver context.
       temporary_directory (Optional[str]): path of the directory for temporary
           files.
     """
@@ -38,6 +39,7 @@ class ParserMediator(object):
     self._number_of_events = 0
     self._parser_chain_components = []
     self._preferred_year = preferred_year
+    self._resolver_context = resolver_context
     self._storage_writer = storage_writer
     self._temporary_directory = temporary_directory
     self._text_prepend = None
@@ -81,6 +83,11 @@ class ParserMediator(object):
   def platform(self):
     """str: platform."""
     return self._knowledge_base.platform
+
+  @property
+  def resolver_context(self):
+    """dfvfs.Context: resolver context."""
+    return self._resolver_context
 
   @property
   def temporary_directory(self):
@@ -487,6 +494,31 @@ class ParserMediator(object):
     """Resets the active file entry."""
     self._file_entry = None
 
+  def SetEventExtractionConfiguration(self, configuration):
+    """Sets the event extraction configuration settings.
+
+    Args:
+      configuration (EventExtractionConfiguration): event extraction
+          configuration.
+    """
+    self._filter_object = configuration.filter_object
+    self._text_prepend = configuration.text_prepend
+
+  def SetInputSourceConfiguration(self, configuration):
+    """Sets the input source configuration settings.
+
+    Args:
+      configuration (InputSourceConfiguration): input source configuration.
+    """
+    mount_path = configuration.mount_path
+
+    # Remove a trailing path separator from the mount path so the relative
+    # paths will start with a path separator.
+    if mount_path and mount_path.endswith(os.sep):
+      mount_path = mount_path[:-1]
+
+    self._mount_path = mount_path
+
   def SetFileEntry(self, file_entry):
     """Sets the active file entry.
 
@@ -495,27 +527,6 @@ class ParserMediator(object):
     """
     self._file_entry = file_entry
 
-  def SetFilterObject(self, filter_object):
-    """Sets the filter object.
-
-    Args:
-      filter_object (objectfilter.Filter): filter object.
-    """
-    self._filter_object = filter_object
-
-  def SetMountPath(self, mount_path):
-    """Sets the mount path.
-
-    Args:
-      mount_path (str): mount path.
-    """
-    # Remove a trailing path separator from the mount path so the relative
-    # paths will start with a path separator.
-    if mount_path and mount_path.endswith(os.sep):
-      mount_path = mount_path[:-1]
-
-    self._mount_path = mount_path
-
   def SetStorageWriter(self, storage_writer):
     """Sets the storage writer.
 
@@ -523,14 +534,6 @@ class ParserMediator(object):
       storage_writer (StorageWriter): storage writer.
     """
     self._storage_writer = storage_writer
-
-  def SetTextPrepend(self, text_prepend):
-    """Sets the text prepend.
-
-    Args:
-      text_prepend (str): text to prepend to every event.
-    """
-    self._text_prepend = text_prepend
 
   def SignalAbort(self):
     """Signals the parsers to abort."""
