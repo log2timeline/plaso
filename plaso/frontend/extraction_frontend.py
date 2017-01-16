@@ -46,6 +46,7 @@ class ExtractionFrontend(frontend.Frontend):
     self._profiling_type = u'all'
     self._use_zeromq = True
     self._resolver_context = context.Context()
+    self._show_worker_memory_information = False
     self._text_prepend = None
 
   def _CheckStorageFile(self, storage_file_path):

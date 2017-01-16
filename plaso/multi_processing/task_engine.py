@@ -664,7 +664,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self, session_identifier, source_path_specs, storage_writer,
       processing_configuration, enable_sigsegv_handler=False,
       filter_find_specs=None, number_of_worker_processes=0,
-      status_update_callback=None, show_memory_usage=False):
+      show_memory_usage=False, status_update_callback=None):
     """Processes the sources and extract event objects.
 
     Args:
@@ -714,6 +714,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     self._enable_sigsegv_handler = enable_sigsegv_handler
     self._number_of_worker_processes = number_of_worker_processes
+    self._show_memory_usage = show_memory_usage
 
     # Keep track of certain values so we can spawn new extraction workers.
     self._processing_configuration = processing_configuration
@@ -819,6 +820,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     # Reset values.
     self._enable_sigsegv_handler = None
     self._number_of_worker_processes = None
+    self._show_memory_usage = None
 
     self._processing_configuration = None
 
