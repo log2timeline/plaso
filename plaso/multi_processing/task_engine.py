@@ -565,13 +565,14 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._serializers_profiler.Write()
       self._serializers_profiler = None
 
-  def _UpdateProcessingStatus(self, pid, process_status):
+  def _UpdateProcessingStatus(self, pid, process_status, used_memory):
     """Updates the processing status.
 
     Args:
       pid (int): process identifier (PID) of the worker process.
       process_status (dict[str, object]): status values received from
           the worker process.
+      used_memory (int): size of used memory in bytes.
 
     Raises:
       KeyError: if the process is not registered with the engine.
@@ -626,9 +627,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
               u'Process {0:s} (PID: {1:d}) has not reported activity within '
               u'the timeout period.').format(process.name, pid))
           processing_status = definitions.PROCESSING_STATUS_NOT_RESPONDING
-
-    process_information = self._process_information_per_pid[pid]
-    used_memory = process_information.GetUsedMemory()
 
     self._processing_status.UpdateWorkerStatus(
         process.name, processing_status, pid, used_memory, display_name,

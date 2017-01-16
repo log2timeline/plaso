@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """The psort multi-processing engine."""
 
-from __future__ import print_function
 import collections
 import logging
 import os
@@ -27,6 +26,8 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
   _QUEUE_TIMEOUT = 10 * 60
 
+  # TODO: change to runtime configurable setting.
+  _ANALYSIS_PROCESS_MEMORY_LIMIT = 2048 * 1024 * 1024
 
   def __init__(self, use_zeromq=True):
     """Initializes an engine object.
@@ -186,6 +187,16 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       else:
         process_is_alive = True
 
+      process_information = self._process_information_per_pid[pid]
+      used_memory = process_information.GetUsedMemory()
+
+      if used_memory > self._ANALYSIS_PROCESS_MEMORY_LIMIT:
+        logging.debug((
+            u'Process: {0:s} (PID: {1:d}) killed because it exceeded the '
+            u'memory limit: {2:d}.').format(
+                process.name, pid, self._ANALYSIS_PROCESS_MEMORY_LIMIT))
+        self._KillProcess(pid)
+
       if isinstance(process_status, dict):
         self._rpc_errors_per_pid[pid] = 0
         status_indicator = process_status.get(u'processing_status', None)
@@ -216,7 +227,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         process_status = {
             u'processing_status': processing_status_string}
 
-    self._UpdateProcessingStatus(pid, process_status)
+    self._UpdateProcessingStatus(pid, process_status, used_memory)
 
     if status_indicator in definitions.PROCESSING_ERROR_STATUS:
       logging.error((
@@ -449,13 +460,14 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       for event_queue in self._event_queues.values():
         event_queue.Close(abort=True)
 
-  def _UpdateProcessingStatus(self, pid, process_status):
+  def _UpdateProcessingStatus(self, pid, process_status, used_memory):
     """Updates the processing status.
 
     Args:
       pid (int): process identifier (PID) of the worker process.
       process_status (dict[str, object]): status values received from
           the worker process.
+      used_memory (int): size of used memory in bytes.
 
     Raises:
       KeyError: if the process is not registered with the engine.
@@ -510,9 +522,6 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
               u'Process {0:s} (PID: {1:d}) has not reported activity within '
               u'the timeout period.').format(process.name, pid))
           processing_status = definitions.PROCESSING_STATUS_NOT_RESPONDING
-
-    process_information = self._process_information_per_pid[pid]
-    used_memory = process_information.GetUsedMemory()
 
     self._processing_status.UpdateWorkerStatus(
         process.name, processing_status, pid, used_memory, display_name,

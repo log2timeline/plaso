@@ -29,6 +29,9 @@ class MultiProcessEngine(engine.BaseEngine):
   _RPC_SERVER_TIMEOUT = 8.0
   _MAXIMUM_RPC_ERRORS = 10
 
+  # TODO: change to runtime configurable setting.
+  _WORKER_MEMORY_LIMIT = 2048 * 1024 * 1024
+
   _ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS = 300
 
   def __init__(self):
@@ -105,6 +108,16 @@ class MultiProcessEngine(engine.BaseEngine):
     else:
       process_is_alive = True
 
+    process_information = self._process_information_per_pid[pid]
+    used_memory = process_information.GetUsedMemory()
+
+    if used_memory > self._WORKER_MEMORY_LIMIT:
+      logging.debug((
+          u'Process: {0:s} (PID: {1:d}) killed because it exceeded the '
+          u'memory limit: {2:d}.').format(
+              process.name, pid, self._WORKER_MEMORY_LIMIT))
+      self._KillProcess(pid)
+
     if isinstance(process_status, dict):
       self._rpc_errors_per_pid[pid] = 0
       status_indicator = process_status.get(u'processing_status', None)
@@ -132,13 +145,12 @@ class MultiProcessEngine(engine.BaseEngine):
       process_status = {
           u'processing_status': processing_status_string}
 
-    self._UpdateProcessingStatus(pid, process_status)
+    self._UpdateProcessingStatus(pid, process_status, used_memory)
 
     if status_indicator in definitions.PROCESSING_ERROR_STATUS:
-      logging.error(
-          (u'Process {0:s} (PID: {1:d}) is not functioning correctly. '
-           u'Status code: {2!s}.').format(
-               process.name, pid, status_indicator))
+      logging.error((
+          u'Process {0:s} (PID: {1:d}) is not functioning correctly. '
+          u'Status code: {2!s}.').format(process.name, pid, status_indicator))
 
       self._TerminateProcess(pid)
 
@@ -309,7 +321,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     Raises:
       KeyError: if the process is not registered with the engine or
-                if the process is registered, but not monitored.
+          if the process is registered, but not monitored.
     """
     self._RaiseIfNotRegistered(pid)
     self._RaiseIfNotMonitored(pid)
