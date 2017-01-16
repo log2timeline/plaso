@@ -22,6 +22,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
   _EXPECTED_PROCESSING_OPTIONS = u'\n'.join([
       u'usage: log2timeline_test.py [--single_process] [--disable_zeromq]',
+      u'                            [--worker-memory-limit SIZE]',
       u'                            [--workers WORKERS]',
       u'',
       u'Test argument parser.',
@@ -34,6 +35,10 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       u'  --single_process, --single-process',
       (u'                        Indicate that the tool should run in a '
        u'single process.'),
+      u'  --worker-memory-limit SIZE, --worker_memory_limit SIZE'
+      (u'                        Maximum amount of memory a worker is '
+       u'allowed to'),
+      u'                        consume. [defaults to 2 GiB]',
       (u'  --workers WORKERS     The number of worker threads [defaults to '
        u'available'),
       u'                        system CPUs minus one].',

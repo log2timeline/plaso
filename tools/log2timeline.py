@@ -219,7 +219,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     argument_group.add_argument(
         u'--worker-memory-limit', u'--worker_memory_limit',
-        dest=u'worker_memory_limit', action=u'store', type=int, help=(
+        dest=u'worker_memory_limit', action=u'store', type=int,
+        metavar=u'SIZE', help=(
             u'Maximum amount of memory a worker is allowed to consume. '
             u'[defaults to 2 GiB]'))
 
