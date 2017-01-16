@@ -376,13 +376,14 @@ class MultiProcessEngine(engine.BaseEngine):
     self._StopMonitoringProcess(pid)
 
   @abc.abstractmethod
-  def _UpdateProcessingStatus(self, pid, process_status):
+  def _UpdateProcessingStatus(self, pid, process_status, used_memory):
     """Updates the processing status.
 
     Args:
       pid (int): process identifier (PID) of the worker process.
       process_status (dict[str, object]): status values received from
           the worker process.
+      used_memory (int): size of used memory in bytes.
 
     Raises:
       KeyError: if the process is not registered with the engine.
