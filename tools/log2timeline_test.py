@@ -35,7 +35,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       u'  --single_process, --single-process',
       (u'                        Indicate that the tool should run in a '
        u'single process.'),
-      u'  --worker-memory-limit SIZE, --worker_memory_limit SIZE'
+      u'  --worker-memory-limit SIZE, --worker_memory_limit SIZE',
       (u'                        Maximum amount of memory a worker is '
        u'allowed to'),
       u'                        consume. [defaults to 2 GiB]',
