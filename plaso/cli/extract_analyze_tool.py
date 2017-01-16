@@ -43,7 +43,7 @@ class ExtractionAndAnalysisTool(status_view_tool.StatusViewTool):
     if source_path.endswith(os.path.sep):
       source_path = os.path.dirname(source_path)
 
-    if source_path == os.path.sep:
+    if not source_path or source_path == os.path.sep:
       # The user passed the filesystem's root as source
       source_name = u'ROOT'
     else:
