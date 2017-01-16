@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The processing status classes."""
+"""Processing status classes."""
 
 import time
 
@@ -59,7 +59,7 @@ class ProcessStatus(object):
   """
 
   def __init__(self):
-    """Initializes the process status object."""
+    """Initializes a process status object."""
     super(ProcessStatus, self).__init__()
     self.display_name = None
     self.identifier = None
@@ -315,7 +315,7 @@ class ProcessingStatus(object):
   """
 
   def __init__(self):
-    """Initializes the processing status object."""
+    """Initializes a processing status object."""
     super(ProcessingStatus, self).__init__()
     self._workers_status = {}
 
