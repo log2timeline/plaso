@@ -5,6 +5,7 @@
 import argparse
 import logging
 import multiprocessing
+import os
 import sys
 import time
 import textwrap
@@ -74,7 +75,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._command_line_arguments = None
     self._enable_sigsegv_handler = False
     self._filter_expression = None
-    self._foreman_verbose = False
     self._front_end = log2timeline.Log2TimelineFrontend()
     self._number_of_extraction_workers = 0
     self._output = None
@@ -83,6 +83,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._status_view_mode = u'linear'
     self._stdout_output_writer = isinstance(
         self._output_writer, cli_tools.StdoutOutputWriter)
+    self._temporary_directory = None
     self._text_prepend = None
     self._worker_memory_limit = None
 
@@ -165,15 +166,20 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    self._single_process_mode = getattr(options, u'single_process', False)
-
-    self._foreman_verbose = getattr(options, u'foreman_verbose', False)
-
     use_zeromq = getattr(options, u'use_zeromq', True)
     self._front_end.SetUseZeroMQ(use_zeromq)
 
-    self._number_of_extraction_workers = getattr(options, u'workers', 0)
+    self._single_process_mode = getattr(options, u'single_process', False)
+
+    self._temporary_directory = getattr(options, u'temporary_directory', None)
+    if (self._temporary_directory and
+        not os.path.isdir(self._temporary_directory)):
+      raise errors.BadConfigOption(
+          u'No such temporary directory: {0:s}'.format(
+              self._temporary_directory))
+
     self._worker_memory_limit = getattr(options, u'worker_memory_limit', None)
+    self._number_of_extraction_workers = getattr(options, u'workers', 0)
 
     # TODO: add code to parse the worker options.
 
@@ -207,26 +213,33 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     argument_group.add_argument(
-        u'--single_process', u'--single-process', dest=u'single_process',
-        action=u'store_true', default=False, help=(
-            u'Indicate that the tool should run in a single process.'))
-
-    argument_group.add_argument(
         u'--disable_zeromq', u'--disable-zeromq', action=u'store_false',
         dest=u'use_zeromq', default=True, help=(
             u'Disable queueing using ZeroMQ. A Multiprocessing queue will be '
             u'used instead.'))
 
     argument_group.add_argument(
+        u'--single_process', u'--single-process', dest=u'single_process',
+        action=u'store_true', default=False, help=(
+            u'Indicate that the tool should run in a single process.'))
+
+    argument_group.add_argument(
+        u'--temporary_directory', u'--temporary-directory',
+        dest=u'temporary_directory', type=str, action=u'store',
+        metavar=u'DIRECTORY', help=(
+            u'Path to the directory that should be used to store temporary '
+            u'files created during extraction.'))
+
+    argument_group.add_argument(
         u'--worker-memory-limit', u'--worker_memory_limit',
         dest=u'worker_memory_limit', action=u'store', type=int,
         metavar=u'SIZE', help=(
-            u'Maximum amount of memory a worker is allowed to consume. '
+            u'Maximum amount of memory a worker process is allowed to consume. '
             u'[defaults to 2 GiB]'))
 
     argument_group.add_argument(
         u'--workers', dest=u'workers', action=u'store', type=int, default=0,
-        help=(u'The number of worker threads [defaults to available system '
+        help=(u'The number of worker processes [defaults to available system '
               u'CPUs minus one].'))
 
   def ListHashers(self):
