@@ -139,6 +139,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._resolver_context = context.Context()
     self._serializers_profiler = None
     self._session_identifier = None
+    self._show_memory_usage = None
     self._status = definitions.PROCESSING_STATUS_IDLE
     self._storage_merge_reader = None
     self._storage_merge_reader_on_hold = None
