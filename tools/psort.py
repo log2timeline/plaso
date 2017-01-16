@@ -725,10 +725,9 @@ class PsortTool(analysis_tool.AnalysisTool):
 
     if isinstance(output_module, output_interface.LinearOutputModule):
       if not self._output_filename:
-        # TODO: Remove "no longer supported" after 1.5 release.
         raise errors.BadConfigOption((
-            u'Output format: {0:s} requires an output file, output to stdout '
-            u'is no longer supported.').format(self._output_format))
+            u'Output format: {0:s} requires an output file').format(
+                self._output_format))
 
       if self._output_filename and os.path.exists(self._output_filename):
         raise errors.BadConfigOption((

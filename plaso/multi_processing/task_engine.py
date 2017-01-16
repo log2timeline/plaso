@@ -172,8 +172,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._storage_writer = None
     self._task_queue = None
     self._task_queue_port = None
-    self._task_manager = task_manager.TaskManager(
-        maximum_number_of_tasks=maximum_number_of_tasks)
+    self._task_manager = task_manager.TaskManager()
     self._temporary_directory = None
     self._text_prepend = None
     self._use_zeromq = use_zeromq
@@ -271,8 +270,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           the sources to process.
       storage_writer (StorageWriter): storage writer for a session storage.
       filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
-          used in path specification extraction. If set, path specs that match
-          the find specification will be processed.
+          used in path specification extraction. If set, path specifications
+          that match the find specification will be processed.
     """
     if self._processing_profiler:
       self._processing_profiler.StartTiming(u'process_sources')
@@ -422,6 +421,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           task = self._task_manager.CreateTask(self._session_identifier)
           task.file_entry_type = event_source.file_entry_type
           task.path_spec = event_source.path_spec
+          logging.debug(
+              u'Scheduled task {0:s} for path specification {1:s}'.format(
+                  task.identifier, task.path_spec.comparable))
           event_source = None
 
           self._number_of_consumed_sources += 1
@@ -683,15 +685,22 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     try:
       self._task_manager.UpdateTaskByIdentifier(task_identifier)
+      return
     except KeyError:
-      if self._task_manager.IsAbandonedTask(task_identifier):
-        logging.debug(
-            u'Worker {0:s} is processing abandoned task: {1:s}.'.format(
-                process.name, task_identifier))
-      else:
-        logging.debug(
-            u'Worker {0:s} is processing unknown task: {1:s}.'.format(
-                process.name, task_identifier))
+      # Avoid nesting exception blocks.
+      pass
+
+    try:
+      task = self._task_manager.GetAbandonedTask(task_identifier)
+      logging.debug(
+          (u'Worker {0:s} is processing abandoned task: {1:s}. It was last '
+           u'updated at {2!s}.').format(
+               process.name, task.identifier, task.last_processing_time))
+      task_manager.AdoptTask(task)
+    except KeyError:
+      logging.debug(
+          u'Worker {0:s} is processing unknown task: {1:s}.'.format(
+              process.name, task_identifier))
 
   def ProcessSources(
       self, session_identifier, source_path_specs, storage_writer,
