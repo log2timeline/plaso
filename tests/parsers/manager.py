@@ -228,6 +228,11 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     manager.ParsersManager.DeregisterParser(TestParserWithPlugins)
     manager.ParsersManager.DeregisterParser(TestParser)
 
+    # Test with a preset name.
+    parser_names = manager.ParsersManager.GetParserAndPluginNames(
+        parser_filter_expression=u'win_gen')
+    self.assertIn(u'lnk', parser_names)
+
   def testGetParserObjectByName(self):
     """Tests the GetParserObjectByName function."""
     manager.ParsersManager.RegisterParser(TestParser)
