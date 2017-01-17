@@ -20,13 +20,7 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
   def __init__(
       self, task_queue, storage_writer, knowledge_base, session_identifier,
-      debug_output=False, enable_profiling=False, filter_object=None,
-      hasher_names_string=None, mount_path=None, parser_filter_expression=None,
-      preferred_year=None, process_archives=False,
-      process_compressed_streams=True, profiling_directory=None,
-      profiling_sample_rate=1000, profiling_type=u'all',
-      temporary_directory=None, text_prepend=None, yara_rules_string=None,
-      **kwargs):
+      processing_configuration, **kwargs):
     """Initializes a worker process.
 
     Non-specified keyword arguments (kwargs) are directly passed to
@@ -38,71 +32,29 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
       knowledge_base (KnowledgeBase): knowledge base which contains
           information from the source data needed for parsing.
       session_identifier (str): identifier of the session.
-      debug_output (Optional[bool]): True if debug output should be enabled.
-      enable_profiling (Optional[bool]): True if profiling should be enabled.
-      filter_object (Optional[objectfilter.Filter]): filter object.
-      hasher_names_string (Optional[str]): comma separated string of names
-          of hashers to use during processing.
-      mount_path (Optional[str]): mount path.
-      parser_filter_expression (Optional[str]): parser filter expression,
-          where None represents all parsers and plugins.
-      preferred_year (Optional[int]): preferred year.
-      process_archives (Optional[bool]): True if archive files should be
-          scanned for file entries.
-      process_compressed_streams (Optional[bool]): True if file content in
-          compressed streams should be processed.
-      profiling_directory (Optional[str]): path to the directory where
-          the profiling sample files should be stored.
-      profiling_sample_rate (Optional[int]): the profiling sample rate.
-          Contains the number of event sources processed.
-      profiling_type (Optional[str]): type of profiling.
-          Supported types are:
-
-          * 'memory' to profile memory usage;
-          * 'parsers' to profile CPU time consumed by individual parsers;
-          * 'processing' to profile CPU time consumed by different parts of
-            the processing;
-          * 'serializers' to profile CPU time consumed by individual
-            serializers.
-      temporary_directory (Optional[str]): path of the directory for temporary
-          files.
-      text_prepend (Optional[str]): text to prepend to every event.
-      yara_rules_string (Optional[str]): unparsed yara rule definitions.
+      processing_configuration (ProcessingConfiguration): processing
+          configuration.
       kwargs: keyword arguments to pass to multiprocessing.Process.
     """
     super(WorkerProcess, self).__init__(**kwargs)
     self._abort = False
     self._buffer_size = 0
     self._current_display_name = u''
-    self._debug_output = debug_output
-    self._enable_profiling = enable_profiling
     self._extraction_worker = None
-    self._filter_object = filter_object
-    self._hasher_names_string = hasher_names_string
     self._knowledge_base = knowledge_base
     self._memory_profiler = None
-    self._mount_path = mount_path
     self._number_of_consumed_events = 0
     self._number_of_consumed_sources = 0
-    self._parser_filter_expression = parser_filter_expression
     self._parser_mediator = None
     self._parsers_profiler = None
-    self._preferred_year = preferred_year
-    self._process_archives = process_archives
-    self._process_compressed_streams = process_compressed_streams
+    self._processing_configuration = processing_configuration
     self._processing_profiler = None
-    self._profiling_directory = profiling_directory
-    self._profiling_sample_rate = profiling_sample_rate
-    self._profiling_type = profiling_type
     self._serializers_profiler = None
     self._session_identifier = session_identifier
     self._status = definitions.PROCESSING_STATUS_INITIALIZED
     self._storage_writer = storage_writer
     self._task = None
     self._task_queue = task_queue
-    self._temporary_directory = temporary_directory
-    self._text_prepend = text_prepend
-    self._yara_rules_string = yara_rules_string
 
   def _GetStatus(self):
     """Returns status information.
@@ -150,37 +102,31 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
   def _Main(self):
     """The main loop."""
-    self._parser_mediator = parsers_mediator.ParserMediator(
-        None, self._knowledge_base, preferred_year=self._preferred_year,
-        temporary_directory=self._temporary_directory)
-
-    if self._filter_object:
-      self._parser_mediator.SetFilterObject(self._filter_object)
-
-    if self._mount_path:
-      self._parser_mediator.SetMountPath(self._mount_path)
-
-    if self._text_prepend:
-      self._parser_mediator.SetTextPrepend(self._text_prepend)
-
     # We need a resolver context per process to prevent multi processing
     # issues with file objects stored in images.
     resolver_context = context.Context()
+
+    self._parser_mediator = parsers_mediator.ParserMediator(
+        None, self._knowledge_base,
+        preferred_year=self._processing_configuration.preferred_year,
+        resolver_context=resolver_context,
+        temporary_directory=self._processing_configuration.temporary_directory)
+
+    self._parser_mediator.SetEventExtractionConfiguration(
+        self._processing_configuration.event_extraction)
+
+    self._parser_mediator.SetInputSourceConfiguration(
+        self._processing_configuration.input_source)
 
     # We need to initialize the parser and hasher objects after the process
     # has forked otherwise on Windows the "fork" will fail with
     # a PickleError for Python modules that cannot be pickled.
     self._extraction_worker = worker.EventExtractionWorker(
-        resolver_context,
-        parser_filter_expression=self._parser_filter_expression,
-        process_archives=self._process_archives,
-        process_compressed_streams=self._process_compressed_streams)
+        parser_filter_expression=(
+            self._processing_configuration.parser_filter_expression))
 
-    if self._hasher_names_string:
-      self._extraction_worker.SetHashers(self._hasher_names_string)
-
-    if self._yara_rules_string:
-      self._extraction_worker.SetYaraRules(self._yara_rules_string)
+    self._extraction_worker.SetExtractionConfiguration(
+        self._processing_configuration.extraction)
 
     self._StartProfiling()
 
@@ -266,10 +212,10 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
           u'unable to process path specification with error: '
           u'{0:s}').format(exception), path_spec=path_spec)
 
-      if self._debug_output:
-        logging.warning(
-            u'Unhandled exception while processing path spec: {0:s}.'.format(
-                self._current_display_name))
+      if self._processing_configuration.debug_output:
+        logging.warning((
+            u'Unhandled exception while processing path specification: '
+            u'{0:s}.').format(self._current_display_name))
         logging.exception(exception)
 
   def _ProcessTask(self, task):
@@ -316,53 +262,51 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
   def _StartProfiling(self):
     """Starts profiling."""
-    if not self._enable_profiling:
+    if not self._processing_configuration:
       return
 
-    if self._profiling_type in (u'all', u'memory'):
+    if self._processing_configuration.profiling.HaveProfileMemory():
       identifier = u'{0:s}-memory'.format(self._name)
       self._memory_profiler = profiler.GuppyMemoryProfiler(
-          identifier, path=self._profiling_directory,
-          profiling_sample_rate=self._profiling_sample_rate)
+          identifier, path=self._processing_configuration.profiling.directory,
+          profiling_sample_rate=(
+              self._processing_configuration.profiling.sample_rate))
       self._memory_profiler.Start()
 
-    if self._profiling_type in (u'all', u'parsers'):
+    if self._processing_configuration.profiling.HaveProfileParsers():
       identifier = u'{0:s}-parsers'.format(self._name)
       self._parsers_profiler = profiler.ParsersProfiler(
-          identifier, path=self._profiling_directory)
+          identifier, path=self._processing_configuration.profiling.directory)
       self._extraction_worker.SetParsersProfiler(self._parsers_profiler)
 
-    if self._profiling_type in (u'all', u'processing'):
+    if self._processing_configuration.profiling.HaveProfileProcessing():
       identifier = u'{0:s}-processing'.format(self._name)
       self._processing_profiler = profiler.ProcessingProfiler(
-          identifier, path=self._profiling_directory)
+          identifier, path=self._processing_configuration.profiling.directory)
       self._extraction_worker.SetProcessingProfiler(self._processing_profiler)
 
-    if self._profiling_type in (u'all', u'serializers'):
+    if self._processing_configuration.profiling.HaveProfileSerializers():
       identifier = u'{0:s}-serializers'.format(self._name)
       self._serializers_profiler = profiler.SerializersProfiler(
-          identifier, path=self._profiling_directory)
+          identifier, path=self._processing_configuration.profiling.directory)
 
   def _StopProfiling(self):
     """Stops profiling."""
-    if not self._enable_profiling:
-      return
-
-    if self._profiling_type in (u'all', u'memory'):
+    if self._memory_profiler:
       self._memory_profiler.Sample()
       self._memory_profiler = None
 
-    if self._profiling_type in (u'all', u'parsers'):
+    if self._parsers_profiler:
       self._extraction_worker.SetParsersProfiler(None)
       self._parsers_profiler.Write()
       self._parsers_profiler = None
 
-    if self._profiling_type in (u'all', u'processing'):
+    if self._processing_profiler:
       self._extraction_worker.SetProcessingProfiler(None)
       self._processing_profiler.Write()
       self._processing_profiler = None
 
-    if self._profiling_type in (u'all', u'serializers'):
+    if self._serializers_profiler:
       self._serializers_profiler.Write()
       self._serializers_profiler = None
 

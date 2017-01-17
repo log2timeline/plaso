@@ -16,6 +16,7 @@ from plaso.cli import extraction_tool
 from plaso.cli import tools as cli_tools
 from plaso.cli import views as cli_views
 from plaso.frontend import log2timeline
+from plaso.engine import configurations
 from plaso.lib import errors
 from plaso.lib import pfilter
 
@@ -82,6 +83,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._status_view_mode = u'linear'
     self._stdout_output_writer = isinstance(
         self._output_writer, cli_tools.StdoutOutputWriter)
+    self._text_prepend = None
 
     self.dependencies_check = True
     self.list_output_modules = False
@@ -151,9 +153,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     if self._output_module == u'list':
       self.list_output_modules = True
 
-    text_prepend = self.ParseStringOption(options, u'text_prepend')
-    if text_prepend:
-      self._front_end.SetTextPrepend(text_prepend)
+    self._text_prepend = self.ParseStringOption(options, u'text_prepend')
 
   def _ParseProcessingOptions(self, options):
     """Parses the processing options.
@@ -208,13 +208,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         u'--single_process', u'--single-process', dest=u'single_process',
         action=u'store_true', default=False, help=(
             u'Indicate that the tool should run in a single process.'))
-
-    argument_group.add_argument(
-        u'--show_memory_usage', u'--show-memory-usage', action=u'store_true',
-        default=False, dest=u'foreman_verbose', help=(
-            u'Indicates that basic memory usage should be included in the '
-            u'output of the process monitor. If this option is not set the '
-            u'tool only displays basic status and counter information.'))
 
     argument_group.add_argument(
         u'--disable_zeromq', u'--disable-zeromq', action=u'store_false',
@@ -510,12 +503,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
           file system.
       UserAbort: if the user initiated an abort.
     """
-    self._front_end.SetDebugMode(self._debug_mode)
-    if self._enable_profiling:
-      self._front_end.EnableProfiling(
-          profiling_directory=self._profiling_directory,
-          profiling_sample_rate=self._profiling_sample_rate,
-          profiling_type=self._profiling_type)
     self._front_end.SetShowMemoryInformation(show_memory=self._foreman_verbose)
 
     self._DetermineSourceType()
@@ -534,21 +521,37 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         preferred_encoding=self.preferred_encoding,
         preferred_year=self._preferred_year)
 
-    storage_writer = self._front_end.CreateStorageWriter(
-        session, self._output)
+    storage_writer = self._front_end.CreateStorageWriter(session, self._output)
     # TODO: handle errors.BadConfigOption
+
+    # TODO: pass preferred_encoding.
+    configuration = configurations.ProcessingConfiguration()
+    configuration.debug_output = self._debug_mode
+    configuration.event_extraction.filter_object = self._filter_object
+    configuration.event_extraction.text_prepend = self._text_prepend
+    configuration.extraction.hasher_names_string = self._hasher_names_string
+    configuration.extraction.process_archives = self._process_archives
+    configuration.extraction.process_compressed_streams = (
+        self._process_compressed_streams)
+    configuration.extraction.yara_rules_string = self._yara_rules_string
+    configuration.filter_file = self._filter_file
+    configuration.filter_object = self._filter_object
+    configuration.input_source.mount_path = self._mount_path
+    configuration.parser_filter_expression = self._parser_filter_expression
+    configuration.preferred_year = self._preferred_year
+    configuration.profiling.directory = self._profiling_directory
+    configuration.profiling.enable = self._enable_profiling
+    configuration.profiling.sample_rate = self._profiling_sample_rate
+    configuration.profiling.profiling_type = self._profiling_type
+    configuration.temporary_directory = self._temporary_directory
 
     processing_status = self._front_end.ProcessSources(
         session, storage_writer, self._source_path_specs, self._source_type,
-        enable_sigsegv_handler=self._enable_sigsegv_handler,
+        configuration, enable_sigsegv_handler=self._enable_sigsegv_handler,
         force_preprocessing=self._force_preprocessing,
-        hasher_names_string=self._hasher_names_string,
         number_of_extraction_workers=self._number_of_extraction_workers,
-        process_archives=self._process_archives,
-        process_compressed_streams=self._process_compressed_streams,
         single_process_mode=self._single_process_mode,
-        status_update_callback=status_update_callback,
-        timezone=self._timezone, yara_rules_string=self._yara_rules_string)
+        status_update_callback=status_update_callback, timezone=self._timezone)
 
     if not processing_status:
       self._output_writer.Write(

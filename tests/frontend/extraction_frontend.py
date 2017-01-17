@@ -9,6 +9,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.containers import sessions
+from plaso.engine import configurations
 from plaso.frontend import extraction_frontend
 from plaso.storage import zip_file as storage_zip_file
 
@@ -43,18 +44,6 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
   # TODO: add test for _PreprocessSource
   # TODO: add test for _PreprocessSetCollectionInformation
   # TODO: add test for _SetTimezone
-
-  def testEnableAndDisableProfiling(self):
-    """Tests the EnableProfiling and DisableProfiling functions."""
-    test_front_end = extraction_frontend.ExtractionFrontend()
-
-    self.assertFalse(test_front_end._enable_profiling)
-
-    test_front_end.EnableProfiling()
-    self.assertTrue(test_front_end._enable_profiling)
-
-    test_front_end.DisableProfiling()
-    self.assertFalse(test_front_end._enable_profiling)
 
   def testGetHashersInformation(self):
     """Tests the GetHashersInformation function."""
@@ -123,13 +112,15 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
 
     source_type = dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE
 
+    configuration = configurations.ProcessingConfiguration()
+
     with shared_test_lib.TempDirectory() as temp_directory:
       storage_file_path = os.path.join(temp_directory, u'storage.plaso')
 
       storage_writer = storage_zip_file.ZIPStorageFileWriter(
           session, storage_file_path)
       test_front_end.ProcessSources(
-          session, storage_writer, [path_spec], source_type)
+          session, storage_writer, [path_spec], source_type, configuration)
 
       storage_file = storage_zip_file.ZIPStorageFile()
       try:
@@ -146,20 +137,10 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
       self.assertEqual(event_object.data_type, u'fs:stat')
       self.assertEqual(event_object.filename, u'/lost+found')
 
-  def testSetDebugMode(self):
-    """Tests the SetDebugMode function."""
-    test_front_end = extraction_frontend.ExtractionFrontend()
-    test_front_end.SetDebugMode(enable_debug=True)
-
   def testSetShowMemoryInformation(self):
     """Tests the SetShowMemoryInformation function."""
     test_front_end = extraction_frontend.ExtractionFrontend()
     test_front_end.SetShowMemoryInformation(show_memory=False)
-
-  def testSetTextPrepend(self):
-    """Tests the SetTextPrepend function."""
-    test_front_end = extraction_frontend.ExtractionFrontend()
-    test_front_end.SetTextPrepend(u'prepended text')
 
   def testSetUseZeroMQ(self):
     """Tests the SetUseZeroMQ function."""

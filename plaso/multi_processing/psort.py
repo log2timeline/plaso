@@ -23,40 +23,19 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
   """Class that defines the psort multi-processing engine."""
 
   _PROCESS_JOIN_TIMEOUT = 5.0
+  _PROCESS_WORKER_TIMEOUT = 15.0 * 60.0
 
   _QUEUE_TIMEOUT = 10 * 60
 
 
-  def __init__(
-      self, debug_output=False, enable_profiling=False,
-      profiling_directory=None, profiling_sample_rate=1000,
-      profiling_type=u'all', use_zeromq=True):
+  def __init__(self, use_zeromq=True):
     """Initializes an engine object.
 
     Args:
-      debug_output (Optional[bool]): True if debug output should be enabled.
-      enable_profiling (Optional[bool]): True if profiling should be enabled.
-      profiling_directory (Optional[str]): path to the directory where
-          the profiling sample files should be stored.
-      profiling_sample_rate (Optional[int]): the profiling sample rate.
-          Contains the number of event sources processed.
-      profiling_type (Optional[str]): type of profiling.
-          Supported types are:
-
-          * 'memory' to profile memory usage;
-          * 'parsers' to profile CPU time consumed by individual parsers;
-          * 'processing' to profile CPU time consumed by different parts of
-            the processing;
-          * 'serializers' to profile CPU time consumed by individual
-            serializers.
       use_zeromq (Optional[bool]): True if ZeroMQ should be used for queuing
           instead of Python's multiprocessing queue.
     """
-    super(PsortMultiProcessEngine, self).__init__(
-        debug_output=debug_output, enable_profiling=enable_profiling,
-        profiling_directory=profiling_directory,
-        profiling_sample_rate=profiling_sample_rate,
-        profiling_type=profiling_type)
+    super(PsortMultiProcessEngine, self).__init__()
     self._completed_analysis_processes = set()
     self._event_queues = {}
     self._merge_task = None
@@ -409,10 +388,12 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       for pid in list(self._process_information_per_pid.keys()):
         self._CheckStatusAnalysisProcess(pid)
 
+      used_memory = self._process_information.GetUsedMemory()
+
       display_name = getattr(self._merge_task, u'identifier', u'')
 
       self._processing_status.UpdateForemanStatus(
-          self._name, self._status, self._pid, display_name,
+          self._name, self._status, self._pid, used_memory, display_name,
           self._number_of_consumed_sources, self._number_of_produced_sources,
           self._number_of_consumed_events, self._number_of_produced_events,
           self._number_of_consumed_event_tags,
@@ -530,13 +511,29 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
               u'the timeout period.').format(process.name, pid))
           processing_status = definitions.PROCESSING_STATUS_NOT_RESPONDING
 
+    process_information = self._process_information_per_pid[pid]
+    used_memory = process_information.GetUsedMemory()
+
     self._processing_status.UpdateWorkerStatus(
-        process.name, processing_status, pid, display_name,
+        process.name, processing_status, pid, used_memory, display_name,
         number_of_consumed_sources, number_of_produced_sources,
         number_of_consumed_events, number_of_produced_events,
         number_of_consumed_event_tags, number_of_produced_event_tags,
         number_of_consumed_errors, number_of_produced_errors,
         number_of_consumed_reports, number_of_produced_reports)
+
+  def _StartWorkerProcess(self, storage_writer):
+    """Creates, starts and registers a worker process.
+
+    Args:
+      storage_writer (StorageWriter): storage writer for a session storage used
+          to create task storage.
+
+    Returns:
+      MultiProcessWorkerProcess: extraction worker process.
+    """
+    # TODO: implement.
+    return
 
   def AnalyzeEvents(
       self, knowledge_base_object, storage_writer, data_location,
