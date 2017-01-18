@@ -75,15 +75,12 @@ class EventExtractionWorker(object):
   _TYPES_WITH_ROOT_METADATA = frozenset([
       dfvfs_definitions.TYPE_INDICATOR_GZIP])
 
-  def __init__(
-      self, resolver_context, parser_filter_expression=None,
-      process_archives=False, process_compressed_streams=True):
+  def __init__(self, parser_filter_expression=None):
     """Initializes the event extraction worker object.
 
     Args:
-      resolver_context (dfvfs.Context): resolver context.
-      parser_filter_expression (Optional[str]): parser filter expression.
-          None represents all parsers and plugins.
+      parser_filter_expression (Optional[str]): parser filter expression,
+          where None represents all parsers and plugins.
 
           The parser filter expression is a comma separated value string that
           denotes a list of parser names to include and/or exclude. Each entry
@@ -93,22 +90,17 @@ class EventExtractionWorker(object):
             plaso/frontend/presets.py for a full list of available presets).
           * A name of a single parser (case insensitive), e.g. msiecf.
           * A glob name for a single parser, e.g. '*msie*' (case insensitive).
-
-      process_archives (Optional[bool]): True if the worker should scan
-          for file entries inside archive files.
-      process_compressed_streams (Optional[bool]): True if file content in
-          compressed streams should be processed.
     """
     super(EventExtractionWorker, self).__init__()
     self._abort = False
     self._analyzers = []
     self._event_extractor = extractors.EventExtractor(
-        resolver_context, parser_filter_expression=parser_filter_expression)
+        parser_filter_expression=parser_filter_expression)
     self._hasher_names = None
-    self._process_archives = process_archives
-    self._process_compressed_streams = process_compressed_streams
+    self._path_spec_extractor = extractors.PathSpecExtractor()
+    self._process_archives = None
+    self._process_compressed_streams = None
     self._processing_profiler = None
-    self._resolver_context = resolver_context
 
     self.last_activity_timestamp = 0.0
     self.processing_status = definitions.PROCESSING_STATUS_IDLE
@@ -351,7 +343,7 @@ class EventExtractionWorker(object):
     """
     try:
       type_indicators = analyzer.Analyzer.GetArchiveTypeIndicators(
-          path_spec, resolver_context=self._resolver_context)
+          path_spec, resolver_context=mediator.resolver_context)
     except IOError as exception:
       type_indicators = []
 
@@ -376,7 +368,7 @@ class EventExtractionWorker(object):
     """
     try:
       type_indicators = analyzer.Analyzer.GetCompressedStreamTypeIndicators(
-          path_spec, resolver_context=self._resolver_context)
+          path_spec, resolver_context=mediator.resolver_context)
     except IOError as exception:
       type_indicators = []
 
@@ -446,11 +438,10 @@ class EventExtractionWorker(object):
 
       if archive_path_spec:
         try:
-          path_spec_extractor = extractors.PathSpecExtractor(
-              self._resolver_context)
+          path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
+              [archive_path_spec], resolver_context=mediator.resolver_context)
 
-          for path_spec in path_spec_extractor.ExtractPathSpecs(
-              [archive_path_spec]):
+          for path_spec in path_spec_generator:
             if self._abort:
               break
 
@@ -584,7 +575,7 @@ class EventExtractionWorker(object):
     logging.debug(
         u'[ProcessFileEntry] processing file entry: {0:s}'.format(display_name))
 
-    reference_count = self._resolver_context.GetFileObjectReferenceCount(
+    reference_count = mediator.resolver_context.GetFileObjectReferenceCount(
         file_entry.path_spec)
 
     try:
@@ -607,10 +598,13 @@ class EventExtractionWorker(object):
           self._ProcessFileEntryDataStream(mediator, file_entry, u'')
 
     finally:
-      if reference_count != self._resolver_context.GetFileObjectReferenceCount(
-          file_entry.path_spec):
+      new_reference_count = (
+          mediator.resolver_context.GetFileObjectReferenceCount(
+              file_entry.path_spec))
+      if reference_count != new_reference_count:
         # Clean up after parsers that do not call close explicitly.
-        if self._resolver_context.ForceRemoveFileObject(file_entry.path_spec):
+        if mediator.resolver_context.ForceRemoveFileObject(
+            file_entry.path_spec):
           logging.warning(
               u'File-object not explicitly closed for file: {0:s}'.format(
                   display_name))
@@ -706,6 +700,35 @@ class EventExtractionWorker(object):
 
     self.last_activity_timestamp = time.time()
 
+  def _SetHashers(self, hasher_names_string):
+    """Sets the hasher names.
+
+    Args:
+      hasher_names_string (str): comma separated names of the hashers
+          to enable, where 'none' disables the hashing analyzer.
+    """
+    if not hasher_names_string or hasher_names_string == u'none':
+      return
+
+    analyzer_object = analyzers_manager.AnalyzersManager.GetAnalyzerInstance(
+        u'hashing')
+    analyzer_object.SetHasherNames(hasher_names_string)
+    self._analyzers.append(analyzer_object)
+
+  def _SetYaraRules(self, yara_rules_string):
+    """Sets the Yara rules.
+
+    Args:
+      yara_rules_string(str): unparsed Yara rule definitions.
+    """
+    if not yara_rules_string:
+      return
+
+    analyzer_object = analyzers_manager.AnalyzersManager.GetAnalyzerInstance(
+        u'yara')
+    analyzer_object.SetRules(yara_rules_string)
+    self._analyzers.append(analyzer_object)
+
   def GetAnalyzerNames(self):
     """Gets the names of the active analyzers.
 
@@ -726,7 +749,7 @@ class EventExtractionWorker(object):
     self.processing_status = definitions.PROCESSING_STATUS_RUNNING
 
     file_entry = path_spec_resolver.Resolver.OpenFileEntry(
-        path_spec, resolver_context=self._resolver_context)
+        path_spec, resolver_context=mediator.resolver_context)
 
     if file_entry is None:
       display_name = mediator.GetDisplayNameForPathSpec(path_spec)
@@ -749,20 +772,17 @@ class EventExtractionWorker(object):
       self.last_activity_timestamp = time.time()
       self.processing_status = definitions.PROCESSING_STATUS_IDLE
 
-  def SetHashers(self, hasher_names_string):
-    """Sets the hasher names.
+  # TODO: move the functionality of this method into the constructor.
+  def SetExtractionConfiguration(self, configuration):
+    """Sets the extraction configuration settings.
 
     Args:
-      hasher_names_string (str): comma separated names of the hashers
-          to enable, where 'none' disables the hashing analyzer.
+      configuration (ExtractionConfiguration): extraction configuration.
     """
-    if not hasher_names_string or hasher_names_string == u'none':
-      return
-
-    analyzer_object = analyzers_manager.AnalyzersManager.GetAnalyzerInstance(
-        u'hashing')
-    analyzer_object.SetHasherNames(hasher_names_string)
-    self._analyzers.append(analyzer_object)
+    self._SetHashers(configuration.hasher_names_string)
+    self._process_archives = configuration.process_archives
+    self._process_compressed_streams = configuration.process_compressed_streams
+    self._SetYaraRules(configuration.yara_rules_string)
 
   def SetParsersProfiler(self, parsers_profiler):
     """Sets the parsers profiler.
@@ -779,17 +799,6 @@ class EventExtractionWorker(object):
       processing_profiler (ProcessingProfiler): processing profile.
     """
     self._processing_profiler = processing_profiler
-
-  def SetYaraRules(self, yara_rules_string):
-    """Sets the Yara rules.
-
-    Args:
-      yara_rules_string(str): unparsed Yara rule definitions.
-    """
-    analyzer_object = analyzers_manager.AnalyzersManager.GetAnalyzerInstance(
-        u'yara')
-    analyzer_object.SetRules(yara_rules_string)
-    self._analyzers.append(analyzer_object)
 
   def SignalAbort(self):
     """Signals the extraction worker to abort."""

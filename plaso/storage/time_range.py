@@ -4,20 +4,19 @@
 class TimeRange(object):
   """A class that defines a date and time range.
 
-  The timestamp are integers containing the number of micro seconds
+  The timestamp are integers containing the number of microseconds
   since January 1, 1970, 00:00:00 UTC.
 
   Attributes:
-    start_timestamp: integer containing the timestamp that marks
-                     the start of the range.
-    end_timestamp: integer containing the timestamp that marks
-                   the end of the range.
+    duration (int): duration of the range in microseconds.
+    end_timestamp (int): timestamp that marks the end of the range.
+    start_timestamp (int): timestamp that marks the start of the range.
   """
 
   def __init__(self, start_timestamp, end_timestamp):
     """Initializes a date and time range object.
 
-    The timestamp are integers containing the number of micro seconds
+    The timestamp are integers containing the number of microseconds
     since January 1, 1970, 00:00:00 UTC.
 
     Args:
@@ -38,5 +37,6 @@ class TimeRange(object):
           u'Invalid start must be earlier than end timestamp.')
 
     super(TimeRange, self).__init__()
+    self.duration = end_timestamp - start_timestamp
     self.end_timestamp = end_timestamp
     self.start_timestamp = start_timestamp

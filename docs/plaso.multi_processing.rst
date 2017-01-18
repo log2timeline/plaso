@@ -44,14 +44,6 @@ plaso.multi_processing.plaso_xmlrpc module
     :undoc-members:
     :show-inheritance:
 
-plaso.multi_processing.process_info module
-------------------------------------------
-
-.. automodule:: plaso.multi_processing.process_info
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.multi_processing.psort module
 -----------------------------------
 
