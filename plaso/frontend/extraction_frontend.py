@@ -40,7 +40,6 @@ class ExtractionFrontend(frontend.Frontend):
     self._filter_expression = None
     self._filter_object = None
     self._mount_path = None
-    self._parser_names = None
     self._profiling_directory = None
     self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
     self._profiling_type = u'all'
@@ -216,14 +215,12 @@ class ExtractionFrontend(frontend.Frontend):
 
   def CreateSession(
       self, command_line_arguments=None, filter_file=None,
-      parser_filter_expression=None, preferred_encoding=u'utf-8',
-      preferred_year=None):
+      preferred_encoding=u'utf-8', preferred_year=None):
     """Creates a session attribute container.
 
     Args:
       command_line_arguments (Optional[str]): the command line arguments.
       filter_file (Optional[str]): path to a file with find specifications.
-      parser_filter_expression (Optional[str]): parser filter expression.
       preferred_encoding (Optional[str]): preferred encoding.
       preferred_year (Optional[int]): preferred year.
 
@@ -232,17 +229,10 @@ class ExtractionFrontend(frontend.Frontend):
     """
     session = sessions.Session()
 
-    parser_and_plugin_names = [
-        parser_name for parser_name in (
-            parsers_manager.ParsersManager.GetParserAndPluginNames(
-                parser_filter_expression=parser_filter_expression))]
-
     session.command_line_arguments = command_line_arguments
-    session.enabled_parser_names = parser_and_plugin_names
     session.filter_expression = self._filter_expression
     session.filter_file = filter_file
     session.debug_mode = self._debug_mode
-    session.parser_filter_expression = parser_filter_expression
     session.preferred_encoding = preferred_encoding
     session.preferred_year = preferred_year
 
@@ -359,7 +349,7 @@ class ExtractionFrontend(frontend.Frontend):
 
     Raises:
       SourceScannerError: if the source scanner could not find a supported
-                          file system.
+          file system.
       UserAbort: if the user initiated an abort.
     """
     if source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
@@ -373,24 +363,28 @@ class ExtractionFrontend(frontend.Frontend):
     if force_preprocessing or source_type in self._SOURCE_TYPES_TO_PREPROCESS:
       self._PreprocessSources(engine, source_path_specs)
 
-    if not session.parser_filter_expression:
+    if not processing_configuration.parser_filter_expression:
       operating_system = engine.knowledge_base.GetValue(
           u'operating_system')
       operating_system_product = engine.knowledge_base.GetValue(
           u'operating_system_product')
       operating_system_version = engine.knowledge_base.GetValue(
           u'operating_system_version')
-      session.parser_filter_expression = self._GetParserFilterPreset(
+      parser_filter_expression = self._GetParserFilterPreset(
           operating_system, operating_system_product, operating_system_version)
 
-      if session.parser_filter_expression:
+      if parser_filter_expression:
         logging.info(u'Parser filter expression changed to: {0:s}'.format(
-            session.parser_filter_expression))
+            parser_filter_expression))
 
-    self._parser_names = []
-    for _, parser_class in parsers_manager.ParsersManager.GetParsers(
-        parser_filter_expression=session.parser_filter_expression):
-      self._parser_names.append(parser_class.NAME)
+      processing_configuration.parser_filter_expression = (
+          parser_filter_expression)
+      session.enabled_parser_names = list(
+          parsers_manager.ParsersManager.GetParserAndPluginNames(
+              parser_filter_expression=(
+                  processing_configuration.parser_filter_expression)))
+      session.parser_filter_expression = (
+          processing_configuration.parser_filter_expression)
 
     self._SetTimezone(engine.knowledge_base, timezone)
 

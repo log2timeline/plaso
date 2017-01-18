@@ -77,19 +77,20 @@ class ParsersManager(object):
       category (str): parser preset categories.
 
     Returns:
-      list[str]: parser names.
+      list[str]: parser names in alphabetical order.
     """
-    parser_names = []
     if category not in presets.CATEGORIES:
-      return parser_names
+      return []
 
+    parser_names = set()
     for element_name in presets.CATEGORIES.get(category):
       if element_name in presets.CATEGORIES:
-        parser_names.extend(cls._GetParsersFromPresetCategory(element_name))
+        category_parser_names = cls._GetParsersFromPresetCategory(element_name)
+        parser_names.update(category_parser_names)
       else:
-        parser_names.append(element_name)
+        parser_names.add(element_name)
 
-    return parser_names
+    return sorted(parser_names)
 
   @classmethod
   def _ReduceParserFilters(cls, includes, excludes):
