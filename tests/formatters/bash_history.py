@@ -14,7 +14,7 @@ class BashHistoryFormatterTest(test_lib.EventFormatterTestCase):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self._formatter = bash_history.BashHistoryFormatter()
+    self._formatter = bash_history.BashHistoryEventFormatter()
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
@@ -26,7 +26,7 @@ class BashHistoryFormatterTest(test_lib.EventFormatterTestCase):
   def testGetMessages(self):
     """Tests the GetMessages method."""
     mediator = None
-    event = bash_parser.BashEvent(1457771210, u'cd plaso')
+    event = bash_parser.BashHistoryEvent(1457771210, u'cd plaso')
 
     expected_messages = (u'Command executed: cd plaso', u'cd plaso')
     messages = self._formatter.GetMessages(mediator, event)

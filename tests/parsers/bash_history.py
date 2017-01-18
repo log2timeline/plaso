@@ -14,7 +14,7 @@ class BashHistoryTest(test_lib.ParserTestCase):
 
   def setUp(self):
     """Makes preparations before running an individual test."""
-    self._parser_object = bash_history.BashParser()
+    self._parser_object = bash_history.BashHistoryParser()
 
   @shared_test_lib.skipUnlessHasTestFile([u'bash_history_desync'])
   def testParsingExtractionDesync(self):

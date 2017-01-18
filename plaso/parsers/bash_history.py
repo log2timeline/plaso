@@ -11,7 +11,7 @@ from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
-class BashEvent(time_events.PosixTimeEvent):
+class BashHistoryEvent(time_events.PosixTimeEvent):
   """Convenience class for events from a Bash history file."""
 
   DATA_TYPE = u'bash:history:command'
@@ -24,12 +24,12 @@ class BashEvent(time_events.PosixTimeEvent):
           that the command was run.
       command (str): command that was executed.
     """
-    super(BashEvent, self).__init__(
+    super(BashHistoryEvent, self).__init__(
         timestamp, eventdata.EventTimestamp.ADDED_TIME)
     self.command = command
 
 
-class BashParser(text_parser.PyparsingMultiLineTextParser):
+class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
   """Parses events from Bash history files."""
 
   NAME = u'bash'
@@ -40,7 +40,7 @@ class BashParser(text_parser.PyparsingMultiLineTextParser):
 
   # Matches timestamps between ~2001 and ~2033, by which time this code
   # has hopefully been deprecated.
-  _TIMESTAMP = pyparsing.Suppress('#') + pyparsing.Word(
+  _TIMESTAMP = pyparsing.Suppress(u'#') + pyparsing.Word(
       pyparsing.nums, exact=10).setParseAction(
           text_parser.PyParseIntCast).setResultsName(u'timestamp')
 
@@ -49,9 +49,9 @@ class BashParser(text_parser.PyparsingMultiLineTextParser):
 
   _LINE_GRAMMAR = _TIMESTAMP + _COMMAND + pyparsing.lineEnd()
 
-  _VERIFICATION_GRAMMAR = (pyparsing.Regex(r'^\s?[^#].*?$', re.MULTILINE) +
-                           _TIMESTAMP +
-                           pyparsing.NotAny(pyparsing.pythonStyleComment))
+  _VERIFICATION_GRAMMAR = (
+    pyparsing.Regex(r'^\s?[^#].*?$', re.MULTILINE) + _TIMESTAMP +
+    pyparsing.NotAny(pyparsing.pythonStyleComment))
 
   LINE_STRUCTURES = [(u'log_entry', _LINE_GRAMMAR)]
 
@@ -68,7 +68,7 @@ class BashParser(text_parser.PyparsingMultiLineTextParser):
       UnableToParseFile: if an unsupported key is provided.
     """
     if key == u'log_entry':
-      event_object = BashEvent(structure.timestamp, structure.command)
+      event_object = BashHistoryEvent(structure.timestamp, structure.command)
       mediator.ProduceEvent(event_object)
     else:
       raise errors.UnableToParseFile(u'Unsupported key: {0:s}'.format(key))
@@ -89,4 +89,4 @@ class BashParser(text_parser.PyparsingMultiLineTextParser):
       return True
 
 
-manager.ParsersManager.RegisterParser(BashParser)
+manager.ParsersManager.RegisterParser(BashHistoryParser)

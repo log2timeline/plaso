@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
-"""The Bash history formatter."""
+"""The Bash history event formatter."""
 from plaso.formatters import interface
 from plaso.formatters import manager
 
 
-class BashHistoryFormatter(interface.EventFormatter):
+class BashHistoryEventFormatter(interface.EventFormatter):
   """Formatter for Bash history events."""
 
-  # Identifier for event data
   DATA_TYPE = u'bash:history:command'
 
   FORMAT_STRING = u'Command executed: {command}'
@@ -17,4 +16,4 @@ class BashHistoryFormatter(interface.EventFormatter):
   SOURCE_LONG = u'Bash History'
 
 
-manager.FormattersManager.RegisterFormatter(BashHistoryFormatter)
+manager.FormattersManager.RegisterFormatter(BashHistoryEventFormatter)
