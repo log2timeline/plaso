@@ -4,6 +4,14 @@ plaso.engine package
 Submodules
 ----------
 
+plaso.engine.configurations module
+----------------------------------
+
+.. automodule:: plaso.engine.configurations
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.engine.engine module
 --------------------------
 
@@ -40,6 +48,14 @@ plaso.engine.plaso_queue module
 -------------------------------
 
 .. automodule:: plaso.engine.plaso_queue
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+plaso.engine.process_info module
+--------------------------------
+
+.. automodule:: plaso.engine.process_info
     :members:
     :undoc-members:
     :show-inheritance:

@@ -13,6 +13,7 @@ class SyslogLineFormatter(interface.ConditionalEventFormatter):
   FORMAT_STRING_SEPARATOR = u''
 
   FORMAT_STRING_PIECES = [
+      u'{severity} ',
       u'[',
       u'{reporter}',
       u', pid: {pid}',
