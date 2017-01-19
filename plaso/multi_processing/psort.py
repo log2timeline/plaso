@@ -191,7 +191,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       used_memory = process_information.GetUsedMemory()
 
       if used_memory > self._worker_memory_limit:
-        logging.debug((
+        logging.warning((
             u'Process: {0:s} (PID: {1:d}) killed because it exceeded the '
             u'memory limit: {2:d}.').format(
                 process.name, pid, self._worker_memory_limit))
@@ -563,7 +563,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       status_update_callback (Optional[function]): callback function for status
           updates.
       worker_memory_limit (Optional[int]): maximum amount of memory a worker is
-          allowed to consume, where None represents 2 GiB.
+          allowed to consume, where None represents the default memory limit.
     """
     if not analysis_plugins:
       return

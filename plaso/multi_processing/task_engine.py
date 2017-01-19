@@ -680,7 +680,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       status_update_callback (Optional[function]): callback function for status
           updates.
       worker_memory_limit (Optional[int]): maximum amount of memory a worker is
-          allowed to consume, where None represents 2 GiB.
+          allowed to consume, where None represents the default memory limit.
 
     Returns:
       ProcessingStatus: processing status.

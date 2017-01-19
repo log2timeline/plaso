@@ -112,7 +112,7 @@ class MultiProcessEngine(engine.BaseEngine):
     used_memory = process_information.GetUsedMemory()
 
     if used_memory > self._worker_memory_limit:
-      logging.debug((
+      logging.warning((
           u'Process: {0:s} (PID: {1:d}) killed because it exceeded the '
           u'memory limit: {2:d}.').format(
               process.name, pid, self._worker_memory_limit))
