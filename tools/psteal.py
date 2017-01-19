@@ -164,6 +164,7 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
         command_line_arguments=self._command_line_arguments,
         filter_file=self._filter_file,
         preferred_encoding=self.preferred_encoding,
+        preferred_time_zone=self._preferred_time_zone,
         preferred_year=self._preferred_year)
 
     storage_writer = self._extraction_front_end.CreateStorageWriter(
@@ -185,8 +186,7 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
         force_preprocessing=self._force_preprocessing,
         number_of_extraction_workers=self._number_of_extraction_workers,
         single_process_mode=self._single_process_mode,
-        status_update_callback=status_update_callback,
-        timezone=self._timezone)
+        status_update_callback=status_update_callback)
 
     if not processing_status:
       self._output_writer.Write(
