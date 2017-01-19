@@ -255,5 +255,5 @@ class OutputMediator(object):
     """
     try:
       self._timezone = pytz.timezone(timezone)
-    except pytz.UnknownTimeZoneError:
-      raise ValueError(u'Unsupported timezone: {0:s}'.format(timezone))
+    except (AttributeError, pytz.UnknownTimeZoneError):
+      raise ValueError(u'Unsupported timezone: {0!s}'.format(timezone))
