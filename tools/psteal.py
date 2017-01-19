@@ -231,7 +231,7 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     """
     self._output_module = self._analysis_front_end.CreateOutputModule(
         self._output_format, preferred_encoding=self.preferred_encoding,
-        timezone=self._timezone)
+        timezone=self._preferred_time_zone)
 
     if isinstance(self._output_module, output_interface.LinearOutputModule):
       if not self._output_filename:
