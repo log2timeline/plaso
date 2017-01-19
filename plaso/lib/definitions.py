@@ -36,6 +36,8 @@ PROCESSING_ERROR_STATUS = frozenset([
     PROCESSING_STATUS_KILLED])
 
 RESERVED_VARIABLE_NAMES = frozenset([
+    u'_store_index',
+    u'_store_number',
     u'body',
     u'data_type',
     u'display_name',
@@ -52,8 +54,6 @@ RESERVED_VARIABLE_NAMES = frozenset([
     u'regvalue',
     u'source_long',
     u'source_short',
-    u'store_index',
-    u'store_number',
     u'tag',
     u'text_prepend',
     u'timestamp',

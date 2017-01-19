@@ -581,7 +581,7 @@ class PregFrontend(extraction_frontend.ExtractionFrontend):
 
       paths = self.GetRegistryFilePaths(types)
 
-    self.knowledge_base_object.SetDefaultCodepage(codepage)
+    self.knowledge_base_object.SetCodepage(codepage)
 
     registry_helpers = []
     for path in paths:

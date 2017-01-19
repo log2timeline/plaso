@@ -518,6 +518,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         command_line_arguments=self._command_line_arguments,
         filter_file=self._filter_file,
         preferred_encoding=self.preferred_encoding,
+        preferred_time_zone=self._preferred_time_zone,
         preferred_year=self._preferred_year)
 
     storage_writer = self._front_end.CreateStorageWriter(session, self._output)
@@ -550,7 +551,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         force_preprocessing=self._force_preprocessing,
         number_of_extraction_workers=self._number_of_extraction_workers,
         single_process_mode=self._single_process_mode,
-        status_update_callback=status_update_callback, timezone=self._timezone)
+        status_update_callback=status_update_callback)
 
     if not processing_status:
       self._output_writer.Write(

@@ -176,52 +176,17 @@ class ExtractionFrontend(frontend.Frontend):
 
     logging.debug(u'Preprocessing done.')
 
-  # TODO: have the frontend fill collection information gradually
-  # and set it as the last step of preprocessing?
-  # Split in:
-  # * extraction preferences (user preferences)
-  # * extraction settings (actual settings used)
-  # * output/storage settings
-  # * processing settings
-  # * source settings (support more than one source)
-  #   * credentials (encryption)
-  #   * mount point
-
-  def _SetTimezone(self, knowledge_base, timezone):
-    """Sets the timezone in the knowledge base.
-
-    Args:
-      knowledge_base (KnowledgeBase): contains information from the source
-          data needed for processing.
-      timezone (str): timezone.
-    """
-    time_zone_str = knowledge_base.GetValue(u'time_zone_str')
-    if time_zone_str:
-      default_timezone = time_zone_str
-    else:
-      default_timezone = timezone
-
-    if not default_timezone:
-      default_timezone = u'UTC'
-
-    logging.info(u'Setting timezone to: {0:s}'.format(default_timezone))
-
-    try:
-      knowledge_base.SetTimezone(default_timezone)
-    except ValueError:
-      logging.warning(
-          u'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
-              default_timezone, knowledge_base.timezone.zone))
-
   def CreateSession(
       self, command_line_arguments=None, filter_file=None,
-      preferred_encoding=u'utf-8', preferred_year=None):
-    """Creates a session attribute container.
+      preferred_encoding=u'utf-8', preferred_time_zone=None,
+      preferred_year=None):
+    """Creates a session attribute containiner.
 
     Args:
       command_line_arguments (Optional[str]): the command line arguments.
       filter_file (Optional[str]): path to a file with find specifications.
       preferred_encoding (Optional[str]): preferred encoding.
+      preferred_time_zone (Optional[str]): preferred time zone.
       preferred_year (Optional[int]): preferred year.
 
     Returns:
@@ -234,6 +199,7 @@ class ExtractionFrontend(frontend.Frontend):
     session.filter_file = filter_file
     session.debug_mode = self._debug_mode
     session.preferred_encoding = preferred_encoding
+    session.preferred_time_zone = preferred_time_zone
     session.preferred_year = preferred_year
 
     return session
@@ -321,7 +287,7 @@ class ExtractionFrontend(frontend.Frontend):
       self, session, storage_writer, source_path_specs, source_type,
       processing_configuration, enable_sigsegv_handler=False,
       force_preprocessing=False, number_of_extraction_workers=0,
-      single_process_mode=False, status_update_callback=None, timezone=u'UTC'):
+      single_process_mode=False, status_update_callback=None):
     """Processes the sources.
 
     Args:
@@ -342,7 +308,6 @@ class ExtractionFrontend(frontend.Frontend):
           run in single process mode.
       status_update_callback (Optional[function]): callback function for status
           updates.
-      timezone (Optional[datetime.tzinfo]): timezone.
 
     Returns:
       ProcessingStatus: processing status or None.
@@ -386,7 +351,14 @@ class ExtractionFrontend(frontend.Frontend):
       session.parser_filter_expression = (
           processing_configuration.parser_filter_expression)
 
-    self._SetTimezone(engine.knowledge_base, timezone)
+    if session.preferred_time_zone:
+      try:
+        engine.knowledge_base.SetTimeZone(session.preferred_time_zone)
+      except ValueError:
+        logging.warning(
+            u'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
+                session.preferred_time_zone,
+                engine.knowledge_base.time_zone.zone))
 
     filter_find_specs = None
     if processing_configuration.filter_file:

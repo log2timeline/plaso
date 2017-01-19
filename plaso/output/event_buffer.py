@@ -42,9 +42,10 @@ class _EventsHeap(object):
     """
     # TODO: remove store number and store index once no longer exposed.
     # Replace them by event specific attributes relevant to sorting.
+    store_number = getattr(event, u'_store_number', None)
+    store_index = getattr(event, u'_store_index', None)
     heap_values = (
-        event.timestamp, event.timestamp_desc, event.store_number,
-        event.store_index, event)
+        event.timestamp, event.timestamp_desc, store_number, store_index, event)
     heapq.heappush(self._heap, heap_values)
 
   def PushEvents(self, events):

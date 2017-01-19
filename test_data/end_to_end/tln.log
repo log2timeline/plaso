@@ -9,15 +9,15 @@ Time|Source|Host|User|Description
 1456708543|LOG|:|-|2016-02-29T01:15:43+00:00; Content Modification Time; [---] testing leap year in parsing, events take place in 2012 ---
 1458774078|LOG|myhostname.myhost.com|-|2016-03-23T23:01:18+00:00; Content Modification Time; [somrandomexe, pid: 19] This syslog message has a fractional value for seconds.
 1458774078|LOG|myhostname.myhost.com|-|2016-03-23T23:01:18+00:00; Content Modification Time; [somrandomexe, pid: 1915] This syslog message is brought to you by me (and not the other guy)
-1476630823|FILE|None|-|2016-10-16T15:13:43+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file
-1476630823|FILE|None|-|2016-10-16T15:13:43+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file
-1476630823|FILE|None|-|2016-10-16T15:13:43+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file
-1476630823|FILE|None|-|2016-10-16T15:13:43+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file
-1476630824|FILE|None|-|2016-10-16T15:13:44+00:00; atime; OS:/tmp/test/test_data/syslog Type: file
-1476630824|FILE|None|-|2016-10-16T15:13:44+00:00; atime; OS:/tmp/test/test_data/syslog Type: file
+1476630823|FILE|-|-|2016-10-16T15:13:43+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file
+1476630823|FILE|-|-|2016-10-16T15:13:43+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file
+1476630823|FILE|-|-|2016-10-16T15:13:43+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file
+1476630823|FILE|-|-|2016-10-16T15:13:43+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file
+1476630824|FILE|-|-|2016-10-16T15:13:44+00:00; atime; OS:/tmp/test/test_data/syslog Type: file
+1476630824|FILE|-|-|2016-10-16T15:13:44+00:00; atime; OS:/tmp/test/test_data/syslog Type: file
 1479431720|LOG|myhostname.myhost.com|-|2016-11-18T01:15:20+00:00; Content Modification Time; [aprocess, pid: 10100] This is a multi-line message that screws up	many syslog parsers.
 1479431743|LOG|:|-|2016-11-18T01:15:43+00:00; Content Modification Time; [---] last message repeated 5 times ---
-1479457820|LOG|None|-|2016-11-18T08:30:20+00:00; Content Modification Time; [kernel] [997.390602] sda2: rw=0, want=65, limit=2
+1479457820|LOG|-|-|2016-11-18T08:30:20+00:00; Content Modification Time; [kernel] [997.390602] sda2: rw=0, want=65, limit=2
 1479457880|LOG|victoria|-|2016-11-18T08:31:20+00:00; Content Modification Time; [kernel] [998.390602] sda2: rw=0, want=66, limit=2
 1482083672|LOG|myhostname.myhost.com|-|2016-12-18T17:54:32+00:00; Content Modification Time; [anacron, pid: 1234] No true exit can exist (124 job run)
 1483206872|LOG|myhostname.myhost.com|-|2016-12-31T17:54:32+00:00; Content Modification Time; [/sbin/anacron, pid: 1234] Another one just like this (124 job run)

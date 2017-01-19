@@ -165,6 +165,4 @@ class AnalysisPluginTestCase(shared_test_lib.BaseTestCase):
           identifier=identifier, user_directory=user.get(u'path', None),
           username=user.get(u'name', None))
 
-      # TODO: refactor the use of store number.
-      user_account_artifact.store_number = 0
-      knowledge_base_object.SetUserAccount(user_account_artifact)
+      knowledge_base_object.AddUserAccount(user_account_artifact)
