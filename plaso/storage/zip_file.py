@@ -1104,7 +1104,10 @@ class ZIPStorageFile(interface.BaseFileStorage):
     if not event:
       return
 
-    self._event_heap.PushEvent(event, stream_number, event.store_index)
+    # TODO: refactor.
+    store_index = getattr(event, u'_store_index', None)
+
+    self._event_heap.PushEvent(event, stream_number, store_index)
 
     reference_timestamp = event.timestamp
     while event.timestamp == reference_timestamp:
@@ -1112,7 +1115,10 @@ class ZIPStorageFile(interface.BaseFileStorage):
       if not event:
         break
 
-      self._event_heap.PushEvent(event, stream_number, event.store_index)
+      # TODO: refactor.
+      store_index = getattr(event, u'_store_index', None)
+
+      self._event_heap.PushEvent(event, stream_number, store_index)
 
   def _GetEvent(self, stream_number, entry_index=-1):
     """Reads an event from a specific stream.
@@ -1132,8 +1138,9 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     event = self._DeserializeAttributeContainer(event_data, u'event')
 
-    event.store_number = stream_number
-    event.store_index = entry_index
+    # TODO: refactor.
+    setattr(event, u'_store_number', stream_number)
+    setattr(event, u'_store_index', entry_index)
 
     return event
 
@@ -1562,8 +1569,11 @@ class ZIPStorageFile(interface.BaseFileStorage):
         next_event.timestamp != event.timestamp):
       self._FillEventHeapFromStream(stream_number)
 
+    # TODO: refactor.
+    store_number = getattr(event, u'_store_number', None)
+    store_index = getattr(event, u'_store_index', None)
     event.tag = self._ReadEventTagByIdentifier(
-        event.store_number, event.store_index, event.uuid)
+        store_number, store_index, event.uuid)
 
     return event
 
@@ -1632,8 +1642,10 @@ class ZIPStorageFile(interface.BaseFileStorage):
         if time_range and event.timestamp > time_range.end_timestamp:
           continue
 
-        self._event_heap.PushEvent(
-            event, stream_number, event.store_number)
+        # TODO: refactor.
+        store_index = getattr(event, u'_store_index', None)
+
+        self._event_heap.PushEvent(event, stream_number, store_index)
 
         reference_timestamp = event.timestamp
         while event.timestamp == reference_timestamp:
@@ -1641,8 +1653,10 @@ class ZIPStorageFile(interface.BaseFileStorage):
           if not event:
             break
 
-          self._event_heap.PushEvent(
-              event, stream_number, event.store_number)
+          # TODO: refactor.
+          store_index = getattr(event, u'_store_index', None)
+
+          self._event_heap.PushEvent(event, stream_number, store_index)
 
   def _OpenRead(self):
     """Opens the storage file for reading."""
@@ -2796,8 +2810,9 @@ class ZIPStorageFile(interface.BaseFileStorage):
       system_configuration = self._ReadAttributeContainerFromStreamEntry(
           data_stream, u'preprocess')
 
+      # TODO: replace stream_number by session_identifier.
       knowledge_base.ReadSystemConfigurationArtifact(
-          stream_number, system_configuration)
+          system_configuration, session_identifier=stream_number)
 
   def WritePreprocessingInformation(self, knowledge_base):
     """Writes preprocessing information.

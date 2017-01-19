@@ -64,8 +64,8 @@ class CLITool(object):
     self._input_reader = input_reader
     self._log_file = None
     self._output_writer = output_writer
+    self._preferred_time_zone = None
     self._quiet_mode = False
-    self._timezone = u'UTC'
     self._views_format_type = views.ViewsFactory.FORMAT_TYPE_CLI
 
     self.list_timezones = False
@@ -218,19 +218,19 @@ class CLITool(object):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    timezone_string = self.ParseStringOption(options, u'timezone')
-    if isinstance(timezone_string, py2to3.STRING_TYPES):
-      if timezone_string.lower() == u'list':
+    time_zone_string = self.ParseStringOption(options, u'timezone')
+    if isinstance(time_zone_string, py2to3.STRING_TYPES):
+      if time_zone_string.lower() == u'list':
         self.list_timezones = True
 
-      elif timezone_string:
+      elif time_zone_string:
         try:
-          pytz.timezone(timezone_string)
+          pytz.timezone(time_zone_string)
         except pytz.UnknownTimeZoneError:
           raise errors.BadConfigOption(
-              u'Unknown timezone: {0:s}'.format(timezone_string))
+              u'Unknown time zone: {0:s}'.format(time_zone_string))
 
-        self._timezone = timezone_string
+        self._preferred_time_zone = time_zone_string
 
   def AddBasicOptions(self, argument_group):
     """Adds the basic options to the argument group.

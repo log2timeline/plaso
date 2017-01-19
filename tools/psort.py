@@ -202,7 +202,8 @@ class PsortTool(analysis_tool.AnalysisTool):
 
     time_slice_event_timestamp = None
     if time_slice_event_time_string:
-      timezone = pytz.timezone(self._timezone)
+      preferred_time_zone = self._preferred_time_zone or u'UTC'
+      timezone = pytz.timezone(preferred_time_zone)
       time_slice_event_timestamp = timelib.Timestamp.FromTimeString(
           time_slice_event_time_string, timezone=timezone)
       if time_slice_event_timestamp is None:
@@ -720,9 +721,10 @@ class PsortTool(analysis_tool.AnalysisTool):
       BadConfigOption: when a configuration parameter fails validation.
       RuntimeError: if a non-recoverable situation is encountered.
     """
+    preferred_time_zone = self._preferred_time_zone or u'UTC'
     output_module = self._front_end.CreateOutputModule(
         self._output_format, preferred_encoding=self.preferred_encoding,
-        timezone=self._timezone)
+        timezone=preferred_time_zone)
 
     if isinstance(output_module, output_interface.LinearOutputModule):
       if not self._output_filename:

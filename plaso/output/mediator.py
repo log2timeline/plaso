@@ -133,13 +133,14 @@ class OutputMediator(object):
     if hostname:
       return hostname
 
-    # TODO: remove the need to pass store number.
-    store_number = getattr(event, u'store_number', None)
-    if store_number is None:
+    # TODO: replace store_number by session_identifier.
+    session_identifier = getattr(event, u'_store_number', None)
+    if session_identifier is None:
       return default_hostname
 
-    return self._knowledge_base.GetHostname(
-        store_number, default_hostname=default_hostname)
+    hostname = self._knowledge_base.GetHostname(
+        session_identifier=session_identifier)
+    return hostname or default_hostname
 
   # TODO: Fix this function when the MFT parser has been implemented.
   def GetMACBRepresentation(self, event):
@@ -233,11 +234,15 @@ class OutputMediator(object):
     if username and username != u'-':
       return username
 
-    # TODO: remove the need to pass store number.
+    # TODO: replace store_number by session_identifier.
+    session_identifier = getattr(event, u'_store_number', None)
+    if session_identifier is None:
+      return default_username
+
     user_sid = getattr(event, u'user_sid', None)
-    store_number = getattr(event, u'store_number', None)
-    return self._knowledge_base.GetUsername(
-        user_sid, store_number, default_username=default_username)
+    username = self._knowledge_base.GetUsernameByIdentifier(
+        user_sid, session_identifier=session_identifier)
+    return username or default_username
 
   def SetTimezone(self, timezone):
     """Sets the timezone.
@@ -248,6 +253,9 @@ class OutputMediator(object):
     Raises:
       ValueError: if the timezone is not supported.
     """
+    if not timezone:
+      return
+
     try:
       self._timezone = pytz.timezone(timezone)
     except pytz.UnknownTimeZoneError:

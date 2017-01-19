@@ -7,6 +7,7 @@ analysis phases, with essential information like e.g. the timezone and
 codepage of the source data.
 """
 
+import codecs
 import logging
 
 from plaso.containers import artifacts
@@ -18,26 +19,27 @@ import pytz  # pylint: disable=wrong-import-order
 class KnowledgeBase(object):
   """Class that implements the artifact knowledge base."""
 
+  CURRENT_SESSION = 0
+
   def __init__(self):
     """Initializes a knowledge base."""
     super(KnowledgeBase, self).__init__()
-    self._default_codepage = u'cp1252'
+    self._codepage = u'cp1252'
     self._environment_variables = {}
     self._hostnames = {}
-    self._timezone = pytz.UTC
+    self._time_zone = pytz.UTC
     self._user_accounts = {}
     self._values = {}
 
   @property
   def codepage(self):
-    """str: codepage."""
-    return self._values.get(u'codepage', self._default_codepage)
+    """str: codepage of the current session."""
+    return self._values.get(u'codepage', self._codepage)
 
   @property
   def hostname(self):
-    """str: hostname."""
-    # TODO: refactor the use of store number.
-    hostname_artifact = self._hostnames.get(0, None)
+    """str: hostname of the current session."""
+    hostname_artifact = self._hostnames.get(self.CURRENT_SESSION, None)
     if not hostname_artifact:
       return u''
 
@@ -45,23 +47,66 @@ class KnowledgeBase(object):
 
   @property
   def platform(self):
-    """str: platform."""
+    """str: platform of the current session."""
     return self._values.get(u'guessed_os', u'')
 
   @platform.setter
   def platform(self, value):
-    """str: platform."""
+    """str: platform of the current session."""
     self._values[u'guessed_os'] = value
 
   @property
   def timezone(self):
-    """datetime.tzinfo: timezone."""
-    return self._timezone
+    """datetime.tzinfo: timezone of the current session."""
+    return self._time_zone
+
+  @property
+  def user_accounts(self):
+    """list[UserAccountArtifact]: user accounts of the current session."""
+    return self._user_accounts.get(self.CURRENT_SESSION, {}).values()
 
   @property
   def year(self):
-    """int: year."""
+    """int: year of the current session."""
     return self._values.get(u'year', 0)
+
+  def AddUserAccount(self, user_account, session_identifier=CURRENT_SESSION):
+    """Adds an user account.
+
+    Args:
+      user_account (UserAccountArtifact): user account artifact.
+      session_identifier (Optional[str])): session identifier, where
+          CURRENT_SESSION represents the active session.
+
+    Raises:
+      KeyError: if the user account already exists.
+    """
+    if session_identifier not in self._user_accounts:
+      self._user_accounts[session_identifier] = {}
+
+    user_accounts = self._user_accounts[session_identifier]
+    if user_account.identifier in user_accounts:
+      raise KeyError(u'User account: {0:s} already exists.'.format(
+          user_account.identifier))
+
+    user_accounts[user_account.identifier] = user_account
+
+  def AddEnvironmentVariable(self, enviroment_variable):
+    """Adds an environment variable.
+
+    Args:
+      enviroment_variable (EnvironmentVariableArtifact): environment variable
+          artifact.
+
+    Raises:
+      KeyError: if the environment variable already exists.
+    """
+    name = enviroment_variable.name.upper()
+    if name in self._environment_variables:
+      raise KeyError(u'Environment variable: {0:s} already exists.'.format(
+          enviroment_variable.name))
+
+    self._environment_variables[name] = enviroment_variable
 
   def GetEnvironmentVariable(self, name):
     """Retrieves an environment variable.
@@ -84,21 +129,24 @@ class KnowledgeBase(object):
     """
     return self._environment_variables.values()
 
-  # TODO: refactor.
-  def GetHostname(self, store_number, default_hostname=u'-'):
+  def GetHostname(self, session_identifier=CURRENT_SESSION):
     """Retrieves the hostname related to the event.
 
     If the hostname is not stored in the event it is determined based
     on the preprocessing information that is stored inside the storage file.
 
     Args:
-      store_number (int): store number.
-      default_hostname (Optional[str]): default hostname.
+      session_identifier (Optional[str])): session identifier, where
+          CURRENT_SESSION represents the active session.
 
     Returns:
       str: hostname.
     """
-    return self._hostnames.get(store_number, default_hostname)
+    hostname_artifact = self._hostnames.get(session_identifier, None)
+    if not hostname_artifact:
+      return u''
+
+    return hostname_artifact.name or u''
 
   # TODO: remove this function it is incorrect.
   def GetStoredHostname(self):
@@ -113,12 +161,12 @@ class KnowledgeBase(object):
     store_number = len(self._hostnames)
     return self._hostnames.get(store_number, None)
 
-  def GetSystemConfigurationArtifact(self, session_number=0):
+  def GetSystemConfigurationArtifact(self, session_identifier=CURRENT_SESSION):
     """Retrieves the knowledge base as a system configuration artifact.
 
     Args:
-      session_number (Optional[int]): session number, where 0 represents
-          the active session.
+      session_identifier (Optional[str])): session identifier, where
+          CURRENT_SESSION represents the active session.
 
     Returns:
       SystemConfigurationArtifact: system configuration artifact.
@@ -126,9 +174,10 @@ class KnowledgeBase(object):
     system_configuration = artifacts.SystemConfigurationArtifact()
 
     system_configuration.code_page = self._values.get(
-        u'codepage', self._default_codepage)
+        u'codepage', self._codepage)
 
-    system_configuration.hostname = self._hostnames.get(session_number, None)
+    system_configuration.hostname = self._hostnames.get(
+        session_identifier, None)
 
     system_configuration.keyboard_layout = self._values.get(
         u'keyboard_layout', None)
@@ -140,44 +189,29 @@ class KnowledgeBase(object):
         u'operating_system_version', None)
     system_configuration.time_zone = self._values.get(u'time_zone_str', u'UTC')
 
-    user_accounts = self._user_accounts.get(session_number, {})
+    user_accounts = self._user_accounts.get(session_identifier, {})
     system_configuration.user_accounts = user_accounts.values()
 
     return system_configuration
 
-  # TODO: refactor.
-  def GetUsername(self, user_identifier, store_number, default_username=u'-'):
-    """Retrieves the username related to the event.
+  def GetUsernameByIdentifier(
+      self, user_identifier, session_identifier=CURRENT_SESSION):
+    """Retrieves the username based on an user identifier.
 
     Args:
-      user_identifier (str): user identifier.
-      store_number (int): store number.
-      default_username (Optional[str]): default username.
+      user_identifier (str): user identifier, either a UID or SID.
+      session_identifier (Optional[str])): session identifier, where
+          CURRENT_SESSION represents the active session.
 
     Returns:
       str: username.
     """
-    # TODO: refactor the use of store number.
-    if store_number not in self._user_accounts or not user_identifier:
-      return default_username
-
-    user_accounts = self._user_accounts[store_number]
+    user_accounts = self._user_accounts.get(session_identifier, {})
     user_account = user_accounts.get(user_identifier, None)
-    if not user_account or not user_account.username:
-      return default_username
+    if not user_account:
+      return u''
 
-    return user_account.username
-
-  def GetUsernameByIdentifier(self, identifier):
-    """Retrieves the username based on an identifier.
-
-    Args:
-      identifier (str): user identifier, either a UID or SID.
-
-    Returns:
-      str: username or '-' if not available.
-    """
-    return self.GetUsername(identifier, 0)
+    return user_account.username or u''
 
   def GetUsernameForPath(self, path):
     """Retrieves a username for a specific path.
@@ -194,8 +228,7 @@ class KnowledgeBase(object):
     """
     path = path.lower()
 
-    # TODO: refactor the use of store number.
-    user_accounts = self._user_accounts.get(0, {})
+    user_accounts = self._user_accounts.get(self.CURRENT_SESSION, {})
     for user_account in iter(user_accounts.values()):
       if not user_account.user_directory:
         continue
@@ -229,56 +262,44 @@ class KnowledgeBase(object):
     Returns:
       bool: True if the knowledge base contains user accounts.
     """
-    # TODO: refactor the use of store number.
-    return self._user_accounts.get(0, {})
+    return self._user_accounts.get(self.CURRENT_SESSION, {}) != {}
 
-  def ReadSystemConfigurationArtifact(self, store_number, system_configuration):
+  def ReadSystemConfigurationArtifact(
+      self, system_configuration, session_identifier=CURRENT_SESSION):
     """Reads the knowledge base values from a system configuration artifact.
 
     Note that this overwrites existing values in the knowledge base.
 
     Args:
-      store_number (int): store number.
       system_configuration (SystemConfigurationArtifact): system configuration
           artifact.
+      session_identifier (Optional[str])): session identifier, where
+          CURRENT_SESSION represents the active session.
     """
-    # TODO: refactor the use of store number.
-    self._hostnames[store_number] = system_configuration.hostname
+    self._hostnames[session_identifier] = system_configuration.hostname
 
-    # TODO: refactor the use of store number.
-    self._user_accounts[store_number] = {
+    self._user_accounts[session_identifier] = {
         user_account.username: user_account
         for user_account in system_configuration.user_accounts}
 
     try:
-      self.SetTimezone(system_configuration.time_zone)
+      self.SetTimeZone(system_configuration.time_zone)
     except ValueError:
       logging.warning(
           u'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
               system_configuration.time_zone, self.timezone.zone))
 
-  def SetDefaultCodepage(self, codepage):
-    """Sets the default codepage.
+  def SetCodepage(self, codepage):
+    """Sets the codepage.
 
     Args:
-      codepage (str): default codepage.
-    """
-    # TODO: check if value is sane.
-    self._default_codepage = codepage
-
-  def SetTimezone(self, timezone):
-    """Sets the timezone.
-
-    Args:
-      timezone (str): timezone.
-
-    Raises:
-      ValueError: if the timezone is not supported.
+      codepage (str): codepage.
     """
     try:
-      self._timezone = pytz.timezone(timezone)
-    except pytz.UnknownTimeZoneError:
-      raise ValueError(u'Unsupported timezone: {0:s}'.format(timezone))
+      codecs.getencoder(codepage)
+      self._codepage = codepage
+    except LookupError:
+      raise ValueError(u'Unsupported codepage: {0:s}'.format(codepage))
 
   def SetEnvironmentVariable(self, environment_variable):
     """Sets an environment variable.
@@ -290,27 +311,29 @@ class KnowledgeBase(object):
     name = environment_variable.name.upper()
     self._environment_variables[name] = environment_variable
 
-  def SetHostname(self, hostname):
+  def SetHostname(self, hostname, session_identifier=CURRENT_SESSION):
     """Sets a hostname.
 
     Args:
       hostname (HostnameArtifact): hostname artifact.
+      session_identifier (Optional[str])): session identifier, where
+          CURRENT_SESSION represents the active session.
     """
-    # TODO: refactor the use of store number.
-    self._hostnames[hostname.store_number] = hostname
+    self._hostnames[session_identifier] = hostname
 
-  def SetUserAccount(self, user_account):
-    """Sets an user account.
+  def SetTimeZone(self, time_zone):
+    """Sets the time zone.
 
     Args:
-      user_account (UserAccountArtifact): user account artifact.
-    """
-    if user_account.store_number not in self._user_accounts:
-      # TODO: refactor the use of store number.
-      self._user_accounts[user_account.store_number] = {}
+      time_zone (str): time zone.
 
-    user_accounts = self._user_accounts[user_account.store_number]
-    user_accounts[user_account.identifier] = user_account
+    Raises:
+      ValueError: if the timezone is not supported.
+    """
+    try:
+      self._time_zone = pytz.timezone(time_zone)
+    except (AttributeError, pytz.UnknownTimeZoneError):
+      raise ValueError(u'Unsupported timezone: {0:s}'.format(time_zone))
 
   def SetValue(self, identifier, value):
     """Sets a value by identifier.

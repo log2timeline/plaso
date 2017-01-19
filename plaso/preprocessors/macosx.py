@@ -156,8 +156,6 @@ class MacOSXHostnamePreprocessPlugin(PlistKeyPreprocessPlugin):
       return
 
     hostname_artifact = artifacts.HostnameArtifact(name=value)
-    # TODO: refactor the use of store number.
-    hostname_artifact.store_number = 0
     knowledge_base.SetHostname(hostname_artifact)
 
 
@@ -227,12 +225,18 @@ class MacOSXTimeZonePreprocessPlugin(interface.FileSystemPreprocessPlugin):
 
     if not file_entry.link:
       raise errors.PreProcessFail(
-          u'Unable to retrieve timezone information from: {0:s}.'.format(
+          u'Unable to retrieve time zone information from: {0:s}.'.format(
               self._PATH))
 
-    _, _, timezone = file_entry.link.partition(u'zoneinfo/')
-    if timezone:
-      knowledge_base.SetValue(u'time_zone_str', timezone)
+    _, _, time_zone = file_entry.link.partition(u'zoneinfo/')
+    if not time_zone:
+      return
+
+    try:
+      knowledge_base.SetTimeZone(time_zone)
+    except ValueError:
+      # TODO: add and store preprocessing errors.
+      pass
 
 
 class MacOSXUserAccountsPreprocessPlugin(PlistPreprocessPlugin):
@@ -317,9 +321,11 @@ class MacOSXUserAccountsPreprocessPlugin(PlistPreprocessPlugin):
     user_account.shell = match.get(u'shell', [None])[0]
     user_account.user_directory = match.get(u'home', [None])[0]
 
-    # TODO: refactor the use of store number.
-    user_account.store_number = 0
-    knowledge_base.SetUserAccount(user_account)
+    try:
+      knowledge_base.AddUserAccount(user_account)
+    except KeyError:
+      # TODO: add and store preprocessing errors.
+      pass
 
   def Run(self, searcher, knowledge_base):
     """Determines the value of the preprocessing attributes.

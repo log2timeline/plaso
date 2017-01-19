@@ -35,8 +35,6 @@ class LinuxHostnamePreprocessPlugin(interface.FilePreprocessPlugin):
     hostname = hostname.strip()
     if hostname:
       hostname_artifact = artifacts.HostnameArtifact(name=hostname)
-      # TODO: refactor the use of store number.
-      hostname_artifact.store_number = 0
       knowledge_base.SetHostname(hostname_artifact)
 
 
@@ -55,9 +53,15 @@ class LinuxTimeZonePreprocessPlugin(interface.FilePreprocessPlugin):
     text_file_object = text_file.TextFile(file_object)
     file_data = text_file_object.readline()
 
-    timezone = file_data.strip()
-    if timezone:
-      knowledge_base.SetValue(u'time_zone_str', timezone)
+    time_zone = file_data.strip()
+    if not time_zone:
+      return
+
+    try:
+      knowledge_base.SetTimeZone(time_zone)
+    except ValueError:
+      # TODO: add and store preprocessing errors.
+      pass
 
 
 class LinuxUserAccountsPreprocessPlugin(interface.FilePreprocessPlugin):
@@ -97,9 +101,11 @@ class LinuxUserAccountsPreprocessPlugin(interface.FilePreprocessPlugin):
       user_account.user_directory = row[5] or None
       user_account.shell = row[6] or None
 
-      # TODO: refactor the use of store number.
-      user_account.store_number = 0
-      knowledge_base.SetUserAccount(user_account)
+      try:
+        knowledge_base.AddUserAccount(user_account)
+      except KeyError:
+        # TODO: add and store preprocessing errors.
+        pass
 
 
 manager.PreprocessPluginsManager.RegisterPlugins([

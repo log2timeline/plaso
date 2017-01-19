@@ -31,6 +31,7 @@ class Session(interface.AttributeContainer):
     parsers_counter (collections.Counter): number of events per parser or
         parser plugin.
     preferred_encoding (str): preferred encoding.
+    preferred_time_zone (str): preferred time zone.
     preferred_year (int): preferred year.
     product_name (str): name of the product that created the session
         e.g. 'log2timeline'.
@@ -56,6 +57,7 @@ class Session(interface.AttributeContainer):
     self.parser_filter_expression = None
     self.parsers_counter = collections.Counter()
     self.preferred_encoding = u'utf-8'
+    self.preferred_time_zone = u'UTC'
     self.preferred_year = None
     self.product_name = u'plaso'
     self.product_version = plaso.GetVersion()
@@ -103,6 +105,7 @@ class Session(interface.AttributeContainer):
     self.identifier = session_start.identifier
     self.parser_filter_expression = session_start.parser_filter_expression
     self.preferred_encoding = session_start.preferred_encoding
+    self.preferred_time_zone = session_start.preferred_time_zone
     self.product_name = session_start.product_name
     self.product_version = session_start.product_version
     self.start_time = session_start.timestamp
@@ -139,6 +142,7 @@ class Session(interface.AttributeContainer):
     session_start.identifier = self.identifier
     session_start.parser_filter_expression = self.parser_filter_expression
     session_start.preferred_encoding = self.preferred_encoding
+    session_start.preferred_time_zone = self.preferred_time_zone
     session_start.product_name = self.product_name
     session_start.product_version = self.product_version
     session_start.timestamp = self.start_time
@@ -191,6 +195,7 @@ class SessionStart(interface.AttributeContainer):
     identifier (str): unique identifier of the session.
     parser_filter_expression (str): parser filter expression.
     preferred_encoding (str): preferred encoding.
+    preferred_time_zone (str): preferred time zone.
     preferred_year (int): preferred year.
     product_name (str): name of the product that created the session
         e.g. 'log2timeline'.
@@ -217,6 +222,7 @@ class SessionStart(interface.AttributeContainer):
     self.identifier = identifier
     self.parser_filter_expression = None
     self.preferred_encoding = None
+    self.preferred_time_zone = None
     self.preferred_year = None
     self.product_name = None
     self.product_version = None

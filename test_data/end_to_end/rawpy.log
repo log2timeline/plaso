@@ -6,6 +6,8 @@
   
 
 [Reserved attributes]:
+  {_store_index} 0
+  {_store_number} 2
   {body} INFO No change in [/etc/netgroup]. Done
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
@@ -13,8 +15,6 @@
   {hostname} myhostname.myhost.com
   {offset} 0
   {parser} syslog
-  {store_index} 0
-  {store_number} 2
   {timestamp} 1453449153000000
   {timestamp_desc} Content Modification Time
   {username} -
@@ -32,6 +32,8 @@
   
 
 [Reserved attributes]:
+  {_store_index} 1
+  {_store_number} 2
   {body} INFO No new content in ímynd.dd.
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
@@ -39,8 +41,6 @@
   {hostname} myhostname.myhost.com
   {offset} 0
   {parser} syslog
-  {store_index} 1
-  {store_number} 2
   {timestamp} 1453449153000000
   {timestamp_desc} Content Modification Time
   {username} -
@@ -58,6 +58,8 @@
   
 
 [Reserved attributes]:
+  {_store_index} 2
+  {_store_number} 2
   {body} (root) CMD (touch /var/run/crond.somecheck)
   {data_type} syslog:cron:task_run
   {display_name} OS:/tmp/test/test_data/syslog
@@ -65,8 +67,6 @@
   {hostname} myhostname.myhost.com
   {offset} 0
   {parser} syslog
-  {store_index} 2
-  {store_number} 2
   {timestamp} 1453449181000000
   {timestamp_desc} Content Modification Time
   {username} root
@@ -85,6 +85,8 @@
   
 
 [Reserved attributes]:
+  {_store_index} 3
+  {_store_number} 2
   {body} (root) CMD (/sbin/status.mycheck))
   {data_type} syslog:cron:task_run
   {display_name} OS:/tmp/test/test_data/syslog
@@ -92,8 +94,6 @@
   {hostname} myhostname.myhost.com
   {offset} 0
   {parser} syslog
-  {store_index} 3
-  {store_number} 2
   {timestamp} 1453449241000000
   {timestamp_desc} Content Modification Time
   {username} root
@@ -112,6 +112,8 @@
   
 
 [Reserved attributes]:
+  {_store_index} 4
+  {_store_number} 2
   {body} (root) CMD (touch /var/run/crond.somecheck)
   {data_type} syslog:cron:task_run
   {display_name} OS:/tmp/test/test_data/syslog
@@ -119,8 +121,6 @@
   {hostname} myhostname.myhost.com
   {offset} 0
   {parser} syslog
-  {store_index} 4
-  {store_number} 2
   {timestamp} 1453449241000000
   {timestamp_desc} Content Modification Time
   {username} root
@@ -139,6 +139,8 @@
   
 
 [Reserved attributes]:
+  {_store_index} 5
+  {_store_number} 2
   {body} `cron.daily' terminated
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
@@ -146,8 +148,6 @@
   {hostname} myhostname.myhost.com
   {offset} 0
   {parser} syslog
-  {store_index} 5
-  {store_number} 2
   {timestamp} 1453449272000000
   {timestamp_desc} Content Modification Time
   {username} -
@@ -164,6 +164,8 @@
   
 
 [Reserved attributes]:
+  {_store_index} 6
+  {_store_number} 2
   {body} Test message with single character day
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
@@ -171,8 +173,6 @@
   {hostname} victoria
   {offset} 0
   {parser} syslog
-  {store_index} 6
-  {store_number} 2
   {timestamp} 1454771790000000
   {timestamp_desc} Content Modification Time
   {username} -
@@ -190,6 +190,8 @@
   
 
 [Reserved attributes]:
+  {_store_index} 7
+  {_store_number} 2
   {body} testing leap year in parsing, events take place in 2012 ---
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
@@ -197,8 +199,6 @@
   {hostname} :
   {offset} 0
   {parser} syslog
-  {store_index} 7
-  {store_number} 2
   {timestamp} 1456708543000000
   {timestamp_desc} Content Modification Time
   {username} -
@@ -215,6 +215,8 @@
   
 
 [Reserved attributes]:
+  {_store_index} 8
+  {_store_number} 2
   {body} This syslog message has a fractional value for seconds.
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
@@ -222,8 +224,6 @@
   {hostname} myhostname.myhost.com
   {offset} 0
   {parser} syslog
-  {store_index} 8
-  {store_number} 2
   {timestamp} 1458774078000000
   {timestamp_desc} Content Modification Time
   {username} -
@@ -241,6 +241,8 @@
   
 
 [Reserved attributes]:
+  {_store_index} 9
+  {_store_number} 2
   {body} This syslog message is brought to you by me (and not the other guy)
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
@@ -248,8 +250,6 @@
   {hostname} myhostname.myhost.com
   {offset} 0
   {parser} syslog
-  {store_index} 9
-  {store_number} 2
   {timestamp} 1458774078000000
   {timestamp_desc} Content Modification Time
   {username} -
@@ -267,13 +267,13 @@
   
 
 [Reserved attributes]:
+  {_store_index} 11
+  {_store_number} 1
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {offset} 0
   {parser} filestat
-  {store_index} 11
-  {store_number} 1
   {timestamp} 1476630823000000
   {timestamp_desc} ctime
   {username} -
@@ -293,13 +293,13 @@
   
 
 [Reserved attributes]:
+  {_store_index} 11
+  {_store_number} 2
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {offset} 0
   {parser} filestat
-  {store_index} 11
-  {store_number} 2
   {timestamp} 1476630823000000
   {timestamp_desc} ctime
   {username} -
@@ -319,13 +319,13 @@
   
 
 [Reserved attributes]:
+  {_store_index} 10
+  {_store_number} 1
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {offset} 0
   {parser} filestat
-  {store_index} 10
-  {store_number} 1
   {timestamp} 1476630823000000
   {timestamp_desc} mtime
   {username} -
@@ -345,13 +345,13 @@
   
 
 [Reserved attributes]:
+  {_store_index} 10
+  {_store_number} 2
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {offset} 0
   {parser} filestat
-  {store_index} 10
-  {store_number} 2
   {timestamp} 1476630823000000
   {timestamp_desc} mtime
   {username} -
@@ -371,13 +371,13 @@
   
 
 [Reserved attributes]:
+  {_store_index} 12
+  {_store_number} 1
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {offset} 0
   {parser} filestat
-  {store_index} 12
-  {store_number} 1
   {timestamp} 1476630824000000
   {timestamp_desc} atime
   {username} -
@@ -397,13 +397,13 @@
   
 
 [Reserved attributes]:
+  {_store_index} 12
+  {_store_number} 2
   {data_type} fs:stat
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {offset} 0
   {parser} filestat
-  {store_index} 12
-  {store_number} 2
   {timestamp} 1476630824000000
   {timestamp_desc} atime
   {username} -
@@ -423,6 +423,8 @@
   
 
 [Reserved attributes]:
+  {_store_index} 13
+  {_store_number} 2
   {body} This is a multi-line message that screws up
 	many syslog parsers.
   {data_type} syslog:line
@@ -431,8 +433,6 @@
   {hostname} myhostname.myhost.com
   {offset} 0
   {parser} syslog
-  {store_index} 13
-  {store_number} 2
   {timestamp} 1479431720000000
   {timestamp_desc} Content Modification Time
   {username} -
@@ -450,6 +450,8 @@
   
 
 [Reserved attributes]:
+  {_store_index} 14
+  {_store_number} 2
   {body} last message repeated 5 times ---
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
@@ -457,8 +459,6 @@
   {hostname} :
   {offset} 0
   {parser} syslog
-  {store_index} 14
-  {store_number} 2
   {timestamp} 1479431743000000
   {timestamp_desc} Content Modification Time
   {username} -
@@ -475,14 +475,14 @@
   
 
 [Reserved attributes]:
+  {_store_index} 15
+  {_store_number} 2
   {body} [997.390602] sda2: rw=0, want=65, limit=2
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
   {filename} /tmp/test/test_data/syslog
   {offset} 0
   {parser} syslog
-  {store_index} 15
-  {store_number} 2
   {timestamp} 1479457820000000
   {timestamp_desc} Content Modification Time
   {username} -
@@ -499,6 +499,8 @@
   
 
 [Reserved attributes]:
+  {_store_index} 16
+  {_store_number} 2
   {body} [998.390602] sda2: rw=0, want=66, limit=2
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
@@ -506,8 +508,6 @@
   {hostname} victoria
   {offset} 0
   {parser} syslog
-  {store_index} 16
-  {store_number} 2
   {timestamp} 1479457880000000
   {timestamp_desc} Content Modification Time
   {username} -
@@ -524,6 +524,8 @@
   
 
 [Reserved attributes]:
+  {_store_index} 17
+  {_store_number} 2
   {body} No true exit can exist (124 job run)
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
@@ -531,8 +533,6 @@
   {hostname} myhostname.myhost.com
   {offset} 0
   {parser} syslog
-  {store_index} 17
-  {store_number} 2
   {timestamp} 1482083672000000
   {timestamp_desc} Content Modification Time
   {username} -
@@ -550,6 +550,8 @@
   
 
 [Reserved attributes]:
+  {_store_index} 18
+  {_store_number} 2
   {body} Another one just like this (124 job run)
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
@@ -557,8 +559,6 @@
   {hostname} myhostname.myhost.com
   {offset} 0
   {parser} syslog
-  {store_index} 18
-  {store_number} 2
   {timestamp} 1483206872000000
   {timestamp_desc} Content Modification Time
   {username} -
