@@ -81,8 +81,10 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._status_view_mode = u'linear'
     self._stdout_output_writer = isinstance(
         self._output_writer, cli_tools.StdoutOutputWriter)
+    self._temporary_directory = None
     self._time_slice = None
     self._use_time_slicer = False
+    self._worker_memory_limit = None
 
     self.list_analysis_plugins = False
     self.list_language_identifiers = False
@@ -254,6 +256,15 @@ class PsortTool(analysis_tool.AnalysisTool):
     """
     use_zeromq = getattr(options, u'use_zeromq', True)
     self._front_end.SetUseZeroMQ(use_zeromq)
+
+    self._temporary_directory = getattr(options, u'temporary_directory', None)
+    if (self._temporary_directory and
+        not os.path.isdir(self._temporary_directory)):
+      raise errors.BadConfigOption(
+          u'No such temporary directory: {0:s}'.format(
+              self._temporary_directory))
+
+    self._worker_memory_limit = getattr(options, u'worker_memory_limit', None)
 
   def _PrintAnalysisReportsDetails(self, storage):
     """Prints the details of the analysis reports.
@@ -448,6 +459,20 @@ class PsortTool(analysis_tool.AnalysisTool):
         dest=u'use_zeromq', default=True, help=(
             u'Disable queueing using ZeroMQ. A Multiprocessing queue will be '
             u'used instead.'))
+
+    argument_group.add_argument(
+        u'--temporary_directory', u'--temporary-directory',
+        dest=u'temporary_directory', type=str, action=u'store',
+        metavar=u'DIRECTORY', help=(
+            u'Path to the directory that should be used to store temporary '
+            u'files created during analysis.'))
+
+    argument_group.add_argument(
+        u'--worker-memory-limit', u'--worker_memory_limit',
+        dest=u'worker_memory_limit', action=u'store', type=int,
+        metavar=u'SIZE', help=(
+            u'Maximum amount of memory a worker process is allowed to consume. '
+            u'[defaults to 2 GiB]'))
 
   def ListAnalysisPlugins(self):
     """Lists the analysis modules."""

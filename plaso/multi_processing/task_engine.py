@@ -139,7 +139,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._resolver_context = context.Context()
     self._serializers_profiler = None
     self._session_identifier = None
-    self._show_memory_usage = None
     self._status = definitions.PROCESSING_STATUS_IDLE
     self._storage_merge_reader = None
     self._storage_merge_reader_on_hold = None
@@ -565,13 +564,14 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._serializers_profiler.Write()
       self._serializers_profiler = None
 
-  def _UpdateProcessingStatus(self, pid, process_status):
+  def _UpdateProcessingStatus(self, pid, process_status, used_memory):
     """Updates the processing status.
 
     Args:
       pid (int): process identifier (PID) of the worker process.
       process_status (dict[str, object]): status values received from
           the worker process.
+      used_memory (int): size of used memory in bytes.
 
     Raises:
       KeyError: if the process is not registered with the engine.
@@ -627,9 +627,6 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
               u'the timeout period.').format(process.name, pid))
           processing_status = definitions.PROCESSING_STATUS_NOT_RESPONDING
 
-    process_information = self._process_information_per_pid[pid]
-    used_memory = process_information.GetUsedMemory()
-
     self._processing_status.UpdateWorkerStatus(
         process.name, processing_status, pid, used_memory, display_name,
         number_of_consumed_sources, number_of_produced_sources,
@@ -665,7 +662,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self, session_identifier, source_path_specs, storage_writer,
       processing_configuration, enable_sigsegv_handler=False,
       filter_find_specs=None, number_of_worker_processes=0,
-      show_memory_usage=False, status_update_callback=None):
+      status_update_callback=None, worker_memory_limit=None):
     """Processes the sources and extract event objects.
 
     Args:
@@ -680,10 +677,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
           used in path specification extraction.
       number_of_worker_processes (Optional[int]): number of worker processes.
-      show_memory_usage (Optional[bool]): True if memory information should be
-          included in status updates.
       status_update_callback (Optional[function]): callback function for status
           updates.
+      worker_memory_limit (Optional[int]): maximum amount of memory a worker is
+          allowed to consume, where None represents the default memory limit.
 
     Returns:
       ProcessingStatus: processing status.
@@ -715,7 +712,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     self._enable_sigsegv_handler = enable_sigsegv_handler
     self._number_of_worker_processes = number_of_worker_processes
-    self._show_memory_usage = show_memory_usage
+    self._worker_memory_limit = (
+        worker_memory_limit or self._DEFAULT_WORKER_MEMORY_LIMIT)
 
     # Keep track of certain values so we can spawn new extraction workers.
     self._processing_configuration = processing_configuration
@@ -821,7 +819,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     # Reset values.
     self._enable_sigsegv_handler = None
     self._number_of_worker_processes = None
-    self._show_memory_usage = None
+    self._worker_memory_limit = self._DEFAULT_WORKER_MEMORY_LIMIT
 
     self._processing_configuration = None
 
