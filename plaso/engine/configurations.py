@@ -12,7 +12,7 @@ class CredentialConfiguration(interface.AttributeContainer):
     credential_type (str): credential type.
     path_spec (dfvfs.PathSpec): path specification.
   """
-  CONTAINER_TYPE = u'credentials'
+  CONTAINER_TYPE = u'credentials_configuration'
 
   def __init__(
       self, credential_data=None, credential_type=None, path_spec=None):
@@ -39,7 +39,7 @@ class EventExtractionConfiguration(interface.AttributeContainer):
         events to include.
     text_prepend (str): text to prepend to every event.
   """
-  CONTAINER_TYPE = u'event_extraction_settings'
+  CONTAINER_TYPE = u'event_extraction_configuration'
 
   def __init__(self):
     """Initializes an event extraction configuration object."""
@@ -62,7 +62,7 @@ class ExtractionConfiguration(interface.AttributeContainer):
         compressed streams should be processed.
     yara_rules_string (str): Yara rule definitions.
   """
-  CONTAINER_TYPE = u'extraction_settings'
+  CONTAINER_TYPE = u'extraction_configuration'
 
   def __init__(self):
     """Initializes an extraction configuration object."""
@@ -106,7 +106,7 @@ class ProfilingConfiguration(interface.AttributeContainer):
     sample_rate (int): the profiling sample rate. Contains the number of event
         sources processed.
   """
-  CONTAINER_TYPE = u'profiling_settings'
+  CONTAINER_TYPE = u'profiling_configuration'
 
   def __init__(self):
     """Initializes a profiling configuration object."""
@@ -168,7 +168,7 @@ class ProcessingConfiguration(interface.AttributeContainer):
     profiling (ProfilingConfiguration): profiling configuration.
     temporary_directory (str): path of the directory for temporary files.
   """
-  CONTAINER_TYPE = u'processing_settings'
+  CONTAINER_TYPE = u'processing_configuration'
 
   def __init__(self):
     """Initializes a process configuration object."""
