@@ -137,11 +137,6 @@ class ExtractionFrontendTests(shared_test_lib.BaseTestCase):
       self.assertEqual(event_object.data_type, u'fs:stat')
       self.assertEqual(event_object.filename, u'/lost+found')
 
-  def testSetShowMemoryInformation(self):
-    """Tests the SetShowMemoryInformation function."""
-    test_front_end = extraction_frontend.ExtractionFrontend()
-    test_front_end.SetShowMemoryInformation(show_memory=False)
-
   def testSetUseZeroMQ(self):
     """Tests the SetUseZeroMQ function."""
     test_front_end = extraction_frontend.ExtractionFrontend()
