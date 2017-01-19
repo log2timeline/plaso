@@ -178,7 +178,8 @@ class ExtractionFrontend(frontend.Frontend):
 
   def CreateSession(
       self, command_line_arguments=None, filter_file=None,
-      preferred_encoding=u'utf-8', preferred_year=None):
+      preferred_encoding=u'utf-8', preferred_time_zone=None,
+      preferred_year=None):
     """Creates a session attribute containiner.
 
     Args:
@@ -286,7 +287,7 @@ class ExtractionFrontend(frontend.Frontend):
       self, session, storage_writer, source_path_specs, source_type,
       processing_configuration, enable_sigsegv_handler=False,
       force_preprocessing=False, number_of_extraction_workers=0,
-      single_process_mode=False, status_update_callback=None, timezone=u'UTC'):
+      single_process_mode=False, status_update_callback=None):
     """Processes the sources.
 
     Args:
@@ -307,7 +308,6 @@ class ExtractionFrontend(frontend.Frontend):
           run in single process mode.
       status_update_callback (Optional[function]): callback function for status
           updates.
-      timezone (Optional[datetime.tzinfo]): timezone.
 
     Returns:
       ProcessingStatus: processing status or None.
