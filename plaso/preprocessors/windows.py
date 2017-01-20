@@ -38,8 +38,11 @@ class WindowsCodepagePreprocessPlugin(
     # Map the Windows code page name to a Python equivalent name.
     codepage = u'cp{0:s}'.format(value_data)
 
-    # TODO: add a value sanity check.
-    knowledge_base.SetValue(u'code_page', codepage)
+    try:
+      knowledge_base.SetCodepage(codepage)
+    except ValueError:
+      # TODO: add and store preprocessing errors.
+      pass
 
 
 class WindowsHostnamePreprocessPlugin(
@@ -68,8 +71,6 @@ class WindowsHostnamePreprocessPlugin(
               type(value_data)))
 
     hostname_artifact = artifacts.HostnameArtifact(name=value_data)
-    # TODO: refactor the use of store number.
-    hostname_artifact.store_number = 0
     knowledge_base.SetHostname(hostname_artifact)
 
 
@@ -183,15 +184,18 @@ class WindowsTimeZonePreprocessPlugin(
     # Map the Windows time zone name to a Python equivalent name.
     lookup_key = value_data.replace(u' ', u'')
 
+    time_zone = time_zones.TIME_ZONES.get(lookup_key, value_data)
+    if not time_zone:
+      return
+
     try:
       # Catch and warn about unsupported mapping.
-      time_zone = time_zones.TIME_ZONES[lookup_key]
-    except KeyError:
+      knowledge_base.SetTimeZone(time_zone)
+    except ValueError:
+      # TODO: add and store preprocessing errors.
       time_zone = value_data
       logging.warning(
           u'Unable to map: "{0:s}" to time zone'.format(value_data))
-
-    knowledge_base.SetValue(u'time_zone_str', time_zone)
 
 
 class WindowsUserAccountsPreprocessPlugin(
@@ -244,9 +248,11 @@ class WindowsUserAccountsPreprocessPlugin(
         user_account.user_directory = profile_path or None
         user_account.username = username or None
 
-      # TODO: refactor the use of store number.
-      user_account.store_number = 0
-      knowledge_base.SetUserAccount(user_account)
+      try:
+        knowledge_base.AddUserAccount(user_account)
+      except KeyError:
+        # TODO: add and store preprocessing errors.
+        pass
 
 
 class WindowsWinDirEnvironmentVariable(

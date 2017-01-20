@@ -29,8 +29,6 @@ class EventObject(interface.AttributeContainer):
     offset (int): offset of the event data.
     pathspec (dfvfs.PathSpec): path specification of the file related to
         the event.
-    store_index (int): store index of the event within the storage file.
-    store_number (int): store number of the event within the storage file.
     tag (EventTag): event tag.
     timestamp (int): timestamp, which contains the number of microseconds
         since January 1, 1970, 00:00:00 UTC.
@@ -45,13 +43,13 @@ class EventObject(interface.AttributeContainer):
   # attributes that should not be used during evaluation of whether two
   # event objects are the same.
   COMPARE_EXCLUDE = frozenset([
+      u'_store_index',
+      u'_store_number',
       u'data_type',
       u'display_name',
       u'filename',
       u'inode',
       u'pathspec',
-      u'store_index',
-      u'store_number',
       u'tag',
       u'timestamp',
       u'uuid'])
@@ -59,6 +57,8 @@ class EventObject(interface.AttributeContainer):
   def __init__(self):
     """Initializes an event object."""
     super(EventObject, self).__init__()
+    self._store_index = None
+    self._store_number = None
     self.data_type = self.DATA_TYPE
     self.display_name = None
     self.filename = None
@@ -66,8 +66,6 @@ class EventObject(interface.AttributeContainer):
     self.inode = None
     self.offset = None
     self.pathspec = None
-    self.store_index = None
-    self.store_number = None
     self.tag = None
     self.timestamp = None
     self.uuid = u'{0:s}'.format(uuid.uuid4().get_hex())
@@ -89,12 +87,12 @@ class EventObject(interface.AttributeContainer):
     The following attributes are considered to be 'reserved' and not used
     for the comparison, so they may be different yet the event object is still
     considered to be equal:
+    * _store_index
+    * _store_number
     * inode
     * pathspec
     * filename
     * display_name
-    * store_number
-    * store_index
 
     Args:
       event (EventObject): event to compare to.

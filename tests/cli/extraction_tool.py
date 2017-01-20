@@ -22,7 +22,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
        u' [--preferred_year YEAR]'),
       u'                               [-p] [--process_archives]',
       u'                               [--skip_compressed_streams]',
-      u'                               [--temporary_directory DIRECTORY]',
       u'',
       u'Test argument parser.',
       u'',
@@ -80,10 +79,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       u'  --skip_compressed_streams, --skip-compressed-streams',
       u'                        Skip processing file content within compressed',
       u'                        streams, such as syslog.gz and syslog.bz2.',
-      u'  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY',
-      (u'                        Path to the directory that should be used to '
-       u'store'),
-      u'                        temporary files created during extraction.',
       u'  --yara_rules PATH, --yara-rules PATH',
       (u'                        Path to a file containing Yara rules '
        u'definitions.'),

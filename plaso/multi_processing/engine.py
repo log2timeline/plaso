@@ -25,6 +25,8 @@ class MultiProcessEngine(engine.BaseEngine):
   * manage the status update thread.
   """
 
+  _DEFAULT_WORKER_MEMORY_LIMIT = 2048 * 1024 * 1024
+
   # Note that on average Windows seems to require a longer wait.
   _RPC_SERVER_TIMEOUT = 8.0
   _MAXIMUM_RPC_ERRORS = 10
@@ -45,6 +47,7 @@ class MultiProcessEngine(engine.BaseEngine):
     self._status_update_callback = None
     self._status_update_thread = None
     self._storage_writer = None
+    self._worker_memory_limit = self._DEFAULT_WORKER_MEMORY_LIMIT
 
   def _AbortJoin(self, timeout=None):
     """Aborts all registered processes by joining with the parent process.
@@ -105,6 +108,16 @@ class MultiProcessEngine(engine.BaseEngine):
     else:
       process_is_alive = True
 
+    process_information = self._process_information_per_pid[pid]
+    used_memory = process_information.GetUsedMemory()
+
+    if used_memory > self._worker_memory_limit:
+      logging.warning((
+          u'Process: {0:s} (PID: {1:d}) killed because it exceeded the '
+          u'memory limit: {2:d}.').format(
+              process.name, pid, self._worker_memory_limit))
+      self._KillProcess(pid)
+
     if isinstance(process_status, dict):
       self._rpc_errors_per_pid[pid] = 0
       status_indicator = process_status.get(u'processing_status', None)
@@ -132,13 +145,12 @@ class MultiProcessEngine(engine.BaseEngine):
       process_status = {
           u'processing_status': processing_status_string}
 
-    self._UpdateProcessingStatus(pid, process_status)
+    self._UpdateProcessingStatus(pid, process_status, used_memory)
 
     if status_indicator in definitions.PROCESSING_ERROR_STATUS:
-      logging.error(
-          (u'Process {0:s} (PID: {1:d}) is not functioning correctly. '
-           u'Status code: {2!s}.').format(
-               process.name, pid, status_indicator))
+      logging.error((
+          u'Process {0:s} (PID: {1:d}) is not functioning correctly. '
+          u'Status code: {2!s}.').format(process.name, pid, status_indicator))
 
       self._TerminateProcess(pid)
 
@@ -309,7 +321,7 @@ class MultiProcessEngine(engine.BaseEngine):
 
     Raises:
       KeyError: if the process is not registered with the engine or
-                if the process is registered, but not monitored.
+          if the process is registered, but not monitored.
     """
     self._RaiseIfNotRegistered(pid)
     self._RaiseIfNotMonitored(pid)
@@ -364,13 +376,14 @@ class MultiProcessEngine(engine.BaseEngine):
     self._StopMonitoringProcess(pid)
 
   @abc.abstractmethod
-  def _UpdateProcessingStatus(self, pid, process_status):
+  def _UpdateProcessingStatus(self, pid, process_status, used_memory):
     """Updates the processing status.
 
     Args:
       pid (int): process identifier (PID) of the worker process.
       process_status (dict[str, object]): status values received from
           the worker process.
+      used_memory (int): size of used memory in bytes.
 
     Raises:
       KeyError: if the process is not registered with the engine.
