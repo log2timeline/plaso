@@ -48,8 +48,8 @@ class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
   _LINE_GRAMMAR = _TIMESTAMP + _COMMAND + pyparsing.lineEnd()
 
   _VERIFICATION_GRAMMAR = (
-    pyparsing.Regex(r'^\s?[^#].*?$', re.MULTILINE) + _TIMESTAMP +
-    pyparsing.NotAny(pyparsing.pythonStyleComment))
+      pyparsing.Regex(r'^\s?[^#].*?$', re.MULTILINE) + _TIMESTAMP +
+      pyparsing.NotAny(pyparsing.pythonStyleComment))
 
   LINE_STRUCTURES = [(u'log_entry', _LINE_GRAMMAR)]
 
