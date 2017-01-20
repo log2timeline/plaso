@@ -21,8 +21,10 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
   _BDE_PASSWORD = u'bde-TEST'
 
   _EXPECTED_PROCESSING_OPTIONS = u'\n'.join([
-      u'usage: log2timeline_test.py [--single_process] [--disable_zeromq]',
-      u'                            [--workers WORKERS]',
+      u'usage: log2timeline_test.py [--disable_zeromq] [--single_process]',
+      u'                            [--temporary_directory DIRECTORY]',
+      (u'                            [--worker-memory-limit SIZE] '
+       u'[--workers WORKERS]'),
       u'',
       u'Test argument parser.',
       u'',
@@ -34,7 +36,15 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       u'  --single_process, --single-process',
       (u'                        Indicate that the tool should run in a '
        u'single process.'),
-      (u'  --workers WORKERS     The number of worker threads [defaults to '
+      u'  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY',
+      (u'                        Path to the directory that should be used to '
+       u'store'),
+      u'                        temporary files created during extraction.',
+      u'  --worker-memory-limit SIZE, --worker_memory_limit SIZE',
+      (u'                        Maximum amount of memory a worker process is '
+       u'allowed'),
+      u'                        to consume. [defaults to 2 GiB]',
+      (u'  --workers WORKERS     The number of worker processes [defaults to '
        u'available'),
       u'                        system CPUs minus one].',
       u''])

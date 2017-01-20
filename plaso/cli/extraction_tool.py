@@ -60,7 +60,6 @@ class ExtractionTool(status_view_tool.StatusViewTool):
     self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._single_process_mode = False
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
-    self._temporary_directory = None
     self._text_prepend = None
     self._yara_rules_string = None
 
@@ -123,13 +122,6 @@ class ExtractionTool(status_view_tool.StatusViewTool):
     self._process_archives = getattr(options, u'process_archives', False)
     self._process_compressed_streams = getattr(
         options, u'process_compressed_streams', True)
-
-    self._temporary_directory = getattr(options, u'temporary_directory', None)
-    if (self._temporary_directory and
-        not os.path.isdir(self._temporary_directory)):
-      raise errors.BadConfigOption(
-          u'No such temporary directory: {0:s}'.format(
-              self._temporary_directory))
 
   def _ParsePerformanceOptions(self, options):
     """Parses the performance options.
@@ -272,13 +264,6 @@ class ExtractionTool(status_view_tool.StatusViewTool):
         help=(
             u'Skip processing file content within compressed streams, such as '
             u'syslog.gz and syslog.bz2.'))
-
-    argument_group.add_argument(
-        u'--temporary_directory', u'--temporary-directory',
-        dest=u'temporary_directory', type=str, action=u'store',
-        metavar=u'DIRECTORY', help=(
-            u'Path to the directory that should be used to store temporary '
-            u'files created during extraction.'))
 
   def AddPerformanceOptions(self, argument_group):
     """Adds the performance options to the argument group.

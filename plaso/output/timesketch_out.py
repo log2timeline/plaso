@@ -28,24 +28,22 @@ class TimesketchOutputModule(interface.OutputModule):
   DESCRIPTION = u'Create a Timesketch timeline.'
 
   def __init__(self, output_mediator):
-    """Initializes an output module object.
+    """Initializes a Timesketch output module.
 
     Args:
       output_mediator (OutputMediator): mediates interactions between output
           modules and other components, such as storage and dfvfs.
     """
     super(TimesketchOutputModule, self).__init__(output_mediator)
-
-    self._output_mediator = output_mediator
-    self._host = None
-    self._port = None
-    self._flush_interval = None
-    self._index_name = None
     self._doc_type = None
-    self._username = None
-    self._mapping = None
     self._elastic = None
+    self._flush_interval = None
+    self._host = None
+    self._index_name = None
+    self._mapping = None
+    self._port = None
     self._timesketch = timesketch.create_app()
+    self._username = None
 
     hostname = self._output_mediator.GetStoredHostname()
     if hostname:
@@ -72,8 +70,8 @@ class TimesketchOutputModule(interface.OutputModule):
     """Return a list of arguments that are missing from the input.
 
     Returns:
-      list[str]: argument names that are missing and necessary for the
-          module to continue to operate.
+      list[str]: names of arguments that are required by the module and have
+          not been specified.
     """
     if not self._timeline_name:
       return [u'timeline_name']
@@ -125,7 +123,7 @@ class TimesketchOutputModule(interface.OutputModule):
     logging.info(u'Owner of the timeline: {0:s}'.format(self._username))
 
   def WriteEventBody(self, event):
-    """Writes the body of an event object to the output.
+    """Writes the body of an event to the output.
 
     Args:
       event (EventObject): event.
