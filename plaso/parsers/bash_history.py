@@ -38,10 +38,8 @@ class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
 
   _ENCODING = u'utf-8'
 
-  # Matches timestamps between ~2001 and ~2033, by which time this code
-  # has hopefully been deprecated.
   _TIMESTAMP = pyparsing.Suppress(u'#') + pyparsing.Word(
-      pyparsing.nums, exact=10).setParseAction(
+      pyparsing.nums, min=9, max=10).setParseAction(
           text_parser.PyParseIntCast).setResultsName(u'timestamp')
 
   _COMMAND = pyparsing.Regex(
@@ -67,11 +65,10 @@ class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
     Raises:
       UnableToParseFile: if an unsupported key is provided.
     """
-    if key == u'log_entry':
-      event_object = BashHistoryEvent(structure.timestamp, structure.command)
-      mediator.ProduceEvent(event_object)
-    else:
+    if key != u'log_entry':
       raise errors.UnableToParseFile(u'Unsupported key: {0:s}'.format(key))
+    event = BashHistoryEvent(structure.timestamp, structure.command)
+    mediator.ProduceEvent(event)
 
   def VerifyStructure(self, unused_mediator, line):
     """Verifies that this is a bash history file.
@@ -85,6 +82,7 @@ class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
       bool: True if this is the correct parser, False otherwise.
     """
     matches = self._VERIFICATION_GRAMMAR.scanString(line, maxMatches=1)
+    # Scanstring returns a generator.
     if list(matches):
       return True
 

@@ -12,30 +12,26 @@ from tests.parsers import test_lib
 class BashHistoryTest(test_lib.ParserTestCase):
   """Test for the bash history parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser_object = bash_history.BashHistoryParser()
-
   @shared_test_lib.skipUnlessHasTestFile([u'bash_history_desync'])
   def testParsingExtractionDesync(self):
     """Tests that the parser correctly handles a desynchronized file.
 
-    A desynchronized file is one with half an event at the top. ie, it starts
-    with a command line instead of a timestamp.
+    A desynchronized file is one with half an event at the top. That is, it
+    starts with a command line instead of a timestamp.
     """
-    storage_writer = self._ParseFile(
-        [u'bash_history_desync'], self._parser_object)
+    parser = bash_history.BashHistoryParser()
+    storage_writer = self._ParseFile([u'bash_history_desync'], parser)
     events = storage_writer.events
     self._TestEventsFromFile(events)
 
   @shared_test_lib.skipUnlessHasTestFile([u'bash_history'])
   def testParsingExtractionSync(self):
-    """Tests that the parser correctly handles a synchronised file.
+    """Tests that the parser correctly handles a synchronized file.
 
-    A synchronised file is one with an event at the top. ie, it starts
-    with a timestamp line.
+    A synchronised file is one that starts with a timestamp line.
     """
-    storage_writer = self._ParseFile([u'bash_history'], self._parser_object)
+    parser = bash_history.BashHistoryParser()
+    storage_writer = self._ParseFile([u'bash_history'], parser)
     events = storage_writer.events
     self._TestEventsFromFile(events)
 
@@ -43,9 +39,8 @@ class BashHistoryTest(test_lib.ParserTestCase):
     """Validates that all events are as expected.
 
     Args:
-      events: events to check values of.
+      events (list[Event]): events to check values of.
     """
-    # There are three events in the test log
     self.assertEqual(len(events), 3)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
