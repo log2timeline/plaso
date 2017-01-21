@@ -16,11 +16,11 @@ fi
 
 rm -rf build/ dist/;
 
-./setup.py -q sdist;
+./setup.py -q sdist_test_data;
 
 if test $? -ne ${EXIT_SUCCESS};
 then
-	echo "Unable to run: ./setup.py sdist";
+	echo "Unable to run: ./setup.py sdist_test_data";
 
 	exit ${EXIT_FAILURE};
 fi
