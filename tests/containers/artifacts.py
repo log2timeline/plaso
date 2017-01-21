@@ -17,7 +17,7 @@ class EnvironmentVariableArtifactTest(shared_test_lib.BaseTestCase):
     evironment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name=u'SystemRoot', value=u'C:\\Windows')
 
-    self.assertEquals(evironment_variable.name, u'SystemRoot')
+    self.assertEqual(evironment_variable.name, u'SystemRoot')
 
     expected_dict = {
         u'case_sensitive': False,
@@ -38,7 +38,7 @@ class HostnameArtifactTest(shared_test_lib.BaseTestCase):
     """Tests the CopyToDict function."""
     hostname = artifacts.HostnameArtifact(name=u'mydomain.com')
 
-    self.assertEquals(hostname.name, u'mydomain.com')
+    self.assertEqual(hostname.name, u'mydomain.com')
 
     expected_dict = {
         u'name': u'mydomain.com',
@@ -59,7 +59,7 @@ class SystemConfigurationArtifactTest(shared_test_lib.BaseTestCase):
     system_configuration = artifacts.SystemConfigurationArtifact(
         code_page=u'cp1252', time_zone=u'UTC')
 
-    self.assertEquals(system_configuration.time_zone, u'UTC')
+    self.assertEqual(system_configuration.time_zone, u'UTC')
 
     expected_dict = {
         u'code_page': u'cp1252',
@@ -82,7 +82,7 @@ class UserAccountArtifactTest(shared_test_lib.BaseTestCase):
         full_name=u'Full Name', group_identifier=1001, identifier=1000,
         user_directory=u'/home/username', username=u'username')
 
-    self.assertEquals(user_account.username, u'username')
+    self.assertEqual(user_account.username, u'username')
 
     expected_dict = {
         u'full_name': u'Full Name',
