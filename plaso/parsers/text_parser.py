@@ -707,6 +707,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     while self._text_reader.lines:
       if parser_mediator.abort:
         break
+
       # Initialize pyparsing objects.
       tokens = None
       start = 0
@@ -717,10 +718,11 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       # Try to parse the line using all the line structures.
       for key, structure in self.LINE_STRUCTURES:
         try:
-          parsed_structure = next(
-              structure.scanString(self._text_reader.lines, maxMatches=1), None)
+          structure_generator = structure.scanString(
+              self._text_reader.lines, maxMatches=1)
+          parsed_structure = next(structure_generator, None)
         except pyparsing.ParseException:
-          continue
+          parsed_structure = None
 
         if not parsed_structure:
           continue
@@ -733,7 +735,11 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
           break
 
       if tokens and start == 0:
-        self.ParseRecord(parser_mediator, key, tokens)
+        try:
+          self.ParseRecord(parser_mediator, key, tokens)
+        except (errors.ParseError, errors.TimestampError) as exception:
+          parser_mediator.ProduceExtractionError(
+              u'unable parse record with error: {0:s}'.format(exception))
 
         self._text_reader.SkipAhead(file_object, end)
 
@@ -749,5 +755,31 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
         self._text_reader.ReadLines(file_object)
       except UnicodeDecodeError as exception:
         parser_mediator.ProduceExtractionError(
-            u'unable to read lines from file with error: {0:s}'.format(
-                exception))
+            u'unable to read lines with error: {0:s}'.format(exception))
+
+  @abc.abstractmethod
+  def ParseRecord(self, mediator, key, structure):
+    """Parses a matching entry.
+
+    Args:
+      mediator (ParserMediator): mediates the interactions between
+          parsers and other components, such as storage and abort signals.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): elements parsed from the file.
+
+    Raises:
+      UnableToParseFile: if an unsupported key is provided.
+    """
+
+  @abc.abstractmethod
+  def VerifyStructure(self, unused_mediator, line):
+    """Verifies that this is a syslog-formatted file.
+
+    Args:
+      mediator (ParserMediator): mediates the interactions between
+          parsers and other components, such as storage and abort signals.
+      line (str): single line from the text file.
+
+    Returns:
+      bool: whether the line appears to contain syslog content.
+    """

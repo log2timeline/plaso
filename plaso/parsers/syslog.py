@@ -230,11 +230,11 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       structure (pyparsing.ParseResults): elements parsed from the file.
 
     Raises:
-      UnableToParseFile: if an unsupported key is provided.
+      ParseError: when the structure type is unknown.
     """
-
     if key not in self._SUPPORTED_KEYS:
-      raise errors.UnableToParseFile(u'Unsupported key: {0:s}'.format(key))
+      raise errors.ParseError(
+          u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
     if key == u'chromeos_syslog_line':
       timestamp = timelib.Timestamp.FromTimeString(structure.iso_8601_date[0])
@@ -287,7 +287,6 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
     Returns:
       bool: whether the line appears to contain syslog content.
     """
-
     return (re.match(self._VERIFICATION_REGEX, line) or
             re.match(self._CHROMEOS_VERIFICATION_REGEX, line)) is not None
 
