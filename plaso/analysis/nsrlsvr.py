@@ -6,7 +6,6 @@ import socket
 
 from plaso.analysis import interface
 from plaso.analysis import manager
-from plaso.containers import hashes
 
 
 class NsrlsvrAnalyzer(interface.HashAnalyzer):
@@ -82,7 +81,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     # nsrlsvr returns "OK 1" if the has was found or "OK 0" if not.
     return response == b'OK 1'
 
-  def Analyze(self, hashes):
+  def Analyze(self, digest_hashes):
     """Looks up hashes in nsrlsvr.
 
     Args:
@@ -100,7 +99,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
       return []
 
     hash_analyses = []
-    for digest in hashes:
+    for digest in digest_hashes:
       response = self._QueryHash(nsrl_socket, digest)
       if response is None:
         continue

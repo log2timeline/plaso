@@ -117,9 +117,8 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
     self.assertEqual(labels, expected_labels)
 
     # TODO: Renable when tagging is removed from the analysis report.
-
-    expected_labels = [u'nsrl_not_present']
-    self.assertEqual(event_tag.labels, expected_labels)
+    # expected_labels = [u'nsrl_not_present']
+    # self.assertEqual(labels, expected_labels)
 
 
 if __name__ == '__main__':

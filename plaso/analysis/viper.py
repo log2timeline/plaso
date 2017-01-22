@@ -5,8 +5,6 @@ import logging
 
 from plaso.analysis import interface
 from plaso.analysis import manager
-from plaso.containers import events
-from plaso.containers import hashes
 from plaso.lib import errors
 
 
@@ -62,11 +60,11 @@ class ViperAnalyzer(interface.HTTPHashAnalyzer):
 
     return json_response
 
-  def Analyze(self, hashes):
+  def Analyze(self, digest_hashes):
     """Looks up hashes in Viper using the Viper HTTP API.
 
     Args:
-      hashes (list[str]): hashes to look up. The Viper plugin supports
+      digest_hashes (list[str]): hashes to look up. The Viper plugin supports
           only one hash at a time.
 
     Returns:
@@ -77,7 +75,7 @@ class ViperAnalyzer(interface.HTTPHashAnalyzer):
       ValueError: If the hashes list contains a number of hashes other than one.
     """
     hash_analyses = []
-    for digest in hashes:
+    for digest in digest_hashes:
       json_response = self._QueryHash(digest)
       hash_analysis = interface.HashAnalysis(digest, json_response)
       hash_analyses.append(hash_analysis)
