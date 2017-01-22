@@ -26,8 +26,11 @@ class SerializedStreamIdentifier(
     self.entry_index = entry_index
     self.stream_number = stream_number
 
-  @property
-  def identifier(self):
-    """str: unique identifier or None."""
+  def CopyToString(self):
+    """Copies the identifier to a string representation.
+
+    Returns:
+      str: unique identifier or None.
+    """
     if self.stream_number is not None and self.entry_index is not None:
       return u'{0:d}.{1:d}'.format(self.stream_number, self.entry_index)

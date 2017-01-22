@@ -826,11 +826,14 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
       storage_file = zip_file.ZIPStorageFile()
       storage_file.Open(path=temp_file)
 
-      event_identifier = identifiers.SerializedStreamIdentifier(0, 0)
+      event_identifier = identifiers.SerializedStreamIdentifier(1, 0)
+      event_tag = storage_file._GetEventTagByIdentifier(event_identifier)
+      self.assertIsNotNone(event_tag)
+      self.assertEqual(event_tag.comment, u'My comment')
+
+      event_identifier = identifiers.SerializedStreamIdentifier(99, 0)
       event_tag = storage_file._GetEventTagByIdentifier(event_identifier)
       self.assertIsNone(event_tag)
-
-      # TODO: add positive test.
 
       storage_file.Close()
 

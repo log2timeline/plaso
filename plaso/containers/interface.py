@@ -15,7 +15,7 @@ class AttributeContainerIdentifier(object):
   def __init__(self):
     """Initializes an attribute container identifier."""
     super(AttributeContainerIdentifier, self).__init__()
-    self._identifier = None
+    self._identifier = id(self)
 
   def CopyToString(self):
     """Copies the identifier to a string representation.
@@ -92,7 +92,7 @@ class AttributeContainer(object):
     The identifier is a storage specific value that should not be serialized.
 
     Returns:
-      AttributeContainerIdentifier: a unique identifier for the container.
+      AttributeContainerIdentifier: an unique identifier for the container.
     """
     return self._identifier
 
