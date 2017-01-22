@@ -44,12 +44,12 @@ class SerializedDataStreamTest(test_lib.StorageTestCase):
 
     entry_data1 = data_stream.ReadEntry()
     self.assertEqual(data_stream.entry_index, 1)
-    self.assertEqual(data_stream._stream_offset, 654)
+    self.assertEqual(data_stream._stream_offset, 610)
     self.assertIsNotNone(entry_data1)
 
     entry_data2 = data_stream.ReadEntry()
     self.assertEqual(data_stream.entry_index, 2)
-    self.assertEqual(data_stream._stream_offset, 1306)
+    self.assertEqual(data_stream._stream_offset, 1218)
     self.assertIsNotNone(entry_data2)
 
     # Read more entries than in the stream.
@@ -57,19 +57,19 @@ class SerializedDataStreamTest(test_lib.StorageTestCase):
       entry_data = data_stream.ReadEntry()
 
     self.assertEqual(data_stream.entry_index, 19)
-    self.assertEqual(data_stream._stream_offset, 12473)
+    self.assertEqual(data_stream._stream_offset, 11637)
     self.assertIsNone(entry_data)
 
-    data_stream.SeekEntryAtOffset(1, 654)
+    data_stream.SeekEntryAtOffset(1, 610)
     entry_data = data_stream.ReadEntry()
     self.assertEqual(data_stream.entry_index, 2)
-    self.assertEqual(data_stream._stream_offset, 1306)
+    self.assertEqual(data_stream._stream_offset, 1218)
     self.assertEqual(entry_data, entry_data2)
 
     data_stream.SeekEntryAtOffset(0, 0)
     entry_data = data_stream.ReadEntry()
     self.assertEqual(data_stream.entry_index, 1)
-    self.assertEqual(data_stream._stream_offset, 654)
+    self.assertEqual(data_stream._stream_offset, 610)
     self.assertEqual(entry_data, entry_data1)
 
     with self.assertRaises(IOError):
@@ -156,13 +156,13 @@ class SerializedDataOffsetTableTest(test_lib.StorageTestCase):
     offset_table.Read()
 
     self.assertEqual(offset_table.GetOffset(0), 0)
-    self.assertEqual(offset_table.GetOffset(1), 654)
+    self.assertEqual(offset_table.GetOffset(1), 610)
 
     with self.assertRaises(IndexError):
       offset_table.GetOffset(99)
 
-    self.assertEqual(offset_table.GetOffset(-1), 11841)
-    self.assertEqual(offset_table.GetOffset(-2), 11209)
+    self.assertEqual(offset_table.GetOffset(-1), 11049)
+    self.assertEqual(offset_table.GetOffset(-2), 10461)
 
     with self.assertRaises(IndexError):
       offset_table.GetOffset(-99)
@@ -227,8 +227,8 @@ class SerializedDataTimestampTableTest(test_lib.StorageTestCase):
     with self.assertRaises(IndexError):
       timestamp_table.GetTimestamp(99)
 
-    self.assertEqual(timestamp_table.GetTimestamp(-1), 1485089424000000)
-    self.assertEqual(timestamp_table.GetTimestamp(-2), 1485089422000000)
+    self.assertEqual(timestamp_table.GetTimestamp(-1), 1485108902000000)
+    self.assertEqual(timestamp_table.GetTimestamp(-2), 1485108900000000)
 
     with self.assertRaises(IndexError):
       timestamp_table.GetTimestamp(-99)
@@ -1456,8 +1456,8 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
       1364079678000000, 1364079678000000, 1384737320000000, 1384737320000000,
       1388512472000000, 1388512472000000, 1391699790000000, 1391699790000000,
       1416273343000000, 1416273343000000, 1416299420000000, 1416299420000000,
-      1416299480000000, 1416299480000000, 1485089422000000, 1485089422000000,
-      1485089422000000, 1485089422000000, 1485089423000000, 1485089424000000]
+      1416299480000000, 1416299480000000, 1485108900000000, 1485108900000000,
+      1485108900000000, 1485108900000000, 1485108901000000, 1485108902000000]
 
   @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
   def testGetEvents(self):

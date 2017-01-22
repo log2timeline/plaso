@@ -15,9 +15,7 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
 2014-11-18T01:15:43+00:00,Content Modification Time,LOG,Log File,[---] last message repeated 5 times ---,syslog,OS:/tmp/test/test_data/syslog,repeated
 2014-11-18T08:30:20+00:00,Content Modification Time,LOG,Log File,[kernel] [997.390602] sda2: rw=0  want=65  limit=2,syslog,OS:/tmp/test/test_data/syslog,-
 2014-11-18T08:31:20+00:00,Content Modification Time,LOG,Log File,[kernel] [998.390602] sda2: rw=0  want=66  limit=2,syslog,OS:/tmp/test/test_data/syslog,-
-2017-01-22T12:50:22+00:00,ctime,FILE,OS ctime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
-2017-01-22T12:50:22+00:00,ctime,FILE,OS ctime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
-2017-01-22T12:50:22+00:00,mtime,FILE,OS mtime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
-2017-01-22T12:50:22+00:00,mtime,FILE,OS mtime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
-2017-01-22T12:50:23+00:00,atime,FILE,OS atime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
-2017-01-22T12:50:24+00:00,atime,FILE,OS atime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
+2017-01-22T18:15:00+00:00,ctime,FILE,OS ctime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
+2017-01-22T18:15:00+00:00,mtime,FILE,OS mtime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
+2017-01-22T18:15:01+00:00,atime,FILE,OS atime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-
+2017-01-22T18:15:02+00:00,atime,FILE,OS atime,OS:/tmp/test/test_data/syslog Type: file,filestat,OS:/tmp/test/test_data/syslog,-

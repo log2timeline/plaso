@@ -226,11 +226,9 @@ class PregFrontendTest(shared_test_lib.BaseTestCase):
 
     for index, event in enumerate(event_objects):
       parsed_key_event = parsed_key_value[index]
-      event_values = event.CopyToDict()
-      del event_values[u'uuid']
 
+      event_values = event.CopyToDict()
       parsed_key_event_values = parsed_key_event.CopyToDict()
-      del parsed_key_event_values[u'uuid']
 
       self.assertEqual(event_values, parsed_key_event_values)
 

@@ -15,9 +15,7 @@ Time|Source|Host|User|Description
 1416273343|LOG|:|-|2014-11-18T01:15:43+00:00; Content Modification Time; [---] last message repeated 5 times ---
 1416299420|LOG|-|-|2014-11-18T08:30:20+00:00; Content Modification Time; [kernel] [997.390602] sda2: rw=0, want=65, limit=2
 1416299480|LOG|victoria|-|2014-11-18T08:31:20+00:00; Content Modification Time; [kernel] [998.390602] sda2: rw=0, want=66, limit=2
-1485089422|FILE|-|-|2017-01-22T12:50:22+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file
-1485089422|FILE|-|-|2017-01-22T12:50:22+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file
-1485089422|FILE|-|-|2017-01-22T12:50:22+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file
-1485089422|FILE|-|-|2017-01-22T12:50:22+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file
-1485089423|FILE|-|-|2017-01-22T12:50:23+00:00; atime; OS:/tmp/test/test_data/syslog Type: file
-1485089424|FILE|-|-|2017-01-22T12:50:24+00:00; atime; OS:/tmp/test/test_data/syslog Type: file
+1485108900|FILE|-|-|2017-01-22T18:15:00+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file
+1485108900|FILE|-|-|2017-01-22T18:15:00+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file
+1485108901|FILE|-|-|2017-01-22T18:15:01+00:00; atime; OS:/tmp/test/test_data/syslog Type: file
+1485108902|FILE|-|-|2017-01-22T18:15:02+00:00; atime; OS:/tmp/test/test_data/syslog Type: file

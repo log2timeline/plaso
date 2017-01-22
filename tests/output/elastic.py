@@ -49,7 +49,6 @@ class ElasticSearchHelperTest(test_lib.OutputModuleTestCase):
     label = u'Test'
     event = ElasticTestEvent(event_timestamp)
     event_tag = events.EventTag()
-    event_tag.uuid = event.uuid
     event_tag.AddLabel(label)
     event.tag = event_tag
 

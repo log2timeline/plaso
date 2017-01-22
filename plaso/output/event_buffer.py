@@ -73,6 +73,19 @@ class EventBuffer(object):
 
   _JOIN_ATTRIBUTES = frozenset([u'display_name', u'filename', u'inode'])
 
+  # Attributes that should not be used in calculating the event key.
+  # TODO: remove uuid when test files have been updated.
+  _EXCLUDED_ATTRIBUTES = frozenset([
+      u'data_type',
+      u'display_name',
+      u'filename',
+      u'inode',
+      u'parser',
+      u'pathspec',
+      u'tag',
+      u'timestamp',
+      u'uuid'])
+
   def __init__(self, output_module, check_dedups=True):
     """Initializes an event buffer object.
 
@@ -102,6 +115,46 @@ class EventBuffer(object):
     """Make usable with "with" statement."""
     self.End()
 
+  def _GetEventIdentifier(self, event):
+    """Determines an unique identifier of an event from its attributes.
+
+    Args:
+      event (EventObject): event.
+
+    Returns:
+      str: unique identifier representation of the event that can be used for
+          equality comparison.
+    """
+    attributes = {}
+    for attribute_name, attribute_value in event.GetAttributes():
+      if attribute_name in self._EXCLUDED_ATTRIBUTES:
+        continue
+
+      if isinstance(attribute_value, dict):
+        attribute_value = sorted(attribute_value.items())
+
+      elif isinstance(attribute_value, set):
+        attribute_value = sorted(list(attribute_value))
+
+      attributes[attribute_name] = attribute_value
+
+    if event.pathspec:
+      attributes[u'pathspec'] = event.pathspec.comparable
+
+    try:
+      event_identifier_string = u'|'.join([
+          u'{0:s}={1!s}'.format(attribute_name, attribute_value)
+          for attribute_name, attribute_value in sorted(attributes.items())])
+
+    except UnicodeDecodeError:
+      event_identifier = event.GetIdentifier()
+      event_identifier_string = u'identifier={0:s}'.format(
+          event_identifier.CopyToString())
+
+    event_identifier_string = u'{0:d}|{1:s}|{2:s}'.format(
+        event.timestamp, event.data_type, event_identifier_string)
+    return event_identifier_string
+
   def Append(self, event):
     """Appends an event.
 
@@ -116,12 +169,12 @@ class EventBuffer(object):
       self._current_timestamp = event.timestamp
       self.Flush()
 
-    key = event.EqualityString()
-    if key in self._events_per_key:
-      duplicate_event = self._events_per_key.pop(key)
+    lookup_key = self._GetEventIdentifier(event)
+    if lookup_key in self._events_per_key:
+      duplicate_event = self._events_per_key.pop(lookup_key)
       self.JoinEvents(event, duplicate_event)
 
-    self._events_per_key[key] = event
+    self._events_per_key[lookup_key] = event
 
   def End(self):
     """Closes the buffer.
