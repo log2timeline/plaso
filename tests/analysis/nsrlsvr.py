@@ -100,21 +100,25 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
     storage_writer = self._AnalyzeEvents(events, plugin)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
+    self.assertEqual(len(storage_writer.event_tags), 1)
 
-    analysis_report = storage_writer.analysis_reports[0]
+    report = storage_writer.analysis_reports[0]
+    self.assertIsNotNone(report)
 
-    tags = analysis_report.GetTags()
-    self.assertEqual(len(tags), 1)
+    expected_text = (
+        u'nsrlsvr hash tagging results\n'
+        u'1 path specifications tagged with label: nsrl_present\n')
+    self.assertEqual(report.text, expected_text)
 
-    tag = tags[0]
-    self.assertEqual(tag.event_uuid, u'8')
+    labels = []
+    for event_tag in storage_writer.event_tags:
+      labels.extend(event_tag.labels)
+    self.assertEqual(len(labels), 1)
 
     expected_labels = [u'nsrl_present']
-    self.assertEqual(tag.labels, expected_labels)
+    self.assertEqual(labels, expected_labels)
 
     # TODO: Renable when tagging is removed from the analysis report.
-    # tag = tags[1]
-    # self.assertEqual(tag.event_uuid, u'9')
 
     # expected_labels = [u'nsrl_not_present']
     # self.assertEqual(tag.labels, expected_labels)

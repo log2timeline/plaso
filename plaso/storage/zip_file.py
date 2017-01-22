@@ -3011,9 +3011,6 @@ class ZIPStorageFileWriter(interface.StorageWriter):
     if not self._storage_file:
       raise IOError(u'Unable to write to closed storage writer.')
 
-    for event_tag in analysis_report.GetTags():
-      self.AddEventTag(event_tag)
-
     self._storage_file.AddAnalysisReport(analysis_report)
 
     report_identifier = analysis_report.plugin_name
