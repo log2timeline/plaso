@@ -1677,7 +1677,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     Raises:
       IOError: if the ZIP file is already opened or if the ZIP file cannot
-               be opened.
+          be opened.
     """
     if self._zipfile:
       raise IOError(u'ZIP file already opened.')
@@ -1992,7 +1992,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     Raises:
       IOError: if the storage type does not support writing a session
-               completion or the session completion already exists.
+          completion or the session completion already exists.
     """
     if self.storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError(u'Session completion not supported by storage type.')
@@ -2019,7 +2019,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     Raises:
       IOError: if the storage type does not support writing a session
-               start or the session start already exists.
+          start or the session start already exists.
     """
     if self.storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError(u'Session completion not supported by storage type.')
@@ -2076,7 +2076,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     Raises:
       IOError: if the storage type does not support writing a task
-               completion or the task completion already exists.
+          completion or the task completion already exists.
     """
     if self.storage_type != definitions.STORAGE_TYPE_TASK:
       raise IOError(u'Task completion not supported by storage type.')
@@ -2102,7 +2102,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     Raises:
       IOError: if the storage type does not support writing a task start
-               or the task start already exists.
+          or the task start already exists.
     """
     if self.storage_type != definitions.STORAGE_TYPE_TASK:
       raise IOError(u'Task start not supported by storage type.')
@@ -2160,11 +2160,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     Raises:
       IOError: when the storage file is closed or read-only or
-               if the error cannot be serialized.
-
-    Raises:
-      IOError: when the storage file is closed or read-only or
-               if the event cannot be serialized.
+          if the error cannot be serialized.
     """
     if not self._is_open:
       raise IOError(u'Unable to write to closed storage file.')
@@ -2194,7 +2190,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     Raises:
       IOError: when the storage file is closed or read-only or
-               if the event cannot be serialized.
+          if the event cannot be serialized.
     """
     if not self._is_open:
       raise IOError(u'Unable to write to closed storage file.')
@@ -2306,7 +2302,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     Raises:
       IOError: when the storage file is closed or read-only or
-               if the stream cannot be opened.
+          if the stream cannot be opened.
     """
     if not self._is_open:
       raise IOError(u'Unable to write to closed storage file.')
@@ -2324,8 +2320,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     Raises:
       IOError: if the storage file is already closed,
-               if the event source cannot be serialized or
-               if the storage file cannot be closed.
+          if the event source cannot be serialized or
+          if the storage file cannot be closed.
     """
     if not self._is_open:
       raise IOError(u'Storage file already closed.')
@@ -2387,7 +2383,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     Raises:
       IOError: when trying to write to a closed storage file or
-               if the event source cannot be serialized.
+          if the event source cannot be serialized.
     """
     if not self._is_open:
       raise IOError(u'Unable to flush a closed storage file.')
@@ -2731,8 +2727,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     Raises:
       IOError: if the storage type does not support writing preprocess
-               information or the storage file is closed or read-only or
-               if the preprocess information stream already exists.
+          information or the storage file is closed or read-only or
+          if the preprocess information stream already exists.
     """
     if not self._is_open:
       raise IOError(u'Unable to write to closed storage file.')
@@ -2981,7 +2977,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported or
-               if the temporary path for the task storage does not exist.
+          if the temporary path for the task storage does not exist.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError(u'Unsupported storage type.')
@@ -3025,7 +3021,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported or
-               if the temporary path for the task storage does not exist.
+          if the temporary path for the task storage does not exist.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError(u'Unsupported storage type.')
@@ -3133,7 +3129,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported or
-               if the temporary path for the task storage does not exist.
+          if the temporary path for the task storage does not exist.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError(u'Unsupported storage type.')
@@ -3194,10 +3190,9 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the storage file cannot be opened or
-               if the storage type is not supported or
-               if the temporary path for the task storage does not exist or
-               if the temporary path for the task storage doe not refers to
-               a file.
+          if the storage type is not supported or
+          if the temporary path for the task storage does not exist or
+          if the temporary path for the task storage doe not refers to a file.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError(u'Unsupported storage type.')
@@ -3218,7 +3213,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported or
-               if the temporary path for the task storage already exists.
+          if the temporary path for the task storage already exists.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError(u'Unsupported storage type.')
@@ -3241,7 +3236,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported or
-               if the temporary path for the task storage does not exist.
+          if the temporary path for the task storage does not exist.
     """
     if self._storage_type != definitions.STORAGE_TYPE_SESSION:
       raise IOError(u'Unsupported storage type.')
@@ -3272,7 +3267,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the storage type does not support writing preprocessing
-               information or when the storage writer is closed.
+          information or when the storage writer is closed.
     """
     if not self._storage_file:
       raise IOError(u'Unable to write to closed storage writer.')
@@ -3290,7 +3285,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported or
-               when the storage writer is closed.
+          when the storage writer is closed.
     """
     if not self._storage_file:
       raise IOError(u'Unable to write to closed storage writer.')
@@ -3307,7 +3302,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported or
-               when the storage writer is closed.
+          when the storage writer is closed.
     """
     if not self._storage_file:
       raise IOError(u'Unable to write to closed storage writer.')
@@ -3326,7 +3321,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported or
-               when the storage writer is closed.
+          when the storage writer is closed.
     """
     if not self._storage_file:
       raise IOError(u'Unable to write to closed storage writer.')
@@ -3343,7 +3338,7 @@ class ZIPStorageFileWriter(interface.StorageWriter):
 
     Raises:
       IOError: if the storage type is not supported or
-               when the storage writer is closed.
+          when the storage writer is closed.
     """
     if not self._storage_file:
       raise IOError(u'Unable to write to closed storage writer.')

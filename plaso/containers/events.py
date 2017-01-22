@@ -238,10 +238,6 @@ class EventObject(interface.AttributeContainer):
 class EventTag(interface.AttributeContainer):
   """Class to represent an event tag attribute container.
 
-  The event tag either needs to have an event_uuid defined or both
-  the store_number and store_index to be valid. If both defined
-  the store_number and store_index is preferred.
-
   Attributes:
     comment (str): comments.
     event_entry_index (int): serialized data stream entry index of the event,
@@ -252,13 +248,8 @@ class EventTag(interface.AttributeContainer):
         identify the event linked to the tag.
     event_uuid (str): event identifier (UUID).
     labels (list[str]): labels, such as "malware", "application_execution".
-    store_index (int): store index of the corresponding event.
-    store_number (int): store number of the corresponding event.
   """
   CONTAINER_TYPE = u'event_tag'
-
-  _ATTRIBUTE_NAMES = frozenset([
-      u'comment', u'event_uuid', u'labels', u'store_index', u'store_number'])
 
   _INVALID_LABEL_CHARACTERS_REGEX = re.compile(r'[^A-Za-z0-9_]')
 
@@ -278,17 +269,6 @@ class EventTag(interface.AttributeContainer):
     self.event_stream_number = None
     self.event_uuid = event_uuid
     self.labels = []
-    # TODO: deprecate store number and index.
-    self.store_index = None
-    self.store_number = None
-
-  @property
-  def string_key(self):
-    """str: string index key for this tag."""
-    if self.event_uuid is not None:
-      return self.event_uuid
-
-    return u'{0:d}:{1:d}'.format(self.store_number, self.store_index)
 
   def AddComment(self, comment):
     """Adds a comment to the event tag.
@@ -380,19 +360,6 @@ class EventTag(interface.AttributeContainer):
     """
     text = u'{0:s}{1:s}'.format(prefix, text)
     return cls._INVALID_LABEL_CHARACTERS_REGEX.sub(u'_', text)
-
-  def GetAttributes(self):
-    """Retrieves the attributes from the event tag object.
-
-    Attributes that are set to None are ignored.
-
-    Yields:
-      tuple[str, str]: event tag attribute name and value.
-    """
-    for attribute_name in self._ATTRIBUTE_NAMES:
-      attribute_value = getattr(self, attribute_name, None)
-      if attribute_value is not None:
-        yield attribute_name, attribute_value
 
   def GetEventIdentifier(self):
     """Retrieves the event identifier.

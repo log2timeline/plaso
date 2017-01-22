@@ -217,8 +217,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     container_object = container_class()
     supported_attribute_names = container_object.GetAttributeNames()
     for attribute_name, attribute_value in iter(json_dict.items()):
-      # Be strict about which attributes to set in non analysis reports
-      # and events.
+      # Be strict about which attributes to set in non events.
       if (container_type != u'event' and
           attribute_name not in supported_attribute_names):
         continue
@@ -270,7 +269,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       json_list: a list of the JSON serialized objects.
 
     Returns:
-      A deserialized list.
+      list[object]: a deserialized list.
     """
     list_value = []
     for json_list_element in json_list:

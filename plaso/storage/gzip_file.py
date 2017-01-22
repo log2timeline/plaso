@@ -370,6 +370,11 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
       self._storage_writer.AddEvent(attribute_container)
 
     elif container_type == u'event_tag':
+      event_identifier = identifiers.SerializedStreamIdentifier(
+          attribute_container.event_stream_number,
+          attribute_container.event_entry_index)
+      attribute_container.SetEventIdentifier(event_identifier)
+
       self._storage_writer.AddEventTag(attribute_container)
 
     elif container_type == u'extraction_error':
@@ -431,14 +436,17 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
         if not line.endswith(b'\n'):
           self._data_buffer = b''.join(lines[index:])
           continue
+
         attribute_container = self._DeserializeAttributeContainer(
             line, u'attribute_container')
         self._AddAttributeContainer(attribute_container)
         number_of_containers += 1
+
         if (maximum_number_of_containers > 0 and
             number_of_containers >= maximum_number_of_containers):
           self._data_buffer = b''.join(lines[index+1:])
           return False
+
       additional_data_buffer = self._gzip_file.read(self._DATA_BUFFER_SIZE)
       self._data_buffer = b''.join([self._data_buffer, additional_data_buffer])
 
