@@ -113,6 +113,7 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
     labels = []
     for event_tag in storage_writer.event_tags:
       labels.extend(event_tag.labels)
+
     self.assertEqual(len(labels), 5)
 
     # This is from a tag rule declared in objectfilter syntax.

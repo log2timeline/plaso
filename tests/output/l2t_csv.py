@@ -52,7 +52,6 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
     self._output_writer = cli_test_lib.TestOutputWriter()
     self._formatter = l2t_csv.L2TCSVOutputModule(output_mediator)
     self._formatter.SetOutputWriter(self._output_writer)
-    self._event_object = L2TTestEvent()
 
   def testWriteHeader(self):
     """Tests the WriteHeader function."""
@@ -73,8 +72,10 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
     event_tag = events.EventTag()
     event_tag.AddLabels([u'Malware', u'Printed'])
 
-    self._event_object.tag = event_tag
-    self._formatter.WriteEventBody(self._event_object)
+    event = L2TTestEvent()
+    event.SetEventTag(event_tag)
+
+    self._formatter.WriteEventBody(event)
 
     expected_event_body = (
         b'06/27/2012,18:17:01,UTC,M...,LOG,Syslog,Content Modification Time,-,'

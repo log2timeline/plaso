@@ -10,6 +10,10 @@ from efilter import api as efilter_api
 from efilter import errors as efilter_errors
 from efilter import query as efilter_query
 
+# We need to import the dottysql formatter, as EFILTER doesn't load it by
+# default.
+from efilter.transforms import asdottysql  # pylint: disable=unused-import
+
 from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.containers import reports

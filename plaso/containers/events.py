@@ -40,8 +40,6 @@ class EventObject(interface.AttributeContainer):
   def __init__(self):
     """Initializes an event object."""
     super(EventObject, self).__init__()
-    self._store_index = None
-    self._store_number = None
     self.data_type = self.DATA_TYPE
     self.display_name = None
     self.filename = None

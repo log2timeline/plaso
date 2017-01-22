@@ -34,8 +34,7 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
 
   _TEST_EVENTS = [{
       u'timestamp': timelib.Timestamp.CopyFromString(u'2015-01-01 17:00:00'),
-      u'sha256_hash': _EVENT_1_HASH,
-      u'uuid': u'8'}]
+      u'sha256_hash': _EVENT_1_HASH}]
 
   def _MockPost(self, unused_url, data=None):
     """Mock funtion to simulate a Viper API request.

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """The attribute container interface."""
 
+import uuid
+
 from efilter.protocols import structured
 
 

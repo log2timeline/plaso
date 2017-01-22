@@ -90,6 +90,8 @@ class StorageTestCase(shared_test_lib.BaseTestCase):
     event_tag = events.EventTag(comment=u'This is interesting')
     event_tag.SetEventIdentifier(event_identifier)
     event_tag.AddLabels([u'Malware', u'Benign'])
+    event_identifier = test_events[2].GetIdentifier()
+    event_tag.SetEventIdentifier(event_identifier)
     event_tags.append(event_tag)
 
     event_identifier = test_events[1].GetIdentifier()
@@ -97,6 +99,8 @@ class StorageTestCase(shared_test_lib.BaseTestCase):
     event_tag = events.EventTag()
     event_tag.SetEventIdentifier(event_identifier)
     event_tag.AddLabel(u'Interesting')
+    event_identifier = test_events[1].GetIdentifier()
+    event_tag.SetEventIdentifier(event_identifier)
     event_tags.append(event_tag)
 
     return event_tags

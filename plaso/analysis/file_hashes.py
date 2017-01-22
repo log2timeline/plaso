@@ -27,27 +27,30 @@ class FileHashesPlugin(interface.AnalysisPlugin):
           analysis plugins and other components, such as storage and dfvfs.
       event (EventObject): event to examine.
     """
-    pathspec = getattr(event, u'pathspec', None)
-    if pathspec is None:
+    path_specification = getattr(event, u'pathspec', None)
+    if path_specification is None:
       return
-    if self._paths_with_hashes.get(pathspec, None):
-      # We've already processed an event with this pathspec and extracted the
-      # hashes from it.
+
+    if self._paths_with_hashes.get(path_specification, None):
+      # We've already processed an event with this path_specification and
+      # extracted the hashes from it.
       return
+
     hash_attributes = {}
     for attribute_name, attribute_value in event.GetAttributes():
       if attribute_name.endswith(u'_hash'):
         hash_attributes[attribute_name] = attribute_value
-    self._paths_with_hashes[pathspec] = hash_attributes
 
-  def _GeneratePathString(self, mediator, pathspec, hashes):
-    """Generates a string containing a pathspec and its hashes.
+    self._paths_with_hashes[path_specification] = hash_attributes
+
+  def _GeneratePathString(self, mediator, path_specification, hashes):
+    """Generates a string containing a path specification and its hashes.
 
     Args:
       mediator (AnalysisMediator): mediates interactions between analysis
           plugins and other components, such as storage and dfvfs.
-      pathspec (dfvfs.Pathspec): the path specification) to generate a string
-          for.
+      path_specification (dfvfs.Pathspec): the path specification to generate
+          a string for.
       hashes (dict[str, str]): mapping of hash attribute names to the value of
           that hash for the path specification being processed.
 
@@ -55,7 +58,7 @@ class FileHashesPlugin(interface.AnalysisPlugin):
       str: string of the form "display_name: hash_type=hash_value". For example,
           "OS:/path/spec: test_hash=4 other_hash=5".
     """
-    display_name = mediator.GetDisplayName(pathspec)
+    display_name = mediator.GetDisplayName(path_specification)
     path_string = u'{0:s}:'.format(display_name)
     for hash_name, hash_value in sorted(hashes.items()):
       path_string = u'{0:s} {1:s}={2:s}'.format(
@@ -73,11 +76,12 @@ class FileHashesPlugin(interface.AnalysisPlugin):
       AnalysisReport: report.
     """
     lines_of_text = [u'Listing file paths and hashes']
-    for pathspec, hashes in sorted(
+    for path_specification, hashes in sorted(
         self._paths_with_hashes.items(),
         key=lambda tuple: tuple[0].comparable):
 
-      path_string = self._GeneratePathString(mediator, pathspec, hashes)
+      path_string = self._GeneratePathString(
+          mediator, path_specification, hashes)
       lines_of_text.append(path_string)
 
     lines_of_text.append(u'')
