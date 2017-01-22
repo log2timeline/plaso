@@ -75,23 +75,6 @@ class EventObject(interface.AttributeContainer):
     self.tag = None
     self.timestamp = None
 
-  def GetAttributeNames(self):
-    """Retrieves the attribute names from the event object.
-
-    Attributes that are set to None are ignored.
-
-    Returns:
-      list[str]: attribute names.
-    """
-    attribute_names = []
-    for attribute_name, attribute_value in self.GetAttributes():
-      if attribute_value is None:
-        continue
-
-      attribute_names.append(attribute_name)
-
-    return attribute_names
-
 
 class EventTag(interface.AttributeContainer):
   """Class to represent an event tag attribute container.
