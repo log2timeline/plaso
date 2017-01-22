@@ -7,6 +7,8 @@ from efilter.protocols import structured
 class AttributeContainerIdentifier(object):
   """Class that defines the attribute container identifier.
 
+  The identifier is a storage specific value that should not be serialized.
+
   The identifier is used to uniquely identify attribute containers.
   """
 
@@ -15,9 +17,12 @@ class AttributeContainerIdentifier(object):
     super(AttributeContainerIdentifier, self).__init__()
     self._identifier = None
 
-  @property
-  def identifier(self):
-    """str: unique identifier or None."""
+  def CopyToString(self):
+    """Copies the identifier to a string representation.
+
+    Returns:
+      str: unique identifier or None.
+    """
     return self._identifier
 
 
@@ -47,7 +52,7 @@ class AttributeContainer(object):
     """Copies the attribute container to a dictionary.
 
     Returns:
-      dict[str, object]: attribute values.
+      dict[str, object]: attribute values per name.
     """
     return {
         attribute_name: attribute_value
@@ -87,7 +92,7 @@ class AttributeContainer(object):
     The identifier is a storage specific value that should not be serialized.
 
     Returns:
-      AttributeContainerIdentifier: identifier.
+      AttributeContainerIdentifier: a unique identifier for the container.
     """
     return self._identifier
 

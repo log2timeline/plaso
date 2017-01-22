@@ -75,8 +75,9 @@ class AnalysisPlugin(object):
     event_tag.SetEventIdentifier(event_identifier)
     event_tag.AddLabels(labels)
 
+    event_identifier_string = event_identifier.CopyToString()
     logging.debug(u'Created event tag: {0:s} for event: {1:s}'.format(
-        comment, event_identifier.identifier))
+        comment, event_identifier_string))
 
     return event_tag
 

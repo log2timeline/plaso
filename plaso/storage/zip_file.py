@@ -877,7 +877,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     self._event_tag_index = {}
     for event_tag in self.GetEventTags():
       event_identifier = event_tag.GetEventIdentifier()
-      lookup_key = event_identifier.identifier
+      lookup_key = event_identifier.CopyToString()
       self._event_tag_index[lookup_key] = event_tag.GetIdentifier()
 
   def _FillEventHeapFromStream(self, stream_number):
@@ -1137,7 +1137,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     if not self._event_tag_index:
       self._BuildEventTagIndex()
 
-    lookup_key = event_identifier.identifier
+    lookup_key = event_identifier.CopyToString()
     event_tag_identifier = self._event_tag_index.get(lookup_key, None)
     if not event_tag_identifier:
       return
@@ -2282,7 +2282,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     event_tag.event_entry_index = event_identifier.entry_index
 
     # TODO: update event tag index value.
-    lookup_key = event_identifier.identifier
+    lookup_key = event_identifier.CopyToString()
     self._event_tag_index[lookup_key] = event_tag_identifier
 
     # We try to serialize the event tag first, so we can skip some

@@ -10,15 +10,12 @@ class AnalysisReport(interface.AttributeContainer):
   """Class to represent an analysis report attribute container.
 
   Attributes:
-    filter_string: a string containing ???
-    images: a list containing ???
-    plugin_name: a string containing the name of the analysis plugin that
-                 generated the report.
-    report_array: an array containing ???
-    report_dict: a dictionary containing ???
-    text: a string containing the report text or None.
-    time_compiled: a timestamp containing the date and time the report was
-                   compiled.
+    filter_string (str): ???
+    plugin_name (str): name of the analysis plugin that generated the report.
+    report_array (array[str]): ???
+    report_dict (dict[str]): ???
+    text (str): report text.
+    time_compiled (int): timestamp of the date and time the report was compiled.
   """
   CONTAINER_TYPE = u'analysis_report'
 
@@ -26,13 +23,12 @@ class AnalysisReport(interface.AttributeContainer):
     """Initializes the analysis report.
 
     Args:
-      plugin_name: optional string containing the name of the analysis plugin
-                   that generated the report.
-      text: optional string containing the report text.
+      plugin_name (Optional[str]): name of the analysis plugin that generated
+          the report.
+      text (Optional[str]): report text.
     """
     super(AnalysisReport, self).__init__()
     self.filter_string = None
-    self.images = None
     self.plugin_name = plugin_name
     self.report_array = None
     self.report_dict = None
@@ -44,7 +40,7 @@ class AnalysisReport(interface.AttributeContainer):
     """Copies the attribute container to a dictionary.
 
     Returns:
-      A dictionary containing the attribute container attributes.
+      dict[str, object]: attribute values per name.
     """
     dictionary = {}
     for attribute_name, attribute_value in self.GetAttributes():
@@ -56,13 +52,11 @@ class AnalysisReport(interface.AttributeContainer):
     return dictionary
 
   def GetString(self):
-    """Retrievs a string representation of the report.
+    """Retrieves a string representation of the report.
 
     Returns:
-      A string containing the report.
+      str: string representation of the report.
     """
-    # TODO: Make this a more complete function that includes images
-    # and the option of saving as a full fledged HTML document.
     string_list = []
     string_list.append(u'Report generated from: {0:s}'.format(self.plugin_name))
 

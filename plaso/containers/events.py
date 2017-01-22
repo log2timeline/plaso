@@ -355,18 +355,18 @@ class EventTag(interface.AttributeContainer):
     return cls._INVALID_LABEL_CHARACTERS_REGEX.sub(u'_', text)
 
   def GetEventIdentifier(self):
-    """Retrieves the event identifier.
+    """Retrieves the identifier of the event associated with the event tag.
 
     The event identifier is a storage specific value that should not
     be serialized.
 
     Returns:
-      AttributeContainerIdentifier: event identifier.
+      AttributeContainerIdentifier: event identifier or None when not set.
     """
     return self._event_identifier
 
   def SetEventIdentifier(self, event_identifier):
-    """Sets the event identifier.
+    """Sets the identifier of the event associated with the event tag.
 
     The event identifier is a storage specific value that should not
     be serialized.
