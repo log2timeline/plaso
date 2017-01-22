@@ -23,15 +23,6 @@ class TestEvent(object):
       self.timestamp = 0
     self.entry = entry
 
-  def EqualityString(self):
-    """Returns a string describing the event object in terms of object equality.
-
-    Returns:
-      A string representation of the event object that can be used for equality
-      comparison.
-    """
-    return u';'.join(map(str, [self.timestamp, self.entry]))
-
 
 class EventBufferTest(test_lib.OutputModuleTestCase):
   """Tests the event buffer."""

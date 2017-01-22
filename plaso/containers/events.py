@@ -2,7 +2,6 @@
 """Event related attribute container object definitions."""
 
 import re
-import uuid
 
 from plaso.containers import interface
 from plaso.containers import manager
@@ -55,7 +54,6 @@ class EventObject(interface.AttributeContainer):
     tag (EventTag): event tag.
     timestamp (int): timestamp, which contains the number of microseconds
         since January 1, 1970, 00:00:00 UTC.
-    uuid (str): unique identifier (UUID).
   """
   CONTAINER_TYPE = u'event'
   # TODO: eventually move data type out of event since the event source
@@ -74,8 +72,7 @@ class EventObject(interface.AttributeContainer):
       u'inode',
       u'pathspec',
       u'tag',
-      u'timestamp',
-      u'uuid'])
+      u'timestamp'])
 
   def __init__(self):
     """Initializes an event object."""
@@ -91,8 +88,8 @@ class EventObject(interface.AttributeContainer):
     self.pathspec = None
     self.tag = None
     self.timestamp = None
-    self.uuid = u'{0:s}'.format(uuid.uuid4().get_hex())
 
+  # TODO: remove
   def __eq__(self, event_object):
     """Return a boolean indicating if two event objects are considered equal.
 
@@ -123,8 +120,6 @@ class EventObject(interface.AttributeContainer):
     Returns:
       bool: True if both event objects are considered equal.
     """
-    # Note: if this method changes, the above EqualityString method MUST be
-    # updated accordingly.
     if (not isinstance(event_object, EventObject) or
         self.timestamp != event_object.timestamp or
         self.data_type != event_object.data_type):
@@ -160,63 +155,6 @@ class EventObject(interface.AttributeContainer):
 
     return True
 
-  def EqualityString(self):
-    """Returns a string describing the event object in terms of object equality.
-
-    The details of this function must match the logic of __eq__. EqualityStrings
-    of two event objects should be the same if and only if the event objects are
-    equal as described in __eq__.
-
-    Returns:
-      str: string representation of the event object that can be used for
-          equality comparison.
-    """
-    attribute_names = set(self.GetAttributeNames())
-    fields = sorted(list(attribute_names.difference(self.COMPARE_EXCLUDE)))
-
-    # TODO: Review this (after 1.1.0 release). Is there a better/more clean
-    # method of removing the timestamp description field out of the fields list?
-    parser = getattr(self, u'parser', u'')
-    if parser == u'filestat':
-      # We don't want to compare the timestamp description field when comparing
-      # filestat events. This is done to be able to join together FILE events
-      # that have the same timestamp, yet different description field (as in an
-      # event that has for instance the same timestamp for mtime and atime,
-      # joining it together into a single event).
-      try:
-        timestamp_desc_index = fields.index(u'timestamp_desc')
-        del fields[timestamp_desc_index]
-      except ValueError:
-        pass
-
-    basic = [self.timestamp, self.data_type]
-    attributes = []
-    for attribute in fields:
-      value = getattr(self, attribute)
-      if isinstance(value, dict):
-        attributes.append(sorted(value.items()))
-      elif isinstance(value, set):
-        attributes.append(sorted(list(value)))
-      else:
-        attributes.append(value)
-    identity = basic + [x for pair in zip(fields, attributes) for x in pair]
-
-    if parser == u'filestat':
-      inode = self.inode
-      if not self.inode:
-        inode = u'_{0:s}'.format(uuid.uuid4())
-      identity.append(u'inode')
-      identity.append(inode)
-
-    try:
-      return u'|'.join(map(py2to3.UNICODE_TYPE, identity))
-
-    except UnicodeDecodeError:
-      # If we cannot properly decode the equality string we give back the UUID
-      # which is unique to this event and thus will not trigger an equal string
-      # with another event.
-      return self.uuid
-
   def GetAttributeNames(self):
     """Retrieves the attribute names from the event object.
 
@@ -246,7 +184,6 @@ class EventTag(interface.AttributeContainer):
     event_stream_number (int): number of the serialized event stream, this
         attribute is used by the ZIP and GZIP storage files to uniquely
         identify the event linked to the tag.
-    event_uuid (str): event identifier (UUID).
     labels (list[str]): labels, such as "malware", "application_execution".
   """
   CONTAINER_TYPE = u'event_tag'
@@ -255,19 +192,17 @@ class EventTag(interface.AttributeContainer):
 
   _VALID_LABEL_REGEX = re.compile(r'^[A-Za-z0-9_]+$')
 
-  def __init__(self, comment=None, event_uuid=None):
+  def __init__(self, comment=None):
     """Initializes an event tag.
 
     Args:
       comment (Optional[str]): comments.
-      event_uuid (Optional[str]): event identifier (UUID).
     """
     super(EventTag, self).__init__()
     self._event_identifier = None
     self.comment = comment
     self.event_entry_index = None
     self.event_stream_number = None
-    self.event_uuid = event_uuid
     self.labels = []
 
   def AddComment(self, comment):

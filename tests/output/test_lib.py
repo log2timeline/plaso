@@ -36,7 +36,6 @@ class TestEventObject(events.EventObject):
         u'Reporter <CRON> PID: |8442| (pam_unix(cron:session): session\n '
         u'closed for user root)')
     self.username = u'root'
-    self.uuid = u'79028cc28d324634a85533d0fbc49275'
 
     os_location = u'{0:s}{1:s}'.format(
         os.path.sep, os.path.join(u'cases', u'image.dd'))
