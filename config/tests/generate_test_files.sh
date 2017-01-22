@@ -72,8 +72,8 @@ cp -rf ${SOURCE_DIRECTORY}/* .;
 TEST_FILE="psort_test.json.plaso";
 
 # Syslog does not contain a year we must pass preferred year to prevent the parser failing early on non-leap years.
-PYTHONPATH=. ./tools/log2timeline.py --buffer_size=300 --quiet ${TEST_FILE} --preferred_year 2012 test_data/syslog;
-PYTHONPATH=. ./tools/log2timeline.py --quiet --timezone=Iceland ${TEST_FILE} --preferred_year 2012 test_data/syslog;
+PYTHONPATH=. ./tools/log2timeline.py --buffer_size=300 --quiet --preferred_year 2012 ${TEST_FILE} test_data/syslog;
+PYTHONPATH=. ./tools/log2timeline.py --quiet --timezone=Iceland --preferred_year 2012 ${TEST_FILE} test_data/syslog;
 
 cat > tagging.txt <<EOI
 anacron
