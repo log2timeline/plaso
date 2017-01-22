@@ -107,8 +107,8 @@ class EventObject(interface.AttributeContainer):
         self.data_type != event_object.data_type):
       return False
 
-    attribute_names = set(self.__dict__.keys())
-    if attribute_names != set(event_object.__dict__.keys()):
+    attribute_names = set(self.GetAttributeNames())
+    if attribute_names != set(event_object.GetAttributeNames()):
       return False
 
     # Here we have to deal with "near" duplicates, so not all attributes
@@ -148,7 +148,7 @@ class EventObject(interface.AttributeContainer):
       str: string representation of the event object that can be used for
           equality comparison.
     """
-    attribute_names = set(self.__dict__.keys())
+    attribute_names = set(self.GetAttributeNames())
     fields = sorted(list(attribute_names.difference(self.COMPARE_EXCLUDE)))
 
     # TODO: Review this (after 1.1.0 release). Is there a better/more clean
@@ -203,10 +203,11 @@ class EventObject(interface.AttributeContainer):
       list[str]: attribute names.
     """
     attribute_names = []
-    for attribute_name in iter(self.__dict__.keys()):
-      attribute_value = getattr(self, attribute_name, None)
-      if attribute_value is not None:
-        attribute_names.append(attribute_name)
+    for attribute_name, attribute_value in self.GetAttributes():
+      if attribute_value is None:
+        continue
+
+      attribute_names.append(attribute_name)
 
     return attribute_names
 
@@ -214,21 +215,18 @@ class EventObject(interface.AttributeContainer):
 class EventTag(interface.AttributeContainer):
   """Class to represent an event tag attribute container.
 
-  The event tag either needs to have an event_uuid defined or both
-  the store_number and store_index to be valid. If both defined
-  the store_number and store_index is preferred.
-
   Attributes:
     comment (str): comments.
+    event_entry_index (int): serialized data stream entry index of the event,
+        this attribute is used by the ZIP and GZIP storage files to
+        uniquely identify the event linked to the tag.
+    event_stream_number (int): number of the serialized event stream, this
+        attribute is used by the ZIP and GZIP storage files to uniquely
+        identify the event linked to the tag.
     event_uuid (str): event identifier (UUID).
     labels (list[str]): labels, such as "malware", "application_execution".
-    store_index (int): store index of the corresponding event.
-    store_number (int): store number of the corresponding event.
   """
   CONTAINER_TYPE = u'event_tag'
-
-  _ATTRIBUTE_NAMES = frozenset([
-      u'comment', u'event_uuid', u'labels', u'store_index', u'store_number'])
 
   _INVALID_LABEL_CHARACTERS_REGEX = re.compile(r'[^A-Za-z0-9_]')
 
@@ -242,20 +240,12 @@ class EventTag(interface.AttributeContainer):
       event_uuid (Optional[str]): event identifier (UUID).
     """
     super(EventTag, self).__init__()
+    self._event_identifier = None
     self.comment = comment
+    self.event_entry_index = None
+    self.event_stream_number = None
     self.event_uuid = event_uuid
     self.labels = []
-    # TODO: deprecate store number and index.
-    self.store_index = None
-    self.store_number = None
-
-  @property
-  def string_key(self):
-    """str: string index key for this tag."""
-    if self.event_uuid is not None:
-      return self.event_uuid
-
-    return u'{0:d}:{1:d}'.format(self.store_number, self.store_index)
 
   def AddComment(self, comment):
     """Adds a comment to the event tag.
@@ -319,13 +309,6 @@ class EventTag(interface.AttributeContainer):
     result_dict = {
         u'labels': self.labels
     }
-    if (self.store_number is not None and self.store_index is not None and
-        self.store_number > -1 and self.store_index > -1):
-      result_dict[u'store_number'] = self.store_number
-      result_dict[u'store_index'] = self.store_index
-    else:
-      result_dict[u'event_uuid'] = self.event_uuid
-
     if self.comment:
       result_dict[u'comment'] = self.comment
 
@@ -348,18 +331,27 @@ class EventTag(interface.AttributeContainer):
     text = u'{0:s}{1:s}'.format(prefix, text)
     return cls._INVALID_LABEL_CHARACTERS_REGEX.sub(u'_', text)
 
-  def GetAttributes(self):
-    """Retrieves the attributes from the event tag object.
+  def GetEventIdentifier(self):
+    """Retrieves the identifier of the event associated with the event tag.
 
-    Attributes that are set to None are ignored.
+    The event identifier is a storage specific value that should not
+    be serialized.
 
-    Yields:
-      tuple[str, str]: event tag attribute name and value.
+    Returns:
+      AttributeContainerIdentifier: event identifier or None when not set.
     """
-    for attribute_name in self._ATTRIBUTE_NAMES:
-      attribute_value = getattr(self, attribute_name, None)
-      if attribute_value is not None:
-        yield attribute_name, attribute_value
+    return self._event_identifier
+
+  def SetEventIdentifier(self, event_identifier):
+    """Sets the identifier of the event associated with the event tag.
+
+    The event identifier is a storage specific value that should not
+    be serialized.
+
+    Args:
+      event_identifier (AttributeContainerIdentifier): event identifier.
+    """
+    self._event_identifier = event_identifier
 
 
 manager.AttributeContainersManager.RegisterAttributeContainers([
