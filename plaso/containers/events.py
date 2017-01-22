@@ -60,20 +60,6 @@ class EventObject(interface.AttributeContainer):
   # has a data type not the event itself.
   DATA_TYPE = None
 
-  # This is a reserved variable just used for comparison operation and defines
-  # attributes that should not be used during evaluation of whether two
-  # event objects are the same.
-  COMPARE_EXCLUDE = frozenset([
-      u'_store_index',
-      u'_store_number',
-      u'data_type',
-      u'display_name',
-      u'filename',
-      u'inode',
-      u'pathspec',
-      u'tag',
-      u'timestamp'])
-
   def __init__(self):
     """Initializes an event object."""
     super(EventObject, self).__init__()
@@ -88,72 +74,6 @@ class EventObject(interface.AttributeContainer):
     self.pathspec = None
     self.tag = None
     self.timestamp = None
-
-  # TODO: remove
-  def __eq__(self, event_object):
-    """Return a boolean indicating if two event objects are considered equal.
-
-    Compares two event objects together and evaluates if they are
-    the same or close enough to be considered to represent the same event.
-
-    For two event objects to be considered the same they need to
-    have the following conditions:
-    * Have the same timestamp.
-    * Have the same data_type value.
-    * Have the same set of attributes.
-    * Compare all other attributes than those that are reserved, and
-    they all have to match.
-
-    The following attributes are considered to be 'reserved' and not used
-    for the comparison, so they may be different yet the event object is still
-    considered to be equal:
-    * _store_index
-    * _store_number
-    * inode
-    * pathspec
-    * filename
-    * display_name
-
-    Args:
-      event (EventObject): event to compare to.
-
-    Returns:
-      bool: True if both event objects are considered equal.
-    """
-    if (not isinstance(event_object, EventObject) or
-        self.timestamp != event_object.timestamp or
-        self.data_type != event_object.data_type):
-      return False
-
-    attribute_names = set(self.GetAttributeNames())
-    if attribute_names != set(event_object.GetAttributeNames()):
-      return False
-
-    # Here we have to deal with "near" duplicates, so not all attributes
-    # should be compared.
-    for attribute in attribute_names.difference(self.COMPARE_EXCLUDE):
-      if getattr(self, attribute) != getattr(event_object, attribute):
-        return False
-
-    # If we are dealing with a file system event the inode number is
-    # the attribute that really matters.
-    if self.data_type.startswith(u'fs:'):
-      inode = self.inode
-      if isinstance(inode, py2to3.BYTES_TYPE):
-        inode = inode.decode(u'utf8', errors=u'ignore')
-      elif not isinstance(inode, py2to3.UNICODE_TYPE):
-        inode = u'{0!s}'.format(inode)
-
-      event_object_inode = event_object.inode
-      if isinstance(event_object_inode, py2to3.BYTES_TYPE):
-        event_object_inode = event_object_inode.decode(
-            u'utf8', errors=u'ignore')
-      elif not isinstance(inode, py2to3.UNICODE_TYPE):
-        event_object_inode = u'{0!s}'.format(event_object_inode)
-
-      return self.inode == event_object.inode
-
-    return True
 
   def GetAttributeNames(self):
     """Retrieves the attribute names from the event object.

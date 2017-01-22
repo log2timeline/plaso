@@ -116,6 +116,18 @@ class PregTool(storage_media_tool.StorageMediaTool):
   RUN_MODE_REG_PLUGIN = 4
   RUN_MODE_REG_KEY = 5
 
+  _EXCLUDED_ATTRIBUTE_NAMES = frozenset([
+      u'_store_index',
+      u'_store_number',
+      u'data_type',
+      u'display_name',
+      u'filename',
+      u'inode',
+      u'pathspec',
+      u'tag',
+      u'timestamp',
+      u'uuid'])
+
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
 
@@ -199,7 +211,8 @@ class PregTool(storage_media_tool.StorageMediaTool):
       attributes = event_object.regvalue.keys()
     else:
       attribute_names = set(event_object.GetAttributeNames())
-      attributes = attribute_names.difference(event_object.COMPARE_EXCLUDE)
+      attributes = attribute_names.difference(
+          self._EXCLUDED_ATTRIBUTE_NAMES)
 
     align_length = self._DEFAULT_FORMAT_ALIGN_LENGTH
     for attribute in attributes:
@@ -353,7 +366,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     else:
       # TODO: Add a function for this to avoid repeating code.
       attribute_names = set(event_object.GetAttributeNames())
-      keys = attribute_names.difference(event_object.COMPARE_EXCLUDE)
+      keys = attribute_names.difference(self._EXCLUDED_ATTRIBUTE_NAMES)
       keys.discard(u'offset')
       keys.discard(u'timestamp_desc')
       attributes = {}
