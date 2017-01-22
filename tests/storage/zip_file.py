@@ -44,12 +44,12 @@ class SerializedDataStreamTest(test_lib.StorageTestCase):
 
     entry_data1 = data_stream.ReadEntry()
     self.assertEqual(data_stream.entry_index, 1)
-    self.assertEqual(data_stream._stream_offset, 610)
+    self.assertEqual(data_stream._stream_offset, 654)
     self.assertIsNotNone(entry_data1)
 
     entry_data2 = data_stream.ReadEntry()
     self.assertEqual(data_stream.entry_index, 2)
-    self.assertEqual(data_stream._stream_offset, 1340)
+    self.assertEqual(data_stream._stream_offset, 1306)
     self.assertIsNotNone(entry_data2)
 
     # Read more entries than in the stream.
@@ -57,19 +57,19 @@ class SerializedDataStreamTest(test_lib.StorageTestCase):
       entry_data = data_stream.ReadEntry()
 
     self.assertEqual(data_stream.entry_index, 19)
-    self.assertEqual(data_stream._stream_offset, 12745)
+    self.assertEqual(data_stream._stream_offset, 12473)
     self.assertIsNone(entry_data)
 
-    data_stream.SeekEntryAtOffset(1, 610)
+    data_stream.SeekEntryAtOffset(1, 654)
     entry_data = data_stream.ReadEntry()
     self.assertEqual(data_stream.entry_index, 2)
-    self.assertEqual(data_stream._stream_offset, 1340)
+    self.assertEqual(data_stream._stream_offset, 1306)
     self.assertEqual(entry_data, entry_data2)
 
     data_stream.SeekEntryAtOffset(0, 0)
     entry_data = data_stream.ReadEntry()
     self.assertEqual(data_stream.entry_index, 1)
-    self.assertEqual(data_stream._stream_offset, 610)
+    self.assertEqual(data_stream._stream_offset, 654)
     self.assertEqual(entry_data, entry_data1)
 
     with self.assertRaises(IOError):
@@ -156,13 +156,13 @@ class SerializedDataOffsetTableTest(test_lib.StorageTestCase):
     offset_table.Read()
 
     self.assertEqual(offset_table.GetOffset(0), 0)
-    self.assertEqual(offset_table.GetOffset(1), 610)
+    self.assertEqual(offset_table.GetOffset(1), 654)
 
     with self.assertRaises(IndexError):
       offset_table.GetOffset(99)
 
-    self.assertEqual(offset_table.GetOffset(-1), 12067)
-    self.assertEqual(offset_table.GetOffset(-2), 11399)
+    self.assertEqual(offset_table.GetOffset(-1), 11841)
+    self.assertEqual(offset_table.GetOffset(-2), 11209)
 
     with self.assertRaises(IndexError):
       offset_table.GetOffset(-99)
@@ -221,14 +221,14 @@ class SerializedDataTimestampTableTest(test_lib.StorageTestCase):
         zip_file_object, stream_name)
     timestamp_table.Read()
 
-    self.assertEqual(timestamp_table.GetTimestamp(0), 1453449153000000)
-    self.assertEqual(timestamp_table.GetTimestamp(1), 1453449153000000)
+    self.assertEqual(timestamp_table.GetTimestamp(0), 1327218753000000)
+    self.assertEqual(timestamp_table.GetTimestamp(1), 1327218753000000)
 
     with self.assertRaises(IndexError):
       timestamp_table.GetTimestamp(99)
 
-    self.assertEqual(timestamp_table.GetTimestamp(-1), 1483206872000000)
-    self.assertEqual(timestamp_table.GetTimestamp(-2), 1482083672000000)
+    self.assertEqual(timestamp_table.GetTimestamp(-1), 1485089424000000)
+    self.assertEqual(timestamp_table.GetTimestamp(-2), 1485089422000000)
 
     with self.assertRaises(IndexError):
       timestamp_table.GetTimestamp(-99)
@@ -698,7 +698,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    expected_timestamp = 1453449153000000
+    expected_timestamp = 1327218753000000
 
     event = storage_file._GetSortedEvent()
     self.assertIsNotNone(event)
@@ -706,7 +706,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
     # Test lower bound time range filter.
     test_time_range = time_range.TimeRange(
-        timelib.Timestamp.CopyFromString(u'2016-04-30 06:41:49'),
+        timelib.Timestamp.CopyFromString(u'2012-04-30 06:41:49'),
         timelib.Timestamp.CopyFromString(u'2030-12-31 23:59:59'))
 
     storage_file.Close()
@@ -714,7 +714,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    expected_timestamp = 1476630823000000
+    expected_timestamp = 1355853272000000
 
     event = storage_file._GetSortedEvent(time_range=test_time_range)
     self.assertEqual(event.timestamp, expected_timestamp)
@@ -722,14 +722,14 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     # Test upper bound time range filter.
     test_time_range = time_range.TimeRange(
         timelib.Timestamp.CopyFromString(u'2000-01-01 00:00:00'),
-        timelib.Timestamp.CopyFromString(u'2016-04-30 06:41:49'))
+        timelib.Timestamp.CopyFromString(u'2012-04-30 06:41:49'))
 
     storage_file.Close()
 
     storage_file = zip_file.ZIPStorageFile()
     storage_file.Open(path=test_file)
 
-    expected_timestamp = 1453449153000000
+    expected_timestamp = 1327218753000000
 
     event = storage_file._GetSortedEvent(time_range=test_time_range)
     self.assertEqual(event.timestamp, expected_timestamp)
@@ -1442,19 +1442,19 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
   """Tests for the ZIP-based storage file reader."""
 
-  _EXPECTED_TIMESTAMPS_BEFORE_20060430 = [
-      1453449153000000, 1453449153000000, 1453449153000000, 1453449153000000,
-      1453449181000000, 1453449181000000, 1453449241000000, 1453449241000000,
-      1453449241000000, 1453449241000000, 1453449272000000, 1453449272000000,
-      1454771790000000, 1454771790000000, 1456708543000000, 1456708543000000,
-      1458774078000000, 1458774078000000, 1458774078000000, 1458774078000000]
+  _EXPECTED_TIMESTAMPS_BEFORE_20120430 = [
+      1327218753000000, 1327218753000000, 1327218753000000, 1327218753000000,
+      1327218781000000, 1327218781000000, 1327218841000000, 1327218841000000,
+      1327218841000000, 1327218841000000, 1327218872000000, 1327218872000000,
+      1330478143000000, 1330478143000000]
 
-  _EXPECTED_TIMESTAMPS_AFTER_20060430 = [
-      1476630823000000, 1476630823000000, 1476630823000000, 1476630823000000,
-      1476630824000000, 1476630824000000, 1479431720000000, 1479431720000000,
-      1479431743000000, 1479431743000000, 1479457820000000, 1479457820000000,
-      1479457880000000, 1479457880000000, 1482083672000000, 1482083672000000,
-      1483206872000000, 1483206872000000]
+  _EXPECTED_TIMESTAMPS_AFTER_20120430 = [
+      1355853272000000, 1355853272000000, 1364079678000000, 1364079678000000,
+      1364079678000000, 1364079678000000, 1384737320000000, 1384737320000000,
+      1388512472000000, 1388512472000000, 1391699790000000, 1391699790000000,
+      1416273343000000, 1416273343000000, 1416299420000000, 1416299420000000,
+      1416299480000000, 1416299480000000, 1485089422000000, 1485089422000000,
+      1485089422000000, 1485089422000000, 1485089423000000, 1485089424000000]
 
   @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
   def testGetEvents(self):
@@ -1467,15 +1467,15 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
         timestamps.append(event.timestamp)
 
     expected_timestamps = []
-    expected_timestamps.extend(self._EXPECTED_TIMESTAMPS_BEFORE_20060430)
-    expected_timestamps.extend(self._EXPECTED_TIMESTAMPS_AFTER_20060430)
+    expected_timestamps.extend(self._EXPECTED_TIMESTAMPS_BEFORE_20120430)
+    expected_timestamps.extend(self._EXPECTED_TIMESTAMPS_AFTER_20120430)
 
     self.assertEqual(len(timestamps), 38)
     self.assertEqual(sorted(timestamps), expected_timestamps)
 
     # Test lower bound time range filter.
     test_time_range = time_range.TimeRange(
-        timelib.Timestamp.CopyFromString(u'2016-04-30 06:41:49'),
+        timelib.Timestamp.CopyFromString(u'2012-04-30 06:41:49'),
         timelib.Timestamp.CopyFromString(u'2030-12-31 23:59:59'))
 
     timestamps = []
@@ -1483,21 +1483,21 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
       for event in storage_reader.GetEvents(time_range=test_time_range):
         timestamps.append(event.timestamp)
 
-    expected_timestamps = self._EXPECTED_TIMESTAMPS_AFTER_20060430
+    expected_timestamps = self._EXPECTED_TIMESTAMPS_AFTER_20120430
 
     self.assertEqual(sorted(timestamps), expected_timestamps)
 
     # Test upper bound time range filter.
     test_time_range = time_range.TimeRange(
         timelib.Timestamp.CopyFromString(u'2000-01-01 00:00:00'),
-        timelib.Timestamp.CopyFromString(u'2016-04-30 06:41:49'))
+        timelib.Timestamp.CopyFromString(u'2012-04-30 06:41:49'))
 
     timestamps = []
     with zip_file.ZIPStorageFileReader(test_file) as storage_reader:
       for event in storage_reader.GetEvents(time_range=test_time_range):
         timestamps.append(event.timestamp)
 
-    expected_timestamps = self._EXPECTED_TIMESTAMPS_BEFORE_20060430
+    expected_timestamps = self._EXPECTED_TIMESTAMPS_BEFORE_20120430
 
     self.assertEqual(sorted(timestamps), expected_timestamps)
 

@@ -332,13 +332,6 @@ class EventTag(interface.AttributeContainer):
     result_dict = {
         u'labels': self.labels
     }
-    if (self.store_number is not None and self.store_index is not None and
-        self.store_number > -1 and self.store_index > -1):
-      result_dict[u'store_number'] = self.store_number
-      result_dict[u'store_index'] = self.store_index
-    else:
-      result_dict[u'event_uuid'] = self.event_uuid
-
     if self.comment:
       result_dict[u'comment'] = self.comment
 
