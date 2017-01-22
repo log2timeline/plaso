@@ -47,8 +47,7 @@ class AnalysisReport(interface.AttributeContainer):
       A dictionary containing the attribute container attributes.
     """
     dictionary = {}
-    for attribute_name in iter(self.__dict__.keys()):
-      attribute_value = getattr(self, attribute_name, None)
+    for attribute_name, attribute_value in self.GetAttributes():
       if attribute_value is None:
         continue
 

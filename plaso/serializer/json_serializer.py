@@ -60,9 +60,6 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     }
 
     for attribute_name, attribute_value in attribute_container.GetAttributes():
-      if attribute_value is None:
-        continue
-
       json_dict[attribute_name] = cls._ConvertAttributeValueToDict(
           attribute_value)
 
@@ -218,19 +215,12 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
           container_type))
 
     container_object = container_class()
+    supported_attribute_names = container_object.GetAttributeNames()
     for attribute_name, attribute_value in iter(json_dict.items()):
-      if attribute_name.startswith(u'__'):
-        continue
-
-      # Event tags should be serialized separately.
-      # TODO: remove when analysis report no longer defines event tags.
-      if (container_type == u'analysis_report' and
-          attribute_name == u'_event_tags'):
-        continue
-
-      # Be strict about which attributes to set in non event data containers.
-      if (container_type not in (u'event', u'event_data') and
-          attribute_name not in container_object.__dict__):
+      # Be strict about which attributes to set in non analysis reports
+      # and events.
+      if (container_type != u'event' and
+          attribute_name not in supported_attribute_names):
         continue
 
       if isinstance(attribute_value, dict):

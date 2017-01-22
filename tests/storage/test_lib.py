@@ -15,6 +15,8 @@ from tests import test_lib as shared_test_lib
 class StorageTestCase(shared_test_lib.BaseTestCase):
   """The unit test case for a storage object."""
 
+  # pylint: disable=protected-access
+
   def _CreateTestEvents(self):
     """Creates events for testing.
 
@@ -79,37 +81,38 @@ class StorageTestCase(shared_test_lib.BaseTestCase):
 
     return test_events
 
-  def _CreateTestEventTags(self):
+  def _CreateTestEventTags(self, test_events):
     """Creates the event tags for testing.
 
+    Args:
+      list[EventObject]: test_events.
+
     Returns:
-      A list of event tags (instances of EventTag).
+      list[EventTag] event tags.
     """
     event_tags = []
 
-    event_tag = events.EventTag()
-    event_tag.store_index = 0
-    event_tag.store_number = 1
-    event_tag.comment = u'My comment'
+    event_tag = events.EventTag(comment=u'My comment')
+    event_identifier = test_events[0].GetIdentifier()
+    event_tag.SetEventIdentifier(event_identifier)
     event_tags.append(event_tag)
 
     event_tag = events.EventTag()
-    event_tag.store_index = 1
-    event_tag.store_number = 1
+    event_identifier = test_events[1].GetIdentifier()
+    event_tag.SetEventIdentifier(event_identifier)
     event_tag.AddLabel(u'Malware')
     event_tags.append(event_tag)
 
-    event_tag = events.EventTag()
-    event_tag.store_number = 1
-    event_tag.store_index = 2
-    event_tag.comment = u'This is interesting'
+    event_tag = events.EventTag(comment=u'This is interesting')
     event_tag.AddLabels([u'Malware', u'Benign'])
+    event_identifier = test_events[2].GetIdentifier()
+    event_tag.SetEventIdentifier(event_identifier)
     event_tags.append(event_tag)
 
     event_tag = events.EventTag()
-    event_tag.store_index = 1
-    event_tag.store_number = 1
     event_tag.AddLabel(u'Interesting')
+    event_identifier = test_events[1].GetIdentifier()
+    event_tag.SetEventIdentifier(event_identifier)
     event_tags.append(event_tag)
 
     return event_tags

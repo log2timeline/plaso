@@ -11,6 +11,7 @@ import time
 from plaso.lib import definitions
 from plaso.lib import platform_specific
 from plaso.serializer import json_serializer
+from plaso.storage import identifiers
 from plaso.storage import interface
 
 
@@ -96,6 +97,10 @@ class GZIPStorageFile(interface.BaseFileStorage):
     if self._read_only:
       raise IOError(u'Unable to write to read-only storage file.')
 
+    attribute_container_identifier = identifiers.SerializedStreamIdentifier(
+        1, len(self._attribute_containers))
+    attribute_container.SetIdentifier(attribute_container_identifier)
+
     attribute_container_data = self._SerializeAttributeContainer(
         attribute_container)
     self._gzip_file.write(attribute_container_data)
@@ -138,7 +143,19 @@ class GZIPStorageFile(interface.BaseFileStorage):
 
     Args:
       event_tag (EventTag): event tag.
+
+    Raises:
+      IOError: if the event tag event identifier type is not supported.
     """
+    event_identifier = event_tag.GetEventIdentifier()
+    if not isinstance(
+        event_identifier, identifiers.SerializedStreamIdentifier):
+      raise IOError(u'Unsupported event identifier type: {0:s}'.format(
+          type(event_identifier)))
+
+    event_tag.event_stream_number = event_identifier.stream_number
+    event_tag.event_entry_index = event_identifier.entry_index
+
     self._WriteAttributeContainer(event_tag)
 
   def Close(self):
@@ -196,10 +213,15 @@ class GZIPStorageFile(interface.BaseFileStorage):
   def GetEventTags(self):
     """Retrieves the event tags.
 
-    Returns:
-      generator(EventTag): event tag generator.
+    Yields:
+      EventTag: event tag.
     """
-    return iter(self._GetAttributeContainerList(u'event_tag'))
+    for event_tag in iter(self._GetAttributeContainerList(u'event_tag')):
+      event_identifier = identifiers.SerializedStreamIdentifier(
+          event_tag.event_stream_number, event_tag.event_entry_index)
+      event_tag.SetEventIdentifier(event_identifier)
+
+      yield event_tag
 
   def HasAnalysisReports(self):
     """Determines if a storage contains analysis reports.

@@ -130,8 +130,8 @@ class EventObject(interface.AttributeContainer):
         self.data_type != event_object.data_type):
       return False
 
-    attribute_names = set(self.__dict__.keys())
-    if attribute_names != set(event_object.__dict__.keys()):
+    attribute_names = set(self.GetAttributeNames())
+    if attribute_names != set(event_object.GetAttributeNames()):
       return False
 
     # Here we have to deal with "near" duplicates, so not all attributes
@@ -171,7 +171,7 @@ class EventObject(interface.AttributeContainer):
       str: string representation of the event object that can be used for
           equality comparison.
     """
-    attribute_names = set(self.__dict__.keys())
+    attribute_names = set(self.GetAttributeNames())
     fields = sorted(list(attribute_names.difference(self.COMPARE_EXCLUDE)))
 
     # TODO: Review this (after 1.1.0 release). Is there a better/more clean
@@ -226,10 +226,11 @@ class EventObject(interface.AttributeContainer):
       list[str]: attribute names.
     """
     attribute_names = []
-    for attribute_name in self.__dict__.keys():
-      attribute_value = getattr(self, attribute_name, None)
-      if attribute_value is not None:
-        attribute_names.append(attribute_name)
+    for attribute_name, attribute_value in self.GetAttributes():
+      if attribute_value is None:
+        continue
+
+      attribute_names.append(attribute_name)
 
     return attribute_names
 
@@ -243,6 +244,12 @@ class EventTag(interface.AttributeContainer):
 
   Attributes:
     comment (str): comments.
+    event_entry_index (int): serialized data stream entry index of the event,
+        this attribute is used by the ZIP and GZIP storage files to
+        uniquely identify the event linked to the tag.
+    event_stream_number (int): number of the serialized event stream, this
+        attribute is used by the ZIP and GZIP storage files to uniquely
+        identify the event linked to the tag.
     event_uuid (str): event identifier (UUID).
     labels (list[str]): labels, such as "malware", "application_execution".
     store_index (int): store index of the corresponding event.
@@ -265,7 +272,10 @@ class EventTag(interface.AttributeContainer):
       event_uuid (Optional[str]): event identifier (UUID).
     """
     super(EventTag, self).__init__()
+    self._event_identifier = None
     self.comment = comment
+    self.event_entry_index = None
+    self.event_stream_number = None
     self.event_uuid = event_uuid
     self.labels = []
     # TODO: deprecate store number and index.
@@ -383,6 +393,28 @@ class EventTag(interface.AttributeContainer):
       attribute_value = getattr(self, attribute_name, None)
       if attribute_value is not None:
         yield attribute_name, attribute_value
+
+  def GetEventIdentifier(self):
+    """Retrieves the event identifier.
+
+    The event identifier is a storage specific value that should not
+    be serialized.
+
+    Returns:
+      AttributeContainerIdentifier: event identifier.
+    """
+    return self._event_identifier
+
+  def SetEventIdentifier(self, event_identifier):
+    """Sets the event identifier.
+
+    The event identifier is a storage specific value that should not
+    be serialized.
+
+    Args:
+      event_identifier (AttributeContainerIdentifier): event identifier.
+    """
+    self._event_identifier = event_identifier
 
 
 manager.AttributeContainersManager.RegisterAttributeContainers([

@@ -138,13 +138,12 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         parent=volume_path_spec)
 
     expected_event_object = events.EventObject()
+    expected_event_object.uuid = u'c7a85a1cdf1740f5a3bf6d05f89fe474'
 
     expected_event_object.data_type = u'test:event2'
     expected_event_object.pathspec = path_spec
     expected_event_object.timestamp = 1234124
     expected_event_object.timestamp_desc = u'Written'
-    # Prevent the event object for generating its own UUID.
-    expected_event_object.uuid = u'5a78777006de4ddb8d7bbe12ab92ccf8'
 
     expected_event_object.binary_string = b'\xc0\x90\x90binary'
     expected_event_object.empty_string = u''
@@ -190,8 +189,8 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         u'string': u'Normal string',
         u'timestamp_desc': u'Written',
         u'timestamp': 1234124,
-        u'uuid': u'5a78777006de4ddb8d7bbe12ab92ccf8',
         u'unicode_string': u'And I am a unicorn.',
+        u'uuid': u'c7a85a1cdf1740f5a3bf6d05f89fe474',
         u'zero_integer': 0
     }
 
@@ -225,7 +224,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     expected_event_source_dict = {
         u'path_spec': test_path_spec.comparable,
-        u'storage_session': 0,
     }
 
     event_source_dict = event_source.CopyToDict()
@@ -240,8 +238,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
   def testReadAndWriteSerializedEventTag(self):
     """Test ReadSerialized and WriteSerialized of EventTag."""
     expected_event_tag = events.EventTag(comment=u'My first comment.')
-    expected_event_tag.store_number = 234
-    expected_event_tag.store_index = 18
     expected_event_tag.AddLabels([u'Malware', u'Common'])
 
     json_string = (
@@ -259,9 +255,8 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     expected_event_tag_dict = {
         u'comment': u'My first comment.',
+        u'event_uuid': None,
         u'labels': [u'Malware', u'Common'],
-        u'store_index': 18,
-        u'store_number': 234,
     }
 
     event_tag_dict = event_tag.CopyToDict()
