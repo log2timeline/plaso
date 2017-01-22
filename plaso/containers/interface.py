@@ -23,7 +23,7 @@ class AttributeContainerIdentifier(object):
     Returns:
       str: unique identifier or None.
     """
-    return self._identifier
+    return u'{0:d}'.format(self._identifier)
 
 
 class AttributeContainer(object):
