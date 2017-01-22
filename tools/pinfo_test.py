@@ -96,9 +96,9 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
     test_filename = u'pinfo_test.json.plaso'
     format_version = u'20170121'
     plaso_version = u'1.5.2_20170119'
-    session_identifier = u'98d1caaa-5224-4cf0-90bb-cb766ffb4d6a'
-    session_start_time = u'2017-01-22T12:50:47.479205+00:00'
-    session_completion_time = u'2017-01-22T12:50:48.275535+00:00'
+    session_identifier = u'6037b6fe-b48f-4b90-811f-c7186c49fddd'
+    session_start_time = u'2017-01-22T18:15:25.774619+00:00'
+    session_completion_time = u'2017-01-22T18:15:26.567489+00:00'
 
     command_line_arguments = (
         u'./tools/log2timeline.py --partition=all --quiet '
