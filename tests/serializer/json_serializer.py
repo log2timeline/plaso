@@ -255,7 +255,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     expected_event_tag_dict = {
         u'comment': u'My first comment.',
-        u'event_uuid': None,
         u'labels': [u'Malware', u'Common'],
     }
 
