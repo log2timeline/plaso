@@ -274,7 +274,7 @@ class PregConsoleTest(cli_test_lib.CLIToolTestCase):
     self._test_console.AddRegistryHelper(self._registry_helper)
     registry_helpers = getattr(self._test_console, u'_registry_helpers', [])
 
-    self.assertEquals(len(registry_helpers), 1)
+    self.assertEqual(len(registry_helpers), 1)
     setattr(self._test_console, u'_registry_helpers', [])
 
   def testPrintBanner(self):
@@ -300,7 +300,7 @@ class PregConsoleTest(cli_test_lib.CLIToolTestCase):
     banner = output_writer.ReadOutput()
 
     # Splitting the string makes it easier to see differences.
-    self.assertEquals(banner.split(b'\n'), expected_banner.split(b'\n'))
+    self.assertEqual(banner.split(b'\n'), expected_banner.split(b'\n'))
 
   def testPrintRegistryFileList(self):
     """Test the PrintRegistryFileList function."""
@@ -310,7 +310,7 @@ class PregConsoleTest(cli_test_lib.CLIToolTestCase):
 
     self._test_console.PrintRegistryFileList()
     text = output_writer.ReadOutput()
-    self.assertEquals(text, u'')
+    self.assertEqual(text, u'')
 
     self._test_console.AddRegistryHelper(self._registry_helper)
     self._test_console.PrintRegistryFileList()
@@ -320,7 +320,7 @@ class PregConsoleTest(cli_test_lib.CLIToolTestCase):
         u'Index Hive [collector]\n'
         u'0     {0:s} [OS]\n').format(self._file_path)
 
-    self.assertEquals(text, expected_text)
+    self.assertEqual(text, expected_text)
 
   def testGetValueData(self):
     """Test getting values and value entries."""
@@ -331,7 +331,7 @@ class PregConsoleTest(cli_test_lib.CLIToolTestCase):
     registry_key_path = (
         u'HKEY_CURRENT_USER\\Software\\JavaSoft\\Java Update\\Policy')
     key = self._registry_helper.GetKeyByPath(registry_key_path)
-    self.assertEquals(key.path, registry_key_path)
+    self.assertEqual(key.path, registry_key_path)
 
     registry_key = self._test_console._CommandGetCurrentKey()
     self.assertIsNotNone(registry_key)
@@ -392,7 +392,7 @@ class PregMagicClassTest(cli_test_lib.CLIToolTestCase):
         u'To open a Registry file, use: hive open INDEX\n').format(
             registry_file_path)
 
-    self.assertEquals(output, expected_output)
+    self.assertEqual(output, expected_output)
 
   def testMagicClass(self):
     """Test the magic class functions."""

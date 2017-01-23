@@ -54,7 +54,7 @@ class SessionCompletionTest(shared_test_lib.BaseTestCase):
         identifier=session_identifier)
     session_completion.timestamp = timestamp
 
-    self.assertEquals(session_completion.identifier, session_identifier)
+    self.assertEqual(session_completion.identifier, session_identifier)
 
     expected_dict = {
         u'aborted': False,
@@ -80,7 +80,7 @@ class SessionStartTest(shared_test_lib.BaseTestCase):
     session_start.product_name = u'plaso'
     session_start.product_version = plaso.GetVersion()
 
-    self.assertEquals(session_start.identifier, session_identifier)
+    self.assertEqual(session_start.identifier, session_identifier)
 
     expected_dict = {
         u'debug_mode': False,
