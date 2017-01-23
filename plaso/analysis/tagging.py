@@ -173,6 +173,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     """
     report_text = u'Tagging plugin produced {0:d} tags.\n'.format(
         self._number_of_event_tags)
+    self._number_of_event_tags = 0
     return reports.AnalysisReport(plugin_name=self.NAME, text=report_text)
 
   def ExamineEvent(self, mediator, event):
@@ -208,6 +209,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
     labels = list(efilter_api.getvalues(matched_labels))
     event_tag = self._CreateEventTag(event, self._EVENT_TAG_COMMENT, labels)
     mediator.ProduceEventTag(event_tag)
+    self._number_of_event_tags += 1
 
   def SetAndLoadTagFile(self, tagging_file_path):
     """Sets the tag file to be used by the plugin.
