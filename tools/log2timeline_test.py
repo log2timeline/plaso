@@ -436,7 +436,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
       # There should be 3 filestat and 3 pe parser generated events.
       event_objects = list(storage_file.GetEvents())
-      self.assertEquals(len(event_objects), 6)
+      self.assertEqual(len(event_objects), 6)
 
   def testShowInfo(self):
     """Tests the output of the tool in info mode."""

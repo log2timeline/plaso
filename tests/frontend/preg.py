@@ -117,34 +117,34 @@ class PregFrontendTest(shared_test_lib.BaseTestCase):
     registry_helpers = front_end.GetRegistryHelpers(
         registry_file_types=[u'SYSTEM'])
 
-    self.assertEquals(len(registry_helpers), 1)
+    self.assertEqual(len(registry_helpers), 1)
 
     registry_helper = registry_helpers[0]
 
     file_path = self._GetTestFilePath([u'SYSTEM'])
-    self.assertEquals(registry_helper.path, file_path)
+    self.assertEqual(registry_helper.path, file_path)
 
     front_end = self._ConfigureStorageMediaFileTest()
     registry_helpers = front_end.GetRegistryHelpers(
         registry_file_types=[u'NTUSER'])
 
-    self.assertEquals(len(registry_helpers), 3)
+    self.assertEqual(len(registry_helpers), 3)
 
     registry_helper = registry_helpers[0]
     registry_helper.Open()
     expected_file_type = preg.REGISTRY_FILE_TYPE_NTUSER
-    self.assertEquals(registry_helper.file_type, expected_file_type)
-    self.assertEquals(registry_helper.name, u'NTUSER.DAT')
-    self.assertEquals(registry_helper.collector_name, u'TSK')
+    self.assertEqual(registry_helper.file_type, expected_file_type)
+    self.assertEqual(registry_helper.name, u'NTUSER.DAT')
+    self.assertEqual(registry_helper.collector_name, u'TSK')
     registry_helper.Close()
 
     registry_helpers = front_end.GetRegistryHelpers(
         plugin_names=[u'userassist'])
-    self.assertEquals(len(registry_helpers), 3)
+    self.assertEqual(len(registry_helpers), 3)
 
     registry_helpers = front_end.GetRegistryHelpers(
         registry_file_types=[u'SAM'])
-    self.assertEquals(len(registry_helpers), 1)
+    self.assertEqual(len(registry_helpers), 1)
 
     # TODO: Add a test for getting Registry helpers from a storage media file
     # that contains VSS stores.
@@ -197,7 +197,7 @@ class PregFrontendTest(shared_test_lib.BaseTestCase):
 
     expected_key_path = (
         u'HKEY_LOCAL_MACHINE\\System\\ControlSet001\\Enum\\USBSTOR')
-    self.assertEquals(usb_key.path, expected_key_path)
+    self.assertEqual(usb_key.path, expected_key_path)
 
     data = usb_parsed_data.get(u'data', None)
     self.assertIsNotNone(data)
@@ -213,20 +213,20 @@ class PregFrontendTest(shared_test_lib.BaseTestCase):
 
     event_objects = data.get(usb_plugin, [])
 
-    self.assertEquals(len(event_objects), 5)
+    self.assertEqual(len(event_objects), 5)
     event_object = event_objects[2]
 
-    self.assertEquals(event_object.data_type, u'windows:registry:key_value')
+    self.assertEqual(event_object.data_type, u'windows:registry:key_value')
 
     parse_key_data = front_end.ParseRegistryKey(
         usb_key, registry_helper, use_plugins=u'windows_usbstor_devices')
 
-    self.assertEquals(len(parse_key_data.keys()), 1)
+    self.assertEqual(len(parse_key_data.keys()), 1)
     parsed_key_value = parse_key_data.values()[0]
 
     for index, event_object in enumerate(event_objects):
       parsed_key_event = parsed_key_value[index]
-      self.assertEquals(
+      self.assertEqual(
           event_object.EqualityString(), parsed_key_event.EqualityString())
 
 
