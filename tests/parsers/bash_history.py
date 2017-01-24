@@ -28,7 +28,7 @@ class BashHistoryTest(test_lib.ParserTestCase):
   def testParsingExtractionSync(self):
     """Tests that the parser correctly handles a synchronized file.
 
-    A synchronised file is one that starts with a timestamp line.
+    A synchronized file is one that starts with a timestamp line.
     """
     parser = bash_history.BashHistoryParser()
     storage_writer = self._ParseFile([u'bash_history'], parser)
