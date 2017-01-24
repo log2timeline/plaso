@@ -81,10 +81,8 @@ class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
     Returns:
       bool: True if this is the correct parser, False otherwise.
     """
-    matches = self._VERIFICATION_GRAMMAR.scanString(line, maxMatches=1)
-    # Scanstring returns a generator.
-    if list(matches):
-      return True
+    match_generator = self._VERIFICATION_GRAMMAR.scanString(line, maxMatches=1)
+    return bool(list(match_generator))
 
 
 manager.ParsersManager.RegisterParser(BashHistoryParser)
