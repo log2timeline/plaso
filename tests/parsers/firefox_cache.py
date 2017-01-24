@@ -21,8 +21,8 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
   def _VerifyMajorMinor(self, events):
     """Verify that valid Firefox cache version is extracted."""
     for event_object in events:
-      self.assertEquals(event_object.major, 1)
-      self.assertEquals(event_object.minor, 19)
+      self.assertEqual(event_object.major, 1)
+      self.assertEqual(event_object.minor, 19)
 
   @shared_test_lib.skipUnlessHasTestFile([u'firefox_cache', u'invalid_file'])
   def testParseCache_InvalidFile(self):
@@ -41,15 +41,15 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         [u'firefox_cache', u'firefox28', u'_CACHE_001_'], parser_object)
 
-    self.assertEquals(len(storage_writer.events), 1665)
+    self.assertEqual(len(storage_writer.events), 1665)
 
     event_object = storage_writer.events[3]
-    self.assertEquals(
+    self.assertEqual(
         event_object.url, u'HTTP:http://start.ubuntu.com/12.04/sprite.png')
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-04-21 14:13:35')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'Fetched 2 time(s) '
@@ -82,15 +82,15 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
         u'2B__utmz%3D68537988.1398089459.1.1.utmcsr%3D(direct)%7Cutmccn'
         u'%3D(direct)%7Cutmcmd%3D(none)%3B&aip=1&utmu=qBQ~')
 
-    self.assertEquals(len(storage_writer.events), 141)
+    self.assertEqual(len(storage_writer.events), 141)
 
     event_object = storage_writer.events[5]
-    self.assertEquals(event_object.url, expected_url)
+    self.assertEqual(event_object.url, expected_url)
 
     event_object = storage_writer.events[1]
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-04-21 14:10:58')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self._VerifyMajorMinor(storage_writer.events)
 
@@ -102,17 +102,17 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         [u'firefox_cache', u'firefox28', u'_CACHE_003_'], parser_object)
 
-    self.assertEquals(len(storage_writer.events), 9)
+    self.assertEqual(len(storage_writer.events), 9)
 
     event_object = storage_writer.events[7]
     expected_url = (
         u'HTTP:https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/'
         u'jquery.min.js')
-    self.assertEquals(event_object.url, expected_url)
+    self.assertEqual(event_object.url, expected_url)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-04-21 14:11:07')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self._VerifyMajorMinor(storage_writer.events)
 
@@ -124,7 +124,7 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         [u'firefox_cache', u'firefox28', u'E8D65m01'], parser_object)
 
-    self.assertEquals(len(storage_writer.events), 9)
+    self.assertEqual(len(storage_writer.events), 9)
 
   @shared_test_lib.skipUnlessHasTestFile([
       u'firefox_cache', u'firefox3', u'_CACHE_001_'])
@@ -134,13 +134,13 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         [u'firefox_cache', u'firefox3', u'_CACHE_001_'], parser_object)
 
-    self.assertEquals(len(storage_writer.events), 73)
+    self.assertEqual(len(storage_writer.events), 73)
 
     event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-05-02 14:15:03')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_msg = (
         u'Fetched 1 time(s) '
@@ -161,13 +161,13 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         [u'firefox_cache', u'firefox3', u'_CACHE_002_'], parser_object)
 
-    self.assertEquals(len(storage_writer.events), 6)
+    self.assertEqual(len(storage_writer.events), 6)
 
     event_object = storage_writer.events[2]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-05-02 14:25:55')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
   @shared_test_lib.skipUnlessHasTestFile([
       u'firefox_cache', u'firefox3', u'_CACHE_003_'])
@@ -177,13 +177,13 @@ class FirefoxCacheParserTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         [u'firefox_cache', u'firefox3', u'_CACHE_003_'], parser_object)
 
-    self.assertEquals(len(storage_writer.events), 6)
+    self.assertEqual(len(storage_writer.events), 6)
 
     event_object = storage_writer.events[3]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-05-02 14:15:07')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
 
 class FirefoxCache2ParserTest(test_lib.ParserTestCase):
@@ -199,34 +199,34 @@ class FirefoxCache2ParserTest(test_lib.ParserTestCase):
         u'1F4B3A4FC81FB19C530758231FA54313BE8F6FA2']
     storage_writer = self._ParseFile(path_segments, parser_object)
 
-    self.assertEquals(len(storage_writer.events), 3)
+    self.assertEqual(len(storage_writer.events), 3)
 
     event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-05-02 15:35:31')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_url = (
         u':https://tiles.cdn.mozilla.net/images/'
         u'8acf9436e1b315f5f04b9435a518bcd1aef131f8.5663.png')
-    self.assertEquals(event_object.url, expected_url)
+    self.assertEqual(event_object.url, expected_url)
 
-    self.assertEquals(event_object.request_method, u'GET')
-    self.assertEquals(event_object.response_code, u'HTTP/1.1 200 OK')
-    self.assertEquals(event_object.fetch_count, 2)
+    self.assertEqual(event_object.request_method, u'GET')
+    self.assertEqual(event_object.response_code, u'HTTP/1.1 200 OK')
+    self.assertEqual(event_object.fetch_count, 2)
 
     event_object = storage_writer.events[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-05-02 15:35:31')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
     event_object = storage_writer.events[2]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-05-01 15:35:31')
-    self.assertEquals(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event_object.timestamp, expected_timestamp)
 
   @shared_test_lib.skipUnlessHasTestFile([
       u'firefox_cache', u'cache2', u'C966EB70794E44E7E3E8A260106D0C72439AF65B'])

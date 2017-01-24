@@ -74,7 +74,7 @@ class SingleProcessEngine(engine.BaseEngine):
           u'unable to process path specification with error: '
           u'{0:s}').format(exception), path_spec=path_spec)
 
-      if self._processing_configuration.debug_output:
+      if getattr(self._processing_configuration, u'debug_output', False):
         logging.warning(
             u'Unhandled exception while processing path spec: {0:s}.'.format(
                 self._current_display_name))
@@ -310,6 +310,7 @@ class SingleProcessEngine(engine.BaseEngine):
     extraction_worker.SetExtractionConfiguration(
         processing_configuration.extraction)
 
+    self._processing_configuration = processing_configuration
     self._status_update_callback = status_update_callback
 
     logging.debug(u'Processing started.')
@@ -345,6 +346,7 @@ class SingleProcessEngine(engine.BaseEngine):
     else:
       logging.debug(u'Processing completed.')
 
+    self._processing_configuration = None
     self._status_update_callback = None
 
     return self._processing_status
