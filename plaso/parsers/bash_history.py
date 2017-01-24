@@ -25,7 +25,7 @@ class BashHistoryEvent(time_events.PosixTimeEvent):
       command (str): command that was executed.
     """
     super(BashHistoryEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.ADDED_TIME)
+        timestamp, eventdata.EventTimestamp.MODIFICATION_TIME)
     self.command = command
 
 
