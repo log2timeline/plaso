@@ -16,11 +16,11 @@ fi
 
 rm -rf build/ dist/;
 
-./setup.py -q sdist;
+./setup.py -q sdist_test_data;
 
 if test $? -ne ${EXIT_SUCCESS};
 then
-	echo "Unable to run: ./setup.py sdist";
+	echo "Unable to run: ./setup.py sdist_test_data";
 
 	exit ${EXIT_FAILURE};
 fi
@@ -71,8 +71,9 @@ cp -rf ${SOURCE_DIRECTORY}/* .;
 
 TEST_FILE="psort_test.json.plaso";
 
-PYTHONPATH=. ./tools/log2timeline.py --buffer_size=300 --quiet ${TEST_FILE} test_data/syslog;
-PYTHONPATH=. ./tools/log2timeline.py --quiet --timezone=Iceland ${TEST_FILE} test_data/syslog;
+# Syslog does not contain a year we must pass preferred year to prevent the parser failing early on non-leap years.
+PYTHONPATH=. ./tools/log2timeline.py --buffer_size=300 --quiet --preferred_year 2012 ${TEST_FILE} test_data/syslog;
+PYTHONPATH=. ./tools/log2timeline.py --quiet --timezone=Iceland --preferred_year 2012 ${TEST_FILE} test_data/syslog;
 
 cat > tagging.txt <<EOI
 anacron
