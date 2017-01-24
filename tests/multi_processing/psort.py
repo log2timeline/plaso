@@ -383,7 +383,7 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
         u'OS:/tmp/test/test_data/syslog Type: file,'
         u'filestat,'
         u'OS:/tmp/test/test_data/syslog,-')
-    self.assertEquals(lines[14], expected_line)
+    self.assertEqual(lines[14], expected_line)
 
 
 if __name__ == '__main__':

@@ -30,13 +30,13 @@ class JSONLinesOutputTest(test_lib.OutputModuleTestCase):
     """Tests the WriteHeader function."""
     self._output_module.WriteHeader()
     header = self._output_writer.ReadOutput()
-    self.assertEquals(header, u'')
+    self.assertEqual(header, u'')
 
   def testWriteFooter(self):
     """Tests the WriteFooter function."""
     self._output_module.WriteFooter()
     footer = self._output_writer.ReadOutput()
-    self.assertEquals(footer, u'')
+    self.assertEqual(footer, u'')
 
   def testWriteEventBody(self):
     """Tests the WriteEventBody function."""
