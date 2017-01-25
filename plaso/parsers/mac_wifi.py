@@ -2,7 +2,6 @@
 """This file contains the wifi.log (Mac OS X) parser."""
 
 import logging
-import re
 
 import pyparsing
 
@@ -22,26 +21,17 @@ class MacWifiLogEvent(time_events.TimestampEvent):
 
   DATA_TYPE = u'mac:wifilog:line'
 
-  def __init__(self, timestamp, agent, function, text, action):
+  def __init__(self, timestamp, body):
     """Initializes the event object.
 
     Args:
       timestamp: the timestamp, contains the number of microseconds from
                  January 1, 1970 00:00:00 UTC.
-      agent: TODO
-      function: TODO
-      text: The log message
-      action: A string containing known WiFI actions, e.g. connected to
-              an AP, configured, etc. If the action is not known,
-              the value is the message of the log (text variable).
+      body: The body of the log message.
     """
     super(MacWifiLogEvent, self).__init__(
         timestamp, eventdata.EventTimestamp.ADDED_TIME)
-    self.agent = agent
-    self.function = function
-    self.text = text
-    self.action = action
-
+    self.body = body
 
 class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
   """Parse text based on wifi.log file."""
@@ -51,10 +41,6 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
 
   _ENCODING = u'utf-8'
 
-  # Regular expressions for known actions.
-  RE_CONNECTED = re.compile(r'Already\sassociated\sto\s(.*)\.\sBailing')
-  RE_WIFI_PARAMETERS = re.compile(
-      r'\[ssid=(.*?), bssid=(.*?), security=(.*?), rssi=')
 
   # Define how a log line should look like.
   WIFI_LINE = (
@@ -62,74 +48,36 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       text_parser.PyparsingConstants.MONTH.setResultsName(u'month') +
       text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
       text_parser.PyparsingConstants.TIME_MSEC.setResultsName(u'time') +
-      pyparsing.Literal(u'<') +
-      pyparsing.CharsNotIn(u'>').setResultsName(u'agent') +
-      pyparsing.Literal(u'>') +
-      pyparsing.CharsNotIn(u':').setResultsName(u'function') +
-      pyparsing.Literal(u':') +
-      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'text'))
+      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'body'))
 
   WIFI_HEADER = (
       text_parser.PyparsingConstants.MONTH.setResultsName(u'day_of_week') +
       text_parser.PyparsingConstants.MONTH.setResultsName(u'month') +
       text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
       text_parser.PyparsingConstants.TIME_MSEC.setResultsName(u'time') +
-      pyparsing.Literal(u'***Starting Up***'))
+      pyparsing.Literal(u'***Starting Up***').setResultsName(u'text'))
+
+  WIFI_TURNED_OVER_HEADER = (
+      text_parser.PyparsingConstants.MONTH.setResultsName(u'month') +
+      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
+      text_parser.PyparsingConstants.TIME.setResultsName(u'time') +
+      pyparsing.Combine(pyparsing.Word(pyparsing.printables) +
+                        pyparsing.Word(pyparsing.printables) +
+                        pyparsing.Literal(u'logfile turned over') +
+                        pyparsing.LineEnd(), joinString=u' ', adjacent=False
+                       ).setResultsName(u'body'))
 
   # Define the available log line structures.
   LINE_STRUCTURES = [
       (u'logline', WIFI_LINE),
-      (u'header', WIFI_HEADER)]
+      (u'header', WIFI_HEADER),
+      (u'turned_over_header', WIFI_TURNED_OVER_HEADER)]
 
   def __init__(self):
     """Initializes a parser object."""
     super(MacWifiLogParser, self).__init__()
     self._last_month = None
     self._year_use = 0
-
-  def _GetAction(self, agent, function, text):
-    """Parse the well know actions for easy reading.
-
-    Args:
-      agent: The device that generate the entry.
-      function: The function or action called by the agent.
-      text: Mac Wifi log text.
-
-    Returns:
-      know_action: A formatted string representing the known (or common) action.
-    """
-    if not agent.startswith(u'airportd'):
-      return text
-
-    # TODO: replace "x in y" checks by startswith if possible.
-    if u'airportdProcessDLILEvent' in function:
-      interface = text.split()[0]
-      return u'Interface {0:s} turn up.'.format(interface)
-
-    if u'doAutoJoin' in function:
-      match = re.match(self.RE_CONNECTED, text)
-      if match:
-        ssid = match.group(1)[1:-1]
-      else:
-        ssid = u'Unknown'
-      return u'Wifi connected to SSID {0:s}'.format(ssid)
-
-    if u'processSystemPSKAssoc' in function:
-      wifi_parameters = self.RE_WIFI_PARAMETERS.search(text)
-      if wifi_parameters:
-        ssid = wifi_parameters.group(1)
-        bssid = wifi_parameters.group(2)
-        security = wifi_parameters.group(3)
-        if not ssid:
-          ssid = u'Unknown'
-        if not bssid:
-          bssid = u'Unknown'
-        if not security:
-          security = u'Unknown'
-        return (
-            u'New wifi configured. BSSID: {0:s}, SSID: {1:s}, '
-            u'Security: {2:s}.').format(bssid, ssid, security)
-    return text
 
   def _ConvertToTimestamp(self, day, month, year, time):
     """Converts date and time values into a timestamp.
@@ -153,11 +101,16 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       TimestampError: if the timestamp cannot be created from the date and
                       time values.
     """
-    time_values, milliseconds = time
-    hours, minutes, seconds = time_values
-    microseconds = milliseconds * 1000
-    return timelib.Timestamp.FromTimeParts(
-        year, month, day, hours, minutes, seconds, microseconds=microseconds)
+    try:
+      time_values, milliseconds = time
+      hours, minutes, seconds = time_values
+      microseconds = milliseconds * 1000
+      return timelib.Timestamp.FromTimeParts(
+          year, month, day, hours, minutes, seconds, microseconds=microseconds)
+    except ValueError:
+      hours, minutes, seconds = time
+      return timelib.Timestamp.FromTimeParts(
+          year, month, day, hours, minutes, seconds)
 
   def _ParseLogLine(self, parser_mediator, structure):
     """Parse a single log line and produce an event object.
@@ -189,14 +142,9 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
 
     self._last_month = month
 
-    text = structure.text
+    body = structure.body
 
-    # Due to the use of CharsNotIn pyparsing structure contains whitespaces
-    # that need to be removed.
-    function = structure.function.strip()
-    action = self._GetAction(structure.agent, function, text)
-    event_object = MacWifiLogEvent(
-        timestamp, structure.agent, function, text, action)
+    event_object = MacWifiLogEvent(timestamp, body)
     parser_mediator.ProduceEvent(event_object)
 
   def ParseRecord(self, parser_mediator, key, structure):
@@ -209,10 +157,10 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       structure: A pyparsing.ParseResults object from a line in the
                  log file.
     """
-    if key == u'logline':
+    if key == u'logline' or key == u'header' or key == u'turned_over_header':
       self._ParseLogLine(parser_mediator, structure)
-    elif key != u'header':
-      logging.warning(
+    else:
+      logging.debug(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
   def VerifyStructure(self, parser_mediator, line):
@@ -228,8 +176,11 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
     try:
       _ = self.WIFI_HEADER.parseString(line)
     except pyparsing.ParseException:
-      logging.debug(u'Not a Mac Wifi log file')
-      return False
+      try:
+        _ = self.WIFI_TURNED_OVER_HEADER.parseString(line)
+      except pyparsing.ParseException:
+        logging.debug(u'Not a Mac Wifi log file')
+        return False
     return True
 
 

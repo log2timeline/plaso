@@ -11,13 +11,10 @@ class MacWifiLogFormatter(interface.ConditionalEventFormatter):
   DATA_TYPE = u'mac:wifilog:line'
 
   FORMAT_STRING_PIECES = [
-      u'Action: {action}',
-      u'Agent: {user}',
-      u'({function})',
-      u'Log: {text}']
+      u'Log: {body}']
 
   FORMAT_STRING_SHORT_PIECES = [
-      u'Action: {action}']
+      u'Log: {body}']
 
   SOURCE_LONG = u'Mac Wifi Log'
   SOURCE_SHORT = u'LOG'
