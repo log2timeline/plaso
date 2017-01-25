@@ -739,7 +739,8 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
           self.ParseRecord(parser_mediator, key, tokens)
         except (errors.ParseError, errors.TimestampError) as exception:
           parser_mediator.ProduceExtractionError(
-              u'unable parse record with error: {0:s}'.format(exception))
+              u'unable parse record: {0:s} with error: {1:s}'.format(
+                  key, exception))
 
         self._text_reader.SkipAhead(file_object, end)
 
@@ -758,28 +759,34 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
             u'unable to read lines with error: {0:s}'.format(exception))
 
   @abc.abstractmethod
-  def ParseRecord(self, mediator, key, structure):
-    """Parses a matching entry.
+  def ParseRecord(self, parser_mediator, key, structure):
+    """Parses a log record structure and produces events.
+
+    This function takes as an input a parsed pyparsing structure
+    and produces an EventObject if possible from that structure.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       key (str): name of the parsed structure.
-      structure (pyparsing.ParseResults): elements parsed from the file.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
 
-    Raises:
-      UnableToParseFile: if an unsupported key is provided.
+    Returns:
+      EventObject: event or None.
     """
 
   @abc.abstractmethod
-  def VerifyStructure(self, unused_mediator, line):
-    """Verifies that this is a syslog-formatted file.
+  def VerifyStructure(self, parser_mediator, line):
+    """Verify the structure of the file and return boolean based on that check.
+
+    This function should read enough text from the text file to confirm
+    that the file is the correct one for this particular parser.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       line (str): single line from the text file.
 
     Returns:
-      bool: whether the line appears to contain syslog content.
+      bool: True if this is the correct parser, False otherwise.
     """
