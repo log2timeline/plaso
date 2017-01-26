@@ -14,6 +14,7 @@
 /__pycache__
 /build/
 /dist/
+/MANIFEST.test_data
 /plaso.egg-info
 
 # Auto-generated Sphinx documentation files

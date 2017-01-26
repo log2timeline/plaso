@@ -241,7 +241,9 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       u''])
 
   _EXPECTED_PROCESSING_OPTIONS = u'\n'.join([
-      u'usage: psort_test.py [--disable_zeromq]',
+      (u'usage: psort_test.py [--disable_zeromq] '
+       u'[--temporary_directory DIRECTORY]'),
+      u'                     [--worker-memory-limit SIZE]',
       u'',
       u'Test argument parser.',
       u'',
@@ -250,6 +252,14 @@ class PsortToolTest(cli_test_lib.CLIToolTestCase):
       (u'                        Disable queueing using ZeroMQ. A '
        u'Multiprocessing queue'),
       u'                        will be used instead.',
+      u'  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY',
+      (u'                        Path to the directory that should be used to '
+       u'store'),
+      u'                        temporary files created during analysis.',
+      u'  --worker-memory-limit SIZE, --worker_memory_limit SIZE',
+      (u'                        Maximum amount of memory a worker process is '
+       u'allowed'),
+      u'                        to consume. [defaults to 2 GiB]',
       u''])
 
   # TODO: add test for _FormatStatusTableRow.

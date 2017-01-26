@@ -421,20 +421,24 @@ class _SerializedDataStream(object):
       construct.ULInt32(u'size'))
   _DATA_ENTRY_SIZE = _DATA_ENTRY.sizeof()
 
-  # The maximum serialized data size (40 MiB).
-  _MAXIMUM_DATA_SIZE = 40 * 1024 * 1024
+  # The default maximum serialized data size (40 MiB).
+  DEFAULT_MAXIMUM_DATA_SIZE = 40 * 1024 * 1024
 
-  def __init__(self, zip_file, storage_file_path, stream_name):
+  def __init__(
+      self, zip_file, storage_file_path, stream_name,
+      maximum_data_size=DEFAULT_MAXIMUM_DATA_SIZE):
     """Initializes a serialized data stream.
 
     Args:
       zip_file (zipfile.ZipFile): ZIP file that contains the stream.
       storage_file_path (str): path of the storage file.
       stream_name (str): name of the stream.
+      maximum_data_size (Optional[int]): maximum data size of the stream.
     """
     super(_SerializedDataStream, self).__init__()
     self._entry_index = 0
     self._file_object = None
+    self._maximum_data_size = maximum_data_size
     self._path = os.path.dirname(os.path.abspath(storage_file_path))
     self._stream_name = stream_name
     self._stream_offset = 0
@@ -487,12 +491,11 @@ class _SerializedDataStream(object):
     try:
       data_entry = self._DATA_ENTRY.parse(data)
     except construct.FieldError as exception:
-      raise IOError(
-          u'Unable to read data entry with error: {0:s}'.format(exception))
+      raise IOError(u'Unable to read data entry with error: {0:s}'.format(
+          exception))
 
-    if data_entry.size > self._MAXIMUM_DATA_SIZE:
-      raise IOError(
-          u'Unable to read data entry size value out of bounds.')
+    if data_entry.size > self._maximum_data_size:
+      raise IOError(u'Unable to read data entry size value out of bounds.')
 
     data = self._file_object.read(data_entry.size)
     if len(data) != data_entry.size:
@@ -549,9 +552,19 @@ class _SerializedDataStream(object):
       int: offset of the entry within the temporary file.
 
     Raises:
-      IOError: if the entry cannot be written.
+      IOError: if the serialized data stream was not opened for writing or
+          the entry cannot be written to the serialized data stream.
     """
-    data_size = construct.ULInt32(u'size').build(len(data))
+    if not self._file_object:
+      raise IOError(u'Unable to write to closed serialized data stream.')
+
+    data_size = len(data)
+    data_end_offset = (
+        self._file_object.tell() + self._DATA_ENTRY_SIZE + data_size)
+    if data_end_offset > self._maximum_data_size:
+      raise IOError(u'Unable to write data entry size value out of bounds.')
+
+    data_size = construct.ULInt32(u'size').build(data_size)
     self._file_object.write(data_size)
     self._file_object.write(data)
 
@@ -566,8 +579,12 @@ class _SerializedDataStream(object):
       int: offset of the entry within the temporary file.
 
     Raises:
-      IOError: if the serialized data stream cannot be written.
+      IOError: if the serialized data stream was not opened for writing or
+          the serialized data stream cannot be written.
     """
+    if not self._file_object:
+      raise IOError(u'Unable to write to closed serialized data stream.')
+
     offset = self._file_object.tell()
     self._file_object.close()
     self._file_object = None
@@ -591,13 +608,18 @@ class _SerializedDataStream(object):
       int: offset of the entry within the temporary file.
 
     Raises:
-      IOError: if the serialized data stream cannot be written.
+      IOError: if the serialized data stream is already opened or
+          cannot be written.
     """
+    if self._file_object:
+      raise IOError(u'Serialized data stream already opened.')
+
     stream_file_path = os.path.join(self._path, self._stream_name)
     self._file_object = open(stream_file_path, 'wb')
     if platform_specific.PlatformIsWindows():
       file_handle = self._file_object.fileno()
       platform_specific.DisableWindowsFileHandleInheritance(file_handle)
+
     return self._file_object.tell()
 
 
@@ -1104,7 +1126,10 @@ class ZIPStorageFile(interface.BaseFileStorage):
     if not event:
       return
 
-    self._event_heap.PushEvent(event, stream_number, event.store_index)
+    # TODO: refactor.
+    store_index = getattr(event, u'_store_index', None)
+
+    self._event_heap.PushEvent(event, stream_number, store_index)
 
     reference_timestamp = event.timestamp
     while event.timestamp == reference_timestamp:
@@ -1112,7 +1137,10 @@ class ZIPStorageFile(interface.BaseFileStorage):
       if not event:
         break
 
-      self._event_heap.PushEvent(event, stream_number, event.store_index)
+      # TODO: refactor.
+      store_index = getattr(event, u'_store_index', None)
+
+      self._event_heap.PushEvent(event, stream_number, store_index)
 
   def _GetEvent(self, stream_number, entry_index=-1):
     """Reads an event from a specific stream.
@@ -1132,8 +1160,9 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     event = self._DeserializeAttributeContainer(event_data, u'event')
 
-    event.store_number = stream_number
-    event.store_index = entry_index
+    # TODO: refactor.
+    setattr(event, u'_store_number', stream_number)
+    setattr(event, u'_store_index', entry_index)
 
     return event
 
@@ -1562,8 +1591,11 @@ class ZIPStorageFile(interface.BaseFileStorage):
         next_event.timestamp != event.timestamp):
       self._FillEventHeapFromStream(stream_number)
 
+    # TODO: refactor.
+    store_number = getattr(event, u'_store_number', None)
+    store_index = getattr(event, u'_store_index', None)
     event.tag = self._ReadEventTagByIdentifier(
-        event.store_number, event.store_index, event.uuid)
+        store_number, store_index, event.uuid)
 
     return event
 
@@ -1632,8 +1664,10 @@ class ZIPStorageFile(interface.BaseFileStorage):
         if time_range and event.timestamp > time_range.end_timestamp:
           continue
 
-        self._event_heap.PushEvent(
-            event, stream_number, event.store_number)
+        # TODO: refactor.
+        store_index = getattr(event, u'_store_index', None)
+
+        self._event_heap.PushEvent(event, stream_number, store_index)
 
         reference_timestamp = event.timestamp
         while event.timestamp == reference_timestamp:
@@ -1641,8 +1675,10 @@ class ZIPStorageFile(interface.BaseFileStorage):
           if not event:
             break
 
-          self._event_heap.PushEvent(
-              event, stream_number, event.store_number)
+          # TODO: refactor.
+          store_index = getattr(event, u'_store_index', None)
+
+          self._event_heap.PushEvent(event, stream_number, store_index)
 
   def _OpenRead(self):
     """Opens the storage file for reading."""
@@ -2796,8 +2832,9 @@ class ZIPStorageFile(interface.BaseFileStorage):
       system_configuration = self._ReadAttributeContainerFromStreamEntry(
           data_stream, u'preprocess')
 
+      # TODO: replace stream_number by session_identifier.
       knowledge_base.ReadSystemConfigurationArtifact(
-          stream_number, system_configuration)
+          system_configuration, session_identifier=stream_number)
 
   def WritePreprocessingInformation(self, knowledge_base):
     """Writes preprocessing information.

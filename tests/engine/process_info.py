@@ -5,7 +5,7 @@
 import os
 import unittest
 
-from plaso.multi_processing import process_info
+from plaso.engine import process_info
 
 
 class ProcessInfoTest(unittest.TestCase):
@@ -17,21 +17,13 @@ class ProcessInfoTest(unittest.TestCase):
     process_information = process_info.ProcessInfo(pid)
     self.assertIsNotNone(process_information)
 
-  def testProperties(self):
-    """Tests the properties."""
+  def testGetUsedMemory(self):
+    """Tests the GetUsedMemory function."""
     pid = os.getpid()
     process_information = process_info.ProcessInfo(pid)
 
-    self.assertEqual(
-        process_information.status, process_information.STATUS_RUNNING)
-
-  def testGetMemoryInformation(self):
-    """Tests the GetMemoryInformation function."""
-    pid = os.getpid()
-    process_information = process_info.ProcessInfo(pid)
-
-    memory_information = process_information.GetMemoryInformation()
-    self.assertIsNotNone(memory_information)
+    used_memory = process_information.GetUsedMemory()
+    self.assertIsNotNone(used_memory)
 
 
 if __name__ == '__main__':

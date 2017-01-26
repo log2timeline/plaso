@@ -130,8 +130,7 @@ class WindowsTimeZonePreprocessPluginTest(test_lib.PreprocessPluginTestCase):
     plugin = windows.WindowsTimeZonePreprocessPlugin()
     knowledge_base = self._RunWindowsRegistryPluginOnSystem(plugin)
 
-    time_zone_str = knowledge_base.GetValue(u'time_zone_str')
-    self.assertEqual(time_zone_str, u'EST5EDT')
+    self.assertEqual(knowledge_base.timezone.zone, u'EST5EDT')
 
 
 class WindowsUserAccountsPreprocessPluginTest(
@@ -147,7 +146,7 @@ class WindowsUserAccountsPreprocessPluginTest(
     knowledge_base = self._RunWindowsRegistryPluginOnSoftware(plugin)
 
     users = sorted(
-        knowledge_base._user_accounts[0].values(),
+        knowledge_base.user_accounts,
         key=lambda user_account: user_account.identifier)
     self.assertIsNotNone(users)
     self.assertEqual(len(users), 11)

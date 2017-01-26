@@ -442,6 +442,7 @@ class ImageExportFrontend(frontend.Frontend):
     self._digests = {}
     self._filter_collection = FileEntryFilterCollection()
     self._knowledge_base = None
+    self._path_spec_extractor = extractors.PathSpecExtractor()
     self._resolver_context = context.Context()
 
   def _CalculateDigestHash(self, file_entry, data_stream_name):
@@ -518,8 +519,10 @@ class ImageExportFrontend(frontend.Frontend):
           should be skipped.
     """
     output_writer.Write(u'Extracting file entries.\n')
-    path_spec_extractor = extractors.PathSpecExtractor(self._resolver_context)
-    for path_spec in path_spec_extractor.ExtractPathSpecs(source_path_specs):
+    path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
+        source_path_specs, resolver_context=self._resolver_context)
+
+    for path_spec in path_spec_generator:
       self._ExtractFileEntry(
           path_spec, destination_path, output_writer,
           skip_duplicates=skip_duplicates)

@@ -105,48 +105,23 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
   _ZEROMQ_NO_WORKER_REQUEST_TIME_SECONDS = 10 * 60
 
   def __init__(
-      self, debug_output=False, enable_profiling=False,
-      maximum_number_of_tasks=_MAXIMUM_NUMBER_OF_TASKS,
-      profiling_directory=None, profiling_sample_rate=1000,
-      profiling_type=u'all', use_zeromq=True):
+      self, maximum_number_of_tasks=_MAXIMUM_NUMBER_OF_TASKS, use_zeromq=True):
     """Initializes an engine object.
 
     Args:
-      debug_output (Optional[bool]): True if debug output should be enabled.
-      enable_profiling (Optional[bool]): True if profiling should be enabled.
       maximum_number_of_tasks (Optional[int]): maximum number of concurrent
           tasks, where 0 represents no limit.
-      profiling_directory (Optional[str]): path to the directory where
-          the profiling sample files should be stored.
-      profiling_sample_rate (Optional[int]): the profiling sample rate.
-          Contains the number of event sources processed.
-      profiling_type (Optional[str]): type of profiling.
-          Supported types are:
-
-          * 'memory' to profile memory usage;
-          * 'parsers' to profile CPU time consumed by individual parsers;
-          * 'processing' to profile CPU time consumed by different parts of
-            the processing;
-          * 'serializers' to profile CPU time consumed by individual
-            serializers.
       use_zeromq (Optional[bool]): True if ZeroMQ should be used for queuing
           instead of Python's multiprocessing queue.
     """
-    super(TaskMultiProcessEngine, self).__init__(
-        debug_output=debug_output, enable_profiling=enable_profiling,
-        profiling_directory=profiling_directory,
-        profiling_sample_rate=profiling_sample_rate,
-        profiling_type=profiling_type)
+    super(TaskMultiProcessEngine, self).__init__()
     self._enable_sigsegv_handler = False
     self._filter_find_specs = None
-    self._filter_object = None
-    self._hasher_names_string = None
     self._last_worker_number = 0
     self._maximum_number_of_tasks = maximum_number_of_tasks
     self._memory_profiler = None
     self._merge_task = None
     self._merge_task_on_hold = None
-    self._mount_path = None
     self._number_of_consumed_errors = 0
     self._number_of_consumed_event_tags = 0
     self._number_of_consumed_events = 0
@@ -158,10 +133,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
     self._number_of_worker_processes = 0
-    self._parser_filter_expression = None
-    self._preferred_year = None
-    self._process_archives = False
-    self._process_compressed_streams = True
+    self._path_spec_extractor = extractors.PathSpecExtractor()
+    self._processing_configuration = None
     self._processing_profiler = None
     self._resolver_context = context.Context()
     self._serializers_profiler = None
@@ -169,15 +142,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._status = definitions.PROCESSING_STATUS_IDLE
     self._storage_merge_reader = None
     self._storage_merge_reader_on_hold = None
-    self._storage_writer = None
     self._task_queue = None
     self._task_queue_port = None
-    self._task_manager = task_manager.TaskManager(
-        maximum_number_of_tasks=maximum_number_of_tasks)
-    self._temporary_directory = None
-    self._text_prepend = None
+    self._task_manager = task_manager.TaskManager()
     self._use_zeromq = use_zeromq
-    self._yara_rules_string = None
 
   def _MergeTaskStorage(self, storage_writer):
     """Merges a task storage with the session storage.
@@ -271,8 +239,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           the sources to process.
       storage_writer (StorageWriter): storage writer for a session storage.
       filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
-          used in path specification extraction. If set, path specs that match
-          the find specification will be processed.
+          used in path specification extraction. If set, path specifications
+          that match the find specification will be processed.
     """
     if self._processing_profiler:
       self._processing_profiler.StartTiming(u'process_sources')
@@ -289,11 +257,11 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     self._number_of_produced_reports = 0
     self._number_of_produced_sources = 0
 
-    path_spec_extractor = extractors.PathSpecExtractor(self._resolver_context)
-
-    for path_spec in path_spec_extractor.ExtractPathSpecs(
+    path_spec_generator = self._path_spec_extractor.ExtractPathSpecs(
         source_path_specs, find_specs=filter_find_specs,
-        recurse_file_system=False):
+        recurse_file_system=False, resolver_context=self._resolver_context)
+
+    for path_spec in path_spec_generator:
       if self._abort:
         break
 
@@ -422,6 +390,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           task = self._task_manager.CreateTask(self._session_identifier)
           task.file_entry_type = event_source.file_entry_type
           task.path_spec = event_source.path_spec
+          logging.debug(
+              u'Scheduled task {0:s} for path specification {1:s}'.format(
+                  task.identifier, task.path_spec.comparable))
           event_source = None
 
           self._number_of_consumed_sources += 1
@@ -457,8 +428,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     else:
       logging.debug(u'Task scheduler stopped')
 
-  def _StartExtractionWorkerProcess(self, storage_writer):
-    """Creates, starts and registers an extraction worker process.
+  def _StartWorkerProcess(self, storage_writer):
+    """Creates, starts and registers a worker process.
 
     Args:
       storage_writer (StorageWriter): storage writer for a session storage used
@@ -480,22 +451,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     process = worker_process.WorkerProcess(
         task_queue, storage_writer, self.knowledge_base,
-        self._session_identifier, debug_output=self._debug_output,
-        enable_profiling=self._enable_profiling,
-        enable_sigsegv_handler=self._enable_sigsegv_handler,
-        filter_object=self._filter_object,
-        hasher_names_string=self._hasher_names_string,
-        mount_path=self._mount_path, name=process_name,
-        parser_filter_expression=self._parser_filter_expression,
-        preferred_year=self._preferred_year,
-        process_archives=self._process_archives,
-        process_compressed_streams=self._process_compressed_streams,
-        profiling_directory=self._profiling_directory,
-        profiling_sample_rate=self._profiling_sample_rate,
-        profiling_type=self._profiling_type,
-        temporary_directory=self._temporary_directory,
-        text_prepend=self._text_prepend,
-        yara_rules_string=self._yara_rules_string)
+        self._session_identifier, self._processing_configuration,
+        enable_sigsegv_handler=self._enable_sigsegv_handler, name=process_name)
 
     process.start()
     self._last_worker_number += 1
@@ -506,25 +463,26 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
   def _StartProfiling(self):
     """Starts profiling."""
-    if not self._enable_profiling:
+    if not self._processing_configuration:
       return
 
-    if self._profiling_type in (u'all', u'memory'):
+    if self._processing_configuration.profiling.HaveProfileMemory():
       identifier = u'{0:s}-memory'.format(self._name)
       self._memory_profiler = profiler.GuppyMemoryProfiler(
-          identifier, path=self._profiling_directory,
-          profiling_sample_rate=self._profiling_sample_rate)
+          identifier, path=self._processing_configuration.profiling.directory,
+          profiling_sample_rate=(
+              self._processing_configuration.profiling.sample_rate))
       self._memory_profiler.Start()
 
-    if self._profiling_type in (u'all', u'processing'):
+    if self._processing_configuration.profiling.HaveProfileProcessing():
       identifier = u'{0:s}-processing'.format(self._name)
       self._processing_profiler = profiler.ProcessingProfiler(
-          identifier, path=self._profiling_directory)
+          identifier, path=self._processing_configuration.profiling.directory)
 
-    if self._profiling_type in (u'all', u'serializers'):
+    if self._processing_configuration.profiling.HaveProfileSerializers():
       identifier = u'{0:s}-serializers'.format(self._name)
       self._serializers_profiler = profiler.SerializersProfiler(
-          identifier, path=self._profiling_directory)
+          identifier, path=self._processing_configuration.profiling.directory)
 
   def _StatusUpdateThreadMain(self):
     """Main function of the status update thread."""
@@ -534,10 +492,12 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       for pid in list(self._process_information_per_pid.keys()):
         self._CheckStatusWorkerProcess(pid)
 
+      used_memory = self._process_information.GetUsedMemory()
+
       display_name = getattr(self._merge_task, u'identifier', u'')
 
       self._processing_status.UpdateForemanStatus(
-          self._name, self._status, self._pid, display_name,
+          self._name, self._status, self._pid, used_memory, display_name,
           self._number_of_consumed_sources, self._number_of_produced_sources,
           self._number_of_consumed_events, self._number_of_produced_events,
           self._number_of_consumed_event_tags,
@@ -592,28 +552,26 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
   def _StopProfiling(self):
     """Stops profiling."""
-    if not self._enable_profiling:
-      return
-
-    if self._profiling_type in (u'all', u'memory'):
+    if self._memory_profiler:
       self._memory_profiler.Sample()
       self._memory_profiler = None
 
-    if self._profiling_type in (u'all', u'processing'):
+    if self._processing_profiler:
       self._processing_profiler.Write()
       self._processing_profiler = None
 
-    if self._profiling_type in (u'all', u'serializers'):
+    if self._serializers_profiler:
       self._serializers_profiler.Write()
       self._serializers_profiler = None
 
-  def _UpdateProcessingStatus(self, pid, process_status):
+  def _UpdateProcessingStatus(self, pid, process_status, used_memory):
     """Updates the processing status.
 
     Args:
       pid (int): process identifier (PID) of the worker process.
       process_status (dict[str, object]): status values received from
           the worker process.
+      used_memory (int): size of used memory in bytes.
 
     Raises:
       KeyError: if the process is not registered with the engine.
@@ -670,7 +628,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           processing_status = definitions.PROCESSING_STATUS_NOT_RESPONDING
 
     self._processing_status.UpdateWorkerStatus(
-        process.name, processing_status, pid, display_name,
+        process.name, processing_status, pid, used_memory, display_name,
         number_of_consumed_sources, number_of_produced_sources,
         number_of_consumed_events, number_of_produced_events,
         number_of_consumed_event_tags, number_of_produced_event_tags,
@@ -683,25 +641,28 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     try:
       self._task_manager.UpdateTaskByIdentifier(task_identifier)
+      return
     except KeyError:
-      if self._task_manager.IsAbandonedTask(task_identifier):
-        logging.debug(
-            u'Worker {0:s} is processing abandoned task: {1:s}.'.format(
-                process.name, task_identifier))
-      else:
-        logging.debug(
-            u'Worker {0:s} is processing unknown task: {1:s}.'.format(
-                process.name, task_identifier))
+      # Avoid nesting exception blocks.
+      pass
+
+    try:
+      task = self._task_manager.GetAbandonedTask(task_identifier)
+      logging.debug(
+          (u'Worker {0:s} is processing abandoned task: {1:s}. It was last '
+           u'updated at {2!s}.').format(
+               process.name, task.identifier, task.last_processing_time))
+      self._task_manager.AdoptTask(task)
+    except KeyError:
+      logging.debug(
+          u'Worker {0:s} is processing unknown task: {1:s}.'.format(
+              process.name, task_identifier))
 
   def ProcessSources(
       self, session_identifier, source_path_specs, storage_writer,
-      enable_sigsegv_handler=False, filter_find_specs=None,
-      filter_object=None, hasher_names_string=None, mount_path=None,
-      number_of_worker_processes=0, parser_filter_expression=None,
-      preferred_year=None, process_archives=False,
-      process_compressed_streams=True, status_update_callback=None,
-      show_memory_usage=False, temporary_directory=None, text_prepend=None,
-      yara_rules_string=None):
+      processing_configuration, enable_sigsegv_handler=False,
+      filter_find_specs=None, number_of_worker_processes=0,
+      status_update_callback=None, worker_memory_limit=None):
     """Processes the sources and extract event objects.
 
     Args:
@@ -709,30 +670,17 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       source_path_specs (list[dfvfs.PathSpec]): path specifications of
           the sources to process.
       storage_writer (StorageWriter): storage writer for a session storage.
+      processing_configuration (ProcessingConfiguration): processing
+          configuration.
       enable_sigsegv_handler (Optional[bool]): True if the SIGSEGV handler
           should be enabled.
       filter_find_specs (Optional[list[dfvfs.FindSpec]]): find specifications
           used in path specification extraction.
-      filter_object (Optional[objectfilter.Filter]): filter object.
-      hasher_names_string (Optional[str]): comma separated string of names
-          of hashers to use during processing.
-      mount_path (Optional[str]): mount path.
       number_of_worker_processes (Optional[int]): number of worker processes.
-      parser_filter_expression (Optional[str]): parser filter expression,
-          where None represents all parsers and plugins.
-      preferred_year (Optional[int]): preferred year.
-      process_archives (Optional[bool]): True if archive files should be
-          scanned for file entries.
-      process_compressed_streams (Optional[bool]): True if file content in
-          compressed streams should be processed.
-      show_memory_usage (Optional[bool]): True if memory information should be
-          included in status updates.
       status_update_callback (Optional[function]): callback function for status
           updates.
-      temporary_directory (Optional[str]): path of the directory for temporary
-          files.
-      text_prepend (Optional[str]): text to prepend to every event.
-      yara_rules_string (Optional[str]): unparsed yara rule definitions.
+      worker_memory_limit (Optional[int]): maximum amount of memory a worker is
+          allowed to consume, where None represents the default memory limit.
 
     Returns:
       ProcessingStatus: processing status.
@@ -764,23 +712,16 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     self._enable_sigsegv_handler = enable_sigsegv_handler
     self._number_of_worker_processes = number_of_worker_processes
-    self._show_memory_usage = show_memory_usage
+    self._worker_memory_limit = (
+        worker_memory_limit or self._DEFAULT_WORKER_MEMORY_LIMIT)
 
     # Keep track of certain values so we can spawn new extraction workers.
+    self._processing_configuration = processing_configuration
+
     self._filter_find_specs = filter_find_specs
-    self._filter_object = filter_object
-    self._hasher_names_string = hasher_names_string
-    self._mount_path = mount_path
-    self._parser_filter_expression = parser_filter_expression
-    self._preferred_year = preferred_year
-    self._process_archives = process_archives
-    self._process_compressed_streams = process_compressed_streams
     self._session_identifier = session_identifier
     self._status_update_callback = status_update_callback
     self._storage_writer = storage_writer
-    self._temporary_directory = temporary_directory
-    self._text_prepend = text_prepend
-    self._yara_rules_string = yara_rules_string
 
     # Set up the task queue.
     if not self._use_zeromq:
@@ -809,7 +750,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     storage_writer.StartTaskStorage()
 
     for _ in range(number_of_worker_processes):
-      extraction_process = self._StartExtractionWorkerProcess(storage_writer)
+      extraction_process = self._StartWorkerProcess(storage_writer)
       self._StartMonitoringProcess(extraction_process.pid)
 
     self._StartStatusUpdateThread()
@@ -878,19 +819,13 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     # Reset values.
     self._enable_sigsegv_handler = None
     self._number_of_worker_processes = None
-    self._show_memory_usage = None
+    self._worker_memory_limit = self._DEFAULT_WORKER_MEMORY_LIMIT
+
+    self._processing_configuration = None
 
     self._filter_find_specs = None
-    self._filter_object = None
-    self._hasher_names_string = None
-    self._mount_path = None
-    self._parser_filter_expression = None
-    self._preferred_year = None
-    self._process_archives = None
-    self._process_compressed_streams = None
     self._session_identifier = None
     self._status_update_callback = None
     self._storage_writer = None
-    self._text_prepend = None
 
     return self._processing_status

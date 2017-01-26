@@ -31,6 +31,7 @@ class SessionTest(shared_test_lib.BaseTestCase):
         u'identifier': session.identifier,
         u'parsers_counter': session.parsers_counter,
         u'preferred_encoding': u'utf-8',
+        u'preferred_time_zone': u'UTC',
         u'product_name': u'plaso',
         u'product_version': plaso.GetVersion(),
         u'start_time': session.start_time}
@@ -53,7 +54,7 @@ class SessionCompletionTest(shared_test_lib.BaseTestCase):
         identifier=session_identifier)
     session_completion.timestamp = timestamp
 
-    self.assertEquals(session_completion.identifier, session_identifier)
+    self.assertEqual(session_completion.identifier, session_identifier)
 
     expected_dict = {
         u'aborted': False,
@@ -79,7 +80,7 @@ class SessionStartTest(shared_test_lib.BaseTestCase):
     session_start.product_name = u'plaso'
     session_start.product_version = plaso.GetVersion()
 
-    self.assertEquals(session_start.identifier, session_identifier)
+    self.assertEqual(session_start.identifier, session_identifier)
 
     expected_dict = {
         u'debug_mode': False,

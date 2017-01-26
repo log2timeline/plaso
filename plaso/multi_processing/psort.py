@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """The psort multi-processing engine."""
 
-from __future__ import print_function
 import collections
 import logging
 import os
@@ -22,41 +21,21 @@ from plaso.storage import time_range as storage_time_range
 class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
   """Class that defines the psort multi-processing engine."""
 
+  _DEFAULT_WORKER_MEMORY_LIMIT = 2048 * 1024 * 1024
+
   _PROCESS_JOIN_TIMEOUT = 5.0
+  _PROCESS_WORKER_TIMEOUT = 15.0 * 60.0
 
   _QUEUE_TIMEOUT = 10 * 60
 
-
-  def __init__(
-      self, debug_output=False, enable_profiling=False,
-      profiling_directory=None, profiling_sample_rate=1000,
-      profiling_type=u'all', use_zeromq=True):
+  def __init__(self, use_zeromq=True):
     """Initializes an engine object.
 
     Args:
-      debug_output (Optional[bool]): True if debug output should be enabled.
-      enable_profiling (Optional[bool]): True if profiling should be enabled.
-      profiling_directory (Optional[str]): path to the directory where
-          the profiling sample files should be stored.
-      profiling_sample_rate (Optional[int]): the profiling sample rate.
-          Contains the number of event sources processed.
-      profiling_type (Optional[str]): type of profiling.
-          Supported types are:
-
-          * 'memory' to profile memory usage;
-          * 'parsers' to profile CPU time consumed by individual parsers;
-          * 'processing' to profile CPU time consumed by different parts of
-            the processing;
-          * 'serializers' to profile CPU time consumed by individual
-            serializers.
       use_zeromq (Optional[bool]): True if ZeroMQ should be used for queuing
           instead of Python's multiprocessing queue.
     """
-    super(PsortMultiProcessEngine, self).__init__(
-        debug_output=debug_output, enable_profiling=enable_profiling,
-        profiling_directory=profiling_directory,
-        profiling_sample_rate=profiling_sample_rate,
-        profiling_type=profiling_type)
+    super(PsortMultiProcessEngine, self).__init__()
     self._completed_analysis_processes = set()
     self._event_queues = {}
     self._merge_task = None
@@ -73,6 +52,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
     self._status = definitions.PROCESSING_STATUS_IDLE
     self._status_update_callback = None
     self._use_zeromq = use_zeromq
+    self._worker_memory_limit = self._DEFAULT_WORKER_MEMORY_LIMIT
 
   def _AnalyzeEvents(self, storage_writer, analysis_plugins, event_filter=None):
     """Analyzes events in a plaso storage.
@@ -207,6 +187,16 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       else:
         process_is_alive = True
 
+      process_information = self._process_information_per_pid[pid]
+      used_memory = process_information.GetUsedMemory()
+
+      if used_memory > self._worker_memory_limit:
+        logging.warning((
+            u'Process: {0:s} (PID: {1:d}) killed because it exceeded the '
+            u'memory limit: {2:d}.').format(
+                process.name, pid, self._worker_memory_limit))
+        self._KillProcess(pid)
+
       if isinstance(process_status, dict):
         self._rpc_errors_per_pid[pid] = 0
         status_indicator = process_status.get(u'processing_status', None)
@@ -237,7 +227,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         process_status = {
             u'processing_status': processing_status_string}
 
-    self._UpdateProcessingStatus(pid, process_status)
+    self._UpdateProcessingStatus(pid, process_status, used_memory)
 
     if status_indicator in definitions.PROCESSING_ERROR_STATUS:
       logging.error((
@@ -409,10 +399,12 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       for pid in list(self._process_information_per_pid.keys()):
         self._CheckStatusAnalysisProcess(pid)
 
+      used_memory = self._process_information.GetUsedMemory()
+
       display_name = getattr(self._merge_task, u'identifier', u'')
 
       self._processing_status.UpdateForemanStatus(
-          self._name, self._status, self._pid, display_name,
+          self._name, self._status, self._pid, used_memory, display_name,
           self._number_of_consumed_sources, self._number_of_produced_sources,
           self._number_of_consumed_events, self._number_of_produced_events,
           self._number_of_consumed_event_tags,
@@ -468,13 +460,14 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       for event_queue in self._event_queues.values():
         event_queue.Close(abort=True)
 
-  def _UpdateProcessingStatus(self, pid, process_status):
+  def _UpdateProcessingStatus(self, pid, process_status, used_memory):
     """Updates the processing status.
 
     Args:
       pid (int): process identifier (PID) of the worker process.
       process_status (dict[str, object]): status values received from
           the worker process.
+      used_memory (int): size of used memory in bytes.
 
     Raises:
       KeyError: if the process is not registered with the engine.
@@ -531,17 +524,30 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
           processing_status = definitions.PROCESSING_STATUS_NOT_RESPONDING
 
     self._processing_status.UpdateWorkerStatus(
-        process.name, processing_status, pid, display_name,
+        process.name, processing_status, pid, used_memory, display_name,
         number_of_consumed_sources, number_of_produced_sources,
         number_of_consumed_events, number_of_produced_events,
         number_of_consumed_event_tags, number_of_produced_event_tags,
         number_of_consumed_errors, number_of_produced_errors,
         number_of_consumed_reports, number_of_produced_reports)
 
+  def _StartWorkerProcess(self, storage_writer):
+    """Creates, starts and registers a worker process.
+
+    Args:
+      storage_writer (StorageWriter): storage writer for a session storage used
+          to create task storage.
+
+    Returns:
+      MultiProcessWorkerProcess: extraction worker process.
+    """
+    # TODO: implement.
+    return
+
   def AnalyzeEvents(
       self, knowledge_base_object, storage_writer, data_location,
       analysis_plugins, event_filter=None, event_filter_expression=None,
-      status_update_callback=None):
+      status_update_callback=None, worker_memory_limit=None):
     """Analyzes events in a plaso storage.
 
     Args:
@@ -556,11 +562,15 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       event_filter_expression (Optional[str]): event filter expression.
       status_update_callback (Optional[function]): callback function for status
           updates.
+      worker_memory_limit (Optional[int]): maximum amount of memory a worker is
+          allowed to consume, where None represents the default memory limit.
     """
     if not analysis_plugins:
       return
 
     self._status_update_callback = status_update_callback
+    self._worker_memory_limit = (
+        worker_memory_limit or self._DEFAULT_WORKER_MEMORY_LIMIT)
 
     # Set up the storage writer before the analysis processes.
     storage_writer.StartTaskStorage()
@@ -616,6 +626,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
 
     # Reset values.
     self._status_update_callback = None
+    self._worker_memory_limit = self._DEFAULT_WORKER_MEMORY_LIMIT
 
   def ExportEvents(
       self, knowledge_base_object, storage_reader, output_module,

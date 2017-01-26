@@ -21,8 +21,10 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
   _BDE_PASSWORD = u'bde-TEST'
 
   _EXPECTED_PROCESSING_OPTIONS = u'\n'.join([
-      u'usage: log2timeline_test.py [--single_process] [--show_memory_usage]',
-      u'                            [--disable_zeromq] [--workers WORKERS]',
+      u'usage: log2timeline_test.py [--disable_zeromq] [--single_process]',
+      u'                            [--temporary_directory DIRECTORY]',
+      (u'                            [--worker-memory-limit SIZE] '
+       u'[--workers WORKERS]'),
       u'',
       u'Test argument parser.',
       u'',
@@ -31,28 +33,25 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
       (u'                        Disable queueing using ZeroMQ. A '
        u'Multiprocessing queue'),
       u'                        will be used instead.',
-      u'  --show_memory_usage, --show-memory-usage',
-      (u'                        Indicates that basic memory usage should '
-       u'be included'),
-      (u'                        in the output of the process monitor. If '
-       u'this option'),
-      (u'                        is not set the tool only displays basic '
-       u'status and'),
-      u'                        counter information.',
       u'  --single_process, --single-process',
       (u'                        Indicate that the tool should run in a '
        u'single process.'),
-      (u'  --workers WORKERS     The number of worker threads [defaults to '
+      u'  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY',
+      (u'                        Path to the directory that should be used to '
+       u'store'),
+      u'                        temporary files created during extraction.',
+      u'  --worker-memory-limit SIZE, --worker_memory_limit SIZE',
+      (u'                        Maximum amount of memory a worker process is '
+       u'allowed'),
+      u'                        to consume. [defaults to 2 GiB]',
+      (u'  --workers WORKERS     The number of worker processes [defaults to '
        u'available'),
       u'                        system CPUs minus one].',
       u''])
 
-  # TODO: add test for _FormatStatusTableRow.
   # TODO: add test for _GetMatcher.
   # TODO: add test for _ParseOutputOptions.
   # TODO: add test for _ParseProcessingOptions.
-  # TODO: add test for _PrintStatusUpdate.
-  # TODO: add test for _PrintStatusUpdateStream.
 
   def testAddProcessingOptions(self):
     """Tests the AddProcessingOptions function."""
@@ -314,7 +313,6 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
     test_tool = log2timeline.Log2TimelineTool(output_writer=output_writer)
 
     options = cli_test_lib.TestOptions()
-    # TODO: refactor to partitions.
     options.partitions = u'all'
     options.quiet = True
     options.single_process = True
@@ -438,7 +436,7 @@ class Log2TimelineToolTest(cli_test_lib.CLIToolTestCase):
 
       # There should be 3 filestat and 3 pe parser generated events.
       event_objects = list(storage_file.GetEvents())
-      self.assertEquals(len(event_objects), 6)
+      self.assertEqual(len(event_objects), 6)
 
   def testShowInfo(self):
     """Tests the output of the tool in info mode."""

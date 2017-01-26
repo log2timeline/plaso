@@ -22,7 +22,7 @@ class TestParser(interface.BaseParser):
     """Parses the file entry and extracts event objects.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
+      parser_mediator (ParserMediator): parser mediator.
     """
     return
 
@@ -40,7 +40,7 @@ class TestParserWithPlugins(interface.BaseParser):
     """Parses the file entry and extracts event objects.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
+      parser_mediator (ParserMediator): parser mediator.
     """
     return
 
@@ -56,7 +56,7 @@ class TestPlugin(plugins.BasePlugin):
     """Evaluates if this is the correct plugin and processes data accordingly.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator (ParserMediator): parser mediator.
       kwargs: Depending on the plugin they may require different sets of
               arguments to be able to evaluate whether or not this is
               the correct plugin.
@@ -108,21 +108,21 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
 
   def testGetParsersFromPresetCategory(self):
     """Tests the _GetParsersFromPresetCategory function."""
-    expected_parser_names = sorted([
-        u'bencode', u'esedb', u'filestat', u'sqlite/google_drive', u'java_idx',
-        u'lnk', u'mcafee_protection', u'olecf', u'openxml', u'pe', u'prefetch',
-        u'sccm', u'skydrive_log', u'skydrive_log_old', u'sqlite/skype',
-        u'symantec_scanlog', u'binary_cookies', u'chrome_cache',
-        u'sqlite/chrome_cookies', u'sqlite/chrome_extension_activity',
-        u'sqlite/chrome_history', u'chrome_preferences', u'firefox_cache',
+    expected_parser_names = [
+        u'bencode', u'binary_cookies', u'chrome_cache', u'chrome_preferences',
+        u'esedb', u'esedb/msie_webcache', u'filestat', u'firefox_cache',
+        u'java_idx', u'lnk', u'mcafee_protection', u'msiecf', u'olecf',
+        u'openxml', u'opera_global', u'opera_typed_history', u'pe',
+        u'plist/safari_history', u'prefetch', u'sccm', u'skydrive_log',
+        u'skydrive_log_old', u'sqlite/chrome_cookies',
+        u'sqlite/chrome_extension_activity', u'sqlite/chrome_history',
         u'sqlite/firefox_cookies', u'sqlite/firefox_downloads',
-        u'sqlite/firefox_history', u'java_idx', u'esedb/msie_webcache',
-        u'msiecf', u'opera_global', u'opera_typed_history',
-        u'plist/safari_history', u'winfirewall', u'winjob', u'winreg'])
+        u'sqlite/firefox_history', u'sqlite/google_drive', u'sqlite/skype',
+        u'symantec_scanlog', u'winfirewall', u'winjob', u'winreg']
 
     parser_names = manager.ParsersManager._GetParsersFromPresetCategory(
         u'win_gen')
-    self.assertEqual(sorted(parser_names), expected_parser_names)
+    self.assertEqual(parser_names, expected_parser_names)
 
     parser_names = manager.ParsersManager._GetParsersFromPresetCategory(
         u'bogus')
@@ -228,6 +228,11 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     manager.ParsersManager.DeregisterParser(TestParserWithPlugins)
     manager.ParsersManager.DeregisterParser(TestParser)
 
+    # Test with a preset name.
+    parser_names = manager.ParsersManager.GetParserAndPluginNames(
+        parser_filter_expression=u'win_gen')
+    self.assertIn(u'lnk', parser_names)
+
   def testGetParserObjectByName(self):
     """Tests the GetParserObjectByName function."""
     manager.ParsersManager.RegisterParser(TestParser)
@@ -317,6 +322,22 @@ class ParsersManagerTest(shared_test_lib.BaseTestCase):
     TestParserWithPlugins.DeregisterPlugin(TestPlugin)
     manager.ParsersManager.DeregisterParser(TestParserWithPlugins)
     manager.ParsersManager.DeregisterParser(TestParser)
+
+    # Test with a preset name.
+    expected_parser_names = [
+        u'bencode', u'binary_cookies', u'chrome_cache', u'chrome_preferences',
+        u'esedb', u'filestat', u'firefox_cache', u'java_idx', u'lnk',
+        u'mcafee_protection', u'msiecf', u'olecf', u'openxml', u'opera_global',
+        u'opera_typed_history', u'pe', u'plist', u'prefetch', u'sccm',
+        u'skydrive_log', u'skydrive_log_old', u'sqlite', u'symantec_scanlog',
+        u'winfirewall', u'winjob', u'winreg']
+
+    parser_names = []
+    for _, parser_class in manager.ParsersManager.GetParsers(
+        parser_filter_expression=u'win_gen'):
+      parser_names.append(parser_class.NAME)
+
+    self.assertEqual(sorted(parser_names), expected_parser_names)
 
   def testGetPluginObjectByName(self):
     """Tests the GetPluginObjectByName function."""
