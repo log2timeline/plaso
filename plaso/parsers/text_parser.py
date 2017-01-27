@@ -707,6 +707,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
     while self._text_reader.lines:
       if parser_mediator.abort:
         break
+
       # Initialize pyparsing objects.
       tokens = None
       start = 0
@@ -717,10 +718,11 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
       # Try to parse the line using all the line structures.
       for key, structure in self.LINE_STRUCTURES:
         try:
-          parsed_structure = next(
-              structure.scanString(self._text_reader.lines, maxMatches=1), None)
+          structure_generator = structure.scanString(
+              self._text_reader.lines, maxMatches=1)
+          parsed_structure = next(structure_generator, None)
         except pyparsing.ParseException:
-          continue
+          parsed_structure = None
 
         if not parsed_structure:
           continue
@@ -733,7 +735,12 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
           break
 
       if tokens and start == 0:
-        self.ParseRecord(parser_mediator, key, tokens)
+        try:
+          self.ParseRecord(parser_mediator, key, tokens)
+        except (errors.ParseError, errors.TimestampError) as exception:
+          parser_mediator.ProduceExtractionError(
+              u'unable parse record: {0:s} with error: {1:s}'.format(
+                  key, exception))
 
         self._text_reader.SkipAhead(file_object, end)
 
@@ -749,5 +756,37 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
         self._text_reader.ReadLines(file_object)
       except UnicodeDecodeError as exception:
         parser_mediator.ProduceExtractionError(
-            u'unable to read lines from file with error: {0:s}'.format(
-                exception))
+            u'unable to read lines with error: {0:s}'.format(exception))
+
+  @abc.abstractmethod
+  def ParseRecord(self, parser_mediator, key, structure):
+    """Parses a log record structure and produces events.
+
+    This function takes as an input a parsed pyparsing structure
+    and produces an EventObject if possible from that structure.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): tokens from a parsed log line.
+
+    Returns:
+      EventObject: event or None.
+    """
+
+  @abc.abstractmethod
+  def VerifyStructure(self, parser_mediator, line):
+    """Verify the structure of the file and return boolean based on that check.
+
+    This function should read enough text from the text file to confirm
+    that the file is the correct one for this particular parser.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      line (str): single line from the text file.
+
+    Returns:
+      bool: True if this is the correct parser, False otherwise.
+    """

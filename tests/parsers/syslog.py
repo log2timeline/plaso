@@ -15,24 +15,13 @@ from tests.parsers import test_lib
 class SyslogParserTest(test_lib.ParserTestCase):
   """Tests for the syslog parser."""
 
-  def setUp(self):
-    """Makes preparations before running an individual test."""
-    self._parser = syslog.SyslogParser()
-    # We don't want to test syslog plugins, just the parser
-    self.plugins = [plugin for _, plugin in list(self._parser.GetPlugins())]
-    for plugin in self.plugins:
-      syslog.SyslogParser.DeregisterPlugin(plugin)
-
-  def tearDown(self):
-    """Cleans up after running an individual test."""
-    syslog.SyslogParser.RegisterPlugins(self.plugins)
-
   @shared_test_lib.skipUnlessHasTestFile([u'syslog_rsyslog'])
   def testParseRsyslog(self):
     """Tests the Parse function on an Ubuntu-style syslog file"""
+    parser = syslog.SyslogParser()
     knowledge_base_values = {u'year': 2016}
     storage_writer = self._ParseFile(
-        [u'syslog_rsyslog'], self._parser,
+        [u'syslog_rsyslog'], parser,
         knowledge_base_values=knowledge_base_values)
 
     self.assertEqual(len(storage_writer.events), 8)
@@ -40,9 +29,10 @@ class SyslogParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'syslog_osx'])
   def testParseDarwin(self):
     """Tests the Parse function on an Darwin-style syslog file"""
+    parser = syslog.SyslogParser()
     knowledge_base_values = {u'year': 2016}
     storage_writer = self._ParseFile(
-        [u'syslog_osx'], self._parser,
+        [u'syslog_osx'], parser,
         knowledge_base_values=knowledge_base_values)
 
     self.assertEqual(len(storage_writer.events), 2)
@@ -50,10 +40,10 @@ class SyslogParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'syslog_chromeos'])
   def testParseChromeOS(self):
     """Tests the Parse function."""
-    parser_object = syslog.SyslogParser()
+    parser = syslog.SyslogParser()
     knowledge_base_values = {u'year': 2016}
     storage_writer = self._ParseFile(
-        [u'syslog_chromeos'], parser_object,
+        [u'syslog_chromeos'], parser,
         knowledge_base_values=knowledge_base_values)
 
     self.assertEqual(len(storage_writer.events), 8)
@@ -96,10 +86,10 @@ class SyslogParserTest(test_lib.ParserTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'syslog'])
   def testParse(self):
     """Tests the Parse function."""
-    parser_object = syslog.SyslogParser()
+    parser = syslog.SyslogParser()
     knowledge_base_values = {u'year': 2012}
     storage_writer = self._ParseFile(
-        [u'syslog'], parser_object,
+        [u'syslog'], parser,
         knowledge_base_values=knowledge_base_values)
 
     self.assertEqual(len(storage_writer.events), 16)
@@ -149,6 +139,15 @@ class SyslogParserTest(test_lib.ParserTestCase):
         u'[kernel] [997.390602] sda2: rw=0, want=65, limit=2')
     self._TestGetMessageStrings(
         event, expected_message, expected_message_short)
+
+    # Testing non-leap year.
+    parser = syslog.SyslogParser()
+    knowledge_base_values = {u'year': 2013}
+    storage_writer = self._ParseFile(
+        [u'syslog'], parser,
+        knowledge_base_values=knowledge_base_values)
+
+    self.assertEqual(len(storage_writer.events), 15)
 
 
 if __name__ == '__main__':
