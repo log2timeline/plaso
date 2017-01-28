@@ -173,6 +173,7 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
 
     # TODO: pass preferred_encoding.
     configuration = configurations.ProcessingConfiguration()
+    configuration.credentials = self._credential_configurations
     configuration.debug_output = self._debug_mode
     configuration.extraction.hasher_names_string = self._hasher_names_string
     configuration.extraction.yara_rules_string = self._yara_rules_string
