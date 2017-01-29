@@ -19,15 +19,16 @@ class MacWifiLogFormatterTest(test_lib.EventFormatterTestCase):
 
   def testInitialization(self):
     """Tests the initialization."""
-    self._formatter = mac_wifi.MacWifiLogFormatter()
     self.assertIsNotNone(self._formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    _formatter = mac_wifi.MacWifiLogFormatter()
 
     expected_attribute_names = [
-        u'body']
+        u'function',
+        u'action',
+        u'agent',
+        u'text']
 
     self._TestGetFormatStringAttributeNames(
         self._formatter, expected_attribute_names)
@@ -36,12 +37,16 @@ class MacWifiLogFormatterTest(test_lib.EventFormatterTestCase):
     """Tests the GetMessages method."""
     mediator = None
     event = mac_wifi_parser.MacWifiLogEvent(
-        u'Thu Nov 14 20:36:37.222',
-        u'<airportd[88]> airportdProcessDLILEvent: en0 attached (up)')
+        u'Thu Nov 14 20:36:37.222', u'airportd[88]',
+        u'airportdProcessDLILEvent',
+        u'en0 attached (up)', u'Interface en0 turn up.')
 
     expected_messages = (
-        u'Log: <airportd[88]> airportdProcessDLILEvent: en0 attached (up)',
-        u'Log: <airportd[88]> airportdProcessDLILEvent: en0 attached (up)')
+        u'Action: Interface en0 turn up. '
+        u'Agent: airportd[88] '
+        u'(airportdProcessDLILEvent) '
+        u'Log: en0 attached (up)',
+        u'Action: Interface en0 turn up.')
 
     messages = self._formatter.GetMessages(mediator, event)
     self.assertEqual(messages, expected_messages)
@@ -50,8 +55,8 @@ class MacWifiLogFormatterTest(test_lib.EventFormatterTestCase):
     """Tests the GetMessages method for turned over logfile."""
     mediator = None
     event = mac_wifi_parser.MacWifiLogEvent(
-        u'2017-01-02 00:10:15',
-        u'test-macbookpro newsyslog[50498]: logfile turned over')
+        u'2017-01-02 00:10:15', u'', u'',
+        u'test-macbookpro newsyslog[50498]: logfile turned over', u'')
 
     expected_messages = (
         u'Log: test-macbookpro newsyslog[50498]: logfile turned over',
