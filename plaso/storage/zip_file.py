@@ -549,7 +549,7 @@ class _SerializedDataStream(object):
       data (bytes): data.
 
     Returns:
-      int: offset of the entry within the data stream.
+      int: offset of the entry within the temporary file.
 
     Raises:
       IOError: if the serialized data stream was not opened for writing or
