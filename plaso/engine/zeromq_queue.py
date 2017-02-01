@@ -753,8 +753,8 @@ class ZeroMQBufferedReplyQueue(ZeroMQBufferedQueue):
 
     Raises:
       QueueAlreadyClosed: If the queue is closed.
-      QueueFull: If the internal buffer was full, and it was not possible to
-        push the item to the buffer within the timeout.
+      QueueFull: If the internal buffer was full and it was not possible to
+          push the item to the buffer within the timeout.
       RuntimeError: if closed event is missing.
     """
     if not self._closed_event:
