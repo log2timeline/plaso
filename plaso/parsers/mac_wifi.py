@@ -177,6 +177,10 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
     Returns:
       int: The timestamp which is an integer containing the number of
           micro seconds since January 1, 1970, 00:00:00 UTC.
+
+    Raises:
+      TimestampError: If the timestamp cannot be created from the date and
+          time values.
     """
 
     microseconds = milliseconds * 1000
