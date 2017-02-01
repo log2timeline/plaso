@@ -175,7 +175,9 @@ class TaskManager(object):
     Returns:
       list[Task]: tasks.
     """
-    return list(self._abandoned_tasks.values())
+    with self._lock:
+      abandoned_tasks = list(self._abandoned_tasks.values())
+    return abandoned_tasks
 
   def GetProcessingTasks(self):
     """Retrieves the tasks that are processing.
@@ -183,7 +185,9 @@ class TaskManager(object):
     Returns:
       list[Task]: tasks that are being processed by workers.
     """
-    return list(self._tasks_processing.values())
+    with self._lock:
+      processing_tasks = list(self._tasks_processing.values())
+    return processing_tasks
 
   def GetTaskPendingMerge(self, current_task):
     """Retrieves the first task that is pending merge or has a higher priority.
