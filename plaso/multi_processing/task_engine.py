@@ -527,9 +527,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       # Signal all the processes to abort.
       self._AbortTerminate()
 
-    if not self._use_zeromq:
-      logging.debug(u'Emptying queue.')
-      self._task_queue.Empty()
+    logging.debug(u'Emptying queue.')
+    self._task_queue.Empty()
 
     # Wake the processes to make sure that they are not blocking
     # waiting for the queue new items.

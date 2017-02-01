@@ -120,6 +120,28 @@ class testZeroMQQueues(shared_test_lib.BaseTestCase):
     reply_queue.Close()
     request_queue.Close()
 
+  def testEmptyBufferedQueues(self):
+    """Tests the Empty method for buffered queues."""
+    queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
+        name=u'requestbufferedreply_replybind', delay_open=False,
+        linger_seconds=1, buffer_max_size=3, timeout_seconds=1,
+        buffer_timeout_seconds=1)
+    try:
+      while True:
+        queue.PushItem(u'item', block=False)
+    except errors.QueueFull:
+      # Queue is now full
+      pass
+
+    with self.assertRaises(errors.QueueFull):
+      queue.PushItem(u'item', block=False)
+
+    queue.Empty()
+    # We should now be able to push another item without an exception.
+    queue.PushItem(u'item')
+    queue.Empty()
+    queue.Close()
+
   def testSocketCreation(self):
     """Tests that ZeroMQ sockets are created when a new queue is created."""
     for queue_class in self._QUEUE_CLASSES:
