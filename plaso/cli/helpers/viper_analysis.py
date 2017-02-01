@@ -86,7 +86,7 @@ class ViperAnalysisArgumentsHelper(interface.ArgumentsHelper):
         options, u'viper_host', default_value=cls._DEFAULT_HOST)
     analysis_plugin.SetHost(host)
 
-    port = cls._ParseStringOption(
+    port = cls._ParseIntegerOption(
         options, u'viper_port', default_value=cls._DEFAULT_PORT)
     analysis_plugin.SetPort(port)
 
