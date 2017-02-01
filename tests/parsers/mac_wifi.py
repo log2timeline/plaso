@@ -32,8 +32,9 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
         u'2017-01-02 00:10:15')
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
-    self.assertEqual(event_object.text,
-                     u'test-macbookpro newsyslog[50498]: logfile turned over')
+    self.assertEqual(
+        event_object.text,
+        u'test-macbookpro newsyslog[50498]: logfile turned over')
 
     event_object = storage_writer.events[1]
 
