@@ -492,7 +492,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       for pid in list(self._process_information_per_pid.keys()):
         self._CheckStatusWorkerProcess(pid)
 
-      used_memory = self._process_information.GetUsedMemory()
+      used_memory = self._process_information.GetUsedMemory() or 0
 
       display_name = getattr(self._merge_task, u'identifier', u'')
 

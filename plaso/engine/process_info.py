@@ -32,13 +32,13 @@ class ProcessInfo(object):
     """Retrieves the amount of memory used by the process.
 
     Returns:
-      int: amount of memory in bytes used by the process or 0
+      int: amount of memory in bytes used by the process or None
           if not available.
     """
     try:
       memory_info = self._memory_info_function()
     except psutil.NoSuchProcess:
-      return 0
+      return
 
     # Psutil will return different memory information depending on what is
     # available in that platform.
