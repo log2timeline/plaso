@@ -255,7 +255,7 @@ class SingleProcessEngine(engine.BaseEngine):
     if status == definitions.PROCESSING_STATUS_IDLE:
       status = definitions.PROCESSING_STATUS_RUNNING
 
-    used_memory = self._process_information.GetUsedMemory()
+    used_memory = self._process_information.GetUsedMemory() or 0
 
     self._processing_status.UpdateForemanStatus(
         self._name, status, self._pid, used_memory, display_name,
