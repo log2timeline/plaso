@@ -46,7 +46,7 @@ class ElasticSearchHelper(object):
     else:
         password = getpass.getpass("Enter your Elasticsearch password: ")
         self.client = Elasticsearch([{u'host': host, u'port': port}], 
-                                    http_auth=(elastic_user,password))
+                                    http_auth=(elastic_user, password))
     self._output_mediator = output_mediator
     self._index = self._EnsureIndexExists(index_name, mapping)
     self._doc_type = doc_type
