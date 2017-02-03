@@ -28,6 +28,7 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
   _DEFAULT_DOC_TYPE = u'plaso_event'
   _DEFAULT_FLUSH_INTERVAL = 1000
   _DEFAULT_RAW_FIELDS = False
+  _DEFAULT_ELASTIC_USER = None
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -56,6 +57,10 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         u'--raw_fields', dest=u'raw_fields', action=u'store_true',
         default=cls._DEFAULT_RAW_FIELDS, help=(
             u'Export string fields that will not be analyzed by Lucene.'))
+    argument_group.add_argument(
+        u'--elastic_user', dest=u'elastic_user', action=u'store',
+        default=cls._DEFAULT_ELASTIC_USER, help=(
+            u'Username to use for Elasticsearch authentication.'))
 
     ElasticSearchServerArgumentsHelper.AddArguments(argument_group)
 
@@ -83,12 +88,15 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
         options, u'flush_interval', default_value=cls._DEFAULT_FLUSH_INTERVAL)
     raw_fields = getattr(
         options, u'raw_fields', cls._DEFAULT_RAW_FIELDS)
+    elastic_user = cls._ParseStringOption(
+        options, u'elastic_user', default_value=cls._DEFAULT_ELASTIC_USER)
 
     ElasticSearchServerArgumentsHelper.ParseOptions(options, output_module)
     output_module.SetIndexName(index_name)
     output_module.SetDocType(doc_type)
     output_module.SetFlushInterval(flush_interval)
     output_module.SetRawFields(raw_fields)
+    output_module.SetElasticUser(elastic_user)
 
 
 manager.ArgumentHelperManager.RegisterHelper(ElasticSearchOutputArgumentsHelper)
