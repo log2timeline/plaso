@@ -42,10 +42,10 @@ class ElasticSearchHelper(object):
     """
     super(ElasticSearchHelper, self).__init__()
     if elastic_user is None:
-        self.client = Elasticsearch([{u'host': host, u'port': port}])
+      self.client = Elasticsearch([{u'host': host, u'port': port}])
     else:
-        password = getpass.getpass("Enter your Elasticsearch password: ")
-        self.client = Elasticsearch([{u'host': host, u'port': port}], 
+      password = getpass.getpass("Enter your Elasticsearch password: ")
+      self.client = Elasticsearch([{u'host': host, u'port': port}],
                                     http_auth=(elastic_user, password))
     self._output_mediator = output_mediator
     self._index = self._EnsureIndexExists(index_name, mapping)
