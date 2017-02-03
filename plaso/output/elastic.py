@@ -3,6 +3,7 @@
 
 from collections import Counter
 import logging
+import getpass
 
 from dfvfs.serializer.json_serializer import JsonPathSpecSerializer
 
@@ -26,7 +27,7 @@ class ElasticSearchHelper(object):
   """Elasticsearch helper class."""
   def __init__(
       self, output_mediator, host, port, flush_interval, index_name, mapping,
-      doc_type):
+      doc_type, elastic_user):
     """Create a Elasticsearch helper.
 
     Args:
@@ -37,15 +38,22 @@ class ElasticSearchHelper(object):
       index_name (str): Name of the Elasticsearch index.
       mapping (dict): Elasticsearch index configuration.
       doc_type (str): Elasticsearch document type name.
+      elastic_user (str): Elasticsearch username to authenticate with.
     """
     super(ElasticSearchHelper, self).__init__()
-    self.client = Elasticsearch([{u'host': host, u'port': port}])
+    if elastic_user is None:
+        self.client = Elasticsearch([{u'host': host, u'port': port}])
+    else:
+        password = getpass.getpass("Enter your Elasticsearch password: ")
+        self.client = Elasticsearch([{u'host': host, u'port': port}], 
+                                    http_auth=(elastic_user,password))
     self._output_mediator = output_mediator
     self._index = self._EnsureIndexExists(index_name, mapping)
     self._doc_type = doc_type
     self._flush_interval = flush_interval
     self._events = []
     self._counter = Counter()
+    self._elastic_user = elastic_user
 
   def AddEvent(self, event_object, force_flush=False):
     """Index event in Elasticsearch.
@@ -181,6 +189,7 @@ class ElasticSearchOutputModule(interface.OutputModule):
     self._output_mediator = output_mediator
     self._port = None
     self._raw_fields = False
+    self._elastic_user = None
 
   def Close(self):
     """Close connection to the Elasticsearch database.
@@ -242,6 +251,15 @@ class ElasticSearchOutputModule(interface.OutputModule):
     logging.info(u'Add non analyzed string fields: {0!s}'.format(
         self._raw_fields))
 
+  def SetElasticUser(self, elastic_user):
+    """Set the Elastic username.
+
+    Args:
+      elastic_user (str): The Elastic user to authenticate with.
+    """
+    self._elastic_user = elastic_user
+    logging.info(u'Elastic user: {0:s}'.format(self._elastic_user))
+
   def WriteEventBody(self, event_object):
     """Writes the body of an event object to the output.
 
@@ -277,7 +295,7 @@ class ElasticSearchOutputModule(interface.OutputModule):
 
     self._elastic = ElasticSearchHelper(
         self._output_mediator, self._host, self._port, self._flush_interval,
-        self._index_name, self._mapping, self._doc_type)
+        self._index_name, self._mapping, self._doc_type, self._elastic_user)
     logging.info(u'Adding events to Elasticsearch..')
 
 
