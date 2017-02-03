@@ -29,7 +29,7 @@ class ElasticSearchOutputArgumentsHelperTest(
       u'  --doc_type DOC_TYPE   Name of the document type that will be used in',
       u'                        ElasticSearch.',
       u'  --elastic_user ELASTIC_USER',
-      (u'                        Username to use for Elasticsearch'
+      (u'                        Username to use for Elasticsearch '
        u'authentication.'),
       u'  --flush_interval FLUSH_INTERVAL',
       u'                        Events to queue up before bulk insert to',
