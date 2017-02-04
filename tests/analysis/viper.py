@@ -143,9 +143,9 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
     self.assertEqual(len(labels), 4)
 
     expected_labels = [
-        u'viper_present', u'viper_project_default', u'viper_tag_rat',
-        u'viper_tag_darkcomet']
-    self.assertEqual(labels, expected_labels)
+        u'viper_present', u'viper_project_default', u'viper_tag_darkcomet',
+        u'viper_tag_rat']
+    self.assertEqual(sorted(labels), expected_labels)
 
 
 if __name__ == '__main__':
