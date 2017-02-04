@@ -57,7 +57,7 @@ class ElasticSearchHelperTest(test_lib.OutputModuleTestCase):
 
     elasticsearch_helper = elastic.ElasticSearchHelper(
         output_mediator, u'127.0.0.1', 9200, 1000, u'test', {}, u'test_type',
-        None)
+        None, None)
     expected_dict = {
         u'data_type': u'syslog:line',
         u'datetime': u'2012-06-27T18:17:01+00:00',

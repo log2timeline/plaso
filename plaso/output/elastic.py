@@ -38,6 +38,7 @@ class ElasticSearchHelper(object):
       mapping (dict): Elasticsearch index configuration.
       doc_type (str): Elasticsearch document type name.
       elastic_user (str): Elasticsearch username to authenticate with.
+      elastic_passsword (str): Elasticsearch password to authenticate with
     """
     super(ElasticSearchHelper, self).__init__()
     if elastic_user is None:
@@ -304,7 +305,8 @@ class ElasticSearchOutputModule(interface.OutputModule):
 
     self._elastic = ElasticSearchHelper(
         self._output_mediator, self._host, self._port, self._flush_interval,
-        self._index_name, self._mapping, self._doc_type, self._elastic_user)
+        self._index_name, self._mapping, self._doc_type, self._elastic_user,
+        self._elastic_password)
     logging.info(u'Adding events to Elasticsearch..')
 
 
