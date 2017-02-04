@@ -2,6 +2,7 @@
 """The Elastic Search output module CLI arguments helper."""
 
 from uuid import uuid4
+import getpass
 
 from plaso.lib import errors
 from plaso.cli.helpers import interface
@@ -91,12 +92,19 @@ class ElasticSearchOutputArgumentsHelper(interface.ArgumentsHelper):
     elastic_user = cls._ParseStringOption(
         options, u'elastic_user', default_value=cls._DEFAULT_ELASTIC_USER)
 
+    if elastic_user is not None:
+      elastic_password = getpass.getpass(
+          u'Enter your Elasticsearch password: ')
+    else:
+      elastic_password = None
+
     ElasticSearchServerArgumentsHelper.ParseOptions(options, output_module)
     output_module.SetIndexName(index_name)
     output_module.SetDocType(doc_type)
     output_module.SetFlushInterval(flush_interval)
     output_module.SetRawFields(raw_fields)
     output_module.SetElasticUser(elastic_user)
+    output_module.SetElasticPassword(elastic_password)
 
 
 manager.ArgumentHelperManager.RegisterHelper(ElasticSearchOutputArgumentsHelper)
