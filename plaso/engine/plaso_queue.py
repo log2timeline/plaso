@@ -32,8 +32,7 @@ class Queue(object):
       block (bool): whether to block if the queue is full.
 
     Raises:
-      QueueFull: when the next call to PushItem would exceed the limit of items
-          in the queue.
+      QueueFull: if the queue is full, and the item could not be added.
     """
 
   @abc.abstractmethod
