@@ -1,5 +1,3 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
 """Tests for the Systemd Journal parser."""
 
 import unittest
@@ -28,16 +26,26 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
     event = journal.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2016-10-24 13:45:19.373121')
+        u'2017-01-27 09:40:55.913258')
 
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
-        u'test-VirtualBox systemd-journald[577] Runtime journal '
-        u'(/run/log/journal/) is 1.2M, max 9.9M, 8.6M free.')
-    expected_message_short = (
-        u'test-VirtualBox systemd-journald[577] Runtime journal '
-        u'(/run/log/journal/) is ...')
+        u'test-VirtualBox systemd[1] Started User Manager for '
+        u'UID 1000.')
+    self._TestGetMessageStrings(event, expected_message, expected_message)
+
+    # This event uses XZ compressed data
+    event = journal.events[2098]
+
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2017-02-06 16:24:32.564585')
+
+    self.assertEqual(event.timestamp, expected_timestamp)
+
+    expected_message = u'test-VirtualBox root[22921] {0:s}'.format(u'a'*692)
+    expected_message_short = u'test-VirtualBox root[22921] {0:s}...'.format(
+        u'a' * 49)
     self._TestGetMessageStrings(event, expected_message, expected_message_short)
 
   def testParseDirty(self):

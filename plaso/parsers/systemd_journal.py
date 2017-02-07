@@ -2,8 +2,7 @@
 """Parser for Systemd journal files."""
 
 import construct
-
-from dfvfs.compression.xz_decompressor import XZDecompressor
+import lzma
 
 from plaso.containers import text_events
 from plaso.lib import errors
@@ -189,8 +188,7 @@ class SystemdJournalParser(interface.FileObjectParser):
 
     event_data = self._journal_file.read(payload_size - self._DATA_OBJECT_SIZE)
     if object_header.flags & self._OBJECT_COMPRESSED_FLAG:
-      xz_decompressor = XZDecompressor()
-      event_data, _ = xz_decompressor.Decompress(event_data)
+      event_data = lzma.decompress(event_data)
 
     event_string = event_data.decode(u'utf-8')
     event_key, event_value = event_string.split(u'=', 1)
