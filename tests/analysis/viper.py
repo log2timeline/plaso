@@ -34,8 +34,7 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
 
   _TEST_EVENTS = [{
       u'timestamp': timelib.Timestamp.CopyFromString(u'2015-01-01 17:00:00'),
-      u'sha256_hash': _EVENT_1_HASH,
-      u'uuid': u'8'}]
+      u'sha256_hash': _EVENT_1_HASH}]
 
   def _MockPost(self, unused_url, data=None):
     """Mock funtion to simulate a Viper API request.
@@ -123,20 +122,29 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
     storage_writer = self._AnalyzeEvents(events, plugin)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
+    self.assertEqual(len(storage_writer.event_tags), 1)
 
-    analysis_report = storage_writer.analysis_reports[0]
+    report = storage_writer.analysis_reports[0]
+    self.assertIsNotNone(report)
 
-    tags = analysis_report.GetTags()
-    self.assertEqual(len(tags), 1)
+    expected_text = (
+        u'viper hash tagging results\n'
+        u'1 path specifications tagged with label: viper_tag_rat\n'
+        u'1 path specifications tagged with label: viper_present\n'
+        u'1 path specifications tagged with label: viper_tag_darkcomet\n'
+        u'1 path specifications tagged with label: viper_project_default\n')
 
-    tag = tags[0]
-    self.assertEqual(tag.event_uuid, u'8')
+    self.assertEqual(report.text, expected_text)
+
+    labels = []
+    for event_tag in storage_writer.event_tags:
+      labels.extend(event_tag.labels)
+    self.assertEqual(len(labels), 4)
 
     expected_labels = [
         u'viper_present', u'viper_project_default', u'viper_tag_rat',
         u'viper_tag_darkcomet']
-
-    self.assertEqual(tag.labels, expected_labels)
+    self.assertEqual(labels, expected_labels)
 
 
 if __name__ == '__main__':

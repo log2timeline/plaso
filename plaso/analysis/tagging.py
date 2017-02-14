@@ -10,6 +10,10 @@ from efilter import api as efilter_api
 from efilter import errors as efilter_errors
 from efilter import query as efilter_query
 
+# We need to import the dottysql formatter, as EFILTER doesn't load it by
+# default.
+from efilter.transforms import asdottysql  # pylint: disable=unused-import
+
 from plaso.analysis import interface
 from plaso.analysis import manager
 from plaso.containers import reports
@@ -208,6 +212,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
 
     labels = list(efilter_api.getvalues(matched_labels))
     event_tag = self._CreateEventTag(event, self._EVENT_TAG_COMMENT, labels)
+
     mediator.ProduceEventTag(event_tag)
     self._number_of_event_tags += 1
 

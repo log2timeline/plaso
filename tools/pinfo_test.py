@@ -94,11 +94,11 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
     test_tool = pinfo.PinfoTool(output_writer=output_writer)
 
     test_filename = u'pinfo_test.json.plaso'
-    format_version = u'20160715'
-    plaso_version = u'1.5.1_20161013'
-    session_identifier = u'3c552fe3-4e64-4871-8a7f-0f4c95dfc1fe'
-    session_start_time = u'2016-10-16T15:13:58.171984+00:00'
-    session_completion_time = u'2016-10-16T15:13:58.957462+00:00'
+    format_version = u'20170121'
+    plaso_version = u'1.5.2_20170119'
+    session_identifier = u'6037b6fe-b48f-4b90-811f-c7186c49fddd'
+    session_start_time = u'2017-01-22T18:15:25.774619+00:00'
+    session_completion_time = u'2017-01-22T18:15:26.567489+00:00'
 
     command_line_arguments = (
         u'./tools/log2timeline.py --partition=all --quiet '
@@ -148,7 +148,8 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
         u'winreg/windows_timezone', u'winreg/windows_typed_urls',
         u'winreg/windows_usb_devices', u'winreg/windows_usbstor_devices',
         u'winreg/windows_version', u'winreg/winlogon', u'winreg/winrar_mru',
-        u'winreg/winreg_default', u'xchatlog', u'xchatscrollback'])
+        u'winreg/winreg_default', u'xchatlog', u'xchatscrollback',
+        u'zsh_extended_history'])
 
     table_view = cli_views.ViewsFactory.GetTableView(
         cli_views.ViewsFactory.FORMAT_TYPE_CLI,

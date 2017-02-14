@@ -77,11 +77,10 @@ class EventFormatter(object):
           u'unable to format string: "{0:s}" event object is missing required '
           u'attributes: {1:s}').format(format_string, exception)
       error_message = (
-          u'Event: {0:s} data type: {1:s} display name: {2:s} '
-          u'parser chain: {3:s} with error: {4:s}').format(
-              event_values[u'uuid'], event_values[u'data_type'],
-              event_values[u'display_name'], event_values[u'parser'],
-              error_message)
+          u'Event with data type: {0:s}, display name: {1:s}, '
+          u'parser chain: {2:s}, and error: {3:s}').format(
+              event_values[u'data_type'], event_values[u'display_name'],
+              event_values[u'parser'], error_message)
       logging.error(error_message)
 
       attribute_values = []
@@ -93,11 +92,10 @@ class EventFormatter(object):
     except UnicodeDecodeError as exception:
       error_message = u'Unicode decode error: {0:s}'.format(exception)
       error_message = (
-          u'Event: {0:s} data type: {1:s} display name: {2:s} '
-          u'parser chain: {3:s} with error: {4:s}').format(
-              event_values[u'uuid'], event_values[u'data_type'],
-              event_values[u'display_name'], event_values[u'parser'],
-              error_message)
+          u'Event with data type: {0:s}, display name: {1:s}, '
+          u'parser chain: {2:s}, and error: {3:s}').format(
+              event_values[u'data_type'], event_values[u'display_name'],
+              event_values[u'parser'], error_message)
       logging.error(error_message)
 
       message_string = u''

@@ -192,6 +192,7 @@ class UUIDTimeEvent(TimestampEvent):
 
   Attributes:
     mac_address (str): MAC address stored in the UUID.
+    uuid (str): UUID.
   """
 
   def __init__(self, uuid, timestamp_description):

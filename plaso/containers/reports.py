@@ -10,15 +10,12 @@ class AnalysisReport(interface.AttributeContainer):
   """Class to represent an analysis report attribute container.
 
   Attributes:
-    filter_string: a string containing ???
-    images: a list containing ???
-    plugin_name: a string containing the name of the analysis plugin that
-                 generated the report.
-    report_array: an array containing ???
-    report_dict: a dictionary containing ???
-    text: a string containing the report text or None.
-    time_compiled: a timestamp containing the date and time the report was
-                   compiled.
+    filter_string (str): event filter expression.
+    plugin_name (str): name of the analysis plugin that generated the report.
+    report_array (array[str]): ???
+    report_dict (dict[str]): ???
+    text (str): report text.
+    time_compiled (int): timestamp of the date and time the report was compiled.
   """
   CONTAINER_TYPE = u'analysis_report'
 
@@ -26,14 +23,12 @@ class AnalysisReport(interface.AttributeContainer):
     """Initializes the analysis report.
 
     Args:
-      plugin_name: optional string containing the name of the analysis plugin
-                   that generated the report.
-      text: optional string containing the report text.
+      plugin_name (Optional[str]): name of the analysis plugin that generated
+          the report.
+      text (Optional[str]): report text.
     """
     super(AnalysisReport, self).__init__()
-    self._event_tags = []
     self.filter_string = None
-    self.images = None
     self.plugin_name = plugin_name
     self.report_array = None
     self.report_dict = None
@@ -45,33 +40,23 @@ class AnalysisReport(interface.AttributeContainer):
     """Copies the attribute container to a dictionary.
 
     Returns:
-      A dictionary containing the attribute container attributes.
+      dict[str, object]: attribute values per name.
     """
     dictionary = {}
-    for attribute_name in iter(self.__dict__.keys()):
-      attribute_value = getattr(self, attribute_name, None)
+    for attribute_name, attribute_value in self.GetAttributes():
       if attribute_value is None:
         continue
-
-      if attribute_name == u'_event_tags':
-        event_tags = []
-        for event_tag in attribute_value:
-          event_tags.append(event_tag.CopyToDict())
-
-        attribute_value = event_tags
 
       dictionary[attribute_name] = attribute_value
 
     return dictionary
 
   def GetString(self):
-    """Retrievs a string representation of the report.
+    """Retrieves a string representation of the report.
 
     Returns:
-      A string containing the report.
+      str: string representation of the report.
     """
-    # TODO: Make this a more complete function that includes images
-    # and the option of saving as a full fledged HTML document.
     string_list = []
     string_list.append(u'Report generated from: {0:s}'.format(self.plugin_name))
 
@@ -89,22 +74,6 @@ class AnalysisReport(interface.AttributeContainer):
     string_list.append(self.text)
 
     return u'\n'.join(string_list)
-
-  def GetTags(self):
-    """Retrieves the event tags.
-
-    Returns:
-      A list of of event tags (instances of EventTag).
-    """
-    return self._event_tags
-
-  def SetTags(self, event_tags):
-    """Sets the list of event tags that relate to the report.
-
-    Args:
-      event_tags: a list of event tags (instances of EventTag).
-    """
-    self._event_tags = event_tags
 
 
 manager.AttributeContainersManager.RegisterAttributeContainer(AnalysisReport)

@@ -291,23 +291,6 @@ class DynamicFieldsHelper(object):
     """
     return self._output_mediator.timezone
 
-  def _GetEventStorageIdentifier(self, event):
-    """Retrieves the event storage identifier of an event.
-
-    Args:
-      event (EventObject): event.
-
-    Returns:
-      str: event storage identifier or "N/A".
-    """
-    store_number = getattr(event, u'_store_number', None)
-    store_index = getattr(event, u'_store_index', None)
-
-    if store_number is None or store_index is None:
-      return u'N/A'
-
-    return u'{0:d}:{1:d}'.format(store_number, store_index)
-
   def _ReportEventError(self, event, error_message):
     """Reports an event related error.
 
@@ -315,12 +298,12 @@ class DynamicFieldsHelper(object):
       event (EventObject): event.
       error_message: a string containing the error message.
     """
-    event_storage_identifier = self._GetEventStorageIdentifier(event)
+    storage_identifier = event.GetStorageIdentifier()
     error_message = (
-        u'Event: {0:s} data type: {1:s} display name: {2:s} '
+        u'Event: {0!s} data type: {1:s} display name: {2:s} '
         u'parser chain: {3:s} with error: {4:s}').format(
-            event_storage_identifier, event.data_type,
-            event.display_name, event.parser, error_message)
+            storage_identifier, event.data_type, event.display_name,
+            event.parser, error_message)
     logging.error(error_message)
 
   def GetFormattedField(self, event, field_name):

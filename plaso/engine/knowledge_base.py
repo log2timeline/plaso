@@ -282,6 +282,9 @@ class KnowledgeBase(object):
         user_account.username: user_account
         for user_account in system_configuration.user_accounts}
 
+    if not system_configuration.time_zone:
+      return
+
     try:
       self.SetTimeZone(system_configuration.time_zone)
     except ValueError:
@@ -333,7 +336,7 @@ class KnowledgeBase(object):
     try:
       self._time_zone = pytz.timezone(time_zone)
     except (AttributeError, pytz.UnknownTimeZoneError):
-      raise ValueError(u'Unsupported timezone: {0:s}'.format(time_zone))
+      raise ValueError(u'Unsupported timezone: {0!s}'.format(time_zone))
 
   def SetValue(self, identifier, value):
     """Sets a value by identifier.

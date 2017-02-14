@@ -23,18 +23,16 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
   _RECEIVE_BUFFER_SIZE = 4096
   _SOCKET_TIMEOUT = 3
 
-  SUPPORTED_HASHES = [u'md5', u'sha1']
-
-  def __init__(self, hash_queue, hash_analysis_queue, **kwargs):
+  def __init__(self, hash_queue, digest_hash_recording_queue, **kwargs):
     """Initializes an nsrlsvr analyzer thread.
 
     Args:
-      hash_queue (Queue.queue): contains hashes to be analyzed.
-      hash_analysis_queue (Queue.queue): that the analyzer will append
-          HashAnalysis objects this queue.
+      hash_queue (Queue.queue): that contains hashes to be analyzed.
+      digest_hash_recording_queue (Queue.queue): that the analyzer will add
+          resulting digest hash recording to.
     """
     super(NsrlsvrAnalyzer, self).__init__(
-        hash_queue, hash_analysis_queue, **kwargs)
+        hash_queue, digest_hash_recording_queue, **kwargs)
     self._host = None
     self._port = None
     self.hashes_per_batch = 100
@@ -83,14 +81,14 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
     # nsrlsvr returns "OK 1" if the has was found or "OK 0" if not.
     return response == b'OK 1'
 
-  def Analyze(self, hashes):
+  def Analyze(self, digest_hashes):
     """Looks up hashes in nsrlsvr.
 
     Args:
-      hashes (list[str]): hash values to look up.
+      digest_hashes (list[str]): digest hash values to look up.
 
     Returns:
-      list[HashAnalysis]: analysis results, or an empty list on error.
+      list[DigestHashRecording]: digest hash recordings.
     """
     logging.debug(
         u'Opening connection to {0:s}:{1:d}'.format(self._host, self._port))
@@ -101,7 +99,7 @@ class NsrlsvrAnalyzer(interface.HashAnalyzer):
       return []
 
     hash_analyses = []
-    for digest in hashes:
+    for digest in digest_hashes:
       response = self._QueryHash(nsrl_socket, digest)
       if response is None:
         continue
@@ -166,23 +164,6 @@ class NsrlsvrAnalysisPlugin(interface.HashTaggingAnalysisPlugin):
   def __init__(self):
     """Initializes an nsrlsvr analysis plugin."""
     super(NsrlsvrAnalysisPlugin, self).__init__(NsrlsvrAnalyzer)
-
-  def GenerateLabels(self, hash_information):
-    """Generates a list of strings that will be used in the event tag.
-
-    Args:
-      hash_information (bool): whether the analyzer received a response from
-          nsrlsvr indicating that the hash was present in its loaded NSRL
-          set.
-
-    Returns:
-      list[str]: strings describing the results from nsrlsvr.
-    """
-    if hash_information:
-      return [u'nsrl_present']
-    # TODO: Renable when tagging is removed from the analysis report.
-    # return [u'nsrl_not_present']
-    return []
 
   def SetHost(self, host):
     """Sets the address or hostname of the server running nsrlsvr.

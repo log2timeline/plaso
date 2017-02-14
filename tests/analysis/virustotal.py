@@ -35,8 +35,7 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
 
   _TEST_EVENTS = [{
       u'timestamp': timelib.Timestamp.CopyFromString(u'2015-01-01 17:00:00'),
-      u'sha256_hash': _EVENT_1_HASH,
-      u'uuid': u'8'}]
+      u'sha256_hash': _EVENT_1_HASH}]
 
   def _MockGet(self, url, params):
     """Mock function to simulate a VirusTotal API request.
@@ -107,15 +106,23 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
     storage_writer = self._AnalyzeEvents(events, plugin)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
+    self.assertEqual(len(storage_writer.event_tags), 1)
 
-    analysis_report = storage_writer.analysis_reports[0]
+    report = storage_writer.analysis_reports[0]
+    self.assertIsNotNone(report)
 
-    tags = analysis_report.GetTags()
-    self.assertEqual(len(tags), 1)
+    expected_text = (
+        u'virustotal hash tagging results\n'
+        u'1 path specifications tagged with label: virustotal_detections_10\n')
+    self.assertEqual(report.text, expected_text)
 
-    tag = tags[0]
-    self.assertEqual(tag.event_uuid, u'8')
-    self.assertEqual(tag.labels[0], u'virustotal_detections_10')
+    labels = []
+    for event_tag in storage_writer.event_tags:
+      labels.extend(event_tag.labels)
+    self.assertEqual(len(labels), 1)
+
+    expected_labels = [u'virustotal_detections_10']
+    self.assertEqual(labels, expected_labels)
 
 
 if __name__ == '__main__':

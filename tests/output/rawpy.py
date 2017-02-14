@@ -53,7 +53,6 @@ class NativePythonOutputTest(test_lib.OutputModuleTestCase):
         b'  {{inode}} 12345678\n'
         b'  {{timestamp}} 1340821021000000\n'
         b'  {{username}} root\n'
-        b'  {{uuid}} 79028cc28d324634a85533d0fbc49275\n'
         b'\n'
         b'[Additional attributes]:\n'
         b'  {{text}} Reporter <CRON> PID: |8442| (pam_unix(cron:session): '

@@ -74,9 +74,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
   def testReadAndWriteSerializedAnalysisReport(self):
     """Test ReadSerialized and WriteSerialized of AnalysisReport."""
-    expected_comment = u'This is a test event tag.'
-    expected_uuid = u'403818f93dce467bac497ef0f263fde8'
-    expected_labels = [u'Test', u'AnotherTest']
     expected_report_dict = {
         u'dude': [
             [u'Google Keep - notes and lists',
@@ -96,15 +93,10 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         u'  YouTube [blpcfgokakmgnkcojhhkbfbldkacnbeo]\n'
         u'\n')
 
-    expected_event_tag = events.EventTag(
-        comment=expected_comment, event_uuid=expected_uuid)
-    expected_event_tag.AddLabels(expected_labels)
-
     expected_analysis_report = reports.AnalysisReport(
         plugin_name=u'chrome_extension_test', text=expected_report_text)
     expected_analysis_report.report_dict = expected_report_dict
     expected_analysis_report.time_compiled = 1431978243000000
-    expected_analysis_report.SetTags([expected_event_tag])
 
     json_string = (
         json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
@@ -121,10 +113,8 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     # TODO: preserve the tuples in the report dict.
     # TODO: add report_array tests.
-    # TODO: remove _event_tags.
 
     expected_analysis_report_dict = {
-        u'_event_tags': [],
         u'plugin_name': u'chrome_extension_test',
         u'report_dict': expected_report_dict,
         u'text': expected_report_text,
@@ -148,13 +138,10 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         parent=volume_path_spec)
 
     expected_event_object = events.EventObject()
-
     expected_event_object.data_type = u'test:event2'
     expected_event_object.pathspec = path_spec
     expected_event_object.timestamp = 1234124
     expected_event_object.timestamp_desc = u'Written'
-    # Prevent the event object for generating its own UUID.
-    expected_event_object.uuid = u'5a78777006de4ddb8d7bbe12ab92ccf8'
 
     expected_event_object.binary_string = b'\xc0\x90\x90binary'
     expected_event_object.empty_string = u''
@@ -200,7 +187,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         u'string': u'Normal string',
         u'timestamp_desc': u'Written',
         u'timestamp': 1234124,
-        u'uuid': u'5a78777006de4ddb8d7bbe12ab92ccf8',
         u'unicode_string': u'And I am a unicorn.',
         u'zero_integer': 0
     }
@@ -235,7 +221,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     expected_event_source_dict = {
         u'path_spec': test_path_spec.comparable,
-        u'storage_session': 0,
     }
 
     event_source_dict = event_source.CopyToDict()
@@ -250,8 +235,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
   def testReadAndWriteSerializedEventTag(self):
     """Test ReadSerialized and WriteSerialized of EventTag."""
     expected_event_tag = events.EventTag(comment=u'My first comment.')
-    expected_event_tag.store_number = 234
-    expected_event_tag.store_index = 18
     expected_event_tag.AddLabels([u'Malware', u'Common'])
 
     json_string = (
@@ -270,8 +253,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     expected_event_tag_dict = {
         u'comment': u'My first comment.',
         u'labels': [u'Malware', u'Common'],
-        u'store_index': 18,
-        u'store_number': 234,
     }
 
     event_tag_dict = event_tag.CopyToDict()
