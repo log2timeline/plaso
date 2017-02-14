@@ -13,6 +13,7 @@ from dfvfs.path import fake_path_spec
 from dfvfs.path import factory as path_spec_factory
 
 import plaso
+from plaso.containers import artifacts
 from plaso.containers import event_sources
 from plaso.containers import events
 from plaso.containers import reports
@@ -85,14 +86,31 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         u'frank': [
             [u'YouTube', u'blpcfgokakmgnkcojhhkbfbldkacnbeo'],
             [u'Google Play Music', u'icppfcnhkcmnfdhfhphakoifcfokfdhg']
+        ],
+        # Tests preservation of tuples.
+        u'billy': [
+            (u'Amazon', u'erfcfgokakmgnkcojhhkbfbldkacnbeo'),
+            (u'YouTube', u'blpcfgokakmgnkcojhhkbfbldkacnbeo')
         ]
     }
+    expected_report_array = [
+        artifacts.UserAccountArtifact(
+            full_name=u'Dude Dudington', username=u'dude'),
+        artifacts.UserAccountArtifact(
+            full_name=u'Frank Grimes', username=u'frank'),
+        artifacts.UserAccountArtifact(
+            full_name=u'Billy Bob', username=u'billy')
+    ]
     expected_report_text = (
         u' == USER: dude ==\n'
         u'  Google Keep - notes and lists [hmjkmjkepdijhoojdojkdfohbdgmmhki]\n'
         u'\n'
         u' == USER: frank ==\n'
         u'  Google Play Music [icppfcnhkcmnfdhfhphakoifcfokfdhg]\n'
+        u'  YouTube [blpcfgokakmgnkcojhhkbfbldkacnbeo]\n'
+        u'\n'
+        u' == USER: billy ==\n'
+        u'  Amazon [erfcfgokakmgnkcojhhkbfbldkacnbeo]\n'
         u'  YouTube [blpcfgokakmgnkcojhhkbfbldkacnbeo]\n'
         u'\n')
 
@@ -103,6 +121,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     expected_analysis_report = reports.AnalysisReport(
         plugin_name=u'chrome_extension_test', text=expected_report_text)
     expected_analysis_report.report_dict = expected_report_dict
+    expected_analysis_report.report_array = expected_report_array
     expected_analysis_report.time_compiled = 1431978243000000
     expected_analysis_report.SetTags([expected_event_tag])
 
@@ -119,18 +138,25 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
     self.assertIsNotNone(analysis_report)
     self.assertIsInstance(analysis_report, reports.AnalysisReport)
 
-    # TODO: preserve the tuples in the report dict.
-    # TODO: add report_array tests.
     # TODO: remove _event_tags.
 
     expected_analysis_report_dict = {
         u'_event_tags': [],
         u'plugin_name': u'chrome_extension_test',
         u'report_dict': expected_report_dict,
+        u'report_array': [
+            artifact.CopyToDict() for artifact in expected_report_array],
         u'text': expected_report_text,
         u'time_compiled': 1431978243000000}
 
     analysis_report_dict = analysis_report.CopyToDict()
+
+    report_array = []
+    for artifact in analysis_report_dict[u'report_array']:
+      self.assertIsInstance(artifact, artifacts.UserAccountArtifact)
+      report_array.append(artifact.CopyToDict())
+    analysis_report_dict[u'report_array'] = report_array
+
     self.assertEqual(
         sorted(analysis_report_dict.items()),
         sorted(expected_analysis_report_dict.items()))
