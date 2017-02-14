@@ -68,6 +68,14 @@ plaso.formatters.asl module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.bash_history module
+------------------------------------
+
+.. automodule:: plaso.formatters.bash_history
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.bencode_parser module
 --------------------------------------
 

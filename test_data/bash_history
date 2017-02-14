@@ -1,0 +1,6 @@
+#1380630977
+/usr/lib/plaso
+#1380630978
+/bin/bash
+#1380630979
+/usr/local/bin/splunk -p 8080

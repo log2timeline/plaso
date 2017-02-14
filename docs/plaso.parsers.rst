@@ -35,6 +35,14 @@ plaso.parsers.asl module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.bash_history module
+---------------------------------
+
+.. automodule:: plaso.parsers.bash_history
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.bencode_parser module
 -----------------------------------
 

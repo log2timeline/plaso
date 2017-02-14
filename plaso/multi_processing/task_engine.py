@@ -7,12 +7,6 @@ import multiprocessing
 import os
 import time
 
-# The 'Queue' module was renamed to 'queue' in Python 3
-try:
-  import Queue
-except ImportError:
-  import queue as Queue  # pylint: disable=import-error
-
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 
@@ -308,7 +302,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       self._task_manager.UpdateTaskAsProcessing(task)
       is_scheduled = True
 
-    except Queue.Full:
+    except errors.QueueFull:
       is_scheduled = False
 
     if self._processing_profiler:
@@ -492,7 +486,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       for pid in list(self._process_information_per_pid.keys()):
         self._CheckStatusWorkerProcess(pid)
 
-      used_memory = self._process_information.GetUsedMemory()
+      used_memory = self._process_information.GetUsedMemory() or 0
 
       display_name = getattr(self._merge_task, u'identifier', u'')
 
@@ -527,14 +521,16 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       # Signal all the processes to abort.
       self._AbortTerminate()
 
-    if not self._use_zeromq:
-      logging.debug(u'Emptying queue.')
-      self._task_queue.Empty()
+    logging.debug(u'Emptying task queue.')
+    self._task_queue.Empty()
 
     # Wake the processes to make sure that they are not blocking
     # waiting for the queue new items.
     for _ in range(self._number_of_worker_processes):
-      self._task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
+      try:
+        self._task_queue.PushItem(plaso_queue.QueueAbort(), block=False)
+      except errors.QueueFull:
+        logging.warn(u'Task queue full, unable to push abort message.')
 
     # Try waiting for the processes to exit normally.
     self._AbortJoin(timeout=self._PROCESS_JOIN_TIMEOUT)

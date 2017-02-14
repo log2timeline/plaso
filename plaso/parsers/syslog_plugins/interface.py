@@ -33,27 +33,27 @@ class SyslogPlugin(plugins.BasePlugin):
     """Parses a syslog body that matched one of the grammars the plugin defined.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      key: a string indicating the name of the matching grammar.
-      timestamp: the timestamp, which is an integer containing the number
-                  of micro seconds since January 1, 1970, 00:00:00 UTC or 0
-                  on error.
-      tokens: a dictionary whose keys are the names of the fields
-              extracted by the syslog parser and the matching grammar, and
-              values are the values of those fields.
+      parser_mediator (ParserMediator): mediates the interactions between
+          parsers and other components, such as storage and abort signals.
+      key (str): name of the parsed structure.
+      timestamp (int): number of micro seconds since January 1, 1970,
+          00:00:00 UTC or 0 on error.
+      tokens (dict[str, str]): names of the fields extracted by the syslog
+          parser and the matching grammar, and values are the values of those
+          fields.
     """
 
   def Process(self, parser_mediator, timestamp, syslog_tokens, **kwargs):
     """Processes the data structure produced by the parser.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      timestamp: the timestamp, which is an integer containing the number
-                  of micro seconds since January 1, 1970, 00:00:00 UTC or 0
-                  on error.
-      syslog_tokens: a dictionary whose keys are the names of the fields
-                     extracted by the syslog parser, and values are the values
-                     of those fields.
+      parser_mediator (ParserMediator): mediates the interactions between
+          parsers and other components, such as storage and abort signals.
+      timestamp (int): number of micro seconds since January 1, 1970,
+          00:00:00 UTC or 0 on error.
+      syslog_tokens (dict[str, str]): names of the fields extracted by the
+          syslog parser and the matching grammar, and values are the values of
+          those fields.
 
     Raises:
       AttributeError: If the syslog_tokens do not include a 'body' attribute.

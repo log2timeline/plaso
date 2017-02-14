@@ -85,15 +85,14 @@ class MultiProcessingQueue(plaso_queue.Queue):
     Args:
       item (object): item to add.
       block (bool): whether to block if the queue is full.
+
+    Raises:
+      QueueFull: if the item could not be pushed the queue because it's full.
     """
     try:
       self._queue.put(item, block=block)
-
-    # Queue.Full can be raised if block is False.
-    # Since this should only be used in the abort code path
-    # the exception is ignored.
-    except Queue.Full:
-      pass
+    except Queue.Full as exception:
+      raise errors.QueueFull(exception)
 
   def PopItem(self):
     """Pops an item off the queue.

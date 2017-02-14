@@ -7,6 +7,7 @@ from plaso.formatters import android_sms
 from plaso.formatters import appcompatcache
 from plaso.formatters import appusage
 from plaso.formatters import asl
+from plaso.formatters import bash_history
 from plaso.formatters import bencode_parser
 from plaso.formatters import bsm
 from plaso.formatters import ccleaner

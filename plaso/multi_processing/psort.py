@@ -188,7 +188,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
         process_is_alive = True
 
       process_information = self._process_information_per_pid[pid]
-      used_memory = process_information.GetUsedMemory()
+      used_memory = process_information.GetUsedMemory() or 0
 
       if used_memory > self._worker_memory_limit:
         logging.warning((
@@ -399,7 +399,7 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       for pid in list(self._process_information_per_pid.keys()):
         self._CheckStatusAnalysisProcess(pid)
 
-      used_memory = self._process_information.GetUsedMemory()
+      used_memory = self._process_information.GetUsedMemory() or 0
 
       display_name = getattr(self._merge_task, u'identifier', u'')
 
