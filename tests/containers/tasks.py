@@ -48,7 +48,7 @@ class TaskCompletionTest(shared_test_lib.BaseTestCase):
         identifier=task_identifier, session_identifier=session_identifier)
     task_completion.timestamp = timestamp
 
-    self.assertEquals(task_completion.identifier, task_identifier)
+    self.assertEqual(task_completion.identifier, task_identifier)
 
     expected_dict = {
         u'aborted': False,
@@ -75,7 +75,7 @@ class TaskStartTest(shared_test_lib.BaseTestCase):
         identifier=task_identifier, session_identifier=session_identifier)
     task_start.timestamp = timestamp
 
-    self.assertEquals(task_start.identifier, task_identifier)
+    self.assertEqual(task_start.identifier, task_identifier)
 
     expected_dict = {
         u'identifier': task_start.identifier,

@@ -20,13 +20,17 @@ class ElasticSearchOutputArgumentsHelperTest(
   _EXPECTED_OUTPUT = u'\n'.join([
       u'usage: cli_helper.py [--index_name INDEX_NAME] [--doc_type DOC_TYPE]',
       u'                     [--flush_interval FLUSH_INTERVAL] [--raw_fields]',
-      u'                     [--server HOSTNAME] [--port PORT]',
+      u'                     [--elastic_user ELASTIC_USER] [--server HOSTNAME]',
+      u'                     [--port PORT]',
       u'',
       u'Test argument parser.',
       u'',
       u'optional arguments:',
       u'  --doc_type DOC_TYPE   Name of the document type that will be used in',
       u'                        ElasticSearch.',
+      u'  --elastic_user ELASTIC_USER',
+      (u'                        Username to use for Elasticsearch '
+       u'authentication.'),
       u'  --flush_interval FLUSH_INTERVAL',
       u'                        Events to queue up before bulk insert to',
       u'                        ElasticSearch.',

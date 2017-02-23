@@ -17,13 +17,13 @@ class WorkerProcessTest(shared_test_lib.BaseTestCase):
   def testInitialization(self):
     """Tests the initialization."""
     test_process = worker_process.WorkerProcess(
-        None, None, None, None, name=u'TestWorker')
+        None, None, None, None, None, name=u'TestWorker')
     self.assertIsNotNone(test_process)
 
   def testGetStatus(self):
     """Tests the _GetStatus function."""
     test_process = worker_process.WorkerProcess(
-        None, None, None, None, name=u'TestWorker')
+        None, None, None, None, None, name=u'TestWorker')
     status_attributes = test_process._GetStatus()
 
     self.assertIsNotNone(status_attributes)
@@ -38,7 +38,7 @@ class WorkerProcessTest(shared_test_lib.BaseTestCase):
   def testSignalAbort(self):
     """Tests the SignalAbort function."""
     test_process = worker_process.WorkerProcess(
-        None, None, None, None, name=u'TestWorker')
+        None, None, None, None, None, name=u'TestWorker')
     test_process.SignalAbort()
 
 

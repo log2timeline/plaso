@@ -133,9 +133,14 @@ class WindowsPathEnvironmentVariablePlugin(FileSystemPreprocessPlugin):
       path_segments = relative_path.split(u'/')
       relative_path = u'\\'.join(path_segments)
 
-    evironment_variable_artifact = artifacts.EnvironmentVariableArtifact(
+    evironment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name=self._NAME, value=relative_path)
-    knowledge_base.SetEnvironmentVariable(evironment_variable_artifact)
+
+    try:
+      knowledge_base.AddEnvironmentVariable(evironment_variable)
+    except KeyError:
+      # TODO: add and store preprocessing errors.
+      pass
 
 
 class WindowsRegistryKeyPreprocessPlugin(PreprocessPlugin):
@@ -242,6 +247,11 @@ class WindowsRegistryEnvironmentVariable(WindowsRegistryValuePreprocessPlugin):
           u'Unsupported Registry key: {0:s}, value: {1:s} type.'.format(
               self._REGISTRY_KEY_PATH, self._REGISTRY_VALUE_NAME))
 
-    evironment_variable_artifact = artifacts.EnvironmentVariableArtifact(
+    evironment_variable = artifacts.EnvironmentVariableArtifact(
         case_sensitive=False, name=self._NAME, value=value_data)
-    knowledge_base.SetEnvironmentVariable(evironment_variable_artifact)
+
+    try:
+      knowledge_base.AddEnvironmentVariable(evironment_variable)
+    except KeyError:
+      # TODO: add and store preprocessing errors.
+      pass

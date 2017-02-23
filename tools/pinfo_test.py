@@ -2,11 +2,14 @@
 # -*- coding: utf-8 -*-
 """Tests for the pinfo CLI tool."""
 
+import json
 import unittest
 
 from plaso.cli import views as cli_views
-from tests.cli import test_lib as cli_test_lib
 from plaso.lib import errors
+from plaso.lib import timelib
+
+from tests.cli import test_lib as cli_test_lib
 
 from tools import pinfo
 
@@ -24,8 +27,8 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
   # TODO: add test for _PrintPreprocessingInformation.
   # TODO: add test for _PrintSessionsDetails.
   # TODO: add test for _PrintSessionsOverview.
-  # TODO: add test for _PrintStorageInformation.
   # TODO: add test for _PrintTasksInformation.
+  # TODO: add test for _PrintStorageInformationAsText.
 
   def testCompareStorages(self):
     """Tests the CompareStorages function."""
@@ -85,8 +88,8 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
 
     # TODO: improve test coverage.
 
-  def testPrintStorageInformation(self):
-    """Tests the PrintStorageInformation function."""
+  def testPrintStorageInformationAsText(self):
+    """Tests the _PrintStorageInformationAsText function."""
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_tool = pinfo.PinfoTool(output_writer=output_writer)
 
@@ -197,6 +200,7 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
 
     options = cli_test_lib.TestOptions()
     options.storage_file = test_file
+    options.output_format = u'text'
 
     test_tool.ParseOptions(options)
 
@@ -207,6 +211,33 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
     # Compare the output as list of lines which makes it easier to spot
     # differences.
     self.assertEqual(output.split(b'\n'), expected_output.split(b'\n'))
+
+  def testPrintStorageInformationAsJSON(self):
+    """Tests the _PrintStorageInformationAsJSON function."""
+    test_filename = u'pinfo_test.json.plaso'
+    session_identifier = u'3c552fe34e6448718a7f0f4c95dfc1fe'
+    session_start_time = timelib.Timestamp.CopyFromString(
+        u'2016-10-16 15:13:58.171984+00:00')
+    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = pinfo.PinfoTool(output_writer=output_writer)
+    test_file = self._GetTestFilePath([test_filename])
+
+    options = cli_test_lib.TestOptions()
+    options.storage_file = test_file
+    options.output_format = u'json'
+
+    test_tool.ParseOptions(options)
+
+    test_tool.PrintStorageInformation()
+    output = output_writer.ReadOutput()
+    json_output = json.loads(output)
+    first_session = json_output[u'session_3c552fe34e6448718a7f0f4c95dfc1fe']
+    self.assertEqual(first_session[u'identifier'], session_identifier)
+    self.assertEqual(first_session[u'start_time'], session_start_time)
+
+    parsers_counter = first_session[u'parsers_counter']
+    self.assertEqual(parsers_counter[u'total'], 3)
+    self.assertEqual(parsers_counter[u'filestat'], 3)
 
 
 if __name__ == '__main__':

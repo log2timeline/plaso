@@ -65,28 +65,26 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
       raise errors.BadConfigOption(
           u'Unable to write to storage file: {0:s}'.format(storage_file_path))
 
-  # TODO: add single processing support.
   def _CreateEngine(self):
     """Creates an engine based on the front end settings.
 
     Returns:
       BaseEngine: engine.
     """
-    return psort.PsortMultiProcessEngine(
-        debug_output=self._debug_mode,
-        enable_profiling=self._enable_profiling,
-        profiling_directory=self._profiling_directory,
-        profiling_sample_rate=self._profiling_sample_rate,
-        profiling_type=self._profiling_type, use_zeromq=self._use_zeromq)
+    # TODO: add single processing support.
+    return psort.PsortMultiProcessEngine(use_zeromq=self._use_zeromq)
 
   def AnalyzeEvents(
-      self, storage_writer, analysis_plugins, status_update_callback=None):
+      self, storage_writer, analysis_plugins, processing_configuration,
+      status_update_callback=None):
     """Analyzes events in a plaso storage.
 
     Args:
       storage_writer (StorageWriter): storage writer.
       analysis_plugins (list[AnalysisPlugin]): analysis plugins that should
           be run.
+      processing_configuration (ProcessingConfiguration): processing
+          configuration.
       status_update_callback (Optional[function]): callback function for status
           updates.
 
@@ -96,6 +94,9 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     engine = self._CreateEngine()
 
     # TODO: add single processing support.
+    # TODO: pass configuration object.
+    _ = processing_configuration
+
     engine.AnalyzeEvents(
         self._knowledge_base, storage_writer, self._data_location,
         analysis_plugins, event_filter=self._event_filter,
@@ -189,13 +190,16 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     return storage_zip_file.ZIPStorageFileWriter(session, storage_file_path)
 
   def ExportEvents(
-      self, storage_reader, output_module, deduplicate_events=True,
-      status_update_callback=None, time_slice=None, use_time_slicer=False):
+      self, storage_reader, output_module, processing_configuration,
+      deduplicate_events=True, status_update_callback=None, time_slice=None,
+      use_time_slicer=False):
     """Exports events using an output module.
 
     Args:
       storage_reader (StorageReader): storage reader.
       output_module (OutputModule): output module.
+      processing_configuration (ProcessingConfiguration): processing
+          configuration.
       deduplicate_events (Optional[bool]): True if events should be
           deduplicated.
       status_update_callback (Optional[function]): callback function for status
@@ -210,6 +214,9 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
           from storage and the analysis plugin results.
     """
     engine = self._CreateEngine()
+
+    # TODO: pass configuration object.
+    _ = processing_configuration
 
     return engine.ExportEvents(
         self._knowledge_base, storage_reader, output_module,

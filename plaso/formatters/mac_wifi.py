@@ -12,7 +12,7 @@ class MacWifiLogFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_PIECES = [
       u'Action: {action}',
-      u'Agent: {user}',
+      u'Agent: {agent}',
       u'({function})',
       u'Log: {text}']
 

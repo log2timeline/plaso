@@ -23,8 +23,8 @@ from tests import test_lib as shared_test_lib
 from tests.storage import test_lib
 
 
-class SerializedDataStream(test_lib.StorageTestCase):
-  """Tests for the serialized data stream object."""
+class SerializedDataStreamTest(test_lib.StorageTestCase):
+  """Tests for the serialized data stream."""
 
   # pylint: disable=protected-access
 
@@ -84,9 +84,61 @@ class SerializedDataStream(test_lib.StorageTestCase):
 
     zip_file_object.close()
 
+  def testWrite(self):
+    """Tests the Write functions."""
+    with shared_test_lib.TempDirectory() as temp_directory:
+      test_file = os.path.join(temp_directory, u'storage.plaso')
 
-class SerializedDataOffsetTable(test_lib.StorageTestCase):
-  """Tests for the serialized data offset table object."""
+      zip_file_object = zipfile.ZipFile(
+          test_file, mode='a', compression=zipfile.ZIP_DEFLATED,
+          allowZip64=True)
+
+      data_stream = zip_file._SerializedDataStream(
+          zip_file_object, test_file, u'test_stream', maximum_data_size=32)
+
+      data_stream.WriteInitialize()
+
+      with self.assertRaises(IOError):
+        data_stream.WriteInitialize()
+
+      data_stream.WriteEntry(b'test_entry_data')
+
+      # TODO: Fix maximum size limit handling to create new stream.
+      #with self.assertRaises(IOError):
+      #  data_stream.WriteEntry(b'test_entry_data')
+
+      data_stream.WriteFinalize()
+
+      with self.assertRaises(IOError):
+        data_stream.WriteEntry(b'test_entry_data')
+
+      with self.assertRaises(IOError):
+        data_stream.WriteFinalize()
+
+      data_stream.WriteAbort()
+
+  def testWriteAbort(self):
+    """Tests the Write functions with abort."""
+    with shared_test_lib.TempDirectory() as temp_directory:
+      test_file = os.path.join(temp_directory, u'storage.plaso')
+
+      zip_file_object = zipfile.ZipFile(
+          test_file, mode='a', compression=zipfile.ZIP_DEFLATED,
+          allowZip64=True)
+
+      data_stream = zip_file._SerializedDataStream(
+          zip_file_object, test_file, u'test_stream', maximum_data_size=32)
+
+      data_stream.WriteInitialize()
+
+      data_stream.WriteAbort()
+
+      with self.assertRaises(IOError):
+        data_stream.WriteFinalize()
+
+
+class SerializedDataOffsetTableTest(test_lib.StorageTestCase):
+  """Tests for the serialized data offset table."""
 
   # pylint: disable=protected-access
 
@@ -133,9 +185,26 @@ class SerializedDataOffsetTable(test_lib.StorageTestCase):
     with self.assertRaises(IOError):
       offset_table.Read()
 
+  def testWrite(self):
+    """Tests the Write function."""
+    with shared_test_lib.TempDirectory() as temp_directory:
+      test_file = os.path.join(temp_directory, u'storage.plaso')
 
-class SerializedDataTimestampTable(test_lib.StorageTestCase):
-  """Tests for the serialized data offset table object."""
+      zip_file_object = zipfile.ZipFile(
+          test_file, mode='a', compression=zipfile.ZIP_DEFLATED,
+          allowZip64=True)
+
+      stream_name = u'test_stream'
+      offset_table = zip_file._SerializedDataOffsetTable(
+          zip_file_object, stream_name)
+
+      offset_table.AddOffset(0)
+
+      offset_table.Write()
+
+
+class SerializedDataTimestampTableTest(test_lib.StorageTestCase):
+  """Tests for the serialized data offset table."""
 
   # pylint: disable=protected-access
 
@@ -147,21 +216,21 @@ class SerializedDataTimestampTable(test_lib.StorageTestCase):
         test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
 
     stream_name = u'event_timestamps.000002'
-    offset_table = zip_file._SerializedDataTimestampTable(
+    timestamp_table = zip_file._SerializedDataTimestampTable(
         zip_file_object, stream_name)
-    offset_table.Read()
+    timestamp_table.Read()
 
-    self.assertEqual(offset_table.GetTimestamp(0), 1453449153000000)
-    self.assertEqual(offset_table.GetTimestamp(1), 1453449153000000)
-
-    with self.assertRaises(IndexError):
-      offset_table.GetTimestamp(99)
-
-    self.assertEqual(offset_table.GetTimestamp(-1), 1483206872000000)
-    self.assertEqual(offset_table.GetTimestamp(-2), 1482083672000000)
+    self.assertEqual(timestamp_table.GetTimestamp(0), 1453449153000000)
+    self.assertEqual(timestamp_table.GetTimestamp(1), 1453449153000000)
 
     with self.assertRaises(IndexError):
-      offset_table.GetTimestamp(-99)
+      timestamp_table.GetTimestamp(99)
+
+    self.assertEqual(timestamp_table.GetTimestamp(-1), 1483206872000000)
+    self.assertEqual(timestamp_table.GetTimestamp(-2), 1482083672000000)
+
+    with self.assertRaises(IndexError):
+      timestamp_table.GetTimestamp(-99)
 
   @shared_test_lib.skipUnlessHasTestFile([u'psort_test.json.plaso'])
   def testRead(self):
@@ -171,20 +240,60 @@ class SerializedDataTimestampTable(test_lib.StorageTestCase):
         test_file, 'r', zipfile.ZIP_DEFLATED, allowZip64=True)
 
     stream_name = u'event_timestamps.000002'
-    offset_table = zip_file._SerializedDataTimestampTable(
+    timestamp_table = zip_file._SerializedDataTimestampTable(
         zip_file_object, stream_name)
-    offset_table.Read()
+    timestamp_table.Read()
 
     stream_name = u'bogus'
-    offset_table = zip_file._SerializedDataTimestampTable(
+    timestamp_table = zip_file._SerializedDataTimestampTable(
         zip_file_object, stream_name)
 
     with self.assertRaises(IOError):
-      offset_table.Read()
+      timestamp_table.Read()
+
+  def testWrite(self):
+    """Tests the Write function."""
+    with shared_test_lib.TempDirectory() as temp_directory:
+      test_file = os.path.join(temp_directory, u'storage.plaso')
+
+      zip_file_object = zipfile.ZipFile(
+          test_file, mode='a', compression=zipfile.ZIP_DEFLATED,
+          allowZip64=True)
+
+      stream_name = u'test_stream'
+      timestamp_table = zip_file._SerializedDataTimestampTable(
+          zip_file_object, stream_name)
+
+      timestamp_table.AddTimestamp(0)
+
+      timestamp_table.Write()
+
+
+class StorageMetadataReaderTest(test_lib.StorageTestCase):
+  """Tests for the storage metadata reader."""
+
+  # pylint: disable=protected-access
+
+  _TEST_DATA = b'\n'.join([
+      b'[plaso_storage_file]',
+      b'format_version: 20170121',
+      b'serialization_format: json',
+      b'storage_type: session'])
+
+  def testRead(self):
+    """Tests the Read function."""
+    reader = zip_file._StorageMetadataReader()
+
+    storage_metadata = reader.Read(self._TEST_DATA)
+    self.assertIsNotNone(storage_metadata)
+
+    self.assertEqual(storage_metadata.format_version, 20170121)
+    self.assertEqual(storage_metadata.serialization_format, u'json')
+    self.assertEqual(storage_metadata.storage_type, u'session')
 
 
 class ZIPStorageFileTest(test_lib.StorageTestCase):
-  """Tests for the ZIP-based storage file object."""
+  """Tests for the ZIP-based storage file."""
 
   # pylint: disable=protected-access
 
@@ -1355,7 +1464,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
 
 
 class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
-  """Tests for the ZIP-based storage file reader object."""
+  """Tests for the ZIP-based storage file reader."""
 
   _EXPECTED_TIMESTAMPS_BEFORE_20060430 = [
       1453449153000000, 1453449153000000, 1453449153000000, 1453449153000000,
@@ -1420,7 +1529,7 @@ class ZIPStorageFileReaderTest(test_lib.StorageTestCase):
 
 
 class ZIPStorageFileWriterTest(test_lib.StorageTestCase):
-  """Tests for the ZIP-based storage file writer object."""
+  """Tests for the ZIP-based storage file writer."""
 
   def testAddAnalysisReport(self):
     """Tests the AddAnalysisReport function."""

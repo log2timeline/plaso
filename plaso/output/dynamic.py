@@ -300,8 +300,8 @@ class DynamicFieldsHelper(object):
     Returns:
       str: event storage identifier or "N/A".
     """
-    store_number = getattr(event, u'store_number', None)
-    store_index = getattr(event, u'store_index', None)
+    store_number = getattr(event, u'_store_number', None)
+    store_index = getattr(event, u'_store_index', None)
 
     if store_number is None or store_index is None:
       return u'N/A'

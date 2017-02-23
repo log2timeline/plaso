@@ -69,7 +69,7 @@ class StorageMediaTool(tools.CLITool):
     self._vss_stores = None
 
   def _FormatHumanReadableSize(self, size):
-    """Represents a number of bytes as as human readable string.
+    """Represents a number of bytes as a human readable string.
 
     Args:
       size (int): size in bytes.

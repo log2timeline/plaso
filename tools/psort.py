@@ -32,6 +32,7 @@ from plaso.cli.helpers import manager as helpers_manager
 from plaso.filters import manager as filters_manager
 from plaso.frontend import frontend
 from plaso.frontend import psort
+from plaso.engine import configurations
 from plaso.output import interface as output_interface
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -80,8 +81,10 @@ class PsortTool(analysis_tool.AnalysisTool):
     self._status_view_mode = u'linear'
     self._stdout_output_writer = isinstance(
         self._output_writer, cli_tools.StdoutOutputWriter)
+    self._temporary_directory = None
     self._time_slice = None
     self._use_time_slicer = False
+    self._worker_memory_limit = None
 
     self.list_analysis_plugins = False
     self.list_language_identifiers = False
@@ -201,7 +204,8 @@ class PsortTool(analysis_tool.AnalysisTool):
 
     time_slice_event_timestamp = None
     if time_slice_event_time_string:
-      timezone = pytz.timezone(self._timezone)
+      preferred_time_zone = self._preferred_time_zone or u'UTC'
+      timezone = pytz.timezone(preferred_time_zone)
       time_slice_event_timestamp = timelib.Timestamp.FromTimeString(
           time_slice_event_time_string, timezone=timezone)
       if time_slice_event_timestamp is None:
@@ -252,6 +256,15 @@ class PsortTool(analysis_tool.AnalysisTool):
     """
     use_zeromq = getattr(options, u'use_zeromq', True)
     self._front_end.SetUseZeroMQ(use_zeromq)
+
+    self._temporary_directory = getattr(options, u'temporary_directory', None)
+    if (self._temporary_directory and
+        not os.path.isdir(self._temporary_directory)):
+      raise errors.BadConfigOption(
+          u'No such temporary directory: {0:s}'.format(
+              self._temporary_directory))
+
+    self._worker_memory_limit = getattr(options, u'worker_memory_limit', None)
 
   def _PrintAnalysisReportsDetails(self, storage):
     """Prints the details of the analysis reports.
@@ -446,6 +459,20 @@ class PsortTool(analysis_tool.AnalysisTool):
         dest=u'use_zeromq', default=True, help=(
             u'Disable queueing using ZeroMQ. A Multiprocessing queue will be '
             u'used instead.'))
+
+    argument_group.add_argument(
+        u'--temporary_directory', u'--temporary-directory',
+        dest=u'temporary_directory', type=str, action=u'store',
+        metavar=u'DIRECTORY', help=(
+            u'Path to the directory that should be used to store temporary '
+            u'files created during analysis.'))
+
+    argument_group.add_argument(
+        u'--worker-memory-limit', u'--worker_memory_limit',
+        dest=u'worker_memory_limit', action=u'store', type=int,
+        metavar=u'SIZE', help=(
+            u'Maximum amount of memory a worker process is allowed to consume. '
+            u'[defaults to 2 GiB]'))
 
   def ListAnalysisPlugins(self):
     """Lists the analysis modules."""
@@ -719,9 +746,10 @@ class PsortTool(analysis_tool.AnalysisTool):
       BadConfigOption: when a configuration parameter fails validation.
       RuntimeError: if a non-recoverable situation is encountered.
     """
+    preferred_time_zone = self._preferred_time_zone or u'UTC'
     output_module = self._front_end.CreateOutputModule(
         self._output_format, preferred_encoding=self.preferred_encoding,
-        timezone=self._timezone)
+        timezone=preferred_time_zone)
 
     if isinstance(output_module, output_interface.LinearOutputModule):
       if not self._output_filename:
@@ -788,13 +816,16 @@ class PsortTool(analysis_tool.AnalysisTool):
         storage_reader.GetNumberOfAnalysisReports())
     storage_reader.Close()
 
+    configuration = configurations.ProcessingConfiguration()
+    configuration.data_location = self._options.data_location
+
     if analysis_plugins:
       storage_writer = self._front_end.CreateStorageWriter(
           session, self._storage_file_path)
       # TODO: handle errors.BadConfigOption
 
       self._front_end.AnalyzeEvents(
-          storage_writer, analysis_plugins,
+          storage_writer, analysis_plugins, configuration,
           status_update_callback=status_update_callback)
 
     counter = collections.Counter()
@@ -803,7 +834,7 @@ class PsortTool(analysis_tool.AnalysisTool):
           self._storage_file_path)
 
       events_counter = self._front_end.ExportEvents(
-          storage_reader, output_module,
+          storage_reader, output_module, configuration,
           deduplicate_events=self._deduplicate_events,
           status_update_callback=status_update_callback,
           time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)

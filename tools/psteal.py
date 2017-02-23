@@ -29,6 +29,7 @@ from plaso.cli import views as cli_views
 from plaso.cli.helpers import manager as helpers_manager
 from plaso.frontend import log2timeline
 from plaso.frontend import psort
+from plaso.engine import configurations
 from plaso.output import interface as output_interface
 from plaso.lib import errors
 
@@ -162,23 +163,30 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     session = self._extraction_front_end.CreateSession(
         command_line_arguments=self._command_line_arguments,
         filter_file=self._filter_file,
-        parser_filter_expression=self._parser_filter_expression,
         preferred_encoding=self.preferred_encoding,
+        preferred_time_zone=self._preferred_time_zone,
         preferred_year=self._preferred_year)
 
     storage_writer = self._extraction_front_end.CreateStorageWriter(
         session, self._storage_file_path)
     # TODO: handle errors.BadConfigOption
 
+    # TODO: pass preferred_encoding.
+    configuration = configurations.ProcessingConfiguration()
+    configuration.debug_output = self._debug_mode
+    configuration.extraction.hasher_names_string = self._hasher_names_string
+    configuration.extraction.yara_rules_string = self._yara_rules_string
+    configuration.filter_file = self._filter_file
+    configuration.parser_filter_expression = self._parser_filter_expression
+    configuration.preferred_year = self._preferred_year
+
     processing_status = self._extraction_front_end.ProcessSources(
         session, storage_writer, self._source_path_specs, self._source_type,
-        enable_sigsegv_handler=self._enable_sigsegv_handler,
+        configuration, enable_sigsegv_handler=self._enable_sigsegv_handler,
         force_preprocessing=self._force_preprocessing,
-        hasher_names_string=self._hasher_names_string,
         number_of_extraction_workers=self._number_of_extraction_workers,
         single_process_mode=self._single_process_mode,
-        status_update_callback=status_update_callback,
-        timezone=self._timezone, yara_rules_string=self._yara_rules_string)
+        status_update_callback=status_update_callback)
 
     if not processing_status:
       self._output_writer.Write(
@@ -223,7 +231,7 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     """
     self._output_module = self._analysis_front_end.CreateOutputModule(
         self._output_format, preferred_encoding=self.preferred_encoding,
-        timezone=self._timezone)
+        timezone=self._preferred_time_zone)
 
     if isinstance(self._output_module, output_interface.LinearOutputModule):
       if not self._output_filename:
@@ -263,13 +271,15 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
         storage_reader.GetNumberOfAnalysisReports())
     storage_reader.Close()
 
+    configuration = configurations.ProcessingConfiguration()
+
     counter = collections.Counter()
     if self._output_format != u'null':
       storage_reader = self._analysis_front_end.CreateStorageReader(
           self._storage_file_path)
 
       events_counter = self._analysis_front_end.ExportEvents(
-          storage_reader, self._output_module,
+          storage_reader, self._output_module, configuration,
           deduplicate_events=self._deduplicate_events,
           time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
 

@@ -90,19 +90,25 @@ class TaggingAnalysisPluginTest(test_lib.AnalysisPluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'test_tag_file.txt'])
   def testExamineEventAndCompileReport(self):
     """Tests the ExamineEvent and CompileReport functions."""
-    event_objects = []
+    test_events = []
     for event_dictionary in self._TEST_EVENTS:
       event = self._CreateTestEventObject(event_dictionary)
-      event_objects.append(event)
+      test_events.append(event)
 
     test_file = self._GetTestFilePath([self._TEST_TAG_FILE_NAME])
     plugin = tagging.TaggingAnalysisPlugin()
     plugin.SetAndLoadTagFile(test_file)
 
-    storage_writer = self._AnalyzeEvents(event_objects, plugin)
+    storage_writer = self._AnalyzeEvents(test_events, plugin)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
     self.assertEqual(len(storage_writer.event_tags), 4)
+
+    report = storage_writer.analysis_reports[0]
+    self.assertIsNotNone(report)
+
+    expected_text = u'Tagging plugin produced 4 tags.\n'
+    self.assertEqual(report.text, expected_text)
 
     labels = []
     for event_tag in storage_writer.event_tags:

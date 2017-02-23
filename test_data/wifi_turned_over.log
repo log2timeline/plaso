@@ -1,0 +1,6 @@
+Jan  2 00:10:15 test-macbookpro newsyslog[50498]: logfile turned over
+Mon Jan  2 00:11:02.378 <kernel> wl0: powerChange: *** BONJOUR/MDNS OFFLOADS ARE NOT RUNNING.
+Mon Jan  2 07:41:01.371 <kernel> wl0: leaveModulePoweredForOffloads: Wi-Fi will stay on.
+Mon Jan  2 07:41:01.371 <kernel> AirPort_Brcm43xx::platformWoWEnable: WWEN[enable]
+Mon Jan  2 07:41:01.371 <kernel> AirPort_Brcm43xx::syncPowerState: WWEN[enabled]
+Mon Jan  2 07:41:02.207 <kernel> Setting BTCoex Config: enable_2G:1, profile_2g:0, enable_5G:1, profile_5G:0

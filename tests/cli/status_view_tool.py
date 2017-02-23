@@ -44,7 +44,7 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
 
     process_status = processing_status.ProcessingStatus()
     process_status.UpdateForemanStatus(
-        u'f_identifier', u'f_status', 123,
+        u'f_identifier', u'f_status', 123, 0,
         u'f_test_file', 1, 29, 3, 456, 5, 6, 7,
         8, 9, 10)
     status_view_tool._PrintStatusUpdate(process_status)
@@ -53,7 +53,8 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
 
     plaso_version = plaso.GetVersion()
 
-    table_header = b'Identifier\tPID\tStatus\t\tSources\t\tEvents\t\tFile'
+    table_header = (
+        b'Identifier\tPID\tStatus\t\tMemory\t\tSources\t\tEvents\t\tFile')
     if not sys.platform.startswith(u'win'):
       table_header = b'\x1b[1m{0:s}\x1b[0m'.format(table_header)
 
@@ -67,13 +68,14 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
         b'Source type\t: TESTSOURCE',
         b'',
         table_header,
-        b'f_identifier\t123\tf_status\t29 (29)\t\t456 (456)\tf_test_file',
+        (b'f_identifier\t123\tf_status\t0 B\t\t29 (29)\t\t456 (456)\t'
+         b'f_test_file'),
         b'',
         b'']
     self.assertEqual(string.split(b'\n'), expected_lines)
 
     process_status.UpdateWorkerStatus(
-        u'w_identifier', u'w_status', 123,
+        u'w_identifier', u'w_status', 123, 0,
         u'w_test_file', 1, 2, 3, 4, 5, 6, 7, 8, 9,
         10)
     status_view_tool._PrintStatusUpdate(process_status)
@@ -86,8 +88,9 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
         b'Source type\t: TESTSOURCE',
         b'',
         table_header,
-        b'f_identifier\t123\tf_status\t29 (29)\t\t456 (456)\tf_test_file',
-        b'w_identifier\t123\tw_status\t2 (2)\t\t4 (4)\t\tw_test_file',
+        (b'f_identifier\t123\tf_status\t0 B\t\t29 (29)\t\t456 (456)\t'
+         b'f_test_file'),
+        b'w_identifier\t123\tw_status\t0 B\t\t2 (2)\t\t4 (4)\t\tw_test_file',
         b'',
         b'']
     self.assertEqual(string.split(b'\n'), expected_lines)
@@ -104,7 +107,7 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
 
     process_status = processing_status.ProcessingStatus()
     process_status.UpdateForemanStatus(
-        u'f_identifier', u'f_status', 123,
+        u'f_identifier', u'f_status', 123, 0,
         u'f_test_file', 1, 29, 3, 456, 5, 6, 7,
         8, 9, 10)
     status_view_tool._PrintStatusUpdateStream(process_status)
@@ -119,7 +122,7 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
     self.assertEqual(string.split(b'\n'), expected_lines)
 
     process_status.UpdateWorkerStatus(
-        u'w_identifier', u'w_status', 123,
+        u'w_identifier', u'w_status', 123, 0,
         u'w_test_file', 1, 2, 3, 4, 5, 6, 7, 8, 9,
         10)
     status_view_tool._PrintStatusUpdateStream(process_status)

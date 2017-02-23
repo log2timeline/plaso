@@ -84,9 +84,9 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
           dfvfs_definitions.TYPE_INDICATOR_OS, location=temp_directory)
 
       resolver_context = context.Context()
-      test_extractor = extractors.PathSpecExtractor(resolver_context)
+      test_extractor = extractors.PathSpecExtractor()
       path_specs = list(test_extractor.ExtractPathSpecs(
-          [source_path_spec]))
+          [source_path_spec], resolver_context=resolver_context))
 
       self.assertEqual(len(path_specs), 4)
 
@@ -105,11 +105,12 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
         dfvfs_definitions.TYPE_INDICATOR_OS, location=u'.')
 
     resolver_context = context.Context()
-    test_extractor = extractors.PathSpecExtractor(resolver_context)
+    test_extractor = extractors.PathSpecExtractor()
 
     find_specs = self._GetFindSpecs(location_expressions)
     path_specs = list(test_extractor.ExtractPathSpecs(
-        [source_path_spec], find_specs=find_specs))
+        [source_path_spec], find_specs=find_specs,
+        resolver_context=resolver_context))
 
     # Two files with test_data/testdir/filter_*.txt, AUTHORS
     # and test_data/System.evtx and test_data/System2.evtx.
@@ -165,9 +166,9 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
         parent=volume_path_spec)
 
     resolver_context = context.Context()
-    test_extractor = extractors.PathSpecExtractor(resolver_context)
+    test_extractor = extractors.PathSpecExtractor()
     path_specs = list(test_extractor.ExtractPathSpecs(
-        [source_path_spec]))
+        [source_path_spec], resolver_context=resolver_context))
 
     self.assertEqual(len(path_specs), 3)
 
@@ -188,11 +189,12 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
         parent=volume_path_spec)
 
     resolver_context = context.Context()
-    test_extractor = extractors.PathSpecExtractor(resolver_context)
+    test_extractor = extractors.PathSpecExtractor()
 
     find_specs = self._GetFindSpecs(location_expressions)
     path_specs = list(test_extractor.ExtractPathSpecs(
-        [source_path_spec], find_specs=find_specs))
+        [source_path_spec], find_specs=find_specs,
+        resolver_context=resolver_context))
 
     self.assertEqual(len(path_specs), 2)
 
@@ -243,7 +245,8 @@ class PathSpecExtractorTest(shared_test_lib.BaseTestCase):
     test_extractor = extractors.PathSpecExtractor(resolver_context)
 
     path_specs = list(test_extractor.ExtractPathSpecs(
-        [p1_file_system_path_spec, p2_file_system_path_spec]))
+        [p1_file_system_path_spec, p2_file_system_path_spec],
+        resolver_context=resolver_context))
 
     expected_paths_p1 = [
         u'/$AttrDef',
