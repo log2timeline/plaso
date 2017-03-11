@@ -4,6 +4,9 @@ import re
 
 import pyparsing
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -11,21 +14,18 @@ from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
-class BashHistoryEvent(time_events.PosixTimeEvent):
-  """Convenience class for events from a Bash history file."""
+class BashHistoryEventData(events.EventData):
+  """Bash history log event data.
+
+  Attributes:
+    command (str): command that was executed.
+  """
 
   DATA_TYPE = u'bash:history:command'
 
-  def __init__(self, timestamp, command):
-    """Initializes the event object.
-
-    Args:
-      timestamp (int): number of seconds after January 1, 1970, 00:00:00 UTC
-          that the command was run.
-      command (str): command that was executed.
-    """
-    super(BashHistoryEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.MODIFICATION_TIME)
+  def __init__(self):
+    """Initializes event data."""
+    super(BashHistoryEventData, self).__init__(data_type=self.DATA_TYPE)
     self.command = command
 
 
@@ -63,12 +63,19 @@ class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
       structure (pyparsing.ParseResults): elements parsed from the file.
 
     Raises:
-      UnableToParseFile: if an unsupported key is provided.
+      ParseError: when the structure type is unknown.
     """
     if key != u'log_entry':
-      raise errors.UnableToParseFile(u'Unsupported key: {0:s}'.format(key))
-    event = BashHistoryEvent(structure.timestamp, structure.command)
-    mediator.ProduceEvent(event)
+      raise errors.ParseError(
+          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+
+    event_data = BashHistoryEventData()
+    event_data.command = structure.command
+
+    date_time = dfdatetime_posix_time.PosixTime(timestamp=structure.timestamp)
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyStructure(self, unused_mediator, line):
     """Verifies that this is a bash history file.
