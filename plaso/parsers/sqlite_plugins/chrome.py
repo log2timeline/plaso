@@ -57,7 +57,6 @@ class ChromeHistoryPageVisitedEventData(events.EventData):
     """Initializes event data."""
     super(ChromeHistoryPageVisitedEventData, self).__init__(
         data_type=self.DATA_TYPE)
-    # TODO: refactor extra to be conditional arguments.
     self.extra = None
     self.from_visit = None
     self.host = None

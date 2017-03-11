@@ -2,6 +2,7 @@
 """Parser for Android WebView databases."""
 
 from dfdatetime import java_time as dfdatetime_java_time
+from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -90,24 +91,25 @@ class WebViewPlugin(interface.SQLitePlugin):
 
     url = u'{0:s}://{1:s}{2:s}'.format(scheme, hostname, path)
 
-    # TODO: It would be good to have some way of representing "infinity"
-    # for cookies that have no expiry.
     timestamp = row['expires']
     if timestamp:
-      event_data = WebViewCookieEventData()
-      event_data.cookie_name = cookie_name
-      event_data.data = cookie_value
-      event_data.host = hostname
-      event_data.offset = row['_id']
-      event_data.path = path
-      event_data.query = query
-      event_data.secure = secure
-      event_data.url = url
-
       date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
-      event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.EXPIRATION_TIME)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    else:
+      date_time = dfdatetime_semantic_time.SemanticTime(u'Infinity')
+
+    event_data = WebViewCookieEventData()
+    event_data.cookie_name = cookie_name
+    event_data.data = cookie_value
+    event_data.host = hostname
+    event_data.offset = row['_id']
+    event_data.path = path
+    event_data.query = query
+    event_data.secure = secure
+    event_data.url = url
+
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.EXPIRATION_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
     # Go through all cookie plugins to see if there are is any specific parsing
     # needed.

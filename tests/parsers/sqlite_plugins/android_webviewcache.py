@@ -18,7 +18,7 @@ class AndroidWebViewCache(test_lib.SQLitePluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'webviewCache.db'])
   def testProcess(self):
     """Test the Process function on a WebViewCache file."""
-    plugin_object = android_webviewcache.WebViewCachePlugin()
+    plugin_object = android_webviewcache.AndroidWebViewCachePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         [u'webviewCache.db'], plugin_object)
 

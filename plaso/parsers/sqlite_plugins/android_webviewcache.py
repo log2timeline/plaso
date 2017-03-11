@@ -27,7 +27,7 @@ class AndroidWebViewCacheEventData(events.EventData):
     self.url = None
 
 
-class WebViewCachePlugin(interface.SQLitePlugin):
+class AndroidWebViewCachePlugin(interface.SQLitePlugin):
   """Parser for Android WebViewCache databases."""
 
   NAME = u'android_webviewcache'
@@ -69,4 +69,4 @@ class WebViewCachePlugin(interface.SQLitePlugin):
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
-sqlite.SQLiteParser.RegisterPlugin(WebViewCachePlugin)
+sqlite.SQLiteParser.RegisterPlugin(AndroidWebViewCachePlugin)
