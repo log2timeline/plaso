@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains the Windows specific event object classes."""
+"""This file contains the Windows specific event data attribute containers."""
 
 from plaso.containers import events
 

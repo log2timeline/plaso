@@ -104,6 +104,20 @@ class NTFSMFTParser(interface.FileObjectParser):
     format_specification.AddNewSignature(b'FILE', offset=0)
     return format_specification
 
+  def _GetDateTime(self, filetime):
+    """Retrieves the date and time from a FILETIME timestamp.
+
+    Args:
+      filetime (int): FILETIME timestamp.
+
+    Returns:
+      dfdatetime.DateTimeValues: date and time.
+    """
+    if filetime == 0:
+      return dfdatetime_semantic_time.SemanticTime(u'Not set')
+
+    return dfdatetime_filetime.Filetime(timestamp=filetime)
+
   def _ParseDistributedTrackingIdentifier(
       self, parser_mediator, uuid_string, origin):
     """Extracts data from a Distributed Tracking identifier.
@@ -164,11 +178,7 @@ class NTFSMFTParser(interface.FileObjectParser):
         creation_time = None
 
       if creation_time is not None:
-        if not creation_time:
-          date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
-        else:
-          date_time = dfdatetime_filetime.Filetime(timestamp=creation_time)
-
+        date_time = self._GetDateTime(creation_time)
         event = time_events.DateTimeValuesEvent(
             date_time, eventdata.EventTimestamp.CREATION_TIME)
         parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -183,11 +193,7 @@ class NTFSMFTParser(interface.FileObjectParser):
         modification_time = None
 
       if modification_time is not None:
-        if not modification_time:
-          date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
-        else:
-          date_time = dfdatetime_filetime.Filetime(timestamp=modification_time)
-
+        date_time = self._GetDateTime(modification_time)
         event = time_events.DateTimeValuesEvent(
             date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
         parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -202,11 +208,7 @@ class NTFSMFTParser(interface.FileObjectParser):
         access_time = None
 
       if access_time is not None:
-        if not access_time:
-          date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
-        else:
-          date_time = dfdatetime_filetime.Filetime(timestamp=access_time)
-
+        date_time = self._GetDateTime(access_time)
         event = time_events.DateTimeValuesEvent(
             date_time, eventdata.EventTimestamp.ACCESS_TIME)
         parser_mediator.ProduceEventWithEventData(event, event_data)
@@ -222,12 +224,7 @@ class NTFSMFTParser(interface.FileObjectParser):
         entry_modification_time = None
 
       if entry_modification_time is not None:
-        if not entry_modification_time:
-          date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
-        else:
-          date_time = dfdatetime_filetime.Filetime(
-              timestamp=entry_modification_time)
-
+        date_time = self._GetDateTime(entry_modification_time)
         event = time_events.DateTimeValuesEvent(
             date_time, eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME)
         parser_mediator.ProduceEventWithEventData(event, event_data)

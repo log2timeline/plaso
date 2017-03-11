@@ -69,49 +69,49 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
   #   date time action protocol src-ip dst-ip src-port dst-port size
   #   tcpflags tcpsyn tcpack tcpwin icmptype icmpcode info path
 
-  BLANK = pyparsing.Suppress(pyparsing.Literal(u'-'))
+  _BLANK = pyparsing.Suppress(pyparsing.Literal(u'-'))
 
-  WORD = (
+  _WORD = (
       pyparsing.Word(pyparsing.alphanums, min=1) |
       pyparsing.Word(pyparsing.alphanums + u'-', min=2) |
-      BLANK)
+      _BLANK)
 
-  INTEGER = (
+  _INTEGER = (
       pyparsing.Word(pyparsing.nums, min=1).setParseAction(
           text_parser.ConvertTokenToInteger) |
-      BLANK)
+      _BLANK)
 
-  IP_ADDRESS = (
+  _IP_ADDRESS = (
       text_parser.PyparsingConstants.IPV4_ADDRESS |
       text_parser.PyparsingConstants.IPV6_ADDRESS |
-      BLANK)
+      _BLANK)
 
-  PORT = (
+  _PORT_NUMBER = (
       pyparsing.Word(pyparsing.nums, min=1, max=6).setParseAction(
           text_parser.ConvertTokenToInteger) |
-      BLANK)
+      _BLANK)
 
-  LOG_LINE = (
+  _LOG_LINE = (
       text_parser.PyparsingConstants.DATE_TIME.setResultsName(u'date_time') +
-      WORD.setResultsName(u'action') +
-      WORD.setResultsName(u'protocol') +
-      IP_ADDRESS.setResultsName(u'source_ip') +
-      IP_ADDRESS.setResultsName(u'dest_ip') +
-      PORT.setResultsName(u'source_port') +
-      INTEGER.setResultsName(u'dest_port') +
-      INTEGER.setResultsName(u'size') +
-      WORD.setResultsName(u'flags') +
-      INTEGER.setResultsName(u'tcp_seq') +
-      INTEGER.setResultsName(u'tcp_ack') +
-      INTEGER.setResultsName(u'tcp_win') +
-      INTEGER.setResultsName(u'icmp_type') +
-      INTEGER.setResultsName(u'icmp_code') +
-      WORD.setResultsName(u'info') +
-      WORD.setResultsName(u'path'))
+      _WORD.setResultsName(u'action') +
+      _WORD.setResultsName(u'protocol') +
+      _IP_ADDRESS.setResultsName(u'source_ip') +
+      _IP_ADDRESS.setResultsName(u'dest_ip') +
+      _PORT_NUMBER.setResultsName(u'source_port') +
+      _INTEGER.setResultsName(u'dest_port') +
+      _INTEGER.setResultsName(u'size') +
+      _WORD.setResultsName(u'flags') +
+      _INTEGER.setResultsName(u'tcp_seq') +
+      _INTEGER.setResultsName(u'tcp_ack') +
+      _INTEGER.setResultsName(u'tcp_win') +
+      _INTEGER.setResultsName(u'icmp_type') +
+      _INTEGER.setResultsName(u'icmp_code') +
+      _WORD.setResultsName(u'info') +
+      _WORD.setResultsName(u'path'))
 
   LINE_STRUCTURES = [
       (u'comment', text_parser.PyparsingConstants.COMMENT_LINE_HASH),
-      (u'logline', LOG_LINE),
+      (u'logline', _LOG_LINE),
   ]
 
   def __init__(self):

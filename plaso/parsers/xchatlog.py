@@ -98,7 +98,7 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
   # Common (header/footer/body) pyparsing structures.
   # TODO: Only English ASCII timestamp supported ATM, add support for others.
 
-  WEEKDAY = pyparsing.Group(
+  _WEEKDAY = pyparsing.Group(
       pyparsing.Keyword(u'Sun') |
       pyparsing.Keyword(u'Mon') |
       pyparsing.Keyword(u'Tue') |
@@ -112,39 +112,39 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
   # Note that "BEGIN LOGGING" text is localized (default, English) and can be
   # different if XChat locale is different.
 
-  HEADER_SIGNATURE = pyparsing.Keyword(u'****')
-  HEADER_DATE_TIME = pyparsing.Group(
-      WEEKDAY.setResultsName(u'weekday') +
+  _HEADER_SIGNATURE = pyparsing.Keyword(u'****')
+  _HEADER_DATE_TIME = pyparsing.Group(
+      _WEEKDAY.setResultsName(u'weekday') +
       text_parser.PyparsingConstants.THREE_LETTERS.setResultsName(u'month') +
       text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
       text_parser.PyparsingConstants.TIME_ELEMENTS +
       text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName(u'year'))
-  LOG_ACTION = pyparsing.Group(
+  _LOG_ACTION = pyparsing.Group(
       pyparsing.Word(pyparsing.printables) +
       pyparsing.Word(pyparsing.printables) +
       pyparsing.Word(pyparsing.printables))
-  HEADER = (
-      HEADER_SIGNATURE.suppress() + LOG_ACTION.setResultsName(u'log_action') +
-      HEADER_DATE_TIME.setResultsName(u'date_time'))
+  _HEADER = (
+      _HEADER_SIGNATURE.suppress() + _LOG_ACTION.setResultsName(u'log_action') +
+      _HEADER_DATE_TIME.setResultsName(u'date_time'))
 
   # Body (nickname, text and/or service messages) pyparsing structures.
   # Sample: "dec 31 21:11:58 <fpi> ola plas-ing guys!".
 
-  DATE_TIME = pyparsing.Group(
+  _DATE_TIME = pyparsing.Group(
       text_parser.PyparsingConstants.THREE_LETTERS.setResultsName(u'month') +
       text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
       text_parser.PyparsingConstants.TIME_ELEMENTS)
-  NICKNAME = pyparsing.QuotedString(u'<', endQuoteChar=u'>').setResultsName(
+  _NICKNAME = pyparsing.QuotedString(u'<', endQuoteChar=u'>').setResultsName(
       u'nickname')
-  LOG_LINE = (
-      DATE_TIME.setResultsName(u'date_time') +
-      pyparsing.Optional(NICKNAME) +
+  _LOG_LINE = (
+      _DATE_TIME.setResultsName(u'date_time') +
+      pyparsing.Optional(_NICKNAME) +
       pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'text'))
 
   LINE_STRUCTURES = [
-      (u'logline', LOG_LINE),
-      (u'header', HEADER),
-      (u'header_signature', HEADER_SIGNATURE),
+      (u'logline', _LOG_LINE),
+      (u'header', _HEADER),
+      (u'header_signature', _HEADER_SIGNATURE),
   ]
 
   def __init__(self):
@@ -172,8 +172,6 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     """
     month, day, hours, minutes, seconds = structure.date_time
 
-    # Note that dfdatetime_time_elements.TimeElements will raise ValueError
-    # for an invalid month.
     month = timelib.MONTH_DICT.get(month.lower(), 0)
 
     if month != 0 and month < self._last_month:
@@ -193,8 +191,6 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
     """
     _, month, day, hours, minutes, seconds, year = structure.date_time
 
-    # Note that dfdatetime_time_elements.TimeElements will raise ValueError
-    # for an invalid month.
     month = timelib.MONTH_DICT.get(month.lower(), 0)
 
     time_elements_tuple = (year, month, day, hours, minutes, seconds)
@@ -310,15 +306,13 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       bool: True if the line is in the expected format, False if not.
     """
     try:
-      structure = self.HEADER.parseString(line)
+      structure = self._HEADER.parseString(line)
     except pyparsing.ParseException:
       logging.debug(u'Not a XChat log file')
       return False
 
     _, month, day, hours, minutes, seconds, year = structure.date_time
 
-    # Note that dfdatetime_time_elements.TimeElements will raise ValueError
-    # for an invalid month.
     month = timelib.MONTH_DICT.get(month.lower(), 0)
 
     time_elements_tuple = (year, month, day, hours, minutes, seconds)

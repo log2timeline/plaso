@@ -292,23 +292,22 @@ class SyslogParser(text_parser.PyparsingMultiLineTextParser):
       event_data.offset = 0
 
     else:
-      reporter = structure.reporter
-
       event_data = SyslogLineEventData()
       event_data.body = structure.body
       event_data.hostname = structure.hostname or None
       # TODO: pass line number to offset or remove.
       event_data.offset = 0
       event_data.pid = structure.pid
-      event_data.reporter = reporter
+      event_data.reporter = structure.reporter
       event_data.severity = structure.severity
 
-      plugin_object = self._plugin_objects_by_reporter.get(reporter, None)
+      plugin_object = self._plugin_objects_by_reporter.get(
+          structure.reporter, None)
       if plugin_object:
         attributes = {
             u'hostname': structure.hostname,
             u'severity': structure.severity,
-            u'reporter': reporter,
+            u'reporter': structure.reporter,
             u'pid': structure.pid,
             u'body': structure.body}
 

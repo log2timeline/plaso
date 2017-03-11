@@ -69,12 +69,11 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
   _ENCODING = u'utf-8'
 
   # Common SDF (SkyDrive Format) structures.
-  COMMA = pyparsing.Literal(u',').suppress()
-  HYPHEN = text_parser.PyparsingConstants.HYPHEN
-  DOT = pyparsing.Literal(u'.').suppress()
+  _COMMA = pyparsing.Literal(u',').suppress()
+  _HYPHEN = text_parser.PyparsingConstants.HYPHEN
 
-  THREE_DIGITS = text_parser.PyparsingConstants.THREE_DIGITS
-  TWO_DIGITS = text_parser.PyparsingConstants.TWO_DIGITS
+  _THREE_DIGITS = text_parser.PyparsingConstants.THREE_DIGITS
+  _TWO_DIGITS = text_parser.PyparsingConstants.TWO_DIGITS
 
   MSEC = pyparsing.Word(pyparsing.nums, max=3).setParseAction(
       text_parser.PyParseIntCast)
@@ -82,55 +81,57 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
 
   # Date and time format used in the header is: YYYY-MM-DD-hhmmss.###
   # For example: 2013-07-25-160323.291
-  SDF_HEADER_DATE_TIME = pyparsing.Group(
-      text_parser.PyparsingConstants.DATE_ELEMENTS + HYPHEN +
-      TWO_DIGITS.setResultsName(u'hours') +
-      TWO_DIGITS.setResultsName(u'minutes') +
-      TWO_DIGITS.setResultsName(u'seconds') + DOT +
-      THREE_DIGITS.setResultsName(u'milliseconds')).setResultsName(
+  _SDF_HEADER_DATE_TIME = pyparsing.Group(
+      text_parser.PyparsingConstants.DATE_ELEMENTS + _HYPHEN +
+      _TWO_DIGITS.setResultsName(u'hours') +
+      _TWO_DIGITS.setResultsName(u'minutes') +
+      _TWO_DIGITS.setResultsName(u'seconds') +
+      pyparsing.Literal(u'.').suppress() +
+      _THREE_DIGITS.setResultsName(u'milliseconds')).setResultsName(
           u'header_date_time')
 
   # Date and time format used in lines other than the header is:
   # MM-DD-YY,hh:mm:ss.###
   # For example: 07-25-13,16:06:31.820
-  SDF_DATE_TIME = (
-      TWO_DIGITS.setResultsName(u'month') + HYPHEN +
-      TWO_DIGITS.setResultsName(u'day') + HYPHEN +
-      TWO_DIGITS.setResultsName(u'year') + COMMA +
+  _SDF_DATE_TIME = (
+      _TWO_DIGITS.setResultsName(u'month') + _HYPHEN +
+      _TWO_DIGITS.setResultsName(u'day') + _HYPHEN +
+      _TWO_DIGITS.setResultsName(u'year') + _COMMA +
       text_parser.PyparsingConstants.TIME_ELEMENTS + pyparsing.Suppress('.') +
-      THREE_DIGITS.setResultsName(u'milliseconds')).setResultsName(u'date_time')
+      _THREE_DIGITS.setResultsName(u'milliseconds')).setResultsName(
+          u'date_time')
 
-  SDF_HEADER_START = (
+  _SDF_HEADER_START = (
       pyparsing.Literal(u'######').suppress() +
       pyparsing.Literal(u'Logging started.').setResultsName(u'log_start'))
 
   # Multiline entry end marker, matched from right to left.
-  SDF_ENTRY_END = pyparsing.StringEnd() | SDF_HEADER_START | SDF_DATE_TIME
+  _SDF_ENTRY_END = pyparsing.StringEnd() | _SDF_HEADER_START | _SDF_DATE_TIME
 
-  SDF_LINE = (
-      SDF_DATE_TIME + COMMA +
-      IGNORE_FIELD + COMMA + IGNORE_FIELD + COMMA + IGNORE_FIELD + COMMA +
-      pyparsing.CharsNotIn(u',').setResultsName(u'module') + COMMA +
-      pyparsing.CharsNotIn(u',').setResultsName(u'source_code') + COMMA +
-      IGNORE_FIELD + COMMA + IGNORE_FIELD + COMMA +
-      pyparsing.CharsNotIn(u',').setResultsName(u'log_level') + COMMA +
-      pyparsing.SkipTo(SDF_ENTRY_END).setResultsName(u'detail') +
+  _SDF_LINE = (
+      _SDF_DATE_TIME + _COMMA +
+      IGNORE_FIELD + _COMMA + IGNORE_FIELD + _COMMA + IGNORE_FIELD + _COMMA +
+      pyparsing.CharsNotIn(u',').setResultsName(u'module') + _COMMA +
+      pyparsing.CharsNotIn(u',').setResultsName(u'source_code') + _COMMA +
+      IGNORE_FIELD + _COMMA + IGNORE_FIELD + _COMMA +
+      pyparsing.CharsNotIn(u',').setResultsName(u'log_level') + _COMMA +
+      pyparsing.SkipTo(_SDF_ENTRY_END).setResultsName(u'detail') +
       pyparsing.ZeroOrMore(pyparsing.lineEnd()))
 
-  SDF_HEADER = (
-      SDF_HEADER_START +
+  _SDF_HEADER = (
+      _SDF_HEADER_START +
       pyparsing.Literal(u'Version=').setResultsName(u'version_string') +
       pyparsing.Word(pyparsing.nums + u'.').setResultsName(u'version_number') +
       pyparsing.Literal(u'StartSystemTime:').suppress() +
-      SDF_HEADER_DATE_TIME +
+      _SDF_HEADER_DATE_TIME +
       pyparsing.Literal(u'StartLocalTime:').setResultsName(
           u'local_time_string') +
       pyparsing.SkipTo(pyparsing.lineEnd()).setResultsName(u'details') +
       pyparsing.lineEnd())
 
   LINE_STRUCTURES = [
-      (u'logline', SDF_LINE),
-      (u'header', SDF_HEADER)
+      (u'logline', _SDF_LINE),
+      (u'header', _SDF_HEADER)
   ]
 
   def _ParseHeader(self, parser_mediator, structure):
@@ -236,7 +237,7 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
       bool: True if the line is in the expected format, False if not.
     """
     try:
-      structure = self.SDF_HEADER.parseString(line)
+      structure = self._SDF_HEADER.parseString(line)
     except pyparsing.ParseException:
       logging.debug(u'Not a SkyDrive log file')
       return False
@@ -261,51 +262,51 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
 
   _ENCODING = u'UTF-8-SIG'
 
-  FOUR_DIGITS = text_parser.PyparsingConstants.FOUR_DIGITS
-  TWO_DIGITS = text_parser.PyparsingConstants.TWO_DIGITS
+  _FOUR_DIGITS = text_parser.PyparsingConstants.FOUR_DIGITS
+  _TWO_DIGITS = text_parser.PyparsingConstants.TWO_DIGITS
 
   # Common SDOL (SkyDriveOldLog) pyparsing objects.
-  SDOL_COLON = pyparsing.Literal(u':')
-  SDOL_EXCLAMATION = pyparsing.Literal(u'!')
+  _SDOL_COLON = pyparsing.Literal(u':')
+  _SDOL_EXCLAMATION = pyparsing.Literal(u'!')
 
   # Date and time format used in the header is: DD-MM-YYYY hhmmss.###
   # For example: 08-01-2013 21:22:28.999
-  SDOL_DATE_TIME = pyparsing.Group(
-      TWO_DIGITS.setResultsName(u'month') + pyparsing.Suppress(u'-') +
-      TWO_DIGITS.setResultsName(u'day_of_month') + pyparsing.Suppress(u'-') +
-      FOUR_DIGITS.setResultsName(u'year') +
+  _SDOL_DATE_TIME = pyparsing.Group(
+      _TWO_DIGITS.setResultsName(u'month') + pyparsing.Suppress(u'-') +
+      _TWO_DIGITS.setResultsName(u'day_of_month') + pyparsing.Suppress(u'-') +
+      _FOUR_DIGITS.setResultsName(u'year') +
       text_parser.PyparsingConstants.TIME_MSEC_ELEMENTS).setResultsName(
           u'date_time')
 
-  SDOL_SOURCE_CODE = pyparsing.Combine(
+  _SDOL_SOURCE_CODE = pyparsing.Combine(
       pyparsing.CharsNotIn(u':') +
-      SDOL_COLON +
+      _SDOL_COLON +
       text_parser.PyparsingConstants.INTEGER +
-      SDOL_EXCLAMATION +
+      _SDOL_EXCLAMATION +
       pyparsing.Word(pyparsing.printables)).setResultsName(u'source_code')
 
-  SDOL_LOG_LEVEL = (
+  _SDOL_LOG_LEVEL = (
       pyparsing.Literal(u'(').suppress() +
       pyparsing.SkipTo(u')').setResultsName(u'log_level') +
       pyparsing.Literal(u')').suppress())
 
-  SDOL_LINE = (
-      SDOL_DATE_TIME + SDOL_SOURCE_CODE + SDOL_LOG_LEVEL +
-      SDOL_COLON + pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'text'))
+  _SDOL_LINE = (
+      _SDOL_DATE_TIME + _SDOL_SOURCE_CODE + _SDOL_LOG_LEVEL +
+      _SDOL_COLON + pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'text'))
 
   # Sometimes the timestamped log line is followed by an empy line,
   # then by a file name plus other data and finally by another empty
   # line. It could happen that a logline is split in two parts.
   # These lines will not be discarded and an event will be generated
   # ad-hoc (see source), based on the last one if available.
-  SDOL_NO_HEADER_SINGLE_LINE = (
+  _SDOL_NO_HEADER_SINGLE_LINE = (
       pyparsing.Optional(pyparsing.Literal(u'->').suppress()) +
       pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'text'))
 
   # Define the available log line structures.
   LINE_STRUCTURES = [
-      (u'logline', SDOL_LINE),
-      (u'no_header_single_line', SDOL_NO_HEADER_SINGLE_LINE),
+      (u'logline', _SDOL_LINE),
+      (u'no_header_single_line', _SDOL_NO_HEADER_SINGLE_LINE),
   ]
 
   def __init__(self):
@@ -412,7 +413,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
       bool: True if the line is in the expected format, False if not.
     """
     try:
-      structure = self.SDOL_LINE.parseString(line)
+      structure = self._SDOL_LINE.parseString(line)
     except pyparsing.ParseException:
       logging.debug(u'Not a SkyDrive old log file')
       return False

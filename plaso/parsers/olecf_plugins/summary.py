@@ -210,7 +210,7 @@ class OLECFDocumentSummaryInformation(OLECFPropertySetStream):
       application_version (int): application version.
 
     Returns:
-      str: fomratted application version.
+      str: formatted application version.
     """
     # The application version consists of 2 16-bit values that make up
     # the version number. Where the upper 16-bit is the major number

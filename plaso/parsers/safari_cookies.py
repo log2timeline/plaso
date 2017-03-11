@@ -4,6 +4,7 @@
 import construct
 
 from dfdatetime import cocoa_time as dfdatetime_cocoa_time
+from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import time_events
@@ -135,13 +136,15 @@ class BinaryCookieParser(interface.FileObjectParser):
           date_time, eventdata.EventTimestamp.CREATION_TIME)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    # TODO: generate event if no timestamp is set.
     if cookie.expiration_date:
       date_time = dfdatetime_cocoa_time.CocoaTime(
           timestamp=cookie.expiration_date)
-      event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.EXPIRATION_TIME)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    else:
+      date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.EXPIRATION_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
     for plugin in self._cookie_plugins:
       if parser_mediator.abort:
