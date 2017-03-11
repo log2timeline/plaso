@@ -26,7 +26,7 @@ class BashHistoryEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(BashHistoryEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.command = command
+    self.command = None
 
 
 class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
@@ -53,12 +53,12 @@ class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
 
   LINE_STRUCTURES = [(u'log_entry', _LINE_GRAMMAR)]
 
-  def ParseRecord(self, mediator, key, structure):
+  def ParseRecord(self, parser_mediator, key, structure):
     """Parses a record and produces a Bash history event.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): elements parsed from the file.
 
@@ -77,12 +77,12 @@ class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
         date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def VerifyStructure(self, unused_mediator, line):
+  def VerifyStructure(self, unused_parser_mediator, line):
     """Verifies that this is a bash history file.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       line (str): single line from the text file.
 
     Returns:
