@@ -29,42 +29,8 @@ class WindowsDistributedLinkTrackingCreationEvent(time_events.UUIDTimeEvent):
     super(WindowsDistributedLinkTrackingCreationEvent, self).__init__(
         uuid, eventdata.EventTimestamp.CREATION_TIME)
 
-    # TODO: replace origin my something machine readable.
+    # TODO: replace origin with something machine readable.
     self.origin = origin
-
-
-class WindowsRegistryInstallationEvent(time_events.PosixTimeEvent):
-  """Convenience class for a Windows installation event.
-
-  Attributes:
-    key_path: a string containing the Windows Registry key path.
-    owner: a string containing the owner.
-    product_name: a string containing the produce name.
-    service_pack: a string containing service pack.
-    version: a string containing the version.
-  """
-  DATA_TYPE = u'windows:registry:installation'
-
-  def __init__(
-      self, posix_time, key_path, owner, product_name, service_pack, version):
-    """Initializes an event object.
-
-    Args:
-      posix_time: the POSIX time value.
-      key_path: a string containing the Windows Registry key path.
-      owner: a string containing the owner.
-      product_name: a string containing the produce name.
-      service_pack: a string containing service pack.
-      version: a string containing the version.
-    """
-    super(WindowsRegistryInstallationEvent, self).__init__(
-        posix_time, eventdata.EventTimestamp.INSTALLATION_TIME)
-
-    self.key_path = key_path
-    self.owner = owner
-    self.product_name = product_name
-    self.service_pack = service_pack
-    self.version = version
 
 
 class WindowsRegistryInstallationEventData(events.EventData):
@@ -139,11 +105,10 @@ class WindowsRegistryServiceEventData(events.EventData):
   """Windows Registry service event data.
 
   Attributes:
-    key_path: a string containing the Windows Registry key path.
-    offset: an integer containing the data offset of the Windows Registry
-            key or value.
-    regvalue: a dictionary containing the values of the key.
-    urls: optional list of strings containing URLs.
+    key_path (str): Windows Registry key path.
+    offset (int): data offset of the Windows Registry key or value.
+    regvalue (dict[str, str]): values of a key.
+    urls (Optional[list[str]]): URLs.
   """
 
   DATA_TYPE = u'windows:registry:service'
