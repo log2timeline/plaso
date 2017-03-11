@@ -9,6 +9,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from plaso.containers import time_events
 from plaso.formatters import zsh_extended_history
 from plaso.lib import eventdata
+
 from tests.formatters import test_lib
 
 

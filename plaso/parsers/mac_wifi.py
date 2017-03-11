@@ -93,17 +93,19 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       _DATE_TIME.setResultsName(u'date_time') +
       pyparsing.Literal(u'***Starting Up***').setResultsName(u'text'))
 
-  _MAC_WIFI_TURNED_OVER_HEADER = (
+  _DATE_TIME_TURNED_OVER_HEADER = pyparsing.Group(
       text_parser.PyparsingConstants.MONTH.setResultsName(u'month') +
       text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
-      text_parser.PyparsingConstants.TIME_ELEMENTS +
+      text_parser.PyparsingConstants.TIME_ELEMENTS)
+
+  _MAC_WIFI_TURNED_OVER_HEADER = (
+      _DATE_TIME_TURNED_OVER_HEADER.setResultsName(u'date_time') +
       pyparsing.Combine(
           pyparsing.Word(pyparsing.printables) +
           pyparsing.Word(pyparsing.printables) +
           pyparsing.Literal(u'logfile turned over') +
           pyparsing.LineEnd(),
-          joinString=u' ',
-          adjacent=False).setResultsName(u'text'))
+          joinString=u' ', adjacent=False).setResultsName(u'text'))
 
   # Define the available log line structures.
   LINE_STRUCTURES = [
