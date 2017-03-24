@@ -60,7 +60,7 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
       from plaso.parsers import systemd_journal
     except ImportError as e:
       if e.message.find(u'lzma') > 0:
-        raise SkipTest('criteria')
+        raise unittest.SkipTest('criteria')
 
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(storage_writer)
