@@ -46,7 +46,7 @@ from plaso.parsers import symantec
 try:
   from plaso.parsers import systemd_journal
 except ImportError as e:
-  if e.message.find("lzma") > 0:
+  if e.message.find(u'lzma') > 0:
     pass
   else:
     raise e
