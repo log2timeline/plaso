@@ -4,18 +4,24 @@ import unittest
 
 from plaso.lib import errors
 from plaso.lib import timelib
-from plaso.parsers import systemd_journal
 
 from tests.parsers import test_lib
+from unittest import SkipTest
 
 
 class SystemdJournalParserTest(test_lib.ParserTestCase):
   """Tests for the Systemd Journal parser."""
 
   # pylint: disable=protected-access
-
   def testParse(self):
     """Tests the Parse function."""
+
+    try:
+      from plaso.parsers import systemd_journal
+    except ImportError as e:
+      if e.message.find(u'lzma') > 0:
+        raise SkipTest('criteria')
+
     parser_object = systemd_journal.SystemdJournalParser()
     journal = self._ParseFile([
         u'systemd', u'journal', u'system.journal'], parser_object)
@@ -50,6 +56,12 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
   def testParseDirty(self):
     """Tests the Parse function on a 'dirty' journal file."""
+
+    try:
+      from plaso.parsers import systemd_journal
+    except ImportError as e:
+      if e.message.find(u'lzma') > 0:
+        raise SkipTest('criteria')
 
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(storage_writer)
