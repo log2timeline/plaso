@@ -74,9 +74,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
   def testReadAndWriteSerializedAnalysisReport(self):
     """Test ReadSerialized and WriteSerialized of AnalysisReport."""
-    expected_comment = u'This is a test event tag.'
-    expected_uuid = u'403818f93dce467bac497ef0f263fde8'
-    expected_labels = [u'Test', u'AnotherTest']
     expected_report_dict = {
         u'dude': [
             [u'Google Keep - notes and lists',
@@ -96,15 +93,10 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         u'  YouTube [blpcfgokakmgnkcojhhkbfbldkacnbeo]\n'
         u'\n')
 
-    expected_event_tag = events.EventTag(
-        comment=expected_comment, event_uuid=expected_uuid)
-    expected_event_tag.AddLabels(expected_labels)
-
     expected_analysis_report = reports.AnalysisReport(
         plugin_name=u'chrome_extension_test', text=expected_report_text)
     expected_analysis_report.report_dict = expected_report_dict
     expected_analysis_report.time_compiled = 1431978243000000
-    expected_analysis_report.SetTags([expected_event_tag])
 
     json_string = (
         json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
@@ -121,10 +113,8 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     # TODO: preserve the tuples in the report dict.
     # TODO: add report_array tests.
-    # TODO: remove _event_tags.
 
     expected_analysis_report_dict = {
-        u'_event_tags': [],
         u'plugin_name': u'chrome_extension_test',
         u'report_dict': expected_report_dict,
         u'text': expected_report_text,

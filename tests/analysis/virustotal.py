@@ -107,15 +107,23 @@ class VirusTotalTest(test_lib.AnalysisPluginTestCase):
     storage_writer = self._AnalyzeEvents(events, plugin)
 
     self.assertEqual(len(storage_writer.analysis_reports), 1)
+    self.assertEqual(len(storage_writer.event_tags), 1)
 
-    analysis_report = storage_writer.analysis_reports[0]
+    report = storage_writer.analysis_reports[0]
+    self.assertIsNotNone(report)
 
-    tags = analysis_report.GetTags()
-    self.assertEqual(len(tags), 1)
+    expected_text = (
+        u'virustotal hash tagging results\n'
+        u'1 path specifications tagged with label: virustotal_detections_10\n')
+    self.assertEqual(report.text, expected_text)
 
-    tag = tags[0]
-    self.assertEqual(tag.event_uuid, u'8')
-    self.assertEqual(tag.labels[0], u'virustotal_detections_10')
+    labels = []
+    for event_tag in storage_writer.event_tags:
+      labels.extend(event_tag.labels)
+    self.assertEqual(len(labels), 1)
+
+    expected_labels = [u'virustotal_detections_10']
+    self.assertEqual(labels, expected_labels)
 
 
 if __name__ == '__main__':
