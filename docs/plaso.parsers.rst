@@ -387,6 +387,14 @@ plaso.parsers.syslog module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.systemd_journal module
+------------------------------------
+
+.. automodule:: plaso.parsers.systemd_journal
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.text_parser module
 --------------------------------
 
