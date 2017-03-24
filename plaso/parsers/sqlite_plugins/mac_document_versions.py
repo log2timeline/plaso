@@ -60,6 +60,25 @@ class MacDocumentVersionsPlugin(interface.SQLitePlugin):
   # The required tables for the query.
   REQUIRED_TABLES = frozenset([u'files', u'generations'])
 
+  SCHEMAS = [
+      {u'files':
+       u'CREATE TABLE files (file_row_id INTEGER PRIMARY KEY ASC,file_name '
+       u'TEXT,file_parent_id INTEGER,file_path TEXT,file_inode '
+       u'INTEGER,file_last_seen INTEGER NOT NULL DEFAULT 0,file_status '
+       u'INTEGER NOT NULL DEFAULT 1,file_storage_id INTEGER NOT NULL)',
+       u'generations':
+       u'CREATE TABLE generations (generation_id INTEGER PRIMARY KEY '
+       u'ASC,generation_storage_id INTEGER NOT NULL,generation_name TEXT NOT '
+       u'NULL,generation_client_id TEXT NOT NULL,generation_path TEXT '
+       u'UNIQUE,generation_options INTEGER NOT NULL DEFAULT '
+       u'1,generation_status INTEGER NOT NULL DEFAULT 1,generation_add_time '
+       u'INTEGER NOT NULL DEFAULT 0,generation_size INTEGER NOT NULL DEFAULT '
+       u'0,generation_prunable INTEGER NOT NULL DEFAULT 0)',
+       u'storage':
+       u'CREATE TABLE storage (storage_id INTEGER PRIMARY KEY ASC '
+       u'AUTOINCREMENT,storage_options INTEGER NOT NULL DEFAULT '
+       u'1,storage_status INTEGER NOT NULL DEFAULT 1)'}]
+
   # The SQL field path is the relative path from DocumentRevisions.
   # For this reason the Path to the program has to be added at the beginning.
   ROOT_VERSION_PATH = u'/.DocumentRevisions-V100/'
@@ -69,9 +88,9 @@ class MacDocumentVersionsPlugin(interface.SQLitePlugin):
     """Parses a document versions row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): parser mediator.
+      row (sqlite3.Row): row resulting from the query.
+      query (Optional[str]): query string.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".

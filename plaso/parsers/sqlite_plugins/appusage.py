@@ -63,14 +63,20 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
   # The required tables.
   REQUIRED_TABLES = frozenset([u'application_usage'])
 
+  SCHEMAS = [
+      {u'application_usage':
+       u'CREATE TABLE application_usage (event TEXT,bundle_id '
+       u'TEXT,app_version TEXT,app_path TEXT,last_time INTEGER DEFAULT '
+       u'0,number_times INTEGER DEFAULT 0,PRIMARY KEY (event, bundle_id))'}]
+
   def ParseApplicationUsageRow(
       self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses an application usage row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): parser mediator.
+      row (sqlite3.Row): row resulting from the query.
+      query (Optional[str]): query string.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".

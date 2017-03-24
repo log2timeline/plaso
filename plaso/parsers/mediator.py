@@ -202,14 +202,7 @@ class ParserMediator(object):
     Args:
       attribute_name (str): name of the attribute to set.
       attribute_value (str): value of the attribute to set.
-
-    Raises:
-      KeyError: If an attribute with the given name is already set.
     """
-    if hasattr(self._extra_event_attributes, attribute_name):
-      raise KeyError(u'Value already set for attribute {0:s}'.format(
-          attribute_name))
-
     self._extra_event_attributes[attribute_name] = attribute_value
 
   def AppendToParserChain(self, plugin_or_parser):
@@ -504,6 +497,15 @@ class ParserMediator(object):
         message=message, parser_chain=parser_chain, path_spec=path_spec)
     self._storage_writer.AddError(extraction_error)
     self._number_of_errors += 1
+
+  def RemoveEventAttribute(self, attribute_name):
+    """Removes an attribute from being set on all events produced.
+
+    Args:
+      attribute_name (str): name of the attribute to set.
+    """
+    if attribute_name in self._extra_event_attributes:
+      del self._extra_event_attributes[attribute_name]
 
   def ResetFileEntry(self):
     """Resets the active file entry."""

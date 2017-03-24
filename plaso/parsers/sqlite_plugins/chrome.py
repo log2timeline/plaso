@@ -99,6 +99,42 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
   REQUIRED_TABLES = frozenset([
       u'keyword_search_terms', u'meta', u'urls', u'visits', u'visit_source'])
 
+  SCHEMAS = [
+      {u'downloads':
+       u'CREATE TABLE downloads (id INTEGER PRIMARY KEY,full_path '
+       u'LONGVARCHAR NOT NULL,url LONGVARCHAR NOT NULL,start_time INTEGER '
+       u'NOT NULL,received_bytes INTEGER NOT NULL,total_bytes INTEGER NOT '
+       u'NULL,state INTEGER NOT NULL)',
+       u'keyword_search_terms':
+       u'CREATE TABLE keyword_search_terms (keyword_id INTEGER NOT '
+       u'NULL,url_id INTEGER NOT NULL,lower_term LONGVARCHAR NOT NULL,term '
+       u'LONGVARCHAR NOT NULL)',
+       u'meta':
+       u'CREATE TABLE meta(key LONGVARCHAR NOT NULL UNIQUE PRIMARY KEY,value '
+       u'LONGVARCHAR)',
+       u'presentation':
+       u'CREATE TABLE presentation(url_id INTEGER PRIMARY KEY,pres_index '
+       u'INTEGER NOT NULL)',
+       u'segment_usage':
+       u'CREATE TABLE segment_usage (id INTEGER PRIMARY KEY,segment_id '
+       u'INTEGER NOT NULL,time_slot INTEGER NOT NULL,visit_count INTEGER '
+       u'DEFAULT 0 NOT NULL)',
+       u'segments':
+       u'CREATE TABLE segments (id INTEGER PRIMARY KEY,name VARCHAR,url_id '
+       u'INTEGER NON NULL,pres_index INTEGER DEFAULT -1 NOT NULL)',
+       u'urls':
+       u'CREATE TABLE urls(id INTEGER PRIMARY KEY,url LONGVARCHAR,title '
+       u'LONGVARCHAR,visit_count INTEGER DEFAULT 0 NOT NULL,typed_count '
+       u'INTEGER DEFAULT 0 NOT NULL,last_visit_time INTEGER NOT NULL,hidden '
+       u'INTEGER DEFAULT 0 NOT NULL,favicon_id INTEGER DEFAULT 0 NOT NULL)',
+       u'visit_source':
+       u'CREATE TABLE visit_source(id INTEGER PRIMARY KEY,source INTEGER NOT '
+       u'NULL)',
+       u'visits':
+       u'CREATE TABLE visits(id INTEGER PRIMARY KEY,url INTEGER NOT '
+       u'NULL,visit_time INTEGER NOT NULL,from_visit INTEGER,transition '
+       u'INTEGER DEFAULT 0 NOT NULL,segment_id INTEGER,is_indexed BOOLEAN)'}]
+
   # Queries for cache building.
   URL_CACHE_QUERY = (
       u'SELECT visits.id AS id, urls.url, urls.title FROM '
@@ -228,9 +264,9 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     """Parses a file downloaded row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): parser mediator.
+      row (sqlite3.Row): row resulting from the query.
+      query (Optional[str]): query string.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
@@ -246,9 +282,9 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     """Parses a file downloaded row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): parser mediator.
+      row (sqlite3.Row): row resulting from the query.
+      query (Optional[str]): query string.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
@@ -265,11 +301,11 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     """Parses a last visited row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
-      cache: Optional cache object (instance of SQLiteCache).
-      database: Optional database object (instance of SQLiteDatabase).
+      parser_mediator (ParserMediator): parser mediator.
+      row (sqlite3.Row): row resulting from the query.
+      query (Optional[str]): query string.
+      cache (Optional[SQLiteCache]): cache object.
+      database (Optional[SQLiteDatabase]): database object.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".

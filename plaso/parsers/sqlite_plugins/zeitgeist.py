@@ -45,14 +45,70 @@ class ZeitgeistPlugin(interface.SQLitePlugin):
 
   REQUIRED_TABLES = frozenset([u'event', u'actor'])
 
+  SCHEMAS = [
+      {u'actor':
+       u'CREATE TABLE actor ( id INTEGER PRIMARY KEY AUTOINCREMENT, value '
+       u'VARCHAR UNIQUE )',
+       u'event':
+       u'CREATE TABLE event ( id INTEGER, timestamp INTEGER, interpretation '
+       u'INTEGER, manifestation INTEGER, actor INTEGER, payload INTEGER, '
+       u'subj_id INTEGER, subj_interpretation INTEGER, subj_manifestation '
+       u'INTEGER, subj_origin INTEGER, subj_mimetype INTEGER, subj_text '
+       u'INTEGER, subj_storage INTEGER, origin INTEGER, subj_id_current '
+       u'INTEGER, CONSTRAINT interpretation_fk FOREIGN KEY(interpretation) '
+       u'REFERENCES interpretation(id) ON DELETE CASCADE, CONSTRAINT '
+       u'manifestation_fk FOREIGN KEY(manifestation) REFERENCES '
+       u'manifestation(id) ON DELETE CASCADE, CONSTRAINT actor_fk FOREIGN '
+       u'KEY(actor) REFERENCES actor(id) ON DELETE CASCADE, CONSTRAINT '
+       u'origin_fk FOREIGN KEY(origin) REFERENCES uri(id) ON DELETE CASCADE, '
+       u'CONSTRAINT payload_fk FOREIGN KEY(payload) REFERENCES payload(id) '
+       u'ON DELETE CASCADE, CONSTRAINT subj_id_fk FOREIGN KEY(subj_id) '
+       u'REFERENCES uri(id) ON DELETE CASCADE, CONSTRAINT subj_id_current_fk '
+       u'FOREIGN KEY(subj_id_current) REFERENCES uri(id) ON DELETE CASCADE, '
+       u'CONSTRAINT subj_interpretation_fk FOREIGN KEY(subj_interpretation) '
+       u'REFERENCES interpretation(id) ON DELETE CASCADE, CONSTRAINT '
+       u'subj_manifestation_fk FOREIGN KEY(subj_manifestation) REFERENCES '
+       u'manifestation(id) ON DELETE CASCADE, CONSTRAINT subj_origin_fk '
+       u'FOREIGN KEY(subj_origin) REFERENCES uri(id) ON DELETE CASCADE, '
+       u'CONSTRAINT subj_mimetype_fk FOREIGN KEY(subj_mimetype) REFERENCES '
+       u'mimetype(id) ON DELETE CASCADE, CONSTRAINT subj_text_fk FOREIGN '
+       u'KEY(subj_text) REFERENCES text(id) ON DELETE CASCADE, CONSTRAINT '
+       u'subj_storage_fk FOREIGN KEY(subj_storage) REFERENCES storage(id) ON '
+       u'DELETE CASCADE, CONSTRAINT unique_event UNIQUE (timestamp, '
+       u'interpretation, manifestation, actor, subj_id) )',
+       u'extensions_conf':
+       u'CREATE TABLE extensions_conf ( extension VARCHAR, key VARCHAR, '
+       u'value BLOB, CONSTRAINT unique_extension UNIQUE (extension, key) )',
+       u'interpretation':
+       u'CREATE TABLE interpretation ( id INTEGER PRIMARY KEY AUTOINCREMENT, '
+       u'value VARCHAR UNIQUE )',
+       u'manifestation':
+       u'CREATE TABLE manifestation ( id INTEGER PRIMARY KEY AUTOINCREMENT, '
+       u'value VARCHAR UNIQUE )',
+       u'mimetype':
+       u'CREATE TABLE mimetype ( id INTEGER PRIMARY KEY AUTOINCREMENT, value '
+       u'VARCHAR UNIQUE )',
+       u'payload':
+       u'CREATE TABLE payload (id INTEGER PRIMARY KEY, value BLOB)',
+       u'schema_version':
+       u'CREATE TABLE schema_version ( schema VARCHAR PRIMARY KEY ON '
+       u'CONFLICT REPLACE, version INT )',
+       u'storage':
+       u'CREATE TABLE storage ( id INTEGER PRIMARY KEY, value VARCHAR '
+       u'UNIQUE, state INTEGER, icon VARCHAR, display_name VARCHAR )',
+       u'text':
+       u'CREATE TABLE text ( id INTEGER PRIMARY KEY, value VARCHAR UNIQUE )',
+       u'uri':
+       u'CREATE TABLE uri ( id INTEGER PRIMARY KEY, value VARCHAR UNIQUE )'}]
+
   def ParseZeitgeistEventRow(
       self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses zeitgeist event row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): parser mediator.
+      row (sqlite3.Row): row resulting from the query.
+      query (Optional[str]): query string.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".

@@ -75,6 +75,25 @@ class WebViewPlugin(interface.SQLitePlugin):
       (u'SELECT _id, name, value, domain, expires, path, secure FROM cookies',
        u'ParseCookieRow')])
 
+  SCHEMAS = [
+      {u'android_metadata':
+       u'CREATE TABLE android_metadata (locale TEXT)',
+       u'cookies':
+       u'CREATE TABLE cookies (_id INTEGER PRIMARY KEY, name TEXT, value '
+       u'TEXT, domain TEXT, path TEXT, expires INTEGER, secure INTEGER)',
+       u'formdata':
+       u'CREATE TABLE formdata (_id INTEGER PRIMARY KEY, urlid INTEGER, name '
+       u'TEXT, value TEXT, UNIQUE (urlid, name, value) ON CONFLICT IGNORE)',
+       u'formurl':
+       u'CREATE TABLE formurl (_id INTEGER PRIMARY KEY, url TEXT)',
+       u'httpauth':
+       u'CREATE TABLE httpauth (_id INTEGER PRIMARY KEY, host TEXT, realm '
+       u'TEXT, username TEXT, password TEXT, UNIQUE (host, realm) ON '
+       u'CONFLICT REPLACE)',
+       u'password':
+       u'CREATE TABLE password (_id INTEGER PRIMARY KEY, host TEXT, username '
+       u'TEXT, password TEXT, UNIQUE (host, username) ON CONFLICT REPLACE)'}]
+
   def __init__(self):
     """Initializes a plugin object."""
     super(WebViewPlugin, self).__init__()
@@ -85,9 +104,9 @@ class WebViewPlugin(interface.SQLitePlugin):
     """Parses a row from the database.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): parser mediator.
+      row (sqlite3.Row): row resulting from the query.
+      query (Optional[str]): query string.
     """
     # Note that pysqlite does not accept a Unicode string in row['string']
     # and will raise "IndexError: Index must be int or string". All indexes are
