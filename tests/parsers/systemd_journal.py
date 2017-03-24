@@ -6,7 +6,6 @@ from plaso.lib import errors
 from plaso.lib import timelib
 
 from tests.parsers import test_lib
-from unittest import SkipTest
 
 
 class SystemdJournalParserTest(test_lib.ParserTestCase):
@@ -20,7 +19,7 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
       from plaso.parsers import systemd_journal
     except ImportError as e:
       if e.message.find(u'lzma') > 0:
-        raise SkipTest('criteria')
+        raise unittest.SkipTest('criteria')
 
     parser_object = systemd_journal.SystemdJournalParser()
     journal = self._ParseFile([
