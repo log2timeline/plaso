@@ -40,6 +40,7 @@ PLASO_DEPENDENCIES="ipython
                     python-hachoir-core
                     python-hachoir-metadata
                     python-hachoir-parser
+                    python-lzma
                     python-pefile
                     python-psutil
                     python-pyparsing
