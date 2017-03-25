@@ -151,7 +151,7 @@ class ParserTestCase(shared_test_lib.BaseTestCase):
            be shortened to it's first 77 characters followed by a "...".
     """
     if len(message_string) > 80:
-      return u'{0:s}...'.format(message_string[0:77])
+      return u'{0:s}...'.format(message_string[:77])
 
     return message_string
 

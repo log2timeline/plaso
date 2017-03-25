@@ -32,15 +32,15 @@ class OLECFParserTest(test_lib.ParserTestCase):
 
     event_object = storage_writer.events[8]
 
-    self.assertEqual(event_object.data_type, u'olecf:item')
-    self.assertEqual(event_object.offset, 0)
-
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-05-16 02:29:49.785')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
         event_object.timestamp_desc,
         eventdata.EventTimestamp.MODIFICATION_TIME)
+
+    self.assertEqual(event_object.data_type, u'olecf:item')
+    self.assertEqual(event_object.offset, 0)
 
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(storage_writer)

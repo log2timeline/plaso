@@ -1,36 +1,28 @@
 # -*- coding: utf-8 -*-
 """This file contains a plist plugin for the iPod/iPhone storage plist."""
 
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import eventdata
+from plaso.lib import timelib
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
 
-class IPodPlistEvent(time_events.PythonDatetimeEvent):
-  """An event object for an entry in the iPod plist file."""
+# TODO: add more attributes.
+class IPodPlistEventData(events.EventData):
+  """iPod plist event data.
+
+  Attributes:
+    device_id (str): unique identifier of the iPod device.
+  """
 
   DATA_TYPE = u'ipod:device:entry'
 
-  def __init__(self, datetime_timestamp, device_id, device_info):
-    """Initialize the event.
-
-    Args:
-      datetime_timestamp: The timestamp for the event as a datetime object.
-      device_id: The device ID.
-      device_info: A dict that contains extracted information from the plist.
-    """
-    super(IPodPlistEvent, self).__init__(
-        datetime_timestamp, eventdata.EventTimestamp.LAST_CONNECTED)
-
-    self.device_id = device_id
-
-    # Save the other attributes.
-    for key, value in iter(device_info.items()):
-      if key == u'Connected':
-        continue
-      attribute_name = key.lower().replace(u' ', u'_')
-      setattr(self, attribute_name, value)
+  def __init__(self):
+    """Initializes event data."""
+    super(IPodPlistEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.device_id = None
 
 
 class IPodPlugin(interface.PlistPlugin):
@@ -46,22 +38,30 @@ class IPodPlugin(interface.PlistPlugin):
     """Extract device information from the iPod plist.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      match: Optional dictionary containing keys extracted from PLIST_KEYS.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
-    if not u'Devices' in match:
-      return
-
-    devices = match[u'Devices']
-    if not devices:
-      return
-
-    for device, device_info in iter(devices.items()):
-      if u'Connected' not in device_info:
+    devices = match.get(u'Devices', {})
+    for device_identifier, device_information in iter(devices.items()):
+      connected_time = device_information.get(u'Connected', None)
+      if not connected_time:
         continue
-      event_object = IPodPlistEvent(
-          device_info.get(u'Connected'), device, device_info)
-      parser_mediator.ProduceEvent(event_object)
+
+      event_data = IPodPlistEventData()
+      event_data.device_id = device_identifier
+
+      # TODO: refactor.
+      for key, value in iter(device_information.items()):
+        if key == u'Connected':
+          continue
+        attribute_name = key.lower().replace(u' ', u'_')
+        setattr(event_data, attribute_name, value)
+
+      timestamp = timelib.Timestamp.FromPythonDatetime(connected_time)
+      event = time_events.TimestampEvent(
+          timestamp, eventdata.EventTimestamp.LAST_CONNECTED)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 plist.PlistParser.RegisterPlugin(IPodPlugin)

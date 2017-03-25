@@ -6,6 +6,10 @@ import uuid
 
 import construct
 
+from dfdatetime import filetime as dfdatetime_filetime
+from dfdatetime import semantic_time as dfdatetime_semantic_time
+from dfdatetime import uuid_time as dfdatetime_uuid_time
+
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import binary
@@ -16,48 +20,60 @@ from plaso.parsers import winlnk
 from plaso.parsers.olecf_plugins import interface
 
 
-class AutomaticDestinationsDestListEntryEvent(time_events.FiletimeEvent):
-  """Convenience class for an .automaticDestinations-ms DestList entry event."""
+class AutomaticDestinationsDestListEntryEvent(time_events.DateTimeValuesEvent):
+  """Convenience class for an .automaticDestinations-ms DestList entry event.
+
+  Attributes:
+    birth_droid_file_identifier (str): birth droid file identifier.
+    birth_droid_volume_identifier (str): birth droid volume identifier.
+    droid_file_identifier (str): droid file identifier.
+    droid_volume_identifier (str): droid volume identifier.
+    entry_number (int): DestList entry number.
+    path (str): path.
+    pin_status (int): pin status.
+    offset (int): offset of the DestList entry relative to the start of
+        the DestList stream.
+  """
 
   DATA_TYPE = u'olecf:dest_list:entry'
 
   def __init__(
-      self, timestamp, timestamp_description, entry_offset, dest_list_entry,
+      self, date_time, date_time_description, entry_offset, dest_list_entry,
       droid_volume_identifier, droid_file_identifier,
       birth_droid_volume_identifier, birth_droid_file_identifier):
-    """Initializes the event object.
+    """Initializes an event.
 
     Args:
-      timestamp: The FILETIME value for the timestamp.
-      timestamp_description: The usage string for the timestamp value.
-      entry_offset: The offset of the DestList entry relative to the start of
-                    the DestList stream.
-      droid_volume_identifier: a string containing the droid volume identifier.
-      droid_file_identifier: a string containing the droid file identifier.
-      birth_droid_volume_identifier: a string containing the birth droid volume
-                                     identifier.
-      birth_droid_file_identifier: a string containing the birth droid file
-                                   identifier.
-      dest_list_entry: The DestList entry (instance of construct.Struct).
+      date_time (dfdatetime.DateTimeValues): date and time values.
+      date_time_description (str): description of the meaning of the date
+          and time values.
+      entry_offset (int): offset of the DestList entry relative to the start of
+          the DestList stream.
+      droid_volume_identifier (str): droid volume identifier.
+      droid_file_identifier (str): droid file identifier.
+      birth_droid_volume_identifier (str): birth droid volume identifier.
+      birth_droid_file_identifier (str): birth droid file identifier.
+      dest_list_entry (construct.Struct): DestList entry.
     """
-    super(AutomaticDestinationsDestListEntryEvent, self).__init__(
-        timestamp, timestamp_description)
-
-    self.offset = entry_offset
-    self.entry_number = dest_list_entry.entry_number
-
-    self.hostname = binary.ByteStreamCopyToString(
+    # TODO: move to parser plugin.
+    hostname = binary.ByteStreamCopyToString(
         dest_list_entry.hostname, codepage=u'ascii')
-    self.path = binary.UTF16StreamCopyToString(dest_list_entry.path)
+    path = binary.UTF16StreamCopyToString(dest_list_entry.path)
+
+    super(AutomaticDestinationsDestListEntryEvent, self).__init__(
+        date_time, date_time_description)
+    self.birth_droid_file_identifier = birth_droid_file_identifier
+    self.birth_droid_volume_identifier = birth_droid_volume_identifier
+    self.droid_file_identifier = droid_file_identifier
+    self.droid_volume_identifier = droid_volume_identifier
+    self.entry_number = dest_list_entry.entry_number
+    self.hostname = hostname
+    self.offset = entry_offset
+    self.path = path
     self.pin_status = dest_list_entry.pin_status
 
-    self.droid_volume_identifier = droid_volume_identifier
-    self.droid_file_identifier = droid_file_identifier
-    self.birth_droid_volume_identifier = birth_droid_volume_identifier
-    self.birth_droid_file_identifier = birth_droid_file_identifier
 
-
-class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
+class AutomaticDestinationsOLECFPlugin(interface.OLECFPlugin):
   """Plugin that parses an .automaticDestinations-ms OLECF file."""
 
   NAME = u'olecf_automatic_destinations'
@@ -119,12 +135,38 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
       construct.String(u'path', lambda ctx: ctx.path_size * 2),
       construct.Padding(4))
 
+  def _ParseDistributedTrackingIdentifier(
+      self, parser_mediator, uuid_data, origin):
+    """Extracts data from a Distributed Tracking identifier.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      uuid_data (bytes): UUID data of the Distributed Tracking identifier.
+      origin (str): origin of the event (event source).
+
+    Returns:
+      str: UUID string of the Distributed Tracking identifier.
+    """
+    uuid_object = uuid.UUID(bytes_le=uuid_data)
+
+    if uuid_object.version == 1:
+      event_data = windows_events.WindowsDistributedLinkTrackingEventData(
+          uuid_object, origin)
+      date_time = dfdatetime_uuid_time.UUIDTime(timestamp=uuid_object.time)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.CREATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    return u'{{{0!s}}}'.format(uuid_object)
+
   def ParseDestList(self, parser_mediator, olecf_item):
     """Parses the DestList OLECF item.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      olecf_item: An OLECF item (instance of pyolecf.item).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      olecf_item (pyolecf.item): OLECF item.
     """
     try:
       header = self._DEST_LIST_STREAM_HEADER.parse_stream(olecf_item)
@@ -154,18 +196,11 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
       if not entry:
         break
 
-      display_name = u'Dest list entry at offset: 0x{0:08x}'.format(
-          entry_offset)
+      display_name = u'DestList entry at offset: 0x{0:08x}'.format(entry_offset)
 
       try:
-        uuid_object = uuid.UUID(bytes_le=entry.droid_volume_identifier)
-        droid_volume_identifier = u'{{{0!s}}}'.format(uuid_object)
-
-        if uuid_object.version == 1:
-          event_object = (
-              windows_events.WindowsDistributedLinkTrackingCreationEvent(
-                  uuid_object, display_name))
-          parser_mediator.ProduceEvent(event_object)
+        droid_volume_identifier = self._ParseDistributedTrackingIdentifier(
+            parser_mediator, entry.droid_volume_identifier, display_name)
 
       except (TypeError, ValueError) as exception:
         droid_volume_identifier = u''
@@ -174,14 +209,8 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
                 exception))
 
       try:
-        uuid_object = uuid.UUID(bytes_le=entry.droid_file_identifier)
-        droid_file_identifier = u'{{{0!s}}}'.format(uuid_object)
-
-        if uuid_object.version == 1:
-          event_object = (
-              windows_events.WindowsDistributedLinkTrackingCreationEvent(
-                  uuid_object, display_name))
-          parser_mediator.ProduceEvent(event_object)
+        droid_file_identifier = self._ParseDistributedTrackingIdentifier(
+            parser_mediator, entry.droid_file_identifier, display_name)
 
       except (TypeError, ValueError) as exception:
         droid_file_identifier = u''
@@ -190,14 +219,10 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
                 exception))
 
       try:
-        uuid_object = uuid.UUID(bytes_le=entry.birth_droid_volume_identifier)
-        birth_droid_volume_identifier = u'{{{0!s}}}'.format(uuid_object)
-
-        if uuid_object.version == 1:
-          event_object = (
-              windows_events.WindowsDistributedLinkTrackingCreationEvent(
-                  uuid_object, display_name))
-          parser_mediator.ProduceEvent(event_object)
+        birth_droid_volume_identifier = (
+            self._ParseDistributedTrackingIdentifier(
+                parser_mediator, entry.birth_droid_volume_identifier,
+                display_name))
 
       except (TypeError, ValueError) as exception:
         birth_droid_volume_identifier = u''
@@ -207,14 +232,8 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
                 exception))
 
       try:
-        uuid_object = uuid.UUID(bytes_le=entry.birth_droid_file_identifier)
-        birth_droid_file_identifier = u'{{{0!s}}}'.format(uuid_object)
-
-        if uuid_object.version == 1:
-          event_object = (
-              windows_events.WindowsDistributedLinkTrackingCreationEvent(
-                  uuid_object, display_name))
-          parser_mediator.ProduceEvent(event_object)
+        birth_droid_file_identifier = self._ParseDistributedTrackingIdentifier(
+            parser_mediator, entry.birth_droid_file_identifier, display_name)
 
       except (TypeError, ValueError) as exception:
         birth_droid_file_identifier = u''
@@ -223,28 +242,36 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
             u'{0:s}').format(
                 exception))
 
-      event_object = AutomaticDestinationsDestListEntryEvent(
-          entry.last_modification_time,
-          eventdata.EventTimestamp.MODIFICATION_TIME, entry_offset, entry,
-          droid_volume_identifier, droid_file_identifier,
+      if entry.last_modification_time == 0:
+        date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+      else:
+        date_time = dfdatetime_filetime.Filetime(
+            timestamp=entry.last_modification_time)
+
+      event = AutomaticDestinationsDestListEntryEvent(
+          date_time, eventdata.EventTimestamp.MODIFICATION_TIME, entry_offset,
+          entry, droid_volume_identifier, droid_file_identifier,
           birth_droid_volume_identifier, birth_droid_file_identifier)
-      parser_mediator.ProduceEvent(event_object)
+      parser_mediator.ProduceEvent(event)
 
       entry_offset = olecf_item.get_offset()
 
-  def ParseItems(
-      self, parser_mediator, file_entry=None, root_item=None, **unused_kwargs):
-    """Parses OLECF items.
+  def Process(self, parser_mediator, root_item=None, **kwargs):
+    """Parses an OLECF file.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-      root_item: Optional root item of the OLECF file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      root_item (Optional[pyolecf.item]): root item of the OLECF file.
 
     Raises:
       ValueError: If the root_item is not set.
     """
-    if root_item is None:
+    # This will raise if unhandled keyword arguments are passed.
+    super(AutomaticDestinationsOLECFPlugin, self).Process(
+        parser_mediator, **kwargs)
+
+    if not root_item:
       raise ValueError(u'Root item not set.')
 
     for item in root_item.sub_items:
@@ -252,9 +279,9 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
         self.ParseDestList(parser_mediator, item)
 
       elif self._RE_LNK_ITEM_NAME.match(item.name):
-        if file_entry:
-          display_name = u'{0:s} # {1:s}'.format(
-              parser_mediator.GetDisplayName(), item.name)
+        display_name = parser_mediator.GetDisplayName()
+        if display_name:
+          display_name = u'{0:s} # {1:s}'.format(display_name, item.name)
         else:
           display_name = u'# {0:s}'.format(item.name)
 
@@ -264,4 +291,4 @@ class AutomaticDestinationsOlecfPlugin(interface.OlecfPlugin):
         # TODO: check for trailing data?
 
 
-olecf.OLECFParser.RegisterPlugin(AutomaticDestinationsOlecfPlugin)
+olecf.OLECFParser.RegisterPlugin(AutomaticDestinationsOLECFPlugin)

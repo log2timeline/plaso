@@ -39,6 +39,9 @@ class EventTimestamp(object):
   LAST_LOGIN_TIME = u'Last Login Time'
   LAST_PASSWORD_RESET = u'Last Password Reset'
 
+  CONNECTION_ESTABLISHED = 'Connection Established'
+  CONNECTION_FAILED = 'Connection Failed'
+
   FIRST_CONNECTED = u'First Connection Time'
   LAST_CONNECTED = u'Last Connection Time'
 

@@ -8,6 +8,9 @@ import re
 
 import pyparsing
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -15,30 +18,20 @@ from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
-class ZshHistoryEvent(time_events.PosixTimeEvent):
-  """Convenience class for Zsh history events.
+class ZshHistoryEventData(events.EventData):
+  """Zsh history event data.
 
   Attributes:
-    command: a string containing the command that was run.
-    elapsed_seconds: an integer containing the time in seconds that the
-                     command took to execute.
+    command (str): command that was run.
+    elapsed_seconds (int): number of seconds that the command took to execute.
   """
   DATA_TYPE = u'shell:zsh:history'
 
-  def __init__(self, posix_time, elapsed_seconds, command):
-    """Initializes an event object.
-
-    Args:
-      posix_time: the POSIX time value, which contains the number of seconds
-                  since January 1, 1970 00:00:00 UTC.
-      elapsed_seconds: an integer containing the time in seconds the command
-                    took to execute.
-      command: a string containing the command that was run.
-    """
-    super(ZshHistoryEvent, self).__init__(
-        posix_time, eventdata.EventTimestamp.MODIFICATION_TIME)
-    self.command = command
-    self.elapsed_seconds = elapsed_seconds
+  def __init__(self):
+    """Initializes event data."""
+    super(ZshHistoryEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.command = None
+    self.elapsed_seconds = None
 
 
 class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
@@ -70,33 +63,38 @@ class ZshExtendedHistoryParser(text_parser.PyparsingMultiLineTextParser):
     """Parses a record and produces a Zsh history event.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      key: an string indicating the name of the parsed structure.
-      structure: the elements parsed from the file (instance of
-                 pyparsing.ParseResults).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): structure parsed from the log file.
 
     Raises:
-      UnableToParseFile: if an unsupported key is provided.
+      ParseError: when the structure type is unknown.
     """
     if key != u'command':
-      raise errors.UnableToParseFile(u'Unsupported key {0:s}'.format(key))
+      raise errors.ParseError(
+          u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    event_object = ZshHistoryEvent(
-        structure[u'timestamp'], structure[u'elapsed_seconds'],
-        structure[u'command'])
-    parser_mediator.ProduceEvent(event_object)
+    event_data = ZshHistoryEventData()
+    event_data.command = structure[u'command']
+    event_data.elapsed_seconds = structure[u'elapsed_seconds']
+
+    date_time = dfdatetime_posix_time.PosixTime(
+        timestamp=structure[u'timestamp'])
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyStructure(self, parser_mediator, lines):
     """Verifies whether content corresponds to a Zsh extended_history file.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      lines: a string containing one or more lines of content from the file-like
-             object being evaluated for parsing.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      line (str): single line from the text file.
 
     Returns:
-      A boolean that indicates the lines appear to contain content from a
-      Zsh extended_history file.
+      bool: True if the line was successfully parsed.
     """
     if self._VERIFICATION_REGEX.match(lines):
       return True

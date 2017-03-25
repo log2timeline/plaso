@@ -5,6 +5,9 @@ import os
 
 import construct
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -17,76 +20,49 @@ from plaso.parsers import manager
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 
-class ASLEvent(time_events.PosixTimeEvent):
+class ASLEventData(events.EventData):
   """Convenience class for an ASL event.
 
   Attributes:
-    computer_name: a string containing the name of the host.
-    extra_information: a string containing extra fields associated
-                       to the event.
-    facility: a string containing the facility.
-    group_id: an integer containing the group identifer (GID).
-    level: a string containing the level of criticality of the event.
-    message_id: an integer containing the message identifier.
-    message: a string containing the message of the event.
-    pid: an integer containing the process identifier (PID).
-    read_uid: the user ID that can read this file. If -1: all.
-    read_gid: the group ID that can read this file. If -1: all.
-    record_position: an integer containing the position of the event record.
-    sender: a string containing the sender or process that created the event.
-    user_sid: a string containing the user identifier (UID).
+    computer_name (str): name of the host.
+    extra_information (str): extra fields associated to the event.
+    facility (str): facility.
+    group_id (int): group identifer (GID).
+    level (str): level of criticality of the event.
+    message_id (int): message identifier.
+    message (str): message of the event.
+    pid (int): process identifier (PID).
+    read_uid (int): user identifier that can read this file, where -1
+        represents all.
+    read_gid (int): the group identifier that can read this file, where -1
+        represents all.
+    record_position (int): position of the event record.
+    sender (str): sender or process that created the event.
+    user_sid (str): user identifier (UID).
   """
 
   DATA_TYPE = u'mac:asl:event'
 
-  def __init__(
-      self, posix_time, offset, message_id, level, pid, uid, gid,
-      read_uid, read_gid, computer_name, sender, facility, message,
-      extra_information, micro_seconds=0):
-    """Initializes the event object.
-
-    Args:
-      posix_time: the POSIX time value, which contains the number of seconds
-                  since January 1, 1970 00:00:00 UTC.
-      offset: an integer containing the offset of the event record.
-      message_id: an integer containing the message identifier.
-      level: a string containing the level of criticality of the event.
-      pid: an integer containing the process identifier (PID).
-      uid: an integer containing the user identifier (UID).
-      gid: an integer containing the group identifier (GID).
-      read_uid: the user ID that can read this file. If -1: all.
-      read_gid: the group ID that can read this file. If -1: all.
-      computer_name: a string containing the name of the host.
-      sender: a string containing the sender or process that created the event.
-      facility: a string containing the facility.
-      message: a string containing the message of the event.
-      extra_information: a string containing extra fields associated
-                         to the event.
-      micro_seconds: optional number of micro seconds.
-    """
-    super(ASLEvent, self).__init__(
-        posix_time, eventdata.EventTimestamp.CREATION_TIME,
-        micro_seconds=micro_seconds)
-    self.computer_name = computer_name
-    self.extra_information = extra_information
-    self.facility = facility
-    self.group_id = gid
-    self.level = level
-    self.message_id = message_id
-    self.message = message
-    self.pid = pid
-    self.read_gid = read_gid
-    self.read_uid = read_uid
-    self.record_position = offset
-    self.sender = sender
-    # Note that the user_sid value is expected to be a string.
-    self.user_sid = u'{0:d}'.format(uid)
+  def __init__(self):
+    """Initializes event data."""
+    super(ASLEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.computer_name = None
+    self.extra_information = None
+    self.facility = None
+    self.group_id = None
+    self.level = None
+    self.message_id = None
+    self.message = None
+    self.pid = None
+    self.read_gid = None
+    self.read_uid = None
+    self.record_position = None
+    self.sender = None
+    self.user_sid = None
 
 
 class ASLParser(interface.FileObjectParser):
   """Parser for ASL log files."""
-
-  _INITIAL_FILE_OFFSET = None
 
   NAME = u'asl_log'
   DESCRIPTION = u'Parser for ASL log files.'
@@ -134,7 +110,7 @@ class ASLParser(interface.FileObjectParser):
       construct.UBInt64(u'next_offset'),
       construct.UBInt64(u'asl_message_id'),
       construct.UBInt64(u'timestamp'),
-      construct.UBInt32(u'nanosec'),
+      construct.UBInt32(u'nanoseconds'),
       construct.UBInt16(u'level'),
       construct.UBInt16(u'flags'),
       construct.UBInt32(u'pid'),
@@ -186,23 +162,26 @@ class ASLParser(interface.FileObjectParser):
 
   @classmethod
   def GetFormatSpecification(cls):
-    """Retrieves the format specification."""
+    """Retrieves the format specification.
+
+    Returns:
+      FormatSpecification: format specification.
+    """
     format_specification = specification.FormatSpecification(cls.NAME)
     format_specification.AddNewSignature(cls._ASL_SIGNATURE, offset=0)
     return format_specification
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
-    """Parses an ALS file-like object.
+    """Parses an ASL file-like object.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      file_object: a file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_object.seek(0, os.SEEK_SET)
-
     try:
       header = self._ASL_HEADER_STRUCT.parse_stream(file_object)
     except (IOError, construct.FieldError) as exception:
@@ -219,30 +198,31 @@ class ASLParser(interface.FileObjectParser):
     header_last_offset = header.last_offset
 
     previous_offset = offset
-    event_object, offset = self.ReadASLEvent(
-        parser_mediator, file_object, offset)
-    while event_object:
+    event, offset = self.ReadASLEvent(parser_mediator, file_object, offset)
+    while event:
       # Sanity check, the last read element must be the same as
       # indicated by the header.
       if offset == 0 and previous_offset != header_last_offset:
         parser_mediator.ProduceExtractionError(
-            u'Unable to parse header. Last element header does not match '
+            u'unable to parse header. Last element header does not match '
             u'header offset.')
       previous_offset = offset
-      event_object, offset = self.ReadASLEvent(
-          parser_mediator, file_object, offset)
+      event, offset = self.ReadASLEvent(parser_mediator, file_object, offset)
 
   def ReadASLEvent(self, parser_mediator, file_object, offset):
     """Reads an ASL record at a specific offset.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      file_object: a file-like object that points to an ASL file.
-      offset: an integer containing the offset of the ASL record.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
+      offset (int): offset of the ASL record.
 
     Returns:
-      A tuple of an event object extracted from the ASL record,
-      and the offset to the next ASL record in the file.
+      tuple: contains:
+
+        EventObject: event extracted from the ASL record or None.
+        int: offset to the next ASL record in the file or None.
     """
     # The heap of the entry is saved to try to avoid seek (performance issue).
     # It has the real start position of the entry.
@@ -396,9 +376,6 @@ class ASLParser(interface.FileObjectParser):
     # Read the last 8 bytes of the record that points to the previous entry.
     _ = file_object.read(8)
 
-    # Parsed section, we translate the read data to an appropriate format.
-    micro_seconds, _ = divmod(record_struct.nanosec, 1000)
-
     # Parsing the dynamic values (text or pointers to position with text).
     # The first four are always the host, sender, facility, and message.
     number_of_values = len(values)
@@ -435,17 +412,35 @@ class ASLParser(interface.FileObjectParser):
             map(u': '.join, zip(extra_values[0::2], extra_values[1::2])))
       except UnicodeDecodeError as exception:
         parser_mediator.ProduceExtractionError(
-            u'Unable to decode all ASL values in the extra information fields.')
+            u'unable to decode all ASL values in the extra information fields.')
 
-    event_object = ASLEvent(
-        record_struct.timestamp, offset, record_struct.asl_message_id,
-        record_struct.level, record_struct.pid, record_struct.uid,
-        record_struct.gid, record_struct.read_uid, record_struct.read_gid,
-        computer_name, sender, facility, message, extra_information,
-        micro_seconds=micro_seconds)
-    parser_mediator.ProduceEvent(event_object)
+    event_data = ASLEventData()
+    event_data.computer_name = computer_name
+    event_data.extra_information = extra_information
+    event_data.facility = facility
+    event_data.group_id = record_struct.gid
+    event_data.level = record_struct.level
+    event_data.message_id = record_struct.asl_message_id
+    event_data.message = message
+    event_data.pid = record_struct.pid
+    event_data.read_gid = record_struct.read_gid
+    event_data.read_uid = record_struct.read_uid
+    event_data.record_position = offset
+    event_data.sender = sender
+    # Note that the user_sid value is expected to be a string.
+    event_data.user_sid = u'{0:d}'.format(record_struct.uid)
 
-    return (event_object, record_struct.next_offset)
+    microseconds, _ = divmod(record_struct.nanoseconds, 1000)
+    timestamp = (record_struct.timestamp * 1000000) + microseconds
+
+    # TODO: replace by PosixTimeInNanoseconds.
+    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=timestamp)
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.CREATION_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    return event, record_struct.next_offset
 
 
 manager.ParsersManager.RegisterParser(ASLParser)

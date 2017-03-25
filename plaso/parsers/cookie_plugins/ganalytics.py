@@ -3,9 +3,12 @@
 
 import urllib
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+from dfdatetime import semantic_time as dfdatetime_semantic_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import eventdata
-from plaso.lib import timelib
 from plaso.parsers.cookie_plugins import interface
 from plaso.parsers.cookie_plugins import manager
 
@@ -13,50 +16,37 @@ from plaso.parsers.cookie_plugins import manager
 # TODO: determine if __utmc always 0?
 
 
-class GoogleAnalyticsEvent(time_events.PosixTimeEvent):
-  """A simple placeholder for a Google Analytics event."""
+class GoogleAnalyticsEventData(events.EventData):
+  """Google Analytics event data.
+
+  Attributes:
+    cookie_name (str): name of cookie.
+    domain_hash (str): domain hash.
+    pages_viewed (int): number of pages viewed.
+    sessions (int): number of sessions.
+    sources (int): number of sources.
+    url (str): URL or path where the cookie got set.
+    visitor_id (str): visitor identifier.
+  """
 
   DATA_TYPE = u'cookie:google:analytics'
 
-  def __init__(
-      self, timestamp, timestamp_description, cookie_identifier, url,
-      domain_hash=None, extra_attributes=None, number_of_pages_viewed=None,
-      number_of_sessions=None, number_of_sources=None, visitor_identifier=None):
-    """Initialize a Google Analytics event.
+  def __init__(self, cookie_identifier):
+    """Initializes event data.
 
     Args:
-      posix_time (int): POSIX time value, which contains the number of seconds
-          since January 1, 1970 00:00:00 UTC.
-      timestamp_description (str): description of the usage of the timestamp
-          value.
       cookie_identifier (str): unique identifier of the cookie.
-      url (str): URL or path where the cookie got set.
-      domain_hash (Optional[str]): domain hash.
-      extra_attributes (Optional[dict[str,str]]): extra attributes.
-      number_of_pages_viewed (Optional[int]): number of pages viewed.
-      number_of_sessions (Optional[int]): number of sessions.
-      number_of_sources (Optional[int]): number of sources.
-      visitor_identifier (Optional[str]): visitor identifier.
     """
     data_type = u'{0:s}:{1:s}'.format(self.DATA_TYPE, cookie_identifier)
-    super(GoogleAnalyticsEvent, self).__init__(
-        timestamp, timestamp_description, data_type=data_type)
 
-    self.cookie_name = u'__{0:s}'.format(cookie_identifier)
-    self.domain_hash = domain_hash
-    self.pages_viewed = number_of_pages_viewed
-    self.sessions = number_of_sessions
-    self.sources = number_of_sources
-    self.url = url
-    self.visitor_id = visitor_identifier
-
-    if not extra_attributes:
-      return
-
-    # TODO: refactor, this approach makes it very hard to tell
-    # which values are actually set.
-    for key, value in iter(extra_attributes.items()):
-      setattr(self, key, value)
+    super(GoogleAnalyticsEventData, self).__init__(data_type=data_type)
+    self.cookie_name = None
+    self.domain_hash = None
+    self.pages_viewed = None
+    self.sessions = None
+    self.sources = None
+    self.url = None
+    self.visitor_id = None
 
 
 class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
@@ -142,34 +132,41 @@ class GoogleAnalyticsUtmaPlugin(interface.BaseCookiePlugin):
       except ValueError:
         number_of_sessions = None
 
+    event_data = GoogleAnalyticsEventData(u'utma')
+    event_data.cookie_name = self.COOKIE_NAME
+    event_data.domain_hash = domain_hash
+    event_data.sessions = number_of_sessions
+    event_data.url = url
+    event_data.visitor_id = visitor_identifier
+
     if first_visit_posix_time is not None:
-      event_object = GoogleAnalyticsEvent(
-          first_visit_posix_time, u'Analytics Creation Time', u'utma', url,
-          domain_hash=domain_hash, number_of_sessions=number_of_sessions,
-          visitor_identifier=visitor_identifier)
-      parser_mediator.ProduceEvent(event_object)
+      date_time = dfdatetime_posix_time.PosixTime(
+          timestamp=first_visit_posix_time)
+      event = time_events.DateTimeValuesEvent(
+          date_time, u'Analytics Creation Time')
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if previous_visit_posix_time is not None:
-      event_object = GoogleAnalyticsEvent(
-          previous_visit_posix_time, u'Analytics Previous Time', u'utma', url,
-          domain_hash=domain_hash, number_of_sessions=number_of_sessions,
-          visitor_identifier=visitor_identifier)
-      parser_mediator.ProduceEvent(event_object)
+      date_time = dfdatetime_posix_time.PosixTime(
+          timestamp=previous_visit_posix_time)
+      event = time_events.DateTimeValuesEvent(
+          date_time, u'Analytics Previous Time')
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
+    date_time = None
     if last_visit_posix_time is not None:
+      date_time = dfdatetime_posix_time.PosixTime(
+          timestamp=last_visit_posix_time)
       timestamp_description = eventdata.EventTimestamp.LAST_VISITED_TIME
     elif first_visit_posix_time is None and previous_visit_posix_time is None:
       # If both creation_time and written_time are None produce an event
       # object without a timestamp.
-      last_visit_posix_time = timelib.Timestamp.NONE_TIMESTAMP
+      date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
       timestamp_description = eventdata.EventTimestamp.NOT_A_TIME
 
-    if last_visit_posix_time is not None:
-      event_object = GoogleAnalyticsEvent(
-          last_visit_posix_time, timestamp_description, u'utma', url,
-          domain_hash=domain_hash, number_of_sessions=number_of_sessions,
-          visitor_identifier=visitor_identifier)
-      parser_mediator.ProduceEvent(event_object)
+    if date_time is not None:
+      event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
@@ -246,15 +243,21 @@ class GoogleAnalyticsUtmbPlugin(interface.BaseCookiePlugin):
         last_visit_posix_time = None
 
     if last_visit_posix_time is not None:
+      date_time = dfdatetime_posix_time.PosixTime(
+          timestamp=last_visit_posix_time)
       timestamp_description = eventdata.EventTimestamp.LAST_VISITED_TIME
     else:
-      last_visit_posix_time = timelib.Timestamp.NONE_TIMESTAMP
+      date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
       timestamp_description = eventdata.EventTimestamp.NOT_A_TIME
 
-    event_object = GoogleAnalyticsEvent(
-        last_visit_posix_time, timestamp_description, u'utmb', url,
-        domain_hash=domain_hash, number_of_pages_viewed=number_of_pages_viewed)
-    parser_mediator.ProduceEvent(event_object)
+    event_data = GoogleAnalyticsEventData(u'utmb')
+    event_data.cookie_name = self.COOKIE_NAME
+    event_data.domain_hash = domain_hash
+    event_data.pages_viewed = number_of_pages_viewed
+    event_data.url = url
+
+    event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 class GoogleAnalyticsUtmtPlugin(interface.BaseCookiePlugin):
@@ -297,14 +300,19 @@ class GoogleAnalyticsUtmtPlugin(interface.BaseCookiePlugin):
       last_visit_posix_time = None
 
     if last_visit_posix_time is not None:
+      date_time = dfdatetime_posix_time.PosixTime(
+          timestamp=last_visit_posix_time)
       timestamp_description = eventdata.EventTimestamp.LAST_VISITED_TIME
     else:
-      last_visit_posix_time = timelib.Timestamp.NONE_TIMESTAMP
+      date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
       timestamp_description = eventdata.EventTimestamp.NOT_A_TIME
 
-    event_object = GoogleAnalyticsEvent(
-        last_visit_posix_time, timestamp_description, u'utmt', url)
-    parser_mediator.ProduceEvent(event_object)
+    event_data = GoogleAnalyticsEventData(u'utmt')
+    event_data.cookie_name = self.COOKIE_NAME
+    event_data.url = url
+
+    event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
@@ -419,17 +427,25 @@ class GoogleAnalyticsUtmzPlugin(interface.BaseCookiePlugin):
         extra_attributes[key] = value_line
 
     if last_visit_posix_time is not None:
+      date_time = dfdatetime_posix_time.PosixTime(
+          timestamp=last_visit_posix_time)
       timestamp_description = eventdata.EventTimestamp.LAST_VISITED_TIME
     else:
-      last_visit_posix_time = timelib.Timestamp.NONE_TIMESTAMP
+      date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
       timestamp_description = eventdata.EventTimestamp.NOT_A_TIME
 
-    event_object = GoogleAnalyticsEvent(
-        last_visit_posix_time, timestamp_description, u'utmz', url,
-        domain_hash=domain_hash, extra_attributes=extra_attributes,
-        number_of_sessions=number_of_sessions,
-        number_of_sources=number_of_sources)
-    parser_mediator.ProduceEvent(event_object)
+    event_data = GoogleAnalyticsEventData(u'utmz')
+    event_data.cookie_name = self.COOKIE_NAME
+    event_data.domain_hash = domain_hash
+    event_data.sessions = number_of_sessions
+    event_data.sources = number_of_sources
+    event_data.url = url
+
+    for key, value in iter(extra_attributes.items()):
+      setattr(event_data, key, value)
+
+    event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 manager.CookiePluginsManager.RegisterPlugins([

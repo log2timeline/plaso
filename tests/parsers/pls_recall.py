@@ -24,36 +24,29 @@ class PlsRecallTest(test_lib.ParserTestCase):
     # There are two events in test file.
     self.assertEqual(len(storage_writer.events), 2)
 
-    event_object = storage_writer.events[0]
+    event = storage_writer.events[0]
 
     timestamp_expected = timelib.Timestamp.CopyFromString(
-        u'2013-06-18 19:50:00:00:00')
-    self.assertEqual(event_object.timestamp, timestamp_expected)
+        u'2013-06-18 19:50:00.550')
+    self.assertEqual(event.timestamp, timestamp_expected)
 
-    sequence_expected = 206
-    self.assertEqual(event_object.sequence, sequence_expected)
-
-    username_expected = u'tsltmp'
-    self.assertEqual(event_object.username, username_expected)
-
-    database_name_expected = u'DB11'
-    self.assertEqual(event_object.database_name, database_name_expected)
+    self.assertEqual(event.sequence_number, 206)
+    self.assertEqual(event.username, u'tsltmp')
+    self.assertEqual(event.database_name, u'DB11')
 
     # The test file actually has 'test_databae' in the SQL string.
-    query_expected = u'SELECT * from test_databae where date > \'01/01/2012\''
-    self.assertEqual(event_object.query, query_expected)
+    expected_query = u'SELECT * from test_databae where date > \'01/01/2012\''
+    self.assertEqual(event.query, expected_query)
 
-    expected_msg = (
-        u'Sequence #206 '
-        u'User: tsltmp '
-        u'Database Name: DB11 '
-        u'Query: SELECT * from test_databae where date > \'01/01/2012\'')
+    expected_message = (
+        u'Sequence number: 206 '
+        u'Username: tsltmp '
+        u'Database name: DB11 '
+        u'Query: {0:s}').format(expected_query)
 
-    expected_msg_short = (
-        u'206 tsltmp DB11 '
-        u'SELECT * from test_databae where date > \'01/01/2012\'')
+    expected_short_message = u'206 tsltmp DB11 {0:s}'.format(expected_query)
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

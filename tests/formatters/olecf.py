@@ -9,17 +9,17 @@ from plaso.formatters import olecf
 from tests.formatters import test_lib
 
 
-class OleCfItemFormatterTest(test_lib.EventFormatterTestCase):
+class OLECFItemFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the OLECF item event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = olecf.OleCfItemFormatter()
+    event_formatter = olecf.OLECFItemFormatter()
     self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = olecf.OleCfItemFormatter()
+    event_formatter = olecf.OLECFItemFormatter()
 
     expected_attribute_names = [u'name']
 
@@ -29,17 +29,17 @@ class OleCfItemFormatterTest(test_lib.EventFormatterTestCase):
   # TODO: add test for GetMessages.
 
 
-class OleCfDestListEntryFormatterTest(test_lib.EventFormatterTestCase):
+class OLECFDestListEntryFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the DestList stream event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = olecf.OleCfDestListEntryFormatter()
+    event_formatter = olecf.OLECFDestListEntryFormatter()
     self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = olecf.OleCfDestListEntryFormatter()
+    event_formatter = olecf.OLECFDestListEntryFormatter()
 
     expected_attribute_names = [
         u'entry_number',
@@ -57,17 +57,17 @@ class OleCfDestListEntryFormatterTest(test_lib.EventFormatterTestCase):
   # TODO: add test for GetMessages.
 
 
-class OleCfDocumentSummaryInfoFormatterTest(test_lib.EventFormatterTestCase):
+class OLECFDocumentSummaryInfoFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the Document Summary Info property set stream event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = olecf.OleCfDocumentSummaryInfoFormatter()
+    event_formatter = olecf.OLECFDocumentSummaryInfoFormatter()
     self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = olecf.OleCfDocumentSummaryInfoFormatter()
+    event_formatter = olecf.OLECFDocumentSummaryInfoFormatter()
 
     expected_attribute_names = [
         u'number_of_bytes',
@@ -92,17 +92,17 @@ class OleCfDocumentSummaryInfoFormatterTest(test_lib.EventFormatterTestCase):
   # TODO: add test for GetMessages.
 
 
-class OleCfSummaryInfoFormatter(test_lib.EventFormatterTestCase):
+class OLECFSummaryInfoFormatter(test_lib.EventFormatterTestCase):
   """Tests for the Summary Info property set stream event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = olecf.OleCfSummaryInfoFormatter()
+    event_formatter = olecf.OLECFSummaryInfoFormatter()
     self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = olecf.OleCfSummaryInfoFormatter()
+    event_formatter = olecf.OLECFSummaryInfoFormatter()
 
     expected_attribute_names = [
         u'title',

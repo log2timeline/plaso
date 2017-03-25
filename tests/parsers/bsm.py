@@ -12,13 +12,13 @@ from tests import test_lib as shared_test_lib
 from tests.parsers import test_lib
 
 
-class MacOSXBsmParserTest(test_lib.ParserTestCase):
+class MacOSXBSMParserTest(test_lib.ParserTestCase):
   """Tests for Basic Security Module (BSM) file parser."""
 
   @shared_test_lib.skipUnlessHasTestFile([u'apple.bsm'])
   def testParse(self):
     """Tests the Parse function on a Mac OS X BSM file."""
-    parser_object = bsm.BsmParser()
+    parser_object = bsm.BSMParser()
     knowledge_base_values = {u'guessed_os': u'MacOSX'}
     storage_writer = self._ParseFile(
         [u'apple.bsm'], parser_object,
@@ -26,14 +26,14 @@ class MacOSXBsmParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(len(storage_writer.events), 54)
 
-    event_object = storage_writer.events[0]
+    event = storage_writer.events[0]
 
-    self.assertEqual(event_object.data_type, u'mac:bsm:event')
+    self.assertEqual(event.data_type, u'mac:bsm:event')
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-04 18:36:20.000381')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
-    self.assertEqual(event_object.event_type, u'audit crash recovery (45029)')
+    self.assertEqual(event.timestamp, expected_timestamp)
+    self.assertEqual(event.event_type, u'audit crash recovery (45029)')
 
     expected_extra_tokens = {
         u'BSM_TOKEN_PATH': u'/var/audit/20131104171720.crash_recovery',
@@ -45,21 +45,21 @@ class MacOSXBsmParserTest(test_lib.ParserTestCase):
         u'BSM_TOKEN_TRAILER': 104
     }
 
-    self.assertEqual(event_object.extra_tokens, expected_extra_tokens)
+    self.assertEqual(event.extra_tokens, expected_extra_tokens)
 
     expected_return_value = {
         u'call_status': 0,
         u'error': u'Success',
         u'token_status': 0
     }
-    self.assertEqual(event_object.return_value, expected_return_value)
+    self.assertEqual(event.return_value, expected_return_value)
 
-    event_object = storage_writer.events[15]
+    event = storage_writer.events[15]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-04 18:36:26.000171')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
-    self.assertEqual(event_object.event_type, u'user authentication (45023)')
+    self.assertEqual(event.timestamp, expected_timestamp)
+    self.assertEqual(event.event_type, u'user authentication (45023)')
 
     expected_extra_tokens = {
         u'BSM_TOKEN_RETURN32': {
@@ -84,22 +84,22 @@ class MacOSXBsmParserTest(test_lib.ParserTestCase):
         u'BSM_TOKEN_TRAILER': 140
     }
 
-    self.assertEqual(event_object.extra_tokens, expected_extra_tokens)
+    self.assertEqual(event.extra_tokens, expected_extra_tokens)
 
     expected_return_value = {
         u'call_status': 5000,
         u'error': u'Unknown',
         u'token_status': 255
     }
-    self.assertEqual(event_object.return_value, expected_return_value)
+    self.assertEqual(event.return_value, expected_return_value)
 
-    event_object = storage_writer.events[31]
+    event = storage_writer.events[31]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-04 18:36:26.000530')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    self.assertEqual(event_object.event_type, u'SecSrvr AuthEngine (45025)')
+    self.assertEqual(event.event_type, u'SecSrvr AuthEngine (45025)')
     expected_extra_tokens = {
         u'BSM_TOKEN_RETURN32': {
             u'call_status': 0,
@@ -118,22 +118,22 @@ class MacOSXBsmParserTest(test_lib.ParserTestCase):
         u'BSM_TOKEN_TEXT': u'system.login.done',
         u'BSM_TOKEN_TRAILER': 110
     }
-    self.assertEqual(event_object.extra_tokens, expected_extra_tokens)
+    self.assertEqual(event.extra_tokens, expected_extra_tokens)
 
     expected_return_value = {
         u'call_status': 0,
         u'error': u'Success',
         u'token_status': 0
     }
-    self.assertEqual(event_object.return_value, expected_return_value)
+    self.assertEqual(event.return_value, expected_return_value)
 
-    event_object = storage_writer.events[50]
+    event = storage_writer.events[50]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-04 18:37:36.000399')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    self.assertEqual(event_object.event_type, u'session end (44903)')
+    self.assertEqual(event.event_type, u'session end (44903)')
 
     expected_extra_tokens = {
         u'BSM_TOKEN_ARGUMENT32': {
@@ -160,23 +160,23 @@ class MacOSXBsmParserTest(test_lib.ParserTestCase):
             u'uid': 0},
         u'BSM_TOKEN_TRAILER': 125
     }
-    self.assertEqual(event_object.extra_tokens, expected_extra_tokens)
+    self.assertEqual(event.extra_tokens, expected_extra_tokens)
 
     expected_return_value = {
         u'call_status': 0,
         u'error': u'Success',
         u'token_status': 0
     }
-    self.assertEqual(event_object.return_value, expected_return_value)
+    self.assertEqual(event.return_value, expected_return_value)
 
 
-class OpenBsmParserTest(test_lib.ParserTestCase):
+class OpenBSMParserTest(test_lib.ParserTestCase):
   """Tests for Basic Security Module (BSM) file parser."""
 
   @shared_test_lib.skipUnlessHasTestFile([u'openbsm.bsm'])
   def testParse(self):
     """Tests the Parse function on a "generic" BSM file."""
-    parser_object = bsm.BsmParser()
+    parser_object = bsm.BSMParser()
     knowledge_base_values = {u'guessed_os': u'openbsm'}
     storage_writer = self._ParseFile(
         [u'openbsm.bsm'],
@@ -282,10 +282,11 @@ class OpenBsmParserTest(test_lib.ParserTestCase):
          u'BSM_TOKEN_TRAILER': 31}
     ]
 
-    for event_object_index in range(0, 19):
-      event_object = storage_writer.events[event_object_index]
-      self.assertDictContains(
-          event_object.extra_tokens, expected_extra_tokens[event_object_index])
+    for event_index in range(0, 19):
+      event = storage_writer.events[event_index]
+      expected_extra_tokens_dict = expected_extra_tokens[event_index]
+      extra_tokens_dict = getattr(event, u'extra_tokens', {})
+      self.assertDictContains(extra_tokens_dict, expected_extra_tokens_dict)
 
 
 if __name__ == '__main__':

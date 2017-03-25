@@ -6,6 +6,9 @@ try:
 except ImportError:
   import sqlite3
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.parsers import sqlite
@@ -18,161 +21,124 @@ if sqlite3.sqlite_version_info < (3, 7, 8):
       u'FirefoxHistoryParser requires at least SQLite version 3.7.8.')
 
 
-class FirefoxPlacesBookmarkAnnotation(time_events.TimestampEvent):
-  """Convenience class for a Firefox bookmark annotation event."""
+class FirefoxPlacesBookmarkAnnotationEventData(events.EventData):
+  """Firefox bookmark annotation event data.
+
+  Attributes:
+    content (str): annotation content.
+    title (str): title of the bookmark folder.
+    url (str): bookmarked URL.
+  """
 
   DATA_TYPE = u'firefox:places:bookmark_annotation'
 
-  def __init__(
-      self, timestamp, timestamp_description, row_id, title, url, content):
-    """Initializes the event object.
-
-    Args:
-      timestamp: The timestamp which is an integer containing the number
-                 of micro seconds since January 1, 1970, 00:00:00 UTC.
-      timestamp_description: The usage string for the timestamp value.
-      row_id: The identifier of the corresponding row.
-      title: The title of the bookmark folder.
-      url: The bookmarked URL.
-      content: The content of the annotation.
-    """
-    super(FirefoxPlacesBookmarkAnnotation, self).__init__(
-        timestamp, timestamp_description)
-    self.content = content
-    self.offset = row_id
-    self.title = title
-    self.url = url
+  def __init__(self):
+    """Initializes event data."""
+    super(FirefoxPlacesBookmarkAnnotationEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.content = None
+    self.title = None
+    self.url = None
 
 
-class FirefoxPlacesBookmarkFolder(time_events.TimestampEvent):
-  """Convenience class for a Firefox bookmark folder event."""
+class FirefoxPlacesBookmarkFolderEventData(events.EventData):
+  """Firefox bookmark folder event data.
+
+  Attributes:
+    title (str): title of the bookmark folder.
+  """
 
   DATA_TYPE = u'firefox:places:bookmark_folder'
 
-  def __init__(self, timestamp, timestamp_description, row_id, title):
-    """Initializes the event object.
-
-    Args:
-      timestamp: The timestamp which is an integer containing the number
-                 of micro seconds since January 1, 1970, 00:00:00 UTC.
-      timestamp_description: The usage string for the timestamp value.
-      row_id: The identifier of the corresponding row.
-      title: The title of the bookmark folder.
-    """
-    super(FirefoxPlacesBookmarkFolder, self).__init__(
-        timestamp, timestamp_description)
-    self.offset = row_id
-    self.title = title
+  def __init__(self):
+    """Initializes event data."""
+    super(FirefoxPlacesBookmarkFolderEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.title = None
 
 
-class FirefoxPlacesBookmark(time_events.TimestampEvent):
-  """Convenience class for a Firefox bookmark event."""
+class FirefoxPlacesBookmarkEventData(events.EventData):
+  """Firefox bookmark event data.
+
+  Attributes:
+    bookmark_type (int): bookmark type.
+    hostname (str): hostname.
+    places_title (str): places title.
+    title (str): title of the bookmark folder.
+    url (str): bookmarked URL.
+    visit_count (int): visit count.
+  """
 
   DATA_TYPE = u'firefox:places:bookmark'
 
-  # TODO: move to formatter.
-  _TYPES = {
-      1: u'URL',
-      2: u'Folder',
-      3: u'Separator',
-  }
-  _TYPES.setdefault(u'N/A')
-
-  def __init__(
-      self, timestamp, timestamp_description, row_id, bookmark_type, title,
-      url, places_title, hostname, visit_count):
-    """Initializes the event object.
-
-    Args:
-      timestamp: The timestamp which is an integer containing the number
-                 of micro seconds since January 1, 1970, 00:00:00 UTC.
-      timestamp_description: The usage string for the timestamp value.
-      row_id: The identifier of the corresponding row.
-      bookmark_type: Integer value containing the bookmark type.
-      title: The title of the bookmark folder.
-      url: The bookmarked URL.
-      places_title: The places title.
-      hostname: The hostname.
-      visit_count: The visit count.
-    """
-    super(FirefoxPlacesBookmark, self).__init__(
-        timestamp, timestamp_description)
-    self.host = hostname
-    self.offset = row_id
-    self.places_title = places_title
-    self.title = title
-    self.type = self._TYPES[bookmark_type]
-    self.url = url
-    self.visit_count = visit_count
+  def __init__(self):
+    """Initializes event data."""
+    super(FirefoxPlacesBookmarkEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.host = None
+    self.places_title = None
+    self.title = None
+    self.type = None
+    self.url = None
+    self.visit_count = None
 
 
-class FirefoxPlacesPageVisitedEvent(time_events.TimestampEvent):
-  """Convenience class for a Firefox page visited event."""
+# TODO: refactor extra attribute.
+class FirefoxPlacesPageVisitedEventData(events.EventData):
+  """Firefox page visited event data.
+
+  Attributes:
+    extra (list[object]): extra event data.
+    hostname (str): visited hostname.
+    title (str): title of the visited page.
+    url (str): URL of the visited page.
+    visit_count (int): visit count.
+    visit_type (str): transition type for the event.
+  """
 
   DATA_TYPE = u'firefox:places:page_visited'
 
-  def __init__(self, timestamp, row_id, url, title, hostname, visit_count,
-               visit_type, extra):
-    """Initializes the event object.
-
-    Args:
-      timestamp: The timestamp which is an integer containing the number
-                 of micro seconds since January 1, 1970, 00:00:00 UTC.
-      row_id: The identifier of the corresponding row.
-      url: The URL of the visited page.
-      title: The title of the visited page.
-      hostname: The visited hostname.
-      visit_count: The visit count.
-      visit_type: The transition type for the event.
-      extra: A list containing extra event data (TODO refactor).
-    """
-    super(FirefoxPlacesPageVisitedEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.PAGE_VISITED)
-
-    self.offset = row_id
-    self.url = url
-    self.title = title
-    self.host = hostname
-    self.visit_count = visit_count
-    self.visit_type = visit_type
-    if extra:
-      self.extra = extra
+  def __init__(self):
+    """Initializes event data."""
+    super(FirefoxPlacesPageVisitedEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.extra = None
+    self.host = None
+    self.title = None
+    self.url = None
+    self.visit_count = None
+    self.visit_type = None
 
 
-class FirefoxDownload(time_events.TimestampEvent):
-  """Convenience class for a Firefox download event."""
+class FirefoxDownloadEventData(events.EventData):
+  """Firefox download event data.
+
+  Attributes:
+    full_path (str): full path of the target of the download.
+    mime_type (str): mime type of the download.
+    name (str): name of the download.
+    received_bytes (int): number of bytes received.
+    referrer (str): referrer URL of the download.
+    temporary_location (str): temporary location of the download.
+    total_bytes (int): total number of bytes of the download.
+    url (str): source URL of the download.
+  """
 
   DATA_TYPE = u'firefox:downloads:download'
 
-  def __init__(
-      self, timestamp, timestamp_description, row_id, name, url, referrer,
-      full_path, temporary_location, received_bytes, total_bytes, mime_type):
-    """Initializes the event object.
-
-    Args:
-      timestamp: The timestamp which is an integer containing the number
-                 of micro seconds since January 1, 1970, 00:00:00 UTC.
-      timestamp_description: The usage string for the timestamp value.
-      row_id: The identifier of the corresponding row.
-      name: The name of the download.
-      url: The source URL of the download.
-      referrer: The referrer URL of the download.
-      full_path: The full path of the target of the download.
-      temporary_location: The temporary location of the download.
-      received_bytes: The number of bytes received.
-      total_bytes: The total number of bytes of the download.
-      mime_type: The mime type of the download.
-    """
-    super(FirefoxDownload, self).__init__(timestamp, timestamp_description)
-    self.full_path = full_path
-    self.mime_type = mime_type
-    self.name = name
-    self.offset = row_id
-    self.received_bytes = received_bytes
-    self.referrer = referrer
-    self.temporary_location = temporary_location
-    self.total_bytes = total_bytes
-    self.url = url
+  def __init__(self):
+    """Initializes event data."""
+    super(FirefoxDownloadEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.full_path = None
+    self.mime_type = None
+    self.name = None
+    self.offset = None
+    self.received_bytes = None
+    self.referrer = None
+    self.temporary_location = None
+    self.total_bytes = None
+    self.url = None
 
 
 class FirefoxHistoryPlugin(interface.SQLitePlugin):
@@ -223,6 +189,13 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       u'SELECT h.id AS id, p.url, p.rev_host FROM moz_places p, '
       u'moz_historyvisits h WHERE p.id = h.place_id')
 
+  # TODO: move to formatter.
+  _BOOKMARK_TYPES = {
+      1: u'URL',
+      2: u'Folder',
+      3: u'Separator',
+  }
+
   def ParseBookmarkAnnotationRow(
       self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a bookmark annotation row.
@@ -236,17 +209,28 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
 
-    if row['dateAdded']:
-      event_object = FirefoxPlacesBookmarkAnnotation(
-          row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
-          row['id'], row['title'], row['url'], row['content'])
-      parser_mediator.ProduceEvent(event_object, query=query)
+    event_data = FirefoxPlacesBookmarkAnnotationEventData()
+    event_data.content = row['content']
+    event_data.offset = row['id']
+    event_data.query = query
+    event_data.title = row['title']
+    event_data.url = row['url']
 
-    if row['lastModified']:
-      event_object = FirefoxPlacesBookmarkAnnotation(
-          row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
-          row['id'], row['title'], row['url'], row['content'])
-      parser_mediator.ProduceEvent(event_object, query=query)
+    timestamp = row['dateAdded']
+    if timestamp:
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.ADDED_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    timestamp = row['lastModified']
+    if timestamp:
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseBookmarkFolderRow(
       self, parser_mediator, row, query=None, **unused_kwargs):
@@ -261,22 +245,26 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
 
-    if not row['title']:
-      title = u'N/A'
-    else:
-      title = row['title']
+    event_data = FirefoxPlacesBookmarkFolderEventData()
+    event_data.offset = row['id']
+    event_data.query = query
+    event_data.title = row['title'] or u'N/A'
 
-    if row['dateAdded']:
-      event_object = FirefoxPlacesBookmarkFolder(
-          row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
-          row['id'], title)
-      parser_mediator.ProduceEvent(event_object, query=query)
+    timestamp = row['dateAdded']
+    if timestamp:
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.ADDED_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    if row['lastModified']:
-      event_object = FirefoxPlacesBookmarkFolder(
-          row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
-          row['id'], title)
-      parser_mediator.ProduceEvent(event_object, query=query)
+    timestamp = row['lastModified']
+    if timestamp:
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseBookmarkRow(
       self, parser_mediator, row, query=None, **unused_kwargs):
@@ -288,21 +276,31 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       row (sqlite3.Row): row.
       query (Optional[str]): query.
     """
-    if row['dateAdded']:
-      event_object = FirefoxPlacesBookmark(
-          row['dateAdded'], eventdata.EventTimestamp.ADDED_TIME,
-          row['id'], row['type'], row['bookmark_title'], row['url'],
-          row['places_title'], getattr(row, u'rev_host', u'N/A'),
-          row['visit_count'])
-      parser_mediator.ProduceEvent(event_object, query=query)
+    event_data = FirefoxPlacesBookmarkEventData()
+    event_data.host = row['rev_host'] or u'N/A'
+    event_data.offset = row['id']
+    event_data.places_title = row['places_title']
+    event_data.query = query
+    event_data.title = row['bookmark_title']
+    event_data.type = self._BOOKMARK_TYPES.get(row['type'], u'N/A')
+    event_data.url = row['url']
+    event_data.visit_count = row['visit_count']
 
-    if row['lastModified']:
-      event_object = FirefoxPlacesBookmark(
-          row['lastModified'], eventdata.EventTimestamp.MODIFICATION_TIME,
-          row['id'], row['type'], row['bookmark_title'], row['url'],
-          row['places_title'], getattr(row, u'rev_host', u'N/A'),
-          row['visit_count'])
-      parser_mediator.ProduceEvent(event_object, query=query)
+    timestamp = row['dateAdded']
+    if timestamp:
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.ADDED_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    timestamp = row['lastModified']
+    if timestamp:
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParsePageVisitedRow(
       self, parser_mediator, row, cache=None, database=None, query=None,
@@ -323,7 +321,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     # TODO: make extra conditional formatting.
     extras = []
     if row['from_visit']:
-      extras.append(u'visited from: {0}'.format(
+      extras.append(u'visited from: {0:s}'.format(
           self._GetUrl(row['from_visit'], cache, database)))
 
     if row['hidden'] == u'1':
@@ -334,12 +332,25 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     else:
       extras.append(u'(URL not typed directly)')
 
-    if row['visit_date']:
-      event_object = FirefoxPlacesPageVisitedEvent(
-          row['visit_date'], row['id'], row['url'], row['title'],
-          self._ReverseHostname(row['rev_host']), row['visit_count'],
-          row['visit_type'], extras)
-      parser_mediator.ProduceEvent(event_object, query=query)
+    event_data = FirefoxPlacesPageVisitedEventData()
+    event_data.host = self._ReverseHostname(row['rev_host'])
+    event_data.offset = row['id']
+    event_data.query = query
+    event_data.title = row['title']
+    event_data.url = row['url']
+    event_data.visit_count = row['visit_count']
+    event_data.visit_type = row['visit_type']
+
+    if extras:
+      event_data.extra = extras
+
+    timestamp = row['visit_date']
+    if timestamp:
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.PAGE_VISITED)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ReverseHostname(self, hostname):
     """Reverses the hostname and strips the leading dot.
@@ -422,21 +433,33 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
 
-    if row['startTime']:
-      event_object = FirefoxDownload(
-          row['startTime'], eventdata.EventTimestamp.START_TIME, row['id'],
-          row['name'], row['source'], row['referrer'], row['target'],
-          row['tempPath'], row['currBytes'], row['maxBytes'],
-          row['mimeType'])
-      parser_mediator.ProduceEvent(event_object, query=query)
+    event_data = FirefoxDownloadEventData()
+    event_data.full_path = row['target']
+    event_data.mime_type = row['mimeType']
+    event_data.name = row['name']
+    event_data.offset = row['id']
+    event_data.query = query
+    event_data.received_bytes = row['currBytes']
+    event_data.referrer = row['referrer']
+    event_data.temporary_location = row['tempPath']
+    event_data.total_bytes = row['maxBytes']
+    event_data.url = row['source']
 
-    if row['endTime']:
-      event_object = FirefoxDownload(
-          row['endTime'], eventdata.EventTimestamp.END_TIME, row['id'],
-          row['name'], row['source'], row['referrer'], row['target'],
-          row['tempPath'], row['currBytes'], row['maxBytes'],
-          row['mimeType'])
-      parser_mediator.ProduceEvent(event_object, query=query)
+    timestamp = row['startTime']
+    if timestamp:
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.START_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    timestamp = row['endTime']
+    if timestamp:
+      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+          timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.END_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugins([

@@ -4,9 +4,13 @@
 
 import unittest
 
-from tests.formatters import test_lib
+from dfdatetime import posix_time as dfdatetime_posix_time
+
+from plaso.containers import time_events
 from plaso.formatters import zsh_extended_history
-from plaso.parsers import zsh_extended_history as zsh_parser
+from plaso.lib import eventdata
+
+from tests.formatters import test_lib
 
 
 class ZshExtendedHistoryFormatterTest(test_lib.EventFormatterTestCase):
@@ -27,11 +31,15 @@ class ZshExtendedHistoryFormatterTest(test_lib.EventFormatterTestCase):
 
   def testGetMessages(self):
     """Tests the GetMessages method."""
-    mediator = None
-    event = zsh_parser.ZshHistoryEvent(1457771210, 0, u'cd plaso')
+    date_time = dfdatetime_posix_time.PosixTime(timestamp=1457771210)
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+    event.command = u'cd plaso'
+    event.data_type = u'shell:zsh:history'
+    event.elapsed_seconds = 0
 
     expected_messages = (u'cd plaso Time elapsed: 0 seconds', u'cd plaso')
-    messages = self._formatter.GetMessages(mediator, event)
+    messages = self._formatter.GetMessages(None, event)
     self.assertEqual(messages, expected_messages)
 
 

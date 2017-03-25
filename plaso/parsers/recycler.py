@@ -3,6 +3,10 @@
 
 import construct
 
+from dfdatetime import filetime as dfdatetime_filetime
+from dfdatetime import semantic_time as dfdatetime_semantic_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import binary
 from plaso.lib import eventdata
@@ -10,13 +14,12 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-class WinRecycleEvent(time_events.FiletimeEvent):
-  """Convenience class for a Windows Recycle Bin event.
+class WinRecycleBinEventData(events.EventData):
+  """Windows Recycle Bin event data.
 
   Attributes:
     drive_number (int): drive number.
     file_size (int): file size.
-    offset (int): offset of the record on which the event is based.
     original_filename (str): filename.
     record_index (int): index of the record on which the event is based.
     short_filename (str): short filename.
@@ -24,31 +27,14 @@ class WinRecycleEvent(time_events.FiletimeEvent):
 
   DATA_TYPE = u'windows:metadata:deleted_item'
 
-  def __init__(
-      self, filetime, filename, file_size, ascii_filename=None,
-      drive_number=None, offset=None, record_index=None):
-    """Initializes an event.
-
-    Args:
-      filetime (int): FILETIME timestamp value.
-      filename (str): filename.
-      file_size (int): file size.
-      ascii_filename (Optional[str]): typically the short filename stored
-          as an ASCII string, which is set when the INFO2 record contains
-          an ASCII filename.
-      drive_number (Optional[int]): drive number.
-      offset (Optional[int]): offset of the record on which the event is based.
-      record_index (Optional[int]): index of the record on which the event is
-          based.
-    """
-    super(WinRecycleEvent, self).__init__(
-        filetime, eventdata.EventTimestamp.DELETED_TIME)
-    self.drive_number = drive_number
-    self.file_size = file_size
-    self.offset = offset
-    self.original_filename = filename or ascii_filename
-    self.record_index = record_index
-    self.short_filename = ascii_filename
+  def __init__(self):
+    """Initializes Windows Recycle Bin event data."""
+    super(WinRecycleBinEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.drive_number = None
+    self.file_size = None
+    self.original_filename = None
+    self.record_index = None
+    self.short_filename = None
 
 
 class WinRecycleBinParser(interface.FileObjectParser):
@@ -68,6 +54,31 @@ class WinRecycleBinParser(interface.FileObjectParser):
       construct.ULInt32(u'number_of_characters'),
       construct.String(
           u'string', lambda ctx: ctx.number_of_characters * 2))
+
+  def _ReadFilename(self, parser_mediator, file_object, format_version):
+    """Reads the filename.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (FileIO): file-like object.
+      format_version (int): format version.
+
+    Returns:
+      str: filename
+    """
+    if format_version == 1:
+      return binary.ReadUTF16Stream(file_object)
+
+    try:
+      filename_struct = self._FILENAME_V2_STRUCT.parse_stream(file_object)
+
+    except (IOError, construct.FieldError) as exception:
+      parser_mediator.ProduceExtractionError(
+          u'unable to parse filename with error: {0:s}'.format(exception))
+      return
+
+    return binary.ReadUTF16(filename_struct.string)
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows RecycleBin $Ixx file-like object.
@@ -97,23 +108,20 @@ class WinRecycleBinParser(interface.FileObjectParser):
               header_struct.format_version))
       return
 
-    filename = None
-    if header_struct.format_version == 1:
-      filename = binary.ReadUTF16Stream(file_object)
-
+    if header_struct.deletion_time == 0:
+      date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
     else:
-      try:
-        filename_struct = self._FILENAME_V2_STRUCT.parse_stream(file_object)
-        filename = binary.ReadUTF16(filename_struct.string)
+      date_time = dfdatetime_filetime.Filetime(
+          timestamp=header_struct.deletion_time)
 
-      except (IOError, construct.FieldError) as exception:
-        parser_mediator.ProduceExtractionError(
-            u'unable to parse filename with error: {0:s}'.format(exception))
-        return
+    event_data = WinRecycleBinEventData()
+    event_data.original_filename = self._ReadFilename(
+        parser_mediator, file_object, header_struct.format_version)
+    event_data.file_size = header_struct.file_size
 
-    event = WinRecycleEvent(
-        header_struct.deletion_time, filename, header_struct.file_size)
-    parser_mediator.ProduceEvent(event)
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.DELETED_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 class WinRecyclerInfo2Parser(interface.FileObjectParser):
@@ -141,6 +149,70 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
 
   _RECORD_INDEX_OFFSET = 0x104
   _UNICODE_FILENAME_OFFSET = 0x118
+
+  def _ParseRecord(
+      self, parser_mediator, file_object, record_offset, record_size):
+    """Parses an INFO-2 record.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
+      record_offset (int): record offset.
+      record_size (int): record size.
+    """
+    record_data = file_object.read(record_size)
+
+    try:
+      ascii_filename = self._ASCII_STRING.parse(record_data)
+
+    except (IOError, construct.FieldError) as exception:
+      parser_mediator.ProduceExtractionError((
+          u'unable to parse recycler ASCII filename at offset: 0x{0:08x} '
+          u'with error: {1:s}').format(record_offset, exception))
+
+    try:
+      recycler_record_struct = self._RECYCLER_RECORD_STRUCT.parse(
+          record_data[self._RECORD_INDEX_OFFSET:])
+    except (IOError, construct.FieldError) as exception:
+      parser_mediator.ProduceExtractionError((
+          u'unable to parse recycler index record at offset: 0x{0:08x} '
+          u'with error: {1:s}').format(
+              record_offset + self._RECORD_INDEX_OFFSET, exception))
+
+    unicode_filename = None
+    if record_size == 800:
+      unicode_filename = binary.ReadUTF16(
+          record_data[self._UNICODE_FILENAME_OFFSET:])
+
+    ascii_filename = None
+    if ascii_filename and parser_mediator.codepage:
+      try:
+        ascii_filename = ascii_filename.decode(parser_mediator.codepage)
+      except UnicodeDecodeError:
+        ascii_filename = ascii_filename.decode(
+            parser_mediator.codepage, errors=u'replace')
+
+    elif ascii_filename:
+      ascii_filename = repr(ascii_filename)
+
+    if recycler_record_struct.deletion_time == 0:
+      date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+    else:
+      date_time = dfdatetime_filetime.Filetime(
+          timestamp=recycler_record_struct.deletion_time)
+
+    event_data = WinRecycleBinEventData()
+    event_data.drive_number = recycler_record_struct.drive_number
+    event_data.original_filename = unicode_filename or ascii_filename
+    event_data.file_size = recycler_record_struct.file_size
+    event_data.offset = record_offset
+    event_data.record_index = recycler_record_struct.index
+    event_data.short_filename = ascii_filename
+
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.DELETED_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows Recycler INFO2 file-like object.
@@ -176,51 +248,13 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
       return
 
     record_offset = self._FILE_HEADER_STRUCT.sizeof()
+    file_size = file_object.get_size()
 
-    data = file_object.read(record_size)
-    while len(data) == record_size:
-      try:
-        ascii_filename = self._ASCII_STRING.parse(data)
-
-      except (IOError, construct.FieldError) as exception:
-        parser_mediator.ProduceExtractionError((
-            u'unable to parse recycler ASCII filename at offset: 0x{0:08x} '
-            u'with error: {1:s}').format(record_offset, exception))
-
-      try:
-        recycler_record_struct = self._RECYCLER_RECORD_STRUCT.parse(
-            data[self._RECORD_INDEX_OFFSET:])
-      except (IOError, construct.FieldError) as exception:
-        parser_mediator.ProduceExtractionError((
-            u'unable to parse recycler index record at offset: 0x{0:08x} '
-            u'with error: {1:s}').format(
-                record_offset + self._RECORD_INDEX_OFFSET, exception))
-
-      unicode_filename = None
-      if record_size == 800:
-        unicode_filename = binary.ReadUTF16(
-            data[self._UNICODE_FILENAME_OFFSET:])
-
-      ascii_filename = None
-      if ascii_filename and parser_mediator.codepage:
-        try:
-          ascii_filename = ascii_filename.decode(parser_mediator.codepage)
-        except UnicodeDecodeError:
-          ascii_filename = ascii_filename.decode(
-              parser_mediator.codepage, errors=u'replace')
-
-      elif ascii_filename:
-        ascii_filename = repr(ascii_filename)
-
-      event = WinRecycleEvent(
-          recycler_record_struct.deletion_time, unicode_filename,
-          recycler_record_struct.file_size, ascii_filename=ascii_filename,
-          drive_number=recycler_record_struct.drive_number,
-          offset=record_offset, record_index=recycler_record_struct.index)
-      parser_mediator.ProduceEvent(event)
+    while record_offset < file_size:
+      self._ParseRecord(
+          parser_mediator, file_object, record_offset, record_size)
 
       record_offset += record_size
-      data = file_object.read(record_size)
 
 
 manager.ParsersManager.RegisterParsers([

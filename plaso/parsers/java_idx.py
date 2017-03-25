@@ -11,6 +11,9 @@ import os
 
 import construct
 
+from dfdatetime import java_time as dfdatetime_java_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -19,26 +22,23 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-class JavaIDXEvent(time_events.TimestampEvent):
-  """Convenience class for a Java IDX cache file download event."""
+class JavaIDXEventData(events.EventData):
+  """Java IDX cache file event data.
+
+  Attributes:
+    idx_version (str): format version of IDX file.
+    ip_address (str): IP address of the host in the URL.
+    url (str): URL of the downloaded file.
+  """
 
   DATA_TYPE = u'java:download:idx'
 
-  def __init__(
-      self, timestamp, timestamp_description, idx_version, url, ip_address):
-    """Initializes the event object.
-
-    Args:
-      timestamp: The timestamp value.
-      timestamp_description: The description of the usage of the time value.
-      idx_version: Version of IDX file.
-      url: URL of the downloaded file.
-      ip_address: IP address of the host in the URL.
-    """
-    super(JavaIDXEvent, self).__init__(timestamp, timestamp_description)
-    self.idx_version = idx_version
-    self.url = url
-    self.ip_address = ip_address
+  def __init__(self):
+    """Initializes event data."""
+    super(JavaIDXEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.idx_version = None
+    self.ip_address = None
+    self.url = None
 
 
 class JavaIDXParser(interface.FileObjectParser):
@@ -192,28 +192,29 @@ class JavaIDXParser(interface.FileObjectParser):
       raise errors.UnableToParseFile(
           u'Unexpected Error: URL or IP address not found in file.')
 
-    last_modified_timestamp = timelib.Timestamp.FromJavaTime(
-        last_modified_date)
-    # TODO: Move the timestamp description fields into eventdata.
-    event_object = JavaIDXEvent(
-        last_modified_timestamp, u'File Hosted Date', magic.idx_version, url,
-        ip_address)
-    parser_mediator.ProduceEvent(event_object)
+    event_data = JavaIDXEventData()
+    event_data.idx_version = magic.idx_version
+    event_data.ip_address = ip_address
+    event_data.url = url
+
+    date_time = dfdatetime_java_time.JavaTime(timestamp=last_modified_date)
+    # TODO: Move the timestamp description into eventdata.
+    event = time_events.DateTimeValuesEvent(date_time, u'File Hosted Date')
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if section_one:
       expiration_date = section_one.get(u'expiration_date', None)
       if expiration_date:
-        expiration_timestamp = timelib.Timestamp.FromJavaTime(expiration_date)
-        event_object = JavaIDXEvent(
-            expiration_timestamp, u'File Expiration Date', magic.idx_version,
-            url, ip_address)
-        parser_mediator.ProduceEvent(event_object)
+        date_time = dfdatetime_java_time.JavaTime(
+            timestamp=expiration_date)
+        event = time_events.DateTimeValuesEvent(
+            date_time, eventdata.EventTimestamp.EXPIRATION_TIME)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if download_date:
-      event_object = JavaIDXEvent(
-          download_date, eventdata.EventTimestamp.FILE_DOWNLOADED,
-          magic.idx_version, url, ip_address)
-      parser_mediator.ProduceEvent(event_object)
+      event = time_events.TimestampEvent(
+          download_date, eventdata.EventTimestamp.FILE_DOWNLOADED)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 manager.ParsersManager.RegisterParser(JavaIDXParser)

@@ -45,18 +45,18 @@ class FormattersManagerTest(shared_test_lib.BaseTestCase):
     text_message_short = None
 
     test_events = containers_test_lib.CreateTestEvents()
-    for event_object in test_events:
+    for event in test_events:
       message, message_short = manager.FormattersManager.GetMessageStrings(
-          formatter_mediator, event_object)
+          formatter_mediator, event)
       source_short, source_long = manager.FormattersManager.GetSourceStrings(
-          event_object)
+          event)
 
       if source_short == u'LOG' and not text_message:
         text_message = message
         text_message_short = message_short
 
       csv_message_strings = u'{0:d},{1:s},{2:s},{3:s}'.format(
-          event_object.timestamp, source_short, source_long, message)
+          event.timestamp, source_short, source_long, message)
       message_strings.append(csv_message_strings)
 
     self.assertIn((

@@ -28,35 +28,29 @@ import logging
 
 import pyparsing
 
+from dfdatetime import time_elements as dfdatetime_time_elements
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
-from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
-class DpkgLineEvent(time_events.TimestampEvent):
-  """Convenience class for a Dpkg log line event.
+class DpkgEventData(events.EventData):
+  """Dpkg event data.
 
   Attributes:
-    timestamp (time): timestamp.
     body (str): body of the log line.
   """
 
   DATA_TYPE = u'dpkg:line'
 
-  def __init__(self, timestamp, body):
-    """Initializes an event.
-
-    Args:
-      timestamp (int): timestamp, which contains the number of micro seconds
-          since January 1, 1970, 00:00:00 UTC.
-      body (str): body of the log line.
-    """
-    super(DpkgLineEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.ADDED_TIME)
-    self.body = body
+  def __init__(self):
+    """Initializes event data."""
+    super(DpkgEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.body = None
 
 
 class DpkgParser(text_parser.PyparsingSingleLineTextParser):
@@ -121,8 +115,7 @@ class DpkgParser(text_parser.PyparsingSingleLineTextParser):
       joinString=u' ', adjacent=False)
 
   _DPKG_LOG_LINE = (
-      text_parser.PyparsingConstants.DATE.setResultsName(u'date') +
-      text_parser.PyparsingConstants.TIME.setResultsName(u'time') +
+      text_parser.PyparsingConstants.DATE_TIME.setResultsName(u'date_time') +
       pyparsing.MatchFirst([
           _DPKG_STARTUP_BODY,
           _DPKG_STATUS_BODY,
@@ -147,48 +140,33 @@ class DpkgParser(text_parser.PyparsingSingleLineTextParser):
       raise errors.ParseError(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-    timestamp = self._GetTimestampFromLine(structure)
-    if not timestamp:
+    try:
+      date_time = dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=structure.date_time)
+    except ValueError:
       parser_mediator.ProduceExtractionError(
-          u'DpkgLog invalid timestamp {0:s}'.format(structure.timestamp))
+          u'invalid date time value: {0!s}'.format(structure.date_time))
       return
 
     body_text = structure.body
     if not body_text:
       parser_mediator.ProduceExtractionError(
-          u'DpkgLog invalid body {0:s}'.format(structure.body))
+          u'invalid body {0:s}'.format(structure.body))
       return
 
-    event_object = DpkgLineEvent(timestamp, body_text)
-    parser_mediator.ProduceEvent(event_object)
+    event_data = DpkgEventData()
+    event_data.body = body_text
 
-  def _GetTimestampFromLine(self, structure):
-    """Retrieves a timestamp from the structure.
-    The following is an example of the timestamp structure expected
-        date: list:[month, day, year]
-            ex.[2013, 07, 25]
-        time: list: list:[hours, minutes, seconds]
-            ex. [16, 03, 24] .
-
-    Args:
-      structure (pyparsing.ParseResults): structure of tokens derived from
-          a line of a text file.
-
-    Returns:
-      int: The timestamp in microseconds or 0 on error.
-    """
-    hour, minute, second = structure.time
-    year, month, day = structure.date
-
-    return timelib.Timestamp.FromTimeParts(
-        year, month, day, hour, minute, second)
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.ADDED_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyStructure(self, parser_mediator, line):
     """Verifies if a line from a text file is in the expected format.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
-      line (str): line from a text file.
+      line (bytes): line from a text file.
 
     Returns:
       bool: True if the line is in the expected format, False if not.
@@ -201,9 +179,8 @@ class DpkgParser(text_parser.PyparsingSingleLineTextParser):
               exception))
       return False
 
-    return (u'date' in structure
-            and u'time' in structure
-            and u'body' in structure)
+    return (
+        u'date_time' in structure and u'body' in structure)
 
 
 manager.ParsersManager.RegisterParser(DpkgParser)

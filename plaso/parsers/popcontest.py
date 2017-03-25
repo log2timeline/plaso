@@ -85,6 +85,9 @@ import sys
 
 import pyparsing
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.lib import timelib
@@ -95,51 +98,45 @@ from plaso.parsers import text_parser
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
 
-class PopularityContestSessionEvent(time_events.PosixTimeEvent):
-  """Convenience class for a Popularity Contest start/end event."""
+class PopularityContestSessionEventData(events.EventData):
+  """Popularity Contest session event data.
+
+  Attributes:
+    details (str): version and host architecture.
+    hostid (str): host uuid.
+    session (int): session number.
+    status (str): session status, either "start" or "end".
+  """
 
   DATA_TYPE = u'popularity_contest:session:event'
 
-  def __init__(self, posix_time, session, status, details=None, hostid=None):
-    """Initializes the event object.
-
-    Args:
-      posix_time: the the start/end POSIX time value, which contains the
-                  number of seconds since January 1, 1970 00:00:00 UTC.
-      session: the session number.
-      status: start or end of the session.
-      details: optional popularity contest version and host architecture.
-      hostid: optional host uuid.
-    """
-    super(PopularityContestSessionEvent, self).__init__(
-        posix_time, eventdata.EventTimestamp.ADDED_TIME)
-    self.details = details
-    self.hostid = hostid
-    self.session = session
-    self.status = status
+  def __init__(self):
+    """Initializes event data."""
+    super(PopularityContestSessionEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.details = None
+    self.hostid = None
+    self.session = None
+    self.status = None
 
 
-class PopularityContestEvent(time_events.PosixTimeEvent):
-  """Convenience class for a Popularity Contest line event."""
+class PopularityContestEventData(events.EventData):
+  """Popularity Contest event data.
+
+  Attributes:
+    mru (str): recently used app/library from package.
+    package (str): installed packaged name, which the mru belongs to.
+    tag (str): popularity context tag.
+  """
 
   DATA_TYPE = u'popularity_contest:log:event'
 
-  def __init__(self, posix_time, timestamp_description, package, mru, tag=None):
-    """Initializes the event object.
-
-    Args:
-      posix_time: the access POSIX time value, which contains the
-                  number of seconds since January 1, 1970 00:00:00 UTC.
-      timestamp_description: The usage string for the timestamp value.
-      package: the installed packaged name, whom mru belongs to.
-      mru: the recently used app/library from package.
-      tag: optional popularity context tag.
-    """
-    super(PopularityContestEvent, self).__init__(
-        posix_time, timestamp_description)
-    self.mru = mru
-    self.package = package
-    self.record_tag = tag
+  def __init__(self):
+    """Initializes event data."""
+    super(PopularityContestEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.mru = None
+    self.package = None
+    self.record_tag = None
 
 
 class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
@@ -193,14 +190,20 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
     """Parses an event object from the log line.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      structure: the log line structure object (instance of
-                 pyparsing.ParseResults).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): structure parsed from the log file.
     """
     # Required fields are <mru> and <atime> and we are not interested in
     # log lines without <mru>.
     if not structure.mru:
       return
+
+    event_data = PopularityContestEventData()
+    event_data.mru = structure.mru
+    event_data.package = structure.package
+    event_data.record_tag = structure.tag
 
     # The <atime> field (as <ctime>) is always present but could be 0.
     # In case of <atime> equal to 0, we are in <NOFILES> case, safely return
@@ -208,68 +211,68 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
     if structure.atime:
       # TODO: not doing any check on <tag> fields, even if only informative
       # probably it could be better to check for the expected values.
-      event_object = PopularityContestEvent(
-          structure.atime, eventdata.EventTimestamp.ACCESS_TIME,
-          structure.package, structure.mru, tag=structure.tag)
-      parser_mediator.ProduceEvent(event_object)
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=structure.atime)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.ACCESS_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if structure.ctime:
-      event_object = PopularityContestEvent(
-          structure.ctime, eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME,
-          structure.package, structure.mru, tag=structure.tag)
-      parser_mediator.ProduceEvent(event_object)
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=structure.ctime)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: An identification string indicating the name of the parsed
-           structure.
-      structure: A pyparsing.ParseResults object from a line in the
-                 log file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): structure parsed from the log file.
     """
+    if key not in (u'footer', u'header', u'logline'):
+      logging.warning(
+          u'PopularityContestParser, unknown structure: {0:s}.'.format(key))
+      return
+
     # TODO: Add anomaly objects for abnormal timestamps, such as when the log
     # timestamp is greater than the session start.
     if key == u'logline':
       self._ParseLogLine(parser_mediator, structure)
 
-    elif key == u'header':
-      if not structure.timestamp:
-        logging.debug(
-            u'PopularityContestParser, header with invalid timestamp.')
-        return
-
-      session = u'{0!s}'.format(structure.session)
-      event_object = PopularityContestSessionEvent(
-          structure.timestamp, session, u'start', details=structure.details,
-          hostid=structure.id)
-      parser_mediator.ProduceEvent(event_object)
-
-    elif key == u'footer':
-      if not structure.timestamp:
-        logging.debug(
-            u'PopularityContestParser, footer with invalid timestamp.')
-        return
-
-      session = u'{0!s}'.format(structure.session)
-      event_object = PopularityContestSessionEvent(
-          structure.timestamp, session, u'end')
-      parser_mediator.ProduceEvent(event_object)
-
     else:
-      logging.warning(
-          u'PopularityContestParser, unknown structure: {0:s}.'.format(key))
+      if not structure.timestamp:
+        logging.debug(
+            u'[{0:s}] {1:s} with invalid timestamp.'.format(self.NAME, key))
+        return
+
+      event_data = PopularityContestSessionEventData()
+      event_data.session = u'{0!s}'.format(structure.session)
+
+      if key == u'header':
+        event_data.details = structure.details
+        event_data.hostid = structure.id
+        event_data.status = u'start'
+
+      elif key == u'footer':
+        event_data.status = u'end'
+
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=structure.timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.ADDED_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyStructure(self, parser_mediator, line):
     """Verify that this file is a Popularity Contest log file.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      line: A single line from the text file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      line (str): single line from the text file.
 
     Returns:
-      True if this is the correct parser, False otherwise.
+      bool: True if the line was successfully parsed.
     """
     try:
       header_struct = self.HEADER.parseString(line)

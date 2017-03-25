@@ -25,7 +25,7 @@ class SkypeChatEventData(events.EventData):
   DATA_TYPE = u'skype:event:chat'
 
   def __init__(self):
-    """Skype chat event data."""
+    """Initializes event data."""
     super(SkypeChatEventData, self).__init__(data_type=self.DATA_TYPE)
     self.from_account = None
     self.text = None

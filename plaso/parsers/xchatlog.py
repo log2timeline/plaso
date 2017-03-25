@@ -56,6 +56,9 @@ import logging
 
 import pyparsing
 
+from dfdatetime import time_elements as dfdatetime_time_elements
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -67,24 +70,21 @@ from plaso.parsers import text_parser
 __author__ = 'Francesco Picasso (francesco.picasso@gmail.com)'
 
 
-class XChatLogEvent(time_events.TimestampEvent):
-  """Convenience class for a XChat Log line event."""
+class XChatLogEventData(events.EventData):
+  """XChat Log event data.
+
+  Attributes:
+    nickname (str): nickname.
+    text (str): text sent by nickname or other text (server, messages, etc.).
+  """
+
   DATA_TYPE = u'xchat:log:line'
 
-  def __init__(self, timestamp, text, nickname=None):
-    """Initializes the event object.
-
-    Args:
-      timestamp: The timestamp which is an integer containing the number
-                 of micro seconds since January 1, 1970, 00:00:00 UTC.
-      text: The text sent by nickname or other text (server, messages, etc.).
-      nickname: optional string containing the XChat nickname.
-    """
-    super(XChatLogEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.ADDED_TIME)
-    self.text = text
-    if nickname:
-      self.nickname = nickname
+  def __init__(self):
+    """Initializes event data."""
+    super(XChatLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.nickname = None
+    self.text = None
 
 
 class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
@@ -97,152 +97,188 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
 
   # Common (header/footer/body) pyparsing structures.
   # TODO: Only English ASCII timestamp supported ATM, add support for others.
-  IGNORE_STRING = pyparsing.Word(pyparsing.printables).suppress()
-  LOG_ACTION = pyparsing.Word(
-      pyparsing.printables, min=3, max=5).setResultsName(u'log_action')
-  MONTH_NAME = pyparsing.Word(
-      pyparsing.printables, exact=3).setResultsName(u'month_name')
-  DAY = pyparsing.Word(pyparsing.nums, max=2).setParseAction(
-      text_parser.PyParseIntCast).setResultsName(u'day')
-  TIME = text_parser.PyparsingConstants.TIME.setResultsName(u'time')
-  YEAR = text_parser.PyparsingConstants.YEAR.setResultsName(u'year')
-  NICKNAME = pyparsing.QuotedString(
-      u'<', endQuoteChar=u'>').setResultsName(u'nickname')
-  TEXT = pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'text')
+
+  _WEEKDAY = pyparsing.Group(
+      pyparsing.Keyword(u'Sun') |
+      pyparsing.Keyword(u'Mon') |
+      pyparsing.Keyword(u'Tue') |
+      pyparsing.Keyword(u'Wed') |
+      pyparsing.Keyword(u'Thu') |
+      pyparsing.Keyword(u'Fri') |
+      pyparsing.Keyword(u'Sat'))
 
   # Header/footer pyparsing structures.
   # Sample: "**** BEGIN LOGGING AT Mon Dec 31 21:11:55 2011".
   # Note that "BEGIN LOGGING" text is localized (default, English) and can be
   # different if XChat locale is different.
-  HEADER_SIGNATURE = pyparsing.Keyword(u'****')
-  HEADER = (
-      HEADER_SIGNATURE.suppress() + LOG_ACTION +
-      pyparsing.Keyword(u'LOGGING AT').suppress() + IGNORE_STRING +
-      MONTH_NAME + DAY + TIME + YEAR)
+
+  _HEADER_SIGNATURE = pyparsing.Keyword(u'****')
+  _HEADER_DATE_TIME = pyparsing.Group(
+      _WEEKDAY.setResultsName(u'weekday') +
+      text_parser.PyparsingConstants.THREE_LETTERS.setResultsName(u'month') +
+      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
+      text_parser.PyparsingConstants.TIME_ELEMENTS +
+      text_parser.PyparsingConstants.FOUR_DIGITS.setResultsName(u'year'))
+  _LOG_ACTION = pyparsing.Group(
+      pyparsing.Word(pyparsing.printables) +
+      pyparsing.Word(pyparsing.printables) +
+      pyparsing.Word(pyparsing.printables))
+  _HEADER = (
+      _HEADER_SIGNATURE.suppress() + _LOG_ACTION.setResultsName(u'log_action') +
+      _HEADER_DATE_TIME.setResultsName(u'date_time'))
 
   # Body (nickname, text and/or service messages) pyparsing structures.
   # Sample: "dec 31 21:11:58 <fpi> ola plas-ing guys!".
-  LOG_LINE = MONTH_NAME + DAY + TIME + pyparsing.Optional(NICKNAME) + TEXT
 
-  # Define the available log line structures.
+  _DATE_TIME = pyparsing.Group(
+      text_parser.PyparsingConstants.THREE_LETTERS.setResultsName(u'month') +
+      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
+      text_parser.PyparsingConstants.TIME_ELEMENTS)
+  _NICKNAME = pyparsing.QuotedString(u'<', endQuoteChar=u'>').setResultsName(
+      u'nickname')
+  _LOG_LINE = (
+      _DATE_TIME.setResultsName(u'date_time') +
+      pyparsing.Optional(_NICKNAME) +
+      pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'text'))
+
   LINE_STRUCTURES = [
-      (u'logline', LOG_LINE),
-      (u'header', HEADER),
-      (u'header_signature', HEADER_SIGNATURE),
+      (u'logline', _LOG_LINE),
+      (u'header', _HEADER),
+      (u'header_signature', _HEADER_SIGNATURE),
   ]
 
   def __init__(self):
     """Initializes a parser object."""
     super(XChatLogParser, self).__init__()
-    self._xchat_year = 0
+    self._last_month = 0
+    self._xchat_year = None
     self.offset = 0
 
-  def _ConvertToTimestamp(self, structure, timezone, year=0):
-    """Converts date and time values into a timestamp.
+  def _GetTimeElementsTuple(self, structure):
+    """Retrieves a time elements tuple from the structure.
 
     Args:
-      structure: a log line structure (instance of pyparsing.ParseResults)
-                 that contains the log header.
-      timezone: The timezone object.
-      year: Optional current year.
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a text file.
 
     Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC.
-
-    Raises:
-      TimestampError: if the timestamp cannot be created from the date and
-                      time values.
+      tuple: contains:
+        year (int): year.
+        month (int): month, where 1 represents January.
+        day_of_month (int): day of month, where 1 is the first day of the month.
+        hours (int): hours.
+        minutes (int): minutes.
+        seconds (int): seconds.
     """
-    month = timelib.MONTH_DICT.get(structure.month_name.lower(), None)
-    if not month:
-      raise errors.TimestampError(
-          u'Unsupport month name: {0:s}'.format(structure.month_name))
+    month, day, hours, minutes, seconds = structure.date_time
 
-    hour, minute, second = structure.time
-    if not year:
-      # This condition could happen when parsing the header line: if unable
-      # to get a valid year, returns a '0' timestamp, thus preventing any
-      # log line parsing (since xchat_year is unset to '0') until a new good
-      # (it means supported) header with a valid year information is found.
-      # TODO: reconsider this behaviour.
-      year = structure.get(u'year', 0)
-      if not year:
-        raise errors.TimestampError(u'Missing year.')
+    month = timelib.MONTH_DICT.get(month.lower(), 0)
 
-      self._xchat_year = year
+    if month != 0 and month < self._last_month:
+      # Gap detected between years.
+      self._xchat_year += 1
 
-    day = structure.get(u'day', 0)
-    return timelib.Timestamp.FromTimeParts(
-        year, month, day, hour, minute, second, timezone=timezone)
+    return (self._xchat_year, month, day, hours, minutes, seconds)
 
   def _ParseHeader(self, parser_mediator, structure):
     """Parses a log header.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      structure: a log line structure (instance of pyparsing.ParseResults)
-                 that contains the log header.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a text file.
     """
+    _, month, day, hours, minutes, seconds, year = structure.date_time
+
+    month = timelib.MONTH_DICT.get(month.lower(), 0)
+
+    time_elements_tuple = (year, month, day, hours, minutes, seconds)
+
     try:
-      timestamp = self._ConvertToTimestamp(structure, parser_mediator.timezone)
-    except errors.TimestampError as exception:
+      date_time = dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=time_elements_tuple)
+      date_time.is_local_time = True
+    except ValueError:
       parser_mediator.ProduceExtractionError(
-          u'unable to determine timestamp with error: {0:s}'.format(
-              exception))
+          u'invalid date time value: {0!s}'.format(structure.date_time))
       return
 
-    if structure.log_action == u'BEGIN':
-      event_object = XChatLogEvent(timestamp, u'XChat start logging')
-      parser_mediator.ProduceEvent(event_object)
+    self._last_month = month
 
-    elif structure.log_action == u'END':
-      # End logging, unset year.
-      self._xchat_year = 0
-      event_object = XChatLogEvent(timestamp, u'XChat end logging')
-      parser_mediator.ProduceEvent(event_object)
+    event_data = XChatLogEventData()
+
+    if structure.log_action[0] == u'BEGIN':
+      self._xchat_year = year
+      event_data.text = u'XChat start logging'
+
+    elif structure.log_action[0] == u'END':
+      self._xchat_year = None
+      event_data.text = u'XChat end logging'
 
     else:
-      logging.warning(u'Unknown log action: {0:s}.'.format(
-          structure.log_action))
+      logging.debug(u'Unknown log action: {0:s}.'.format(
+          u' '.join(structure.log_action)))
+      return
+
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.ADDED_TIME,
+        time_zone=parser_mediator.timezone)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseLogLine(self, parser_mediator, structure):
     """Parses a log line.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      structure: a log line structure (instance of pyparsing.ParseResults)
-                 that contains the log line.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a text file.
     """
     if not self._xchat_year:
-      logging.debug(u'XChatLogParser, missing year information.')
       return
+
+    time_elements_tuple = self._GetTimeElementsTuple(structure)
 
     try:
-      timestamp = self._ConvertToTimestamp(
-          structure, parser_mediator.timezone, year=self._xchat_year)
-    except errors.TimestampError as exception:
+      date_time = dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=time_elements_tuple)
+      date_time.is_local_time = True
+    except ValueError:
       parser_mediator.ProduceExtractionError(
-          u'unable to determine timestamp with error: {0:s}'.format(
-              exception))
+          u'invalid date time value: {0!s}'.format(structure.date_time))
       return
 
+    self._last_month = time_elements_tuple[1]
+
+    event_data = XChatLogEventData()
+    event_data.nickname = structure.nickname
     # The text string contains multiple unnecessary whitespaces that need to
     # be removed, thus the split and re-join.
-    event_object = XChatLogEvent(
-        timestamp, u' '.join(structure.text.split()), structure.nickname)
-    parser_mediator.ProduceEvent(event_object)
+    event_data.text = u' '.join(structure.text.split())
+
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.ADDED_TIME,
+        time_zone=parser_mediator.timezone)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: An identification string indicating the name of the parsed
-           structure.
-      structure: a log line structure (instance of pyparsing.ParseResults)
-                 that contains the log line.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      key (str): identifier of the structure of tokens.
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a text file.
+
+    Raises:
+      ParseError: when the structure type is unknown.
     """
+    if key not in (u'header', u'header_signature', u'logline'):
+      raise errors.ParseError(
+          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+
     if key == u'logline':
       self._ParseLogLine(parser_mediator, structure)
 
@@ -258,35 +294,38 @@ class XChatLogParser(text_parser.PyparsingSingleLineTextParser):
       logging.warning(u'Unknown locale header.')
       self._xchat_year = 0
 
-    else:
-      logging.warning(
-          u'Unable to parse record, unknown structure: {0:s}'.format(key))
-
   def VerifyStructure(self, parser_mediator, line):
     """Verify that this file is a XChat log file.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      line: A single line from the text file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      line (bytes): line from a text file.
 
     Returns:
-      True if this is the correct parser, False otherwise.
+      bool: True if the line is in the expected format, False if not.
     """
     try:
-      parse_result = self.HEADER.parseString(line)
+      structure = self._HEADER.parseString(line)
     except pyparsing.ParseException:
-      logging.debug(u'Unable to parse, not a valid XChat log file header')
+      logging.debug(u'Not a XChat log file')
       return False
+
+    _, month, day, hours, minutes, seconds, year = structure.date_time
+
+    month = timelib.MONTH_DICT.get(month.lower(), 0)
+
+    time_elements_tuple = (year, month, day, hours, minutes, seconds)
 
     try:
-      self._ConvertToTimestamp(parse_result, parser_mediator.timezone)
-    except errors.TimestampError:
-      logging.debug(u'Wrong XChat timestamp: {0:s}'.format(parse_result))
+      dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=time_elements_tuple)
+    except ValueError:
+      logging.debug(
+          u'Not a XChat log file, invalid date and time: {0!s}'.format(
+              structure.date_time))
       return False
 
-    # Unset the xchat_year since we are only verifying structure.
-    # The value gets set in _ConvertToTimestamp during the actual parsing.
-    self._xchat_year = 0
     return True
 
 

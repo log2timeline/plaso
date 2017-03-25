@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 """Parser for OLE Compound Files (OLECF)."""
 
-import logging
-
 import pyolecf
 
 from plaso import dependencies
-from plaso.lib import errors
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -27,7 +24,11 @@ class OLECFParser(interface.FileObjectParser):
 
   @classmethod
   def GetFormatSpecification(cls):
-    """Retrieves the format specification."""
+    """Retrieves the format specification.
+
+    Returns:
+      FormatSpecification: format specification.
+    """
     format_specification = specification.FormatSpecification(cls.NAME)
 
     # OLECF
@@ -44,8 +45,9 @@ class OLECFParser(interface.FileObjectParser):
     """Parses an OLE Compound File (OLECF) file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
     """
     olecf_file = pyolecf.file()
     olecf_file.set_ascii_codepage(parser_mediator.codepage)
@@ -69,22 +71,33 @@ class OLECFParser(interface.FileObjectParser):
     # the default plugin) and run it. Only if none of the plugins
     # works will we use the default plugin.
 
-    # TODO: add a parser filter.
-    for plugin_object in self._plugin_objects:
-      try:
-        plugin_object.UpdateChainAndProcess(
-            parser_mediator, root_item=root_item, item_names=item_names)
-      except errors.WrongPlugin:
-        logging.debug(
-            u'[{0:s}] plugin: {1:s} cannot parse the OLECF file: {2:s}'.format(
-                self.NAME, plugin_object.NAME,
-                parser_mediator.GetDisplayName()))
+    item_names = frozenset(item_names)
 
-    if self._default_plugin:
-      self._default_plugin.UpdateChainAndProcess(
-          parser_mediator, root_item=root_item, item_names=item_names)
+    try:
+      for plugin in self._plugin_objects:
+        if item_names < plugin.REQUIRED_ITEMS:
+          continue
 
-    olecf_file.close()
+        try:
+          plugin.UpdateChainAndProcess(parser_mediator, root_item=root_item)
+
+        except Exception as exception:  # pylint: disable=broad-except
+          parser_mediator.ProduceExtractionError((
+              u'plugin: {0:s} unable to parse OLECF file with error: '
+              u'{1:s}').format(plugin.NAME, exception))
+
+      if self._default_plugin:
+        try:
+          self._default_plugin.UpdateChainAndProcess(
+              parser_mediator, root_item=root_item)
+
+        except Exception as exception:  # pylint: disable=broad-except
+          parser_mediator.ProduceExtractionError((
+              u'plugin: {0:s} unable to parse OLECF file with error: '
+              u'{1:s}').format(self._default_plugin.NAME, exception))
+
+    finally:
+      olecf_file.close()
 
 
 manager.ParsersManager.RegisterParser(OLECFParser)

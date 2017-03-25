@@ -32,8 +32,9 @@ class SoftwareUpdatePlugin(interface.PlistPlugin):
     """Extracts relevant Mac OS X update entries.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      match: Optional dictionary containing keys extracted from PLIST_KEYS.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
     root = u'/'
     key = u''

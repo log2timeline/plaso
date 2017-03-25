@@ -48,7 +48,7 @@ class TestIPodPlugin(test_lib.PlistPluginTestCase):
         u'Connected 1 times '
         u'Serial nr: 526F676572 '
         u'IMEI [012345678901234]')
-    expected_message_short = u'{0:s}...'.format(expected_message[0:77])
+    expected_message_short = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_message_short)

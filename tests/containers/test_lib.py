@@ -6,7 +6,6 @@ from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
 from plaso.containers import interface
-from plaso.containers import text_events
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import eventdata
@@ -112,17 +111,20 @@ def CreateTestEvents():
 
   test_events.append(event)
 
-  text_dict = {u'body': (
+  timestamp = timelib.Timestamp.CopyFromString(u'2012-06-05 22:14:19.000000')
+  # TODO: refactor to use event data.
+  event = time_events.TimestampEvent(
+      timestamp, eventdata.EventTimestamp.WRITTEN_TIME,
+      data_type=u'text:entry')
+  event.hostname = u'nomachine'
+  event.offset = 12
+  event.body = (
       u'This is a line by someone not reading the log line properly. And '
       u'since this log line exceeds the accepted 80 chars it will be '
-      u'shortened.'), u'hostname': u'nomachine', u'username': u'johndoe'}
-
-  # TODO: move this to a TextEvent unit test.
-  timestamp = timelib.Timestamp.CopyFromString(u'2012-06-05 22:14:19.000000')
-  event = text_events.TextEvent(timestamp, 12, text_dict)
+      u'shortened.')
+  # TODO: fix missing body attribute
   event.text = event.body
-  event.hostname = hostname
-  event.filename = filename
+  event.username = u'johndoe'
 
   test_events.append(event)
 

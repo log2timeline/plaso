@@ -7,6 +7,9 @@ The format specifications can be read here:
 
 import re
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.parsers import manager
@@ -14,8 +17,8 @@ from plaso.parsers import text_parser
 
 
 # TODO: refactor to pass user_sid as an int.
-class MactimeEvent(time_events.PosixTimeEvent):
-  """Convenience class for a mactime event.
+class MactimeEventData(events.EventData):
+  """Mactime event data.
 
   Attributes:
     filename (str): name of the file.
@@ -31,41 +34,17 @@ class MactimeEvent(time_events.PosixTimeEvent):
 
   DATA_TYPE = u'fs:mactime:line'
 
-  def __init__(
-      self, posix_time, timestamp_description, row_offset, filename,
-      inode_number, data_size, mode, user_uid, user_gid, md5_hash):
-    """Initializes a mactime event.
-
-    Args:
-      posix_time (int): POSIX time value, which contains the number of seconds
-          since January 1, 1970 00:00:00 UTC.
-      timestamp_description (str): description of the meaning of the timestamp
-          value.
-      row_offset (int): number of the corresponding line.
-      filename (str): name of the file.
-      inode_number (int): "inode" of the file. Note that inode is an
-          overloaded term in the context of mactime and used for MFT entry
-          index values as well.
-      data_size (int): size of the file content.
-      mode (str): protection mode.
-      user_uid (int): user identifier (UID).
-      user_gid (int): user group identifier (GID).
-      md5_hash (str): MD5 hash of the file content.
-    """
-    super(MactimeEvent, self).__init__(posix_time, timestamp_description)
-    self.filename = filename
-    self.inode = inode_number
-    self.md5 = md5_hash
-    self.mode_as_string = mode
-    self.offset = row_offset
-    self.size = data_size
-    self.user_gid = user_gid
-
-    if user_uid is None:
-      self.user_sid = None
-    else:
-      # Note that the user_sid value is expected to be a string.
-      self.user_sid = u'{0:d}'.format(user_uid)
+  def __init__(self):
+    """Initializes event data."""
+    super(MactimeEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.filename = None
+    self.inode = None
+    self.md5 = None
+    self.mode_as_string = None
+    self.offset = None
+    self.size = None
+    self.user_gid = None
+    self.user_sid = None
 
 
 class MactimeParser(text_parser.TextCSVParser):
@@ -132,6 +111,21 @@ class MactimeParser(text_parser.TextCSVParser):
     user_uid = self._GetIntegerValue(row, u'uid')
     user_gid = self._GetIntegerValue(row, u'gid')
 
+    event_data = MactimeEventData()
+    event_data.filename = filename
+    event_data.inode = inode_number
+    event_data.md5 = md5_hash
+    event_data.mode_as_string = mode
+    event_data.offset = row_offset
+    event_data.size = data_size
+    event_data.user_gid = user_gid
+
+    if user_uid is None:
+      event_data.user_sid = None
+    else:
+      # Note that the user_sid value is expected to be a string.
+      event_data.user_sid = u'{0:d}'.format(user_uid)
+
     for value_name, timestamp_description in iter(
         self._TIMESTAMP_DESC_MAP.items()):
       posix_time = self._GetIntegerValue(row, value_name)
@@ -139,10 +133,9 @@ class MactimeParser(text_parser.TextCSVParser):
       if not posix_time:
         continue
 
-      event = MactimeEvent(
-          posix_time, timestamp_description, row_offset, filename,
-          inode_number, data_size, mode, user_uid, user_gid, md5_hash)
-      parser_mediator.ProduceEvent(event)
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=posix_time)
+      event = time_events.DateTimeValuesEvent(date_time, timestamp_description)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyRow(self, unused_parser_mediator, row):
     """Verify we are dealing with a mactime bodyfile.

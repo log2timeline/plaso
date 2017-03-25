@@ -19,7 +19,8 @@ class DefaultPlugin(interface.PlistPlugin):
     """Simple method to exact date values from a Plist.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       top_level: Plist in dictionary form.
     """
     for root, key, value in interface.RecurseKey(top_level):
@@ -43,7 +44,8 @@ class DefaultPlugin(interface.PlistPlugin):
     and KEY.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       plist_name: Name of the plist file.
       top_level: Plist in dictionary form.
     """
