@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 """Parser for Systemd journal files."""
 
-try:
-  import lzma
-except ImportError:
-  lzma = None
+import lzma
 
 import construct
 
@@ -314,5 +311,4 @@ class SystemdJournalParser(interface.FileObjectParser):
                 exception))
 
 
-if lzma:
-  manager.ParsersManager.RegisterParser(SystemdJournalParser)
+manager.ParsersManager.RegisterParser(SystemdJournalParser)

@@ -1,11 +1,7 @@
 """Tests for the Systemd Journal parser."""
 
+import lzma
 import unittest
-
-try:
-  import lzma
-except ImportError:
-  lzma = None
 
 from plaso.lib import errors
 from plaso.lib import timelib
@@ -14,7 +10,6 @@ from plaso.parsers import systemd_journal
 from tests.parsers import test_lib
 
 
-@unittest.skipUnless(lzma, 'lzma missing')
 class SystemdJournalParserTest(test_lib.ParserTestCase):
   """Tests for the Systemd Journal parser."""
 

@@ -30,6 +30,7 @@ PYTHON_DEPENDENCIES = {
     u'hachoir_metadata': (u'__version__', u'1.3.3', None),
     u'hachoir_parser': (u'__version__', u'1.3.4', None),
     u'IPython': (u'__version__', u'1.2.1', None),
+    u'lzma': (u'__version__', u'0.5.3', None),
     u'pefile': (u'__version__', u'1.2.10-139', None),
     u'psutil': (u'__version__', u'1.2.1', None),
     u'pybde': (u'get_version()', u'20140531', None),
@@ -76,6 +77,7 @@ _DPKG_PACKAGE_NAMES = {
     u'hachoir_metadata': u'python-hachoir-metadata',
     u'hachoir_parser': u'python-hachoir-parser',
     u'IPython': u'ipython',
+    u'lzma': u'python-lzma',
     u'pybde': u'libbde-python',
     u'pyesedb': u'libesedb-python',
     u'pyevt': u'libevt-python',
@@ -107,6 +109,7 @@ _PYPI_PROJECT_NAMES = {
     u'hachoir_core': u'hachoir-core',
     u'hachoir_metadata': u'hachoir-metadata',
     u'hachoir_parser': u'hachoir-parser',
+    u'lzma': u'pyliblzma',
     u'pybde': u'libbde-python',
     u'pyesedb': u'libesedb-python',
     u'pyevt': u'libevt-python',
@@ -142,6 +145,7 @@ _RPM_PACKAGE_NAMES = {
     u'hachoir_metadata': u'python-hachoir-metadata',
     u'hachoir_parser': u'python-hachoir-parser',
     u'IPython': u'python-ipython',
+    u'lzma': u'pyliblzma',
     u'pybde': u'libbde-python',
     u'pyesedb': u'libesedb-python',
     u'pyevt': u'libevt-python',
@@ -406,7 +410,7 @@ def CheckTestDependencies():
     return False
 
   print(u'Checking availability and versions of test dependencies.')
-  for module_name, version_tuple in sorted(PYTHON_DEPENDENCIES.items()):
+  for module_name, version_tuple in sorted(PYTHON_TEST_DEPENDENCIES.items()):
     if not _CheckPythonModule(
         module_name, version_tuple[0], version_tuple[1],
         maximum_version=version_tuple[2]):
