@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 """Parser for Systemd journal files."""
 
+try:
+  import lzma
+except ImportError:
+  lzma = None
+
 import construct
-import lzma
 
 from plaso.containers import text_events
 from plaso.lib import errors
@@ -310,4 +314,5 @@ class SystemdJournalParser(interface.FileObjectParser):
                 exception))
 
 
-manager.ParsersManager.RegisterParser(SystemdJournalParser)
+if lzma:
+  manager.ParsersManager.RegisterParser(SystemdJournalParser)

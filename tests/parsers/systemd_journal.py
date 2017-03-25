@@ -2,25 +2,26 @@
 
 import unittest
 
+try:
+  import lzma
+except ImportError:
+  lzma = None
+
 from plaso.lib import errors
 from plaso.lib import timelib
+from plaso.parsers import systemd_journal
 
 from tests.parsers import test_lib
 
 
+@unittest.skipUnless(lzma, 'lzma missing')
 class SystemdJournalParserTest(test_lib.ParserTestCase):
   """Tests for the Systemd Journal parser."""
 
   # pylint: disable=protected-access
+
   def testParse(self):
     """Tests the Parse function."""
-
-    try:
-      from plaso.parsers import systemd_journal
-    except ImportError as e:
-      if e.message.find(u'lzma') > 0:
-        raise unittest.SkipTest(u'python lzma is not installed')
-
     parser_object = systemd_journal.SystemdJournalParser()
     journal = self._ParseFile([
         u'systemd', u'journal', u'system.journal'], parser_object)
@@ -55,13 +56,6 @@ class SystemdJournalParserTest(test_lib.ParserTestCase):
 
   def testParseDirty(self):
     """Tests the Parse function on a 'dirty' journal file."""
-
-    try:
-      from plaso.parsers import systemd_journal
-    except ImportError as e:
-      if e.message.find(u'lzma') > 0:
-        raise unittest.SkipTest(u'python lzma is not installed')
-
     storage_writer = self._CreateStorageWriter()
     parser_mediator = self._CreateParserMediator(storage_writer)
     parser_object = systemd_journal.SystemdJournalParser()
