@@ -363,16 +363,16 @@ def CheckModuleVersion(module_name):
     ImportError: if the module does not exists or does not meet
         the version requirements.
   """
+  try:
+    module_object = list(map(__import__, [module_name]))[0]
+  except ImportError:
+    raise
+
   if module_name not in PYTHON_DEPENDENCIES:
     return
 
   version_attribute_name, minimum_version, maximum_version, _ = (
       PYTHON_DEPENDENCIES[module_name])
-
-  try:
-    module_object = list(map(__import__, [module_name]))[0]
-  except ImportError:
-    raise
 
   module_version = None
   if not version_attribute_name.endswith(u'()'):

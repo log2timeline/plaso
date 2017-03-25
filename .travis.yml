@@ -6,6 +6,7 @@ matrix:
     sudo: required
     python: 2.7
   - os: osx
+    osx_image: xcode8.1
     language: generic
     env: PYTHONPATH=/Library/Python/2.7/site-packages/
   exclude:
