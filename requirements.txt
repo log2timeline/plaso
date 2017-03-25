@@ -8,7 +8,7 @@ artifacts >= 20150409
 bencode
 binplist >= 0.1.4
 construct >= 2.5.2,<= 2.5.3
-dfdatetime >= 20160319
+dfdatetime >= 20170103
 dfvfs >= 20160803
 dfwinreg >= 20160320
 dpkt >= 1.8
@@ -41,6 +41,7 @@ libvslvm-python >= 20160109
 pefile >= 1.2.10-139
 psutil >= 1.2.1
 pycrypto >= 2.6.0
+pyliblzma >= 0.5.3
 pyparsing >= 2.0.3
 python-dateutil >= 1.5
 pytsk3 >= 20160721
