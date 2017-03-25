@@ -26,9 +26,13 @@ class SyslogLineEventData(events.EventData):
 
   DATA_TYPE = u'syslog:line'
 
-  def __init__(self):
-    """Initializes event data."""
-    super(SyslogLineEventData, self).__init__(data_type=self.DATA_TYPE)
+  def __init__(self, data_type=DATA_TYPE):
+    """Initializes an event data attribute container.
+
+    Args:
+      data_type (Optional[str]): event data type indicator.
+    """
+    super(SyslogLineEventData, self).__init__(data_type=data_type)
     self.body = None
     self.hostname = None
     self.pid = None
