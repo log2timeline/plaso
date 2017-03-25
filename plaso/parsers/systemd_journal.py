@@ -1,27 +1,44 @@
 # -*- coding: utf-8 -*-
 """Parser for Systemd journal files."""
 
-import construct
-import lzma
+try:
+  import lzma
+except ImportError:
+  lzma = None
 
-from plaso.containers import text_events
+import os
+
+import construct
+
+from dfdatetime import posix_time as dfdatetime_posix_time
+
+from plaso.containers import events
+from plaso.containers import time_events
 from plaso.lib import errors
+from plaso.lib import eventdata
 from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-class SystemdJournalEvent(text_events.TextEvent):
-  """Convenience class for a Systemd journal event."""
+class SystemdJournalEventData(events.EventData):
+  """Systemd journal event data.
 
-  # TODO: Change Event type when event data has been refactored.
-  DATA_TYPE = u'systemd:journal:event'
+  Attributes:
+    body (str): message body.
+    hostname (str): hostname.
+    pid (int): process identifier (PID).
+    reporter (str): reporter.
+  """
 
+  DATA_TYPE = u'systemd:journal'
 
-class SystemdJournalUserlandEvent(SystemdJournalEvent):
-  """Convenience class for a Systemd journal Userland event."""
-
-  # This class will be formatted with the process' PID.
-  DATA_TYPE = u'systemd:journal:userland'
+  def __init__(self):
+    """Initializes event data."""
+    super(SystemdJournalEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.body = None
+    self.hostname = None
+    self.pid = None
+    self.reporter = None
 
 
 class SystemdJournalParser(interface.FileObjectParser):
@@ -130,63 +147,61 @@ class SystemdJournalParser(interface.FileObjectParser):
       construct.ULInt64(u'head_entry_realtime'),
       construct.ULInt64(u'tail_entry_realtime'),
       construct.ULInt64(u'tail_entry_monotonic'),
-      # Added in 187
+      # Added in format version 187
       construct.ULInt64(u'n_data'),
       construct.ULInt64(u'n_fields'),
-      # Added in 189
+      # Added in format version 189
       construct.ULInt64(u'n_tags'),
       construct.ULInt64(u'n_entry_arrays')
   )
-
-  _JOURNAL_HEADER_SIZE = _JOURNAL_HEADER.sizeof()
 
   def __init__(self):
     """Initializes a parser object."""
     super(SystemdJournalParser, self).__init__()
     self._max_journal_file_offset = 0
-    self._journal_file = None
-    self._journal_header = None
 
-  def _ParseObjectHeader(self, offset):
+  def _ParseObjectHeader(self, file_object, offset):
     """Parses a Systemd journal object header structure.
 
     Args:
+      file_object (dfvfs.FileIO): a file-like object.
       offset (int): offset to the object header.
 
     Returns:
-      tuple[construct.Struct, int]: the parsed object header and size of the
-        followong object's payload.
+      tuple[construct.Struct, int]: parsed object header and size of the
+          object payload (data) that follows.
     """
-    self._journal_file.seek(offset)
-    object_header_data = self._journal_file.read(self._OBJECT_HEADER_SIZE)
+    file_object.seek(offset, os.SEEK_SET)
+    object_header_data = file_object.read(self._OBJECT_HEADER_SIZE)
     object_header = self._OBJECT_HEADER.parse(object_header_data)
     payload_size = object_header.size - self._OBJECT_HEADER_SIZE
     return (object_header, payload_size)
 
-  def _ParseItem(self, offset):
+  def _ParseItem(self, file_object, offset):
     """Parses a Systemd journal DATA object.
 
     This method will read, and decompress if needed, the content of a DATA
     object.
 
     Args:
+      file_object (dfvfs.FileIO): a file-like object.
       offset (int): offset to the DATA object.
 
     Returns:
-      tuple[str,str]: key and value of this item.
+      tuple[str, str]: key and value of this item.
 
     Raises:
       ParseError: When an unexpected object type is parsed.
     """
-    object_header, payload_size = self._ParseObjectHeader(offset)
-    self._journal_file.read(self._DATA_OBJECT_SIZE)
+    object_header, payload_size = self._ParseObjectHeader(file_object, offset)
+    file_object.read(self._DATA_OBJECT_SIZE)
 
     if object_header.type != u'DATA':
       raise errors.ParseError(
           u'Expected an object of type DATA, but got {0:s}'.format(
               object_header.type))
 
-    event_data = self._journal_file.read(payload_size - self._DATA_OBJECT_SIZE)
+    event_data = file_object.read(payload_size - self._DATA_OBJECT_SIZE)
     if object_header.flags & self._OBJECT_COMPRESSED_FLAG:
       event_data = lzma.decompress(event_data)
 
@@ -194,21 +209,22 @@ class SystemdJournalParser(interface.FileObjectParser):
     event_key, event_value = event_string.split(u'=', 1)
     return (event_key, event_value)
 
-  def _ParseJournalEntry(self, parser_mediator, offset):
+  def _ParseJournalEntry(self, parser_mediator, file_object, offset):
     """Parses a Systemd journal ENTRY object.
 
     This method will generate an event per ENTRY object.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
+      file_object (dfvfs.FileIO): a file-like object.
       offset (int): offset of the ENTRY object.
 
     Raises:
       ParseError: When an unexpected object type is parsed.
     """
-    object_header, payload_size = self._ParseObjectHeader(offset)
+    object_header, payload_size = self._ParseObjectHeader(file_object, offset)
 
-    entry_object_data = self._journal_file.read(payload_size)
+    entry_object_data = file_object.read(payload_size)
     entry_object = self._ENTRY_OBJECT.parse(entry_object_data)
 
     if object_header.type != u'ENTRY':
@@ -222,53 +238,58 @@ class SystemdJournalParser(interface.FileObjectParser):
         raise errors.ParseError(
             u'object offset should be after hash tables ({0:d} < {1:d})'.format(
                 offset, self._max_journal_file_offset))
-      key, value = self._ParseItem(item.object_offset)
+      key, value = self._ParseItem(file_object, item.object_offset)
       fields[key] = value
 
-    # The realtime attribute is a number of microseconds since 1970-01-01, in
-    # UTC, so we don't need to convert it.
-    timestamp = entry_object.realtime
+    reporter = fields.get(u'SYSLOG_IDENTIFIER', None)
+    if reporter and reporter != u'kernel':
+      pid = fields.get(u'_PID', fields.get(u'SYSLOG_PID', None))
+    else:
+      pid = None
 
-    event_class = SystemdJournalEvent
-    syslog_identifier = fields.get(u'SYSLOG_IDENTIFIER', None)
-    if syslog_identifier and syslog_identifier != u'kernel':
-      if u'_PID' not in fields:
-        fields[u'_PID'] = fields[u'SYSLOG_PID']
-      event_class = SystemdJournalUserlandEvent
+    event_data = SystemdJournalEventData()
+    event_data.body = fields[u'MESSAGE']
+    event_data.hostname = fields[u'_HOSTNAME']
+    event_data.pid = pid
+    event_data.reporter = reporter
 
-    parser_mediator.ProduceEvent(event_class(timestamp, offset, fields))
+    date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+        timestamp=entry_object.realtime)
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def _ParseEntries(self, offset=None):
+  def _ParseEntries(self, file_object, offset):
     """Parses Systemd journal ENTRY_ARRAY objects.
 
     Args:
+      file_object (dfvfs.FileIO): a file-like object.
       offset (int): offset of the ENTRY_ARRAY object.
 
     Returns:
-      list: A list of dict() containing every ENTRY objects offsets.
+      list[dict]: every ENTRY objects offsets.
 
     Raises:
       ParseError: When an unexpected object type is parsed.
     """
     entry_offsets = []
-    if not offset:
-      offset = self._journal_header.entry_array_offset
-    object_header, payload_size = self._ParseObjectHeader(offset)
+    object_header, payload_size = self._ParseObjectHeader(file_object, offset)
 
     if object_header.type != u'ENTRY_ARRAY':
       raise errors.ParseError(
           u'Expected an object of type ENTRY_ARRAY, but got {0:s}'.format(
               object_header.type))
 
-    next_array_offset = self._ULInt64.parse_stream(self._journal_file)
-    entry_offests_numbers = (payload_size - 8) / 8
+    next_array_offset = self._ULInt64.parse_stream(file_object)
+    entry_offests_numbers, _ = divmod((payload_size - 8), 8)
     for entry_offset in range(entry_offests_numbers):
-      entry_offset = self._ULInt64.parse_stream(self._journal_file)
+      entry_offset = self._ULInt64.parse_stream(file_object)
       if entry_offset != 0:
         entry_offsets.append(entry_offset)
 
     if next_array_offset != 0:
-      entry_offsets.extend(self._ParseEntries(offset=next_array_offset))
+      next_entry_offsets = self._ParseEntries(file_object, next_array_offset)
+      entry_offsets.extend(next_entry_offsets)
 
     return entry_offsets
 
@@ -282,32 +303,32 @@ class SystemdJournalParser(interface.FileObjectParser):
     Raises:
       UnableToParseFile: when the header cannot be parsed.
     """
-    self._journal_file = file_object
-
-    journal_header_data = self._journal_file.read(self._JOURNAL_HEADER_SIZE)
     try:
-      self._journal_header = self._JOURNAL_HEADER.parse(journal_header_data)
+      journal_header = self._JOURNAL_HEADER.parse_stream(file_object)
     except construct.ConstructError as exception:
       raise errors.UnableToParseFile(
           u'Unable to parse journal header with error: {0:s}'.format(exception))
 
     max_data_hash_table_offset = (
-        self._journal_header.data_hash_table_offset +
-        self._journal_header.data_hash_table_size)
+        journal_header.data_hash_table_offset +
+        journal_header.data_hash_table_size)
     max_field_hash_table_offset = (
-        self._journal_header.field_hash_table_offset +
-        self._journal_header.field_hash_table_size)
+        journal_header.field_hash_table_offset +
+        journal_header.field_hash_table_size)
     self._max_journal_file_offset = max(
         max_data_hash_table_offset, max_field_hash_table_offset)
 
-    entries_offsets = self._ParseEntries()
+    entries_offsets = self._ParseEntries(
+        file_object, journal_header.entry_array_offset)
+
     for entry_offset in entries_offsets:
       try:
-        self._ParseJournalEntry(parser_mediator, entry_offset)
+        self._ParseJournalEntry(parser_mediator, file_object, entry_offset)
       except construct.ConstructError as exception:
-        raise errors.UnableToParseFile(
-            u'Unable to parse journal header with error: {0:s}'.format(
-                exception))
+        raise errors.UnableToParseFile((
+            u'Unable to parse journal header at offset: 0x{0:08x} with '
+            u'error: {1:s}').format(entry_offset, exception))
 
 
-manager.ParsersManager.RegisterParser(SystemdJournalParser)
+if lzma:
+  manager.ParsersManager.RegisterParser(SystemdJournalParser)

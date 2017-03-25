@@ -43,13 +43,7 @@ from plaso.parsers import selinux
 from plaso.parsers import skydrivelog
 from plaso.parsers import sqlite
 from plaso.parsers import symantec
-try:
-  from plaso.parsers import systemd_journal
-except ImportError as e:
-  if e.message.find(u'lzma') > 0:
-    pass
-  else:
-    raise e
+from plaso.parsers import systemd_journal
 from plaso.parsers import syslog
 from plaso.parsers import utmp
 from plaso.parsers import utmpx
