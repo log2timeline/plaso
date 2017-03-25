@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 """Parser for Systemd journal files."""
 
-import lzma
+try:
+  import lzma
+except ImportError:
+  lzma = None
+
 import os
 
 import construct
@@ -326,4 +330,5 @@ class SystemdJournalParser(interface.FileObjectParser):
             u'error: {1:s}').format(entry_offset, exception))
 
 
-manager.ParsersManager.RegisterParser(SystemdJournalParser)
+if lzma:
+  manager.ParsersManager.RegisterParser(SystemdJournalParser)

@@ -8,67 +8,67 @@ import re
 # Dictionary that contains version tuples per module name.
 #
 # A version tuple consists of:
-# (version_attribute_name, minimum_version, maximum_version)
+# (version_attribute_name, minimum_version, maximum_version, is_required)
 #
 # Where version_attribute_name is either a name of an attribute,
 # property or method.
 PYTHON_DEPENDENCIES = {
-    u'artifacts': (u'__version__', u'20150409', None),
+    u'artifacts': (u'__version__', u'20150409', None, True),
     # The bencode module does not appear to have version information.
-    u'bencode': (u'', u'', None),
-    u'binplist': (u'__version__', u'0.1.4', None),
-    u'construct': (u'__version__', u'2.5.2', u'2.5.3'),
-    u'Crypto': (u'__version__', u'2.6.0', None),
-    u'dateutil': (u'__version__', u'1.5', None),
-    u'dfdatetime': (u'__version__', u'20170103', None),
-    u'dfvfs': (u'__version__', u'20160803', None),
-    u'dfwinreg': (u'__version__', u'20160320', None),
-    u'dpkt': (u'__version__', u'1.8', None),
+    u'bencode': (u'', u'', None, True),
+    u'binplist': (u'__version__', u'0.1.4', None, True),
+    u'construct': (u'__version__', u'2.5.2', u'2.5.3', True),
+    u'Crypto': (u'__version__', u'2.6.0', None, True),
+    u'dateutil': (u'__version__', u'1.5', None, True),
+    u'dfdatetime': (u'__version__', u'20170103', None, True),
+    u'dfvfs': (u'__version__', u'20160803', None, True),
+    u'dfwinreg': (u'__version__', u'20160320', None, True),
+    u'dpkt': (u'__version__', u'1.8', None, True),
     # TODO: determine the version of Efilter.
-    u'efilter': (u'', u'1.5', None),
-    u'hachoir_core': (u'__version__', u'1.3.3', None),
-    u'hachoir_metadata': (u'__version__', u'1.3.3', None),
-    u'hachoir_parser': (u'__version__', u'1.3.4', None),
-    u'IPython': (u'__version__', u'1.2.1', None),
-    u'lzma': (u'__version__', u'0.5.3', None),
-    u'pefile': (u'__version__', u'1.2.10-139', None),
-    u'psutil': (u'__version__', u'1.2.1', None),
-    u'pybde': (u'get_version()', u'20140531', None),
-    u'pyesedb': (u'get_version()', u'20150409', None),
-    u'pyevt': (u'get_version()', u'20120410', None),
-    u'pyevtx': (u'get_version()', u'20141112', None),
-    u'pyewf': (u'get_version()', u'20131210', None),
-    u'pyfsntfs': (u'get_version()', u'20151130', None),
-    u'pyfvde': (u'get_version()', u'20160719', None),
-    u'pyfwnt': (u'get_version()', u'20160418', None),
-    u'pyfwsi': (u'get_version()', u'20150606', None),
-    u'pylnk': (u'get_version()', u'20150830', None),
-    u'pymsiecf': (u'get_version()', u'20150314', None),
-    u'pyolecf': (u'get_version()', u'20151223', None),
-    u'pyparsing': (u'__version__', u'2.0.3', None),
-    u'pyqcow': (u'get_version()', u'20131204', None),
-    u'pyregf': (u'get_version()', u'20150315', None),
-    u'pyscca': (u'get_version()', u'20161031', None),
-    u'pysigscan': (u'get_version()', u'20150627', None),
-    u'pysmdev': (u'get_version()', u'20140529', None),
-    u'pysmraw': (u'get_version()', u'20140612', None),
-    u'pytsk3': (u'get_version()', u'20160721', None),
+    u'efilter': (u'', u'1.5', None, True),
+    u'hachoir_core': (u'__version__', u'1.3.3', None, True),
+    u'hachoir_metadata': (u'__version__', u'1.3.3', None, True),
+    u'hachoir_parser': (u'__version__', u'1.3.4', None, True),
+    u'IPython': (u'__version__', u'1.2.1', None, True),
+    u'lzma': (u'__version__', u'0.5.3', None, False),
+    u'pefile': (u'__version__', u'1.2.10-139', None, True),
+    u'psutil': (u'__version__', u'1.2.1', None, True),
+    u'pybde': (u'get_version()', u'20140531', None, True),
+    u'pyesedb': (u'get_version()', u'20150409', None, True),
+    u'pyevt': (u'get_version()', u'20120410', None, True),
+    u'pyevtx': (u'get_version()', u'20141112', None, True),
+    u'pyewf': (u'get_version()', u'20131210', None, True),
+    u'pyfsntfs': (u'get_version()', u'20151130', None, True),
+    u'pyfvde': (u'get_version()', u'20160719', None, True),
+    u'pyfwnt': (u'get_version()', u'20160418', None, True),
+    u'pyfwsi': (u'get_version()', u'20150606', None, True),
+    u'pylnk': (u'get_version()', u'20150830', None, True),
+    u'pymsiecf': (u'get_version()', u'20150314', None, True),
+    u'pyolecf': (u'get_version()', u'20151223', None, True),
+    u'pyparsing': (u'__version__', u'2.0.3', None, True),
+    u'pyqcow': (u'get_version()', u'20131204', None, True),
+    u'pyregf': (u'get_version()', u'20150315', None, True),
+    u'pyscca': (u'get_version()', u'20161031', None, True),
+    u'pysigscan': (u'get_version()', u'20150627', None, True),
+    u'pysmdev': (u'get_version()', u'20140529', None, True),
+    u'pysmraw': (u'get_version()', u'20140612', None, True),
+    u'pytsk3': (u'get_version()', u'20160721', None, True),
     # TODO: determine the version of pytz.
     # pytz uses __version__ but has a different version indicator e.g. 2012d
-    u'pytz': (u'', u'', None),
-    u'pyvhdi': (u'get_version()', u'20131210', None),
-    u'pyvmdk': (u'get_version()', u'20140421', None),
-    u'pyvshadow': (u'get_version()', u'20160109', None),
-    u'pyvslvm': (u'get_version()', u'20160109', None),
-    u'requests': (u'__version__', u'2.2.1', None),
-    u'six': (u'__version__', u'1.1.0', None),
-    u'xlsxwriter': (u'__version__', u'0.9.3', None),
-    u'yaml': (u'__version__', u'3.10', None),
-    u'yara': (u'YARA_VERSION', u'3.4.0', None),
-    u'zmq': (u'__version__', u'2.1.11', None)}
+    u'pytz': (u'', u'', None, True),
+    u'pyvhdi': (u'get_version()', u'20131210', None, True),
+    u'pyvmdk': (u'get_version()', u'20140421', None, True),
+    u'pyvshadow': (u'get_version()', u'20160109', None, True),
+    u'pyvslvm': (u'get_version()', u'20160109', None, True),
+    u'requests': (u'__version__', u'2.2.1', None, True),
+    u'six': (u'__version__', u'1.1.0', None, True),
+    u'xlsxwriter': (u'__version__', u'0.9.3', None, True),
+    u'yaml': (u'__version__', u'3.10', None, True),
+    u'yara': (u'YARA_VERSION', u'3.4.0', None, True),
+    u'zmq': (u'__version__', u'2.1.11', None, True)}
 
 PYTHON_TEST_DEPENDENCIES = {
-    u'mock': (u'__version__', u'0.7.1', None)}
+    u'mock': (u'__version__', u'0.7.1', None, True)}
 
 # Maps Python module names to DPKG packages.
 _DPKG_PACKAGE_NAMES = {
@@ -176,7 +176,7 @@ _VERSION_SPLIT_REGEX = re.compile(r'\.|\-')
 
 def _CheckPythonModule(
     module_name, version_attribute_name, minimum_version,
-    maximum_version=None, verbose_output=True):
+    is_required=True, maximum_version=None, verbose_output=True):
   """Checks the availability of a Python module.
 
   Args:
@@ -184,6 +184,8 @@ def _CheckPythonModule(
     version_attribute_name (str): name of the attribute that contains
        the module version or method to retrieve the module version.
     minimum_version (str): minimum required version.
+    is_required (Optional[bool]): True if the Python module is a required
+        dependency.
     maximum_version (Optional[str]): maximum required version. Should only be
         used if there is a later version that is not supported.
     verbose_output (Optional[bool]): True if output should be verbose.
@@ -194,6 +196,10 @@ def _CheckPythonModule(
   """
   module_object = _ImportPythonModule(module_name)
   if not module_object:
+    if not is_required:
+      print(u'[OPTIONAL]\tmissing: {0:s}.'.format(module_name))
+      return True
+
     print(u'[FAILURE]\tmissing: {0:s}.'.format(module_name))
     return False
 
@@ -333,7 +339,8 @@ def CheckDependencies(verbose_output=True):
   for module_name, version_tuple in sorted(PYTHON_DEPENDENCIES.items()):
     if not _CheckPythonModule(
         module_name, version_tuple[0], version_tuple[1],
-        maximum_version=version_tuple[2], verbose_output=verbose_output):
+        is_required=version_tuple[3], maximum_version=version_tuple[2],
+        verbose_output=verbose_output):
       check_result = False
 
   if not _CheckSQLite3(verbose_output=verbose_output):
@@ -354,18 +361,18 @@ def CheckModuleVersion(module_name):
 
   Raises:
     ImportError: if the module does not exists or does not meet
-                 the version requirements.
+        the version requirements.
   """
+  if module_name not in PYTHON_DEPENDENCIES:
+    return
+
+  version_attribute_name, minimum_version, maximum_version, _ = (
+      PYTHON_DEPENDENCIES[module_name])
+
   try:
     module_object = list(map(__import__, [module_name]))[0]
   except ImportError:
     raise
-
-  if module_name not in PYTHON_DEPENDENCIES:
-    return
-
-  version_attribute_name, minimum_version, maximum_version = (
-      PYTHON_DEPENDENCIES[module_name])
 
   module_version = None
   if not version_attribute_name.endswith(u'()'):
@@ -413,7 +420,7 @@ def CheckTestDependencies():
   for module_name, version_tuple in sorted(PYTHON_TEST_DEPENDENCIES.items()):
     if not _CheckPythonModule(
         module_name, version_tuple[0], version_tuple[1],
-        maximum_version=version_tuple[2]):
+        is_required=version_tuple[3], maximum_version=version_tuple[2]):
       return False
 
   return True
