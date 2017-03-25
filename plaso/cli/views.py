@@ -209,6 +209,7 @@ class MarkdownTableView(BaseTableView):
     output_writer.Write(u'\n')
 
     for values in self._rows:
+      values = [u'{0!s}'.format(value) for value in values]
       output_writer.Write(u' | '.join(values))
       output_writer.Write(u'\n')
 
