@@ -3,7 +3,6 @@
 
 import pyparsing
 
-from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.parsers import syslog
