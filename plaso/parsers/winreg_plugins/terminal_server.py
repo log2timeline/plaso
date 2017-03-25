@@ -3,7 +3,9 @@
 
 import re
 
+from plaso.containers import time_events
 from plaso.containers import windows_events
+from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -27,13 +29,13 @@ class TerminalServerClientPlugin(interface.WindowsRegistryPlugin):
 
   _SOURCE_APPEND = u': RDP Connection'
 
-  def GetEntries(self, parser_mediator, registry_key, **kwargs):
-    """Collect Values in Servers and return event for each one.
+  def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
+    """Extracts events from a Terminal Server Client Windows Registry key.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      registry_key: A Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     mru_values_dict = {}
     for subkey in registry_key.GetSubkeys():
@@ -46,17 +48,26 @@ class TerminalServerClientPlugin(interface.WindowsRegistryPlugin):
         username = u'N/A'
 
       mru_values_dict[subkey.name] = username
-      values_dict = {u'Username hint': username}
 
-      event_object = windows_events.WindowsRegistryEvent(
-          subkey.last_written_time, subkey.path, values_dict,
-          offset=subkey.offset, source_append=self._SOURCE_APPEND)
-      parser_mediator.ProduceEvent(event_object)
+      event_data = windows_events.WindowsRegistryEventData()
+      event_data.key_path = subkey.path
+      event_data.offset = subkey.offset
+      event_data.regvalue = {u'Username hint': username}
+      event_data.source_append = self._SOURCE_APPEND
 
-    event_object = windows_events.WindowsRegistryEvent(
-        registry_key.last_written_time, registry_key.path, mru_values_dict,
-        offset=registry_key.offset, source_append=self._SOURCE_APPEND)
-    parser_mediator.ProduceEvent(event_object)
+      event = time_events.DateTimeValuesEvent(
+          subkey.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = registry_key.path
+    event_data.offset = registry_key.offset
+    event_data.regvalue = mru_values_dict
+    event_data.source_append = self._SOURCE_APPEND
+
+    event = time_events.DateTimeValuesEvent(
+        registry_key.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
@@ -76,13 +87,13 @@ class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
   _RE_VALUE_DATA = re.compile(r'MRU[0-9]+')
   _SOURCE_APPEND = u': RDP Connection'
 
-  def GetEntries(self, parser_mediator, registry_key, **kwargs):
-    """Collect MRU Values and return event for each one.
+  def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
+    """Extracts events from a Terminal Server Client MRU Windows Registry key.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      registry_key: A Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     values_dict = {}
     for value in registry_key.GetValues():
@@ -96,10 +107,15 @@ class TerminalServerClientMRUPlugin(interface.WindowsRegistryPlugin):
 
       values_dict[value.name] = value.GetDataAsObject()
 
-    event_object = windows_events.WindowsRegistryEvent(
-        registry_key.last_written_time, registry_key.path, values_dict,
-        offset=registry_key.offset, source_append=self._SOURCE_APPEND)
-    parser_mediator.ProduceEvent(event_object)
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = registry_key.path
+    event_data.offset = registry_key.offset
+    event_data.regvalue = values_dict
+    event_data.source_append = self._SOURCE_APPEND
+
+    event = time_events.DateTimeValuesEvent(
+        registry_key.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 winreg.WinRegistryParser.RegisterPlugins([

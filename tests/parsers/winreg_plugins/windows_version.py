@@ -11,14 +11,14 @@ from dfwinreg import fake as dfwinreg_fake
 from plaso.formatters import winreg  # pylint: disable=unused-import
 from plaso.lib import eventdata
 from plaso.lib import timelib
-from plaso.parsers.winreg_plugins import winver
+from plaso.parsers.winreg_plugins import windows_version
 
 from tests import test_lib as shared_test_lib
 from tests.parsers.winreg_plugins import test_lib
 
 
-class WinVerPluginTest(test_lib.RegistryPluginTestCase):
-  """Tests for the WinVer Windows Registry plugin."""
+class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
+  """Tests for the Windows version Windows Registry plugin."""
 
   def _CreateTestKey(self, key_path, time_string):
     """Creates Registry keys and values for testing.
@@ -75,7 +75,7 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
     time_string = u'2012-08-31 20:09:55.123521'
     registry_key = self._CreateTestKey(key_path, time_string)
 
-    plugin_object = winver.WinVerPlugin()
+    plugin_object = windows_version.WindowsVersionPlugin()
     storage_writer = self._ParseKeyWithPlugin(registry_key, plugin_object)
 
     self.assertEqual(len(storage_writer.events), 2)
@@ -98,7 +98,7 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
         u'Product name: MyTestOS '
         u'Service pack: Service Pack 1 '
         u'Windows Version Information: 5.1').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
@@ -135,7 +135,7 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
     win_registry = self._GetWinRegistryFromFileEntry(test_file_entry)
     registry_key = win_registry.GetKeyByPath(key_path)
 
-    plugin_object = winver.WinVerPlugin()
+    plugin_object = windows_version.WindowsVersionPlugin()
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin_object, file_entry=test_file_entry)
 
@@ -158,7 +158,7 @@ class WinVerPluginTest(test_lib.RegistryPluginTestCase):
         u'Product name: Windows 7 Ultimate '
         u'Service pack: Service Pack 1 '
         u'Windows Version Information: 6.1').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

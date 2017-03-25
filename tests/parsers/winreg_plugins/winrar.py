@@ -73,7 +73,7 @@ class WinRarArcHistoryPluginTest(test_lib.RegistryPluginTestCase):
         u'[{0:s}] '
         u'0: C:\\Downloads\\The Sleeping Dragon CD1.iso '
         u'1: C:\\Downloads\\plaso-static.rar').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
 

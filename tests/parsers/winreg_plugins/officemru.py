@@ -71,7 +71,7 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
         u'Item 5: [F00000000][T01CCFCBA595DFC30][O00000000]*'
         u'C:\\Users\\nfury\\Documents\\ADAMANTIUM-Background.docx').format(
             key_path, regvalue_identifier, expected_value_string)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
@@ -89,7 +89,7 @@ class OfficeMRUPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_message = u'[{0:s}] Value: {1:s}'.format(
         key_path, expected_value_string)
-    expected_short_message = u'{0:s}...'.format(expected_value_string[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_value_string[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

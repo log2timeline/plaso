@@ -22,7 +22,7 @@ class AppCompatCacheFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = appcompatcache.AppCompatCacheFormatter()
 
     expected_attribute_names = [
-        u'keyname', u'entry_index', u'path']
+        u'key_path', u'entry_index', u'path']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

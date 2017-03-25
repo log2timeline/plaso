@@ -3,7 +3,9 @@
 
 import logging
 
+from plaso.containers import time_events
 from plaso.containers import windows_events
+from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -25,23 +27,28 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
 
   _SOURCE_APPEND = u': USBStor Entries'
 
-  def GetEntries(self, parser_mediator, registry_key, **kwargs):
-    """Collect Values under USBStor and return an event object for each one.
+  def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
+    """Extracts events from a Windows Registry key.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      registry_key: A Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     for subkey in registry_key.GetSubkeys():
       values_dict = {}
       values_dict[u'subkey_name'] = subkey.name
 
+      event_data = windows_events.WindowsRegistryEventData()
+      event_data.key_path = registry_key.path
+      event_data.offset = registry_key.offset
+      event_data.regvalue = values_dict
+      event_data.source_append = self._SOURCE_APPEND
+
       # Time last USB device of this class was first inserted.
-      event_object = windows_events.WindowsRegistryEvent(
-          subkey.last_written_time, registry_key.path, values_dict,
-          offset=registry_key.offset, source_append=self._SOURCE_APPEND)
-      parser_mediator.ProduceEvent(event_object)
+      event = time_events.DateTimeValuesEvent(
+          subkey.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
       name_values = subkey.name.split(u'&')
       number_of_name_values = len(name_values)
@@ -79,34 +86,30 @@ class USBStorPlugin(interface.WindowsRegistryPlugin):
 
         # Win7 - Last Connection.
         # Vista/XP - Time of an insert.
-        event_object = windows_events.WindowsRegistryEvent(
-            device_key.last_written_time, registry_key.path, values_dict,
-            offset=registry_key.offset, source_append=self._SOURCE_APPEND)
-        parser_mediator.ProduceEvent(event_object)
+        event = time_events.DateTimeValuesEvent(
+            device_key.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
         device_parameter_key = device_key.GetSubkeyByName(u'Device Parameters')
         if device_parameter_key:
-          event_object = windows_events.WindowsRegistryEvent(
-              device_parameter_key.last_written_time, registry_key.path,
-              values_dict, offset=registry_key.offset,
-              source_append=self._SOURCE_APPEND)
-          parser_mediator.ProduceEvent(event_object)
+          event = time_events.DateTimeValuesEvent(
+              device_parameter_key.last_written_time,
+              eventdata.EventTimestamp.WRITTEN_TIME)
+          parser_mediator.ProduceEventWithEventData(event, event_data)
 
         log_configuration_key = device_key.GetSubkeyByName(u'LogConf')
         if log_configuration_key:
-          event_object = windows_events.WindowsRegistryEvent(
-              log_configuration_key.last_written_time, registry_key.path,
-              values_dict, offset=registry_key.offset,
-              source_append=self._SOURCE_APPEND)
-          parser_mediator.ProduceEvent(event_object)
+          event = time_events.DateTimeValuesEvent(
+              log_configuration_key.last_written_time,
+              eventdata.EventTimestamp.WRITTEN_TIME)
+          parser_mediator.ProduceEventWithEventData(event, event_data)
 
         properties_key = device_key.GetSubkeyByName(u'Properties')
         if properties_key:
-          event_object = windows_events.WindowsRegistryEvent(
-              properties_key.last_written_time, registry_key.path,
-              values_dict, offset=registry_key.offset,
-              source_append=self._SOURCE_APPEND)
-          parser_mediator.ProduceEvent(event_object)
+          event = time_events.DateTimeValuesEvent(
+              properties_key.last_written_time,
+              eventdata.EventTimestamp.WRITTEN_TIME)
+          parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 winreg.WinRegistryParser.RegisterPlugin(USBStorPlugin)

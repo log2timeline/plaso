@@ -5,7 +5,9 @@ from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
 from plaso.containers import text_events
+from plaso.containers import time_events
 from plaso.containers import windows_events
+from plaso.lib import eventdata
 from plaso.lib import timelib
 
 from tests import test_lib as shared_test_lib
@@ -23,29 +25,44 @@ class StorageTestCase(shared_test_lib.BaseTestCase):
     test_events = []
     filetime = dfdatetime_filetime.Filetime()
 
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = u'MY AutoRun key'
+    event_data.parser = u'UNKNOWN'
+    event_data.regvalue = {u'Value': u'c:/Temp/evil.exe'}
+
     filetime.CopyFromString(u'2012-04-20 22:38:46.929596')
-    values_dict = {u'Value': u'c:/Temp/evil.exe'}
-    event = windows_events.WindowsRegistryEvent(
-        filetime, u'MY AutoRun key', values_dict)
-    event.parser = 'UNKNOWN'
+    event = time_events.DateTimeValuesEvent(
+        filetime, eventdata.EventTimestamp.WRITTEN_TIME)
+
+    self._MergeEventAndEventData(event, event_data)
     test_events.append(event)
 
-    filetime.CopyFromString(u'2012-05-02 13:43:26.929596')
-    values_dict = {u'Value': u'send all the exes to the other world'}
-    event = windows_events.WindowsRegistryEvent(
-        filetime, u'HKCU\\Secret\\EvilEmpire\\Malicious_key',
-        values_dict)
-    event.parser = 'UNKNOWN'
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = (
+        u'HKEY_CURRENT_USER\\Secret\\EvilEmpire\\Malicious_key')
+    event_data.parser = u'UNKNOWN'
+    event_data.regvalue = {u'Value': u'send all the exes to the other world'}
+
+    filetime.CopyFromString(u'2012-04-20 23:56:46.929596')
+    event = time_events.DateTimeValuesEvent(
+        filetime, eventdata.EventTimestamp.WRITTEN_TIME)
+
+    self._MergeEventAndEventData(event, event_data)
     test_events.append(event)
+
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = u'HKEY_CURRENT_USER\\Windows\\Normal'
+    event_data.parser = u'UNKNOWN'
+    event_data.regvalue = {u'Value': u'run all the benign stuff'}
 
     filetime.CopyFromString(u'2012-04-20 16:44:46')
-    values_dict = {u'Value': u'run all the benign stuff'}
-    event = windows_events.WindowsRegistryEvent(
-        filetime, u'HKCU\\Windows\\Normal', values_dict)
-    event.parser = 'UNKNOWN'
+    event = time_events.DateTimeValuesEvent(
+        filetime, eventdata.EventTimestamp.WRITTEN_TIME)
+
+    self._MergeEventAndEventData(event, event_data)
     test_events.append(event)
 
-    timemstamp = timelib.Timestamp.CopyFromString(u'2009-04-05 12:27:39')
+    timestamp = timelib.Timestamp.CopyFromString(u'2009-04-05 12:27:39')
     text_dict = {
         u'hostname': u'nomachine',
         u'text': (
@@ -53,8 +70,8 @@ class StorageTestCase(shared_test_lib.BaseTestCase):
             u'since this log line exceeds the accepted 80 chars it will be '
             u'shortened.'),
         u'username': u'johndoe'}
-    event = text_events.TextEvent(timemstamp, 12, text_dict)
-    event.parser = 'UNKNOWN'
+    event = text_events.TextEvent(timestamp, 12, text_dict)
+    event.parser = u'UNKNOWN'
     test_events.append(event)
 
     return test_events
@@ -93,3 +110,14 @@ class StorageTestCase(shared_test_lib.BaseTestCase):
     event_tags.append(event_tag)
 
     return event_tags
+
+  # TODO: remove after event data refactor.
+  def _MergeEventAndEventData(self, event, event_data):
+    """Merges the event data with the event.
+
+    args:
+      event (EventObject): event.
+      event_data (EventData): event_data.
+    """
+    for attribute_name, attribute_value in event_data.GetAttributes():
+      setattr(event, attribute_name, attribute_value)
