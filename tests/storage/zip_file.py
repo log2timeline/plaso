@@ -1251,7 +1251,7 @@ class ZIPStorageFileTest(test_lib.StorageTestCase):
     self.assertEqual(event.tag.labels[0], u'Malware')
     message, _ = formatters_manager.FormattersManager.GetMessageStrings(
         formatter_mediator, event)
-    self.assertEqual(message[0:14], u'[HKCU\\Windows\\')
+    self.assertEqual(message[0:27], u'[HKEY_CURRENT_USER\\Windows\\')
 
     event = tagged_events[2]
     self.assertEqual(event.tag.comment, u'This is interesting')

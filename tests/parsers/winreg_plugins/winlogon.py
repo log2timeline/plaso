@@ -295,7 +295,7 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
         u'Command: NavLogon.dll '
         u'Handler: NavLogoffEvent '
         u'Trigger: Logoff').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
@@ -310,7 +310,7 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
         u'Application: VmApplet '
         u'Command: SystemPropertiesPerformance.exe/pagefile '
         u'Trigger: Logon').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

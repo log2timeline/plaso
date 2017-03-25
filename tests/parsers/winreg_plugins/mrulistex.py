@@ -90,7 +90,7 @@ class TestMRUListExStringPlugin(test_lib.RegistryPluginTestCase):
         u'Index: 1 [MRU Value 2]: C:\\looks_legit.exe '
         u'Index: 2 [MRU Value 0]: Some random text here '
         u'Index: 3 [MRU Value 1]: c:\\evil.exe').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
@@ -135,7 +135,7 @@ class TestMRUListExShellItemListPlugin(test_lib.RegistryPluginTestCase):
         u'Index: 2 [MRU Value 0]: Shell item path: <Computers and Devices> '
         u'<UNKNOWN: 0x00>\\\\controller\\WebDavShare\\Firefox Setup 3.6.12.exe'
         u'').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
@@ -237,7 +237,7 @@ class TestMRUListExStringAndShellItemPlugin(test_lib.RegistryPluginTestCase):
         u'Shell item: [StarFury (2).lnk] '
         u'Index: 9 [MRU Value 7]: Path: Earth_SA-26_Thunderbolt.jpg, '
         u'Shell item: [Earth_SA-26_Thunderbolt.lnk]').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
@@ -302,7 +302,7 @@ class TestMRUListExStringAndShellItemListPlugin(
         u'Shell item path: <My Computer> P:\\Application Tools\\Firefox 6.0 '
         u'Index: 8 [MRU Value 2]: Path: Skype.exe, '
         u'Shell item path: <Users Libraries> <UNKNOWN: 0x00>').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

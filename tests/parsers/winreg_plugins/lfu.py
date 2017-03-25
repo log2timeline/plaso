@@ -113,7 +113,7 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
 
     expected_message = (
         u'[{0:s}] BootExecute: autocheck autochk *').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
@@ -130,7 +130,7 @@ class TestBootExecutePlugin(test_lib.RegistryPluginTestCase):
         u'HeapSegmentCommit: 0 '
         u'HeapSegmentReserve: 0 '
         u'NumberOfInitialSessions: 2').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
@@ -188,7 +188,7 @@ class TestBootVerificationRegistry(test_lib.RegistryPluginTestCase):
         u'[{0:s}] '
         u'ImagePath: C:\\WINDOWS\\system32\\googleupdater.exe').format(
             key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

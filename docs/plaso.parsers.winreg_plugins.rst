@@ -212,6 +212,14 @@ plaso.parsers.winreg_plugins.userassist module
     :undoc-members:
     :show-inheritance:
 
+plaso.parsers.winreg_plugins.windows_version module
+---------------------------------------------------
+
+.. automodule:: plaso.parsers.winreg_plugins.windows_version
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.parsers.winreg_plugins.winlogon module
 --------------------------------------------
 
@@ -224,14 +232,6 @@ plaso.parsers.winreg_plugins.winrar module
 ------------------------------------------
 
 .. automodule:: plaso.parsers.winreg_plugins.winrar
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.parsers.winreg_plugins.winver module
-------------------------------------------
-
-.. automodule:: plaso.parsers.winreg_plugins.winver
     :members:
     :undoc-members:
     :show-inheritance:

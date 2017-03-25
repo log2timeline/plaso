@@ -61,7 +61,7 @@ class USBStorPlugin(test_lib.RegistryPluginTestCase):
         u'serial: AA951D0000007252&0 '
         u'subkey_name: Disk&Ven_HP&Prod_v100w&Rev_1024 '
         u'vendor: Ven_HP').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

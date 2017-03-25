@@ -72,7 +72,7 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     expected_message = (
         u'[{0:s}\\myserver.com] '
         u'Username hint: DOMAIN\\username').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
@@ -82,7 +82,7 @@ class ServersTerminalServerClientPluginTest(test_lib.RegistryPluginTestCase):
     expected_message = (
         u'[{0:s}] '
         u'myserver.com: DOMAIN\\username').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
@@ -147,7 +147,7 @@ class DefaultTerminalServerClientMRUPluginTest(test_lib.RegistryPluginTestCase):
         u'[{0:s}] '
         u'MRU0: 192.168.16.60 '
         u'MRU1: computer.domain.com').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

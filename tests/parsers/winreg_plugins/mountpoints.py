@@ -50,7 +50,7 @@ class MountPoints2PluginTest(test_lib.RegistryPluginTestCase):
         u'[{0:s}] Label: Home Drive Remote_Server: controller Share_Name: '
         u'\\home\\nfury Type: Remote Drive Volume: '
         u'##controller#home#nfury').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

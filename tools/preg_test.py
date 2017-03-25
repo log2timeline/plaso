@@ -148,9 +148,9 @@ class PregToolTest(cli_test_lib.CLIToolTestCase):
     output = self._output_writer.ReadOutput()
 
     # TODO: refactor to more accurate way to test this.
-    self.assertIn((
-        b'UEME_RUNPATH:C:\\Program Files\\Internet Explorer\\iexplore.exe : '
-        b'[Count: 1]'), output)
+    expected_string = (
+        b'UEME_RUNPATH:C:\\Program Files\\Internet Explorer\\iexplore.exe')
+    self.assertIn(expected_string, output)
 
     # TODO: Add tests that parse a disk image. Test both Registry key parsing
     # and plugin parsing.
@@ -430,11 +430,10 @@ class PregMagicClassTest(cli_test_lib.CLIToolTestCase):
     # Parse using a plugin.
     self._magic_obj.ParseWithPlugin(u'userassist')
 
-    partial_string = (
-        b'UEME_RUNPIDL:%csidl2%\\BCWipe 3.0\\BCWipe Task Manager.lnk '
-        b': [Count: 1]')
+    expected_string = (
+        b'UEME_RUNPIDL:%csidl2%\\BCWipe 3.0\\BCWipe Task Manager.lnk')
     output = self._output_writer.ReadOutput()
-    self.assertTrue(partial_string in output)
+    self.assertIn(expected_string, output)
 
     self._magic_obj.PrintCurrentWorkingDirectory(u'')
 

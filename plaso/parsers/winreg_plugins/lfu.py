@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """Plug-in to collect the Less Frequently Used Keys."""
 
+from plaso.containers import time_events
 from plaso.containers import windows_events
+from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -19,25 +21,28 @@ class BootVerificationPlugin(interface.WindowsRegistryPlugin):
 
   URLS = [u'http://technet.microsoft.com/en-us/library/cc782537(v=ws.10).aspx']
 
-  def GetEntries(self, parser_mediator, registry_key, **kwargs):
-    """Gather the BootVerification key values and return one event for all.
-
-    This key is rare, so its presence is suspect.
+  def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
+    """Extracts events from a Windows Registry key.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      registry_key: A Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     values_dict = {}
     for registry_value in registry_key.GetValues():
       value_name = registry_value.name or u'(default)'
       values_dict[value_name] = registry_value.GetDataAsObject()
 
-    event_object = windows_events.WindowsRegistryEvent(
-        registry_key.last_written_time, registry_key.path, values_dict,
-        offset=registry_key.offset, urls=self.URLS)
-    parser_mediator.ProduceEvent(event_object)
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = registry_key.path
+    event_data.offset = registry_key.offset
+    event_data.regvalue = values_dict
+    event_data.urls = self.URLS
+
+    event = time_events.DateTimeValuesEvent(
+        registry_key.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 class BootExecutePlugin(interface.WindowsRegistryPlugin):
@@ -53,16 +58,19 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
 
   URLS = [u'http://technet.microsoft.com/en-us/library/cc963230.aspx']
 
-  def GetEntries(self, parser_mediator, registry_key, **kwargs):
-    """Gather the BootExecute Value, compare to default, return event.
-
-    The rest of the values in the Session Manager key are in a separate event.
+  def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
+    """Extracts events from a Windows Registry key.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      registry_key: A Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = registry_key.path
+    event_data.offset = registry_key.offset
+    event_data.urls = self.URLS
+
     values_dict = {}
     for registry_value in registry_key.GetValues():
       value_name = registry_value.name or u'(default)'
@@ -89,19 +97,21 @@ class BootExecutePlugin(interface.WindowsRegistryPlugin):
           parser_mediator.ProduceExtractionError(error_string)
 
         # TODO: why does this have a separate event object? Remove this.
-        value_dict = {u'BootExecute': value_string}
-        event_object = windows_events.WindowsRegistryEvent(
-            registry_key.last_written_time, registry_key.path, value_dict,
-            offset=registry_key.offset, urls=self.URLS)
-        parser_mediator.ProduceEvent(event_object)
+        event_data.regvalue = {u'BootExecute': value_string}
+
+        event = time_events.DateTimeValuesEvent(
+            registry_key.last_written_time,
+            eventdata.EventTimestamp.WRITTEN_TIME)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
       else:
         values_dict[value_name] = registry_value.GetDataAsObject()
 
-    event_object = windows_events.WindowsRegistryEvent(
-        registry_key.last_written_time, registry_key.path, values_dict,
-        offset=registry_key.offset, urls=self.URLS)
-    parser_mediator.ProduceEvent(event_object)
+    event_data.regvalue = values_dict
+
+    event = time_events.DateTimeValuesEvent(
+        registry_key.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 winreg.WinRegistryParser.RegisterPlugins([

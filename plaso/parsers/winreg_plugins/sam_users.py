@@ -3,6 +3,9 @@
 
 import construct
 
+from dfdatetime import filetime as dfdatetime_filetime
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import eventdata
@@ -13,48 +16,29 @@ from plaso.parsers.winreg_plugins import interface
 __author__ = 'Preston Miller, dpmforensics.com, github.com/prmiller91'
 
 
-class SAMUsersWindowsRegistryEvent(time_events.FiletimeEvent):
-  """Convenience class for a SAM users Windows Registry event.
+class SAMUsersWindowsRegistryEventData(events.EventData):
+  """Class that defines SAM users Windows Registry event data.
 
   Attributes:
-    account_rid: an integer containing the account relative identifier (RID).
-    comments: a string containing the comments.
-    fullname: a string containing the full name.
-    key_path: a string containing the Windows Registry key path.
-    login_count: an integer containing the login count.
-    offset: an integer containing the data offset of the SAM users
-            Windows Registry value.
-    username: a string containing the username.
+    account_rid (int): account relative identifier (RID).
+    comments (str): comments.
+    fullname (str): full name.
+    key_path (str): Windows Registry key path.
+    login_count (int): login count.
+    username (str): a string containing the username.
   """
   DATA_TYPE = u'windows:registry:sam_users'
 
-  def __init__(
-      self, filetime, timestamp_description, key_path, offset, account_rid,
-      login_count, username, fullname, comments):
-    """Initializes a SAM users Windows Registry event.
-
-    Args:
-      filetime: an integer containing a FILETIME timestamp.
-      timestamp_description: a string containing the usage of
-                             the timestamp value.
-      key_path: a string containing the Windows Registry key path.
-      offset: an integer containing the data offset of the SAM users
-              Windows Registry value.
-      account_rid: an integer containing the account relative identifier (RID).
-      login_count: an integer containing the login count.
-      username: a string containing the username.
-      fullname: a string containing the full name.
-      comments: a string containing the comments.
-    """
-    super(SAMUsersWindowsRegistryEvent, self).__init__(
-        filetime, timestamp_description)
-    self.account_rid = account_rid
-    self.comments = comments
-    self.fullname = fullname
-    self.key_path = key_path
-    self.login_count = login_count
-    self.offset = offset
-    self.username = username
+  def __init__(self):
+    """Initializes event data."""
+    super(SAMUsersWindowsRegistryEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.account_rid = None
+    self.comments = None
+    self.fullname = None
+    self.key_path = None
+    self.login_count = None
+    self.username = None
 
 
 class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
@@ -86,22 +70,22 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
 
   _SOURCE_APPEND = u': User Account Information'
 
-  def GetEntries(self, parser_mediator, registry_key, **kwargs):
-    """Collect data from Users and Names and produce event objects.
+  def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
+    """Extracts events from a Windows Registry key.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      registry_key: A Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     names_key = registry_key.GetSubkeyByName(u'Names')
     if not names_key:
-      parser_mediator.ProduceExtractionError(u'missing subkey: "Names".')
+      parser_mediator.ProduceExtractionError(u'missing subkey: Names.')
       return
 
-    values = [(v.name, v.last_written_time) for v in names_key.GetSubkeys()]
-
-    usernames_dict = dict(values)
+    last_written_time_per_username = {
+        registry_value.name: registry_value.last_written_time
+        for registry_value in names_key.GetSubkeys()}
 
     for subkey in registry_key.GetSubkeys():
       if subkey.name == u'Names':
@@ -178,13 +162,11 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
             u'that cannot be decoded will be replaced with "?" or '
             u'"\\ufffd".').format(exception))
 
-      filetime = None
-      if usernames_dict:
-        filetime = usernames_dict.get(username, None)
+      last_written_time = last_written_time_per_username.get(username, None)
 
       # TODO: check if subkey.name == f_data_struct.rid
 
-      if filetime:
+      if last_written_time:
         values_dict = {
             u'account_rid': f_data_struct.rid,
             u'login_count': f_data_struct.login_count}
@@ -196,25 +178,38 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
         if comments:
           values_dict[u'comments'] = comments
 
-        event_object = windows_events.WindowsRegistryEvent(
-            filetime, registry_key.path, values_dict,
-            offset=registry_key.offset, source_append=self._SOURCE_APPEND)
-        parser_mediator.ProduceEvent(event_object)
+        event_data = windows_events.WindowsRegistryEventData()
+        event_data.key_path = registry_key.path
+        event_data.offset = registry_key.offset
+        event_data.regvalue = values_dict
+        event_data.source_append = self._SOURCE_APPEND
 
-      if f_data_struct.last_login > 0:
-        event_object = SAMUsersWindowsRegistryEvent(
-            f_data_struct.last_login, eventdata.EventTimestamp.LAST_LOGIN_TIME,
-            registry_key.path, f_value.offset, f_data_struct.rid,
-            f_data_struct.login_count, username, fullname, comments)
-        parser_mediator.ProduceEvent(event_object)
+        event = time_events.DateTimeValuesEvent(
+            last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
-      if f_data_struct.password_reset > 0:
-        event_object = SAMUsersWindowsRegistryEvent(
-            f_data_struct.password_reset,
-            eventdata.EventTimestamp.LAST_PASSWORD_RESET,
-            registry_key.path, f_value.offset, f_data_struct.rid,
-            f_data_struct.login_count, username, fullname, comments)
-        parser_mediator.ProduceEvent(event_object)
+      event_data = SAMUsersWindowsRegistryEventData()
+      event_data.account_rid = f_data_struct.rid
+      event_data.comments = comments
+      event_data.fullname = fullname
+      event_data.key_path = registry_key.path
+      event_data.login_count = f_data_struct.login_count
+      event_data.offset = f_value.offset
+      event_data.username = username
+
+      if f_data_struct.last_login != 0:
+        date_time = dfdatetime_filetime.Filetime(
+            timestamp=f_data_struct.last_login)
+        event = time_events.DateTimeValuesEvent(
+            date_time, eventdata.EventTimestamp.LAST_LOGIN_TIME)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
+
+      if f_data_struct.password_reset != 0:
+        date_time = dfdatetime_filetime.Filetime(
+            timestamp=f_data_struct.password_reset)
+        event = time_events.DateTimeValuesEvent(
+            date_time, eventdata.EventTimestamp.LAST_PASSWORD_RESET)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 winreg.WinRegistryParser.RegisterPlugin(SAMUsersWindowsRegistryPlugin)

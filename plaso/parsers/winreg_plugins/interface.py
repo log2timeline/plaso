@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""The Windows Registry plugin objects interface."""
+"""The Windows Registry plugin interface."""
 
 import abc
 
@@ -19,11 +19,10 @@ class BaseWindowsRegistryKeyFilter(object):
     """Determines if a Windows Registry key matches the filter.
 
     Args:
-      registry_key: a Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
 
     Returns:
-      A boolean value that indicates a match.
+      bool: True if the keys match.
     """
 
 
@@ -41,10 +40,10 @@ class WindowsRegistryKeyPathFilter(BaseWindowsRegistryKeyFilter):
       u'HKEY_LOCAL_MACHINE\\Software']
 
   def __init__(self, key_path):
-    """Initializes a Windows Registry key filter object.
+    """Initializes a Windows Registry key filter.
 
     Args:
-      key_path: the key path.
+      key_path (str): key path.
     """
     super(WindowsRegistryKeyPathFilter, self).__init__()
 
@@ -96,11 +95,10 @@ class WindowsRegistryKeyPathFilter(BaseWindowsRegistryKeyFilter):
     """Determines if a Windows Registry key matches the filter.
 
     Args:
-      registry_key: a Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
 
     Returns:
-      A boolean value that indicates a match.
+      bool: True if the keys match.
     """
     key_path = registry_key.path.upper()
     if self._key_path_prefix and self._key_path_suffix:
@@ -127,7 +125,7 @@ class WindowsRegistryKeyPathPrefixFilter(BaseWindowsRegistryKeyFilter):
   """Windows Registry key path prefix filter."""
 
   def __init__(self, key_path_prefix):
-    """Initializes a Windows Registry key filter object.
+    """Initializes a Windows Registry key filter.
 
     Args:
       key_path_prefix: the key path prefix.
@@ -139,11 +137,10 @@ class WindowsRegistryKeyPathPrefixFilter(BaseWindowsRegistryKeyFilter):
     """Determines if a Windows Registry key matches the filter.
 
     Args:
-      registry_key: a Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
 
     Returns:
-      A boolean value that indicates a match.
+      bool: True if the keys match.
     """
     return registry_key.path.startsswith(self._key_path_prefix)
 
@@ -152,7 +149,7 @@ class WindowsRegistryKeyPathSuffixFilter(BaseWindowsRegistryKeyFilter):
   """Windows Registry key path suffix filter."""
 
   def __init__(self, key_path_suffix):
-    """Initializes a Windows Registry key filter object.
+    """Initializes a Windows Registry key filter.
 
     Args:
       key_path_suffix: the key path suffix.
@@ -164,11 +161,10 @@ class WindowsRegistryKeyPathSuffixFilter(BaseWindowsRegistryKeyFilter):
     """Determines if a Windows Registry key matches the filter.
 
     Args:
-      registry_key: a Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
 
     Returns:
-      A boolean value that indicates a match.
+      bool: True if the keys match.
     """
     return registry_key.path.endswith(self._key_path_suffix)
 
@@ -179,10 +175,10 @@ class WindowsRegistryKeyWithValuesFilter(BaseWindowsRegistryKeyFilter):
   _EMPTY_SET = frozenset()
 
   def __init__(self, value_names):
-    """Initializes a Windows Registry key filter object.
+    """Initializes a Windows Registry key filter.
 
     Args:
-      value_names: list of value names that should be present in the key.
+      value_names (list[str]): name of values that should be present in the key.
     """
     super(WindowsRegistryKeyWithValuesFilter, self).__init__()
     self._value_names = frozenset(value_names)
@@ -191,11 +187,10 @@ class WindowsRegistryKeyWithValuesFilter(BaseWindowsRegistryKeyFilter):
     """Determines if a Windows Registry key matches the filter.
 
     Args:
-      registry_key: a Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
 
     Returns:
-      A boolean value that indicates a match.
+      bool: True if the keys match.
     """
     value_names = frozenset([
         registry_value.name for registry_value in registry_key.GetValues()])
@@ -204,7 +199,8 @@ class WindowsRegistryKeyWithValuesFilter(BaseWindowsRegistryKeyFilter):
 
 
 class WindowsRegistryPlugin(plugins.BasePlugin):
-  """Class that defines the Windows Registry plugin object interface."""
+  """The Windows Registry plugin interface."""
+
   NAME = u'winreg_plugin'
   DESCRIPTION = u'Parser for Windows Registry value data.'
 
@@ -218,13 +214,13 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
   URLS = []
 
   @abc.abstractmethod
-  def GetEntries(self, parser_mediator, registry_key, **kwargs):
-    """Extracts event objects from the Windows Registry key.
+  def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
+    """Extracts events from a Windows Registry key.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      registry_key: A Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
 
   # TODO: remove after preg refactor.
@@ -233,7 +229,7 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
     """Retrieves a list of Windows Registry key paths.
 
     Returns:
-      A list of Windows Registry key paths.
+      list[str]: Windows Registry key paths.
     """
     key_paths = []
     for registry_key_filter in cls.FILTERS:
@@ -249,9 +245,9 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
     """Processes a Windows Registry key or value.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      registry_key: A Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
 
     Raises:
       ValueError: If the Windows Registry key is not set.
@@ -262,15 +258,15 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
     # This will raise if unhandled keyword arguments are passed.
     super(WindowsRegistryPlugin, self).Process(parser_mediator, **kwargs)
 
-    self.GetEntries(parser_mediator, registry_key, **kwargs)
+    self.ExtractEvents(parser_mediator, registry_key, **kwargs)
 
   def UpdateChainAndProcess(self, parser_mediator, registry_key, **kwargs):
     """Updates the parser chain and processes a Windows Registry key or value.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      registry_key: A Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
 
     Raises:
       ValueError: If the Windows Registry key is not set.

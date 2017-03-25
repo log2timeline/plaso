@@ -48,7 +48,7 @@ class TaskCachePluginTest(test_lib.RegistryPluginTestCase):
 
     expected_message = u'[{0:s}] {1:s}: {2:s}'.format(
         key_path, regvalue_identifier, expected_value)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

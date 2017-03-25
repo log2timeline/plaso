@@ -52,7 +52,7 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         u'comments: Built-in account for administering the computer/domain '
         u'login_count: 6 '
         u'username: Administrator').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
