@@ -228,9 +228,10 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     """Parses a bookmark annotation row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row.
+      query (Optional[str]): query.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
@@ -252,9 +253,10 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     """Parses a bookmark folder row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row.
+      query (Optional[str]): query.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
@@ -281,9 +283,10 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
     """Parses a bookmark row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row.
+      query (Optional[str]): query.
     """
     if row['dateAdded']:
       event_object = FirefoxPlacesBookmark(
@@ -302,16 +305,17 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       parser_mediator.ProduceEvent(event_object, query=query)
 
   def ParsePageVisitedRow(
-      self, parser_mediator, row, query=None, cache=None, database=None,
+      self, parser_mediator, row, cache=None, database=None, query=None,
       **unused_kwargs):
     """Parses a page visited row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
-      cache: A cache object (instance of SQLiteCache).
-      database: A database object (instance of SQLiteDatabase).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row.
+      cache (SQLiteCache): cache.
+      database (SQLiteDatabase): database.
+      query (Optional[str]): query.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
@@ -385,8 +389,8 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
 class FirefoxDownloadsPlugin(interface.SQLitePlugin):
   """Parses a Firefox downloads file.
 
-     The Firefox downloads history is stored in a SQLite database file named
-     downloads.sqlite.
+  The Firefox downloads history is stored in a SQLite database file named
+  downloads.sqlite.
   """
 
   NAME = u'firefox_downloads'
@@ -410,9 +414,10 @@ class FirefoxDownloadsPlugin(interface.SQLitePlugin):
     """Parses a downloads row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row.
+      query (Optional[str]): query.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".

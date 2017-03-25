@@ -1,42 +1,49 @@
 # -*- coding: utf-8 -*-
 """Parser for the Google Chrome extension activity database files.
 
-   The Chrome extension activity is stored in SQLite database files named
-   Extension Activity.
+The Chrome extension activity is stored in SQLite database files named
+Extension Activity.
 """
 
+from dfdatetime import webkit_time as dfdatetime_webkit_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class ChromeExtensionActivityEvent(time_events.WebKitTimeEvent):
-  """Convenience class for a Chrome Extension Activity event."""
+class ChromeExtensionActivityEventData(events.EventData):
+  """Chrome Extension Activity event data.
+
+  Attributes:
+    action_type (str): action type.
+    activity_id (str): activity identifier.
+    api_name (str): name of API.
+    arg_url (str): URL argument.
+    args (str): arguments.
+    extension_id (str): extension identifier.
+    other (str): other.
+    page_title (str): title of webpage.
+    page_url (str): URL of webpage.
+  """
+
   DATA_TYPE = u'chrome:extension_activity:activity_log'
 
-  def __init__(self, row):
-    """Initializes the event object.
-
-    Args:
-      row: The row resulting from the query (instance of sqlite3.Row).
-    """
-    # Note that pysqlite does not accept a Unicode string in row['string'] and
-    # will raise "IndexError: Index must be int or string".
-
-    # TODO: change the timestamp usage from unknown to something else.
-    super(ChromeExtensionActivityEvent, self).__init__(
-        row['time'], eventdata.EventTimestamp.UNKNOWN)
-
-    self.extension_id = row['extension_id']
-    self.action_type = row['action_type']
-    self.api_name = row['api_name']
-    self.args = row['args']
-    self.page_url = row['page_url']
-    self.page_title = row['page_title']
-    self.arg_url = row['arg_url']
-    self.other = row['other']
-    self.activity_id = row['activity_id']
+  def __init__(self):
+    """Initializes event data."""
+    super(ChromeExtensionActivityEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.action_type = None
+    self.activity_id = None
+    self.api_name = None
+    self.arg_url = None
+    self.args = None
+    self.extension_id = None
+    self.other = None
+    self.page_title = None
+    self.page_url = None
 
 
 class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
@@ -57,15 +64,34 @@ class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
 
   def ParseActivityLogUncompressedRow(
       self, parser_mediator, row, query=None, **unused_kwargs):
-    """Parses a file downloaded row.
+    """Parses an activity log row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query (instance of sqlite3.Row).
-      query: Optional query string.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row.
+      query (Optional[str]): query.
     """
-    event_object = ChromeExtensionActivityEvent(row)
-    parser_mediator.ProduceEvent(event_object, query=query)
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
+
+    event_data = ChromeExtensionActivityEventData()
+    event_data.action_type = row['action_type']
+    event_data.activity_id = row['activity_id']
+    event_data.api_name = row['api_name']
+    event_data.arg_url = row['arg_url']
+    event_data.args = row['args']
+    event_data.extension_id = row['extension_id']
+    event_data.other = row['other']
+    event_data.page_title = row['page_title']
+    event_data.page_url = row['page_url']
+    event_data.query = query
+
+    timestamp = row['time']
+    date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.UNKNOWN)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(ChromeExtensionActivityPlugin)

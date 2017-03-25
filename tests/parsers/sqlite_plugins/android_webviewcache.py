@@ -4,6 +4,7 @@
 
 import unittest
 
+from plaso.formatters import android_webviewcache  # pylint: disable=unused-import
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import android_webviewcache
 
@@ -17,20 +18,30 @@ class AndroidWebViewCache(test_lib.SQLitePluginTestCase):
   @shared_test_lib.skipUnlessHasTestFile([u'webviewCache.db'])
   def testProcess(self):
     """Test the Process function on a WebViewCache file."""
-    plugin_object = android_webviewcache.WebViewCachePlugin()
+    plugin_object = android_webviewcache.AndroidWebViewCachePlugin()
     storage_writer = self._ParseDatabaseFileWithPlugin(
         [u'webviewCache.db'], plugin_object)
 
     self.assertEqual(10, len(storage_writer.events))
 
-    test_event = storage_writer.events[0]
-    self.assertEqual(1821, test_event.content_length)
-    expected_url = (u'https://apps.skypeassets.com/static/'
-                    u'skype.skypeloginstatic/css/print.css?_version=1.15')
-    self.assertEqual(expected_url, test_event.url)
+    event = storage_writer.events[0]
+
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-03-28 09:48:18')
-    self.assertEqual(test_event.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.assertEqual(1821, event.content_length)
+
+    expected_url = (
+        u'https://apps.skypeassets.com/static/'
+        u'skype.skypeloginstatic/css/print.css?_version=1.15')
+    self.assertEqual(expected_url, event.url)
+
+    expected_message = (
+        u'URL: {0:s} '
+        u'Content Length: 1821').format(expected_url)
+    expected_short_message = u'{0:s}...'.format(expected_url[:77])
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
