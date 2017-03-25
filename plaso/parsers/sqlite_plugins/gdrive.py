@@ -5,6 +5,9 @@ The Google Drive snapshots are stored in SQLite database files named
 snapshot.db.
 """
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.parsers import sqlite
@@ -14,65 +17,46 @@ from plaso.parsers.sqlite_plugins import interface
 __author__ = 'David Nides (david.nides@gmail.com)'
 
 
-class GoogleDriveSnapshotCloudEntryEvent(time_events.PosixTimeEvent):
-  """Convenience class for a Google Drive snapshot cloud entry."""
+class GoogleDriveSnapshotCloudEntryEventData(events.EventData):
+  """Google Drive snapshot cloud entry event data.
+
+  Attributes:
+    doc_type (int): document type.
+    path (str): path of the file.
+    shared (bool): True if the file is shared, False if the file is private.
+    size (int): size of the file.
+    url (str): URL of the file.
+  """
 
   DATA_TYPE = u'gdrive:snapshot:cloud_entry'
 
-  # TODO: this could be moved to the formatter.
-  # The following definition for values can be found on Patrick Olson's blog:
-  # http://www.sysforensics.org/2012/05/google-drive-forensics-notes.html
-  _DOC_TYPES = {
-      0: u'FOLDER',
-      1: u'FILE',
-      2: u'PRESENTATION',
-      3: u'UNKNOWN',
-      4: u'SPREADSHEET',
-      5: u'DRAWING',
-      6: u'DOCUMENT',
-      7: u'TABLE',
-  }
-
-  def __init__(self, posix_time, usage, url, path, size, doc_type, shared):
-    """Initializes the event.
-
-    Args:
-      posix_time: The POSIX time value.
-      usage: The description of the usage of the time value.
-      url: The URL of the file as in the cloud.
-      path: The path of the file.
-      size: The size of the file.
-      doc_type: Integer value containing the document type.
-      shared: A string indicating whether or not this is a shared document.
-    """
-    super(GoogleDriveSnapshotCloudEntryEvent, self).__init__(
-        posix_time, usage)
-
-    self.url = url
-    self.path = path
-    self.size = size
-    self.document_type = self._DOC_TYPES.get(doc_type, u'UNKNOWN')
-    self.shared = shared
+  def __init__(self):
+    """Initializes event data."""
+    super(GoogleDriveSnapshotCloudEntryEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.document_type = None
+    self.path = None
+    self.shared = None
+    self.size = None
+    self.url = None
 
 
-class GoogleDriveSnapshotLocalEntryEvent(time_events.PosixTimeEvent):
-  """Convenience class for a Google Drive snapshot local entry event."""
+class GoogleDriveSnapshotLocalEntryEventData(events.EventData):
+  """Google Drive snapshot local entry event data.
+
+  Attributes:
+    path (str): path of the file.
+    size (int): size of the file.
+  """
 
   DATA_TYPE = u'gdrive:snapshot:local_entry'
 
-  def __init__(self, posix_time, local_path, size):
-    """Initializes the event object.
-
-    Args:
-      posix_time: The POSIX time value.
-      local_path: The local path of the file.
-      size: The size of the file.
-    """
-    super(GoogleDriveSnapshotLocalEntryEvent, self).__init__(
-        posix_time, eventdata.EventTimestamp.MODIFICATION_TIME)
-
-    self.path = local_path
-    self.size = size
+  def __init__(self):
+    """Initializes event data."""
+    super(GoogleDriveSnapshotLocalEntryEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.path = None
+    self.size = None
 
 
 class GoogleDrivePlugin(interface.SQLitePlugin):
@@ -118,8 +102,8 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
 
     Args:
       inode: The inode number for the file.
-      cache: A cache object (instance of SQLiteCache).
-      database: A database object (instance of SQLiteDatabase).
+      cache (SQLiteCache): cache.
+      database (SQLiteDatabase): database.
 
     Returns:
       A full path, including the filename of the given inode value.
@@ -198,16 +182,17 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     return u'/{0:s}/'.format(u'/'.join(paths))
 
   def ParseCloudEntryRow(
-      self, parser_mediator, row, query=None, cache=None, database=None,
+      self, parser_mediator, row, cache=None, database=None, query=None,
       **unused_kwargs):
     """Parses a cloud entry row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
-      cache: The local cache object.
-      database: The database object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row.
+      cache (SQLiteCache): cache.
+      database (SQLiteDatabase): database.
+      query (Optional[str]): query.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
@@ -215,42 +200,52 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
     cloud_path = self.GetCloudPath(row['parent_resource_id'], cache, database)
     cloud_filename = u'{0:s}{1:s}'.format(cloud_path, row['filename'])
 
-    if row['shared']:
-      shared = u'Shared'
-    else:
-      shared = u'Private'
+    event_data = GoogleDriveSnapshotCloudEntryEventData()
+    event_data.document_type = row['doc_type']
+    event_data.path = cloud_filename
+    event_data.query = query
+    event_data.shared = bool(row['shared'])
+    event_data.size = row['size']
+    event_data.url = row['url']
 
-    event_object = GoogleDriveSnapshotCloudEntryEvent(
-        row['modified'], eventdata.EventTimestamp.MODIFICATION_TIME,
-        row['url'], cloud_filename, row['size'], row['doc_type'], shared)
-    parser_mediator.ProduceEvent(event_object, query=query)
+    date_time = dfdatetime_posix_time.PosixTime(timestamp=row['modified'])
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if row['created']:
-      event_object = GoogleDriveSnapshotCloudEntryEvent(
-          row['created'], eventdata.EventTimestamp.CREATION_TIME,
-          row['url'], cloud_filename, row['size'], row['doc_type'], shared)
-      parser_mediator.ProduceEvent(event_object, query=query)
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=row['created'])
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.CREATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseLocalEntryRow(
-      self, parser_mediator, row, query=None, cache=None, database=None,
+      self, parser_mediator, row, cache=None, database=None, query=None,
       **unused_kwargs):
     """Parses a local entry row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
-      cache: The local cache object (instance of SQLiteCache).
-      database: A database object (instance of SQLiteDatabase).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row.
+      cache (SQLiteCache): cache.
+      database (SQLiteDatabase): database.
+      query (Optional[str]): query.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
 
     local_path = self.GetLocalPath(row['inode_number'], cache, database)
 
-    event_object = GoogleDriveSnapshotLocalEntryEvent(
-        row['modified'], local_path, row['size'])
-    parser_mediator.ProduceEvent(event_object, query=query)
+    event_data = GoogleDriveSnapshotLocalEntryEventData()
+    event_data.path = local_path
+    event_data.query = query
+    event_data.size = row['size']
+
+    date_time = dfdatetime_posix_time.PosixTime(timestamp=row['modified'])
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(GoogleDrivePlugin)

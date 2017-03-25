@@ -5,6 +5,7 @@
 import unittest
 
 from plaso.formatters import firefox_cookies  # pylint: disable=unused-import
+from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import firefox_cookies
 
@@ -22,7 +23,7 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     storage_writer = self._ParseDatabaseFileWithPlugin(
         [u'firefox_cookies.sqlite'], plugin_object)
 
-    event_objects = []
+    test_events = []
     extra_objects = []
 
     # sqlite> SELECT COUNT(id) FROM moz_cookies;
@@ -40,49 +41,50 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     #   5 Analytics Creation Time
     #
     # In total: 93 * 3 + 15 + 5 + 5 = 304 events.
-    for event_object in storage_writer.events:
-      if isinstance(event_object, firefox_cookies.FirefoxCookieEvent):
-        event_objects.append(event_object)
+    for event in storage_writer.events:
+      if event.data_type == u'firefox:cookie:entry':
+        test_events.append(event)
       else:
-        extra_objects.append(event_object)
+        extra_objects.append(event)
 
-    self.assertEqual(len(event_objects), 90 * 3)
+    self.assertEqual(len(test_events), 90 * 3)
     self.assertGreaterEqual(len(extra_objects), 25)
 
     # Check one greenqloud.com event
-    event_object = event_objects[32]
-    self.assertEqual(event_object.timestamp_desc, u'Cookie Expires')
-    self.assertEqual(event_object.host, u's.greenqloud.com')
-    self.assertEqual(event_object.cookie_name, u'__utma')
-    self.assertFalse(event_object.httponly)
-    self.assertEqual(event_object.url, u'http://s.greenqloud.com/')
+    event = test_events[32]
+    self.assertEqual(
+        event.timestamp_desc, eventdata.EventTimestamp.EXPIRATION_TIME)
+    self.assertEqual(event.host, u's.greenqloud.com')
+    self.assertEqual(event.cookie_name, u'__utma')
+    self.assertFalse(event.httponly)
+    self.assertEqual(event.url, u'http://s.greenqloud.com/')
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-10-30 21:56:03')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'http://s.greenqloud.com/ (__utma) Flags: [HTTP only]: False')
-    expected_short = u's.greenqloud.com (__utma)'
-    self._TestGetMessageStrings(event_object, expected_msg, expected_short)
+    expected_short_message = u's.greenqloud.com (__utma)'
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     # Check one of the visits to pubmatic.com.
-    event_object = event_objects[62]
+    event = test_events[62]
     self.assertEqual(
-        event_object.timestamp_desc, u'Cookie Expires')
+        event.timestamp_desc, eventdata.EventTimestamp.EXPIRATION_TIME)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-29 21:56:04')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    self.assertEqual(event_object.url, u'http://pubmatic.com/')
-    self.assertEqual(event_object.path, u'/')
-    self.assertFalse(event_object.secure)
+    self.assertEqual(event.url, u'http://pubmatic.com/')
+    self.assertEqual(event.path, u'/')
+    self.assertFalse(event.secure)
 
-    expected_msg = (
+    expected_message = (
         u'http://pubmatic.com/ (KRTBCOOKIE_391) Flags: [HTTP only]: False')
-    self._TestGetMessageStrings(
-        event_object, expected_msg, u'pubmatic.com (KRTBCOOKIE_391)')
+    expected_short_message = u'pubmatic.com (KRTBCOOKIE_391)'
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':
