@@ -10,16 +10,11 @@ from plaso.parsers import syslog
 from plaso.parsers.syslog_plugins import interface
 
 
-class CronTaskRunEventData(events.EventData):
+class CronTaskRunEventData(syslog.SyslogLineEventData):
   """Cron task run event data.
 
   Attributes:
-    body (str): message body.
     command (str): command executed.
-    hostname (str): hostname of the reporter.
-    pid (str): process identifier of the reporter.
-    reporter (str): reporter.
-    severity (str): severity.
     username (str): name of user the command was executed.
   """
 
@@ -28,12 +23,7 @@ class CronTaskRunEventData(events.EventData):
   def __init__(self):
     """Initializes event data."""
     super(CronTaskRunEventData, self).__init__(data_type=self.DATA_TYPE)
-    self.body = None
     self.command = None
-    self.hostname = None
-    self.pid = None
-    self.reporter = None
-    self.severity = None
     self.username = None
 
 

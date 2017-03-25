@@ -11,20 +11,15 @@ from plaso.parsers import text_parser
 from plaso.parsers.syslog_plugins import interface
 
 
-class SSHEventData(events.EventData):
+class SSHEventData(syslog.SyslogLineEventData):
   """SSH event data.
 
   Attributes:
     address (str): IP address.
     authentication_method (str): authentication method.
-    body (str): message body.
     fingerprint (str): fingerprint.
-    hostname (str): hostname of the reporter.
-    pid (str): process identifier of the reporter.
     port (str): port.
     protocol (str): protocol.
-    reporter (str): reporter.
-    severity (str): severity.
     username (str): name of user the command was executed.
   """
 
@@ -33,14 +28,9 @@ class SSHEventData(events.EventData):
     super(SSHEventData, self).__init__(data_type=self.DATA_TYPE)
     self.address = None
     self.authentication_method = None
-    self.body = None
     self.fingerprint = None
-    self.hostname = None
-    self.pid = None
     self.port = None
     self.protocol = None
-    self.reporter = None
-    self.severity = None
     self.username = None
 
 
