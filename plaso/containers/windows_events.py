@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
-"""This file contains the Windows specific event object classes."""
+"""This file contains the Windows specific event data attribute containers."""
 
 from plaso.containers import events
-from plaso.containers import time_events
-from plaso.lib import eventdata
 
 
-class WindowsDistributedLinkTrackingCreationEvent(time_events.UUIDTimeEvent):
-  """Convenience class for a Windows distributed link creation event.
+class WindowsDistributedLinkTrackingEventData(events.EventData):
+  """Windows distributed link event data.
 
   Attributes:
-    origin: a string containing the origin of the event (event source).
-            E.g. the path of the corresponding LNK file or file reference
-            MFT entry with the corresponding NTFS $OBJECT_ID attribute.
+    mac_address (str): MAC address stored in the UUID.
+    origin (str): origin of the event (event source).
+        E.g. the path of the corresponding LNK file or file reference
+        MFT entry with the corresponding NTFS $OBJECT_ID attribute.
+    uuid (str): UUID.
   """
 
   DATA_TYPE = u'windows:distributed_link_tracking:creation'
@@ -21,16 +21,27 @@ class WindowsDistributedLinkTrackingCreationEvent(time_events.UUIDTimeEvent):
     """Initializes an event object.
 
     Args:
-      uuid: an uuid object (instance of uuid.UUID).
-      origin: a string containing the origin of the event (event source).
-              E.g. the path of the corresponding LNK file or file reference
-              MFT entry with the corresponding NTFS $OBJECT_ID attribute.
-    """
-    super(WindowsDistributedLinkTrackingCreationEvent, self).__init__(
-        uuid, eventdata.EventTimestamp.CREATION_TIME)
+      uuid (uuid.UUID): UUID.
+      origin (str): origin of the event (event source).
+          E.g. the path of the corresponding LNK file or file reference
+          MFT entry with the corresponding NTFS $OBJECT_ID attribute.
 
-    # TODO: replace origin with something machine readable.
+    Raises:
+      ValueError: if the UUID version is not supported.
+    """
+    if uuid.version != 1:
+      raise ValueError(u'Unsupported UUID version.')
+
+    mac_address = u'{0:s}:{1:s}:{2:s}:{3:s}:{4:s}:{5:s}'.format(
+        uuid.hex[20:22], uuid.hex[22:24], uuid.hex[24:26], uuid.hex[26:28],
+        uuid.hex[28:30], uuid.hex[30:32])
+
+    super(WindowsDistributedLinkTrackingEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.mac_address = mac_address
+    # TODO: replace origin my something machine readable.
     self.origin = origin
+    self.uuid = u'{0!s}'.format(uuid)
 
 
 class WindowsRegistryInstallationEventData(events.EventData):
@@ -126,30 +137,21 @@ class WindowsRegistryServiceEventData(events.EventData):
     self.urls = None
 
 
-class WindowsVolumeCreationEvent(time_events.FiletimeEvent):
-  """Convenience class for a Windows volume creation event.
+class WindowsVolumeEventData(events.EventData):
+  """Windows volume event data.
 
   Attributes:
-    device_path: a string containing the volume device path.
-    origin: a string containing the origin of the event (event source).
-            E.g. corresponding Prefetch file name.
-    serial_number: a string containing the volume serial number.
+    device_path (str): volume device path.
+    origin (str): origin of the event (event source), for example
+        the corresponding Prefetch file name.
+    serial_number (str): volume serial number.
   """
   DATA_TYPE = u'windows:volume:creation'
 
-  def __init__(self, filetime, device_path, serial_number, origin):
-    """Initializes an event object.
-
-    Args:
-      filetime: an integer containing the FILETIME timestamp value.
-      device_path: a string containing the volume device path.
-      origin: a string containing the origin of the event (event source).
-              E.g. corresponding Prefetch file name.
-      serial_number: a string containing the volume serial number.
-    """
-    super(WindowsVolumeCreationEvent, self).__init__(
-        filetime, eventdata.EventTimestamp.CREATION_TIME)
-
-    self.device_path = device_path
-    self.origin = origin
-    self.serial_number = serial_number
+  def __init__(self):
+    """Initializes event data."""
+    super(WindowsVolumeEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.device_path = None
+    # TODO: replace origin my something machine readable.
+    self.origin = None
+    self.serial_number = None

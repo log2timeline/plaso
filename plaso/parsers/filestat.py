@@ -3,14 +3,49 @@
 
 from dfvfs.lib import definitions as dfvfs_definitions
 
-from plaso.containers import file_system_events
+from plaso.containers import time_events
 from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import manager
 
 
+class FileStatEvent(time_events.TimestampEvent):
+  """File system stat event.
+
+  Attributes:
+    file_entry_type (int): dfVFS file entry type.
+    file_size (int): file size in bytes.
+    file_system_type (str): file system type.
+    is_allocated (bool): True if the file is allocated.
+    offset (int): the offset of the stat data in bytes.
+  """
+
+  DATA_TYPE = u'fs:stat'
+
+  def __init__(
+      self, timestamp, timestamp_description, is_allocated, file_size,
+      file_entry_type, file_system_type):
+    """Initializes the event object.
+
+    Args:
+      timestamp (int): timestamp, which contains the number of microseconds
+          since Jan 1, 1970 00:00:00 UTC
+      timestamp_description (str): description of the timestamp.
+      is_allocated (bool): True if the file entry is allocated.
+      file_size (int): file size in bytes.
+      file_entry_type (int): dfVFS file entry type.
+      file_system_type (str): file system type.
+    """
+    super(FileStatEvent, self).__init__(timestamp, timestamp_description)
+    self.file_entry_type = file_entry_type
+    self.file_size = file_size
+    self.file_system_type = file_system_type
+    self.is_allocated = is_allocated
+    self.offset = 0
+
+
 class FileStatParser(interface.FileEntryParser):
-  """Class that defines a file system stat object parser."""
+  """Parses file system stat object."""
 
   NAME = u'filestat'
   DESCRIPTION = u'Parser for file system stat information.'
@@ -22,10 +57,10 @@ class FileStatParser(interface.FileEntryParser):
     """Return a filesystem type string from a file entry object.
 
     Args:
-      file_entry: A file entry object (instance of vfs.file_entry.FileEntry).
+      file_entry (dfvfs.FileEntry): a file entry.
 
     Returns:
-      A string indicating the file system type.
+      str: file system type.
     """
     if file_entry.type_indicator != dfvfs_definitions.TYPE_INDICATOR_TSK:
       return file_entry.type_indicator
@@ -43,8 +78,9 @@ class FileStatParser(interface.FileEntryParser):
     """Parses a file entry.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_entry (dfvfs.FileEntry): a file entry.
     """
     stat_object = file_entry.GetStat()
     if not stat_object:
@@ -74,7 +110,7 @@ class FileStatParser(interface.FileEntryParser):
           not timestamp):
         continue
 
-      event_object = file_system_events.FileStatEvent(
+      event_object = FileStatEvent(
           timestamp, time_attribute, is_allocated, file_size, stat_object.type,
           file_system_type)
       parser_mediator.ProduceEvent(event_object)

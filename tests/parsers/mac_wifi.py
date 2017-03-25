@@ -125,7 +125,6 @@ class MacWifiUnitTest(test_lib.ParserTestCase):
         u'<airportd[88]> _handleLinkEvent: Unable to process link event, '
         u'op mode request returned -3903 (Operation not supported)')
 
-    self.assertEqual(event_object.action, '')
     self.assertEqual(event_object.text, expected_string)
 
     event_object = storage_writer.events[6]

@@ -13,14 +13,14 @@ from tests import test_lib as shared_test_lib
 from tests.parsers.olecf_plugins import test_lib
 
 
-class TestDefaultPluginOleCf(test_lib.OleCfPluginTestCase):
+class TestDefaultPluginOLECF(test_lib.OLECFPluginTestCase):
   """Tests for the OLECF default plugin."""
 
   @shared_test_lib.skipUnlessHasTestFile([u'Document.doc'])
   def testProcess(self):
     """Tests the Process function."""
-    plugin_object = default.DefaultOleCFPlugin()
-    storage_writer = self._ParseOleCfFileWithPlugin(
+    plugin_object = default.DefaultOLECFPlugin()
+    storage_writer = self._ParseOLECFFileWithPlugin(
         [u'Document.doc'], plugin_object)
 
     self.assertEqual(len(storage_writer.events), 5)

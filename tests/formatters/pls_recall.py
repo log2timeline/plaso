@@ -22,7 +22,7 @@ class PlsRecallFormatterTest(test_lib.EventFormatterTestCase):
     event_formatter = pls_recall.PlsRecallFormatter()
 
     expected_attribute_names = [
-        u'sequence',
+        u'sequence_number',
         u'username',
         u'database_name',
         u'query']

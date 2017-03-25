@@ -4,17 +4,30 @@ import re
 
 import pyparsing
 
-from plaso.containers import text_events
+from plaso.containers import events
+from plaso.containers import time_events
 from plaso.lib import errors
+from plaso.lib import eventdata
 from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
-class SCCMLogEvent(text_events.TextEvent):
-  """Object class to represent SCCM log events """
+class SCCMLogEventData(events.EventData):
+  """SCCM log event data.
+
+  Attributes:
+    component (str): component.
+    text (str): text.
+  """
 
   DATA_TYPE = u'software_management:sccm:log'
+
+  def __init__(self):
+    """Initializes event data."""
+    super(SCCMLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.component = None
+    self.text = None
 
 
 class SCCMParser(text_parser.PyparsingMultiLineTextParser):
@@ -33,15 +46,16 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
 
   _MICRO_SECONDS_PER_MINUTE = 60 * 1000000
 
+  _FOUR_DIGITS = text_parser.PyparsingConstants.FOUR_DIGITS
+  _ONE_OR_TWO_DIGITS = text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS
+
   # PyParsing Components used to construct grammars for parsing lines.
   _PARSING_COMPONENTS = {
       u'msg_left_delimiter': pyparsing.Literal(u'<![LOG['),
       u'msg_right_delimiter': pyparsing.Literal(u']LOG]!><time="'),
-      u'year': text_parser.PyparsingConstants.YEAR.setResultsName(u'year'),
-      u'month': text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.
-                setResultsName(u'month'),
-      u'day': text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.
-              setResultsName(u'day'),
+      u'year': _FOUR_DIGITS.setResultsName(u'year'),
+      u'month': _ONE_OR_TWO_DIGITS.setResultsName(u'month'),
+      u'day': _ONE_OR_TWO_DIGITS.setResultsName(u'day'),
       u'microsecond': pyparsing.Regex(r'\d{3,7}').
                       setResultsName(u'microsecond'),
       u'utc_offset_minutes': pyparsing.Regex(r'[-+]\d{3}').
@@ -58,8 +72,7 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
                          setResultsName(u'line_remainder'),
       u'lastline_remainder': pyparsing.restOfLine.
                              setResultsName(u'lastline_remainder'),
-      u'hour': text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.
-               setResultsName(u'hour'),
+      u'hour': _ONE_OR_TWO_DIGITS.setResultsName(u'hour'),
       u'minute': text_parser.PyparsingConstants.TWO_DIGITS.
                  setResultsName(u'minute'),
       u'second': text_parser.PyparsingConstants.TWO_DIGITS.
@@ -112,15 +125,22 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
     """Parse the record and return an SCCM log event object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: An identification string indicating the name of the parsed
-           structure.
-      structure: A pyparsing.ParseResults object from a line in the
-                 log file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): a file-like object.
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a text file.
 
     Raises:
+      ParseError: when the structure type is unknown.
       TimestampError: when a non-int value for microseconds is encountered.
     """
+    if key not in (
+        u'log_entry', u'log_entry_at_end', u'log_entry_offset',
+        u'log_entry_offset_at_end'):
+      raise errors.ParseError(
+          u'Unable to parse record, unknown structure: {0:s}'.format(key))
+
     # Sometimes, SCCM logs will exhibit a seven-digit sub-second precision
     # (100 nanosecond intervals). Using six-digit precision because
     # timestamps are in microseconds.
@@ -164,8 +184,15 @@ class SCCMParser(text_parser.PyparsingMultiLineTextParser):
         delta_microseconds = -delta_microseconds
       timestamp += delta_microseconds
 
-    event_object = SCCMLogEvent(timestamp, 0, structure)
-    parser_mediator.ProduceEvent(event_object)
+    event_data = SCCMLogEventData()
+    event_data.component = structure.component
+    # TODO: pass line number to offset or remove.
+    event_data.offset = 0
+    event_data.text = structure.text
+
+    event = time_events.TimestampEvent(
+        timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyStructure(self, parser_mediator, lines):
     """Verifies whether content corresponds to an SCCM log file.

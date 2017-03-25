@@ -24,21 +24,20 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(len(storage_writer.events), 1)
 
-    event_object = storage_writer.events[0]
+    event = storage_writer.events[0]
 
     expected_filename = (
         u'C:\\Users\\nfury\\Documents\\Alloy Research\\StarFury.zip')
-    self.assertEqual(event_object.original_filename, expected_filename)
+    self.assertEqual(event.original_filename, expected_filename)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-03-12 20:49:58.633')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
-    self.assertEqual(event_object.file_size, 724919)
+    self.assertEqual(event.timestamp, expected_timestamp)
+    self.assertEqual(event.file_size, 724919)
 
     expected_message = u'{0:s} (from drive: UNKNOWN)'.format(expected_filename)
     expected_message_short = u'Deleted file: {0:s}'.format(expected_filename)
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_message_short)
+    self._TestGetMessageStrings(event, expected_message, expected_message_short)
 
   @shared_test_lib.skipUnlessHasTestFile([u'$I103S5F.jpg'])
   def testParseWindows10(self):
@@ -48,21 +47,20 @@ class WinRecycleBinParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(len(storage_writer.events), 1)
 
-    event_object = storage_writer.events[0]
+    event = storage_writer.events[0]
 
     expected_filename = (
         u'C:\\Users\\random\\Downloads\\bunnies.jpg')
-    self.assertEqual(event_object.original_filename, expected_filename)
+    self.assertEqual(event.original_filename, expected_filename)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2016-06-29 21:37:45.618')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
-    self.assertEqual(event_object.file_size, 222255)
+    self.assertEqual(event.timestamp, expected_timestamp)
+    self.assertEqual(event.file_size, 222255)
 
     expected_message = u'{0:s} (from drive: UNKNOWN)'.format(expected_filename)
     expected_message_short = u'Deleted file: {0:s}'.format(expected_filename)
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_message_short)
+    self._TestGetMessageStrings(event, expected_message, expected_message_short)
 
 
 class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
@@ -76,21 +74,21 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(len(storage_writer.events), 4)
 
-    event_object = storage_writer.events[0]
+    event = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2004-08-25 16:18:25.237')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.DELETED_TIME)
+        event.timestamp_desc, eventdata.EventTimestamp.DELETED_TIME)
 
-    self.assertEqual(event_object.record_index, 1)
+    self.assertEqual(event.record_index, 1)
 
     expected_filename = (
         u'C:\\Documents and Settings\\Mr. Evil\\Desktop\\lalsetup250.exe')
-    self.assertEqual(event_object.original_filename, expected_filename)
+    self.assertEqual(event.original_filename, expected_filename)
 
-    event_object = storage_writer.events[1]
+    event = storage_writer.events[1]
 
     expected_message = (
         u'DC2 -> C:\\Documents and Settings\\Mr. Evil\\Desktop'
@@ -99,12 +97,11 @@ class WinRecyclerInfo2ParserTest(test_lib.ParserTestCase):
         u'Deleted file: C:\\Documents and Settings\\Mr. Evil\\Desktop'
         u'\\netstumblerinstaller...')
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_message_short)
+    self._TestGetMessageStrings(event, expected_message, expected_message_short)
 
-    event_object = storage_writer.events[2]
+    event = storage_writer.events[2]
 
-    self._TestGetSourceStrings(event_object, u'Recycle Bin', u'RECBIN')
+    self._TestGetSourceStrings(event, u'Recycle Bin', u'RECBIN')
 
 
 if __name__ == '__main__':

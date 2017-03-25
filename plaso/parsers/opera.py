@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """Parsers for Opera Browser history files."""
 
-import logging
 import os
 import sys
+
 from xml.etree import ElementTree
 
 if sys.version_info[0] < 3:
@@ -11,65 +11,59 @@ if sys.version_info[0] < 3:
 else:
   from urllib import parse as urlparse  # pylint: disable=no-name-in-module
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+from dfdatetime import time_elements as dfdatetime_time_elements
+from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfvfs.helpers import text_file
 
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
-from plaso.lib import timelib
-from plaso.lib import utils
 from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-class OperaTypedHistoryEvent(time_events.TimestampEvent):
-  """An EventObject for an Opera typed history entry."""
+class OperaTypedHistoryEventData(events.EventData):
+  """Opera typed history entry data.
+
+  Attributes:
+    entry_selection (str): information about whether the URL was directly
+        typed in or the result of the user choosing from the auto complete.
+    entry_type (str): information about whether the URL was directly typed in
+        or the result of the user choosing from the auto complete.
+    url (str): typed URL or hostname.
+  """
 
   DATA_TYPE = u'opera:history:typed_entry'
 
-  def __init__(self, timestamp, url, entry_type):
-    """A constructor for the typed history event.
-
-    Args:
-      timestamp: The timestamp time value. The timestamp contains the
-                 number of microseconds since Jan 1, 1970 00:00:00 UTC
-      url: The url, or the typed hostname.
-      entry_type: A string indicating whether the URL was directly
-                  typed in or the result of the user choosing from the
-                  auto complete (based on prior history).
-    """
-    super(OperaTypedHistoryEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.LAST_VISITED_TIME)
-
-    self.entry_type = entry_type
-    self.url = url
-
-    if entry_type == u'selected':
-      self.entry_selection = u'Filled from autocomplete.'
-    elif entry_type == u'text':
-      self.entry_selection = u'Manually typed.'
+  def __init__(self):
+    """Initializes event data."""
+    super(OperaTypedHistoryEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.entry_selection = None
+    self.entry_type = None
+    self.url = None
 
 
-class OperaGlobalHistoryEvent(time_events.PosixTimeEvent):
-  """An EventObject for an Opera global history entry."""
+class OperaGlobalHistoryEventData(events.EventData):
+  """Opera global history entry data.
+
+  Attributes:
+    description (str): description.
+    popularity_index (int): popularity index.
+    title (str): title.
+    url (str):  URL.
+  """
 
   DATA_TYPE = u'opera:history:entry'
 
-  def __init__(self, timestamp, url, title, popularity_index):
-    """Initialize the event object."""
-    super(OperaGlobalHistoryEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.PAGE_VISITED, self.DATA_TYPE)
-
-    self.url = url
-    if title != url:
-      self.title = title
-
-    self.popularity_index = popularity_index
-
-    if popularity_index < 0:
-      self.description = u'First and Only Visit'
-    else:
-      self.description = u'Last Visit'
+  def __init__(self):
+    """Initializes event data."""
+    super(OperaGlobalHistoryEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.description = None
+    self.popularity_index = None
+    self.title = None
+    self.url = None
 
 
 class OperaTypedHistoryParser(interface.FileObjectParser):
@@ -84,8 +78,9 @@ class OperaTypedHistoryParser(interface.FileObjectParser):
     """Parses an Opera typed history file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -107,23 +102,33 @@ class OperaTypedHistoryParser(interface.FileObjectParser):
     xml = ElementTree.parse(file_object)
 
     for history_item in xml.iterfind(u'typed_history_item'):
-      content = history_item.get(u'content', u'')
-      last_typed_time = history_item.get(u'last_typed', None)
-      entry_type = history_item.get(u'type', u'')
+      event_data = OperaTypedHistoryEventData()
+      event_data.entry_type = history_item.get(u'type', None)
+      event_data.url = history_item.get(u'content', None)
 
+      if event_data.entry_type == u'selected':
+        event_data.entry_selection = u'Filled from autocomplete.'
+      elif event_data.entry_type == u'text':
+        event_data.entry_selection = u'Manually typed.'
+
+      last_typed_time = history_item.get(u'last_typed', None)
       if last_typed_time is None:
         parser_mediator.ProduceExtractionError(u'missing last typed time.')
         continue
 
+      date_time = dfdatetime_time_elements.TimeElements()
+
       try:
-        timestamp = timelib.Timestamp.FromTimeString(last_typed_time)
-      except errors.TimestampError:
+        date_time.CopyFromStringISO8601(last_typed_time)
+      except ValueError as exception:
         parser_mediator.ProduceExtractionError(
-            u'unsupported last typed time: {0:s}.'.format(last_typed_time))
+            u'unsupported last typed time: {0:s} with error: {1:s}.'.format(
+                last_typed_time, exception))
         continue
 
-      event_object = OperaTypedHistoryEvent(timestamp, content, entry_type)
-      parser_mediator.ProduceEvent(event_object)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.LAST_VISITED_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 class OperaGlobalHistoryParser(interface.FileObjectParser):
@@ -132,162 +137,178 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
   NAME = u'opera_global'
   DESCRIPTION = u'Parser for Opera global_history.dat files.'
 
+  _MAXIMUM_LINE_SIZE = 512
+
   _SUPPORTED_URL_SCHEMES = frozenset([u'file', u'http', u'https', u'ftp'])
 
   def _IsValidUrl(self, url):
-    """A simple test to see if an URL is considered valid."""
-    parsed_url = urlparse.urlparse(url)
-
-    # Few supported first URL entries.
-    if parsed_url.scheme in self._SUPPORTED_URL_SCHEMES:
-      return True
-
-    return False
-
-  def _ReadRecord(self, text_file_object, max_line_length=0):
-    """Return a single record from an Opera global_history file.
-
-    A single record consists of four lines, with each line as:
-      Title of page (or the URL if not there).
-      Website URL.
-      Timestamp in POSIX time.
-      Popularity index (-1 if first time visited).
-
-    Args:
-      text_file_object: A text file object (instance of dfvfs.TextFile).
-      max_line_length: An integer that denotes the maximum byte
-                       length for each line read.
+    """Checks if an URL is considered valid.
 
     Returns:
-      A tuple of: title, url, timestamp, popularity_index.
-
-    Raises:
-      errors.NotAText: If the file being read is not a text file.
+      bool: True if the URL is valid.
     """
-    if max_line_length:
-      title_raw = text_file_object.readline(max_line_length)
-      if len(title_raw) == max_line_length and not title_raw.endswith(b'\n'):
-        return None, None, None, None
-      if not utils.IsText(title_raw):
-        raise errors.NotAText(u'Title line is not a text.')
-      title = title_raw.strip()
-    else:
-      title = text_file_object.readline().strip()
+    parsed_url = urlparse.urlparse(url)
+    return parsed_url.scheme in self._SUPPORTED_URL_SCHEMES
 
-    if not title:
-      return None, None, None, None
-
-    url = text_file_object.readline().strip()
-
-    if not url:
-      return None, None, None, None
-
-    timestamp_line = text_file_object.readline().strip()
-    popularity_line = text_file_object.readline().strip()
-
-    try:
-      timestamp = int(timestamp_line, 10)
-    except ValueError:
-      if len(timestamp_line) > 30:
-        timestamp_line = timestamp_line[0:30]
-      logging.debug(u'Unable to read in timestamp [{0!r}]'.format(
-          timestamp_line))
-      return None, None, None, None
-
-    try:
-      popularity_index = int(popularity_line, 10)
-    except ValueError:
-      try:
-        logging.debug(u'Unable to read in popularity index[{0:s}]'.format(
-            popularity_line))
-      except UnicodeDecodeError:
-        logging.debug(
-            u'Unable to read in popularity index [unable to print '
-            u'bad line]')
-      return None, None, None, None
-
-    # Try to get the data into Unicode.
-    try:
-      title_unicode = title.decode(u'utf-8')
-    except UnicodeDecodeError:
-      partial_title = title.decode(u'utf-8', errors=u'replace')
-      # TODO: replace with parse error.
-      title_unicode = u'Warning: partial line, starts with: {0:s}'.format(
-          partial_title)
-
-    return title_unicode, url, timestamp, popularity_index
-
-  def _ReadRecords(self, text_file_object):
-    """Yield records read from an Opera global_history file.
-
-    A single record consists of four lines, with each line as:
-      Title of page (or the URL if not there).
-      Website URL.
-      Timestamp in POSIX time.
-      Popularity index (-1 if first time visited).
+  def _ParseRecord(self, parser_mediator, text_file_object):
+    """Parses an Opera global history record.
 
     Args:
-      text_file_object: A text file object (instance of dfvfs.TextFile).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      text_file_object (dfvfs.TextFile): text file.
 
-    Yields:
-      A tuple of: title, url, timestamp, popularity_index.
+    Returns:
+      bool: True if the record was successfully parsed.
     """
-    while True:
-      title, url, timestamp, popularity_index = self._ReadRecord(
-          text_file_object)
+    title = text_file_object.readline()
+    if not title:
+      return False
 
-      if not title:
-        raise StopIteration
-      if not url:
-        raise StopIteration
-      if not popularity_index:
-        raise StopIteration
+    url = text_file_object.readline()
+    timestamp = text_file_object.readline()
+    popularity_index = text_file_object.readline()
 
-      yield title, url, timestamp, popularity_index
+    title = title.strip()
+    url = url.strip()
+    timestamp = timestamp.strip()
+    popularity_index = popularity_index.strip()
+
+    event_data = OperaGlobalHistoryEventData()
+
+    try:
+      title = title.decode(u'utf-8')
+    except UnicodeDecodeError:
+      title = title.decode(u'utf-8', errors=u'replace')
+      message = (
+          u'unable to properly determine string due to encoding error. '
+          u'Switching to error tolerant encoding which can result in '
+          u'non Basic Latin (C0) characters to be replaced with "?" or '
+          u'"\\ufffd". Title: {0:s}').format(title)
+      parser_mediator.ProduceExtractionError(message)
+
+    event_data.url = url.decode(u'utf-8')
+
+    if title != event_data.url:
+      event_data.title = title
+
+    try:
+      event_data.popularity_index = int(popularity_index, 10)
+    except ValueError:
+      parser_mediator.ProduceExtractionError(
+          u'unable to convert popularity index: {0:s}'.format(popularity_index))
+
+    if event_data.popularity_index < 0:
+      event_data.description = u'First and Only Visit'
+    else:
+      event_data.description = u'Last Visit'
+
+    try:
+      timestamp = int(timestamp, 10)
+    except ValueError:
+      parser_mediator.ProduceExtractionError(
+          u'unable to convert timestamp: {0:s}'.format(timestamp))
+      timestamp = None
+
+    if timestamp is None:
+      date_time = dfdatetime_semantic_time.SemanticTime(u'Invalid')
+    else:
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.PAGE_VISITED)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    return True
+
+  def _ParseAndValidateRecord(self, parser_mediator, text_file_object):
+    """Parses and validates an Opera global history record.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      text_file_object (dfvfs.TextFile): text file.
+
+    Returns:
+      bool: True if the record was successfully parsed.
+    """
+    title = text_file_object.readline(self._MAXIMUM_LINE_SIZE)
+    if len(title) == self._MAXIMUM_LINE_SIZE and not title.endswith(b'\n'):
+      return False
+
+    url = text_file_object.readline(self._MAXIMUM_LINE_SIZE)
+    if len(url) == self._MAXIMUM_LINE_SIZE and not url.endswith(b'\n'):
+      return False
+
+    timestamp = text_file_object.readline(self._MAXIMUM_LINE_SIZE)
+    if (len(timestamp) == self._MAXIMUM_LINE_SIZE and
+        not timestamp.endswith(b'\n')):
+      return False
+
+    popularity_index = text_file_object.readline(self._MAXIMUM_LINE_SIZE)
+    if (len(popularity_index) == self._MAXIMUM_LINE_SIZE and
+        not popularity_index.endswith(b'\n')):
+      return False
+
+    title = title.strip()
+    url = url.strip()
+    timestamp = timestamp.strip()
+    popularity_index = popularity_index.strip()
+
+    if not title or not url or not timestamp or not popularity_index:
+      return False
+
+    event_data = OperaGlobalHistoryEventData()
+
+    try:
+      title = title.decode(u'utf-8')
+      url = url.decode(u'utf-8')
+    except UnicodeDecodeError:
+      return False
+
+    if not self._IsValidUrl(url):
+      return False
+
+    event_data.url = url
+    if title != url:
+      event_data.title = title
+
+    try:
+      event_data.popularity_index = int(popularity_index, 10)
+      timestamp = int(timestamp, 10)
+    except ValueError:
+      return False
+
+    if event_data.popularity_index < 0:
+      event_data.description = u'First and Only Visit'
+    else:
+      event_data.description = u'Last Visit'
+
+    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.PAGE_VISITED)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    return True
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses an Opera global history file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
     """
-    file_object.seek(0, os.SEEK_SET)
-
     text_file_object = text_file.TextFile(file_object)
-
-    try:
-      title, url, timestamp, popularity_index = self._ReadRecord(
-          text_file_object, 400)
-    except errors.NotAText:
+    if not self._ParseAndValidateRecord(parser_mediator, text_file_object):
       raise errors.UnableToParseFile(
-          u'Not an Opera history file [not a text file].')
+          u'Unable to parse as Opera global_history.dat.')
 
-    if not title:
-      raise errors.UnableToParseFile(
-          u'Not an Opera history file [no title present].')
-
-    if not self._IsValidUrl(url):
-      raise errors.UnableToParseFile(
-          u'Not an Opera history file [not a valid URL].')
-
-    if not timestamp:
-      raise errors.UnableToParseFile(
-          u'Not an Opera history file [timestamp does not exist].')
-
-    event_object = OperaGlobalHistoryEvent(
-        timestamp, url, title, popularity_index)
-    parser_mediator.ProduceEvent(event_object)
-
-    # Read in the rest of the history file.
-    for title, url, timestamp, popularity_index in self._ReadRecords(
-        text_file_object):
-      event_object = OperaGlobalHistoryEvent(
-          timestamp, url, title, popularity_index)
-      parser_mediator.ProduceEvent(event_object)
+    while self._ParseRecord(parser_mediator, text_file_object):
+      pass
 
 
 manager.ParsersManager.RegisterParsers([

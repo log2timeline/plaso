@@ -24,9 +24,9 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
         [u'Cookies.binarycookies'], parser_object)
 
     cookie_events = []
-    for event_object in storage_writer.events:
-      if isinstance(event_object, safari_cookies.BinaryCookieEvent):
-        cookie_events.append(event_object)
+    for event in storage_writer.events:
+      if event.data_type == u'safari:cookie:entry':
+        cookie_events.append(event)
 
     # There should be:
     # * 207 events in total
@@ -35,39 +35,39 @@ class SafariCookieParserTest(test_lib.ParserTestCase):
     self.assertEqual(len(storage_writer.events), 207)
     self.assertEqual(len(cookie_events), 182)
 
-    event_object = cookie_events[3]
-    self.assertEqual(event_object.flags, 5)
-    self.assertEqual(event_object.url, u'accounts.google.com')
-    self.assertEqual(event_object.cookie_name, u'GAPS')
+    event = cookie_events[3]
+    self.assertEqual(event.flags, 5)
+    self.assertEqual(event.url, u'accounts.google.com')
+    self.assertEqual(event.cookie_name, u'GAPS')
 
-    event_object = cookie_events[48]
+    event = cookie_events[48]
 
-    self.assertEqual(event_object.flags, 0)
+    self.assertEqual(event.flags, 0)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-08 20:54:50')
 
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
-    self.assertEqual(event_object.cookie_name, u'nonsession')
-    self.assertEqual(event_object.path, u'/')
+        event.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+    self.assertEqual(event.cookie_name, u'nonsession')
+    self.assertEqual(event.path, u'/')
 
     expected_message = u'.ebay.com </> (nonsession)'
     expected_message_short = u'.ebay.com (nonsession)'
 
     self._TestGetMessageStrings(
-        event_object, expected_message, expected_message_short)
+        event, expected_message, expected_message_short)
 
-    event_object = cookie_events[52]
-    self.assertEqual(event_object.cookie_name, u'fpc')
+    event = cookie_events[52]
+    self.assertEqual(event.cookie_name, u'fpc')
     value = (
         u'd=0dTg3Ou32s3MrAJ2iHjFph100Tw3E1HTfDOTly0GfJ2g4W.mXpy54F9fjBFfXMw4YyW'
         u'AG2cT2FVSqOvGGi_Y1OPrngmNvpKPPyz5gIUP6x_EQeM7bR3jsrg_F1UXVOgu6JgkFwqO'
         u'5uHrv4HiL05qb.85Bl.V__HZI5wpAGOGPz1XHhY5mOMH.g.pkVDLli36W2iuYwA-&v=2')
-    self.assertEqual(event_object.cookie_value, value)
+    self.assertEqual(event.cookie_value, value)
 
-    self.assertEqual(event_object.path, u'/')
-    self.assertEqual(event_object.url, u'.www.yahoo.com')
+    self.assertEqual(event.path, u'/')
+    self.assertEqual(event.url, u'.www.yahoo.com')
 
 
 if __name__ == '__main__':

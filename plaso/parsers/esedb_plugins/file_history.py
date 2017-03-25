@@ -3,14 +3,18 @@
 
 import logging
 
+from dfdatetime import filetime as dfdatetime_filetime
+from dfdatetime import semantic_time as dfdatetime_semantic_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.parsers import esedb
 from plaso.parsers.esedb_plugins import interface
 
 
-class FileHistoryNamespaceEventObject(time_events.FiletimeEvent):
-  """Convenience class for a file history namespace table event.
+class FileHistoryNamespaceEventData(events.EventData):
+  """File history namespace table event data.
 
   Attributes:
     file_attribute (int): file attribute.
@@ -22,28 +26,15 @@ class FileHistoryNamespaceEventObject(time_events.FiletimeEvent):
 
   DATA_TYPE = u'file_history:namespace:event'
 
-  def __init__(
-      self, filetime, timestamp_description, filename, file_attribute,
-      identifier, parent_identifier, usn_number):
-    """Initializes an event.
-
-    Args:
-      filetime (int): FILETIME timestamp value.
-      timestamp_description (str): description of the meaning of the timestamp
-          value.
-      filename (str): name of the orignal file.
-      file_attribute (int): file attribute.
-      identifier (str): identifier.
-      parent_identifier (str): parent identifier.
-      usn_number (int): USN number.
-    """
-    super(FileHistoryNamespaceEventObject, self).__init__(
-        filetime, timestamp_description)
-    self.file_attribute = file_attribute
-    self.identifier = identifier
-    self.original_filename = filename
-    self.parent_identifier = parent_identifier
-    self.usn_number = usn_number
+  def __init__(self):
+    """Initializes event data."""
+    super(FileHistoryNamespaceEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.file_attribute = None
+    self.identifier = None
+    self.original_filename = None
+    self.parent_identifier = None
+    self.usn_number = None
 
 
 class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
@@ -121,27 +112,32 @@ class FileHistoryESEDBPlugin(interface.ESEDBPlugin):
       record_values = self._GetRecordValues(
           parser_mediator, table.name, esedb_record)
 
-      created_timestamp = record_values.get(u'fileCreated')
-      file_attribute = record_values.get(u'fileAttrib')
-      filename = strings.get(record_values.get(u'id', -1), u'')
-      identifier = record_values.get(u'id')
-      parent_identifier = record_values.get(u'parentId')
-      usn_number = record_values.get(u'usn')
+      event_data = FileHistoryNamespaceEventData()
+      event_data.file_attribute = record_values.get(u'fileAttrib', None)
+      event_data.identifier = record_values.get(u'id', None)
+      event_data.parent_identifier = record_values.get(u'parentId', None)
+      event_data.usn_number = record_values.get(u'usn', None)
+      event_data.original_filename = strings.get(event_data.identifier, None)
 
+      created_timestamp = record_values.get(u'fileCreated')
       if created_timestamp:
-        event_object = FileHistoryNamespaceEventObject(
-            created_timestamp, eventdata.EventTimestamp.CREATION_TIME,
-            filename, file_attribute, identifier, parent_identifier,
-            usn_number)
-        parser_mediator.ProduceEvent(event_object)
+        date_time = dfdatetime_filetime.Filetime(timestamp=created_timestamp)
+        event = time_events.DateTimeValuesEvent(
+            date_time, eventdata.EventTimestamp.CREATION_TIME)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
       modified_timestamp = record_values.get(u'fileModified')
       if modified_timestamp:
-        event_object = FileHistoryNamespaceEventObject(
-            modified_timestamp, eventdata.EventTimestamp.MODIFICATION_TIME,
-            filename, file_attribute, identifier, parent_identifier,
-            usn_number)
-        parser_mediator.ProduceEvent(event_object)
+        date_time = dfdatetime_filetime.Filetime(timestamp=modified_timestamp)
+        event = time_events.DateTimeValuesEvent(
+            date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
+
+      if not created_timestamp and not modified_timestamp:
+        date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+        event = time_events.DateTimeValuesEvent(
+            date_time, eventdata.EventTimestamp.NOT_A_TIME)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 esedb.ESEDBParser.RegisterPlugin(FileHistoryESEDBPlugin)

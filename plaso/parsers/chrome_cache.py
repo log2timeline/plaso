@@ -5,9 +5,11 @@ import os
 
 import construct
 
+from dfdatetime import webkit_time as dfdatetime_webkit_time
 from dfvfs.resolver import resolver as path_spec_resolver
 from dfvfs.path import factory as path_spec_factory
 
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -16,14 +18,14 @@ from plaso.parsers import manager
 
 
 class CacheAddress(object):
-  """Class that contains a cache address.
+  """Chrome cache address.
 
   Attributes:
-    block_number: an integer containing the block data file number.
-    block_offset: an integer containing the offset within the block data file.
-    block_size: an integer containing the block size.
-    filename: a string containing the name of the block data file.
-    value: an integer containing the cache address.
+    block_number (int): block data file number.
+    block_offset (int): offset within the block data file.
+    block_size (int): block size.
+    filename (str): name of the block data file.
+    value (int): cache address.
   """
   FILE_TYPE_SEPARATE = 0
   FILE_TYPE_BLOCK_RANKINGS = 1
@@ -40,10 +42,10 @@ class CacheAddress(object):
   _FILE_TYPE_BLOCK_SIZES = [0, 36, 256, 1024, 4096]
 
   def __init__(self, cache_address):
-    """Initializes a cache address object.
+    """Initializes a cache address.
 
     Args:
-      cache_address: an integer containing the cache address.
+      cache_address (int): cache address.
     """
     super(CacheAddress, self).__init__()
     self.block_number = None
@@ -75,20 +77,19 @@ class CacheAddress(object):
 
 
 class CacheEntry(object):
-  """Class that contains a cache entry.
+  """Chrome cache entry.
 
   Attributes:
-    creation_time: an integer containing the creation time, in number of
-                   micro seconds since January 1, 1970, 00:00:00 UTC.
-    hash: an integer containing the super fast hash of the key.
-    key: a binary string containing the key.
-    next: an integer containing the cache address of the next cache entry.
-    rankings_node: an integer containing the cache address of the rankings
-                   node.
+    creation_time (int): creation time, in number of micro seconds since
+        January 1, 1970, 00:00:00 UTC.
+    hash (int): super fast hash of the key.
+    key (bytes): key.
+    next (int): cache address of the next cache entry.
+    rankings_node (int): cache address of the rankings node.
   """
 
   def __init__(self):
-    """Initializes a cache entry object."""
+    """Initializes a cache entry."""
     super(CacheEntry, self).__init__()
     self.creation_time = None
     self.hash = None
@@ -98,7 +99,7 @@ class CacheEntry(object):
 
 
 class IndexFile(object):
-  """Class that contains an index file."""
+  """Chrome cache index file."""
 
   SIGNATURE = 0xc103cac3
 
@@ -119,7 +120,7 @@ class IndexFile(object):
       construct.Padding(208))
 
   def __init__(self):
-    """Initializes the index file object."""
+    """Initializes an index file."""
     super(IndexFile, self).__init__()
     self._file_object = None
     self.creation_time = None
@@ -178,7 +179,7 @@ class IndexFile(object):
     """Opens the index file.
 
     Args:
-      file_object: the file object.
+      file_object (file): file-like object.
     """
     self._file_object = file_object
     self._ReadFileHeader()
@@ -188,7 +189,7 @@ class IndexFile(object):
 
 
 class DataBlockFile(object):
-  """Class that contains a data block file."""
+  """Chrome data block file."""
 
   SIGNATURE = 0xc104cac3
 
@@ -226,7 +227,7 @@ class DataBlockFile(object):
       construct.Array(160, construct.UBInt8(u'key')))
 
   def __init__(self):
-    """Initializes the data block file object."""
+    """Initializes a data block file."""
     super(DataBlockFile, self).__init__()
     self._file_object = None
     self.creation_time = None
@@ -268,10 +269,10 @@ class DataBlockFile(object):
     """Reads a cache entry.
 
     Args:
-      block_offset: The block offset of the cache entry.
+      block_offset (int): block offset of the cache entry.
 
     Returns:
-      A cache entry (instance of CacheEntry).
+      CacheEntry: cache entry.
     """
     self._file_object.seek(block_offset, os.SEEK_SET)
 
@@ -307,29 +308,25 @@ class DataBlockFile(object):
     """Opens the data block file.
 
     Args:
-      file_object: the file object.
+      file_object (file): file-like object.
     """
     self._file_object = file_object
     self._ReadFileHeader()
 
 
-class ChromeCacheEntryEvent(time_events.WebKitTimeEvent):
-  """Class that contains a Chrome Cache event."""
+class ChromeCacheEntryEventData(events.EventData):
+  """Chrome Cache event data.
+
+  Attributes:
+    original_url (str): original URL.
+  """
 
   DATA_TYPE = u'chrome:cache:entry'
 
-  def __init__(self, creation_time, original_url):
-    """Initializes the event object.
-
-    Args:
-      creation_time: an integer containing the creation time, in number of
-                     micro seconds since January 1, 1970, 00:00:00 UTC.
-      original_url: a string containing the original URL or an empty string
-                    if not available.
-    """
-    super(ChromeCacheEntryEvent, self).__init__(
-        creation_time, eventdata.EventTimestamp.CREATION_TIME)
-    self.original_url = original_url
+  def __init__(self):
+    """Initializes event data."""
+    super(ChromeCacheEntryEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.original_url = None
 
 
 class ChromeCacheParser(interface.FileEntryParser):
@@ -342,11 +339,11 @@ class ChromeCacheParser(interface.FileEntryParser):
     """Parses Chrome Cache file entries.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      index_file: A Chrome cache index file object (instance of IndexFile).
-      data_block_files: A dictionary containing the data block files lookup
-                        table which contains data block file objects (instances
-                        of DataBlockFile).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      index_file (IndexFile): Chrome cache index file.
+      data_block_files (dict[str: DataBlockFile]): data block files lookup table
+          which contains data block files.
     """
     # Parse the cache entries in the data block files.
     for cache_address in index_file.index_table:
@@ -381,9 +378,14 @@ class ChromeCacheParser(interface.FileEntryParser):
               u'0x{0:08x}. Characters that cannot be decoded will be '
               u'replaced with "?" or "\\ufffd".').format(cache_address.value))
 
-        event_object = ChromeCacheEntryEvent(
-            cache_entry.creation_time, original_url)
-        parser_mediator.ProduceEvent(event_object)
+        event_data = ChromeCacheEntryEventData()
+        event_data.original_url = original_url
+
+        date_time = dfdatetime_webkit_time.WebKitTime(
+            timestamp=cache_entry.creation_time)
+        event = time_events.DateTimeValuesEvent(
+            date_time, eventdata.EventTimestamp.PAGE_VISITED)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
         cache_address = cache_entry.next
         cache_address_chain_length += 1
@@ -392,8 +394,9 @@ class ChromeCacheParser(interface.FileEntryParser):
     """Parses Chrome Cache files.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      file_entry: a file entry object (instance of dfvfs.FileEntry).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_entry (dfvfs.FileEntry): file entry.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -422,10 +425,11 @@ class ChromeCacheParser(interface.FileEntryParser):
     """Parses a Chrome Cache index file object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_system: The file system object (instance of dfvfs.FileSystem).
-      file_entry: The file entry object (instance of dfvfs.FileEntry).
-      index_file: An index file object (instance of IndexFile)
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_system (dfvfs.FileSystem): file system.
+      file_entry (dfvfs.FileEntry): file entry.
+      index_file (IndexFile): Chrome cache index file.
     """
     # Build a lookup table for the data block files.
     path_segments = file_system.SplitPath(file_entry.path_spec.location)

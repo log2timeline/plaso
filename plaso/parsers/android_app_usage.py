@@ -5,6 +5,9 @@ import os
 
 from xml.etree import ElementTree
 
+from dfdatetime import java_time as dfdatetime_java_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -12,25 +15,21 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-class AndroidAppUsageEvent(time_events.JavaTimeEvent):
-  """Convenience class for an Android Application Last Resumed event."""
+class AndroidAppUsageEventData(events.EventData):
+  """Android Application event data.
+
+  Attributes:
+    package_name (str): name of the Android application.
+    component_name (str): name of the individual component of the application.
+  """
 
   DATA_TYPE = u'android:event:last_resume_time'
 
-  def __init__(self, java_time, package_name, component_name):
-    """Initializes the event object.
-
-    Args:
-      java_time: the Java timestamp which is an integer containing the number
-                 of milliseconds since January 1, 1970, 00:00:00 UTC.
-      package_name: string containing the name of the Android application.
-      component_name: string containing the name of the individual component
-                      of the application.
-    """
-    super(AndroidAppUsageEvent, self).__init__(
-        java_time, eventdata.EventTimestamp.LAST_RESUME_TIME)
-    self.component = component_name
-    self.package = package_name
+  def __init__(self):
+    """Initializes event data."""
+    super(AndroidAppUsageEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.component = None
+    self.package = None
 
 
 class AndroidAppUsageParser(interface.FileObjectParser):
@@ -45,8 +44,9 @@ class AndroidAppUsageParser(interface.FileObjectParser):
     """Parses an Android usage-history file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -69,15 +69,13 @@ class AndroidAppUsageParser(interface.FileObjectParser):
     root_node = xml.getroot()
 
     for application_node in root_node:
-      package_name = application_node.get(u'name', u'')
+      package_name = application_node.get(u'name', None)
 
       for part_node in application_node.iter():
         if part_node.tag != u'comp':
           continue
 
-        component_name = part_node.get(u'name', u'')
         last_resume_time = part_node.get(u'lrt', None)
-
         if last_resume_time is None:
           parser_mediator.ProduceExtractionError(u'missing last resume time.')
           continue
@@ -89,9 +87,14 @@ class AndroidAppUsageParser(interface.FileObjectParser):
               u'unsupported last resume time: {0:s}.'.format(last_resume_time))
           continue
 
-        event_object = AndroidAppUsageEvent(
-            last_resume_time, package_name, component_name)
-        parser_mediator.ProduceEvent(event_object)
+        event_data = AndroidAppUsageEventData()
+        event_data.component = part_node.get(u'name', None)
+        event_data.package = package_name
+
+        date_time = dfdatetime_java_time.JavaTime(timestamp=last_resume_time)
+        event = time_events.DateTimeValuesEvent(
+            date_time, eventdata.EventTimestamp.LAST_RESUME_TIME)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 manager.ParsersManager.RegisterParser(AndroidAppUsageParser)

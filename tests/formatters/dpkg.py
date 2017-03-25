@@ -4,9 +4,12 @@
 
 import unittest
 
-from tests.formatters import test_lib
+from dfdatetime import posix_time as dfdatetime_posix_time
+
+from plaso.containers import time_events
 from plaso.formatters import dpkg
-from plaso.parsers import dpkg as dpkg_parser
+from plaso.lib import eventdata
+from tests.formatters import test_lib
 
 
 class DpkgFormatterTest(test_lib.EventFormatterTestCase):
@@ -26,15 +29,18 @@ class DpkgFormatterTest(test_lib.EventFormatterTestCase):
 
   def testGetMessages(self):
     """Tests the GetMessages method."""
-    mediator = None
-    event = dpkg_parser.DpkgLineEvent(
-        u'2016-08-09 04:57:14',
-        u'status half-installed base-passwd:amd64 3.5.33')
+    date_time = dfdatetime_posix_time.PosixTime()
+    date_time.CopyFromString(u'2016-08-09 04:57:14')
+
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+    event.data_type = u'dpkg:line'
+    event.body = u'status half-installed base-passwd:amd64 3.5.33'
 
     expected_messages = (
         u'status half-installed base-passwd:amd64 3.5.33',
         u'status half-installed base-passwd:amd64 3.5.33')
-    messages = self._formatter.GetMessages(mediator, event)
+    messages = self._formatter.GetMessages(None, event)
     self.assertEqual(messages, expected_messages)
 
 
