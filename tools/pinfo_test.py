@@ -216,9 +216,9 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
   def testPrintStorageInformationAsJSON(self):
     """Tests the _PrintStorageInformationAsJSON function."""
     test_filename = u'pinfo_test.json.plaso'
-    session_identifier = u'3c552fe34e6448718a7f0f4c95dfc1fe'
+    session_identifier = u'98d1caaa52244cf090bbcb766ffb4d6a'
     session_start_time = timelib.Timestamp.CopyFromString(
-        u'2016-10-16 15:13:58.171984+00:00')
+        u'2017-01-22 12:50:47.479205+00:00')
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_tool = pinfo.PinfoTool(output_writer=output_writer)
     test_file = self._GetTestFilePath([test_filename])
@@ -232,7 +232,11 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
     test_tool.PrintStorageInformation()
     output = output_writer.ReadOutput()
     json_output = json.loads(output)
-    first_session = json_output[u'session_3c552fe34e6448718a7f0f4c95dfc1fe']
+
+    first_session_identifier = u'session_{0:s}'.format(session_identifier)
+    first_session = json_output.get(first_session_identifier, None)
+    self.assertIsNotNone(first_session)
+
     self.assertEqual(first_session[u'identifier'], session_identifier)
     self.assertEqual(first_session[u'start_time'], session_start_time)
 
