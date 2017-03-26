@@ -293,7 +293,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     self._analyzer.SignalAbort()
 
     lines_of_text = [u'{0:s} hash tagging results'.format(self.NAME)]
-    for label, count in path_specs_per_labels_counter.items():
+    for label, count in sorted(path_specs_per_labels_counter.items()):
       line_of_text = (
           u'{0:d} path specifications tagged with label: {1:s}'.format(
               count, label))
