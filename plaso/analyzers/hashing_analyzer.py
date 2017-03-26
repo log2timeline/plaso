@@ -70,7 +70,7 @@ class HashingAnalyzer(interface.BaseAnalyzer):
         hasher_names_string)
 
     debug_hasher_names = u', '.join(hasher_names)
-    logging.debug(u'Got hasher names: {0:s}'.format(debug_hasher_names)
+    logging.debug(u'Got hasher names: {0:s}'.format(debug_hasher_names))
 
     self._hashers = hashers_manager.HashersManager.GetHashers(hasher_names)
     self._hasher_names_string = hasher_names_string
