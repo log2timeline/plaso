@@ -20,6 +20,7 @@ from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import timelib
 from plaso.storage import zip_file as storage_zip_file
+from plaso.serializer import json_serializer
 
 
 class PinfoTool(analysis_tool.AnalysisTool):
@@ -44,8 +45,8 @@ class PinfoTool(analysis_tool.AnalysisTool):
     super(PinfoTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._compare_storage_file_path = None
-
     self._front_end = analysis_frontend.AnalysisFrontend()
+    self._output_format = None
 
     self._verbose = False
     self.compare_storage_information = False
@@ -400,8 +401,8 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
     table_view.Write(self._output_writer)
 
-  def _PrintStorageInformation(self, storage):
-    """Prints information about the storage.
+  def _PrintStorageInformationAsText(self, storage):
+    """Prints information about the storage as human-readable text.
 
     Args:
       storage (BaseStorage): storage.
@@ -442,6 +443,22 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
     elif storage.storage_type == definitions.STORAGE_TYPE_TASK:
       self._PrintTasksInformation(storage)
+
+  def _PrintStorageInformationAsJSON(self, storage):
+    """Writes a summary of sessions as machine-readable JSON.
+
+    Args:
+      storage (BaseStorage): storage.
+    """
+    serializer = json_serializer.JSONAttributeContainerSerializer
+    self._output_writer.Write(u'{')
+    for index, session in enumerate(storage.GetSessions()):
+      json_string = serializer.WriteSerialized(session)
+      if index != 0:
+        self._output_writer.Write(u',\n')
+      self._output_writer.Write(u'"session_{0:s}": {1:s} '.format(
+          session.identifier, json_string))
+    self._output_writer.Write(u'}')
 
   def _PrintTasksInformation(self, storage):
     """Prints information about the tasks.
@@ -524,6 +541,11 @@ class PinfoTool(analysis_tool.AnalysisTool):
         action=u'store', default=u'', metavar=u'STORAGE_FILE', help=(
             u'The path of the storage file to compare against.'))
 
+    argument_parser.add_argument(
+        u'--output-format', dest=u'output_format', type=str,
+        choices=[u'text', u'json'], action=u'store', default=u'text',
+        metavar=u'FORMAT', help=u'Type of output to produce')
+
     try:
       options = argument_parser.parse_args()
     except UnicodeEncodeError:
@@ -575,6 +597,8 @@ class PinfoTool(analysis_tool.AnalysisTool):
       self._compare_storage_file_path = compare_storage_file_path
       self.compare_storage_information = True
 
+    self._output_format = self.ParseStringOption(options, u'output_format')
+
   def PrintStorageInformation(self):
     """Prints the storage information."""
     storage_file = storage_zip_file.ZIPStorageFile()
@@ -587,7 +611,10 @@ class PinfoTool(analysis_tool.AnalysisTool):
       return
 
     try:
-      self._PrintStorageInformation(storage_file)
+      if self._output_format == u'json':
+        self._PrintStorageInformationAsJSON(storage_file)
+      elif self._output_format == u'text':
+        self._PrintStorageInformationAsText(storage_file)
     finally:
       storage_file.Close()
 

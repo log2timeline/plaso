@@ -18,7 +18,6 @@ class AnalysisReportTest(shared_test_lib.BaseTestCase):
         plugin_name=u'test', text=u'This is a test analysis report')
 
     expected_dict = {
-        u'_event_tags': [],
         u'plugin_name': u'test',
         u'text': u'This is a test analysis report'}
 
