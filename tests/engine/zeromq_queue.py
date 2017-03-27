@@ -125,7 +125,7 @@ class testZeroMQQueues(shared_test_lib.BaseTestCase):
     queue = zeromq_queue.ZeroMQBufferedReplyBindQueue(
         name=u'requestbufferedreply_replybind', delay_open=False,
         linger_seconds=1, buffer_max_size=3, timeout_seconds=1,
-        buffer_timeout_seconds=1)
+        buffer_timeout_seconds=5)
     try:
       while True:
         queue.PushItem(u'item', block=False)
