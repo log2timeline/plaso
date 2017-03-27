@@ -5,6 +5,8 @@
 import os
 import unittest
 
+from dfvfs.resolver import resolver as dfvfs_resolver
+
 from plaso.lib import errors
 
 from tests import test_lib as shared_test_lib
@@ -104,6 +106,9 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
 
   def testExtractEventsFromSourceBDEImage(self):
     """Tests the ExtractEventsFromSources function on an image with BDE."""
+    # TODO: added for testing.
+    dfvfs_resolver.Resolver.key_chain.Empty()
+
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_tool = psteal.PstealTool(output_writer=output_writer)
 
@@ -136,8 +141,7 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
       self.assertEqual(output.split(b'\n'), expected_output)
 
   def testExtractEventsFromSourcesImage(self):
-    """Tests the ExtractEventsFromSources function on a single partition
-    image."""
+    """Tests the ExtractEventsFromSources function on a single partition."""
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_tool = psteal.PstealTool(output_writer=output_writer)
 
