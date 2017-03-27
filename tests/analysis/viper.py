@@ -138,10 +138,10 @@ class ViperTest(test_lib.AnalysisPluginTestCase):
 
     expected_text = (
         u'viper hash tagging results\n'
-        u'1 path specifications tagged with label: viper_tag_rat\n'
         u'1 path specifications tagged with label: viper_present\n'
+        u'1 path specifications tagged with label: viper_project_default\n'
         u'1 path specifications tagged with label: viper_tag_darkcomet\n'
-        u'1 path specifications tagged with label: viper_project_default\n')
+        u'1 path specifications tagged with label: viper_tag_rat\n')
 
     self.assertEqual(report.text, expected_text)
 

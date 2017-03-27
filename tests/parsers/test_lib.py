@@ -11,6 +11,7 @@ from plaso.containers import sessions
 from plaso.engine import knowledge_base
 from plaso.formatters import manager as formatters_manager
 from plaso.formatters import mediator as formatters_mediator
+from plaso.lib import py2to3
 from plaso.parsers import interface
 from plaso.parsers import mediator
 from plaso.storage import fake_storage
@@ -62,6 +63,10 @@ class _EventsHeap(object):
     for attribute_name, attribute_value in sorted(event_values.items()):
       if isinstance(attribute_value, dict):
         attribute_value = sorted(attribute_value.items())
+
+      elif isinstance(attribute_value, py2to3.BYTES_TYPE):
+        attribute_value = repr(attribute_value)
+
       comparable = u'{0:s}: {1!s}'.format(attribute_name, attribute_value)
       attributes.append(comparable)
 
