@@ -83,7 +83,7 @@ ADDITIONAL_MODULES = set([
     u'dfwinreg.definitions', u'efilter.protocols', u'elasticsearch',
     u'elasticsearch.exceptions', u'flask', u'hachoir_core',
     u'hachoir_core.config', u'hachoir_parser', u'hachoir_metadata', u'MySQLdb',
-    u'pyelasticsearch', u'requests', u'timesketch', u'timesketch.lib',
+    u'pyelasticsearch', u'timesketch', u'timesketch.lib',
     u'timesketch.lib.datastores', u'timesketch.lib.datastores.elastic',
     u'timesketch.models', u'timesketch.models.sketch',
     u'timesketch.models.user'])
