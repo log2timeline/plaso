@@ -12,7 +12,7 @@ class CredentialConfiguration(interface.AttributeContainer):
     credential_type (str): credential type.
     path_spec (dfvfs.PathSpec): path specification.
   """
-  CONTAINER_TYPE = u'credentials_configuration'
+  CONTAINER_TYPE = u'credential_configuration'
 
   def __init__(
       self, credential_data=None, credential_type=None, path_spec=None):
