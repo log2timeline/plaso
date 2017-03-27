@@ -18,6 +18,7 @@ from dfvfs.volume import tsk_volume_system
 from dfvfs.volume import vshadow_volume_system
 
 from plaso.cli import tools
+from plaso.engine import configurations
 from plaso.lib import errors
 from plaso.lib import py2to3
 from plaso.lib import timelib
@@ -59,6 +60,7 @@ class StorageMediaTool(tools.CLITool):
     super(StorageMediaTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._credentials = []
+    self._credential_configurations = []
     self._filter_file = None
     self._partitions = None
     self._partition_offset = None
@@ -68,6 +70,21 @@ class StorageMediaTool(tools.CLITool):
     self._source_path_specs = []
     self._vss_only = False
     self._vss_stores = None
+
+  def _AddCredentialConfiguration(
+      self, path_spec, credential_type, credential_data):
+    """Adds a credential configuration.
+
+    Args:
+      path_spec (dfvfs.PathSpec): path specification.
+      credential_type (str): credential type.
+      credential_data (bytes): credential data.
+    """
+    credential_configuration = configurations.CredentialConfiguration(
+        credential_data=credential_data, credential_type=credential_type,
+        path_spec=path_spec)
+
+    self._credential_configurations.append(credential_configuration)
 
   def _FormatHumanReadableSize(self, size):
     """Represents a number of bytes as a human readable string.
@@ -178,9 +195,9 @@ class StorageMediaTool(tools.CLITool):
 
     Raises:
       RuntimeError: if the volume for a specific identifier cannot be
-                    retrieved.
+          retrieved.
       SourceScannerError: if the format of or within the source
-                          is not supported or the the scan node is invalid.
+          is not supported or the the scan node is invalid.
     """
     if not scan_node or not scan_node.path_spec:
       raise errors.SourceScannerError(u'Invalid scan node.')
@@ -242,7 +259,7 @@ class StorageMediaTool(tools.CLITool):
 
     Raises:
       SourceScannerError: if the format of or within the source
-                          is not supported or the the scan node is invalid.
+          is not supported or the the scan node is invalid.
     """
     if not scan_node or not scan_node.path_spec:
       raise errors.SourceScannerError(u'Invalid scan node.')
@@ -328,10 +345,10 @@ class StorageMediaTool(tools.CLITool):
 
     Args:
       partitions (str): partitions. A range of partitions can be defined
-           as: "3..5". Multiple partitions can be defined as: "1,3,5" (a list
-           of comma separated values). Ranges and lists can also be combined
-           as: "1,3..5". The first partition is 1. All partition can be
-           defined as: "all".
+          as: "3..5". Multiple partitions can be defined as: "1,3,5" (a list
+          of comma separated values). Ranges and lists can also be combined
+          as: "1,3..5". The first partition is 1. All partition can be
+          defined as: "all".
 
     Returns:
       list[str]: partitions.
@@ -588,6 +605,7 @@ class StorageMediaTool(tools.CLITool):
         result = self._source_scanner.Unlock(
             scan_context, locked_scan_node.path_spec, credential_type,
             credential_data)
+
       except IOError as exception:
         logging.debug(u'Unable to unlock volume with error: {0:s}'.format(
             exception))
@@ -598,6 +616,11 @@ class StorageMediaTool(tools.CLITool):
         self._output_writer.Write(u'\n')
 
     self._output_writer.Write(u'\n')
+
+    if result:
+      self._AddCredentialConfiguration(
+          locked_scan_node.path_spec, credential_type, credential_data)
+
     return result
 
   def _PromptUserForPartitionIdentifier(
@@ -796,7 +819,7 @@ class StorageMediaTool(tools.CLITool):
 
     Raises:
       SourceScannerError: if the format of or within the source
-                          is not supported or the the scan node is invalid.
+          is not supported or the the scan node is invalid.
     """
     if not volume_scan_node or not volume_scan_node.path_spec:
       raise errors.SourceScannerError(u'Invalid or missing volume scan node.')
@@ -824,7 +847,7 @@ class StorageMediaTool(tools.CLITool):
 
     Raises:
       SourceScannerError: if the format of or within the source
-                          is not supported or the the scan node is invalid.
+          is not supported or the the scan node is invalid.
     """
     if not volume_scan_node or not volume_scan_node.path_spec:
       raise errors.SourceScannerError(u'Invalid or missing volume scan node.')
@@ -875,7 +898,10 @@ class StorageMediaTool(tools.CLITool):
         result = self._source_scanner.Unlock(
             scan_context, volume_scan_node.path_spec, credential_type,
             credential_data)
+
         if result:
+          self._AddCredentialConfiguration(
+              volume_scan_node.path_spec, credential_type, credential_data)
           break
 
       if self._credentials and not result:
@@ -1071,7 +1097,7 @@ class StorageMediaTool(tools.CLITool):
 
     Raises:
       SourceScannerError: if the format of or within the source is
-                          not supported.
+          not supported.
     """
     if (not self._source_path.startswith(u'\\\\.\\') and
         not os.path.exists(self._source_path)):

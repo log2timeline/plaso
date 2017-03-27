@@ -110,8 +110,6 @@ class PstealToolTest(cli_test_lib.CLIToolTestCase):
     options = cli_test_lib.TestOptions()
     options.credentials = [u'password:{0:s}'.format(self._BDE_PASSWORD)]
     options.quiet = True
-    # TODO: remove work-around after fixing #1112
-    options.single_process = True
     options.source = self._GetTestFilePath([u'bdetogo.raw'])
     options.status_view_mode = u'none'
 

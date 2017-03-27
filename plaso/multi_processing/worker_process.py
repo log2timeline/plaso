@@ -5,6 +5,7 @@ import logging
 
 from dfvfs.lib import errors as dfvfs_errors
 from dfvfs.resolver import context
+from dfvfs.resolver import resolver
 
 from plaso.engine import plaso_queue
 from plaso.engine import profiler
@@ -105,6 +106,12 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     # We need a resolver context per process to prevent multi processing
     # issues with file objects stored in images.
     resolver_context = context.Context()
+
+    for credential_configuration in self._processing_configuration.credentials:
+      resolver.Resolver.key_chain.SetCredential(
+          credential_configuration.path_spec,
+          credential_configuration.credential_type,
+          credential_configuration.credential_data)
 
     self._parser_mediator = parsers_mediator.ParserMediator(
         None, self._knowledge_base,
