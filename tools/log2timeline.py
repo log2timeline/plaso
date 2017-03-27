@@ -546,6 +546,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     # TODO: pass preferred_encoding.
     configuration = configurations.ProcessingConfiguration()
+    configuration.credentials = self._credential_configurations
     configuration.debug_output = self._debug_mode
     configuration.event_extraction.filter_object = self._filter_object
     configuration.event_extraction.text_prepend = self._text_prepend
