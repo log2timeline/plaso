@@ -602,6 +602,7 @@ class GitHelper(CLIHelper):
       if (not changed_file.endswith(u'.py') or
           changed_file.endswith(u'_pb2.py') or
           not os.path.exists(changed_file) or
+          changed_file.startswith(u'data') or
           changed_file.startswith(u'docs') or
           changed_file.startswith(u'test_data') or
           changed_file in (u'setup.py', upload_path)):
@@ -877,8 +878,8 @@ class ProjectHelper(CLIHelper):
       u'Google Inc. (*@google.com)']
 
   SUPPORTED_PROJECTS = frozenset([
-      u'dfdatetime', u'dfvfs', u'dfwinreg', u'l2tdevtools', u'l2tdocs',
-      u'plaso'])
+      u'dfdatetime', u'dfvfs', u'dfwinreg', u'dftimewolf', u'eccemotus',
+      u'l2tdevtools', u'l2tdocs', u'plaso'])
 
   def __init__(self, script_path):
     """Initializes a project helper object.
@@ -1519,28 +1520,28 @@ class ReviewHelper(object):
     Returns:
       bool: True if the close was successful.
     """
-    review_file = ReviewFile(self._feature_branch)
-    if not review_file.Exists():
-      print(u'Review file missing for branch: {0:s}'.format(
-          self._feature_branch))
-      return False
-
     if not self._git_helper.CheckHasBranch(self._feature_branch):
       print(u'No such feature branch: {0:s}'.format(self._feature_branch))
     else:
       self._git_helper.RemoveFeatureBranch(self._feature_branch)
 
-    codereview_issue_number = review_file.GetCodeReviewIssueNumber()
+    review_file = ReviewFile(self._feature_branch)
+    if not review_file.Exists():
+      print(u'Review file missing for branch: {0:s}'.format(
+          self._feature_branch))
 
-    review_file.Remove()
+    else:
+      codereview_issue_number = review_file.GetCodeReviewIssueNumber()
 
-    if codereview_issue_number:
-      if not self._codereview_helper.CloseIssue(codereview_issue_number):
-        print(u'Unable to close code review: {0!s}'.format(
-            codereview_issue_number))
-        print((
-            u'Close it manually on: https://codereview.appspot.com/'
-            u'{0!s}').format(codereview_issue_number))
+      review_file.Remove()
+
+      if codereview_issue_number:
+        if not self._codereview_helper.CloseIssue(codereview_issue_number):
+          print(u'Unable to close code review: {0!s}'.format(
+              codereview_issue_number))
+          print((
+              u'Close it manually on: https://codereview.appspot.com/'
+              u'{0!s}').format(codereview_issue_number))
 
     return True
 
@@ -1668,7 +1669,8 @@ class ReviewHelper(object):
     if self._project_name == u'l2tdocs':
       return True
 
-    if self._command not in (u'create', u'merge', u'lint', u'update'):
+    if self._command not in (
+        u'create', u'merge', u'lint', u'lint-test', u'lint_test', u'update'):
       return True
 
     pylint_helper = PylintHelper()
@@ -1676,16 +1678,6 @@ class ReviewHelper(object):
       print(u'{0:s} aborted - pylint verion 1.5.0 or later required.'.format(
           self._command.title()))
       return False
-
-    if self._command == u'merge':
-      fork_git_repo_url = self._github_helper.GetForkGitRepoUrl(
-          self._fork_username)
-
-      if not self._git_helper.PullFromFork(
-          fork_git_repo_url, self._fork_feature_branch):
-        print(u'{0:s} aborted - unable to pull changes from fork.'.format(
-            self._command.title()))
-        return False
 
     if self._all_files:
       diffbase = None
@@ -1840,6 +1832,23 @@ class ReviewHelper(object):
 
     return True
 
+  def PullChangesFromFork(self):
+    """Pulls changes from a feature branch on a fork.
+
+    Returns:
+      bool: True if the pull was successful.
+    """
+    fork_git_repo_url = self._github_helper.GetForkGitRepoUrl(
+        self._fork_username)
+
+    if not self._git_helper.PullFromFork(
+        fork_git_repo_url, self._fork_feature_branch):
+      print(u'{0:s} aborted - unable to pull changes from fork.'.format(
+          self._command.title()))
+      return False
+
+    return True
+
   def Test(self):
     """Tests a review.
 
@@ -1849,13 +1858,13 @@ class ReviewHelper(object):
     if self._project_name == u'l2tdocs':
       return True
 
-    if self._command not in (u'create', u'merge', u'test', u'update'):
+    if self._command not in (
+        u'create', u'lint-test', u'lint_test', u'merge', u'test', u'update'):
       return True
 
     # TODO: determine why this alters the behavior of argparse.
     # Currently affects this script being used in plaso.
-    command = u'{0:s} run_tests.py --fail-unless-has-test-file'.format(
-        sys.executable)
+    command = u'{0:s} run_tests.py'.format(sys.executable)
     exit_code = subprocess.call(command, shell=True)
     if exit_code != 0:
       print(u'{0:s} aborted - unable to pass tests.'.format(
@@ -2008,7 +2017,26 @@ def Main():
       metavar=u'GITHUB_ORIGIN', default=None,
       help=u'the github origin to merged e.g. username:feature.')
 
+  merge_edit_command_parser = commands_parser.add_parser(u'merge-edit')
+
+  # TODO: add this to help output.
+  merge_edit_command_parser.add_argument(
+      u'github_origin', action=u'store',
+      metavar=u'GITHUB_ORIGIN', default=None,
+      help=u'the github origin to merged e.g. username:feature.')
+
+  merge_edit_command_parser = commands_parser.add_parser(u'merge_edit')
+
+  # TODO: add this to help output.
+  merge_edit_command_parser.add_argument(
+      u'github_origin', action=u'store',
+      metavar=u'GITHUB_ORIGIN', default=None,
+      help=u'the github origin to merged e.g. username:feature.')
+
   commands_parser.add_parser(u'lint')
+
+  commands_parser.add_parser(u'lint-test')
+  commands_parser.add_parser(u'lint_test')
 
   open_command_parser = commands_parser.add_parser(u'open')
 
@@ -2103,6 +2131,10 @@ def Main():
     if not review_helper.PrepareMerge(codereview_issue_number):
       return False
 
+  if options.command in (u'merge', u'merge-edit', u'merge_edit'):
+    if not review_helper.PullChangesFromFork():
+      return False
+
   if not review_helper.Lint():
     return False
 
@@ -2116,7 +2148,7 @@ def Main():
   elif options.command == u'close':
     result = review_helper.Close()
 
-  elif options.command in (u'lint', u'test'):
+  elif options.command in (u'lint', u'lint-test', u'lint_test', u'test'):
     result = True
 
   elif options.command == u'merge':
