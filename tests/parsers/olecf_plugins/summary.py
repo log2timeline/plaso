@@ -25,7 +25,9 @@ class TestSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
     # There is one summary info stream with three event objects.
     self.assertEqual(len(storage_writer.events), 3)
 
-    event_object = storage_writer.events[1]
+    events = self._GetSortedEvents(storage_writer.events)
+
+    event_object = events[0]
     self.assertEqual(event_object.name, u'Summary Information')
 
     self.assertEqual(event_object.title, u'Table of Context')
@@ -78,7 +80,9 @@ class TestDocumentSummaryInformationOLECFPlugin(test_lib.OLECFPluginTestCase):
     # There should only be one summary info stream with one event.
     self.assertEqual(len(storage_writer.events), 1)
 
-    event_object = storage_writer.events[0]
+    events = self._GetSortedEvents(storage_writer.events)
+
+    event_object = events[0]
     self.assertEqual(event_object.name, u'Document Summary Information')
 
     self.assertEqual(event_object.number_of_lines, 1)
