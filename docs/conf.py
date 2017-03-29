@@ -88,6 +88,8 @@ ADDITIONAL_MODULES = set([
     u'timesketch.models', u'timesketch.models.sketch',
     u'timesketch.models.user'])
 modules_to_mock = set(modules_to_mock).union(ADDITIONAL_MODULES)
+# Readthedocs now has it's own install of requests, so remove it from mocking.
+modules_to_mock.remove(u'requests')
 
 # There are some modules we install via pip on readthedocs that we don't need
 # to mock.
