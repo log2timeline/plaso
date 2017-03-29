@@ -12,8 +12,9 @@ class SCCMEventFormatter(interface.ConditionalEventFormatter):
 
   FORMAT_STRING_SEPARATOR = u' '
 
-  FORMAT_STRING_PIECES = [u'{component}',
-                          u'{text}']
+  FORMAT_STRING_PIECES = [
+      u'{component}',
+      u'{text}']
 
   FORMAT_STRING_SHORT_PIECES = [u'{text}']
 

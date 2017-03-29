@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """This file contains the MountPoints2 plugin."""
 
+from plaso.containers import time_events
 from plaso.containers import windows_events
+from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -19,13 +21,13 @@ class MountPoints2Plugin(interface.WindowsRegistryPlugin):
 
   URLS = [u'http://support.microsoft.com/kb/932463']
 
-  def GetEntries(self, parser_mediator, registry_key, **kwargs):
-    """Retrieves information from the MountPoints2 registry key.
+  def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
+    """Extracts events from a Windows Registry key.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      registry_key: A Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     for subkey in registry_key.GetSubkeys():
       name = subkey.name
@@ -53,10 +55,15 @@ class MountPoints2Plugin(interface.WindowsRegistryPlugin):
       else:
         values_dict[u'Type'] = u'Drive'
 
-      event_object = windows_events.WindowsRegistryEvent(
-          subkey.last_written_time, registry_key.path, values_dict,
-          offset=subkey.offset, urls=self.URLS)
-      parser_mediator.ProduceEvent(event_object)
+      event_data = windows_events.WindowsRegistryEventData()
+      event_data.key_path = registry_key.path
+      event_data.offset = subkey.offset
+      event_data.regvalue = values_dict
+      event_data.urls = self.URLS
+
+      event = time_events.DateTimeValuesEvent(
+          subkey.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 winreg.WinRegistryParser.RegisterPlugin(MountPoints2Plugin)

@@ -5,6 +5,10 @@ import logging
 
 import construct
 
+from dfdatetime import filetime as dfdatetime_filetime
+from dfdatetime import semantic_time as dfdatetime_semantic_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.engine import path_helper
 from plaso.lib import eventdata
@@ -13,36 +17,31 @@ from plaso.parsers.winreg_plugins import interface
 from plaso.winnt import known_folder_ids
 
 
-class UserAssistWindowsRegistryEvent(time_events.FiletimeEvent):
-  """Convenience class for an UserAssist Windows Registry event.
+class UserAssistWindowsRegistryEventData(events.EventData):
+  """UserAssist Windows Registry event data.
 
   Attributes:
-    key_path: a string containing the Windows Registry key path.
-    offset: an integer containing the data offset of the UserAssist
-            Windows Registry value.
-    regvalue: a dictionary containing the UserAssist values.
+    application_focus_count (int): application focus count.
+    application_focus_duration (int): application focus duration.
+    entry_index (int): entry index.
+    key_path (str): Windows Registry key path.
+    number_of_executions (int): nubmer of executions.
+    regvalue (dict[str, str]): UserAssist values.
+    value_name (str): name of the Windows Registry value.
   """
 
   DATA_TYPE = u'windows:registry:userassist'
 
-  def __init__(self, filetime, key_path, offset, values_dict):
-    """Initializes an UserAssist Windows Registry event.
-
-    Args:
-      filetime: an integer containing a FILETIME timestamp.
-      key_path: a string containing the Windows Registry key path.
-      offset: an integer containing the data offset of the UserAssist
-              Windows Registry value.
-      values_dict: dictionary object containing the UserAssist values.
-    """
-    # TODO: check if last written is correct.
-    super(UserAssistWindowsRegistryEvent, self).__init__(
-        filetime, eventdata.EventTimestamp.WRITTEN_TIME)
-
-    self.key_path = key_path
-    self.offset = offset
-    # TODO: rename regvalue to ???.
-    self.regvalue = values_dict
+  def __init__(self):
+    """Initializes event data."""
+    super(UserAssistWindowsRegistryEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.application_focus_count = None
+    self.application_focus_duration = None
+    self.entry_index = None
+    self.key_path = None
+    self.number_of_executions = None
+    self.value_name = None
 
 
 class UserAssistWindowsRegistryKeyPathFilter(
@@ -54,10 +53,10 @@ class UserAssistWindowsRegistryKeyPathFilter(
       u'Explorer\\UserAssist\\{{{0:s}}}')
 
   def __init__(self, user_assist_guid):
-    """Initializes Windows Registry key filter object.
+    """Initializes Windows Registry key filter.
 
     Args:
-      user_assist_guid: string containing the User Assist GUID.
+      user_assist_guid (str): UserAssist GUID.
     """
     key_path = self._KEY_PATH_FORMAT.format(user_assist_guid)
     super(UserAssistWindowsRegistryKeyPathFilter, self).__init__(key_path)
@@ -105,48 +104,48 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
   _USERASSIST_V3_STRUCT = construct.Struct(
       u'userassist_entry',
       construct.Padding(4),
-      construct.ULInt32(u'count'),
+      construct.ULInt32(u'number_of_executions'),
       construct.ULInt64(u'timestamp'))
 
   # UserAssist format version used in Windows 2008, 7, 8.
   _USERASSIST_V5_STRUCT = construct.Struct(
       u'userassist_entry',
       construct.Padding(4),
-      construct.ULInt32(u'count'),
-      construct.ULInt32(u'app_focus_count'),
-      construct.ULInt32(u'focus_duration'),
+      construct.ULInt32(u'number_of_executions'),
+      construct.ULInt32(u'application_focus_count'),
+      construct.ULInt32(u'application_focus_duration'),
       construct.Padding(44),
       construct.ULInt64(u'timestamp'),
       construct.Padding(4))
 
-  def GetEntries(self, parser_mediator, registry_key, **kwargs):
-    """Parses a UserAssist Registry key.
+  def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
+    """Extracts events from a Windows Registry key.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      registry_key: A Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     version_value = registry_key.GetValueByName(u'Version')
     count_subkey = registry_key.GetSubkeyByName(u'Count')
 
     if not version_value:
-      parser_mediator.ProduceExtractionError(u'Missing version value')
+      parser_mediator.ProduceExtractionError(u'missing version value')
       return
 
     if not version_value.DataIsInteger():
       parser_mediator.ProduceExtractionError(
-          u'Unsupported version value data type')
+          u'unsupported version value data type')
       return
 
     format_version = version_value.GetDataAsObject()
     if format_version not in (3, 5):
       parser_mediator.ProduceExtractionError(
-          u'Unsupported format version: {0:d}'.format(format_version))
+          u'unsupported format version: {0:d}'.format(format_version))
       return
 
     if not count_subkey:
-      parser_mediator.ProduceExtractionError(u'Missing count subkey')
+      parser_mediator.ProduceExtractionError(u'missing count subkey')
       return
 
     userassist_entry_index = 0
@@ -184,6 +183,7 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
         value_name = u'\\'.join(path_segments)
         # Check if we might need to substitute values.
         if u'%' in value_name:
+          # TODO: fix missing self._knowledge_base
           environment_variables = self._knowledge_base.GetEnvironmentVariables()
           value_name = path_helper.PathHelper.ExpandWindowsPath(
               value_name, environment_variables)
@@ -191,7 +191,7 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
       value_data_size = len(registry_value.data)
       if not registry_value.DataIsBinaryData():
         parser_mediator.ProduceExtractionError(
-            u'Unsupported value data type: {0:s}'.format(
+            u'unsupported value data type: {0:s}'.format(
                 registry_value.data_type_string))
 
       elif value_name == u'UEME_CTLSESSION':
@@ -200,45 +200,63 @@ class UserAssistPlugin(interface.WindowsRegistryPlugin):
       elif format_version == 3:
         if value_data_size != self._USERASSIST_V3_STRUCT.sizeof():
           parser_mediator.ProduceExtractionError(
-              u'Unsupported value data size: {0:d}'.format(value_data_size))
+              u'unsupported value data size: {0:d}'.format(value_data_size))
 
         else:
           parsed_data = self._USERASSIST_V3_STRUCT.parse(registry_value.data)
-          filetime = parsed_data.get(u'timestamp', 0)
-          count = parsed_data.get(u'count', 0)
+          timestamp = parsed_data.get(u'timestamp', None)
 
-          if count > 5:
-            count -= 5
+          number_of_executions = parsed_data.get(u'number_of_executions', None)
+          if number_of_executions is not None and number_of_executions > 5:
+            number_of_executions -= 5
 
-          values_dict = {}
-          values_dict[value_name] = u'[Count: {0:d}]'.format(count)
-          event_object = UserAssistWindowsRegistryEvent(
-              filetime, count_subkey.path, registry_value.offset, values_dict)
-          parser_mediator.ProduceEvent(event_object)
+          event_data = UserAssistWindowsRegistryEventData()
+          event_data.key_path = count_subkey.path
+          event_data.number_of_executions = number_of_executions
+          event_data.offset = registry_value.offset
+          event_data.value_name = value_name
+
+          if not timestamp:
+            date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+          else:
+            date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
+
+          # TODO: check if last written is correct.
+          event = time_events.DateTimeValuesEvent(
+              date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+          parser_mediator.ProduceEventWithEventData(event, event_data)
 
       elif format_version == 5:
         if value_data_size != self._USERASSIST_V5_STRUCT.sizeof():
           parser_mediator.ProduceExtractionError(
-              u'Unsupported value data size: {0:d}'.format(value_data_size))
+              u'unsupported value data size: {0:d}'.format(value_data_size))
 
         parsed_data = self._USERASSIST_V5_STRUCT.parse(registry_value.data)
 
         userassist_entry_index += 1
-        count = parsed_data.get(u'count', None)
-        app_focus_count = parsed_data.get(u'app_focus_count', None)
-        focus_duration = parsed_data.get(u'focus_duration', None)
-        filetime = parsed_data.get(u'timestamp', 0)
+        timestamp = parsed_data.get(u'timestamp', None)
 
-        values_dict = {}
-        values_dict[value_name] = (
-            u'[UserAssist entry: {0:d}, Count: {1:d}, '
-            u'Application focus count: {2:d}, Focus duration: {3:d}]').format(
-                userassist_entry_index, count, app_focus_count,
-                focus_duration)
+        event_data = UserAssistWindowsRegistryEventData()
+        event_data.application_focus_count = parsed_data.get(
+            u'application_focus_count', None)
+        event_data.application_focus_duration = parsed_data.get(
+            u'application_focus_duration', None)
+        event_data.entry_index = userassist_entry_index
+        event_data.key_path = count_subkey.path
+        event_data.number_of_executions = parsed_data.get(
+            u'number_of_executions', None)
+        event_data.offset = count_subkey.offset
+        event_data.value_name = value_name
 
-        event_object = UserAssistWindowsRegistryEvent(
-            filetime, count_subkey.path, count_subkey.offset, values_dict)
-        parser_mediator.ProduceEvent(event_object)
+        if not timestamp:
+          date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+        else:
+          date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
+
+        # TODO: check if last written is correct.
+        event = time_events.DateTimeValuesEvent(
+            date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 winreg.WinRegistryParser.RegisterPlugin(UserAssistPlugin)

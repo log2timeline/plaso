@@ -3,6 +3,8 @@
 
 import pyfwsi
 
+from dfdatetime import fat_date_time as dfdatetime_fat_date_time
+
 from plaso import dependencies
 from plaso.containers import shell_item_events
 from plaso.lib import eventdata
@@ -21,7 +23,7 @@ class ShellItemsParser(object):
     """Initializes the parser.
 
     Args:
-      origin: a string containing the origin of the event (event source).
+      origin (str): origin of the event.
     """
     super(ShellItemsParser, self).__init__()
     self._origin = origin
@@ -31,8 +33,9 @@ class ShellItemsParser(object):
     """Parses a shell item.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      shell_item: the shell item (instance of pyfwsi.item).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      shell_item (pyfwsi.item): shell item.
     """
     path_segment = self._ParseShellItemPathSegment(shell_item)
     self._path_segments.append(path_segment)
@@ -53,37 +56,43 @@ class ShellItemsParser(object):
                 file_reference & 0xffffffffffff, file_reference >> 48)
 
           fat_date_time = extension_block.get_creation_time_as_integer()
-          if fat_date_time:
-            event_object = shell_item_events.ShellItemFileEntryEvent(
-                fat_date_time, eventdata.EventTimestamp.CREATION_TIME,
+          if fat_date_time != 0:
+            date_time = dfdatetime_fat_date_time.FATDateTime(
+                fat_date_time=fat_date_time)
+            event = shell_item_events.ShellItemFileEntryEvent(
+                date_time, eventdata.EventTimestamp.CREATION_TIME,
                 shell_item.name, long_name, localized_name, file_reference,
                 shell_item_path, self._origin)
-            parser_mediator.ProduceEvent(event_object)
+            parser_mediator.ProduceEvent(event)
 
           fat_date_time = extension_block.get_access_time_as_integer()
-          if fat_date_time:
-            event_object = shell_item_events.ShellItemFileEntryEvent(
-                fat_date_time, eventdata.EventTimestamp.ACCESS_TIME,
+          if fat_date_time != 0:
+            date_time = dfdatetime_fat_date_time.FATDateTime(
+                fat_date_time=fat_date_time)
+            event = shell_item_events.ShellItemFileEntryEvent(
+                date_time, eventdata.EventTimestamp.ACCESS_TIME,
                 shell_item.name, long_name, localized_name, file_reference,
                 shell_item_path, self._origin)
-            parser_mediator.ProduceEvent(event_object)
+            parser_mediator.ProduceEvent(event)
 
       fat_date_time = shell_item.get_modification_time_as_integer()
-      if fat_date_time:
-        event_object = shell_item_events.ShellItemFileEntryEvent(
-            fat_date_time, eventdata.EventTimestamp.MODIFICATION_TIME,
+      if fat_date_time != 0:
+        date_time = dfdatetime_fat_date_time.FATDateTime(
+            fat_date_time=fat_date_time)
+        event = shell_item_events.ShellItemFileEntryEvent(
+            date_time, eventdata.EventTimestamp.MODIFICATION_TIME,
             shell_item.name, long_name, localized_name, file_reference,
             shell_item_path, self._origin)
-        parser_mediator.ProduceEvent(event_object)
+        parser_mediator.ProduceEvent(event)
 
   def _ParseShellItemPathSegment(self, shell_item):
     """Parses a shell item path segment.
 
     Args:
-      shell_item: the shell item (instance of pyfwsi.item).
+      shell_item (pyfwsi.item): shell item.
 
     Returns:
-      A string containing the shell item path segment.
+      str: shell item path segment.
     """
     path_segment = None
 
@@ -132,7 +141,7 @@ class ShellItemsParser(object):
     """Copies the shell items to a path.
 
     Returns:
-      A Unicode string containing the converted shell item list path or None.
+      str: converted shell item list path or None.
     """
     number_of_path_segments = len(self._path_segments)
     if number_of_path_segments == 0:
@@ -160,7 +169,7 @@ class ShellItemsParser(object):
     """Retrieves the upper shell item path segment.
 
     Returns:
-      A Unicode string containing the shell item path segment or 'N/A'.
+      str: shell item path segment or "N/A".
     """
     if not self._path_segments:
       return u'N/A'
@@ -173,11 +182,12 @@ class ShellItemsParser(object):
     """Parses the shell items from the byte stream.
 
     Args:
-      parser_mediator: a parser mediator object (instance of ParserMediator).
-      byte_stream: a string holding the shell items data.
-      parent_path_segments: optional list containing the parent shell item
-                            path segments.
-      codepage: optional byte stream codepage.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      byte_stream (bytes): shell items data.
+      parent_path_segments (Optional[list[str]]): parent shell item path
+          segments.
+      codepage (Optional[str]): byte stream codepage.
     """
     if parent_path_segments and isinstance(parent_path_segments, list):
       self._path_segments = list(parent_path_segments)

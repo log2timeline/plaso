@@ -3,7 +3,11 @@
 
 import pyevt
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+from dfdatetime import semantic_time as dfdatetime_semantic_time
+
 from plaso import dependencies
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.lib import specification
@@ -14,8 +18,8 @@ from plaso.parsers import manager
 dependencies.CheckModuleVersion(u'pyevt')
 
 
-class WinEvtRecordEvent(time_events.PosixTimeEvent):
-  """Convenience class for a Windows EventLog (EVT) record event.
+class WinEvtRecordEventData(events.EventData):
+  """Windows EventLog (EVT) record event data.
 
   Attributes:
     computer_name (str): computer name stored in the event record.
@@ -24,7 +28,6 @@ class WinEvtRecordEvent(time_events.PosixTimeEvent):
     event_type (int): event type.
     facility (int): event facility.
     message_identifier (int): event message identifier.
-    offset (int): data offset of the event record with in the file.
     record_number (int): event record number.
     recovered (bool): True if the record was recovered.
     severity (int): event severity.
@@ -35,47 +38,21 @@ class WinEvtRecordEvent(time_events.PosixTimeEvent):
 
   DATA_TYPE = u'windows:evt:record'
 
-  def __init__(
-      self, posix_time, timestamp_description, evt_record, record_number,
-      event_identifier, recovered=False):
-    """Initializes the event.
-
-    Args:
-      posix_time (int): POSIX time value, which contains the number of seconds
-          since January 1, 1970 00:00:00 UTC.
-      timestamp_description (str): description of the usage of the timestamp
-          value.
-      evt_record (pyevt.record): event record.
-      record_number (int): event record number.
-      event_identifier (int): event identifier.
-      recovered (Optional[bool]): True if the record was recovered.
-    """
-    super(WinEvtRecordEvent, self).__init__(posix_time, timestamp_description)
-
-    self.offset = evt_record.offset
-    self.recovered = recovered
-
-    if record_number is not None:
-      self.record_number = evt_record.identifier
-
-    # We want the event identifier to match the behavior of that of the EVTX
-    # event records.
-    if event_identifier is not None:
-      self.event_identifier = event_identifier & 0xffff
-      self.facility = (event_identifier >> 16) & 0x0fff
-      self.severity = event_identifier >> 30
-      self.message_identifier = event_identifier
-
-    self.event_type = evt_record.event_type
-    self.event_category = evt_record.event_category
-    self.source_name = evt_record.source_name
-
-    # Computer name is the value stored in the event record and does not
-    # necessarily corresponds with the actual hostname.
-    self.computer_name = evt_record.computer_name
-    self.user_sid = evt_record.user_security_identifier
-
-    self.strings = list(evt_record.strings)
+  def __init__(self):
+    """Initializes event data."""
+    super(WinEvtRecordEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.computer_name = None
+    self.event_category = None
+    self.event_identifier = None
+    self.event_type = None
+    self.facility = None
+    self.message_identifier = None
+    self.record_number = None
+    self.recovered = None
+    self.severity = None
+    self.source_name = None
+    self.strings = None
+    self.user_sid = None
 
 
 class WinEvtParser(interface.FileObjectParser):
@@ -97,24 +74,28 @@ class WinEvtParser(interface.FileObjectParser):
     format_specification.AddNewSignature(b'LfLe', offset=4)
     return format_specification
 
-  def _ParseRecord(
+  def _GetEventData(
       self, parser_mediator, record_index, evt_record, recovered=False):
-    """Extract data from a Windows EventLog (EVT) record.
+    """Retrieves event data from the Windows EventLog (EVT) record.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       record_index (int): event record index.
       evt_record (pyevt.record): event record.
       recovered (Optional[bool]): True if the record was recovered.
+
+    Returns:
+      WinEvtRecordEventData: event data.
     """
+    event_data = WinEvtRecordEventData()
+
     try:
-      record_number = evt_record.identifier
+      event_data.record_number = evt_record.identifier
     except OverflowError as exception:
       parser_mediator.ProduceExtractionError((
           u'unable to read record identifier from event record: {0:d} '
           u'with error: {1:s}').format(record_index, exception))
-
-      record_number = None
 
     try:
       event_identifier = evt_record.event_identifier
@@ -125,6 +106,44 @@ class WinEvtParser(interface.FileObjectParser):
 
       event_identifier = None
 
+    event_data.offset = evt_record.offset
+    event_data.recovered = recovered
+
+    # We want the event identifier to match the behavior of that of the EVTX
+    # event records.
+    if event_identifier is not None:
+      event_data.event_identifier = event_identifier & 0xffff
+      event_data.facility = (event_identifier >> 16) & 0x0fff
+      event_data.severity = event_identifier >> 30
+      event_data.message_identifier = event_identifier
+
+    event_data.event_type = evt_record.event_type
+    event_data.event_category = evt_record.event_category
+    event_data.source_name = evt_record.source_name
+
+    # Computer name is the value stored in the event record and does not
+    # necessarily corresponds with the actual hostname.
+    event_data.computer_name = evt_record.computer_name
+    event_data.user_sid = evt_record.user_security_identifier
+
+    event_data.strings = list(evt_record.strings)
+
+    return event_data
+
+  def _ParseRecord(
+      self, parser_mediator, record_index, evt_record, recovered=False):
+    """Parses a Windows EventLog (EVT) record.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      record_index (int): event record index.
+      evt_record (pyevt.record): event record.
+      recovered (Optional[bool]): True if the record was recovered.
+    """
+    event_data = self._GetEventData(
+        parser_mediator, record_index, evt_record, recovered=recovered)
+
     try:
       creation_time = evt_record.get_creation_time_as_integer()
     except OverflowError as exception:
@@ -134,11 +153,11 @@ class WinEvtParser(interface.FileObjectParser):
 
       creation_time = None
 
-    if creation_time is not None:
-      event_object = WinEvtRecordEvent(
-          creation_time, eventdata.EventTimestamp.CREATION_TIME,
-          evt_record, record_number, event_identifier, recovered=recovered)
-      parser_mediator.ProduceEvent(event_object)
+    if creation_time:
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=creation_time)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.CREATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
     try:
       written_time = evt_record.get_written_time_as_integer()
@@ -149,31 +168,26 @@ class WinEvtParser(interface.FileObjectParser):
 
       written_time = None
 
-    if written_time is not None:
-      event_object = WinEvtRecordEvent(
-          written_time, eventdata.EventTimestamp.WRITTEN_TIME,
-          evt_record, record_number, event_identifier, recovered=recovered)
-      parser_mediator.ProduceEvent(event_object)
+    if written_time:
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=written_time)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    # TODO: what if both creation_time and written_time are None.
+    if not creation_time and not written_time:
+      date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.NOT_A_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
-  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
-    """Parses a Windows EventLog (EVT) file-like object.
+  def _ParseRecords(self, parser_mediator, evt_file):
+    """Parses Windows EventLog (EVT) records.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
-      file_object (dfvfs.FileIO): a file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      evt_file (pyevt.file): Windows EventLog (EVT) file.
     """
-    evt_file = pyevt.file()
-    evt_file.set_ascii_codepage(parser_mediator.codepage)
-
-    try:
-      evt_file.open_file_object(file_object)
-    except IOError as exception:
-      parser_mediator.ProduceExtractionError(
-          u'unable to open file with error: {0:s}'.format(exception))
-      return
-
     for record_index, evt_record in enumerate(evt_file.records):
       if parser_mediator.abort:
         break
@@ -197,7 +211,28 @@ class WinEvtParser(interface.FileObjectParser):
             u'unable to parse recovered event record: {0:d} with error: '
             u'{1:s}').format(record_index, exception))
 
-    evt_file.close()
+  def ParseFileObject(self, parser_mediator, file_object, **kwargs):
+    """Parses a Windows EventLog (EVT) file-like object.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): a file-like object.
+    """
+    evt_file = pyevt.file()
+    evt_file.set_ascii_codepage(parser_mediator.codepage)
+
+    try:
+      evt_file.open_file_object(file_object)
+    except IOError as exception:
+      parser_mediator.ProduceExtractionError(
+          u'unable to open file with error: {0:s}'.format(exception))
+      return
+
+    try:
+      self._ParseRecords(parser_mediator, evt_file)
+    finally:
+      evt_file.close()
 
 
 manager.ParsersManager.RegisterParser(WinEvtParser)

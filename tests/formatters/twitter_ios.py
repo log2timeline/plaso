@@ -8,17 +8,17 @@ from plaso.formatters import twitter_ios
 from tests.formatters import test_lib
 
 
-class TwitterContactCreationFormatterTest(test_lib.EventFormatterTestCase):
-  """Test for the Twitter contacts creation event formatter."""
+class TwitterIOSContactFormatterTest(test_lib.EventFormatterTestCase):
+  """Tests the Twitter on iOS 8+ contact event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = (twitter_ios.TwitterIOSContactCreationFormatter())
+    event_formatter = twitter_ios.TwitterIOSContactFormatter()
     self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = (twitter_ios.TwitterIOSContactCreationFormatter())
+    event_formatter = twitter_ios.TwitterIOSContactFormatter()
 
     expected_attribute_names = [
         u'screen_name',
@@ -28,85 +28,32 @@ class TwitterContactCreationFormatterTest(test_lib.EventFormatterTestCase):
         u'description',
         u'url',
         u'following',
-        u'followers_cnt',
-        u'following_cnt',
+        u'followers_count',
+        u'following_count',
     ]
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)
 
 
-class TwitterContactUpdateFormatterTest(test_lib.EventFormatterTestCase):
-  """Test for the Twitter contacts update event formatter."""
+class TwitterIOSStatusFormatterTest(test_lib.EventFormatterTestCase):
+  """Tests the Twitter on iOS 8+ status event formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = (twitter_ios.TwitterIOSContactUpdateFormatter())
+    event_formatter = twitter_ios.TwitterIOSStatusFormatter()
     self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = (twitter_ios.TwitterIOSContactUpdateFormatter())
-
-    expected_attribute_names = [
-        u'screen_name',
-        u'profile_url',
-        u'name',
-        u'location',
-        u'description',
-        u'url',
-        u'following',
-        u'followers_cnt',
-        u'following_cnt',
-    ]
-
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-
-class TwitterStatusCreationFormatterTest(test_lib.EventFormatterTestCase):
-  """Test for the Twitter contacts update event formatter."""
-
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = (twitter_ios.TwitterIOSStatusCreationFormatter())
-    self.assertIsNotNone(event_formatter)
-
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = (twitter_ios.TwitterIOSStatusCreationFormatter())
+    event_formatter = twitter_ios.TwitterIOSStatusFormatter()
 
     expected_attribute_names = [
         u'text',
         u'user_id',
         u'name',
-        u'retweet_cnt',
-        u'favorite_cnt',
-        u'favorited',
-    ]
-
-    self._TestGetFormatStringAttributeNames(
-        event_formatter, expected_attribute_names)
-
-
-class TwitterStatusUpdateFormatterTest(test_lib.EventFormatterTestCase):
-  """Test for the Twitter contacts update event formatter."""
-
-  def testInitialization(self):
-    """Tests the initialization."""
-    event_formatter = (twitter_ios.TwitterIOSStatusUpdateFormatter())
-    self.assertIsNotNone(event_formatter)
-
-  def testGetFormatStringAttributeNames(self):
-    """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = (twitter_ios.TwitterIOSStatusUpdateFormatter())
-
-    expected_attribute_names = [
-        u'text',
-        u'user_id',
-        u'name',
-        u'retweet_cnt',
-        u'favorite_cnt',
+        u'retweet_count',
+        u'favorite_count',
         u'favorited',
     ]
 

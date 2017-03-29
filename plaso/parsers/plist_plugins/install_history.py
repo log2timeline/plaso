@@ -24,7 +24,8 @@ class InstallHistoryPlugin(interface.PlistPlugin):
     """Extracts relevant install history entries.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       top_level: Optional plist in dictionary form.
     """
     for entry in top_level:

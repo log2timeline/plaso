@@ -5,44 +5,40 @@ iMessage and SMS data in OSX and iOS are stored in SQLite databases named
 chat.db and sms.db respectively.
 """
 
+from dfdatetime import cocoa_time as dfdatetime_cocoa_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class IMessageEvent(time_events.CocoaTimeEvent):
-  """Convenience class for an iMessage and SMS event."""
+class IMessageEventData(events.EventData):
+  """iMessage and SMS event data.
+
+  Attributes:
+    attachment_location (str): location of the attachment.
+    imessage_id (str): mobile number or email address the message was sent
+        to or received from.
+    message_type (int): value to indicate the message was sent (1) or
+        received (0).
+    read_receipt (bool): True if the message read receipt was received.
+    service (str): service, which is either SMS or iMessage.
+    text (str): content of the message.
+  """
 
   DATA_TYPE = u'imessage:event:chat'
 
-  def __init__(
-      self, cocoa_time, identifier, imessage_id, read_receipt,
-      message_type, service, attachment_location, text):
-    """Initializes the event object.
-
-    Args:
-      cocoa_time: an integer containing the Apple Cocoa time value - the number
-                  of seconds passed since January 1, 2001 00:00:00 GMT.
-      identifier: an integer containing the row number.
-      imessage_id: a string containing the mobile number or email address the
-                   message was sent to or received from.
-      read_receipt: a boolean indicating that a message read receipt was
-                    received.
-      message_type: an integer indicating message was sent (1) or received (0).
-      service: a string indicating SMS or iMessage.
-      attachment: a boolean indicating that the message contained an attachment.
-      text: content of the message.
-    """
-    super(IMessageEvent, self).__init__(
-        cocoa_time, eventdata.EventTimestamp.CREATION_TIME)
-    self.offset = identifier
-    self.imessage_id = imessage_id
-    self.read_receipt = read_receipt
-    self.message_type = message_type
-    self.service = service
-    self.attachment_location = attachment_location
-    self.text = text
+  def __init__(self):
+    """Initializes event data."""
+    super(IMessageEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.attachment_location = None
+    self.imessage_id = None
+    self.message_type = None
+    self.read_receipt = None
+    self.service = None
+    self.text = None
 
 
 class IMessagePlugin(interface.SQLitePlugin):
@@ -62,23 +58,36 @@ class IMessagePlugin(interface.SQLitePlugin):
        u'maj.attachment_id = a.ROWID', u'ParseMessageRow')]
 
   # The required tables.
-  REQUIRED_TABLES = frozenset([u'message', u'handle', u'attachment',
-                               u'message_attachment_join'])
+  REQUIRED_TABLES = frozenset([
+      u'message', u'handle', u'attachment', u'message_attachment_join'])
 
   def ParseMessageRow(self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a message row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row.
+      query (Optional[str]): query.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
-    event_object = IMessageEvent(
-        row['date'], row['ROWID'], row['imessage_id'], row['read_receipt'],
-        row['message_type'], row['service'], row['attachment_location'],
-        row['text'])
-    parser_mediator.ProduceEvent(event_object, query=query)
+
+    event_data = IMessageEventData()
+    event_data.attachment_location = row['attachment_location']
+    event_data.imessage_id = row['imessage_id']
+    event_data.message_type = row['message_type']
+    event_data.offset = row['ROWID']
+    event_data.query = query
+    event_data.read_receipt = row['read_receipt']
+    event_data.service = row['service']
+    event_data.text = row['text']
+
+    timestamp = row['date']
+    date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.CREATION_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
+
 
 sqlite.SQLiteParser.RegisterPlugin(IMessagePlugin)

@@ -4,9 +4,13 @@
 
 import unittest
 
-from tests.formatters import test_lib
+from dfdatetime import posix_time as dfdatetime_posix_time
+
+from plaso.containers import time_events
 from plaso.formatters import bash_history
-from plaso.parsers import bash_history as bash_parser
+from plaso.lib import eventdata
+
+from tests.formatters import test_lib
 
 
 class BashHistoryFormatterTest(test_lib.EventFormatterTestCase):
@@ -25,11 +29,14 @@ class BashHistoryFormatterTest(test_lib.EventFormatterTestCase):
 
   def testGetMessages(self):
     """Tests the GetMessages method."""
-    mediator = None
-    event = bash_parser.BashHistoryEvent(1457771210, u'cd plaso')
+    date_time = dfdatetime_posix_time.PosixTime(timestamp=1457771210)
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+    event.data_type = u'bash:history:command'
+    event.command = u'cd plaso'
 
     expected_messages = (u'Command executed: cd plaso', u'cd plaso')
-    messages = self._formatter.GetMessages(mediator, event)
+    messages = self._formatter.GetMessages(None, event)
     self.assertEqual(messages, expected_messages)
 
 

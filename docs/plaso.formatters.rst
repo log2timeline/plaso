@@ -572,6 +572,14 @@ plaso.formatters.syslog module
     :undoc-members:
     :show-inheritance:
 
+plaso.formatters.systemd_journal module
+---------------------------------------
+
+.. automodule:: plaso.formatters.systemd_journal
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.formatters.task_scheduler module
 --------------------------------------
 

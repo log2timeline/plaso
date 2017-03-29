@@ -8,6 +8,9 @@ import os
 import construct
 import pyparsing
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -18,24 +21,41 @@ from plaso.parsers import manager
 __author__ = 'Petter Bjelland (petter.bjelland@gmail.com)'
 
 
-class FirefoxCacheEvent(time_events.PosixTimeEvent):
-  """Convenience class for a Firefox cache record event."""
+class FirefoxCacheEventData(events.EventData):
+  """Firefox cache event data.
+
+  Attributes:
+    data_size (int): size of the cached data.
+    fetch_count (int): number of times the cache entry was fetched.
+    frequency (int): ???
+    info_size (int): size of the metadata.
+    location (str): ???
+    major (int): major format version ???
+    minor (int): minor format version ???
+    request_method (str): HTTP request method.
+    request_size (int): HTTP request byte size.
+    response_code (int): HTTP response code.
+    url (str): URL of original content.
+    version (int): Firefox cache format version.
+  """
 
   DATA_TYPE = u'firefox:cache:record'
 
-  def __init__(self, timestamp, timestamp_type, cache_record_values):
-    """Initializes the event object.
-
-    Args:
-      timestamp: The POSIX timestamp value.
-      timestamp_description: A description string for the timestamp value.
-      cache_record_values: A dictionary object containing the cache record
-                           values.
-    """
-    super(FirefoxCacheEvent, self).__init__(timestamp, timestamp_type)
-
-    for key, value in iter(cache_record_values.items()):
-      setattr(self, key, value)
+  def __init__(self):
+    """Initializes event data."""
+    super(FirefoxCacheEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.data_size = None
+    self.fetch_count = None
+    self.frequency = None
+    self.info_size = None
+    self.location = None
+    self.major = None
+    self.minor = None
+    self.request_method = None
+    self.request_size = None
+    self.response_code = None
+    self.url = None
+    self.version = None
 
 
 class BaseFirefoxCacheParser(interface.FileObjectParser):
@@ -170,8 +190,8 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
     """Determine cache file block size.
 
     Args:
-      file_object: A file-like object.
-      display_name: the display name.
+      file_object (dfvfs.FileIO): a file-like object.
+      display_name (str): display name.
 
     Raises:
       UnableToParseFile: if no valid cache record could be found.
@@ -186,12 +206,13 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
       try:
         # We have not yet determined the block size, so we use the smallest
         # possible size.
-        fetched, _, _ = self._NextRecord(
+        cache_record_header, _ = self._ReadCacheEntry(
             file_object, display_name, self._MINUMUM_BLOCK_SIZE)
 
         record_size = (
-            self._CACHE_RECORD_HEADER_SIZE + fetched.request_size +
-            fetched.info_size)
+            self._CACHE_RECORD_HEADER_SIZE +
+            cache_record_header.request_size +
+            cache_record_header.info_size)
 
         if record_size >= 4096:
           # _CACHE_003_
@@ -212,17 +233,52 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
     raise errors.UnableToParseFile(
         u'Could not find a valid cache record. Not a Firefox cache file.')
 
-  def _NextRecord(self, file_object, display_name, block_size):
-    """Provide the next cache record.
+  def _ParseCacheEntry(
+      self, parser_mediator, file_object, display_name, block_size):
+    """Parses a cache entry.
 
     Args:
-      file_object: A file-like object.
-      display_name: the display name.
-      block_size: the block size.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): a file-like object.
+      display_name (str): display name.
+      block_size (int): block size.
+    """
+    cache_record_header, event_data = self._ReadCacheEntry(
+        file_object, display_name, block_size)
+
+    date_time = dfdatetime_posix_time.PosixTime(
+        timestamp=cache_record_header.last_fetched)
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.LAST_VISITED_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    if cache_record_header.last_modified:
+      date_time = dfdatetime_posix_time.PosixTime(
+          timestamp=cache_record_header.last_modified)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    if cache_record_header.expire_time:
+      date_time = dfdatetime_posix_time.PosixTime(
+          timestamp=cache_record_header.expire_time)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.EXPIRATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+  def _ReadCacheEntry(self, file_object, display_name, block_size):
+    """Reads a cache entry.
+
+    Args:
+      file_object (dfvfs.FileIO): a file-like object.
+      display_name (str): display name.
+      block_size (int): block size.
 
     Returns:
-      A tuple containing the fetched, modified and expire event objects
-      (instances of EventObject) or None.
+      tuple: contains:
+        construct.Stuct: cache record header structure.
+        FirefoxCacheEventData: event data.
     """
     offset = file_object.get_offset()
 
@@ -238,7 +294,7 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
       file_object.seek(file_offset, os.SEEK_CUR)
       raise IOError(u'Not a valid Firefox cache record.')
 
-    # The last byte in a request is null.
+    # The URL string is NUL-terminated.
     url = file_object.read(cache_record_header.request_size)[:-1]
 
     # HTTP response header, even elements are keys, odd elements values.
@@ -254,45 +310,28 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
     # Move reader to next candidate block. Include the null-byte skipped above.
     file_object.seek(block_size - remainder, os.SEEK_CUR)
 
-    cache_record_values = {
-        u'data_size': cache_record_header.data_size,
-        u'fetch_count': cache_record_header.fetch_count,
-        u'info_size': cache_record_header.info_size,
-        u'location': cache_record_header.location,
-        u'major': cache_record_header.major,
-        u'minor': cache_record_header.minor,
-        u'request_method': request_method,
-        u'request_size': cache_record_header.request_size,
-        u'response_code': response_code,
-        u'version': self._CACHE_VERSION,
-        u'url': url}
+    event_data = FirefoxCacheEventData()
+    event_data.data_size = cache_record_header.data_size
+    event_data.fetch_count = cache_record_header.fetch_count
+    event_data.info_size = cache_record_header.info_size
+    event_data.location = cache_record_header.location
+    event_data.major = cache_record_header.major
+    event_data.minor = cache_record_header.minor
+    event_data.request_method = request_method
+    event_data.request_size = cache_record_header.request_size
+    event_data.response_code = response_code
+    event_data.url = url
+    event_data.version = self._CACHE_VERSION
 
-    fetched = FirefoxCacheEvent(
-        cache_record_header.last_fetched,
-        eventdata.EventTimestamp.LAST_VISITED_TIME, cache_record_values)
-
-    if cache_record_header.last_modified:
-      modified = FirefoxCacheEvent(
-          cache_record_header.last_modified,
-          eventdata.EventTimestamp.WRITTEN_TIME, cache_record_values)
-    else:
-      modified = None
-
-    if cache_record_header.expire_time:
-      expire = FirefoxCacheEvent(
-          cache_record_header.expire_time,
-          eventdata.EventTimestamp.EXPIRATION_TIME, cache_record_values)
-    else:
-      expire = None
-
-    return fetched, modified, expire
+    return cache_record_header, event_data
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Firefox cache file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -315,15 +354,10 @@ class FirefoxCacheParser(BaseFirefoxCacheParser):
 
     while file_object.get_offset() < file_object.get_size():
       try:
-        fetched, modified, expire = self._NextRecord(
-            file_object, display_name, firefox_config.block_size)
-        parser_mediator.ProduceEvent(fetched)
+        self._ParseCacheEntry(
+            parser_mediator, file_object, display_name,
+            firefox_config.block_size)
 
-        if modified:
-          parser_mediator.ProduceEvent(modified)
-
-        if expire:
-          parser_mediator.ProduceEvent(expire)
       except IOError:
         file_offset = file_object.get_offset() - self._MINUMUM_BLOCK_SIZE
         logging.debug((
@@ -432,32 +466,35 @@ class FirefoxCache2Parser(BaseFirefoxCacheParser):
     request_method, response_code = self._ParseHTTPHeaders(
         header_data, meta_start, display_name)
 
-    cache_record_values = {
-        u'fetch_count': cache_record_header.fetch_count,
-        u'frequency': cache_record_header.frequency,
-        u'major': cache_record_header.major,
-        u'request_method': request_method,
-        u'request_size': cache_record_header.request_size,
-        u'response_code': response_code,
-        u'version': self._CACHE_VERSION,
-        u'url': url}
+    event_data = FirefoxCacheEventData()
+    event_data.fetch_count = cache_record_header.fetch_count
+    event_data.frequency = cache_record_header.frequency
+    event_data.major = cache_record_header.major
+    event_data.request_method = request_method
+    event_data.request_size = cache_record_header.request_size
+    event_data.response_code = response_code
+    event_data.version = self._CACHE_VERSION
+    event_data.url = url
 
-    event_object = FirefoxCacheEvent(
-        cache_record_header.last_fetched,
-        eventdata.EventTimestamp.LAST_VISITED_TIME, cache_record_values)
-    parser_mediator.ProduceEvent(event_object)
+    date_time = dfdatetime_posix_time.PosixTime(
+        timestamp=cache_record_header.last_fetched)
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.LAST_VISITED_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if cache_record_header.last_modified:
-      event_object = FirefoxCacheEvent(
-          cache_record_header.last_modified,
-          eventdata.EventTimestamp.WRITTEN_TIME, cache_record_values)
-      parser_mediator.ProduceEvent(event_object)
+      date_time = dfdatetime_posix_time.PosixTime(
+          timestamp=cache_record_header.last_modified)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if cache_record_header.expire_time:
-      event_object = FirefoxCacheEvent(
-          cache_record_header.expire_time,
-          eventdata.EventTimestamp.EXPIRATION_TIME, cache_record_values)
-      parser_mediator.ProduceEvent(event_object)
+      date_time = dfdatetime_posix_time.PosixTime(
+          timestamp=cache_record_header.expire_time)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.EXPIRATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 manager.ParsersManager.RegisterParsers([

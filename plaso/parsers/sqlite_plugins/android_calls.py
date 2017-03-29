@@ -4,35 +4,34 @@
 Android Call History is stored in SQLite database files named contacts2.db.
 """
 
+from dfdatetime import java_time as dfdatetime_java_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import py2to3
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class AndroidCallEvent(time_events.JavaTimeEvent):
-  """Convenience class for an Android Call History event."""
+class AndroidCallEventData(events.EventData):
+  """Android Call event data.
+
+  Attributes:
+    call_type (str): type of call, such as: Incoming, Outgoing, or Missed.
+    duration (int): number of seconds the call lasted.
+    name (str): name associated to the remote party.
+    number (str): phone number associated to the remote party.
+  """
 
   DATA_TYPE = u'android:event:call'
 
-  def __init__(
-      self, java_time, usage, identifier, number, name, duration, call_type):
-    """Initializes the event object.
-
-    Args:
-      java_time: The Java time value.
-      usage: The description of the usage of the time value.
-      identifier: The row identifier.
-      number: The phone number associated to the remote party.
-      duration: The number of seconds the call lasted.
-      call_type: Incoming, Outgoing, or Missed.
-    """
-    super(AndroidCallEvent, self).__init__(java_time, usage)
-    self.offset = identifier
-    self.number = number
-    self.name = name
-    self.duration = duration
-    self.call_type = call_type
+  def __init__(self):
+    """Initializes event data."""
+    super(AndroidCallEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.call_type = None
+    self.duration = None
+    self.name = None
+    self.number = None
 
 
 class AndroidCallPlugin(interface.SQLitePlugin):
@@ -57,35 +56,43 @@ class AndroidCallPlugin(interface.SQLitePlugin):
     """Parses a Call record row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row.
+      query (Optional[str]): query.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
 
     call_type = self.CALL_TYPE.get(row['type'], u'UNKNOWN')
-
-    event_object = AndroidCallEvent(
-        row['date'], u'Call Started', row['id'], row['number'], row['name'],
-        row['duration'], call_type)
-    parser_mediator.ProduceEvent(event_object, query=query)
-
     duration = row['duration']
-    if isinstance(duration, py2to3.STRING_TYPES):
-      try:
-        duration = int(duration, 10)
-      except ValueError:
-        duration = 0
+    timestamp = row['date']
+
+    event_data = AndroidCallEventData()
+    event_data.call_type = call_type
+    event_data.duration = row['duration']
+    event_data.name = row['name']
+    event_data.number = row['number']
+    event_data.offset = row['id']
+    event_data.query = query
+
+    date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
+    event = time_events.DateTimeValuesEvent(date_time, u'Call Started')
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if duration:
-      # The duration is in seconds and the date value in milliseconds.
-      duration *= 1000
-      event_object = AndroidCallEvent(
-          row['date'] + duration, u'Call Ended', row['id'], row['number'],
-          row['name'], row['duration'], call_type)
-      parser_mediator.ProduceEvent(event_object, query=query)
+      if isinstance(duration, py2to3.STRING_TYPES):
+        try:
+          duration = int(duration, 10)
+        except ValueError:
+          duration = 0
 
+      # The duration is in seconds and the date value in milliseconds.
+      timestamp += duration * 1000
+
+      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(date_time, u'Call Ended')
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(AndroidCallPlugin)

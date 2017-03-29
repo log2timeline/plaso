@@ -6,6 +6,9 @@ import re
 
 import pyparsing
 
+from dfdatetime import time_elements as dfdatetime_time_elements
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -17,30 +20,27 @@ from plaso.parsers import text_parser
 __author__ = 'Joaquin Moreno Garijo (bastionado@gmail.com)'
 
 
-class MacWifiLogEvent(time_events.TimestampEvent):
-  """Convenience class for a Mac Wifi log line event."""
+class MacWifiLogEventData(events.EventData):
+  """Mac Wifi log event data.
+
+  Attributes:
+    action (str): known WiFI action, for example connected to an AP,
+        configured, etc. If the action is not known, the value is
+        the message of the log (text variable).
+    agent (str): name and identifier of process that generated the log message.
+    function (str): name of function that generated the log message.
+    text (str): log message
+  """
 
   DATA_TYPE = u'mac:wifilog:line'
 
-  def __init__(self, timestamp, agent, function, text, action):
-    """Initializes the event object.
-
-    Args:
-      timestamp (int): The timestamp, contains the number of microseconds from
-          January 1, 1970 00:00:00 UTC.
-      agent (str): The process responsible for this log message.
-      function (str): The function being called by the process.
-      text (str): The log message
-      action (str): A string containing known WiFI actions, e.g. connected to
-          an AP, configured, etc. If the action is not known, the value is
-          the message of the log (text variable).
-    """
-    super(MacWifiLogEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.ADDED_TIME)
-    self.agent = agent
-    self.function = function
-    self.text = text
-    self.action = action
+  def __init__(self):
+    """Initializes event data."""
+    super(MacWifiLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.action = None
+    self.agent = None
+    self.function = None
+    self.text = None
 
 
 class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
@@ -51,9 +51,12 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
 
   _ENCODING = u'utf-8'
 
+  THREE_DIGITS = text_parser.PyparsingConstants.THREE_DIGITS
+  THREE_LETTERS = text_parser.PyparsingConstants.THREE_LETTERS
+
   # Regular expressions for known actions.
-  RE_CONNECTED = re.compile(r'Already\sassociated\sto\s(.*)\.\sBailing')
-  RE_WIFI_PARAMETERS = re.compile(
+  _CONNECTED_RE = re.compile(r'Already\sassociated\sto\s(.*)\.\sBailing')
+  _WIFI_PARAMETERS_RE = re.compile(
       r'\[ssid=(.*?), bssid=(.*?), security=(.*?), rssi=')
 
   _KNOWN_FUNCTIONS = [
@@ -61,62 +64,62 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       u'_doAutoJoin',
       u'_processSystemPSKAssoc']
 
-  # Define how a log line should look like.
-  WIFI_KNOWN_FUNCTION_LINE = (
-      text_parser.PyparsingConstants.MONTH.setResultsName(u'day_of_week') +
-      text_parser.PyparsingConstants.MONTH.setResultsName(u'month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
-      text_parser.PyparsingConstants.TIME_MSEC.setResultsName(u'time') +
+  _AGENT = (
       pyparsing.Literal(u'<') +
       pyparsing.Combine(
-          pyparsing.Literal(u'airportd') +
-          pyparsing.CharsNotIn(u'>'),
-          joinString='',
-          adjacent=True).setResultsName(u'agent') +
-      pyparsing.Literal(u'>') +
+          pyparsing.Literal(u'airportd') + pyparsing.CharsNotIn(u'>'),
+          joinString='', adjacent=True).setResultsName(u'agent') +
+      pyparsing.Literal(u'>'))
+
+  _DATE_TIME = pyparsing.Group(
+      THREE_LETTERS.setResultsName(u'day_of_week') +
+      THREE_LETTERS.setResultsName(u'month') +
+      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
+      text_parser.PyparsingConstants.TIME_ELEMENTS + pyparsing.Suppress('.') +
+      THREE_DIGITS.setResultsName(u'milliseconds'))
+
+  # Define how a log line should look like.
+  _MAC_WIFI_KNOWN_FUNCTION_LINE = (
+      _DATE_TIME.setResultsName(u'date_time') + _AGENT +
       pyparsing.oneOf(_KNOWN_FUNCTIONS).setResultsName(u'function') +
       pyparsing.Literal(u':') +
       pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'text'))
 
-  WIFI_LINE = (
-      text_parser.PyparsingConstants.MONTH.setResultsName(u'day_of_week') +
-      text_parser.PyparsingConstants.MONTH.setResultsName(u'month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
-      text_parser.PyparsingConstants.TIME_MSEC.setResultsName(u'time') +
+  _MAC_WIFI_LINE = (
+      _DATE_TIME.setResultsName(u'date_time') +
       pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'text'))
 
-  WIFI_HEADER = (
-      text_parser.PyparsingConstants.MONTH.setResultsName(u'day_of_week') +
-      text_parser.PyparsingConstants.MONTH.setResultsName(u'month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
-      text_parser.PyparsingConstants.TIME_MSEC.setResultsName(u'time') +
+  _MAC_WIFI_HEADER = (
+      _DATE_TIME.setResultsName(u'date_time') +
       pyparsing.Literal(u'***Starting Up***').setResultsName(u'text'))
 
-  WIFI_TURNED_OVER_HEADER = (
+  _DATE_TIME_TURNED_OVER_HEADER = pyparsing.Group(
       text_parser.PyparsingConstants.MONTH.setResultsName(u'month') +
       text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
-      text_parser.PyparsingConstants.TIME.setResultsName(u'time') +
+      text_parser.PyparsingConstants.TIME_ELEMENTS)
+
+  _MAC_WIFI_TURNED_OVER_HEADER = (
+      _DATE_TIME_TURNED_OVER_HEADER.setResultsName(u'date_time') +
       pyparsing.Combine(
           pyparsing.Word(pyparsing.printables) +
           pyparsing.Word(pyparsing.printables) +
           pyparsing.Literal(u'logfile turned over') +
           pyparsing.LineEnd(),
-          joinString=u' ',
-          adjacent=False).setResultsName(u'text'))
+          joinString=u' ', adjacent=False).setResultsName(u'text'))
 
   # Define the available log line structures.
   LINE_STRUCTURES = [
-      (u'header', WIFI_HEADER),
-      (u'turned_over_header', WIFI_TURNED_OVER_HEADER),
-      (u'known_function_logline', WIFI_KNOWN_FUNCTION_LINE),
-      (u'logline', WIFI_LINE)]
+      (u'header', _MAC_WIFI_HEADER),
+      (u'turned_over_header', _MAC_WIFI_TURNED_OVER_HEADER),
+      (u'known_function_logline', _MAC_WIFI_KNOWN_FUNCTION_LINE),
+      (u'logline', _MAC_WIFI_LINE)]
 
   _SUPPORTED_KEYS = frozenset([key for key, _ in LINE_STRUCTURES])
 
   def __init__(self):
     """Initializes a parser object."""
     super(MacWifiLogParser, self).__init__()
-    self._last_month = None
+    self._last_month = 0
     self._year_use = 0
 
   def _GetAction(self, function, text):
@@ -127,17 +130,16 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       text (str): Mac Wifi log text.
 
     Returns:
-       str: A formatted string representing the known (or common) action.
+       str: a formatted string representing the known (or common) action.
            If the action is not known the original log text is returned.
     """
-
     # TODO: replace "x in y" checks by startswith if possible.
     if u'airportdProcessDLILEvent' in function:
       interface = text.split()[0]
       return u'Interface {0:s} turn up.'.format(interface)
 
     if u'doAutoJoin' in function:
-      match = re.match(self.RE_CONNECTED, text)
+      match = self._CONNECTED_RE.match(text)
       if match:
         ssid = match.group(1)[1:-1]
       else:
@@ -145,7 +147,7 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
       return u'Wifi connected to SSID {0:s}'.format(ssid)
 
     if u'processSystemPSKAssoc' in function:
-      wifi_parameters = self.RE_WIFI_PARAMETERS.search(text)
+      wifi_parameters = self._WIFI_PARAMETERS_RE.search(text)
       if wifi_parameters:
         ssid = wifi_parameters.group(1)
         bssid = wifi_parameters.group(2)
@@ -156,123 +158,150 @@ class MacWifiLogParser(text_parser.PyparsingSingleLineTextParser):
           bssid = u'Unknown'
         if not security:
           security = u'Unknown'
+
         return (
             u'New wifi configured. BSSID: {0:s}, SSID: {1:s}, '
             u'Security: {2:s}.').format(bssid, ssid, security)
+
     return text
 
-  def _ConvertToTimestamp(self, day, month, year, hours, minutes, seconds,
-                          milliseconds):
-    """Converts date and time values into a timestamp.
+  def _GetTimeElementsTuple(self, key, structure):
+    """Retrieves a time elements tuple from the structure.
 
     Args:
-      day (int): an integer representing the day.
-      month (int) : an integer representing the month with January equal to 1.
-      year (int): an integer representing the year.
-      hours (int): an integer representing the number of hours.
-      minutes (int): an integer representing the number of minutes.
-      seconds (int): an integer representing the number of seconds.
-      milliseconds (int): an integer representing the number of milliseconds.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a text file.
 
     Returns:
-      int: The timestamp which is an integer containing the number of
-          micro seconds since January 1, 1970, 00:00:00 UTC.
-
-    Raises:
-      TimestampError: If the timestamp cannot be created from the date and
-          time values.
+      tuple: contains:
+        year (int): year.
+        month (int): month, where 1 represents January.
+        day_of_month (int): day of month, where 1 is the first day of the month.
+        hours (int): hours.
+        minutes (int): minutes.
+        seconds (int): seconds.
+        milliseconds (int): milliseconds.
     """
+    if key == u'turned_over_header':
+      month, day, hours, minutes, seconds = structure.date_time
 
-    microseconds = milliseconds * 1000
-    return timelib.Timestamp.FromTimeParts(
-        year, month, day, hours, minutes, seconds, microseconds)
+      milliseconds = 0
+    else:
+      _, month, day, hours, minutes, seconds, milliseconds = structure.date_time
 
-  def _ParseLogLine(self, parser_mediator, structure, key):
+    # Note that dfdatetime_time_elements.TimeElements will raise ValueError
+    # for an invalid month.
+    month = timelib.MONTH_DICT.get(month.lower(), 0)
+
+    if month != 0 and month < self._last_month:
+      # Gap detected between years.
+      self._year_use += 1
+
+    return (self._year_use, month, day, hours, minutes, seconds, milliseconds)
+
+  def _ParseLogLine(self, parser_mediator, key, structure):
     """Parse a single log line and produce an event object.
 
     Args:
-      parser_mediator (ParserMediator): A parser mediator object.
-      structure (pyparsing.ParseResults): A pyparsing.ParseResults object
-          from a line in the log file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a text file.
     """
-    if not self._year_use:
-      self._year_use = parser_mediator.GetEstimatedYear()
-
-    # Gap detected between years.
-    month = timelib.MONTH_DICT.get(structure.month.lower())
-    if not self._last_month:
-      self._last_month = month
-
-    if month < self._last_month:
-      self._year_use += 1
-
-    milliseconds = 0
-    if key == u'turned_over_header':
-      hours, minutes, seconds = structure.time
-    else:
-      time_values, milliseconds = structure.time
-      hours, minutes, seconds = time_values
+    time_elements_tuple = self._GetTimeElementsTuple(key, structure)
 
     try:
-      timestamp = self._ConvertToTimestamp(
-          structure.day, month, self._year_use, hours, minutes, seconds,
-          milliseconds)
-    except errors.TimestampError as exception:
+      date_time = dfdatetime_time_elements.TimeElementsInMilliseconds(
+          time_elements_tuple=time_elements_tuple)
+    except ValueError:
       parser_mediator.ProduceExtractionError(
-          u'Unable to determine timestamp with error: {0:s}'.format(
-              exception))
+          u'invalid date time value: {0!s}'.format(structure.date_time))
       return
 
-    self._last_month = month
+    self._last_month = time_elements_tuple[1]
 
-    text = structure.text
-    function = structure.function.strip()
-    action = ''
+    event_data = MacWifiLogEventData()
+    event_data.agent = structure.agent
+    # Due to the use of CharsNotIn pyparsing structure contains whitespaces
+    # that need to be removed.
+    event_data.function = structure.function.strip()
+    event_data.text = structure.text
 
-    if key == 'known_function_logline':
-      action = self._GetAction(function, text)
+    if key == u'known_function_logline':
+      event_data.action = self._GetAction(
+          event_data.function, event_data.text)
 
-    event = MacWifiLogEvent(
-        timestamp, structure.agent, function, text, action)
-
-    parser_mediator.ProduceEvent(event)
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.ADDED_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
 
     Args:
-      parser_mediator (pyparsing.ParseResults): A parser mediator object.
-      key (str): An identification string indicating the name of the parsed
-          structure.
-      structure (pyparsing.ParseResults): A pyparsing.ParseResults object
-          from a line in the log file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      key (str): name of the parsed structure.
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a text file.
+
+    Raises:
+      ParseError: when the structure type is unknown.
     """
-
     if key not in self._SUPPORTED_KEYS:
-      logging.debug(
+      raise errors.ParseError(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
-      return
 
-    self._ParseLogLine(parser_mediator, structure, key)
+    self._ParseLogLine(parser_mediator, key, structure)
 
   def VerifyStructure(self, parser_mediator, line):
     """Verify that this file is a Mac Wifi log file.
 
     Args:
-      parser_mediator (ParserMediator): A parser mediator object.
-      line (str): A single line from the text file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      line (bytes): line from a text file.
 
     Returns:
-      bool: True if this is the correct parser, False otherwise.
+      bool: True if the line is in the expected format, False if not.
     """
+    self._last_month = 0
+    self._year_use = parser_mediator.GetEstimatedYear()
+
+    key = u'header'
+
     try:
-      _ = self.WIFI_HEADER.parseString(line)
+      structure = self._MAC_WIFI_HEADER.parseString(line)
     except pyparsing.ParseException:
+      structure = None
+
+    if not structure:
+      key = u'turned_over_header'
+
       try:
-        _ = self.WIFI_TURNED_OVER_HEADER.parseString(line)
+        structure = self._MAC_WIFI_TURNED_OVER_HEADER.parseString(line)
       except pyparsing.ParseException:
-        logging.debug(u'Not a Mac Wifi log file')
-        return False
+        structure = None
+
+    if not structure:
+      logging.debug(u'Not a Mac Wifi log file')
+      return False
+
+    time_elements_tuple = self._GetTimeElementsTuple(key, structure)
+
+    try:
+      dfdatetime_time_elements.TimeElementsInMilliseconds(
+          time_elements_tuple=time_elements_tuple)
+    except ValueError:
+      logging.debug(
+          u'Not a Mac Wifi log file, invalid date and time: {0!s}'.format(
+              structure.date_time))
+      return False
+
+    self._last_month = time_elements_tuple[1]
+
     return True
 
 

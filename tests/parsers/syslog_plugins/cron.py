@@ -5,7 +5,6 @@
 import unittest
 
 from plaso.lib import timelib
-from plaso.parsers.syslog_plugins import cron
 
 from tests import test_lib as shared_test_lib
 from tests.parsers.syslog_plugins import test_lib
@@ -29,7 +28,7 @@ class SyslogCronPluginTest(test_lib.SyslogPluginTestCase):
 
     event = events[1]
 
-    self.assertEqual(event.data_type, cron.CronTaskRunEvent.DATA_TYPE)
+    self.assertEqual(event.data_type, u'syslog:cron:task_run')
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-03-11 19:26:39')

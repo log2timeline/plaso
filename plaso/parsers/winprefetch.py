@@ -3,12 +3,15 @@
 
 import pyscca
 
+from dfdatetime import filetime as dfdatetime_filetime
+from dfdatetime import semantic_time as dfdatetime_semantic_time
+
 from plaso import dependencies
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import eventdata
 from plaso.lib import specification
-from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -16,8 +19,8 @@ from plaso.parsers import manager
 dependencies.CheckModuleVersion(u'pyscca')
 
 
-class WinPrefetchExecutionEvent(time_events.FiletimeEvent):
-  """Class that defines a Windows Prefetch execution event.
+class WinPrefetchExecutionEventData(events.EventData):
+  """Windows Prefetch event data.
 
   Attributes:
     executable (str): executable filename.
@@ -33,36 +36,19 @@ class WinPrefetchExecutionEvent(time_events.FiletimeEvent):
 
   DATA_TYPE = u'windows:prefetch:execution'
 
-  def __init__(
-      self, timestamp, timestamp_description, format_version,
-      executable_filename, prefetch_hash, run_count, mapped_files, path,
-      number_of_volumes, volume_serial_numbers, volume_device_paths):
-    """Initializes the event.
-
-    Args:
-      timestamp (int): the FILETIME timestamp value.
-      timestamp_description (str): the usage string for the timestamp value.
-      format_version (int): format version.
-      executable_filename (str): executable filename.
-      prefetch_hash (int): prefetch hash.
-      run_count (int): run count.
-      mapped_files (list[str]): mapped filenames.
-      path (str): path to the executable.
-      number_of_volumes (int): number of volumes.
-      volume_serial_numbers (list[int]): volume serial numbers.
-      volume_device_paths (list[str]): volume device paths.
-    """
-    super(WinPrefetchExecutionEvent, self).__init__(
-        timestamp, timestamp_description)
-    self.executable = executable_filename
-    self.mapped_files = mapped_files
-    self.number_of_volumes = number_of_volumes
-    self.path = path
-    self.prefetch_hash = prefetch_hash
-    self.run_count = run_count
-    self.version = format_version
-    self.volume_device_paths = volume_device_paths
-    self.volume_serial_numbers = volume_serial_numbers
+  def __init__(self):
+    """Initializes event data."""
+    super(WinPrefetchExecutionEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.executable = None
+    self.mapped_files = None
+    self.number_of_volumes = None
+    self.path = None
+    self.prefetch_hash = None
+    self.run_count = None
+    self.version = None
+    self.volume_device_paths = None
+    self.volume_serial_numbers = None
 
 
 class WinPrefetchParser(interface.FileObjectParser):
@@ -75,7 +61,11 @@ class WinPrefetchParser(interface.FileObjectParser):
 
   @classmethod
   def GetFormatSpecification(cls):
-    """Retrieves the format specification."""
+    """Retrieves the format specification.
+
+    Returns:
+      FormatSpecification: format specification.
+    """
     format_specification = specification.FormatSpecification(cls.NAME)
     format_specification.AddNewSignature(b'SCCA', offset=4)
     format_specification.AddNewSignature(b'MAM\x04', offset=0)
@@ -85,8 +75,9 @@ class WinPrefetchParser(interface.FileObjectParser):
     """Parses a Windows Prefetch file-like object.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
-      file_object (dfvfs.FileIO): file-like object to be parsed.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
     """
     scca_file = pyscca.file()
 
@@ -116,10 +107,15 @@ class WinPrefetchParser(interface.FileObjectParser):
 
       timestamp = volume_information.get_creation_time_as_integer()
       if timestamp:
-        event_object = windows_events.WindowsVolumeCreationEvent(
-            timestamp, volume_device_path, volume_serial_number,
-            parser_mediator.GetFilename())
-        parser_mediator.ProduceEvent(event_object)
+        event_data = windows_events.WindowsVolumeEventData()
+        event_data.device_path = volume_device_path
+        event_data.origin = parser_mediator.GetFilename()
+        event_data.serial_number = volume_serial_number
+
+        date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
+        event = time_events.DateTimeValuesEvent(
+            date_time, eventdata.EventTimestamp.CREATION_TIME)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
       for filename in iter(scca_file.filenames):
         if not filename:
@@ -147,16 +143,27 @@ class WinPrefetchParser(interface.FileObjectParser):
 
       mapped_files.append(mapped_file_string)
 
+    event_data = WinPrefetchExecutionEventData()
+    event_data.executable = executable_filename
+    event_data.mapped_files = mapped_files
+    event_data.number_of_volumes = number_of_volumes
+    event_data.path = path
+    event_data.prefetch_hash = prefetch_hash
+    event_data.run_count = run_count
+    event_data.version = format_version
+    event_data.volume_device_paths = volume_device_paths
+    event_data.volume_serial_numbers = volume_serial_numbers
+
     timestamp = scca_file.get_last_run_time_as_integer(0)
     if not timestamp:
       parser_mediator.ProduceExtractionError(u'missing last run time')
-      timestamp = timelib.Timestamp.NONE_TIMESTAMP
+      date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+    else:
+      date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
 
-    event_object = WinPrefetchExecutionEvent(
-        timestamp, eventdata.EventTimestamp.LAST_RUNTIME, format_version,
-        executable_filename, prefetch_hash, run_count, mapped_files, path,
-        number_of_volumes, volume_serial_numbers, volume_device_paths)
-    parser_mediator.ProduceEvent(event_object)
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.LAST_RUNTIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
     # Check for the 7 older last run time values available since
     # format version 26.
@@ -166,13 +173,12 @@ class WinPrefetchParser(interface.FileObjectParser):
         if not timestamp:
           continue
 
-        timestamp_description = u'Previous {0:s}'.format(
+        date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
+        date_time_description = u'Previous {0:s}'.format(
             eventdata.EventTimestamp.LAST_RUNTIME)
-        event_object = WinPrefetchExecutionEvent(
-            timestamp, timestamp_description, format_version,
-            executable_filename, prefetch_hash, run_count, mapped_files, path,
-            number_of_volumes, volume_serial_numbers, volume_device_paths)
-        parser_mediator.ProduceEvent(event_object)
+        event = time_events.DateTimeValuesEvent(
+            date_time, date_time_description)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
     scca_file.close()
 

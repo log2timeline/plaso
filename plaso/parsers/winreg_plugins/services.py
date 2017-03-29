@@ -2,6 +2,8 @@
 """Plug-in to format the Services and Drivers key with Start and Type values."""
 
 from plaso.containers import windows_events
+from plaso.containers import time_events
+from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -27,10 +29,10 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
     the Registry.
 
     Args:
-      key: A Windows Registry key (instance of dfwinreg.WinRegistryKey).
+      key (dfwinreg.WinRegistryKey): a Windows Registry key.
 
     Returns:
-      A string containing the service DLL path or None.
+      str: path of the service DLL or None.
     """
     parameters_key = key.GetSubkeyByName(u'Parameters')
     if not parameters_key:
@@ -42,13 +44,13 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
 
     return service_dll.GetDataAsObject()
 
-  def GetEntries(self, parser_mediator, registry_key, **kwargs):
-    """Create one event for each subkey under Services that has Type and Start.
+  def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
+    """Extracts events from a Windows Registry key.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      registry_key: A Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     values_dict = {}
 
@@ -73,10 +75,15 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
 
       # Create a specific service event, so that we can recognize and expand
       # certain values when we're outputting the event.
-      event_object = windows_events.WindowsRegistryServiceEvent(
-          registry_key.last_written_time, registry_key.path, values_dict,
-          offset=registry_key.offset, urls=self.URLS)
-      parser_mediator.ProduceEvent(event_object)
+      event_data = windows_events.WindowsRegistryServiceEventData()
+      event_data.key_path = registry_key.path
+      event_data.offset = registry_key.offset
+      event_data.regvalue = values_dict
+      event_data.urls = self.URLS
+
+      event = time_events.DateTimeValuesEvent(
+          registry_key.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 winreg.WinRegistryParser.RegisterPlugin(ServicesPlugin)

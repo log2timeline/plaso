@@ -36,8 +36,9 @@ class SpotlightPlugin(interface.PlistPlugin):
     """Extracts relevant Spotlight entries.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      match: Optional dictionary containing keys extracted from PLIST_KEYS.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
     shortcuts = match.get(u'UserShortcuts', {})
     for search_text, data in iter(shortcuts.items()):

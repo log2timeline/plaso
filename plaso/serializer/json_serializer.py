@@ -228,8 +228,8 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
           attribute_name == u'_event_tags'):
         continue
 
-      # Be strict about which attributes to set in non event objects.
-      if (container_type != u'event' and
+      # Be strict about which attributes to set in non event data containers.
+      if (container_type not in (u'event', u'event_data') and
           attribute_name not in container_object.__dict__):
         continue
 

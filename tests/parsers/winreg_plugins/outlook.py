@@ -71,7 +71,7 @@ class MSOutlook2013SearchMRUPluginTest(test_lib.RegistryPluginTestCase):
         u'[{0:s}] '
         u'C:\\Users\\username\\AppData\\Local\\Microsoft\\Outlook\\'
         u'username@example.com.ost: 0x00372bcf').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

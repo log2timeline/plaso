@@ -6,16 +6,18 @@
 
 import binascii
 import logging
+
 from xml.etree import ElementTree
 
 from binplist import binplist
+from dfdatetime import time_elements as dfdatetime_time_elements
 from dfvfs.file_io import fake_file_io
 from dfvfs.path import fake_path_spec
 from dfvfs.resolver import context
 
 from plaso.containers import plist_event
-from plaso.lib import errors
-from plaso.lib import timelib
+from plaso.containers import time_events
+from plaso.lib import eventdata
 from plaso.parsers import plist
 from plaso.parsers.plist_plugins import interface
 
@@ -60,7 +62,8 @@ class MacUserPlugin(interface.PlistPlugin):
     """Check if it is a valid Mac OS X system  account plist file name.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       plist_name: name of the plist file.
       top_level: dictionary with the plist file parsed.
     """
@@ -71,17 +74,15 @@ class MacUserPlugin(interface.PlistPlugin):
     """Extracts relevant user timestamp entries.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      match: Optional dictionary containing keys extracted from PLIST_KEYS.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
     if u'name' not in match or u'uid' not in match:
       return
 
     account = match[u'name'][0]
     uid = match[u'uid'][0]
-    cocoa_zero = (
-        timelib.Timestamp.COCOA_TIME_TO_POSIX_BASE *
-        timelib.Timestamp.MICRO_SECONDS_PER_SECOND)
 
     # INFO: binplist return a string with the Plist XML.
     for policy in match.get(u'passwordpolicyoptions', []):
@@ -101,17 +102,18 @@ class MacUserPlugin(interface.PlistPlugin):
         policy_dict = dict(zip(key_values[0::2], key_values[1::2]))
 
       time_string = policy_dict.get(u'passwordLastSetTime', None)
-      if time_string:
+      if time_string and time_string != u'2001-01-01T00:00:00Z':
         try:
-          timestamp = timelib.Timestamp.FromTimeString(time_string)
-        except errors.TimestampError:
+          date_time = dfdatetime_time_elements.TimeElements()
+          date_time.CopyFromStringISO8601(time_string)
+        except ValueError:
+          date_time = None
           parser_mediator.ProduceExtractionError(
-              u'Unable to parse time string: {0:s}'.format(time_string))
-          timestamp = 0
+              u'unable to parse passworkd last set time string: {0:s}'.format(
+                  time_string))
 
         shadow_hash_data = match.get(u'ShadowHashData', None)
-        if timestamp > cocoa_zero and isinstance(
-            shadow_hash_data, (list, tuple)):
+        if date_time and isinstance(shadow_hash_data, (list, tuple)):
           # Extract the hash password information.
           # It is store in the attribute ShadowHasData which is
           # a binary plist data; However binplist only extract one
@@ -142,44 +144,62 @@ class MacUserPlugin(interface.PlistPlugin):
                 binascii.hexlify(salted_hash[u'entropy']))
           else:
             password_hash = u'N/A'
-          description = (
+
+          event_data = plist_event.PlistTimeEventData()
+          event_data.desc = (
               u'Last time {0:s} ({1!s}) changed the password: {2!s}').format(
                   account, uid, password_hash)
-          event_object = plist_event.PlistTimeEvent(
-              self._ROOT, u'passwordLastSetTime', timestamp, description)
-          parser_mediator.ProduceEvent(event_object)
+          event_data.key = u'passwordLastSetTime'
+          event_data.root = self._ROOT
+
+          event = time_events.DateTimeValuesEvent(
+              date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+          parser_mediator.ProduceEventWithEventData(event, event_data)
 
       time_string = policy_dict.get(u'lastLoginTimestamp', None)
-      if time_string:
+      if time_string and time_string != u'2001-01-01T00:00:00Z':
         try:
-          timestamp = timelib.Timestamp.FromTimeString(time_string)
-        except errors.TimestampError:
+          date_time = dfdatetime_time_elements.TimeElements()
+          date_time.CopyFromStringISO8601(time_string)
+        except ValueError:
+          date_time = None
           parser_mediator.ProduceExtractionError(
-              u'Unable to parse time string: {0:s}'.format(time_string))
-          timestamp = 0
+              u'unable to parse last login time string: {0:s}'.format(
+                  time_string))
 
-        description = u'Last login from {0:s} ({1!s})'.format(account, uid)
-        if timestamp > cocoa_zero:
-          event_object = plist_event.PlistTimeEvent(
-              self._ROOT, u'lastLoginTimestamp', timestamp, description)
-          parser_mediator.ProduceEvent(event_object)
+        if date_time:
+          event_data = plist_event.PlistTimeEventData()
+          event_data.desc = u'Last login from {0:s} ({1!s})'.format(
+              account, uid)
+          event_data.key = u'lastLoginTimestamp'
+          event_data.root = self._ROOT
+
+          event = time_events.DateTimeValuesEvent(
+              date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+          parser_mediator.ProduceEventWithEventData(event, event_data)
 
       time_string = policy_dict.get(u'failedLoginTimestamp', None)
-      if time_string:
+      if time_string and time_string != u'2001-01-01T00:00:00Z':
         try:
-          timestamp = timelib.Timestamp.FromTimeString(time_string)
-        except errors.TimestampError:
+          date_time = dfdatetime_time_elements.TimeElements()
+          date_time.CopyFromStringISO8601(time_string)
+        except ValueError:
+          date_time = None
           parser_mediator.ProduceExtractionError(
-              u'Unable to parse time string: {0:s}'.format(time_string))
-          timestamp = 0
+              u'unable to parse failed login time string: {0:s}'.format(
+                  time_string))
 
-        description = (
-            u'Last failed login from {0:s} ({1!s}) ({2!s} times)').format(
-                account, uid, policy_dict.get(u'failedLoginCount', 0))
-        if timestamp > cocoa_zero:
-          event_object = plist_event.PlistTimeEvent(
-              self._ROOT, u'failedLoginTimestamp', timestamp, description)
-          parser_mediator.ProduceEvent(event_object)
+        if date_time:
+          event_data = plist_event.PlistTimeEventData()
+          event_data.desc = (
+              u'Last failed login from {0:s} ({1!s}) ({2!s} times)').format(
+                  account, uid, policy_dict.get(u'failedLoginCount', 0))
+          event_data.key = u'failedLoginTimestamp'
+          event_data.root = self._ROOT
+
+          event = time_events.DateTimeValuesEvent(
+              date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+          parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 plist.PlistParser.RegisterPlugin(MacUserPlugin)

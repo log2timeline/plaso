@@ -164,10 +164,11 @@ class ESEDBPlugin(plugins.BasePlugin):
     """Retrieves the values from the record.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       table_name (str): name of the table.
       record (pyesedb.record): ESE record.
-      value_mappings (Optional[dict[str,str]): value mappings, which map
+      value_mappings (Optional[dict[str, str]): value mappings, which map
           the column name to a callback method.
 
     Returns:
@@ -213,7 +214,8 @@ class ESEDBPlugin(plugins.BasePlugin):
     """Extracts event objects from the database.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       cache (Optional[ESEDBCache]): cache.
       database (Optional[pyesedb.file]): ESE database.
 
@@ -256,7 +258,8 @@ class ESEDBPlugin(plugins.BasePlugin):
     """Determines if this is the appropriate plugin for the database.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       cache (Optional[ESEDBCache]): cache.
       database (Optional[pyesedb.file]): ESE database.
 

@@ -184,6 +184,24 @@ class TextCSVParser(interface.FileObjectParser):
     pass
 
 
+# TODO: determine if this method should be merged with PyParseIntCast.
+def ConvertTokenToInteger(unused_string, unused_location, tokens):
+  """Pyparsing parse action callback to convert a token into an integer value.
+
+  Args:
+    string (str): original string.
+    location (int): location in the string where the token was found.
+    tokens (list[str]): tokens.
+
+  Returns:
+    int: integer value or None.
+  """
+  try:
+    return int(tokens[0], 10)
+  except ValueError:
+    pass
+
+
 def PyParseRangeCheck(lower_bound, upper_bound):
   """Verify that a number is within a defined range.
 
@@ -302,31 +320,47 @@ class PyparsingConstants(object):
   IPV6_ADDRESS = pyparsing.Word(':' + pyparsing.hexnums).setParseAction(
       PyParseJoinList)
 
-  # Common words.
+  IP_ADDRESS = (IPV4_ADDRESS | IPV6_ADDRESS)
+
+  # TODO: deprecate and remove, use THREE_LETTERS instead.
   MONTH = pyparsing.Word(
-      pyparsing.string.uppercase, pyparsing.string.lowercase,
-      exact=3)
+      pyparsing.string.uppercase, pyparsing.string.lowercase, exact=3)
 
   # Define date structures.
   HYPHEN = pyparsing.Literal(u'-').suppress()
-  YEAR = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
-      PyParseIntCast)
-  TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
-      PyParseIntCast)
+
   ONE_OR_TWO_DIGITS = pyparsing.Word(
       pyparsing.nums, min=1, max=2).setParseAction(PyParseIntCast)
-  DATE = pyparsing.Group(
-      YEAR + pyparsing.Suppress(u'-') + TWO_DIGITS +
-      pyparsing.Suppress(u'-') + TWO_DIGITS)
-  DATE_REV = pyparsing.Group(
-      TWO_DIGITS + pyparsing.Suppress(u'-') + TWO_DIGITS +
-      pyparsing.Suppress(u'-') + YEAR)
-  TIME = pyparsing.Group(
-      TWO_DIGITS + pyparsing.Suppress(':') + TWO_DIGITS +
-      pyparsing.Suppress(':') + TWO_DIGITS)
+  TWO_DIGITS = pyparsing.Word(pyparsing.nums, exact=2).setParseAction(
+      PyParseIntCast)
+  THREE_DIGITS = pyparsing.Word(pyparsing.nums, exact=3).setParseAction(
+      PyParseIntCast)
+  FOUR_DIGITS = pyparsing.Word(pyparsing.nums, exact=4).setParseAction(
+      PyParseIntCast)
+
+  THREE_LETTERS = pyparsing.Word(pyparsing.alphas, exact=3)
+
+  DATE_ELEMENTS = (
+      FOUR_DIGITS.setResultsName(u'year') + pyparsing.Suppress(u'-') +
+      TWO_DIGITS.setResultsName(u'month') + pyparsing.Suppress(u'-') +
+      TWO_DIGITS.setResultsName(u'day_of_month'))
+  TIME_ELEMENTS = (
+      TWO_DIGITS.setResultsName(u'hours') + pyparsing.Suppress(':') +
+      TWO_DIGITS.setResultsName(u'minutes') + pyparsing.Suppress(':') +
+      TWO_DIGITS.setResultsName(u'seconds'))
+  TIME_MSEC_ELEMENTS = (
+      TIME_ELEMENTS + pyparsing.Suppress('.') +
+      INTEGER.setResultsName(u'microseconds'))
+
+  # Date structures defined as a single group.
+  DATE = pyparsing.Group(DATE_ELEMENTS)
+  DATE_TIME = pyparsing.Group(DATE_ELEMENTS + TIME_ELEMENTS)
+  DATE_TIME_MSEC = pyparsing.Group(DATE_ELEMENTS + TIME_MSEC_ELEMENTS)
+  TIME = pyparsing.Group(TIME_ELEMENTS)
+
   TIME_MSEC = TIME + pyparsing.Suppress('.') + INTEGER
-  DATE_TIME = DATE + TIME
-  DATE_TIME_MSEC = DATE + TIME_MSEC
+  # TODO: replace by
+  # TIME_MSEC = pyparsing.Group(TIME_MSEC_ELEMENTS)
 
   COMMENT_LINE_HASH = pyparsing.Literal(u'#') + pyparsing.SkipTo(
       pyparsing.LineEnd())
@@ -488,7 +522,7 @@ class PyparsingSingleLineTextParser(interface.FileObjectParser):
           parser_mediator.ProduceEvent(parsed_event)
       else:
         if len(line) > 80:
-          line = u'{0:s}...'.format(line[0:77])
+          line = u'{0:s}...'.format(line[:77])
         parser_mediator.ProduceExtractionError(
             u'unable to parse log line: {0:s} at offset {1:d}'.format(
                 repr(line), self._current_offset))
@@ -748,7 +782,7 @@ class PyparsingMultiLineTextParser(PyparsingSingleLineTextParser):
         odd_line = self._text_reader.ReadLine(file_object)
         if odd_line:
           if len(odd_line) > 80:
-            odd_line = u'{0:s}...'.format(odd_line[0:77])
+            odd_line = u'{0:s}...'.format(odd_line[:77])
           parser_mediator.ProduceExtractionError(
               u'unable to parse log line: {0:s}'.format(repr(odd_line)))
 

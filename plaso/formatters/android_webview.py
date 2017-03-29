@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
-"""The Android WebViewCache database event formatter."""
+"""The Android WebView database event formatter."""
 
 from plaso.formatters import interface
 from plaso.formatters import manager
 
-class WebViewCookieExpiryEventFormatter(interface.ConditionalEventFormatter):
-  """Formatter for an Android WebView Cookie Expiry event."""
 
-  DATA_TYPE = u'webview:cookie:expiry'
+class AndroidWebViewCookieEventFormatter(interface.ConditionalEventFormatter):
+  """Formatter for Android WebView Cookie event data."""
+
+  DATA_TYPE = u'webview:cookie'
 
   FORMAT_STRING_PIECES = [
       u'Domain: {domain}',
@@ -16,10 +17,13 @@ class WebViewCookieExpiryEventFormatter(interface.ConditionalEventFormatter):
       u'Value: {value}',
       u'Secure: {secure}',]
 
-  FORMAT_STRING_SHORT_PIECES = [u'{domain}', u'{name}', u'{value}']
+  FORMAT_STRING_SHORT_PIECES = [
+      u'{domain}',
+      u'{name}',
+      u'{value}']
 
   SOURCE_LONG = u'Android WebView'
   SOURCE_SHORT = u'WebView'
 
 
-manager.FormattersManager.RegisterFormatter(WebViewCookieExpiryEventFormatter)
+manager.FormattersManager.RegisterFormatter(AndroidWebViewCookieEventFormatter)

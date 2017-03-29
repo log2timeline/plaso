@@ -45,7 +45,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     expected_message = (
         u'[{0:s}] Sidebar: %ProgramFiles%\\Windows Sidebar\\Sidebar.exe '
         u'/autoRun').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
@@ -81,7 +81,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     expected_message = (
         u'[{0:s}] mctadmin: C:\\Windows\\System32\\mctadmin.exe').format(
             key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
@@ -101,7 +101,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     storage_writer = self._ParseKeyWithPlugin(
         registry_key, plugin_object, file_entry=test_file_entry)
 
-    self.assertEqual(len(storage_writer.events), 3)
+    self.assertEqual(len(storage_writer.events), 1)
 
     event_object = storage_writer.events[0]
 
@@ -115,16 +115,18 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_message = (
-        u'[{0:s}] VMware Tools: \"C:\\Program Files\\VMware\\VMware Tools'
-        u'\\VMwareTray.exe\"').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+        u'[{0:s}] '
+        u'McAfee Host Intrusion Prevention Tray: "C:\\Program Files\\McAfee\\'
+        u'Host Intrusion Prevention\\FireTray.exe" '
+        u'VMware Tools: "C:\\Program Files\\VMware\\VMware Tools\\'
+        u'VMwareTray.exe" '
+        u'VMware User Process: "C:\\Program Files\\VMware\\VMware Tools\\'
+        u'VMwareUser.exe"').format(key_path)
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
 
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2011-09-16 20:57:09.067575')
-    self.assertEqual(storage_writer.events[1].timestamp, expected_timestamp)
 
   @shared_test_lib.skipUnlessHasTestFile([u'SOFTWARE-RunTests'])
   def testProcessSoftwareRunOnce(self):
@@ -157,7 +159,7 @@ class AutoRunsPluginTest(test_lib.RegistryPluginTestCase):
     expected_message = (
         u'[{0:s}] *WerKernelReporting: %SYSTEMROOT%\\SYSTEM32\\WerFault.exe '
         u'-k -rq').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

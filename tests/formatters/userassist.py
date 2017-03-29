@@ -24,7 +24,11 @@ class UserAssistWindowsRegistryEventFormatterTest(
 
     expected_attribute_names = [
         u'key_path',
-        u'text']
+        u'entry_index',
+        u'value_name',
+        u'number_of_executions',
+        u'application_focus_count',
+        u'application_focus_duration']
 
     self._TestGetFormatStringAttributeNames(
         event_formatter, expected_attribute_names)

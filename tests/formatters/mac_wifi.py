@@ -4,8 +4,11 @@
 
 import unittest
 
+from dfdatetime import time_elements as dfdatetime_time_elements
+
+from plaso.containers import time_events
 from plaso.formatters import mac_wifi
-from plaso.parsers import mac_wifi as mac_wifi_parser
+from plaso.lib import eventdata
 
 from tests.formatters import test_lib
 
@@ -35,11 +38,16 @@ class MacWifiLogFormatterTest(test_lib.EventFormatterTestCase):
 
   def testGetMessages(self):
     """Tests the GetMessages method."""
-    mediator = None
-    event = mac_wifi_parser.MacWifiLogEvent(
-        u'Thu Nov 14 20:36:37.222', u'airportd[88]',
-        u'airportdProcessDLILEvent',
-        u'en0 attached (up)', u'Interface en0 turn up.')
+    date_time = dfdatetime_time_elements.TimeElements()
+    date_time.CopyFromString(u'2016-11-14 20:36:37.222')
+
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+    event.data_type = u'mac:wifilog:line'
+    event.action = u'Interface en0 turn up.'
+    event.agent = u'airportd[88]'
+    event.function = u'airportdProcessDLILEvent'
+    event.text = u'en0 attached (up)'
 
     expected_messages = (
         u'Action: Interface en0 turn up. '
@@ -48,22 +56,24 @@ class MacWifiLogFormatterTest(test_lib.EventFormatterTestCase):
         u'Log: en0 attached (up)',
         u'Action: Interface en0 turn up.')
 
-    messages = self._formatter.GetMessages(mediator, event)
+    messages = self._formatter.GetMessages(None, event)
     self.assertEqual(messages, expected_messages)
 
-  def testGetMessagesTurnedOver(self):
-    """Tests the GetMessages method for turned over logfile."""
-    mediator = None
-    event = mac_wifi_parser.MacWifiLogEvent(
-        u'2017-01-02 00:10:15', u'', u'',
-        u'test-macbookpro newsyslog[50498]: logfile turned over', u'')
+    date_time = dfdatetime_time_elements.TimeElements()
+    date_time.CopyFromString(u'2017-01-02 00:10:15')
+
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+    event.data_type = u'mac:wifilog:line'
+    event.text = u'test-macbookpro newsyslog[50498]: logfile turned over'
 
     expected_messages = (
         u'Log: test-macbookpro newsyslog[50498]: logfile turned over',
         u'Log: test-macbookpro newsyslog[50498]: logfile turned over')
 
-    messages = self._formatter.GetMessages(mediator, event)
+    messages = self._formatter.GetMessages(None, event)
     self.assertEqual(messages, expected_messages)
+
 
 if __name__ == '__main__':
   unittest.main()

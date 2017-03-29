@@ -7,7 +7,9 @@ from plaso.lib import errors
 
 
 class TwitterIOSContactFormatter(interface.ConditionalEventFormatter):
-  """Parent class for Twitter on iOS 8+ contacts formatters."""
+  """Twitter on iOS 8+ contact event formatter."""
+
+  DATA_TYPE = u'twitter:ios:contact'
 
   FORMAT_STRING_PIECES = [
       u'Screen name: {screen_name}',
@@ -17,8 +19,8 @@ class TwitterIOSContactFormatter(interface.ConditionalEventFormatter):
       u'Description: {description}',
       u'URL: {url}',
       u'Following: {following}',
-      u'Number of followers: {followers_cnt}',
-      u'Number of following: {following_cnt}',
+      u'Number of followers: {followers_count}',
+      u'Number of following: {following_count}',
   ]
 
   FORMAT_STRING_SHORT_PIECES = [
@@ -64,26 +66,18 @@ class TwitterIOSContactFormatter(interface.ConditionalEventFormatter):
     return self._ConditionalFormatMessages(event_values)
 
 
-class TwitterIOSContactCreationFormatter(TwitterIOSContactFormatter):
-  """Formatter for Twitter on iOS 8+ contacts creation event."""
-  DATA_TYPE = u'twitter:ios:contact_creation'
-
-
-class TwitterIOSContactUpdateFormatter(TwitterIOSContactFormatter):
-  """Formatter for Twitter on iOS 8+ contacts update event."""
-  DATA_TYPE = u'twitter:ios:contact_update'
-
-
 class TwitterIOSStatusFormatter(interface.ConditionalEventFormatter):
-  """Parent class for Twitter on iOS 8+ status formatters."""
+  """Twitter on iOS 8+ status event formatter."""
+
+  DATA_TYPE = u'twitter:ios:status'
 
   FORMAT_STRING_PIECES = [
       u'Name: {name}',
       u'User Id: {user_id}',
       u'Message: {text}',
       u'Favorite: {favorited}',
-      u'Retweet Count: {retweet_cnt}',
-      u'Favorite Count: {favorite_cnt}',
+      u'Retweet Count: {retweet_count}',
+      u'Favorite Count: {favorite_count}',
   ]
 
   FORMAT_STRING_SHORT_PIECES = [
@@ -128,16 +122,5 @@ class TwitterIOSStatusFormatter(interface.ConditionalEventFormatter):
     return self._ConditionalFormatMessages(event_values)
 
 
-class TwitterIOSStatusCreationFormatter(TwitterIOSStatusFormatter):
-  """Formatter for Twitter on iOS 8+ status creation event."""
-  DATA_TYPE = u'twitter:ios:status_creation'
-
-
-class TwitterIOSStatusUpdateFormatter(TwitterIOSStatusFormatter):
-  """Formatter for Twitter on iOS 8+ status update event."""
-  DATA_TYPE = u'twitter:ios:status_update'
-
-
 manager.FormattersManager.RegisterFormatters([
-    TwitterIOSContactCreationFormatter, TwitterIOSContactUpdateFormatter,
-    TwitterIOSStatusCreationFormatter, TwitterIOSStatusUpdateFormatter])
+    TwitterIOSContactFormatter, TwitterIOSStatusFormatter])

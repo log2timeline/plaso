@@ -4,6 +4,9 @@ import re
 
 import pyparsing
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -11,22 +14,19 @@ from plaso.parsers import manager
 from plaso.parsers import text_parser
 
 
-class BashHistoryEvent(time_events.PosixTimeEvent):
-  """Convenience class for events from a Bash history file."""
+class BashHistoryEventData(events.EventData):
+  """Bash history log event data.
+
+  Attributes:
+    command (str): command that was executed.
+  """
 
   DATA_TYPE = u'bash:history:command'
 
-  def __init__(self, timestamp, command):
-    """Initializes the event object.
-
-    Args:
-      timestamp (int): number of seconds after January 1, 1970, 00:00:00 UTC
-          that the command was run.
-      command (str): command that was executed.
-    """
-    super(BashHistoryEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.MODIFICATION_TIME)
-    self.command = command
+  def __init__(self):
+    """Initializes event data."""
+    super(BashHistoryEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.command = None
 
 
 class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
@@ -53,29 +53,36 @@ class BashHistoryParser(text_parser.PyparsingMultiLineTextParser):
 
   LINE_STRUCTURES = [(u'log_entry', _LINE_GRAMMAR)]
 
-  def ParseRecord(self, mediator, key, structure):
+  def ParseRecord(self, parser_mediator, key, structure):
     """Parses a record and produces a Bash history event.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       key (str): name of the parsed structure.
       structure (pyparsing.ParseResults): elements parsed from the file.
 
     Raises:
-      UnableToParseFile: if an unsupported key is provided.
+      ParseError: when the structure type is unknown.
     """
     if key != u'log_entry':
-      raise errors.UnableToParseFile(u'Unsupported key: {0:s}'.format(key))
-    event = BashHistoryEvent(structure.timestamp, structure.command)
-    mediator.ProduceEvent(event)
+      raise errors.ParseError(
+          u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-  def VerifyStructure(self, unused_mediator, line):
+    event_data = BashHistoryEventData()
+    event_data.command = structure.command
+
+    date_time = dfdatetime_posix_time.PosixTime(timestamp=structure.timestamp)
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
+
+  def VerifyStructure(self, unused_parser_mediator, line):
     """Verifies that this is a bash history file.
 
     Args:
-      mediator (ParserMediator): mediates the interactions between
-          parsers and other components, such as storage and abort signals.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       line (str): single line from the text file.
 
     Returns:

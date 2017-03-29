@@ -1,10 +1,17 @@
 # -*- coding: utf-8 -*-
-"""This file contains the ASL securityd log plaintext parser."""
+"""This file contains the Mac OS X securityd log plaintext parser.
+
+Also see:
+  http://opensource.apple.com/source/Security/Security-55471/sec/securityd/
+"""
 
 import logging
 
 import pyparsing
 
+from dfdatetime import time_elements as dfdatetime_time_elements
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -16,41 +23,31 @@ from plaso.parsers import text_parser
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 
-# INFO:
-# http://opensource.apple.com/source/Security/Security-55471/sec/securityd/
+class MacSecuritydLogEventData(events.EventData):
+  """Mac OS X securityd log event data.
 
+  Attributes:
+    caller (str): caller, consists of two hex numbers.
+    facility (str): facility.
+    level (str): priority level.
+    message (str): message.
+    security_api (str): name of securityd function.
+    sender_pid (int): process identifier of the sender.
+    sender (str): name of the sender.
+  """
 
-class MacSecuritydLogEvent(time_events.TimestampEvent):
-  """Convenience class for a ASL securityd line event."""
+  DATA_TYPE = u'mac:securityd:line'
 
-  DATA_TYPE = u'mac:asl:securityd:line'
-
-  def __init__(
-      self, timestamp, structure, sender, sender_pid, security_api, caller,
-      message):
-    """Initializes the event object.
-
-    Args:
-      timestamp: The timestamp which is an integer containing the number
-                 of micro seconds since January 1, 1970, 00:00:00 UTC.
-      structure: Structure with the parse fields.
-        level: String with the text representation of the priority level.
-        facility: String with the ASL facility.
-      sender: String with the name of the sender.
-      sender_pid: Process id of the sender.
-      security_api: Securityd function name.
-      caller: The caller field, a string containing two hex numbers.
-      message: String with the ASL message.
-    """
-    super(MacSecuritydLogEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.ADDED_TIME)
-    self.caller = caller
-    self.facility = structure.facility
-    self.level = structure.level
-    self.message = message
-    self.security_api = security_api
-    self.sender_pid = sender_pid
-    self.sender = sender
+  def __init__(self):
+    """Initializes event data."""
+    super(MacSecuritydLogEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.caller = None
+    self.facility = None
+    self.level = None
+    self.message = None
+    self.security_api = None
+    self.sender = None
+    self.sender_pid = None
 
 
 class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
@@ -62,11 +59,13 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
   _ENCODING = u'utf-8'
   _DEFAULT_YEAR = 2012
 
-  # Default ASL Securityd log.
-  SECURITYD_LINE = (
-      text_parser.PyparsingConstants.MONTH.setResultsName(u'month') +
+  DATE_TIME = pyparsing.Group(
+      text_parser.PyparsingConstants.THREE_LETTERS.setResultsName(u'month') +
       text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
-      text_parser.PyparsingConstants.TIME.setResultsName(u'time') +
+      text_parser.PyparsingConstants.TIME_ELEMENTS)
+
+  SECURITYD_LINE = (
+      DATE_TIME.setResultsName(u'date_time') +
       pyparsing.CharsNotIn(u'[').setResultsName(u'sender') +
       pyparsing.Literal(u'[').suppress() +
       text_parser.PyparsingConstants.PID.setResultsName(u'sender_pid') +
@@ -84,16 +83,12 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
           u'caller')) + pyparsing.Literal(u']:').suppress() +
       pyparsing.SkipTo(pyparsing.lineEnd).setResultsName(u'message'))
 
-  # Repeated line.
   REPEATED_LINE = (
-      text_parser.PyparsingConstants.MONTH.setResultsName(u'month') +
-      text_parser.PyparsingConstants.ONE_OR_TWO_DIGITS.setResultsName(u'day') +
-      text_parser.PyparsingConstants.TIME.setResultsName(u'time') +
+      DATE_TIME.setResultsName(u'date_time') +
       pyparsing.Literal(u'--- last message repeated').suppress() +
       text_parser.PyparsingConstants.INTEGER.setResultsName(u'times') +
       pyparsing.Literal(u'time ---').suppress())
 
-  # Define the available log line structures.
   LINE_STRUCTURES = [
       (u'logline', SECURITYD_LINE),
       (u'repeated', REPEATED_LINE)]
@@ -123,109 +118,131 @@ class MacSecuritydLogParser(text_parser.PyparsingSingleLineTextParser):
     return timelib.Timestamp.FromTimeParts(
         year, month, day, hours, minutes, seconds)
 
+  def _GetTimeElementsTuple(self, structure):
+    """Retrieves a time elements tuple from the structure.
+
+    Args:
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a text file.
+
+    Returns:
+      tuple: contains:
+        year (int): year.
+        month (int): month, where 1 represents January.
+        day_of_month (int): day of month, where 1 is the first day of the month.
+        hours (int): hours.
+        minutes (int): minutes.
+        seconds (int): seconds.
+    """
+    month, day, hours, minutes, seconds = structure.date_time
+
+    # Note that dfdatetime_time_elements.TimeElements will raise ValueError
+    # for an invalid month.
+    month = timelib.MONTH_DICT.get(month.lower(), 0)
+
+    if month != 0 and month < self._last_month:
+      # Gap detected between years.
+      self._year_use += 1
+
+    return (self._year_use, month, day, hours, minutes, seconds)
+
   def _ParseLogLine(self, parser_mediator, structure, key):
     """Parse a single log line and produce an event object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: An identification string indicating the name of the parsed
-           structure.
-      structure: A pyparsing.ParseResults object from a line in the
-                 log file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): a file-like object.
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a text file.
     """
-    if not self._year_use:
-      self._year_use = parser_mediator.GetEstimatedYear()
-
-    # Gap detected between years.
-    month = timelib.MONTH_DICT.get(structure.month.lower())
-    if not self._last_month:
-      self._last_month = month
-
-    if month < self._last_month:
-      self._year_use += 1
+    time_elements_tuple = self._GetTimeElementsTuple(structure)
 
     try:
-      timestamp = self._ConvertToTimestamp(
-          structure.day, month, self._year_use, structure.time)
-    except errors.TimestampError as exception:
+      date_time = dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=time_elements_tuple)
+    except ValueError:
       parser_mediator.ProduceExtractionError(
-          u'unable to determine timestamp with error: {0:s}'.format(
-              exception))
+          u'invalid date time value: {0!s}'.format(structure.date_time))
       return
 
-    self._last_month = month
+    self._last_month = time_elements_tuple[1]
 
     if key == u'logline':
       self._previous_structure = structure
       message = structure.message
     else:
-      times = structure.times
-      structure = self._previous_structure
       message = u'Repeated {0:d} times: {1:s}'.format(
-          times, structure.message)
+          structure.times, self._previous_structure.message)
+      structure = self._previous_structure
 
     # It uses CarsNotIn structure which leaves whitespaces
     # at the beginning of the sender and the caller.
-    sender = structure.sender.strip()
-    caller = structure.caller.strip()
-    if not caller:
-      caller = u'unknown'
-    if not structure.security_api:
-      security_api = u'unknown'
-    else:
-      security_api = structure.security_api
 
-    event_object = MacSecuritydLogEvent(
-        timestamp, structure, sender, structure.sender_pid, security_api,
-        caller, message)
-    parser_mediator.ProduceEvent(event_object)
+    event_data = MacSecuritydLogEventData()
+    event_data.caller = structure.caller.strip() or u'unknown'
+    event_data.facility = structure.facility
+    event_data.level = structure.level
+    event_data.message = message
+    event_data.security_api = structure.security_api or u'unknown'
+    event_data.sender_pid = structure.sender_pid
+    event_data.sender = structure.sender.strip()
+
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.ADDED_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseRecord(self, parser_mediator, key, structure):
     """Parses a log record structure and produces events.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      key: An identification string indicating the name of the parsed
-           structure.
-      structure: A pyparsing.ParseResults object from a line in the
-                 log file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): a file-like object.
+      structure (pyparsing.ParseResults): structure of tokens derived from
+          a line of a text file.
+
+    Raises:
+      ParseError: when the structure type is unknown.
     """
-    if key in (u'logline', u'repeated'):
-      self._ParseLogLine(parser_mediator, structure, key)
-    else:
-      logging.warning(
+    if key not in (u'logline', u'repeated'):
+      raise errors.ParseError(
           u'Unable to parse record, unknown structure: {0:s}'.format(key))
 
-  def VerifyStructure(self, unused_parser_mediator, line):
-    """Verify that this file is a ASL securityd log file.
+    self._ParseLogLine(parser_mediator, structure, key)
+
+  def VerifyStructure(self, parser_mediator, line):
+    """Verify that this file is a securityd log file.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      line: A single line from the text file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      line (bytes): line from a text file.
 
     Returns:
-      True if this is the correct parser, False otherwise.
+      bool: True if the line is in the expected format, False if not.
     """
-    try:
-      line = self.SECURITYD_LINE.parseString(line)
-    except pyparsing.ParseException as exception:
-      logging.debug((
-          u'Unable to parse file as an ASL securityd log file with error: '
-          u'{0:s}').format(exception))
-      return False
-
-    # Check if the day, month and time is valid taking a random year.
-    month = timelib.MONTH_DICT.get(line.month.lower())
-    if not month:
-      logging.debug(u'Unsupported month value: {0:s}'.format(line.month))
-      return False
+    self._last_month = 0
+    self._year_use = parser_mediator.GetEstimatedYear()
 
     try:
-      self._ConvertToTimestamp(line.day, month, self._DEFAULT_YEAR, line.time)
-    except errors.TimestampError as exception:
-      logging.debug(u'Unable to determine timestamp with error: {0:s}'.format(
-          exception))
+      structure = self.SECURITYD_LINE.parseString(line)
+    except pyparsing.ParseException:
+      logging.debug(u'Not a Mac securityd log file')
       return False
+
+    time_elements_tuple = self._GetTimeElementsTuple(structure)
+
+    try:
+      dfdatetime_time_elements.TimeElements(
+          time_elements_tuple=time_elements_tuple)
+    except ValueError:
+      logging.debug(
+          u'Not a Mac securityd log file, invalid date and time: {0!s}'.format(
+              structure.date_time))
+      return False
+
+    self._last_month = time_elements_tuple[1]
 
     return True
 

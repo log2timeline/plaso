@@ -140,9 +140,10 @@ class PlistPlugin(plugins.BasePlugin):
     See plist/bluetooth.py for the implemented example plugin.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       top_level: Optional plist in dictionary form.
-      match: Optional dictionary containing extracted keys from PLIST_KEYS.
+      match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
 
   # pylint: disable=arguments-differ
@@ -159,7 +160,8 @@ class PlistPlugin(plugins.BasePlugin):
     plugin.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       plist_name: Name of the plist file.
       top_level: Plist in dictionary form.
 

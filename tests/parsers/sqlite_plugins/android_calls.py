@@ -26,22 +26,22 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(len(storage_writer.events), 5)
 
     # Check the first event.
-    event_object = storage_writer.events[0]
+    event = storage_writer.events[0]
 
-    self.assertEqual(event_object.timestamp_desc, u'Call Started')
+    self.assertEqual(event.timestamp_desc, u'Call Started')
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-06 21:17:16.690')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-06 21:17:16.690')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_number = u'5404561685'
-    self.assertEqual(event_object.number, expected_number)
+    self.assertEqual(event.number, expected_number)
 
     expected_type = u'MISSED'
-    self.assertEqual(event_object.call_type, expected_type)
+    self.assertEqual(event.call_type, expected_type)
 
     expected_call = (
         u'MISSED '
@@ -49,27 +49,27 @@ class AndroidCallSQLitePluginTest(test_lib.SQLitePluginTestCase):
         u'Name: Barney '
         u'Duration: 0 seconds')
     expected_short = u'MISSED Call'
-    self._TestGetMessageStrings(event_object, expected_call, expected_short)
+    self._TestGetMessageStrings(event, expected_call, expected_short)
 
     # Run some tests on the last 2 events.
-    event_object_3 = storage_writer.events[3]
-    event_object_4 = storage_writer.events[4]
+    event_3 = storage_writer.events[3]
+    event_4 = storage_writer.events[4]
 
     # Check the timestamp_desc of the last event.
-    self.assertEqual(event_object_4.timestamp_desc, u'Call Ended')
+    self.assertEqual(event_4.timestamp_desc, u'Call Ended')
 
     expected_timestamp3 = timelib.Timestamp.CopyFromString(
         u'2013-11-07 00:03:36.690')
-    self.assertEqual(event_object_3.timestamp, expected_timestamp3)
+    self.assertEqual(event_3.timestamp, expected_timestamp3)
 
     expected_timestamp4 = timelib.Timestamp.CopyFromString(
         u'2013-11-07 00:14:15.690')
-    self.assertEqual(event_object_4.timestamp, expected_timestamp4)
+    self.assertEqual(event_4.timestamp, expected_timestamp4)
 
     # Ensure the difference in btw. events 3 and 4 equals the duration.
     expected_duration, _ = divmod(
         expected_timestamp4 - expected_timestamp3, 1000000)
-    self.assertEqual(event_object_4.duration, expected_duration)
+    self.assertEqual(event_4.duration, expected_duration)
 
 
 if __name__ == '__main__':

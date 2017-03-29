@@ -6,7 +6,7 @@ from plaso.formatters import manager
 from plaso.lib import errors
 
 
-class OleCfItemFormatter(interface.EventFormatter):
+class OLECFItemFormatter(interface.EventFormatter):
   """Formatter for an OLECF item event."""
 
   DATA_TYPE = u'olecf:item'
@@ -18,7 +18,7 @@ class OleCfItemFormatter(interface.EventFormatter):
   SOURCE_SHORT = u'OLECF'
 
 
-class OleCfDestListEntryFormatter(interface.ConditionalEventFormatter):
+class OLECFDestListEntryFormatter(interface.ConditionalEventFormatter):
   """Formatter for an OLECF DestList stream event."""
 
   DATA_TYPE = u'olecf:dest_list:entry'
@@ -68,7 +68,7 @@ class OleCfDestListEntryFormatter(interface.ConditionalEventFormatter):
     return self._ConditionalFormatMessages(event_values)
 
 
-class OleCfDocumentSummaryInfoFormatter(interface.ConditionalEventFormatter):
+class OLECFDocumentSummaryInfoFormatter(interface.ConditionalEventFormatter):
   """Formatter for an OLECF Document Summary Info property set stream event."""
 
   DATA_TYPE = u'olecf:document_summary_info'
@@ -100,7 +100,7 @@ class OleCfDocumentSummaryInfoFormatter(interface.ConditionalEventFormatter):
   SOURCE_SHORT = u'OLECF'
 
 
-class OleCfSummaryInfoFormatter(interface.ConditionalEventFormatter):
+class OLECFSummaryInfoFormatter(interface.ConditionalEventFormatter):
   """Formatter for an OLECF Summary Info property set stream event."""
 
   DATA_TYPE = u'olecf:summary_info'
@@ -174,5 +174,5 @@ class OleCfSummaryInfoFormatter(interface.ConditionalEventFormatter):
 
 
 manager.FormattersManager.RegisterFormatters([
-    OleCfItemFormatter, OleCfDestListEntryFormatter,
-    OleCfDocumentSummaryInfoFormatter, OleCfSummaryInfoFormatter])
+    OLECFItemFormatter, OLECFDestListEntryFormatter,
+    OLECFDocumentSummaryInfoFormatter, OLECFSummaryInfoFormatter])

@@ -3,11 +3,15 @@
 
 import construct
 
+from dfdatetime import definitions as dfdatetime_definitions
+from dfdatetime import systemtime as dfdatetime_systemtime
+from dfdatetime import time_elements as dfdatetime_time_elements
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import binary
 from plaso.lib import errors
 from plaso.lib import eventdata
-from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -15,8 +19,8 @@ from plaso.parsers import manager
 __author__ = 'Brian Baskin (brian@thebaskins.com)'
 
 
-class WinJobEvent(time_events.TimestampEvent):
-  """Convenience class for a Windows Scheduled Task event.
+class WinJobEventData(events.EventData):
+  """Windows Scheduled Task event data.
 
   Attributes:
     application (str): path to job executable.
@@ -29,30 +33,15 @@ class WinJobEvent(time_events.TimestampEvent):
 
   DATA_TYPE = u'windows:tasks:job'
 
-  def __init__(
-      self, timestamp, timestamp_description, application, parameters,
-      working_directory, username, description, trigger_type=None):
-    """Initializes the event object.
-
-    Args:
-      timestamp (int): timestamp, which contains the number of microseconds
-          since January 1, 1970, 00:00:00 UTC.
-      timestamp_description (str): description of the meaning of the timestamp
-          value.
-      application (str): path to job executable.
-      parameters (str): application command line parameters.
-      working_directory (str): working directory of the scheduled task.
-      username (str): username that scheduled the task.
-      description (str): description of the scheduled task.
-      trigger_type (Optional[int]): trigger type.
-    """
-    super(WinJobEvent, self).__init__(timestamp, timestamp_description)
-    self.application = application
-    self.comment = description
-    self.parameters = parameters
-    self.trigger_type = trigger_type
-    self.username = username
-    self.working_directory = working_directory
+  def __init__(self):
+    """Initializes event data."""
+    super(WinJobEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.application = None
+    self.comment = None
+    self.parameters = None
+    self.trigger_type = None
+    self.username = None
+    self.working_directory = None
 
 
 class WinJobParser(interface.FileObjectParser):
@@ -60,6 +49,8 @@ class WinJobParser(interface.FileObjectParser):
 
   NAME = u'winjob'
   DESCRIPTION = u'Parser for Windows Scheduled Task job (or At-job) files.'
+
+  _EMPTY_SYSTEM_TIME_TUPLE = (0, 0, 0, 0, 0, 0, 0, 0)
 
   _PRODUCT_VERSIONS = {
       0x0400: u'Windows NT 4.0',
@@ -158,66 +149,13 @@ class WinJobParser(interface.FileObjectParser):
       construct.ULInt16(u'trigger_reserved2'),
       construct.ULInt16(u'trigger_reserved3'))
 
-  def _CopySystemTimeToTimestamp(self, system_time_struct, timezone):
-    """Copies a system time to a timestamp.
-
-    Args:
-      system_time_struct (construct.Struct): structure representing the system
-          time.
-      timezone (datetime.tzinfo): timezone.
-    """
-    return timelib.Timestamp.FromTimeParts(
-        system_time_struct.year, system_time_struct.month,
-        system_time_struct.day, system_time_struct.hours,
-        system_time_struct.minutes, system_time_struct.seconds,
-        microseconds=system_time_struct.milliseconds * 1000,
-        timezone=timezone)
-
-  def _IsEmptySystemTime(self, system_time_struct):
-    """Determines if the system time is empty.
-
-    Args:
-      system_time_struct (construct.Struct): structure representing the system
-          time.
-
-    Return:
-      bool: True if the system time is empty.
-    """
-    return (
-        system_time_struct.year == 0 or system_time_struct.month == 0 and
-        system_time_struct.weekday == 0 and system_time_struct.day == 0 and
-        system_time_struct.hours == 0 and system_time_struct.minutes == 0 and
-        system_time_struct.seconds == 0 and
-        system_time_struct.milliseconds == 0)
-
-  def _IsValidSystemTime(self, system_time_struct):
-    """Determines if the system time is valid.
-
-    Args:
-      system_time_struct (construct.Struct): structure representing the system
-          time.
-
-    Return:
-      bool: True if the system time is valid.
-    """
-    return (
-        system_time_struct.year >= 1601 and
-        system_time_struct.year <= 30827 and
-        system_time_struct.month >= 1 and system_time_struct.month <= 12 and
-        system_time_struct.weekday >= 0 and system_time_struct.weekday <= 6 and
-        system_time_struct.day >= 1 and system_time_struct.day <= 31 and
-        system_time_struct.hours >= 0 and system_time_struct.hours <= 23 and
-        system_time_struct.minutes >= 0 and system_time_struct.minutes <= 59 and
-        system_time_struct.seconds >= 0 and system_time_struct.seconds <= 59 and
-        system_time_struct.milliseconds >= 0 and
-        system_time_struct.milliseconds <= 999)
-
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a Windows job file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -247,72 +185,88 @@ class WinJobParser(interface.FileObjectParser):
           u'Unable to parse variable-length section with error: {0:s}'.format(
               exception))
 
-    application = binary.ReadUTF16(job_variable_struct.application)
-    description = binary.ReadUTF16(job_variable_struct.comment)
-    parameter = binary.ReadUTF16(job_variable_struct.parameter)
-    username = binary.ReadUTF16(job_variable_struct.username)
-    working_directory = binary.ReadUTF16(job_variable_struct.working_directory)
+    event_data = WinJobEventData()
+    event_data.application = binary.ReadUTF16(job_variable_struct.application)
+    event_data.comment = binary.ReadUTF16(job_variable_struct.comment)
+    event_data.parameters = binary.ReadUTF16(job_variable_struct.parameter)
+    event_data.username = binary.ReadUTF16(job_variable_struct.username)
+    event_data.working_directory = binary.ReadUTF16(
+        job_variable_struct.working_directory)
 
-    last_run_time = None
-    if not self._IsEmptySystemTime(header_struct.last_run_time):
+    systemtime_struct = header_struct.last_run_time
+    system_time_tuple = (
+        systemtime_struct.year, systemtime_struct.month,
+        systemtime_struct.weekday, systemtime_struct.day,
+        systemtime_struct.hours, systemtime_struct.minutes,
+        systemtime_struct.seconds, systemtime_struct.milliseconds)
+
+    date_time = None
+    if system_time_tuple != self._EMPTY_SYSTEM_TIME_TUPLE:
       try:
-        last_run_time = self._CopySystemTimeToTimestamp(
-            header_struct.last_run_time, parser_mediator.timezone)
-      except errors.TimestampError as exception:
+        date_time = dfdatetime_systemtime.Systemtime(
+            system_time_tuple=system_time_tuple)
+      except ValueError:
         parser_mediator.ProduceExtractionError(
-            u'unable to determine last run time with error: {0:s}'.format(
-                exception))
+            u'invalid last run time: {0!s}'.format(system_time_tuple))
 
-    if last_run_time is not None:
-      event = WinJobEvent(
-          last_run_time, eventdata.EventTimestamp.LAST_RUNTIME, application,
-          parameter, working_directory, username, description)
-      parser_mediator.ProduceEvent(event)
+    if date_time:
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.LAST_RUNTIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
     for index in range(job_variable_struct.number_of_triggers):
       try:
         trigger_struct = self._TRIGGER_STRUCT.parse_stream(file_object)
       except (IOError, construct.FieldError) as exception:
-        raise errors.UnableToParseFile(
-            u'Unable to parse trigger: {0:d} with error: {1:s}'.format(
-                index, exception))
-
-      try:
-        trigger_start_time = timelib.Timestamp.FromTimeParts(
-            trigger_struct.start_year, trigger_struct.start_month,
-            trigger_struct.start_day, trigger_struct.start_hour,
-            trigger_struct.start_minute, 0, timezone=parser_mediator.timezone)
-      except errors.TimestampError as exception:
-        trigger_start_time = None
         parser_mediator.ProduceExtractionError(
-            u'unable to determine scheduled date with error: {0:s}'.format(
-                exception))
+            u'unable to parse trigger: {0:d} with error: {1:s}'.format(
+                index, exception))
+        return
 
-      if trigger_start_time is not None:
-        event = WinJobEvent(
-            trigger_start_time, u'Scheduled to start', application, parameter,
-            working_directory, username, description,
-            trigger_type=trigger_struct.trigger_type)
-        parser_mediator.ProduceEvent(event)
+      event_data.trigger_type = trigger_struct.trigger_type
 
-      if trigger_struct.end_year:
+      time_elements_tuple = (
+          trigger_struct.start_year, trigger_struct.start_month,
+          trigger_struct.start_day, trigger_struct.start_hour,
+          trigger_struct.start_minute, 0)
+
+      if time_elements_tuple != (0, 0, 0, 0, 0, 0):
         try:
-          trigger_end_time = timelib.Timestamp.FromTimeParts(
-              trigger_struct.end_year, trigger_struct.end_month,
-              trigger_struct.end_day, 0, 0, 0,
-              timezone=parser_mediator.timezone)
-        except errors.TimestampError as exception:
-          trigger_end_time = None
-          parser_mediator.ProduceExtractionError((
-              u'unable to determine scheduled end date with error: '
-              u'{0:s}').format(exception))
+          date_time = dfdatetime_time_elements.TimeElements(
+              time_elements_tuple=time_elements_tuple)
+          date_time.is_local_time = True
+          date_time.precision = dfdatetime_definitions.PRECISION_1_MINUTE
+        except ValueError:
+          date_time = None
+          parser_mediator.ProduceExtractionError(
+              u'invalid trigger start time: {0!s}'.format(time_elements_tuple))
 
-        if trigger_end_time is not None:
-          event = WinJobEvent(
-              trigger_end_time, u'Scheduled to end', application, parameter,
-              working_directory, username, description,
-              trigger_type=trigger_struct.trigger_type)
-          parser_mediator.ProduceEvent(event)
+        if date_time:
+          event = time_events.DateTimeValuesEvent(
+              date_time, u'Scheduled to start',
+              time_zone=parser_mediator.timezone)
+          parser_mediator.ProduceEventWithEventData(event, event_data)
+
+      time_elements_tuple = (
+          trigger_struct.end_year, trigger_struct.end_month,
+          trigger_struct.end_day, 0, 0, 0)
+
+      if time_elements_tuple != (0, 0, 0, 0, 0, 0):
+        try:
+          date_time = dfdatetime_time_elements.TimeElements(
+              time_elements_tuple=time_elements_tuple)
+          date_time.is_local_time = True
+          date_time.precision = dfdatetime_definitions.PRECISION_1_DAY
+        except ValueError:
+          date_time = None
+          parser_mediator.ProduceExtractionError(
+              u'invalid trigger end time: {0!s}'.format(time_elements_tuple))
+
+        if date_time:
+          event = time_events.DateTimeValuesEvent(
+              date_time, u'Scheduled to end',
+              time_zone=parser_mediator.timezone)
+          parser_mediator.ProduceEventWithEventData(event, event_data)
 
     # TODO: create a timeless event object if last_run_time and
     # trigger_start_time are None? What should be the description of

@@ -220,7 +220,7 @@ class NetworksPluginTest(test_lib.RegistryPluginTestCase):
         u'Connection Type: Wired '
         u'Default Gateway Mac: 00:50:56:ea:6c:ec '
         u'DNS Suffix: localdomain')
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
@@ -237,7 +237,7 @@ class NetworksPluginTest(test_lib.RegistryPluginTestCase):
         u'SSID: My Awesome Wifi Hotspot '
         u'Description: My Awesome Wifi Hotspot '
         u'Connection Type: Wireless')
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

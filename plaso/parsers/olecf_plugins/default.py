@@ -1,38 +1,42 @@
 # -*- coding: utf-8 -*-
 """The default plugin for parsing OLE Compound Files (OLECF)."""
 
+from dfdatetime import filetime as dfdatetime_filetime
+from dfdatetime import semantic_time as dfdatetime_semantic_time
+
 from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.parsers import olecf
 from plaso.parsers.olecf_plugins import interface
 
 
-class OleCfItemEvent(time_events.FiletimeEvent):
+class OLECFItemEvent(time_events.DateTimeValuesEvent):
   """Convenience class for an OLECF item event."""
 
   DATA_TYPE = u'olecf:item'
 
-  def __init__(self, timestamp, usage, olecf_item):
-    """Initializes the event.
+  def __init__(self, date_time, date_time_description, olecf_item):
+    """Initializes an event.
 
     Args:
-      timestamp: The FILETIME timestamp value.
-      usage: A string describing the timestamp value.
-      olecf_item: The OLECF item (pyolecf.item).
+      date_time (dfdatetime.DateTimeValues): date and time values.
+      date_time_description (str): description of the meaning of the date
+          and time values.
+      olecf_item (pyolecf.item): OLECF item.
     """
-    super(OleCfItemEvent, self).__init__(timestamp, usage)
+    super(OLECFItemEvent, self).__init__(date_time, date_time_description)
+    self.name = olecf_item.name
 
     # TODO: need a better way to express the original location of the
     # original data.
     self.offset = 0
 
-    self.name = olecf_item.name
     # TODO: have pyolecf return the item type here.
     # self.type = olecf_item.type
     self.size = olecf_item.size
 
 
-class DefaultOleCFPlugin(interface.OlecfPlugin):
+class DefaultOLECFPlugin(interface.OLECFPlugin):
   """Class to define the default OLECF file plugin."""
 
   NAME = u'olecf_default'
@@ -42,30 +46,31 @@ class DefaultOleCFPlugin(interface.OlecfPlugin):
     """Parses an OLECF item.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      olecf_item: An OLECF item (instance of pyolecf.item).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      olecf_item (pyolecf.item): OLECF item.
 
     Returns:
-      A boolean value indicating if an event object was produced.
+      bool: True if an event was produced.
     """
-    event_object = None
+    event = None
     result = False
 
-    creation_time, modification_time = self.GetTimestamps(olecf_item)
+    creation_time, modification_time = self._GetTimestamps(olecf_item)
 
     if creation_time:
-      event_object = OleCfItemEvent(
-          creation_time, eventdata.EventTimestamp.CREATION_TIME,
-          olecf_item)
-      parser_mediator.ProduceEvent(event_object)
+      date_time = dfdatetime_filetime.Filetime(timestamp=creation_time)
+      event = OLECFItemEvent(
+          date_time, eventdata.EventTimestamp.CREATION_TIME, olecf_item)
+      parser_mediator.ProduceEvent(event)
 
     if modification_time:
-      event_object = OleCfItemEvent(
-          modification_time, eventdata.EventTimestamp.MODIFICATION_TIME,
-          olecf_item)
-      parser_mediator.ProduceEvent(event_object)
+      date_time = dfdatetime_filetime.Filetime(timestamp=modification_time)
+      event = OLECFItemEvent(
+          date_time, eventdata.EventTimestamp.MODIFICATION_TIME, olecf_item)
+      parser_mediator.ProduceEvent(event)
 
-    if event_object:
+    if event:
       result = True
 
     for sub_item in olecf_item.sub_items:
@@ -74,41 +79,29 @@ class DefaultOleCFPlugin(interface.OlecfPlugin):
 
     return result
 
-  def ParseItems(self, parser_mediator, root_item=None, **unused_kwargs):
-    """Parses OLECF items.
+  def Process(self, parser_mediator, root_item=None, **kwargs):
+    """Parses an OLECF file.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      root_item: Optional root item of the OLECF file.
-    """
-    if not self._ParseItem(parser_mediator, root_item):
-      # If no event object was produced, produce at least one for
-      # the root item.
-      event_object = OleCfItemEvent(
-          0, eventdata.EventTimestamp.CREATION_TIME, root_item)
-      parser_mediator.ProduceEvent(event_object)
-
-  def Process(self, parser_mediator, root_item=None, item_names=None, **kwargs):
-    """Determine if this is the right plugin for this OLECF file.
-
-    This function takes a list of sub items found in the root of a
-    OLECF file and compares that to a list of required items defined
-    in this plugin.
-
-    Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      root_item: Optional root item of the OLECF file.
-      item_names: Optional list of all items discovered in the root.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      root_item (Optional[pyolecf.item]): root item of the OLECF file.
 
     Raises:
-      errors.WrongPlugin: If the set of required items is not a subset
-                          of the available items.
-      ValueError: If the root_item or items are not set.
+      ValueError: If the root item is not set.
     """
-    if root_item is None or item_names is None:
-      raise ValueError(u'Root item or items are not set.')
+    # This will raise if unhandled keyword arguments are passed.
+    super(DefaultOLECFPlugin, self).Process(parser_mediator, **kwargs)
 
-    self.ParseItems(parser_mediator, root_item=root_item)
+    if not root_item:
+      raise ValueError(u'Root item not set.')
+
+    if not self._ParseItem(parser_mediator, root_item):
+      # If no event was produced, produce at least one for the root item.
+      date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
+      event = OLECFItemEvent(
+          date_time, eventdata.EventTimestamp.CREATION_TIME, root_item)
+      parser_mediator.ProduceEvent(event)
 
 
-olecf.OLECFParser.RegisterPlugin(DefaultOleCFPlugin)
+olecf.OLECFParser.RegisterPlugin(DefaultOLECFPlugin)
