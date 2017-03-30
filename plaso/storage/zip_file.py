@@ -251,14 +251,13 @@ class _EventsHeap(object):
     except IndexError:
       return None, None
 
-  def PushEvent(self, event, event_identifier):
+  def PushEvent(self, event):
     """Pushes an event onto the heap.
 
     Args:
       event (EventObject): event.
-      event_identifier (AttributeContainerIdentifier): event attribute
-          container identifier.
     """
+    event_identifier = event.GetIdentifier()
     heap_values = (
         event.timestamp, event_identifier.stream_number,
         event_identifier.entry_index, event)
@@ -897,8 +896,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     if not event:
       return
 
-    event_identifier = event.GetIdentifier()
-    self._event_heap.PushEvent(event, event_identifier)
+    self._event_heap.PushEvent(event)
 
     reference_timestamp = event.timestamp
     while event.timestamp == reference_timestamp:
@@ -906,8 +904,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       if not event:
         break
 
-      event_identifier = event.GetIdentifier()
-      self._event_heap.PushEvent(event, event_identifier)
+      self._event_heap.PushEvent(event)
 
   def _GetEvent(self, stream_number, entry_index=NEXT_AVAILABLE_ENTRY):
     """Reads an event from a specific stream.
@@ -915,7 +912,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
     Args:
       stream_number (int): number of the serialized event stream.
       entry_index (Optional[int]): number of the serialized event within
-          the stream, where -1 represents the next available event.
+          the stream, where NEXT_AVAILABLE_ENTRY represents the next available
+          event.
 
     Returns:
       EventObject: event or None.
@@ -942,7 +940,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
     Args:
       stream_number (int): number of the serialized event stream.
       entry_index (Optional[int]): number of the serialized event within
-          the stream, where -1 represents the next available event.
+          the stream, where NEXT_AVAILABLE_ENTRY represents the next available
+          event.
 
     Returns:
       tuple: contains:
@@ -964,7 +963,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
       raise ValueError(u'Stream number: {0:d} out of bounds.'.format(
           stream_number))
 
-    if entry_index < -1:
+    if entry_index < self.NEXT_AVAILABLE_ENTRY:
       raise ValueError(u'Entry index: {0:d} out of bounds.'.format(
           entry_index))
 
@@ -1005,7 +1004,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
     Args:
       stream_number (int): number of the serialized event source stream.
       entry_index (Optional[int]): number of the serialized event source
-          within the stream, where -1 represents the next available event
+          within the stream, where NEXT_AVAILABLE_ENTRY represents the next
+          available event
           source.
 
     Returns:
@@ -1034,8 +1034,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
     Args:
       stream_number (int): number of the serialized event source stream.
       entry_index (Optional[int]): number of the serialized event source
-          within the stream, where -1 represents the next available event
-          source.
+          within the stream, where NEXT_AVAILABLE_ENTRY represents the next
+          available event source.
 
     Returns:
       tuple: contains:
@@ -1050,7 +1050,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     if stream_number < 1 or stream_number > self._event_source_stream_number:
       raise ValueError(u'Stream number out of bounds.')
 
-    if entry_index < -1:
+    if entry_index < self.NEXT_AVAILABLE_ENTRY:
       raise ValueError(u'Entry index out of bounds.')
 
     if stream_number == self._event_source_stream_number:
@@ -1098,7 +1098,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
     Args:
       stream_number (int): number of the serialized event tag stream.
       entry_index (Optional[int]): number of the serialized event tag
-          within the stream, where -1 represents the next available event tag.
+          within the stream, where NEXT_AVAILABLE_ENTRY represents
+          the next available event tag.
 
     Returns:
       EventTag: event tag or None.
@@ -1156,7 +1157,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
     Args:
       stream_number (int): number of the serialized event tag stream.
       entry_index (Optional[int]): number of the serialized event tag
-          within the stream, where -1 represents the next available event tag.
+          within the stream, where NEXT_AVAILABLE_ENTRY represents
+          the next available event tag.
 
     Returns:
       tuple: contains:
@@ -1171,7 +1173,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     if stream_number < 1 or stream_number > self._event_tag_stream_number:
       raise ValueError(u'Stream number out of bounds.')
 
-    if entry_index < -1:
+    if entry_index < self.NEXT_AVAILABLE_ENTRY:
       raise ValueError(u'Entry index out of bounds.')
 
     if stream_number == self._event_tag_stream_number:
@@ -1553,7 +1555,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
     number_range = self._GetSerializedEventStreamNumbers()
     for stream_number in number_range:
-      entry_index = -1
+      entry_index = self.NEXT_AVAILABLE_ENTRY
       if time_range:
         stream_name = u'event_timestamps.{0:06d}'.format(stream_number)
         if self._HasStream(stream_name):
@@ -1567,7 +1569,8 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
           # If the start timestamp of the time range filter is larger than the
           # last timestamp in the timestamp table skip this stream.
-          timestamp_compare = timestamp_table.GetTimestamp(-1)
+          timestamp_compare = timestamp_table.GetTimestamp(
+              self.NEXT_AVAILABLE_ENTRY)
           if time_range.start_timestamp > timestamp_compare:
             continue
 
@@ -1587,8 +1590,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
         if time_range and event.timestamp > time_range.end_timestamp:
           continue
 
-        event_identifier = event.GetIdentifier()
-        self._event_heap.PushEvent(event, event_identifier)
+        self._event_heap.PushEvent(event)
 
         reference_timestamp = event.timestamp
         while event.timestamp == reference_timestamp:
@@ -1596,8 +1598,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
           if not event:
             break
 
-          event_identifier = event.GetIdentifier()
-          self._event_heap.PushEvent(event, event_identifier)
+          self._event_heap.PushEvent(event)
 
   def _OpenRead(self):
     """Opens the storage file for reading."""
@@ -2244,6 +2245,9 @@ class ZIPStorageFile(interface.BaseFileStorage):
 
   def AddEventTag(self, event_tag):
     """Adds an event tag.
+
+    If the event referenced by the tag is already tagged, the comment
+    and labels will be appended to the existing tag.
 
     Args:
       event_tag (EventTag): event tag.

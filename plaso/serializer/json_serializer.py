@@ -4,6 +4,7 @@
 import binascii
 import collections
 import json
+import logging
 
 from dfvfs.path import path_spec as dfvfs_path_spec
 from dfvfs.path import factory as dfvfs_path_spec_factory
@@ -220,6 +221,9 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       # Be strict about which attributes to set in non events.
       if (container_type != u'event' and
           attribute_name not in supported_attribute_names):
+        logging.debug(
+            u'Unusuppored attribute name: {0:s}.{1:s}'.format(
+                container_type, attribute_name))
         continue
 
       if isinstance(attribute_value, dict):

@@ -6,9 +6,11 @@ from plaso.containers import interface as containers_interface
 
 class SerializedStreamIdentifier(
     containers_interface.AttributeContainerIdentifier):
-  """Class that defines the serialized stream attribute container identifier.
+  """The serialized stream attribute container identifier.
 
-  The identifier is used to uniquely identify attribute containers.
+  The identifier is used to uniquely identify attribute containers. Where
+  for example an attribute container is stored as a JSON serialized data in
+  a ZIP file.
 
   Attributes:
     stream_number (int): number of the serialized attribute container stream.

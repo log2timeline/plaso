@@ -5,11 +5,10 @@ from efilter.protocols import structured
 
 
 class AttributeContainerIdentifier(object):
-  """Class that defines the attribute container identifier.
-
-  The identifier is a storage specific value that should not be serialized.
+  """The attribute container identifier.
 
   The identifier is used to uniquely identify attribute containers.
+  The value should be unique at runtime an in storage.
   """
 
   def __init__(self):
@@ -27,7 +26,7 @@ class AttributeContainerIdentifier(object):
 
 
 class AttributeContainer(object):
-  """Class that defines the attribute container interface.
+  """The attribute container interface.
 
   This is the the base class for those object that exists primarily as
   a container of attributes with basic accessors and mutators.
@@ -36,9 +35,8 @@ class AttributeContainer(object):
   the container type e.g. the container type "event" identifiers an event
   object.
 
-  Attributes are defined as be public class members which should be of an
-  serializable type. Protected and private class members are not to be
-  serialized.
+  Attributes are public class members of an serializable type. Protected
+  and private class members are not to be serialized.
   """
   CONTAINER_TYPE = None
 
