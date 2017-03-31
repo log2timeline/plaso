@@ -401,6 +401,7 @@ class GZIPStorageMergeReader(interface.StorageMergeReader):
       # of memory.
       self._data_buffer = self._gzip_file.read(self._DATA_BUFFER_SIZE)
 
+
     number_of_containers = 0
     while self._data_buffer:
       lines = self._data_buffer.splitlines(True)
