@@ -9,17 +9,17 @@ from plaso.formatters import android_webview
 from tests.formatters import test_lib
 
 
-class WebViewCookieExpiryEventFormatterTest(test_lib.EventFormatterTestCase):
+class AndroidWebViewCookieEventFormatterTest(test_lib.EventFormatterTestCase):
   """Tests for the Android WebView formatter."""
 
   def testInitialization(self):
     """Tests the initialization."""
-    event_formatter = android_webview.WebViewCookieExpiryEventFormatter()
+    event_formatter = android_webview.AndroidWebViewCookieEventFormatter()
     self.assertIsNotNone(event_formatter)
 
   def testGetFormatStringAttributeNames(self):
     """Tests the GetFormatStringAttributeNames function."""
-    event_formatter = android_webview.WebViewCookieExpiryEventFormatter()
+    event_formatter = android_webview.AndroidWebViewCookieEventFormatter()
 
     expected_attribute_names = [
         u'domain', u'path', u'name', u'value', u'secure']

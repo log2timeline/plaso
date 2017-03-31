@@ -56,7 +56,7 @@ class USBPluginTest(test_lib.RegistryPluginTestCase):
         u'serial: 6&2ab01149&0&2 '
         u'subkey_name: VID_0E0F&PID_0002 '
         u'vendor: VID_0E0F').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

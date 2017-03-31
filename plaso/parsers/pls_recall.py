@@ -5,6 +5,9 @@ import os
 
 import construct
 
+from dfdatetime import delphi_date_time as dfdatetime_delphi_date_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -14,33 +17,31 @@ from plaso.parsers import interface
 from plaso.parsers import manager
 
 
-class PlsRecallEvent(time_events.DelphiTimeEvent):
-  """Convenience class for a PL/SQL Recall file container."""
+class PlsRecallEventData(events.EventData):
+  """PL/SQL Recall event data.
+
+  Attributes:
+    database_name (str): name of the database.
+    query (str): PL/SQL query.
+    sequence_number (int): sequence number.
+    username (str): username used to query.
+  """
 
   DATA_TYPE = u'PLSRecall:event'
 
-  def __init__(self, delphi_time, sequence, user, database, query):
-    """Initializes the event object.
-
-    Args:
-      delphi_time: the Delphi time value when the entry was created.
-      sequence: Sequence indicates the order of execution.
-      username: The username that made the query.
-      database_name: String containing the database name.
-      query: String containing the PL/SQL query.
-    """
-    super(PlsRecallEvent, self).__init__(
-        delphi_time, eventdata.EventTimestamp.CREATION_TIME)
-    self.database_name = database
-    self.query = query
-    self.sequence = sequence
-    self.username = user
+  def __init__(self):
+    """Initializes event data."""
+    super(PlsRecallEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.database_name = None
+    self.query = None
+    self.sequence_number = None
+    self.username = None
 
 
 class PlsRecallParser(interface.FileObjectParser):
   """Parse PL/SQL Recall files.
 
-  Parser is based on a::
+  Parser is based on:
 
     TRecallRecord = packed record
       Sequence: Integer;
@@ -50,8 +51,8 @@ class PlsRecallParser(interface.FileObjectParser):
       Text: array[0..4000] of Char;
     end;
 
-    Delphi TDateTime is a little endian 64-bit
-    floating point without any time zone information
+    Delphi TDateTime is a little-endian 64-bit floating-point value without
+    time zone information.
   """
 
   _INITIAL_FILE_OFFSET = None
@@ -66,7 +67,7 @@ class PlsRecallParser(interface.FileObjectParser):
   NAME = u'pls_recall'
   DESCRIPTION = u'Parser for PL/SQL Recall files.'
 
-  PLS_STRUCT = construct.Struct(
+  _PLS_RECALL_RECORD = construct.Struct(
       u'PL/SQL_Recall',
       construct.ULInt32(u'Sequence'),
       construct.LFloat64(u'TimeStamp'),
@@ -78,8 +79,9 @@ class PlsRecallParser(interface.FileObjectParser):
     """Parses a PLSRecall.dat file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.
@@ -96,16 +98,24 @@ class PlsRecallParser(interface.FileObjectParser):
           u'Not a PLSRecall File, unable to parse.')
 
     file_object.seek(0, os.SEEK_SET)
-    pls_record = self.PLS_STRUCT.parse_stream(file_object)
+    pls_record = self._PLS_RECALL_RECORD.parse_stream(file_object)
 
     while pls_record:
-      event_object = PlsRecallEvent(
-          pls_record.TimeStamp, pls_record.Sequence, pls_record.Username,
-          pls_record.Database, pls_record.Query)
-      parser_mediator.ProduceEvent(event_object)
+      event_data = PlsRecallEventData()
+
+      event_data.database_name = pls_record.Database
+      event_data.sequence_number = pls_record.Sequence
+      event_data.query = pls_record.Query
+      event_data.username = pls_record.Username
+
+      date_time = dfdatetime_delphi_date_time.DelphiDateTime(
+          timestamp=pls_record.TimeStamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
       try:
-        pls_record = self.PLS_STRUCT.parse_stream(file_object)
+        pls_record = self._PLS_RECALL_RECORD.parse_stream(file_object)
       except construct.FieldError:
         # The code has reached the end of file (EOF).
         break
@@ -114,10 +124,10 @@ class PlsRecallParser(interface.FileObjectParser):
     """Check if the file is a PLSRecall.dat file.
 
     Args:
-      file_object: file that we want to check.
+      file_object (dfvfs.FileIO): a file-like object.
 
     Returns:
-      True if this is a valid PLSRecall.dat file, otherwise False.
+      bool: True if this is a valid PLSRecall.dat file, False otherwise.
     """
     file_object.seek(0, os.SEEK_SET)
 
@@ -125,17 +135,8 @@ class PlsRecallParser(interface.FileObjectParser):
     # size (4125 bytes) TRecallRecord records. It should be
     # noted that the query value is free form.
     try:
-      structure = self.PLS_STRUCT.parse_stream(file_object)
+      structure = self._PLS_RECALL_RECORD.parse_stream(file_object)
     except (IOError, construct.FieldError):
-      return False
-
-    # Verify few entries inside the structure.
-    try:
-      timestamp = timelib.Timestamp.FromDelphiTime(structure.TimeStamp)
-    except ValueError:
-      return False
-
-    if timestamp <= 0:
       return False
 
     # Verify that the timestamp is no more than six years into the future.
@@ -144,8 +145,10 @@ class PlsRecallParser(interface.FileObjectParser):
     # TODO: Add a check for similarly valid value back in time. Maybe if it the
     # timestamp is before 1980 we are pretty sure it is invalid?
     # TODO: This is a very flaky assumption. Find a better one.
-    current_timestamp = timelib.Timestamp.GetNow()
-    if timestamp > current_timestamp + self._SIX_YEARS_IN_MICRO_SECONDS:
+    future_timestamp = (
+        timelib.Timestamp.GetNow() + self._SIX_YEARS_IN_MICRO_SECONDS)
+
+    if structure.TimeStamp > future_timestamp:
       return False
 
     # TODO: Add other verification checks here. For instance make sure

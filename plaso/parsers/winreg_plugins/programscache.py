@@ -3,7 +3,9 @@
 
 import construct
 
+from plaso.containers import time_events
 from plaso.containers import windows_events
+from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.parsers.shared import shell_items
 from plaso.parsers.winreg_plugins import interface
@@ -43,11 +45,10 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
     """Extracts event objects from a Explorer ProgramsCache value data.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      registry_key: A Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
-      registry_value: A Windows Registry value (instance of
-                     dfwinreg.WinRegistryValue).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
+      registry_value (dfwinreg.WinRegistryValue): Windows Registry value.
     """
     value_data = registry_value.data
     if len(value_data) < 4:
@@ -62,7 +63,7 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
       return
 
     format_version = header_struct.get(u'format_version')
-    if format_version not in [0x01, 0x09, 0x0c, 0x13]:
+    if format_version not in (0x01, 0x09, 0x0c, 0x13):
       parser_mediator.ProduceExtractionError(
           u'unsupported format version: 0x{0:08x}'.format(format_version))
       return
@@ -94,7 +95,7 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
       sentinel = entry_footer_struct.get(u'sentinel')
 
     link_targets = []
-    while sentinel in [0x00, 0x01]:
+    while sentinel in (0x00, 0x01):
       try:
         entry_header_struct = self._ENTRY_HEADER_STRUCT.parse(
             value_data[value_data_offset:])
@@ -136,24 +137,25 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
 
     # TODO: recover remaining items.
 
-    list_name = registry_value.name
-    list_values = u' '.join([
+    event_data = windows_events.WindowsRegistryListEventData()
+    event_data.key_path = registry_key.path
+    event_data.list_name = registry_value.name
+    event_data.list_values = u' '.join([
         u'{0:d}: {1:s}'.format(index, link_target)
         for index, link_target in enumerate(link_targets)])
+    event_data.value_name = registry_value.name
 
-    event_object = windows_events.WindowsRegistryListEvent(
-        registry_key.last_written_time, registry_key.path,
-        list_name, list_values, value_name=registry_value.name)
+    event = time_events.DateTimeValuesEvent(
+        registry_key.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    parser_mediator.ProduceEvent(event_object)
-
-  def GetEntries(self, parser_mediator, registry_key, **kwargs):
-    """Extracts event objects from a Explorer ProgramsCache Registry key.
+  def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
+    """Extracts events from a Windows Registry key.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      registry_key: A Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     registry_value = registry_key.GetValueByName(u'ProgramsCache')
     if registry_value:
@@ -170,8 +172,8 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
     values_dict = {}
     for registry_value in registry_key.GetValues():
       # Ignore the default value.
-      if not registry_value.name or registry_value.name in [
-          u'ProgramsCache', u'ProgramsCacheSMP', u'ProgramsCacheTBP']:
+      if not registry_value.name or registry_value.name in (
+          u'ProgramsCache', u'ProgramsCacheSMP', u'ProgramsCacheTBP'):
         continue
 
       # Ignore any value that is empty or that does not contain a string.
@@ -180,11 +182,14 @@ class ExplorerProgramsCachePlugin(interface.WindowsRegistryPlugin):
 
       values_dict[registry_value.name] = registry_value.GetDataAsObject()
 
-    event_object = windows_events.WindowsRegistryEvent(
-        registry_key.last_written_time, registry_key.path, values_dict,
-        offset=registry_key.offset)
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = registry_key.path
+    event_data.offset = registry_key.offset
+    event_data.regvalue = values_dict
 
-    parser_mediator.ProduceEvent(event_object)
+    event = time_events.DateTimeValuesEvent(
+        registry_key.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 winreg.WinRegistryParser.RegisterPlugin(ExplorerProgramsCachePlugin)

@@ -344,10 +344,10 @@ class ParserMediator(object):
     return u'/'.join(self._parser_chain_components)
 
   def MatchesFilter(self, event):
-    """Checks if the event object matches the filter.
+    """Checks if an event matches the filter.
 
     Args:
-      event (EventObject): event object.
+      event (EventObject): event.
 
     Returns:
       bool: True if the event matches the filter.
@@ -364,10 +364,10 @@ class ParserMediator(object):
 
     Args:
       event (EventObject): event.
-      parser_chain (Optional[str]): parser chain.
+      parser_chain (Optional[str]): parsing chain up to this point.
       file_entry (Optional[dfvfs.FileEntry]): file entry, where None will
-          default to the current file entry set in the mediator.
-      query (Optional[str]): query string.
+          use the current file entry set in the mediator.
+      query (Optional[str]): query that was used to obtain the event.
     """
     # TODO: rename this to event.parser_chain or equivalent.
     if not getattr(event, u'parser', None) and parser_chain:
@@ -468,12 +468,27 @@ class ParserMediator(object):
     self._storage_writer.AddEventSource(event_source)
     self._number_of_event_sources += 1
 
+  def ProduceEventWithEventData(self, event, event_data):
+    """Produces an event.
+
+    Args:
+      event (EventObject): event.
+      event_data (EventData): event data.
+    """
+    # TODO: store event data and event seperately.
+    for attribute_name, attribute_value in event_data.GetAttributes():
+      setattr(event, attribute_name, attribute_value)
+
+    self.ProduceEvent(event)
+
   def ProduceExtractionError(self, message, path_spec=None):
     """Produces an extraction error.
 
     Args:
       message (str): message of the error.
-      path_spec (Optional[dfvfs.PathSpec]): path specification.
+      path_spec (Optional[dfvfs.PathSpec]): path specification, where None
+          will use the path specification of current file entry set in
+          the mediator.
 
     Raises:
       RuntimeError: when storage writer is not set.

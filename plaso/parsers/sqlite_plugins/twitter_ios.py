@@ -6,121 +6,69 @@ SQLite database path:
 SQLite database name: twitter.db
 """
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class TwitterIOSContactEvent(time_events.PosixTimeEvent):
-  """Parent class for Twitter on iOS 8+ contacts events.
+class TwitterIOSContactEventData(events.EventData):
+  """Twitter on iOS 8+ contact event data.
 
   Attributes:
-    description: A string containing the contact's profile description.
-    followers_cnt: An integer containing the number of followers.
-    following: An integer value to describe if the contact is following the
-               user's account, represented by 0 or 1.
-    following_cnt: An integer containing the number of following.
-    location: A string containing the contact's profile location.
-    name: A string containing the contact's profile name.
-    profile_url: A string containing the contact's  profile picture URL.
-    screen_name: A string containing the contact's screen name.
-    url: A string containing the contact's profile URL.
+    description (str): description of the profile.
+    followers_count (int): number of accounts following the contact.
+    following_count (int): number of accounts the contact is following.
+    following (int): 1 if the contact is following the user's account, 0 if not.
+    location (str): location of the profile.
+    name (str): name of the profile.
+    profile_url (str): URL of the profile picture.
+    screen_name (str): screen name.
+    url (str): URL of the profile.
   """
 
-  def __init__(
-      self, posix_time, posix_time_description, screen_name, name, profile_url,
-      location, url, description, following, following_cnt, followers_cnt):
-    """Initalizes a TwitterIOSContacts event.
+  DATA_TYPE = u'twitter:ios:contact'
 
-    Args:
-      posix_time: The POSIX time value, which contains the number of seconds
-                  since January 1, 1970 00:00:00 UTC.
-      posix_time_description: The description of the usage of the timestamp.
-      screen_name: A string containing the contact's screen name.
-      name: A string containing the contact's profile name.
-      profile_url: A string containing the contact's  profile picture URL.
-      location: A string containing the contact's profile location.
-      url: A string containing the contact's profile URL.
-      description: A string containing the contact's profile description.
-      following: An interger value to describe if the contact is following the
-                 user's account, represented by 0 or 1.
-      following_cnt: An integer containing the number of following.
-      followers_cnt: An integer containing the number of followers.
-    """
-    super(TwitterIOSContactEvent, self).__init__(
-        posix_time, posix_time_description)
-    self.description = description
-    self.followers_cnt = followers_cnt
-    self.following = following
-    self.following_cnt = following_cnt
-    self.location = location
-    self.name = name
-    self.profile_url = profile_url
-    self.screen_name = screen_name
-    self.url = url
+  def __init__(self):
+    """Initializes event data."""
+    super(TwitterIOSContactEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.description = None
+    self.followers_count = None
+    self.following = None
+    self.following_count = None
+    self.location = None
+    self.name = None
+    self.profile_url = None
+    self.screen_name = None
+    self.url = None
 
 
-class TwitterIOSContactCreationEvent(TwitterIOSContactEvent):
-  """Convenience class for Twitter contacts creation events."""
-  DATA_TYPE = u'twitter:ios:contact_creation'
-
-
-class TwitterIOSContactUpdateEvent(TwitterIOSContactEvent):
-  """Convenience class for Twitter contacts update events."""
-  DATA_TYPE = u'twitter:ios:contact_update'
-
-
-class TwitterIOSStatusEvent(time_events.PosixTimeEvent):
+class TwitterIOSStatusEventData(events.EventData):
   """Parent class for Twitter on iOS 8+ status events.
 
   Attributes:
-    favorite_cnt: An integer containing the number of times the status message
-                  has been favorited.
-    favorited: An integer value to mark status as favorite by the account.
-    name: A string containing the user's profile name.
-    retweet_cnt: A string containing the number of times the status message has
-                 been retweeted.
-    text: A string containing the content of the status messsage.
-    user_id: An integer containing the user unique identifier.
+    favorite_count (int): number of times the status message has been favorited.
+    favorited (int): value to mark status as favorite by the account.
+    name (str): user's profile name.
+    retweet_count (str): number of times the status message has been retweeted.
+    text (str): content of the status messsage.
+    user_id (int): user unique identifier.
   """
 
-  def __init__(
-      self, posix_time, posix_time_description, text, user_id, name,
-      retweet_cnt, favorite_cnt, favorited):
-    """Initalizes a TwitterIOSStatuses event.
+  DATA_TYPE = u'twitter:ios:status'
 
-    Args:
-      posix_time: the POSIX time value, which contains the number of seconds
-                  since January 1, 1970 00:00:00 UTC.
-      posix_time_description: The description of the usage of the timestamp.
-      text: A string containing the content of the status messsage.
-      user_id: An integer containing the user unique identifier.
-      name: A string containing the user's profile name.
-      retweet_cnt: A string containing the number of times the status message
-                   has been retweeted.
-      favorite_cnt: An integer containing the number of times the status
-                    message has been favorited.
-      favorited: An integer value to mark status as favorite by the account.
-    """
-    super(TwitterIOSStatusEvent, self).__init__(
-        posix_time, posix_time_description)
-    self.favorite_cnt = favorite_cnt
-    self.favorited = favorited
-    self.name = name
-    self.retweet_cnt = retweet_cnt
-    self.text = text
-    self.user_id = user_id
-
-
-class TwitterIOSStatusCreationEvent(TwitterIOSStatusEvent):
-  """Convenience class for Twitter status creation events."""
-  DATA_TYPE = u'twitter:ios:status_creation'
-
-
-class TwitterIOSStatusUpdateEvent(TwitterIOSStatusEvent):
-  """Convenience class for Twitter status update events."""
-  DATA_TYPE = u'twitter:ios:status_update'
+  def __init__(self):
+    """Initializes event data."""
+    super(TwitterIOSStatusEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.favorite_count = None
+    self.favorited = None
+    self.name = None
+    self.retweet_count = None
+    self.text = None
+    self.user_id = None
 
 
 class TwitterIOSPlugin(interface.SQLitePlugin):
@@ -148,47 +96,82 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
     """Parses a contact row from the database.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row resulting from query.
+      query (Optional[str]): query.
     """
-    if row['createdDate'] is not None:
-      event_object = TwitterIOSContactCreationEvent(
-          row['createdDate'], eventdata.EventTimestamp.CREATION_TIME,
-          row['screenName'], row['name'], row['profileImageUrl'],
-          row['location'], row['url'], row['description'], row['following'],
-          row['followingCount'], row['followersCount'])
-      parser_mediator.ProduceEvent(event_object, query=query)
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
 
-    if row['updatedAt'] is not None:
-      event_object = TwitterIOSContactUpdateEvent(
-          row['updatedAt'], eventdata.EventTimestamp.UPDATE_TIME,
-          row['screenName'], row['name'], row['profileImageUrl'],
-          row['location'], row['url'], row['description'], row['following'],
-          row['followingCount'], row['followersCount'])
-      parser_mediator.ProduceEvent(event_object, query=query)
+    event_data = TwitterIOSContactEventData()
+    event_data.description = row['description']
+    event_data.followers_count = row['followersCount']
+    event_data.following = row['following']
+    event_data.following_count = row['followingCount']
+    event_data.location = row['location']
+    event_data.name = row['name']
+    event_data.profile_url = row['profileImageUrl']
+    event_data.query = query
+    event_data.screen_name = row['screenName']
+    event_data.url = row['url']
+
+    timestamp = row['createdDate']
+    if timestamp:
+      # Convert the floating point value to an integer.
+      timestamp = int(timestamp)
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.CREATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    timestamp = row['updatedAt']
+    if timestamp:
+      # Convert the floating point value to an integer.
+      timestamp = int(timestamp)
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.UPDATE_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseStatusRow(self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a contact row from the database.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row resulting from query.
+      query (Optional[str]): query.
     """
-    if row['date'] is not None:
-      event_object = TwitterIOSStatusCreationEvent(
-          row['date'], eventdata.EventTimestamp.CREATION_TIME, row['text'],
-          row['user_id'], row['name'], row['retweetCount'],
-          row['favoriteCount'], row['favorited'])
-      parser_mediator.ProduceEvent(event_object, query=query)
+    # Note that pysqlite does not accept a Unicode string in row['string'] and
+    # will raise "IndexError: Index must be int or string".
 
-    if row['updatedAt'] is not None:
-      event_object = TwitterIOSStatusUpdateEvent(
-          row['updatedAt'], eventdata.EventTimestamp.UPDATE_TIME, row['text'],
-          row['user_id'], row['name'], row['retweetCount'],
-          row['favoriteCount'], row['favorited'])
-      parser_mediator.ProduceEvent(event_object, query=query)
+    event_data = TwitterIOSStatusEventData()
+    event_data.favorite_count = row['favoriteCount']
+    event_data.favorited = row['favorited']
+    event_data.name = row['name']
+    event_data.query = query
+    event_data.retweet_count = row['retweetCount']
+    event_data.text = row['text']
+    event_data.user_id = row['user_id']
+
+    timestamp = row['date']
+    if timestamp:
+      # Convert the floating point value to an integer.
+      timestamp = int(timestamp)
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.CREATION_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    timestamp = row['updatedAt']
+    if timestamp:
+      # Convert the floating point value to an integer.
+      timestamp = int(timestamp)
+      date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.UPDATE_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(TwitterIOSPlugin)

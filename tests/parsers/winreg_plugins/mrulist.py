@@ -87,7 +87,7 @@ class TestMRUListStringPlugin(test_lib.RegistryPluginTestCase):
         u'Index: 1 [MRU Value a]: Some random text here '
         u'Index: 2 [MRU Value c]: C:/looks_legit.exe '
         u'Index: 3 [MRU Value b]: c:/evil.exe').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
@@ -168,7 +168,7 @@ class TestMRUListShellItemListPlugin(test_lib.RegistryPluginTestCase):
         u'Index: 1 [MRU Value a]: Shell item path: '
         u'<My Computer> C:\\Winnt\\Profiles\\Administrator\\Desktop').format(
             key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

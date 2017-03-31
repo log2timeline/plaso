@@ -19,11 +19,10 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     """Retrieves a Windows Registry from a file entry.
 
     Args:
-      file_entry: A file entry object (instance of dfvfs.FileEntry) that
-                  references a test file.
+      file_entry (dfvfs.FileEntry): file entry that references a test file.
 
     Returns:
-      A Windows Registry object (instance of dfwinreg.WinRegistry) or None.
+      dfwinreg.WinRegistry: Windows Registry or None.
     """
     file_object = file_entry.GetFileObject()
     if not file_object:
@@ -42,21 +41,19 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     return win_registry
 
   def _ParseKeyWithPlugin(
-      self, registry_key, plugin_object, file_entry=None,
-      knowledge_base_values=None, parser_chain=None):
-    """Parses a key within a Windows Registry file using the plugin object.
+      self, registry_key, plugin, file_entry=None, knowledge_base_values=None,
+      parser_chain=None):
+    """Parses a key within a Windows Registry file using the plugin.
 
     Args:
-      registry_key: a Windows Registry Key.
-      plugin_object: The plugin object.
-      file_entry: Optional file entry object (instance of dfvfs.FileEntry).
-      knowledge_base_values: Optional dict containing the knowledge base
-                             values.
-      parser_chain: Optional string containing the parsing chain up to this
-                    point.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry Key.
+      plugin (WindowsRegistryPlugin): Windows Registry plugin.
+      file_entry (Optional[dfvfs.FileEntry]): file entry.
+      knowledge_base_values (Optional[dict[str, str]}): knowledge base values.
+      parser_chain (Optional[str]): parsing chain up to this point.
 
     Returns:
-      A storage writer object (instance of FakeStorageWriter).
+      FakeStorageWriter: storage writer.
     """
     self.assertNotEqual(registry_key, None)
 
@@ -73,7 +70,7 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
     # parser chain argument is supplied.
     if parser_chain is None:
       # AppendToParserChain needs to be run after SetFileEntry.
-      parser_mediator.AppendToParserChain(plugin_object)
+      parser_mediator.AppendToParserChain(plugin)
 
     else:
       # In the rare case that a test is checking for a particular chain, we
@@ -81,19 +78,19 @@ class RegistryPluginTestCase(test_lib.ParserTestCase):
       # as access to the parser chain should be very infrequent.
       parser_mediator._parser_chain_components = parser_chain.split(u'/')
 
-    plugin_object.Process(parser_mediator, registry_key)
+    plugin.Process(parser_mediator, registry_key)
 
     return storage_writer
 
-  # TODO: deprecate the usage of "event_object.regvalue".
-  def _TestRegvalue(self, event_object, identifier, expected_value):
-    """Tests a specific 'regvalue' attribute within the event object.
+  # TODO: deprecate the usage of "event.regvalue".
+  def _TestRegvalue(self, event, identifier, expected_value):
+    """Tests a specific 'regvalue' attribute within the event.
 
     Args:
-      event_object: the event object (instance of EventObject).
+      event (EventObject): event.
       identifier: the identifier of the 'regvalue' attribute.
       expected_value: the expected value of the 'regvalue' attribute.
     """
-    self.assertTrue(hasattr(event_object, u'regvalue'))
-    self.assertIn(identifier, event_object.regvalue)
-    self.assertEqual(event_object.regvalue[identifier], expected_value)
+    self.assertTrue(hasattr(event, u'regvalue'))
+    self.assertIn(identifier, event.regvalue)
+    self.assertEqual(event.regvalue[identifier], expected_value)

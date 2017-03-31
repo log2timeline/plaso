@@ -35,47 +35,47 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     self.assertEqual(len(storage_writer.events), 5)
 
     # A shortcut event object.
-    event_object = storage_writer.events[0]
+    event = storage_writer.events[0]
 
     expected_string = u'@%windir%\\system32\\migwiz\\wet.dll,-590'
-    self.assertEqual(event_object.description, expected_string)
+    self.assertEqual(event.description, expected_string)
 
     expected_string = u'.\\migwiz\\migwiz.exe'
-    self.assertEqual(event_object.relative_path, expected_string)
+    self.assertEqual(event.relative_path, expected_string)
 
     expected_string = u'%windir%\\system32\\migwiz'
-    self.assertEqual(event_object.working_directory, expected_string)
+    self.assertEqual(event.working_directory, expected_string)
 
     expected_string = u'%windir%\\system32\\migwiz\\migwiz.exe'
-    self.assertEqual(event_object.icon_location, expected_string)
-    self.assertEqual(event_object.env_var_location, expected_string)
+    self.assertEqual(event.icon_location, expected_string)
+    self.assertEqual(event.env_var_location, expected_string)
 
     # The last accessed timestamp.
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-13 23:29:02.849131')
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+        event.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     # The creation timestamp.
-    event_object = storage_writer.events[1]
+    event = storage_writer.events[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-13 23:29:02.849131')
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+        event.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     # The last modification timestamp.
-    event_object = storage_writer.events[2]
+    event = storage_writer.events[2]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-14 01:39:18.220000')
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+        event.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'[@%windir%\\system32\\migwiz\\wet.dll,-590] '
         u'File size: 544768 '
         u'File attribute flags: 0x00000020 '
@@ -84,23 +84,23 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         u'Working dir: %windir%\\system32\\migwiz '
         u'Icon location: %windir%\\system32\\migwiz\\migwiz.exe')
 
-    expected_msg_short = (
+    expected_short_message = (
         u'[@%windir%\\system32\\migwiz\\wet.dll,-590]')
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     # A distributed link tracking event object.
-    event_object = storage_writer.events[4]
+    event = storage_writer.events[4]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-14 05:45:20.500012')
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+        event.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_uuid = u'846ee3bb-7039-11de-9d20-001d09fa5a1c'
-    self.assertEqual(event_object.uuid, expected_uuid)
-    self.assertEqual(event_object.mac_address, u'00:1d:09:fa:5a:1c')
+    self.assertEqual(event.uuid, expected_uuid)
+    self.assertEqual(event.mac_address, u'00:1d:09:fa:5a:1c')
 
   @shared_test_lib.skipUnlessHasTestFile([u'NeroInfoTool.lnk'])
   def testParseLinkTargetIdentifier(self):
@@ -111,9 +111,9 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     self.assertEqual(len(storage_writer.events), 20)
 
     # A shortcut event object.
-    event_object = storage_writer.events[16]
+    event = storage_writer.events[16]
 
-    expected_msg = (
+    expected_message = (
         u'[Nero InfoTool provides you with information about the most '
         u'important features of installed drives, inserted discs, installed '
         u'software and much more. With Nero InfoTool you can find out all '
@@ -134,20 +134,20 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         u'Link target: <My Computer> C:\\Program Files (x86)\\Nero\\Nero 9\\'
         u'Nero InfoTool\\InfoTool.exe')
 
-    expected_msg_short = (
+    expected_short_message = (
         u'[Nero InfoTool provides you with information about the most '
         u'important feature...')
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
     # A shell item event object.
-    event_object = storage_writer.events[12]
+    event = storage_writer.events[12]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-06-05 20:13:20')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
-    expected_msg = (
+    expected_message = (
         u'Name: InfoTool.exe '
         u'Long name: InfoTool.exe '
         u'NTFS file reference: 81349-1 '
@@ -155,12 +155,12 @@ class WinLnkParserTest(test_lib.ParserTestCase):
         u'Nero 9\\Nero InfoTool\\InfoTool.exe '
         u'Origin: NeroInfoTool.lnk')
 
-    expected_msg_short = (
+    expected_short_message = (
         u'Name: InfoTool.exe '
         u'NTFS file reference: 81349-1 '
         u'Origin: NeroInfoTool.lnk')
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

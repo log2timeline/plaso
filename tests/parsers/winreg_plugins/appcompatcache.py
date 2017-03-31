@@ -167,7 +167,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_path = u'\\??\\C:\\WINDOWS\\system32\\hticons.dll'
     expected_message = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event_object.keyname, event_object_index + 1, expected_path)
+        event_object.key_path, event_object_index + 1, expected_path)
     expected_short_message = u'Path: {0:s}'.format(expected_path)
 
     self._TestGetMessageStrings(
@@ -207,7 +207,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
     expected_path = (
         u'\\??\\C:\\WINDOWS\\Microsoft.NET\\Framework\\v1.1.4322\\ngen.exe')
     expected_message = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event_object.keyname, event_object_index + 1, expected_path)
+        event_object.key_path, event_object_index + 1, expected_path)
     expected_short_message = u'Path: {0:s}'.format(expected_path)
 
     self._TestGetMessageStrings(
@@ -244,7 +244,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_path = u'\\??\\C:\\Windows\\SYSTEM32\\WISPTIS.EXE'
     expected_message = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event_object.keyname, event_object_index + 1, expected_path)
+        event_object.key_path, event_object_index + 1, expected_path)
     expected_short_message = u'Path: {0:s}'.format(expected_path)
 
     self._TestGetMessageStrings(
@@ -283,7 +283,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_path = u'\\??\\C:\\Windows\\PSEXESVC.EXE'
     expected_message = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event_object.keyname, event_object_index + 1, expected_path)
+        event_object.key_path, event_object_index + 1, expected_path)
     expected_short_message = u'Path: {0:s}'.format(expected_path)
 
     self._TestGetMessageStrings(
@@ -332,7 +332,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_path = u'SYSVOL\\Windows\\System32\\wbem\\WmiPrvSE.exe'
     expected_message = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event_object.keyname, event_object_index + 1, expected_path)
+        event_object.key_path, event_object_index + 1, expected_path)
     expected_short_message = u'Path: {0:s}'.format(expected_path)
 
     self._TestGetMessageStrings(
@@ -378,7 +378,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_path = u'SYSVOL\\Windows\\System32\\dllhost.exe'
     expected_message = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event_object.keyname, event_object_index + 1, expected_path)
+        event_object.key_path, event_object_index + 1, expected_path)
     expected_short_message = u'Path: {0:s}'.format(expected_path)
 
     self._TestGetMessageStrings(
@@ -426,7 +426,7 @@ class AppCompatCacheRegistryPluginTest(test_lib.RegistryPluginTestCase):
 
     expected_path = u'C:\\Windows\\system32\\MpSigStub.exe'
     expected_message = u'[{0:s}] Cached entry: {1:d} Path: {2:s}'.format(
-        event_object.keyname, event_object_index + 1, expected_path)
+        event_object.key_path, event_object_index + 1, expected_path)
     expected_short_message = u'Path: {0:s}'.format(expected_path)
 
     self._TestGetMessageStrings(

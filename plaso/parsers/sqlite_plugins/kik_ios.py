@@ -5,38 +5,36 @@ Kik messages on iOS devices are stored in an
 SQLite database file named kik.sqlite.
 """
 
+from dfdatetime import cocoa_time as dfdatetime_cocoa_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class KikIOSMessageEvent(time_events.CocoaTimeEvent):
-  """Convenience class for a Kik message event."""
+class KikIOSMessageEventData(events.EventData):
+  """Kik message event data.
+
+  Args:
+    body (str): content of the message.
+    message_status (str): message status, such as:
+        read, unread, not sent, delivered, etc.
+    message_type (str): message type, either Sent or Received.
+    username (str): unique username of the sender or receiver.
+  """
 
   DATA_TYPE = u'ios:kik:messaging'
 
-  def __init__(
-      self, cocoa_time, identifier, username, displayname,
-      message_status, message_type, body):
-    """Initializes the event object.
-
-    Args:
-      cocoa_time: The Cocoa time value.
-      identifier: The row identifier.
-      username: The unique username of the sender/receiver.
-      message_status:  Read, unread, not sent, delivered, etc.
-      message_type: Sent or Received.
-      body: Content of the message.
-    """
-    super(KikIOSMessageEvent, self).__init__(
-        cocoa_time, eventdata.EventTimestamp.CREATION_TIME)
-    self.offset = identifier
-    self.username = username
-    self.displayname = displayname
-    self.message_status = message_status
-    self.message_type = message_type
-    self.body = body
+  def __init__(self):
+    """Initializes event data."""
+    super(KikIOSMessageEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.body = None
+    self.displayname = None
+    self.message_status = None
+    self.message_type = None
+    self.username = None
 
 
 class KikIOSPlugin(interface.SQLitePlugin):
@@ -59,16 +57,29 @@ class KikIOSPlugin(interface.SQLitePlugin):
     """Parses a message row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row.
+      query (Optional[str]): query.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
 
-    event_object = KikIOSMessageEvent(
-        row['ZRECEIVEDTIMESTAMP'], row['id'], row['ZUSERNAME'],
-        row['ZDISPLAYNAME'], row['ZSTATE'], row['ZTYPE'], row['ZBODY'])
-    parser_mediator.ProduceEvent(event_object, query=query)
+    event_data = KikIOSMessageEventData()
+    event_data.body = row['ZBODY']
+    event_data.displayname = row['ZDISPLAYNAME']
+    event_data.message_status = row['ZSTATE']
+    event_data.message_type = row['ZTYPE']
+    event_data.offset = row['id']
+    event_data.query = query
+    event_data.username = row['ZUSERNAME']
+
+    # Convert the floating point value to an integer.
+    timestamp = int(row['ZRECEIVEDTIMESTAMP'])
+    date_time = dfdatetime_cocoa_time.CocoaTime(timestamp=timestamp)
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.CREATION_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
+
 
 sqlite.SQLiteParser.RegisterPlugin(KikIOSPlugin)

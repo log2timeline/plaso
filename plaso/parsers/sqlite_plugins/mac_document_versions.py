@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 """Parser for the Mac OS X Document Versions files."""
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.parsers import sqlite
@@ -10,32 +13,28 @@ from plaso.parsers.sqlite_plugins import interface
 __author__ = 'Joaquin Moreno Garijo (Joaquin.MorenoGarijo.2013@live.rhul.ac.uk)'
 
 
-class MacDocumentVersionsEvent(time_events.PosixTimeEvent):
-  """Convenience class for a entry from the Document Versions database."""
+class MacDocumentVersionsEventData(events.EventData):
+  """Mac OS X Document Versions database event data.
+
+  Attributes:
+    name (str): name of the original file.
+    path (str): path from the original file.
+    version_path (str): path to the version copy of the original file.
+    last_time (str): the system user ID of the user that opened the file.
+    user_sid (str): identification user ID that open the file.
+  """
 
   DATA_TYPE = u'mac:document_versions:file'
 
-  def __init__(self, posix_time, name, path, version_path, last_time, user_sid):
-    """Initializes the event object.
-
-    Args:
-      posix_time: The POSIX time value.
-      name: name of the original file.
-      path: path from the original file.
-      version_path: path to the version copy of the original file.
-      last_time: the system user ID of the user that opened the file.
-      user_sid: identification user ID that open the file.
-    """
-    super(MacDocumentVersionsEvent, self).__init__(
-        posix_time, eventdata.EventTimestamp.CREATION_TIME)
-
-    self.name = name
-    self.path = path
-    self.version_path = version_path
+  def __init__(self):
+    """Initializes event data."""
+    super(MacDocumentVersionsEventData, self).__init__(data_type=self.DATA_TYPE)
     # TODO: shouldn't this be a separate event?
-    self.last_time = last_time
-    # Note that the user_sid value is expected to be a string.
-    self.user_sid = u'{0!s}'.format(user_sid)
+    self.last_time = None
+    self.name = None
+    self.path = None
+    self.user_sid = None
+    self.version_path = None
 
 
 class MacDocumentVersionsPlugin(interface.SQLitePlugin):
@@ -69,9 +68,10 @@ class MacDocumentVersionsPlugin(interface.SQLitePlugin):
     """Parses a document versions row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row.
+      query (Optional[str]): query.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
@@ -86,10 +86,20 @@ class MacDocumentVersionsPlugin(interface.SQLitePlugin):
     version_path = self.ROOT_VERSION_PATH + row['version_path']
     path, _, _ = row['path'].rpartition(u'/')
 
-    event_object = MacDocumentVersionsEvent(
-        row['version_time'], row['name'], path, version_path,
-        row['last_time'], user_sid)
-    parser_mediator.ProduceEvent(event_object, query=query)
+    event_data = MacDocumentVersionsEventData()
+    # TODO: shouldn't this be a separate event?
+    event_data.last_time = row['last_time']
+    event_data.name = row['name']
+    event_data.path = path
+    event_data.query = query
+    # Note that the user_sid value is expected to be a string.
+    event_data.user_sid = u'{0!s}'.format(user_sid)
+    event_data.version_path = version_path
+
+    date_time = dfdatetime_posix_time.PosixTime(timestamp=row['version_time'])
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.CREATION_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(MacDocumentVersionsPlugin)

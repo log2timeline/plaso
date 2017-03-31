@@ -31,7 +31,6 @@ class AnalysisReport(interface.AttributeContainer):
       text: optional string containing the report text.
     """
     super(AnalysisReport, self).__init__()
-    self._event_tags = []
     self.filter_string = None
     self.images = None
     self.plugin_name = plugin_name
@@ -52,13 +51,6 @@ class AnalysisReport(interface.AttributeContainer):
       attribute_value = getattr(self, attribute_name, None)
       if attribute_value is None:
         continue
-
-      if attribute_name == u'_event_tags':
-        event_tags = []
-        for event_tag in attribute_value:
-          event_tags.append(event_tag.CopyToDict())
-
-        attribute_value = event_tags
 
       dictionary[attribute_name] = attribute_value
 
@@ -89,22 +81,6 @@ class AnalysisReport(interface.AttributeContainer):
     string_list.append(self.text)
 
     return u'\n'.join(string_list)
-
-  def GetTags(self):
-    """Retrieves the event tags.
-
-    Returns:
-      A list of of event tags (instances of EventTag).
-    """
-    return self._event_tags
-
-  def SetTags(self, event_tags):
-    """Sets the list of event tags that relate to the report.
-
-    Args:
-      event_tags: a list of event tags (instances of EventTag).
-    """
-    self._event_tags = event_tags
 
 
 manager.AttributeContainersManager.RegisterAttributeContainer(AnalysisReport)

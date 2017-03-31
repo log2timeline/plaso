@@ -4,6 +4,31 @@
 from plaso.containers import interface
 
 
+class CredentialConfiguration(interface.AttributeContainer):
+  """Configuration settings for a credential.
+
+  Attributes:
+    credential_data (bytes): credential data.
+    credential_type (str): credential type.
+    path_spec (dfvfs.PathSpec): path specification.
+  """
+  CONTAINER_TYPE = u'credential_configuration'
+
+  def __init__(
+      self, credential_data=None, credential_type=None, path_spec=None):
+    """Initializes a credential configuration object.
+
+    Args:
+      credential_data (Optional[bytes]): credential data.
+      credential_type (Optional[str]): credential type.
+      path_spec (Optional[dfvfs.PathSpec]): path specification.
+    """
+    super(CredentialConfiguration, self).__init__()
+    self.credential_data = credential_data
+    self.credential_type = credential_type
+    self.path_spec = path_spec
+
+
 class EventExtractionConfiguration(interface.AttributeContainer):
   """Configuration settings for event extraction.
 
@@ -14,6 +39,7 @@ class EventExtractionConfiguration(interface.AttributeContainer):
         events to include.
     text_prepend (str): text to prepend to every event.
   """
+  CONTAINER_TYPE = u'event_extraction_configuration'
 
   def __init__(self):
     """Initializes an event extraction configuration object."""
@@ -36,6 +62,7 @@ class ExtractionConfiguration(interface.AttributeContainer):
         compressed streams should be processed.
     yara_rules_string (str): Yara rule definitions.
   """
+  CONTAINER_TYPE = u'extraction_configuration'
 
   def __init__(self):
     """Initializes an extraction configuration object."""
@@ -52,6 +79,7 @@ class InputSourceConfiguration(interface.AttributeContainer):
   Attributes:
     mount_path (str): path of a "mounted" directory input source.
   """
+  CONTAINER_TYPE = u'input_source'
 
   def __init__(self):
     """Initializes an input source configuration object."""
@@ -78,6 +106,7 @@ class ProfilingConfiguration(interface.AttributeContainer):
     sample_rate (int): the profiling sample rate. Contains the number of event
         sources processed.
   """
+  CONTAINER_TYPE = u'profiling_configuration'
 
   def __init__(self):
     """Initializes a profiling configuration object."""
@@ -124,6 +153,7 @@ class ProcessingConfiguration(interface.AttributeContainer):
   """Configuration settings for processing.
 
   Attributes:
+    credentials (list[CredentialConfiguration]): credential configurations.
     data_location (str): path to the data files.
     debug_output (bool): True if debug output should be enabled.
     event_extraction (EventExtractionConfiguration): event extraction
@@ -138,10 +168,12 @@ class ProcessingConfiguration(interface.AttributeContainer):
     profiling (ProfilingConfiguration): profiling configuration.
     temporary_directory (str): path of the directory for temporary files.
   """
+  CONTAINER_TYPE = u'processing_configuration'
 
   def __init__(self):
     """Initializes a process configuration object."""
     super(ProcessingConfiguration, self).__init__()
+    self.credentials = []
     self.data_location = None
     self.debug_output = False
     self.event_extraction = EventExtractionConfiguration()

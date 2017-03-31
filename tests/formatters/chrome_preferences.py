@@ -33,5 +33,10 @@ class ChromeExtensionInstallationEventFormatterTest(
   # TODO: add test for GetMessages.
 
 
+# TODO: add tests for ChromeExtensionsAutoupdaterEvent
+# TODO: add tests for ChromeExtensionInstallationEventFormatter
+# TODO: add tests for ChromeContentSettingsExceptionsFormatter
+
+
 if __name__ == '__main__':
   unittest.main()

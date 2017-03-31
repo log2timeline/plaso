@@ -150,8 +150,9 @@ class BencodePlugin(plugins.BasePlugin):
     the plugin.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      data: Bencode data in dictionary form.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      data (dict[str, object]): bencode data values.
 
     Raises:
       WrongBencodePlugin: If this plugin is not able to process the given file.

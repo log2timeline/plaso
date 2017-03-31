@@ -33,7 +33,8 @@ class AppleAccountPlugin(interface.PlistPlugin):
     """Check if it is a valid Apple account plist file name.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       plist_name: name of the plist file.
       top_level: dictionary with the plist file parsed.
     """
@@ -46,8 +47,9 @@ class AppleAccountPlugin(interface.PlistPlugin):
     """Extracts relevant Apple Account entries.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      match: Optional dictionary containing keys extracted from PLIST_KEYS.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
     root = u'/Accounts'
 

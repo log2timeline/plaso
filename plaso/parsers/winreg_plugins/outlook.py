@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 """This file contains an Outlook Registry parser."""
 
+from plaso.containers import time_events
 from plaso.containers import windows_events
+from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -40,13 +42,13 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
 
   _SOURCE_APPEND = u': PST Paths'
 
-  def GetEntries(self, parser_mediator, registry_key, **kwargs):
-    """Collect the values under Outlook and return event for each one.
+  def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
+    """Extracts events from a Windows Registry key.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      registry_key: A Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     values_dict = {}
     for registry_value in registry_key.GetValues():
@@ -63,10 +65,15 @@ class OutlookSearchMRUPlugin(interface.WindowsRegistryPlugin):
       value_integer = registry_value.GetDataAsObject()
       values_dict[registry_value.name] = u'0x{0:08x}'.format(value_integer)
 
-    event_object = windows_events.WindowsRegistryEvent(
-        registry_key.last_written_time, registry_key.path, values_dict,
-        offset=registry_key.offset, source_append=self._SOURCE_APPEND)
-    parser_mediator.ProduceEvent(event_object)
+    event_data = windows_events.WindowsRegistryEventData()
+    event_data.key_path = registry_key.path
+    event_data.offset = registry_key.offset
+    event_data.regvalue = values_dict
+    event_data.source_append = self._SOURCE_APPEND
+
+    event = time_events.DateTimeValuesEvent(
+        registry_key.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 winreg.WinRegistryParser.RegisterPlugin(OutlookSearchMRUPlugin)

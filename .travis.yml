@@ -6,8 +6,8 @@ matrix:
     sudo: required
     python: 2.7
   - os: osx
+    osx_image: xcode8.1
     language: generic
-    env: PYTHONPATH=/Library/Python/2.7/site-packages/
   exclude:
   - os: linux
     dist: trusty
@@ -16,11 +16,11 @@ matrix:
 install:
   - ./config/travis/install.sh
 script:
-  - if test `uname -s` = 'Linux' && test ${TRAVIS_PYTHON_VERSION} = "2.7"; then coverage run --source=plaso --omit="*_test*,*__init__*,*test_lib*" ./run_tests.py; else ./run_tests.py; fi
-  - if test `uname -s` = 'Linux'; then python setup.py build; fi
-  - if test `uname -s` = 'Linux'; then python setup.py sdist; fi
-  - if test `uname -s` = 'Linux'; then python setup.py bdist; fi
-  - if test `uname -s` = 'Linux'; then mkdir -p ${PWD}/tmp/lib/python${TRAVIS_PYTHON_VERSION}/site-packages/ && PYTHONPATH=${PWD}/tmp/lib/python${TRAVIS_PYTHON_VERSION}/site-packages/ python setup.py install --prefix=${PWD}/tmp/; fi
+  - if test ${TRAVIS_OS_NAME} = "osx"; then PYTHONPATH=/Library/Python/2.7/site-packages/ /usr/bin/python run_tests.py; elif test ${TRAVIS_OS_NAME} = "linux"; then if test ${TRAVIS_PYTHON_VERSION} = "2.7"; then coverage run --source=dfwinreg --omit="*_test*,*__init__*,*test_lib*" ./run_tests.py; else ./run_tests.py; fi; fi
+  - if test ${TRAVIS_OS_NAME} = "linux"; then python setup.py build; fi
+  - if test ${TRAVIS_OS_NAME} = "linux"; then python setup.py sdist; fi
+  - if test ${TRAVIS_OS_NAME} = "linux"; then python setup.py bdist; fi
+  - if test ${TRAVIS_OS_NAME} = "linux"; then mkdir -p ${PWD}/tmp/lib/python${TRAVIS_PYTHON_VERSION}/site-packages/ && PYTHONPATH=${PWD}/tmp/lib/python${TRAVIS_PYTHON_VERSION}/site-packages/ python setup.py install --prefix=${PWD}/tmp/; fi
   - PYTHONPATH=${PYTHONPATH}:. ./tests/end-to-end.py --debug -c config/end-to-end.ini
 after_success:
-  - if test `uname -s` = 'Linux' && test ${TRAVIS_PYTHON_VERSION} = "2.7"; then coveralls --verbose; fi
+  - if test ${TRAVIS_OS_NAME} = "linux" && test ${TRAVIS_PYTHON_VERSION} = "2.7"; then coveralls --verbose; fi

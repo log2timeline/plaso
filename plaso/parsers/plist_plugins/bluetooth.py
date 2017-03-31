@@ -35,8 +35,9 @@ class BluetoothPlugin(interface.PlistPlugin):
     """Extracts relevant BT entries.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      match: Optional dictionary containing extracted keys from PLIST_KEYS.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      match (Optional[dict[str: object]]): keys extracted from PLIST_KEYS.
     """
     root = u'/DeviceCache'
 

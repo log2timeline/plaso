@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 """Parser for Android WebView databases."""
 
+from dfdatetime import java_time as dfdatetime_java_time
+from dfdatetime import semantic_time as dfdatetime_semantic_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -11,56 +15,30 @@ from plaso.parsers.cookie_plugins import manager as cookie_plugins_manager
 from plaso.parsers.sqlite_plugins import interface
 
 
-class WebViewCookieExpiryEvent(time_events.JavaTimeEvent):
-  """Convenience class for a WebView cookie expiry event.
+class WebViewCookieEventData(events.EventData):
+  """Android WebView cookie event data.
 
   Attributes:
-    cookie_name: a string containing the name of the cookie.
-    data: a string containing the data stored in the cookie.
-    domain: a string containing the host that set the cookie.
-    identifier: an integer type containing the identifier of the row containing
-                the event information.
-    offset: an integer type containing the identifier of the row containing the
-            event information.
-    path: a string containing the path for which the cookie was set.
-    secure: a boolean indicating if the cookie should only be transmitted over
-            a secure channel.
+    cookie_name (str): name of the cookie.
+    data (str): data stored in the cookie.
+    domain (str): host that set the cookie.
+    path (str): path for which the cookie was set.
+    secure (bool): True if the cookie should only be transmitted over
+        a secure channel.
+    url (str): URL of the cookie.
   """
 
-  DATA_TYPE = u'webview:cookie:expiry'
+  DATA_TYPE = u'webview:cookie'
 
-  def __init__(
-      self, timestamp, identifier, domain, cookie_name, value, path, secure):
-    """Initializes the event.
-
-    Args:
-      timestamp: the Java timestamp which is an integer containing the number
-                 of milliseconds since January 1, 1970, 00:00:00 UTC.
-      identifier: an integer containing the identifier of the row containing
-                the event information.
-      domain: the hostname of host that set the cookie value.
-      cookie_name: the name field of the cookie.
-      value: string containing the value of the cookie.
-      path: a string containing the path for which the cookie was set.
-      secure: boolean indicating that the cookie should only be transmitted
-              over a secure channel.
-    """
-    super(WebViewCookieExpiryEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.EXPIRATION_TIME)
-    self.cookie_name = cookie_name
-    self.data = value
-    self.host = domain
-    self.identifier = identifier
-    self.offset = identifier
-    self.path = path
-    self.secure = True if secure else False
-
-    if self.secure:
-      scheme = u'https'
-    else:
-      scheme = u'http'
-
-    self.url = u'{0:s}://{1:s}{2:s}'.format(scheme, domain, path)
+  def __init__(self):
+    """Initializes event data."""
+    super(WebViewCookieEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.cookie_name = None
+    self.data = None
+    self.host = None
+    self.path = None
+    self.secure = None
+    self.url = None
 
 
 class WebViewPlugin(interface.SQLitePlugin):
@@ -85,39 +63,61 @@ class WebViewPlugin(interface.SQLitePlugin):
     """Parses a row from the database.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row.
+      query (Optional[str]): query.
     """
     # Note that pysqlite does not accept a Unicode string in row['string']
     # and will raise "IndexError: Index must be int or string". All indexes are
     # thus raw strings.
 
-    # The WebView database stores the secure flag as a integer type,
-    # but we represent it as a boolean.
-    secure = row['secure'] != 0
-    # TODO: It would be good to have some way of representing "infinity"
-    # for cookies that have no expiry.
-    if row['expires']:
-      event = WebViewCookieExpiryEvent(
-          row['expires'], row['_id'], row['domain'], row['name'],
-          row['value'], row['path'], secure)
-      parser_mediator.ProduceEvent(event, query=query)
+    cookie_name = row['name']
+    cookie_value = row['value']
+    path = row['path']
 
-    # Go through all cookie plugins to see if there are is any specific parsing
-    # needed.
     hostname = row['domain']
     if hostname.startswith('.'):
       hostname = hostname[1:]
 
-    url = u'http{0:s}://{1:s}{2:s}'.format(
-        u's' if secure else u'', hostname, row['path'])
+    # The WebView database stores the secure flag as a integer type,
+    # but we represent it as a boolean.
+    secure = row['secure'] != 0
 
+    if secure:
+      scheme = u'https'
+    else:
+      scheme = u'http'
+
+    url = u'{0:s}://{1:s}{2:s}'.format(scheme, hostname, path)
+
+    timestamp = row['expires']
+    if timestamp:
+      date_time = dfdatetime_java_time.JavaTime(timestamp=timestamp)
+    else:
+      date_time = dfdatetime_semantic_time.SemanticTime(u'Infinity')
+
+    event_data = WebViewCookieEventData()
+    event_data.cookie_name = cookie_name
+    event_data.data = cookie_value
+    event_data.host = hostname
+    event_data.offset = row['_id']
+    event_data.path = path
+    event_data.query = query
+    event_data.secure = secure
+    event_data.url = url
+
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.EXPIRATION_TIME)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
+
+    # Go through all cookie plugins to see if there are is any specific parsing
+    # needed.
     for cookie_plugin in self._cookie_plugins:
       try:
         cookie_plugin.UpdateChainAndProcess(
-            parser_mediator, cookie_name=row['name'],
-            cookie_data=row['value'], url=url)
+            parser_mediator, cookie_name=cookie_name,
+            cookie_data=cookie_value, url=url)
       except errors.WrongPlugin:
         pass
 

@@ -61,7 +61,7 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
 
     event_object = cloud_entries[16]
 
-    self.assertEqual(event_object.document_type, u'DOCUMENT')
+    self.assertEqual(event_object.document_type, 6)
     self.assertEqual(
         event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
 

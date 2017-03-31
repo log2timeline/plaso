@@ -1,77 +1,69 @@
 # -*- coding: utf-8 -*-
 """Parser for the Google Chrome History files.
 
-   The Chrome History is stored in SQLite database files named History
-   and Archived History. Where the Archived History does not contain
-   the downloads table.
+The Chrome History is stored in SQLite database files named History
+and Archived History. Where the Archived History does not contain
+the downloads table.
 """
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+from dfdatetime import webkit_time as dfdatetime_webkit_time
+
+from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import timelib
 from plaso.lib import eventdata
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
 
-class ChromeHistoryFileDownloadedEvent(time_events.TimestampEvent):
-  """Convenience class for a Chrome History file downloaded event."""
+class ChromeHistoryFileDownloadedEventData(events.EventData):
+  """Chrome History file downloaded event data.
+
+  Attributes:
+    full_path (str): full path where the file was downloaded to.
+    received_bytes (int): number of bytes received while downloading.
+    total_bytes (int): total number of bytes to download.
+    url (str): URL of the downloaded file.
+  """
+
   DATA_TYPE = u'chrome:history:file_downloaded'
 
-  def __init__(
-      self, timestamp, row_id, url, full_path, received_bytes, total_bytes):
-    """Initializes the event object.
-
-    Args:
-      timestamp: The timestamp value.
-      row_id: The identifier of the corresponding row.
-      url: The URL of the downloaded file.
-      full_path: The full path where the file was downloaded to.
-      received_bytes: The number of bytes received while downloading.
-      total_bytes: The total number of bytes to download.
-    """
-    super(ChromeHistoryFileDownloadedEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.FILE_DOWNLOADED)
-
-    self.offset = row_id
-    self.url = url
-    self.full_path = full_path
-    self.received_bytes = received_bytes
-    self.total_bytes = total_bytes
+  def __init__(self):
+    """Initializes event data."""
+    super(ChromeHistoryFileDownloadedEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.full_path = None
+    self.received_bytes = None
+    self.total_bytes = None
+    self.url = None
 
 
-class ChromeHistoryPageVisitedEvent(time_events.WebKitTimeEvent):
-  """Convenience class for a Chrome History page visited event."""
+class ChromeHistoryPageVisitedEventData(events.EventData):
+  """Chrome History page visited event data.
+
+  Attributes:
+    extra (str): extra event data.
+    from_visit (str): URL where the visit originated from.
+    hostname (str): visited hostname.
+    title (str): title of the visited page.
+    typed_count (int): number of characters of the URL that were typed.
+    url (str): URL of the visited page.
+    visit_source (str): source of the page visit.
+  """
+
   DATA_TYPE = u'chrome:history:page_visited'
 
-  # TODO: refactor extra to be conditional arguments.
-  def __init__(
-      self, webkit_time, row_id, url, title, hostname, typed_count, from_visit,
-      extra, visit_source):
-    """Initializes the event object.
-
-    Args:
-      webkit_time: The WebKit time value.
-      row_id: The identifier of the corresponding row.
-      url: The URL of the visited page.
-      title: The title of the visited page.
-      hostname: The visited hostname.
-      typed_count: The number of characters of the URL that were typed.
-      from_visit: The URL where the visit originated from.
-      extra: String containing extra event data.
-      visit_source: The source of the page visit, if defined.
-    """
-    super(ChromeHistoryPageVisitedEvent, self).__init__(
-        webkit_time, eventdata.EventTimestamp.PAGE_VISITED)
-
-    self.offset = row_id
-    self.url = url
-    self.title = title
-    self.host = hostname
-    self.typed_count = typed_count
-    self.from_visit = from_visit
-    self.extra = extra
-    if visit_source is not None:
-      self.visit_source = visit_source
+  def __init__(self):
+    """Initializes event data."""
+    super(ChromeHistoryPageVisitedEventData, self).__init__(
+        data_type=self.DATA_TYPE)
+    self.extra = None
+    self.from_visit = None
+    self.host = None
+    self.title = None
+    self.typed_count = None
+    self.url = None
+    self.visit_source = None
 
 
 class ChromeHistoryPlugin(interface.SQLitePlugin):
@@ -157,22 +149,34 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
 
   CORE_MASK = 0xff
 
-  def _GetHostname(self, hostname):
-    """Return a hostname from a full URL."""
-    if hostname.startswith(u'http') or hostname.startswith(u'ftp'):
-      _, _, uri = hostname.partition(u'//')
-      hostname, _, _ = uri.partition(u'/')
+  def _GetHostname(self, url):
+    """Retrieves the hostname from a full URL.
 
+    Args:
+      url (str): full URL.
+
+    Returns:
+      str: hostname or full URL if not hostname could be retrieved.
+    """
+    if url.startswith(u'http') or url.startswith(u'ftp'):
+      _, _, uri = url.partition(u'//')
+      hostname, _, _ = uri.partition(u'/')
       return hostname
 
-    if hostname.startswith(u'about') or hostname.startswith(u'chrome'):
-      site, _, _ = hostname.partition(u'/')
-      return site
+    if url.startswith(u'about') or url.startswith(u'chrome'):
+      hostname, _, _ = url.partition(u'/')
+      return hostname
 
-    return hostname
+    return url
 
   def _GetUrl(self, url, cache, database):
-    """Return an URL from a reference to an entry in the from_visit table."""
+    """Retrieves an URL from a reference to an entry in the from_visit table.
+
+    Args:
+      url (str): URL.
+      cache (SQLiteCache): cache.
+      database (SQLiteDatabase): database.
+    """
     if not url:
       return u''
 
@@ -182,8 +186,7 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
 
       # Note that pysqlite does not accept a Unicode string in row['string'] and
       # will raise "IndexError: Index must be int or string".
-      cache.CacheQueryResults(
-          result_set, 'url', 'id', ('url', 'title'))
+      cache.CacheQueryResults(result_set, 'url', 'id', ('url', 'title'))
       url_cache_results = cache.GetResults(u'url')
 
     reference_url, reference_title = url_cache_results.get(url, [u'', u''])
@@ -197,12 +200,12 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     """Return a string denoting the visit source type if possible.
 
     Args:
-      visit_id: The ID from the visits table for the particular record.
-      cache: A cache object (instance of SQLiteCache).
-      database: A database object (instance of SQLiteDatabase).
+      visit_id (str): ID from the visits table for the particular record.
+      cache (SQLiteCache): cache.
+      database (SQLiteDatabase): database.
 
     Returns:
-      A string with the visit source, None if not found.
+      str: visit source or None if not found.
     """
     if not visit_id:
       return
@@ -213,8 +216,7 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
 
       # Note that pysqlite does not accept a Unicode string in row['string'] and
       # will raise "IndexError: Index must be int or string".
-      cache.CacheQueryResults(
-          result_set, 'sync', 'id', ('source',))
+      cache.CacheQueryResults(result_set, 'sync', 'id', ('source',))
       sync_cache_results = cache.GetResults(u'sync')
 
     results = sync_cache_results.get(visit_id, None)
@@ -228,48 +230,67 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     """Parses a file downloaded row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row.
+      query (Optional[str]): query.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
 
-    timestamp = timelib.Timestamp.FromPosixTime(row['start_time'])
-    event_object = ChromeHistoryFileDownloadedEvent(
-        timestamp, row['id'], row['url'], row['full_path'],
-        row['received_bytes'], row['total_bytes'])
-    parser_mediator.ProduceEvent(event_object, query=query)
+    event_data = ChromeHistoryFileDownloadedEventData()
+    event_data.full_path = row['full_path']
+    event_data.offset = row['id']
+    event_data.query = query
+    event_data.received_bytes = row['received_bytes']
+    event_data.total_bytes = row['total_bytes']
+    event_data.url = row['url']
+
+    timestamp = row['start_time']
+    date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.FILE_DOWNLOADED)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseNewFileDownloadedRow(
       self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a file downloaded row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row.
+      query (Optional[str]): query.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
 
-    timestamp = timelib.Timestamp.FromWebKitTime(row['start_time'])
-    event_object = ChromeHistoryFileDownloadedEvent(
-        timestamp, row['id'], row['url'], row['target_path'],
-        row['received_bytes'], row['total_bytes'])
-    parser_mediator.ProduceEvent(event_object, query=query)
+    event_data = ChromeHistoryFileDownloadedEventData()
+    event_data.full_path = row['target_path']
+    event_data.offset = row['id']
+    event_data.query = query
+    event_data.received_bytes = row['received_bytes']
+    event_data.total_bytes = row['total_bytes']
+    event_data.url = row['url']
+
+    timestamp = row['start_time']
+    date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.FILE_DOWNLOADED)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseLastVisitedRow(
-      self, parser_mediator, row, query=None, cache=None, database=None,
+      self, parser_mediator, row, cache=None, database=None, query=None,
       **unused_kwargs):
     """Parses a last visited row.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      row: The row resulting from the query.
-      query: Optional query string.
-      cache: Optional cache object (instance of SQLiteCache).
-      database: Optional database object (instance of SQLiteDatabase).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      row (sqlite3.Row): row.
+      cache (Optional[SQLiteCache]): cache.
+      database (Optional[SQLiteDatabase]): database.
+      query (Optional[str]): query.
     """
     # Note that pysqlite does not accept a Unicode string in row['string'] and
     # will raise "IndexError: Index must be int or string".
@@ -300,12 +321,22 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     visit_source = self._GetVisitSource(row['visit_id'], cache, database)
 
     # TODO: replace extras by conditional formatting.
-    event_object = ChromeHistoryPageVisitedEvent(
-        row['visit_time'], row['id'], row['url'], row['title'],
-        self._GetHostname(row['url']), row['typed_count'],
-        self._GetUrl(row['from_visit'], cache, database), u' '.join(extras),
-        visit_source)
-    parser_mediator.ProduceEvent(event_object, query=query)
+    event_data = ChromeHistoryPageVisitedEventData()
+    event_data.extra = u' '.join(extras)
+    event_data.from_visit = self._GetUrl(row['from_visit'], cache, database)
+    event_data.host = self._GetHostname(row['url'])
+    event_data.offset = row['id']
+    event_data.query = query
+    event_data.title = row['title']
+    event_data.typed_count = row['typed_count']
+    event_data.url = row['url']
+    event_data.visit_source = visit_source
+
+    timestamp = row['visit_time']
+    date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.PAGE_VISITED)
+    parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 sqlite.SQLiteParser.RegisterPlugin(ChromeHistoryPlugin)

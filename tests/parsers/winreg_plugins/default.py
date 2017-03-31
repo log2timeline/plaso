@@ -86,7 +86,7 @@ class TestDefaultRegistry(test_lib.RegistryPluginTestCase):
         u'a: [REG_SZ] Some random text here '
         u'b: [REG_BINARY] '
         u'c: [REG_SZ] C:/looks_legit.exe').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

@@ -73,7 +73,7 @@ class SkypePluginTest(test_lib.SQLitePluginTestCase):
         u'[SENDSOLICITUDE]')
 
     self._TestGetMessageStrings(
-        storage_writer.events[17], expected_msg, expected_msg[0:77] + '...')
+        storage_writer.events[17], expected_msg, expected_msg[:77] + '...')
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-07-01 22:14:22')

@@ -53,7 +53,11 @@ class ESEDBParser(interface.FileObjectParser):
 
   @classmethod
   def GetFormatSpecification(cls):
-    """Retrieves the format specification."""
+    """Retrieves the format specification.
+
+    Returns:
+      FormatSpecification: format specification.
+    """
     format_specification = specification.FormatSpecification(cls.NAME)
     format_specification.AddNewSignature(b'\xef\xcd\xab\x89', offset=4)
     return format_specification
@@ -62,7 +66,8 @@ class ESEDBParser(interface.FileObjectParser):
     """Parses an ESE database file-like object.
 
     Args:
-      parser_mediator (ParserMediator): parser mediator.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
       file_object (dfvfs.FileIO): file-like object.
     """
     esedb_file = pyesedb.file()

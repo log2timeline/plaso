@@ -44,14 +44,6 @@ plaso.containers.events module
     :undoc-members:
     :show-inheritance:
 
-plaso.containers.file_system_events module
-------------------------------------------
-
-.. automodule:: plaso.containers.file_system_events
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.containers.interface module
 ---------------------------------
 
@@ -104,14 +96,6 @@ plaso.containers.tasks module
 -----------------------------
 
 .. automodule:: plaso.containers.tasks
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-plaso.containers.text_events module
------------------------------------
-
-.. automodule:: plaso.containers.text_events
     :members:
     :undoc-members:
     :show-inheritance:

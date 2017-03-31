@@ -27,32 +27,32 @@ class KikMessageTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(len(storage_writer.events), 60)
 
     # Check the second message sent.
-    event_object = storage_writer.events[1]
+    event = storage_writer.events[1]
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-06-29 12:26:11.000')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_username = u'ken.doh'
-    self.assertEqual(event_object.username, expected_username)
+    self.assertEqual(event.username, expected_username)
 
     expected_displayname = u'Ken Doh'
-    self.assertEqual(event_object.displayname, expected_displayname)
+    self.assertEqual(event.displayname, expected_displayname)
 
     expected_body = u'Hello'
-    self.assertEqual(event_object.body, expected_body)
+    self.assertEqual(event.body, expected_body)
 
-    expected_msg = (
+    expected_message = (
         u'Username: ken.doh '
         u'Displayname: Ken Doh '
         u'Status: read after offline '
         u'Type: sent '
         u'Message: Hello')
-    expected_short = u'Hello'
-    self._TestGetMessageStrings(event_object, expected_msg, expected_short)
+    expected_short_message = u'Hello'
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

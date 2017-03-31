@@ -49,7 +49,7 @@ class SQLiteCache(plugins.BasePluginCache):
           'second': ['another_stuff', 'another_thing']}
 
     Args:
-      sql_results (sqlite.Cursor): result after executing a SQL command
+      sql_results (sqlite3.Cursor): result after executing a SQL command
           on a database.
       attribute_name (str): attribute name in the cache to store results to.
           This will be the name of the dictionary attribute.

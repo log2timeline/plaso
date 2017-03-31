@@ -5,6 +5,7 @@
 import unittest
 
 from plaso.formatters import mcafeeav  # pylint: disable=unused-import
+from plaso.lib import timelib
 from plaso.parsers import mcafeeav
 
 from tests import test_lib as shared_test_lib
@@ -21,13 +22,17 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     storage_writer = self._ParseFile(
         [u'AccessProtectionLog.txt'], parser_object)
 
-    # The file contains 14 lines which results in 14 event objects.
+    # The file contains 14 lines which results in 14 events.
     self.assertEqual(len(storage_writer.events), 14)
 
-    # Test that the UTF-8 byte order mark gets removed from the first line.
-    event_object = storage_writer.events[0]
+    event = storage_writer.events[0]
 
-    self.assertEqual(event_object.timestamp, 1380292946000000)
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-09-27 14:42:26')
+    self.assertEqual(event.timestamp, expected_timestamp)
+
+    # TODO: Test that the UTF-8 byte order mark gets removed from
+    # the first line.
 
     # Test this entry:
     # 9/27/2013 2:42:26 PM  Blocked by Access Protection rule
@@ -36,14 +41,17 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
     # Protection:Prevent termination of McAfee processes  Action blocked :
     # Terminate
 
-    event_object = storage_writer.events[1]
+    event = storage_writer.events[1]
 
-    self.assertEqual(event_object.timestamp, 1380292959000000)
-    self.assertEqual(event_object.username, u'SOMEDOMAIN\\someUser')
+    expected_timestamp = timelib.Timestamp.CopyFromString(
+        u'2013-09-27 14:42:39')
+    self.assertEqual(event.timestamp, expected_timestamp)
+
+    self.assertEqual(event.username, u'SOMEDOMAIN\\someUser')
     self.assertEqual(
-        event_object.full_path, u'C:\\Windows\\System32\\procexp64.exe')
+        event.filename, u'C:\\Windows\\System32\\procexp64.exe')
 
-    expected_msg = (
+    expected_message = (
         u'File Name: C:\\Windows\\System32\\procexp64.exe '
         u'User: SOMEDOMAIN\\someUser '
         u'C:\\Program Files (x86)\\McAfee\\Common Framework\\Frame'
@@ -51,11 +59,11 @@ class McafeeAccessProtectionUnitTest(test_lib.ParserTestCase):
         u'Blocked by Access Protection rule  '
         u'Common Standard Protection:Prevent termination of McAfee processes '
         u'Action blocked : Terminate')
-    expected_msg_short = (
+    expected_short_message = (
         u'C:\\Windows\\System32\\procexp64.exe '
         u'Action blocked : Terminate')
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

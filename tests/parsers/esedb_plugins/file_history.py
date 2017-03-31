@@ -23,30 +23,33 @@ class FileHistoryESEDBPluginTest(test_lib.ESEDBPluginTestCase):
     storage_writer = self._ParseESEDBFileWithPlugin(
         [u'Catalog1.edb'], plugin_object)
 
-    self.assertEqual(len(storage_writer.events), 2680)
+    self.assertEqual(len(storage_writer.events), 2713)
 
-    event_object = storage_writer.events[693]
+    event = storage_writer.events[702]
 
-    self.assertEqual(event_object.usn_number, 9251162904)
-    self.assertEqual(event_object.identifier, 356)
+    self.assertEqual(event.usn_number, 9251162904)
+    self.assertEqual(event.identifier, 356)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-10-12 17:34:36.688580')
 
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
+        event.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
 
     filename = u'?UP\\Favorites\\Links\\Lenovo'
-    self.assertEqual(event_object.original_filename, filename)
+    self.assertEqual(event.original_filename, filename)
 
-    expected_msg = (
-        u'Filename: {0:s} Identifier: 356 Parent Identifier: 230 Attributes: '
-        u'16 USN number: 9251162904').format(filename)
+    expected_message = (
+        u'Filename: {0:s} '
+        u'Identifier: 356 '
+        u'Parent Identifier: 230 '
+        u'Attributes: 16 '
+        u'USN number: 9251162904').format(filename)
 
-    expected_msg_short = u'Filename: {0:s}'.format(filename)
+    expected_message_short = u'Filename: {0:s}'.format(filename)
 
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(event, expected_message, expected_message_short)
 
 
 if __name__ == '__main__':

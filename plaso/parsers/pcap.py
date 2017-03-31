@@ -7,6 +7,9 @@ import socket
 
 import dpkt
 
+from dfdatetime import posix_time as dfdatetime_posix_time
+
+from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
 from plaso.lib import eventdata
@@ -441,32 +444,42 @@ class Stream(object):
       self.stream_data = b''.join(clean_data)
 
 
-class PcapEvent(time_events.PosixTimeEvent):
-  """Convenience class for a PCAP record event."""
+class PcapEventData(events.EventData):
+  """PCAP event data.
+
+  Attributes:
+    dest_ip (str): destination IP address.
+    dest_port (str): destination TCP or UDP port number.
+    first_packet_id (int): identifier of the first PCAP packet in a stream.
+    last_packet_id (int): identifier of the last PCAP packet in a stream.
+    packet_count (int): number of PCAP packets in a stream.
+    protocol (str): most specific protocol.
+    protocol_data (bytes): protocol data ???
+    size (int): size of a stream in bytes.
+    source_ip (str): source IP address.
+    source_port (str): source TCP or UDP port number.
+    stream_data (str): human readable representation of the first 50 bytes
+        of the stream data.
+    stream_type (str): stream type.
+  """
 
   DATA_TYPE = u'metadata:pcap'
 
-  def __init__(self, timestamp, usage, stream_object):
-    """Initializes the event.
-
-    Args:
-      timestamp: The POSIX value of the timestamp.
-      usage: A usage description value.
-      stream_object: The stream object (instance of Stream).
-    """
-    super(PcapEvent, self).__init__(timestamp, usage)
-
-    self.source_ip = stream_object.source_ip
-    self.dest_ip = stream_object.dest_ip
-    self.source_port = stream_object.source_port
-    self.dest_port = stream_object.dest_port
-    self.protocol = stream_object.protocol
-    self.size = stream_object.size
-    self.stream_type, self.protocol_data = stream_object.SpecialTypes()
-    self.first_packet_id = min(stream_object.packet_id)
-    self.last_packet_id = max(stream_object.packet_id)
-    self.packet_count = len(stream_object.packet_id)
-    self.stream_data = repr(stream_object.stream_data[:50])
+  def __init__(self):
+    """Initializes event data."""
+    super(PcapEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.dest_ip = None
+    self.dest_port = None
+    self.first_packet_id = None
+    self.last_packet_id = None
+    self.packet_count = None
+    self.protocol = None
+    self.protocol_data = None
+    self.size = None
+    self.source_ip = None
+    self.source_port = None
+    self.stream_data = None
+    self.stream_type = None
 
 
 class PcapParser(interface.FileObjectParser):
@@ -777,25 +790,58 @@ class PcapParser(interface.FileObjectParser):
       if not stream_object.protocol == u'ICMP':
         stream_object.Clean()
 
-      event_objects = [
-          PcapEvent(
-              min(stream_object.timestamps),
-              eventdata.EventTimestamp.START_TIME, stream_object),
-          PcapEvent(
-              max(stream_object.timestamps),
-              eventdata.EventTimestamp.END_TIME, stream_object)]
+      event_data = PcapEventData()
+      event_data.dest_ip = stream_object.dest_ip
+      event_data.dest_port = stream_object.dest_port
+      event_data.first_packet_id = min(stream_object.packet_id)
+      event_data.last_packet_id = max(stream_object.packet_id)
+      event_data.packet_count = len(stream_object.packet_id)
+      event_data.protocol = stream_object.protocol
+      event_data.size = stream_object.size
+      event_data.source_ip = stream_object.source_ip
+      event_data.source_port = stream_object.source_port
+      event_data.stream_data = repr(stream_object.stream_data[:50])
+      event_data.stream_type, event_data.protocol_data = (
+          stream_object.SpecialTypes())
 
-      parser_mediator.ProduceEvents(event_objects)
+      date_time = dfdatetime_posix_time.PosixTime(
+          timestamp=min(stream_object.timestamps))
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.START_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+      date_time = dfdatetime_posix_time.PosixTime(
+          timestamp=max(stream_object.timestamps))
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.END_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
     for stream_object in other_streams:
-      event_objects = [
-          PcapEvent(
-              min(stream_object.timestamps),
-              eventdata.EventTimestamp.START_TIME, stream_object),
-          PcapEvent(
-              max(stream_object.timestamps),
-              eventdata.EventTimestamp.END_TIME, stream_object)]
-      parser_mediator.ProduceEvents(event_objects)
+      event_data = PcapEventData()
+      event_data.dest_ip = stream_object.dest_ip
+      event_data.dest_port = stream_object.dest_port
+      event_data.first_packet_id = min(stream_object.packet_id)
+      event_data.last_packet_id = max(stream_object.packet_id)
+      event_data.packet_count = len(stream_object.packet_id)
+      event_data.protocol = stream_object.protocol
+      event_data.size = stream_object.size
+      event_data.source_ip = stream_object.source_ip
+      event_data.source_port = stream_object.source_port
+      event_data.stream_data = repr(stream_object.stream_data[:50])
+      event_data.stream_type, event_data.protocol_data = (
+          stream_object.SpecialTypes())
+
+      date_time = dfdatetime_posix_time.PosixTime(
+          timestamp=min(stream_object.timestamps))
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.START_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+      date_time = dfdatetime_posix_time.PosixTime(
+          timestamp=max(stream_object.timestamps))
+      event = time_events.DateTimeValuesEvent(
+          date_time, eventdata.EventTimestamp.END_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 manager.ParsersManager.RegisterParser(PcapParser)

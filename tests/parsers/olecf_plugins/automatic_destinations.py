@@ -13,15 +13,15 @@ from tests import test_lib as shared_test_lib
 from tests.parsers.olecf_plugins import test_lib
 
 
-class TestAutomaticDestinationsOlecfPlugin(test_lib.OleCfPluginTestCase):
+class TestAutomaticDestinationsOLECFPlugin(test_lib.OLECFPluginTestCase):
   """Tests for the .automaticDestinations-ms OLECF parser plugin."""
 
   @shared_test_lib.skipUnlessHasTestFile([
       u'1b4dd67f29cb1962.automaticDestinations-ms'])
   def testProcessVersion1(self):
     """Tests the Process function on version 1 .automaticDestinations-ms."""
-    plugin_object = automatic_destinations.AutomaticDestinationsOlecfPlugin()
-    storage_writer = self._ParseOleCfFileWithPlugin(
+    plugin_object = automatic_destinations.AutomaticDestinationsOLECFPlugin()
+    storage_writer = self._ParseOLECFFileWithPlugin(
         [u'1b4dd67f29cb1962.automaticDestinations-ms'], plugin_object)
 
     self.assertEqual(len(storage_writer.events), 88)
@@ -97,11 +97,11 @@ class TestAutomaticDestinationsOlecfPlugin(test_lib.OleCfPluginTestCase):
     expected_message = (
         u'63eea867-7b85-11e1-8950-005056a50b40 '
         u'MAC address: 00:50:56:a5:0b:40 '
-        u'Origin: Dest list entry at offset: 0x00000020')
+        u'Origin: DestList entry at offset: 0x00000020')
 
     expected_message_short = (
         u'63eea867-7b85-11e1-8950-005056a50b40 '
-        u'Origin: Dest list entry at offset: 0x000...')
+        u'Origin: DestList entry at offset: 0x0000...')
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_message_short)
@@ -110,8 +110,8 @@ class TestAutomaticDestinationsOlecfPlugin(test_lib.OleCfPluginTestCase):
       u'9d1f905ce5044aee.automaticDestinations-ms'])
   def testProcessVersion3(self):
     """Tests the Process function on version 3 .automaticDestinations-ms."""
-    plugin_object = automatic_destinations.AutomaticDestinationsOlecfPlugin()
-    storage_writer = self._ParseOleCfFileWithPlugin(
+    plugin_object = automatic_destinations.AutomaticDestinationsOLECFPlugin()
+    storage_writer = self._ParseOLECFFileWithPlugin(
         [u'9d1f905ce5044aee.automaticDestinations-ms'], plugin_object)
 
     self.assertEqual(len(storage_writer.events), 4)

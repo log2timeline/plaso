@@ -4,7 +4,6 @@
 
 import datetime
 import unittest
-import uuid
 
 from plaso.lib import errors
 from plaso.lib import timelib
@@ -120,55 +119,6 @@ class TimeLibTest(unittest.TestCase):
     with self.assertRaises(ValueError):
       _ = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01Z')
 
-  def testCocoaTime(self):
-    """Tests the Cocoa timestamp conversion."""
-    timestamp = timelib.Timestamp.FromCocoaTime(395011845)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-07-08 21:30:45')
-    self.assertEqual(timestamp, expected_timestamp)
-
-    timestamp = timelib.Timestamp.FromCocoaTime(395353142)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-07-12 20:19:02')
-    self.assertEqual(timestamp, expected_timestamp)
-
-    timestamp = timelib.Timestamp.FromCocoaTime(394993669)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-07-08 16:27:49')
-    self.assertEqual(timestamp, expected_timestamp)
-
-  def testHFSTimes(self):
-    """Tests the HFS timestamp conversion."""
-    timestamp = timelib.Timestamp.FromHfsTime(
-        3458215528, timezone=pytz.timezone(u'EST5EDT'), is_dst=True)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-08-01 15:25:28-04:00')
-    self.assertEqual(timestamp, expected_timestamp)
-
-    timestamp = timelib.Timestamp.FromHfsPlusTime(3458215528)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-08-01 15:25:28')
-    self.assertEqual(timestamp, expected_timestamp)
-
-    timestamp = timelib.Timestamp.FromHfsPlusTime(3413373928)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-02-29 15:25:28')
-    self.assertEqual(timestamp, expected_timestamp)
-
-  def testSystemtime(self):
-    """Tests the SYSTEMTIME timestamp conversion."""
-    timestamp = timelib.Timestamp.FromSystemtime(
-        b'\xde\x07\x0c\x00\x02\x00\x10\x00\x08\x00\x04\x00\x27\x00\x6a\x00')
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2014-12-16 08:04:39.106')
-    self.assertEqual(timestamp, expected_timestamp)
-
-    timestamp = timelib.Timestamp.FromSystemtime(
-        b'\xe0\x07\x05\x00\x05\x00\x06\x00\x09\x00\x1b\x00\x24\x00\x30\x01')
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2016-05-06 09:27:36.304')
-    self.assertEqual(timestamp, expected_timestamp)
-
   def testTimestampIsLeapYear(self):
     """Tests the is leap year check."""
     self.assertEqual(timelib.Timestamp.IsLeapYear(2012), True)
@@ -213,57 +163,6 @@ class TimeLibTest(unittest.TestCase):
     self.assertEqual(
         timelib.Timestamp.DayOfYear(0, 11, 2013), expected_day_of_year)
 
-  def testTimestampFromDelphiTime(self):
-    """Test the Delphi date time conversion."""
-    timestamp = timelib.Timestamp.FromDelphiTime(41443.8263953)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2013-06-18 19:50:00')
-    self.assertEqual(timestamp, expected_timestamp)
-
-  def testTimestampFromFatDateTime(self):
-    """Test the FAT date time conversion."""
-    timestamp = timelib.Timestamp.FromFatDateTime(0xa8d03d0c)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2010-08-12 21:06:32')
-    self.assertEqual(timestamp, expected_timestamp)
-
-    # Invalid number of seconds.
-    fat_date_time = (0xa8d03d0c & ~(0x1f << 16)) | ((30 & 0x1f) << 16)
-    self.assertEqual(timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
-
-    # Invalid number of minutes.
-    fat_date_time = (0xa8d03d0c & ~(0x3f << 21)) | ((60 & 0x3f) << 21)
-    self.assertEqual(timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
-
-    # Invalid number of hours.
-    fat_date_time = (0xa8d03d0c & ~(0x1f << 27)) | ((24 & 0x1f) << 27)
-    self.assertEqual(timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
-
-    # Invalid day of month.
-    fat_date_time = (0xa8d03d0c & ~0x1f) | (32 & 0x1f)
-    self.assertEqual(timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
-
-    # Invalid month.
-    fat_date_time = (0xa8d03d0c & ~(0x0f << 5)) | ((13 & 0x0f) << 5)
-    self.assertEqual(timelib.Timestamp.FromFatDateTime(fat_date_time), 0)
-
-  def testTimestampFromFiletime(self):
-    """Test the FILETIME conversion."""
-    timestamp = timelib.Timestamp.FromFiletime(0x01cb3a623d0a17ce)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2010-08-12 21:06:31.546875')
-    self.assertEqual(timestamp, expected_timestamp)
-
-    filetime = 86400 * 10000000
-    timestamp = timelib.Timestamp.FromFiletime(filetime)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'1601-01-02 00:00:00')
-    self.assertEqual(timestamp, expected_timestamp)
-
-    # FILETIME that exceeds lower bound.
-    filetime = -1
-    self.assertEqual(timelib.Timestamp.FromFiletime(filetime), 0)
-
   def testTimestampFromPosixTime(self):
     """Test the POSIX time conversion."""
     timestamp = timelib.Timestamp.FromPosixTime(1281647191)
@@ -281,42 +180,6 @@ class TimeLibTest(unittest.TestCase):
 
     # POSIX time that exceeds lower bound.
     self.assertEqual(timelib.Timestamp.FromPosixTime(-9223372036855), 0)
-
-  def testTimestampFromUUIDTime(self):
-    """Test the UUID time conversion."""
-    uuid_object = uuid.UUID(u'00911b54-9ef4-11e1-be53-525400123456')
-
-    timestamp = timelib.Timestamp.FromUUIDTime(uuid_object.time)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2012-05-16 01:11:01.654408')
-    self.assertEqual(timestamp, expected_timestamp)
-
-    uuid_time = 86400 * 10000000
-    timestamp = timelib.Timestamp.FromUUIDTime(uuid_time)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'1582-10-16 00:00:00')
-    self.assertEqual(timestamp, expected_timestamp)
-
-    # UUID time that exceeds lower bound.
-    uuid_time = -1
-    self.assertEqual(timelib.Timestamp.FromUUIDTime(uuid_time), 0)
-
-  def testTimestampFromWebKitTime(self):
-    """Test the WebKit time conversion."""
-    timestamp = timelib.Timestamp.FromWebKitTime(0x2dec3d061a9bfb)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'2010-08-12 21:06:31.546875')
-    self.assertEqual(timestamp, expected_timestamp)
-
-    webkit_time = 86400 * 1000000
-    timestamp = timelib.Timestamp.FromWebKitTime(webkit_time)
-    expected_timestamp = timelib.Timestamp.CopyFromString(
-        u'1601-01-02 00:00:00')
-    self.assertEqual(timestamp, expected_timestamp)
-
-    # WebKit time that exceeds lower bound.
-    webkit_time = -((1 << 63) - 1)
-    self.assertEqual(timelib.Timestamp.FromWebKitTime(webkit_time), 0)
 
   def testMonthDict(self):
     """Test the month dict, both inside and outside of scope."""

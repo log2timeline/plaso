@@ -3,32 +3,31 @@
 
 import construct
 
+from dfdatetime import filetime as dfdatetime_filetime
+
+from plaso.containers import events
 from plaso.containers import windows_events
 from plaso.containers import time_events
+from plaso.lib import eventdata
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
 
-class TaskCacheEvent(time_events.FiletimeEvent):
-  """Convenience class for a Task Cache event."""
+class TaskCacheEventData(events.EventData):
+  """Task Cache event data.
+
+  Attributes:
+    task_name (str): name of the task.
+    task_identifier (str): identifier of the task.
+  """
 
   DATA_TYPE = u'task_scheduler:task_cache:entry'
 
-  def __init__(
-      self, timestamp, timestamp_description, task_name, task_identifier):
-    """Initializes the event.
-
-    Args:
-      timestamp: The FILETIME value for the timestamp.
-      timestamp_description: The usage string for the timestamp value.
-      task_name: String containing the name of the task.
-      task_identifier: String containing the identifier of the task.
-    """
-    super(TaskCacheEvent, self).__init__(timestamp, timestamp_description)
-
-    self.offset = 0
-    self.task_name = task_name
-    self.task_identifier = task_identifier
+  def __init__(self):
+    """Initializes event data."""
+    super(TaskCacheEventData, self).__init__(data_type=self.DATA_TYPE)
+    self.task_name = None
+    self.task_identifier = None
 
 
 class TaskCachePlugin(interface.WindowsRegistryPlugin):
@@ -67,32 +66,33 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
 
   _DYNAMIC_INFO2_STRUCT_SIZE = _DYNAMIC_INFO2_STRUCT.sizeof()
 
-  def _GetIdValue(self, key):
+  def _GetIdValue(self, registry_key):
     """Retrieves the Id value from Task Cache Tree key.
 
     Args:
-      key: A Windows Registry key (instance of dfwinreg.WinRegistryKey).
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
 
     Yields:
-      A tuple containing a Windows Registry Key (instance of
-      dfwinreg.WinRegistryKey) and a Windows Registry value (instance of
-      dfwinreg.WinRegistryValue).
-    """
-    id_value = key.GetValueByName(u'Id')
-    if id_value:
-      yield key, id_value
+      tuple: contains:
 
-    for sub_key in key.GetSubkeys():
+        dfwinreg.WinRegistryKey: Windows Registry key.
+        dfwinreg.WinRegistryValue: Windows Registry value.
+    """
+    id_value = registry_key.GetValueByName(u'Id')
+    if id_value:
+      yield registry_key, id_value
+
+    for sub_key in registry_key.GetSubkeys():
       for value_key, id_value in self._GetIdValue(sub_key):
         yield value_key, id_value
 
-  def GetEntries(self, parser_mediator, registry_key, **kwargs):
-    """Parses a Task Cache Registry key.
+  def ExtractEvents(self, parser_mediator, registry_key, **kwargs):
+    """Extracts events from a Windows Registry key.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      registry_key: A Windows Registry key (instance of
-                    dfwinreg.WinRegistryKey).
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
     dynamic_info_size_error_reported = False
 
@@ -147,31 +147,43 @@ class TaskCachePlugin(interface.WindowsRegistryPlugin):
       values_dict = {}
       values_dict[u'Task: {0:s}'.format(name)] = u'[ID: {0:s}]'.format(
           sub_key.name)
-      event_object = windows_events.WindowsRegistryEvent(
-          registry_key.last_written_time, registry_key.path, values_dict,
-          offset=registry_key.offset)
-      parser_mediator.ProduceEvent(event_object)
+
+      event_data = windows_events.WindowsRegistryEventData()
+      event_data.key_path = registry_key.path
+      event_data.offset = registry_key.offset
+      event_data.regvalue = values_dict
+
+      event = time_events.DateTimeValuesEvent(
+          registry_key.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+      parser_mediator.ProduceEventWithEventData(event, event_data)
+
+      event_data = TaskCacheEventData()
+      event_data.task_name = name
+      event_data.task_identifier = sub_key.name
 
       last_registered_time = dynamic_info_struct.get(u'last_registered_time')
       if last_registered_time:
         # Note this is likely either the last registered time or
         # the update time.
-        event_object = TaskCacheEvent(
-            last_registered_time, u'Last registered time', name, sub_key.name)
-        parser_mediator.ProduceEvent(event_object)
+        date_time = dfdatetime_filetime.Filetime(timestamp=last_registered_time)
+        event = time_events.DateTimeValuesEvent(
+            date_time, u'Last registered time')
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
       launch_time = dynamic_info_struct.get(u'launch_time')
       if launch_time:
         # Note this is likely the launch time.
-        event_object = TaskCacheEvent(
-            launch_time, u'Launch time', name, sub_key.name)
-        parser_mediator.ProduceEvent(event_object)
+        date_time = dfdatetime_filetime.Filetime(timestamp=launch_time)
+        event = time_events.DateTimeValuesEvent(
+            date_time, u'Launch time')
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
       unknown_time = dynamic_info_struct.get(u'unknown_time')
       if unknown_time:
-        event_object = TaskCacheEvent(
-            unknown_time, u'Unknown time', name, sub_key.name)
-        parser_mediator.ProduceEvent(event_object)
+        date_time = dfdatetime_filetime.Filetime(timestamp=unknown_time)
+        event = time_events.DateTimeValuesEvent(
+            date_time, eventdata.EventTimestamp.UNKNOWN)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
     # TODO: Add support for the Triggers value.
 

@@ -58,7 +58,7 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         u'[LowIcon]: inetcpl.cpl#005422 '
         u'[PMDisplayName]: Computer '
         u'[Protected Mode]').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
@@ -110,7 +110,7 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         u'[LowIcon]: inetcpl.cpl#005422 '
         u'[PMDisplayName]: Computer '
         u'[Protected Mode]').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
@@ -239,7 +239,7 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         u'[LowIcon]: inetcpl.cpl#005422 '
         u'[PMDisplayName]: Computer '
         u'[Protected Mode]').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)
@@ -372,7 +372,7 @@ class MsieZoneSettingsPluginTest(test_lib.RegistryPluginTestCase):
         u'[LowIcon]: inetcpl.cpl#005422 '
         u'[PMDisplayName]: Computer '
         u'[Protected Mode]').format(key_path)
-    expected_short_message = u'{0:s}...'.format(expected_message[0:77])
+    expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
     self._TestGetMessageStrings(
         event_object, expected_message, expected_short_message)

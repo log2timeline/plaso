@@ -293,7 +293,7 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     self._analyzer.SignalAbort()
 
     lines_of_text = [u'{0:s} hash tagging results'.format(self.NAME)]
-    for label, count in path_specs_per_labels_counter.items():
+    for label, count in sorted(path_specs_per_labels_counter.items()):
       line_of_text = (
           u'{0:d} path specifications tagged with label: {1:s}'.format(
               count, label))
@@ -301,10 +301,11 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     lines_of_text.append(u'')
     report_text = u'\n'.join(lines_of_text)
 
-    analysis_report = reports.AnalysisReport(
+    for event_tag in tags:
+      mediator.ProduceEventTag(event_tag)
+
+    return reports.AnalysisReport(
         plugin_name=self.NAME, text=report_text)
-    analysis_report.SetTags(tags)
-    return analysis_report
 
   def EstimateTimeRemaining(self):
     """Estimates how long until all hashes have been analyzed.

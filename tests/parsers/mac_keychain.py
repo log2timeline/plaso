@@ -22,17 +22,16 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
     parser_object = mac_keychain.KeychainParser()
     storage_writer = self._ParseFile([u'login.keychain'], parser_object)
 
-    self.assertEqual(len(storage_writer.events), 5)
+    self.assertEqual(len(storage_writer.events), 8)
 
     event_object = storage_writer.events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-01-26 14:51:48')
     self.assertEqual(event_object.timestamp, expected_timestamp)
-
     self.assertEqual(
-        event_object.timestamp_desc,
-        eventdata.EventTimestamp.CREATION_TIME)
+        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+
     self.assertEqual(event_object.entry_name, u'Secret Application')
     self.assertEqual(event_object.account_name, u'moxilo')
     expected_ssgp = (
@@ -66,7 +65,7 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
     expected_msg_short = u'Secret Note'
     self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
 
-    event_object = storage_writer.events[3]
+    event_object = storage_writer.events[4]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-01-26 14:54:33')

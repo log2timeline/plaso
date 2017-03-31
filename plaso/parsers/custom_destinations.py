@@ -63,14 +63,15 @@ class CustomDestinationsParser(interface.FileObjectParser):
     """Parses a LNK file stored within the .customDestinations-ms file.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_entry: A file entry object (instance of dfvfs.FileEntry).
-      file_offset: The offset of the LNK file data.
-      remaining_file_size: The size of the data remaining in the
-                           .customDestinations-ms file.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_entry (dfvfs.FileEntry): a file entry.
+      file_object (dfvfs.FileIO): a file-like object.
+      remaining_file_size (int): size of the data remaining in the
+          .customDestinations-ms file.
 
     Returns:
-      The size of the LNK file data or 0 if the LNK file could not be read.
+      int: size of the LNK file data or 0 if the LNK file could not be read.
     """
     path_spec = path_spec_factory.Factory.NewPathSpec(
         definitions.TYPE_INDICATOR_DATA_RANGE, range_offset=file_offset,
@@ -102,8 +103,9 @@ class CustomDestinationsParser(interface.FileObjectParser):
     """Parses a .customDestinations-ms file-like object.
 
     Args:
-      parser_mediator: A parser mediator object (instance of ParserMediator).
-      file_object: A file-like object.
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): a file-like object.
 
     Raises:
       UnableToParseFile: when the file cannot be parsed.

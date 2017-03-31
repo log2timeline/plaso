@@ -14,7 +14,6 @@ import datetime
 import logging
 import time
 
-import construct
 import dateutil.parser
 import pytz
 
@@ -65,54 +64,11 @@ class Timestamp(object):
   # The days per month of a non leap year
   DAYS_PER_MONTH = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
-  # The number of seconds in a day
-  SECONDS_PER_DAY = 24 * 60 * 60
-
   # The number of micro seconds per second
   MICRO_SECONDS_PER_SECOND = 1000000
 
   # The multiplication factor to change milliseconds to micro seconds.
   MILLI_SECONDS_TO_MICRO_SECONDS = 1000
-
-  # The difference between Jan 1, 1980 and Jan 1, 1970 in seconds.
-  FAT_DATE_TO_POSIX_BASE = 315532800
-
-  # The difference between Jan 1, 1601 and Jan 1, 1970 in micro seconds
-  WEBKIT_TIME_TO_POSIX_BASE = 11644473600 * 1000000
-
-  # The difference between Jan 1, 1601 and Jan 1, 1970 in 100 nanoseconds.
-  FILETIME_TO_POSIX_BASE = 11644473600 * 10000000
-
-  # The difference between Nov 10, 1582 and Jan 1, 1970 in 100 nanoseconds.
-  UUID_TIME_TO_POSIX_BASE = 12219292800 * 10000000
-
-  # The number of seconds between January 1, 1904 and Jan 1, 1970.
-  # Value confirmed with sleuthkit:
-  #  http://svn.sleuthkit.org/repos/sleuthkit/trunk/tsk3/fs/tsk_hfs.h
-  # and linux source file linux/include/linux/hfsplus_fs.h
-  HFSTIME_TO_POSIX_BASE = 2082844800
-
-  # The number of seconds between January 1, 1970 and January 1, 2001.
-  # As specified in:
-  # https://developer.apple.com/library/ios/documentation/
-  #       cocoa/Conceptual/DatesAndTimes/Articles/dtDates.html
-  COCOA_TIME_TO_POSIX_BASE = 978307200
-
-  # The difference between POSIX (Jan 1, 1970) and DELPHI (Dec 30, 1899).
-  # http://docwiki.embarcadero.com/Libraries/XE3/en/System.TDateTime
-  DELPHI_TIME_TO_POSIX_BASE = 25569
-
-  # The Windows SYSTEMTIME structure.
-  SYSTEMTIME_STRUCT = construct.Struct(
-      u'timestamp',
-      construct.ULInt16(u'year'),
-      construct.ULInt16(u'month'),
-      construct.ULInt16(u'weekday'),
-      construct.ULInt16(u'day'),
-      construct.ULInt16(u'hour'),
-      construct.ULInt16(u'minutes'),
-      construct.ULInt16(u'seconds'),
-      construct.ULInt16(u'milliseconds'))
 
   @classmethod
   def CopyFromString(cls, time_string):
@@ -390,182 +346,6 @@ class Timestamp(object):
     return day_of_year
 
   @classmethod
-  def FromCocoaTime(cls, cocoa_time):
-    """Converts a Cocoa time to a timestamp.
-
-    In Cocoa, time and date values are stored in a unsigned 32-bit integer
-    containing the number of seconds since January 1, 2001 at 00:00:00
-    (midnight) UTC (GMT).
-
-    Args:
-      cocoa_time: The timestamp in Cocoa format.
-
-    Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC or 0 on error.
-    """
-    return cls.FromPosixTime(cocoa_time + cls.COCOA_TIME_TO_POSIX_BASE)
-
-  @classmethod
-  def FromDelphiTime(cls, delphi_time):
-    """Converts a Delphi time to a timestamp.
-
-    In Delphi, time and date values (TDateTime)
-    are stored in a unsigned little endian 64-bit
-    floating point containing the number of seconds
-    since December 30, 1899 at 00:00:00 (midnight) Local Timezone.
-    TDateTime does not have any time zone information.
-
-    Args:
-      delphi_time: The timestamp in Delphi format.
-
-    Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC or 0 on error.
-    """
-    posix_time = (delphi_time - cls.DELPHI_TIME_TO_POSIX_BASE) * 86400.0
-    if (posix_time < cls.TIMESTAMP_MIN_SECONDS or
-        posix_time > cls.TIMESTAMP_MAX_SECONDS):
-      return 0
-
-    return cls.FromPosixTime(int(posix_time))
-
-  @classmethod
-  def FromFatDateTime(cls, fat_date_time):
-    """Converts a FAT date and time into a timestamp.
-
-    FAT date time is mainly used in DOS/Windows file formats and FAT.
-
-    The FAT date and time is a 32-bit value containing two 16-bit values:
-      * The date (lower 16-bit).
-        * bits 0 - 4:  day of month, where 1 represents the first day
-        * bits 5 - 8:  month of year, where 1 represent January
-        * bits 9 - 15: year since 1980
-      * The time of day (upper 16-bit).
-        * bits 0 - 4: seconds (in 2 second intervals)
-        * bits 5 - 10: minutes
-        * bits 11 - 15: hours
-
-    Args:
-      fat_date_time: The 32-bit FAT date time.
-
-    Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC or 0 on error.
-    """
-    number_of_seconds = cls.FAT_DATE_TO_POSIX_BASE
-
-    day_of_month = (fat_date_time & 0x1f) - 1
-    month = ((fat_date_time >> 5) & 0x0f) - 1
-    year = (fat_date_time >> 9) & 0x7f
-
-    if day_of_month < 0 or day_of_month > 30 or month < 0 or month > 11:
-      return 0
-
-    number_of_days = cls.DayOfYear(day_of_month, month, 1980 + year)
-    for past_year in range(0, year):
-      number_of_days += cls.DaysInYear(past_year)
-
-    fat_date_time >>= 16
-
-    seconds = (fat_date_time & 0x1f) * 2
-    minutes = (fat_date_time >> 5) & 0x3f
-    hours = (fat_date_time >> 11) & 0x1f
-
-    if hours > 23 or minutes > 59 or seconds > 59:
-      return 0
-
-    number_of_seconds += (((hours * 60) + minutes) * 60) + seconds
-
-    number_of_seconds += number_of_days * cls.SECONDS_PER_DAY
-
-    return number_of_seconds * cls.MICRO_SECONDS_PER_SECOND
-
-  @classmethod
-  def FromFiletime(cls, filetime):
-    """Converts a FILETIME into a timestamp.
-
-    FILETIME is mainly used in Windows file formats and NTFS.
-
-    The FILETIME is a 64-bit value containing:
-      100th nano seconds since 1601-01-01 00:00:00
-
-    Technically FILETIME consists of 2 x 32-bit parts and is presumed
-    to be unsigned.
-
-    Args:
-      filetime: The 64-bit FILETIME timestamp.
-
-    Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC or 0 on error.
-    """
-    # TODO: Add a handling for if the timestamp equals to zero.
-    if filetime < 0:
-      return 0
-    timestamp = (filetime - cls.FILETIME_TO_POSIX_BASE) / 10
-
-    if timestamp > cls.TIMESTAMP_MAX_MICRO_SECONDS:
-      return 0
-    return timestamp
-
-  @classmethod
-  def FromHfsTime(cls, hfs_time, timezone=pytz.UTC, is_dst=False):
-    """Converts a HFS time to a timestamp.
-
-    HFS time is the same as HFS+ time, except stored in the local
-    timezone of the user.
-
-    Args:
-      hfs_time: Timestamp in the hfs format (32 bit unsigned int).
-      timezone: The timezone object of the system's local time.
-      is_dst: A boolean to indicate the timestamp is corrected for daylight
-              savings time (DST) only used for the DST transition period.
-
-    Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC or 0 on error.
-    """
-    timestamp_local = cls.FromHfsPlusTime(hfs_time)
-    return cls.LocaltimeToUTC(timestamp_local, timezone, is_dst)
-
-  @classmethod
-  def FromHfsPlusTime(cls, hfs_time):
-    """Converts a HFS+ time to a timestamp.
-
-    In HFS+ date and time values are stored in an unsigned 32-bit integer
-    containing the number of seconds since January 1, 1904 at 00:00:00
-    (midnight) UTC (GMT).
-
-    Args:
-      hfs_time: The timestamp in HFS+ format.
-
-    Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC or 0 on error.
-    """
-    return cls.FromPosixTime(hfs_time - cls.HFSTIME_TO_POSIX_BASE)
-
-  @classmethod
-  def FromJavaTime(cls, java_time):
-    """Converts a Java time to a timestamp.
-
-    Jave time is the number of milliseconds since
-    January 1, 1970, 00:00:00 UTC.
-
-    URL: http://docs.oracle.com/javase/7/docs/api/
-         java/sql/Timestamp.html#getTime%28%29
-
-    Args:
-      java_time: The Java Timestamp.
-
-    Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC or 0 on error.
-    """
-    return java_time * cls.MILLI_SECONDS_TO_MICRO_SECONDS
-
-  @classmethod
   def FromPosixTime(cls, posix_time):
     """Converts a POSIX timestamp into a timestamp.
 
@@ -659,43 +439,6 @@ class Timestamp(object):
         year, month, day, hour, minutes, seconds, microseconds, timezone)
 
   @classmethod
-  def FromSystemtime(cls, systemtime):
-    """Converts a SYSTEMTIME structure into a timestamp.
-
-    The SYSTEMTIME structure is a 128-bit struct containing 8 little endian
-    16-bit integers structured like so:
-      struct {
-        WORD year,
-        WORD month,
-        WORD day_of_week,
-        WORD day,
-        WORD hour,
-        WORD minute,
-        WORD second,
-        WORD millisecond
-      }
-
-    Args:
-      systemtime (bytes): 128-bit SYSTEMTIME timestamp value.
-
-    Returns:
-      int: timestamp, which contains the number of micro seconds since
-          January 1, 1970, 00:00:00 UTC or 0 on error.
-    """
-    try:
-      timestamp = cls.SYSTEMTIME_STRUCT.parse(systemtime)
-    except construct.ConstructError as exception:
-      raise errors.TimestampError(
-          u'Unable to create timestamp from {0:s} with error: {1:s}'.format(
-              systemtime, exception))
-    return cls.FromTimeParts(
-        year=timestamp.year, month=timestamp.month,
-        day=timestamp.day, hour=timestamp.hour,
-        minutes=timestamp.minutes, seconds=timestamp.seconds,
-        microseconds=(
-            timestamp.milliseconds * cls.MILLI_SECONDS_TO_MICRO_SECONDS))
-
-  @classmethod
   def FromTimeParts(
       cls, year, month, day, hour, minutes, seconds, microseconds=0,
       timezone=pytz.UTC):
@@ -783,48 +526,6 @@ class Timestamp(object):
       datetime_object = timezone.localize(datetime_object)
 
     return cls.FromPythonDatetime(datetime_object)
-
-  @classmethod
-  def FromUUIDTime(cls, uuid_time):
-    """Converts a UUID verion 1 time into a timestamp.
-
-    The UUID version 1 time is a 60-bit value containing:
-      100th nano seconds since 1582-10-15 00:00:00
-
-    Args:
-      uuid_time: The 60-bit UUID version 1 timestamp.
-
-    Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC or 0 on error.
-    """
-    # TODO: Add a handling for if the timestamp equals to zero.
-    if uuid_time < 0:
-      return 0
-    timestamp = (uuid_time - cls.UUID_TIME_TO_POSIX_BASE) / 10
-
-    if timestamp > cls.TIMESTAMP_MAX_MICRO_SECONDS:
-      return 0
-    return timestamp
-
-  @classmethod
-  def FromWebKitTime(cls, webkit_time):
-    """Converts a WebKit time into a timestamp.
-
-    The WebKit time is a 64-bit value containing:
-      micro seconds since 1601-01-01 00:00:00
-
-    Args:
-      webkit_time: The 64-bit WebKit time timestamp.
-
-    Returns:
-      The timestamp which is an integer containing the number of micro seconds
-      since January 1, 1970, 00:00:00 UTC or 0 on error.
-    """
-    if webkit_time < (cls.TIMESTAMP_MIN_MICRO_SECONDS +
-                      cls.WEBKIT_TIME_TO_POSIX_BASE):
-      return 0
-    return webkit_time - cls.WEBKIT_TIME_TO_POSIX_BASE
 
   @classmethod
   def GetNow(cls):

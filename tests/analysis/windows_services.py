@@ -8,7 +8,8 @@ from dfdatetime import filetime as dfdatetime_filetime
 from dfvfs.path import fake_path_spec
 
 from plaso.analysis import windows_services
-from plaso.containers import windows_events
+from plaso.containers import time_events
+from plaso.lib import eventdata
 from plaso.parsers import winreg
 
 from tests import test_lib as shared_test_lib
@@ -19,15 +20,15 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
   """Tests for the Windows Services analysis plugin."""
 
   _TEST_EVENTS = [
-      {u'path': u'\\ControlSet001\\services\\TestbDriver',
-       u'text_dict': {u'ImagePath': u'C:\\Dell\\testdriver.sys', u'Type': 2,
-                      u'Start': 2, u'ObjectName': u''},
+      {u'key_path': u'\\ControlSet001\\services\\TestbDriver',
+       u'regvalue': {u'ImagePath': u'C:\\Dell\\testdriver.sys', u'Type': 2,
+                     u'Start': 2, u'ObjectName': u''},
        u'timestamp': 1346145829002031},
       # This is almost the same, but different timestamp and source, so that
       # we can test the service de-duplication.
-      {u'path': u'\\ControlSet003\\services\\TestbDriver',
-       u'text_dict': {u'ImagePath': u'C:\\Dell\\testdriver.sys', u'Type': 2,
-                      u'Start': 2, u'ObjectName': u''},
+      {u'key_path': u'\\ControlSet003\\services\\TestbDriver',
+       u'regvalue': {u'ImagePath': u'C:\\Dell\\testdriver.sys', u'Type': 2,
+                     u'Start': 2, u'ObjectName': u''},
        u'timestamp': 1346145839002031},
   ]
 
@@ -41,15 +42,13 @@ class WindowsServicesTest(test_lib.AnalysisPluginTestCase):
     Returns:
       EventObject: event with the appropriate attributes for testing.
     """
-    filetime = dfdatetime_filetime.Filetime(
+    date_time = dfdatetime_filetime.Filetime(
         timestamp=event_dictionary[u'timestamp'])
-    event = windows_events.WindowsRegistryServiceEvent(
-        filetime, event_dictionary[u'path'], event_dictionary[u'text_dict'])
+    event = time_events.DateTimeValuesEvent(
+        date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+    event.data_type = u'windows:registry:service'
 
     for attribute_name, attribute_value in event_dictionary.items():
-      if attribute_name in (u'path', u'text_dict', u'timestamp'):
-        continue
-
       setattr(event, attribute_name, attribute_value)
 
     return event
