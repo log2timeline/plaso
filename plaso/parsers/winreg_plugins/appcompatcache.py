@@ -209,10 +209,10 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
   _CACHED_ENTRY_SIGNATURE_8_1 = b'10ts'
 
   # AppCompatCache format used in Windows 10
-  _HEADER_SIGNATURE_10 = 0x00000030
+  _HEADER_SIGNATURES_10 = (0x00000030, 0x00000034)
 
   _HEADER_10_STRUCT = construct.Struct(
-      u'appcompatcache_header_8',
+      u'appcompatcache_header_10',
       construct.ULInt32(u'signature'),
       construct.ULInt32(u'unknown1'),
       construct.Padding(28),
@@ -244,7 +244,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
           self._CACHED_ENTRY_SIGNATURE_8_0, self._CACHED_ENTRY_SIGNATURE_8_1]:
         return self._FORMAT_TYPE_8
 
-    elif signature == self._HEADER_SIGNATURE_10:
+    elif signature in self._HEADER_SIGNATURES_10:
       # Windows 10 uses the same cache entry signature as Windows 8.1
       if value_data[signature:signature + 4] in [
           self._CACHED_ENTRY_SIGNATURE_8_1]:
@@ -348,28 +348,28 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
     header_object = AppCompatCacheHeader()
 
     if format_type == self._FORMAT_TYPE_XP:
-      header_object.header_size = self._HEADER_XP_32BIT_STRUCT.sizeof()
       header_struct = self._HEADER_XP_32BIT_STRUCT.parse(value_data)
+      header_object.header_size = self._HEADER_XP_32BIT_STRUCT.sizeof()
 
     elif format_type == self._FORMAT_TYPE_2003:
-      header_object.header_size = self._HEADER_2003_STRUCT.sizeof()
       header_struct = self._HEADER_2003_STRUCT.parse(value_data)
+      header_object.header_size = self._HEADER_2003_STRUCT.sizeof()
 
     elif format_type == self._FORMAT_TYPE_VISTA:
-      header_object.header_size = self._HEADER_VISTA_STRUCT.sizeof()
       header_struct = self._HEADER_VISTA_STRUCT.parse(value_data)
+      header_object.header_size = self._HEADER_VISTA_STRUCT.sizeof()
 
     elif format_type == self._FORMAT_TYPE_7:
-      header_object.header_size = self._HEADER_7_STRUCT.sizeof()
       header_struct = self._HEADER_7_STRUCT.parse(value_data)
+      header_object.header_size = self._HEADER_7_STRUCT.sizeof()
 
     elif format_type == self._FORMAT_TYPE_8:
-      header_object.header_size = self._HEADER_8_STRUCT.sizeof()
       header_struct = self._HEADER_8_STRUCT.parse(value_data)
+      header_object.header_size = self._HEADER_8_STRUCT.sizeof()
 
     elif format_type == self._FORMAT_TYPE_10:
-      header_object.header_size = self._HEADER_10_STRUCT.sizeof()
       header_struct = self._HEADER_10_STRUCT.parse(value_data)
+      header_object.header_size = header_struct.signature
 
     if format_type in [
         self._FORMAT_TYPE_XP, self._FORMAT_TYPE_2003, self._FORMAT_TYPE_VISTA,
@@ -443,8 +443,9 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
     elif format_type in [self._FORMAT_TYPE_8, self._FORMAT_TYPE_10]:
       if cached_entry_data[0:4] not in [
           self._CACHED_ENTRY_SIGNATURE_8_0, self._CACHED_ENTRY_SIGNATURE_8_1]:
-        raise RuntimeError(
-            u'[{0:s}] Unsupported cache entry signature'.format(self.NAME))
+        raise RuntimeError((
+            u'[{0:s}] Unsupported cache entry signature at offset: '
+            u'0x{1:08x}').format(self.NAME, cached_entry_offset))
 
       if cached_entry_size == self._CACHED_ENTRY_HEADER_8_STRUCT.sizeof():
         cached_entry_struct = self._CACHED_ENTRY_HEADER_8_STRUCT.parse(
