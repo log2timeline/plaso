@@ -49,9 +49,9 @@ PLASO_DEPENDENCIES="PyYAML
                     python-pytsk3
                     python-requests
                     python-six
+                    python-yara
                     python-zmq
-                    pytz
-                    yara-python";
+                    pytz";
 
 # Additional dependencies for running Plaso tests, alphabetized,
 # one per line.
