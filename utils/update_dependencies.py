@@ -90,7 +90,7 @@ class GIFTCOPRInstallScriptWriter(object):
   _FILE_FOOTER = [
       u'',
       u'sudo dnf install dnf-plugins-core',
-      u'sudo dnf copr enable gift/dev',
+      u'sudo dnf copr enable @gift/dev',
       u'sudo dnf install -y ${PLASO_DEPENDENCIES}',
       u'',
       u'if [[ "$*" =~ "include-debug" ]]; then',

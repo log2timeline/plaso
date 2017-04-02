@@ -88,7 +88,7 @@ DEBUG_DEPENDENCIES="libbde-debuginfo
                     libvslvm-debuginfo";
 
 sudo dnf install dnf-plugins-core
-sudo dnf copr enable gift/dev
+sudo dnf copr enable @gift/dev
 sudo dnf install -y ${PLASO_DEPENDENCIES}
 
 if [[ "$*" =~ "include-debug" ]]; then
