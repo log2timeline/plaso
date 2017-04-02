@@ -268,7 +268,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
 
     expected_session = sessions.Session()
     expected_session.product_name = u'plaso'
-    expected_session.product_version = plaso.GetVersion()
+    expected_session.product_version = plaso.__version__
     expected_session.parsers_counter = parsers_counter
 
     json_string = (
@@ -294,7 +294,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         u'preferred_encoding': u'utf-8',
         u'preferred_time_zone': u'UTC',
         u'product_name': u'plaso',
-        u'product_version': plaso.GetVersion(),
+        u'product_version': plaso.__version__,
         u'start_time': session.start_time
     }
 
@@ -350,7 +350,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         identifier=session_identifier)
     expected_session_start.timestamp = timestamp
     expected_session_start.product_name = u'plaso'
-    expected_session_start.product_version = plaso.GetVersion()
+    expected_session_start.product_version = plaso.__version__
 
     json_string = (
         json_serializer.JSONAttributeContainerSerializer.WriteSerialized(
@@ -369,7 +369,7 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         u'debug_mode': False,
         u'identifier': session_identifier,
         u'product_name': u'plaso',
-        u'product_version': plaso.GetVersion(),
+        u'product_version': plaso.__version__,
         u'timestamp': timestamp
     }
 
