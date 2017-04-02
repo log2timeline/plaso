@@ -83,7 +83,7 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(test_event.timestamp, expected_timestamp)
 
     self.assertEqual(
-        test_event.timestamp_desc, definitions.TIME_DESCRIPTION_UPDATE_TIME)
+        test_event.timestamp_desc, definitions.TIME_DESCRIPTION_UPDATE)
 
     self.assertEqual(test_event.screen_name, u'BBCBreaking')
     self.assertEqual(test_event.name, u'BBC Breaking News')
@@ -157,7 +157,7 @@ class TwitterIOSTest(test_lib.SQLitePluginTestCase):
     self.assertEqual(test_event.timestamp, expected_timestamp)
 
     self.assertEqual(
-        test_event.timestamp_desc, definitions.TIME_DESCRIPTION_UPDATE_TIME)
+        test_event.timestamp_desc, definitions.TIME_DESCRIPTION_UPDATE)
 
     self.assertEqual(test_event.text, u'Never forget. http://t.co/L7bjWue1A2')
     self.assertEqual(test_event.user_id, 475222380)

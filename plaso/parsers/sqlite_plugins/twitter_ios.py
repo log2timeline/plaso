@@ -211,7 +211,7 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
       timestamp = int(timestamp)
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_UPDATE_TIME)
+          date_time, definitions.TIME_DESCRIPTION_UPDATE)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseStatusRow(self, parser_mediator, row, query=None, **unused_kwargs):
@@ -250,7 +250,7 @@ class TwitterIOSPlugin(interface.SQLitePlugin):
       timestamp = int(timestamp)
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
-          date_time, definitions.TIME_DESCRIPTION_UPDATE_TIME)
+          date_time, definitions.TIME_DESCRIPTION_UPDATE)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

@@ -113,7 +113,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
     event_data.key_path = key_path
 
     event = time_events.DateTimeValuesEvent(
-        date_time, definitions.TIME_DESCRIPTION_UPDATE_TIME,
+        date_time, definitions.TIME_DESCRIPTION_UPDATE,
         time_zone=parser_mediator.timezone)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
