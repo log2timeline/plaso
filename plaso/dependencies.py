@@ -491,8 +491,12 @@ def GetInstallRequires():
   return sorted(install_requires)
 
 
-def GetRPMRequires():
+def GetRPMRequires(exclude_version=False):
   """Retrieves the setup.cfg RPM installation requirements.
+
+  Args:
+    exclude_version (Optional[bool]): True if the version should be excluded
+        from the dependency definitions.
 
   Returns:
     list[str]: dependency definitions for requires for setup.cfg.
@@ -509,7 +513,7 @@ def GetRPMRequires():
       # the sqlite3 version.
       module_version = None
 
-    if not module_version:
+    if exclude_version or not module_version:
       requires.append(module_name)
     else:
       requires.append(u'{0:s} >= {1!s}'.format(module_name, module_version))
