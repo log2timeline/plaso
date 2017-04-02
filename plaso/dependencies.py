@@ -411,8 +411,11 @@ def CheckModuleVersion(module_name):
           u'required.').format(module_name, module_version, maximum_version))
 
 
-def CheckTestDependencies():
+def CheckTestDependencies(verbose_output=True):
   """Checks the availability of the dependencies when running tests.
+
+  Args:
+    verbose_output (Optional[bool]): True if output should be verbose.
 
   Returns:
     bool: True if the dependencies are available, False otherwise.
@@ -424,7 +427,8 @@ def CheckTestDependencies():
   for module_name, version_tuple in sorted(PYTHON_TEST_DEPENDENCIES.items()):
     if not _CheckPythonModule(
         module_name, version_tuple[0], version_tuple[1],
-        is_required=version_tuple[3], maximum_version=version_tuple[2]):
+        is_required=version_tuple[3], maximum_version=version_tuple[2],
+        verbose_output=verbose_output):
       return False
 
   return True

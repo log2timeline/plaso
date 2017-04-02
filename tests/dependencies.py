@@ -51,7 +51,9 @@ class DependenciesTest(unittest.TestCase):
     with self.assertRaises(ImportError):
       dependencies.CheckModuleVersion(u'bogus')
 
-  # CheckTestDependencies is tested in ./run_tests.py
+  def testCheckTestDependencies(self):
+    """Tests the CheckTestDependencies function."""
+    dependencies.CheckTestDependencies(verbose_output=False)
 
   def testGetDPKGDepends(self):
     """Tests the GetDPKGDepends function."""
