@@ -74,20 +74,21 @@ class GIFTInstallScriptWriter(object):
       (u'# This should not include packages only required for testing or '
        u'development.')]
 
-  _FILE_FOOTER = [
+  _ADDITIONAL_DEPENDENCIES = [
       u'',
       u'# Additional dependencies for running Plaso tests, alphabetized,',
       u'# one per line.',
       u'TEST_DEPENDENCIES="python-mock";',
       u'',
-      u'# Additional dependencies for doing Plaso debugging, alphabetized,',
-      u'# one per line.',
-      u'DEBUG_DEPENDENCIES="python-guppy";',
-      u'',
       u'# Additional dependencies for doing Plaso development, alphabetized,',
       u'# one per line.',
       u'DEVELOPMENT_DEPENDENCIES="python-sphinx',
       u'                          pylint";',
+      u'',
+      u'# Additional dependencies for doing Plaso debugging, alphabetized,',
+      u'# one per line.']
+
+  _FILE_FOOTER = [
       u'',
       u'sudo add-apt-repository ppa:gift/dev -y',
       u'sudo apt-get update -q',
@@ -112,6 +113,7 @@ class GIFTInstallScriptWriter(object):
     file_content.extend(self._FILE_HEADER)
 
     dependencies = plaso.dependencies.GetDPKGDepends(exclude_version=True)
+    libyal_dependencies = []
     for index, dependency in enumerate(dependencies):
       if index == 0:
         file_content.append(u'PLASO_DEPENDENCIES="{0:s}'.format(dependency))
@@ -119,6 +121,23 @@ class GIFTInstallScriptWriter(object):
         file_content.append(u'                    {0:s}";'.format(dependency))
       else:
         file_content.append(u'                    {0:s}'.format(dependency))
+
+      if dependency.startswith(u'lib') and dependency.endswith(u'-python'):
+        dependency, _, _ = dependency.partition(u'-')
+        libyal_dependencies.append(dependency)
+
+    file_content.extend(self._ADDITIONAL_DEPENDENCIES)
+
+    for index, dependency in enumerate(libyal_dependencies):
+      if index == 0:
+        file_content.append(u'DEBUG_DEPENDENCIES="{0:s}-dbg'.format(dependency))
+      else:
+        file_content.append(u'                    {0:s}-dbg'.format(dependency))
+
+      file_content.append(u'                    {0:s}-python-dbg'.format(
+          dependency))
+
+    file_content.append(u'                    python-guppy";')
 
     file_content.extend(self._FILE_FOOTER)
 
