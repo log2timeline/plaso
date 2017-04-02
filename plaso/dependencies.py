@@ -171,7 +171,8 @@ _RPM_PACKAGE_NAMES = {
     u'pyvslvm': u'libvslvm-python',
     u'sqlite3': u'python-libs',
     u'xlsxwriter': u'python-XlsxWriter',
-    u'yaml': u'python-PyYAML'}
+    u'yaml': u'PyYAML',
+    u'yara': u'yara-python'}
 
 _VERSION_SPLIT_REGEX = re.compile(r'\.|\-')
 

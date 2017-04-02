@@ -3,7 +3,8 @@ set -e
 
 # Dependencies for running Plaso, alphabetized, one per line.
 # This should not include packages only required for testing or development.
-PLASO_DEPENDENCIES="libbde-python
+PLASO_DEPENDENCIES="PyYAML
+                    libbde-python
                     libesedb-python
                     libevt-python
                     libevtx-python
@@ -26,7 +27,6 @@ PLASO_DEPENDENCIES="libbde-python
                     libvshadow-python
                     libvslvm-python
                     pyliblzma
-                    python-PyYAML
                     python-XlsxWriter
                     python-artifacts
                     python-bencode
@@ -49,9 +49,9 @@ PLASO_DEPENDENCIES="libbde-python
                     python-pytsk3
                     python-requests
                     python-six
-                    python-yara
                     python-zmq
-                    pytz";
+                    pytz
+                    yara-python";
 
 # Additional dependencies for running Plaso tests, alphabetized,
 # one per line.
