@@ -133,9 +133,9 @@ _PYPI_PROJECT_NAMES = {
     u'pyvshadow': u'libvshadow-python',
     u'pyvslvm': u'libvslvm-python',
     u'sqlite3': u'pysqlite',
+    u'xlsxwriter': u'XlsxWriter',
     u'yaml': u'PyYAML',
     u'yara': u'yara-python',
-    u'xlsxwriter': u'XlsxWriter',
     u'zmq': u'pyzmq'}
 
 # Maps Python module names to RPM packages.
@@ -169,7 +169,9 @@ _RPM_PACKAGE_NAMES = {
     u'pyvmdk': u'libvmdk-python',
     u'pyvshadow': u'libvshadow-python',
     u'pyvslvm': u'libvslvm-python',
-    u'sqlite3': u'python-libs'}
+    u'sqlite3': u'python-libs',
+    u'xlsxwriter': u'python-XlsxWriter',
+    u'yaml': u'python-PyYAML'}
 
 _VERSION_SPLIT_REGEX = re.compile(r'\.|\-')
 
