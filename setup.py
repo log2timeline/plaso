@@ -37,10 +37,20 @@ import plaso.dependencies
 
 
 version_tuple = (sys.version_info[0], sys.version_info[1])
-if version_tuple < (2, 7):
+if (version_tuple[0] == 2 and version_tuple < (2, 7)):
   print((
-      'Unsupported Python version: {0:s}, version 2.7 or higher '
+      'Unsupported Python 2 version: {0:s}, version 2.7 or higher '
       'required.').format(sys.version))
+  sys.exit(1)
+
+elif (version_tuple[0] == 3 and version_tuple < (3, 4)):
+  print((
+      'Unsupported Python 3 version: {0:s}, version 3.4 or higher '
+      'required.').format(sys.version))
+  sys.exit(1)
+
+else:
+  print('Unsupported Python version: {0:s}.'.format(sys.version))
   sys.exit(1)
 
 
