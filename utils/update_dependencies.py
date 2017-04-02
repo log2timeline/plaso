@@ -8,6 +8,7 @@ import sys
 # Change PYTHONPATH to include plaso.
 sys.path.insert(0, u'.')
 
+# pylint: disable=wrong-import-position
 import plaso.dependencies
 
 
