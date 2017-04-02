@@ -11,7 +11,7 @@ except ImportError:
   import sqlite3
 
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.output import sqlite_4n6time
 
@@ -32,7 +32,7 @@ class SQLiteTestEvent(time_events.TimestampEvent):
                  of micro seconds since January 1, 1970, 00:00:00 UTC.
     """
     super(SQLiteTestEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
+        timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
     self.hostname = u'ubuntu'
     self.filename = u'log/syslog.1'
     self.display_name = u'log/syslog.1'

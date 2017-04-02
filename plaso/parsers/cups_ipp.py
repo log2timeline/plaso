@@ -28,7 +28,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -181,14 +181,14 @@ class CupsIppParser(interface.FileObjectParser):
       u'printer-uri': u'uri'}
 
   _POSIX_TIME_IN_MICROSECOND_VALUES = {
-      u'date-time-at-creation': eventdata.EventTimestamp.CREATION_TIME,
-      u'date-time-at-processing': eventdata.EventTimestamp.START_TIME,
-      u'date-time-at-completed': eventdata.EventTimestamp.END_TIME}
+      u'date-time-at-creation': definitions.TIME_DESCRIPTION_CREATION_TIME,
+      u'date-time-at-processing': definitions.TIME_DESCRIPTION_START_TIME,
+      u'date-time-at-completed': definitions.TIME_DESCRIPTION_END_TIME}
 
   _POSIX_TIME_VALUES = {
-      u'time-at-creation': eventdata.EventTimestamp.CREATION_TIME,
-      u'time-at-processing': eventdata.EventTimestamp.START_TIME,
-      u'time-at-completed': eventdata.EventTimestamp.END_TIME}
+      u'time-at-creation': definitions.TIME_DESCRIPTION_CREATION_TIME,
+      u'time-at-processing': definitions.TIME_DESCRIPTION_START_TIME,
+      u'time-at-completed': definitions.TIME_DESCRIPTION_END_TIME}
 
   _POSIX_TIME_VALUE_NAMES = _POSIX_TIME_IN_MICROSECOND_VALUES.keys()
   _POSIX_TIME_VALUE_NAMES.extend(_POSIX_TIME_VALUES.keys())

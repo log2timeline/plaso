@@ -5,7 +5,7 @@ from dfdatetime import java_time as dfdatetime_java_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -69,13 +69,13 @@ class AndroidWebViewCachePlugin(interface.SQLitePlugin):
     if row['expires'] is not None:
       date_time = dfdatetime_java_time.JavaTime(timestamp=row['expires'])
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.EXPIRATION_TIME)
+          date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if row['lastmodify'] is not None:
       date_time = dfdatetime_java_time.JavaTime(timestamp=row['lastmodify'])
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

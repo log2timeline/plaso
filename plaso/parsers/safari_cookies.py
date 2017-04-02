@@ -9,7 +9,7 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import specification
 # Need to register cookie plugins.
 from plaso.parsers import cookie_plugins  # pylint: disable=unused-import
@@ -133,7 +133,7 @@ class BinaryCookieParser(interface.FileObjectParser):
       date_time = dfdatetime_cocoa_time.CocoaTime(
           timestamp=cookie.creation_date)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.CREATION_TIME)
+          date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if cookie.expiration_date:
@@ -143,7 +143,7 @@ class BinaryCookieParser(interface.FileObjectParser):
       date_time = dfdatetime_semantic_time.SemanticTime(u'Not set')
 
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.EXPIRATION_TIME)
+        date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     for plugin in self._cookie_plugins:

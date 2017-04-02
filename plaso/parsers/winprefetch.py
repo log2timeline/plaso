@@ -9,7 +9,7 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.containers import windows_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -110,7 +110,7 @@ class WinPrefetchParser(interface.FileObjectParser):
 
         date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.CREATION_TIME)
+            date_time, definitions.TIME_DESCRIPTION_CREATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       for filename in iter(scca_file.filenames):
@@ -158,7 +158,7 @@ class WinPrefetchParser(interface.FileObjectParser):
       date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
 
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.LAST_RUNTIME)
+        date_time, definitions.TIME_DESCRIPTION_LAST_RUN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     # Check for the 7 older last run time values available since
@@ -171,7 +171,7 @@ class WinPrefetchParser(interface.FileObjectParser):
 
         date_time = dfdatetime_filetime.Filetime(timestamp=timestamp)
         date_time_description = u'Previous {0:s}'.format(
-            eventdata.EventTimestamp.LAST_RUNTIME)
+            definitions.TIME_DESCRIPTION_LAST_RUN)
         event = time_events.DateTimeValuesEvent(
             date_time, date_time_description)
         parser_mediator.ProduceEventWithEventData(event, event_data)

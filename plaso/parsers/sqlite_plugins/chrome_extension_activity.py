@@ -9,7 +9,7 @@ from dfdatetime import webkit_time as dfdatetime_webkit_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -104,7 +104,7 @@ class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
     timestamp = row['time']
     date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.UNKNOWN)
+        date_time, definitions.TIME_DESCRIPTION_UNKNOWN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

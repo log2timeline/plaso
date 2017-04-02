@@ -5,7 +5,7 @@ from dfdatetime import webkit_time as dfdatetime_webkit_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 # Register the cookie plugins.
 from plaso.parsers import cookie_plugins  # pylint: disable=unused-import
 from plaso.parsers import sqlite
@@ -132,13 +132,13 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
     timestamp = row['creation_utc']
     date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.CREATION_TIME)
+        date_time, definitions.TIME_DESCRIPTION_CREATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     timestamp = row['last_access_utc']
     date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.ACCESS_TIME)
+        date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if row['has_expires']:

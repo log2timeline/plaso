@@ -3,7 +3,7 @@
 
 from plaso.containers import windows_events
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -82,7 +82,7 @@ class ServicesPlugin(interface.WindowsRegistryPlugin):
       event_data.urls = self.URLS
 
       event = time_events.DateTimeValuesEvent(
-          registry_key.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+          registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

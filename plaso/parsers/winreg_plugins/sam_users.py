@@ -8,7 +8,7 @@ from dfdatetime import filetime as dfdatetime_filetime
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.containers import windows_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -185,7 +185,7 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
         event_data.source_append = self._SOURCE_APPEND
 
         event = time_events.DateTimeValuesEvent(
-            last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+            last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       event_data = SAMUsersWindowsRegistryEventData()
@@ -201,14 +201,14 @@ class SAMUsersWindowsRegistryPlugin(interface.WindowsRegistryPlugin):
         date_time = dfdatetime_filetime.Filetime(
             timestamp=f_data_struct.last_login)
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.LAST_LOGIN_TIME)
+            date_time, definitions.TIME_DESCRIPTION_LAST_LOGIN)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       if f_data_struct.password_reset != 0:
         date_time = dfdatetime_filetime.Filetime(
             timestamp=f_data_struct.password_reset)
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.LAST_PASSWORD_RESET)
+            date_time, definitions.TIME_DESCRIPTION_LAST_PASSWORD_RESET)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

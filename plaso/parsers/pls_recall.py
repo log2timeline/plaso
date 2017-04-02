@@ -10,7 +10,7 @@ from dfdatetime import delphi_date_time as dfdatetime_delphi_date_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.lib import utils
 from plaso.parsers import interface
@@ -111,7 +111,7 @@ class PlsRecallParser(interface.FileObjectParser):
       date_time = dfdatetime_delphi_date_time.DelphiDateTime(
           timestamp=pls_record.TimeStamp)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+          date_time, definitions.TIME_DESCRIPTION_WRITTEN)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
       try:

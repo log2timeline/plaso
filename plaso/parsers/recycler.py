@@ -9,7 +9,7 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import binary
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -120,7 +120,7 @@ class WinRecycleBinParser(interface.FileObjectParser):
     event_data.file_size = header_struct.file_size
 
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.DELETED_TIME)
+        date_time, definitions.TIME_DESCRIPTION_DELETED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
@@ -211,7 +211,7 @@ class WinRecyclerInfo2Parser(interface.FileObjectParser):
     event_data.short_filename = ascii_filename
 
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.DELETED_TIME)
+        date_time, definitions.TIME_DESCRIPTION_DELETED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):

@@ -2,7 +2,7 @@
 """The output mediator object."""
 
 from plaso.formatters import manager as formatters_manager
-from plaso.lib import eventdata
+from plaso.lib import definitions
 
 import pytz  # pylint: disable=wrong-import-order
 
@@ -174,38 +174,37 @@ class OutputMediator(object):
 
     # Access time.
     if event.timestamp_desc in [
-        eventdata.EventTimestamp.ACCESS_TIME,
-        eventdata.EventTimestamp.ACCOUNT_CREATED,
-        eventdata.EventTimestamp.PAGE_VISITED,
-        eventdata.EventTimestamp.LAST_VISITED_TIME,
-        eventdata.EventTimestamp.START_TIME,
-        eventdata.EventTimestamp.LAST_SHUTDOWN,
-        eventdata.EventTimestamp.LAST_LOGIN_TIME,
-        eventdata.EventTimestamp.LAST_PASSWORD_RESET,
-        eventdata.EventTimestamp.LAST_CONNECTED,
-        eventdata.EventTimestamp.LAST_RUNTIME,
-        eventdata.EventTimestamp.LAST_PRINTED]:
+        definitions.TIME_DESCRIPTION_LAST_ACCESS,
+        definitions.TIME_DESCRIPTION_ACCOUNT_CREATED,
+        definitions.TIME_DESCRIPTION_LAST_VISITED,
+        definitions.TIME_DESCRIPTION_START,
+        definitions.TIME_DESCRIPTION_LAST_SHUTDOWN,
+        definitions.TIME_DESCRIPTION_LAST_LOGIN,
+        definitions.TIME_DESCRIPTION_LAST_PASSWORD_RESET,
+        definitions.TIME_DESCRIPTION_LAST_CONNECTED,
+        definitions.TIME_DESCRIPTION_LAST_RUN,
+        definitions.TIME_DESCRIPTION_LAST_PRINTED]:
       return u'.A..'
 
     # Content modification.
     if event.timestamp_desc in [
-        eventdata.EventTimestamp.MODIFICATION_TIME,
-        eventdata.EventTimestamp.WRITTEN_TIME,
-        eventdata.EventTimestamp.DELETED_TIME]:
+        definitions.TIME_DESCRIPTION_MODIFICATION,
+        definitions.TIME_DESCRIPTION_WRITTEN,
+        definitions.TIME_DESCRIPTION_DELETED]:
       return u'M...'
 
     # Content creation time.
     if event.timestamp_desc in [
-        eventdata.EventTimestamp.CREATION_TIME,
-        eventdata.EventTimestamp.ADDED_TIME,
-        eventdata.EventTimestamp.FILE_DOWNLOADED,
-        eventdata.EventTimestamp.FIRST_CONNECTED]:
+        definitions.TIME_DESCRIPTION_CREATION,
+        definitions.TIME_DESCRIPTION_ADDED,
+        definitions.TIME_DESCRIPTION_FILE_DOWNLOADED,
+        definitions.TIME_DESCRIPTION_FIRST_CONNECTED]:
       return '...B'
 
     # Metadata modification.
     if event.timestamp_desc in [
-        eventdata.EventTimestamp.CHANGE_TIME,
-        eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME]:
+        definitions.TIME_DESCRIPTION_CHANGE,
+        definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION]:
       return u'..C.'
 
     return u'....'

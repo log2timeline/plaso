@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import olecf  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers.olecf_plugins import default
 
@@ -31,7 +31,7 @@ class TestDefaultPluginOLECF(test_lib.OLECFPluginTestCase):
     self.assertEqual(event_object.name, u'Root Entry')
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-05-16 02:29:49.795')

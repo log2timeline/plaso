@@ -8,7 +8,7 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.containers import windows_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -113,7 +113,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
     event_data.key_path = key_path
 
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.UPDATE_TIME,
+        date_time, definitions.TIME_DESCRIPTION_UPDATE_TIME,
         time_zone=parser_mediator.timezone)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
@@ -144,7 +144,7 @@ class CCleanerPlugin(interface.WindowsRegistryPlugin):
     event_data.urls = self.URLS
 
     event = time_events.DateTimeValuesEvent(
-        registry_key.last_written_time, eventdata.EventTimestamp.WRITTEN_TIME)
+        registry_key.last_written_time, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

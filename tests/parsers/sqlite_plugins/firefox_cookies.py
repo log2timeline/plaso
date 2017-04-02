@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import firefox_cookies  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import firefox_cookies
 
@@ -53,7 +53,7 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     # Check one greenqloud.com event
     event = test_events[32]
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.EXPIRATION_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_EXPIRATION)
     self.assertEqual(event.host, u's.greenqloud.com')
     self.assertEqual(event.cookie_name, u'__utma')
     self.assertFalse(event.httponly)
@@ -71,7 +71,7 @@ class FirefoxCookiesPluginTest(test_lib.SQLitePluginTestCase):
     # Check one of the visits to pubmatic.com.
     event = test_events[62]
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.EXPIRATION_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_EXPIRATION)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-29 21:56:04')

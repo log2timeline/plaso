@@ -10,7 +10,7 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -162,7 +162,7 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
         structure.details)
 
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.ADDED_TIME)
+        date_time, definitions.TIME_DESCRIPTION_ADDED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseLine(self, parser_mediator, structure):
@@ -199,7 +199,7 @@ class SkyDriveLogParser(text_parser.PyparsingMultiLineTextParser):
     event_data.source_code = structure.source_code
 
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.ADDED_TIME)
+        date_time, definitions.TIME_DESCRIPTION_ADDED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseRecord(self, parser_mediator, key, structure):
@@ -347,7 +347,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
     event_data.text = structure.text
 
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.ADDED_TIME)
+        date_time, definitions.TIME_DESCRIPTION_ADDED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     self._last_date_time = date_time
@@ -371,7 +371,7 @@ class SkyDriveOldLogParser(text_parser.PyparsingSingleLineTextParser):
     event_data.text = structure.text
 
     event = time_events.DateTimeValuesEvent(
-        self._last_date_time, eventdata.EventTimestamp.ADDED_TIME)
+        self._last_date_time, definitions.TIME_DESCRIPTION_ADDED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     # TODO think to a possible refactoring for the non-header lines.

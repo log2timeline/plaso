@@ -8,7 +8,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import time_events
 from plaso.formatters import bash_history
-from plaso.lib import eventdata
+from plaso.lib import definitions
 
 from tests.formatters import test_lib
 
@@ -31,7 +31,7 @@ class BashHistoryFormatterTest(test_lib.EventFormatterTestCase):
     """Tests the GetMessages method."""
     date_time = dfdatetime_posix_time.PosixTime(timestamp=1457771210)
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+        date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
     event.data_type = u'bash:history:command'
     event.command = u'cd plaso'
 

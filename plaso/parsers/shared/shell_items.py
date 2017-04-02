@@ -6,7 +6,7 @@ import pyfwsi
 from dfdatetime import fat_date_time as dfdatetime_fat_date_time
 
 from plaso.containers import shell_item_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.winnt import shell_folder_ids
 
 
@@ -56,7 +56,7 @@ class ShellItemsParser(object):
             date_time = dfdatetime_fat_date_time.FATDateTime(
                 fat_date_time=fat_date_time)
             event = shell_item_events.ShellItemFileEntryEvent(
-                date_time, eventdata.EventTimestamp.CREATION_TIME,
+                date_time, definitions.TIME_DESCRIPTION_CREATION,
                 shell_item.name, long_name, localized_name, file_reference,
                 shell_item_path, self._origin)
             parser_mediator.ProduceEvent(event)
@@ -66,7 +66,7 @@ class ShellItemsParser(object):
             date_time = dfdatetime_fat_date_time.FATDateTime(
                 fat_date_time=fat_date_time)
             event = shell_item_events.ShellItemFileEntryEvent(
-                date_time, eventdata.EventTimestamp.ACCESS_TIME,
+                date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS,
                 shell_item.name, long_name, localized_name, file_reference,
                 shell_item_path, self._origin)
             parser_mediator.ProduceEvent(event)
@@ -76,7 +76,7 @@ class ShellItemsParser(object):
         date_time = dfdatetime_fat_date_time.FATDateTime(
             fat_date_time=fat_date_time)
         event = shell_item_events.ShellItemFileEntryEvent(
-            date_time, eventdata.EventTimestamp.MODIFICATION_TIME,
+            date_time, definitions.TIME_DESCRIPTION_MODIFICATION,
             shell_item.name, long_name, localized_name, file_reference,
             shell_item_path, self._origin)
         parser_mediator.ProduceEvent(event)

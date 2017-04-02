@@ -9,7 +9,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -241,13 +241,13 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
 
     date_time = dfdatetime_posix_time.PosixTime(timestamp=row['modified'])
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+        date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if row['created']:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=row['created'])
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.CREATION_TIME)
+          date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseLocalEntryRow(
@@ -275,7 +275,7 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
 
     date_time = dfdatetime_posix_time.PosixTime(timestamp=row['modified'])
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+        date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

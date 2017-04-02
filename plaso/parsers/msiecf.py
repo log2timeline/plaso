@@ -9,7 +9,7 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -120,7 +120,7 @@ class MSIECFParser(interface.FileObjectParser):
           cache_directories[event_data.cache_directory_index])
 
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.NOT_A_TIME)
+        date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseItems(self, parser_mediator, msiecf_file):
@@ -194,7 +194,7 @@ class MSIECFParser(interface.FileObjectParser):
     event_data.url = msiecf_item.location
 
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.NOT_A_TIME)
+        date_time, definitions.TIME_DESCRIPTION_NOT_A_TIME)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseUrl(
@@ -229,33 +229,33 @@ class MSIECFParser(interface.FileObjectParser):
 
     if msiecf_item.type:
       if msiecf_item.type == u'cache':
-        primary_date_time_description = eventdata.EventTimestamp.ACCESS_TIME
+        primary_date_time_description = definitions.TIME_DESCRIPTION_LAST_ACCESS
         secondary_date_time_description = (
-            eventdata.EventTimestamp.MODIFICATION_TIME)
+            definitions.TIME_DESCRIPTION_MODIFICATION)
 
       elif msiecf_item.type == u'cookie':
-        primary_date_time_description = eventdata.EventTimestamp.ACCESS_TIME
+        primary_date_time_description = definitions.TIME_DESCRIPTION_LAST_ACCESS
         secondary_date_time_description = (
-            eventdata.EventTimestamp.MODIFICATION_TIME)
+            definitions.TIME_DESCRIPTION_MODIFICATION)
 
       elif msiecf_item.type == u'history':
         primary_date_time_description = (
-            eventdata.EventTimestamp.LAST_VISITED_TIME)
+            definitions.TIME_DESCRIPTION_LAST_VISITED)
         secondary_date_time_description = (
-            eventdata.EventTimestamp.LAST_VISITED_TIME)
+            definitions.TIME_DESCRIPTION_LAST_VISITED)
 
       elif msiecf_item.type == u'history-daily':
         primary_date_time_description = (
-            eventdata.EventTimestamp.LAST_VISITED_TIME)
+            definitions.TIME_DESCRIPTION_LAST_VISITED)
         secondary_date_time_description = (
-            eventdata.EventTimestamp.LAST_VISITED_TIME)
+            definitions.TIME_DESCRIPTION_LAST_VISITED)
         # The secondary_date_time is in localtime normalize it to be in UTC.
         secondary_date_time.is_local_time = True
 
       elif msiecf_item.type == u'history-weekly':
-        primary_date_time_description = eventdata.EventTimestamp.CREATION_TIME
+        primary_date_time_description = definitions.TIME_DESCRIPTION_CREATION
         secondary_date_time_description = (
-            eventdata.EventTimestamp.LAST_VISITED_TIME)
+            definitions.TIME_DESCRIPTION_LAST_VISITED)
         # The secondary_date_time is in localtime normalize it to be in UTC.
         secondary_date_time.is_local_time = True
 
@@ -324,7 +324,7 @@ class MSIECFParser(interface.FileObjectParser):
               fat_date_time=expiration_timestamp)
 
       event = time_events.DateTimeValuesEvent(
-          expiration_date_time, eventdata.EventTimestamp.EXPIRATION_TIME)
+          expiration_date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     last_checked_timestamp = msiecf_item.get_last_checked_time_as_integer()
@@ -333,7 +333,7 @@ class MSIECFParser(interface.FileObjectParser):
           fat_date_time=last_checked_timestamp)
 
       event = time_events.DateTimeValuesEvent(
-          last_checked_date_time, eventdata.EventTimestamp.LAST_CHECKED_TIME)
+          last_checked_date_time, definitions.TIME_DESCRIPTION_LAST_CHECKED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   @classmethod

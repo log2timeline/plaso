@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import userassist  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import userassist
 
@@ -44,7 +44,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
         u'2009-08-04 15:11:22.811067')
     self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.WRITTEN_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
     expected_value_name = u'UEME_RUNPIDL:%csidl2%\\MSN.lnk'
     self.assertEqual(event.value_name, expected_value_name)
@@ -82,7 +82,7 @@ class UserAssistPluginTest(test_lib.RegistryPluginTestCase):
     # and not through the parser.
     self.assertEqual(event.parser, plugin.plugin_name)
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.WRITTEN_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-11-10 07:49:37.078067')
