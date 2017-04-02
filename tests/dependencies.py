@@ -48,6 +48,10 @@ class DependenciesTest(unittest.TestCase):
     """Tests the CheckModuleVersion function."""
     dependencies.CheckModuleVersion(u'dfdatetime')
 
+    dependencies.CheckModuleVersion(u'pyregf')
+
+    dependencies.CheckModuleVersion(u'os')
+
     with self.assertRaises(ImportError):
       dependencies.CheckModuleVersion(u'bogus')
 
