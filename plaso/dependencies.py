@@ -420,7 +420,7 @@ def CheckTestDependencies(verbose_output=True):
   Returns:
     bool: True if the dependencies are available, False otherwise.
   """
-  if not CheckDependencies():
+  if not CheckDependencies(verbose_output=verbose_output):
     return False
 
   print(u'Checking availability and versions of test dependencies.')

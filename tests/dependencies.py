@@ -57,7 +57,8 @@ class DependenciesTest(unittest.TestCase):
 
   def testCheckTestDependencies(self):
     """Tests the CheckTestDependencies function."""
-    dependencies.CheckTestDependencies(verbose_output=False)
+    result = dependencies.CheckTestDependencies(verbose_output=False)
+    self.assertTrue(result)
 
   def testGetDPKGDepends(self):
     """Tests the GetDPKGDepends function."""
