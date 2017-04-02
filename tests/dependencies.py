@@ -71,6 +71,9 @@ class DependenciesTest(unittest.TestCase):
     install_requires = dependencies.GetRPMRequires()
     self.assertIn(u'libbde-python >= 20140531', install_requires)
 
+    install_requires = dependencies.GetRPMRequires(exclude_version=True)
+    self.assertIn(u'libregf-python', install_requires)
+
 
 if __name__ == '__main__':
   unittest.main()
