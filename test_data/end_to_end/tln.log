@@ -1,9 +1,9 @@
 Time|Source|Host|User|Description
-1327218753|LOG|myhostname.myhost.com|-|2012-01-22T07:52:33+00:00; Content Modification Time; [client, pid: 30840] INFO No new content in ímynd.dd.
 1327218753|LOG|myhostname.myhost.com|-|2012-01-22T07:52:33+00:00; Content Modification Time; [client, pid: 30840] INFO No change in [/etc/netgroup]. Done
+1327218753|LOG|myhostname.myhost.com|-|2012-01-22T07:52:33+00:00; Content Modification Time; [client, pid: 30840] INFO No new content in ímynd.dd.
 1327218781|LOG|myhostname.myhost.com|root|2012-01-22T07:53:01+00:00; Content Modification Time; Cron ran: touch /var/run/crond.somecheck for user: root pid: 31051
-1327218841|LOG|myhostname.myhost.com|root|2012-01-22T07:54:01+00:00; Content Modification Time; Cron ran: touch /var/run/crond.somecheck for user: root pid: 31068
 1327218841|LOG|myhostname.myhost.com|root|2012-01-22T07:54:01+00:00; Content Modification Time; Cron ran: /sbin/status.mycheck) for user: root pid: 31067
+1327218841|LOG|myhostname.myhost.com|root|2012-01-22T07:54:01+00:00; Content Modification Time; Cron ran: touch /var/run/crond.somecheck for user: root pid: 31068
 1327218872|LOG|myhostname.myhost.com|-|2012-01-22T07:54:32+00:00; Content Modification Time; [Job] `cron.daily' terminated
 1330478143|LOG|:|-|2012-02-29T01:15:43+00:00; Content Modification Time; [---] testing leap year in parsing, events take place in 2012 ---
 1355853272|LOG|myhostname.myhost.com|-|2012-12-18T17:54:32+00:00; Content Modification Time; [anacron, pid: 1234] No true exit can exist (124 job run)
@@ -15,9 +15,7 @@ Time|Source|Host|User|Description
 1416273343|LOG|:|-|2014-11-18T01:15:43+00:00; Content Modification Time; [---] last message repeated 5 times ---
 1416299420|LOG|-|-|2014-11-18T08:30:20+00:00; Content Modification Time; [kernel] [997.390602] sda2: rw=0, want=65, limit=2
 1416299480|LOG|victoria|-|2014-11-18T08:31:20+00:00; Content Modification Time; [kernel] [998.390602] sda2: rw=0, want=66, limit=2
-1485089422|FILE|-|-|2017-01-22T12:50:22+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file
-1485089422|FILE|-|-|2017-01-22T12:50:22+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file
-1485089422|FILE|-|-|2017-01-22T12:50:22+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file
-1485089422|FILE|-|-|2017-01-22T12:50:22+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file
-1485089423|FILE|-|-|2017-01-22T12:50:23+00:00; atime; OS:/tmp/test/test_data/syslog Type: file
-1485089424|FILE|-|-|2017-01-22T12:50:24+00:00; atime; OS:/tmp/test/test_data/syslog Type: file
+1491238787|FILE|-|-|2017-04-03T16:59:47+00:00; atime; OS:/tmp/test/test_data/syslog Type: file
+1491238787|FILE|-|-|2017-04-03T16:59:47+00:00; ctime; OS:/tmp/test/test_data/syslog Type: file
+1491238787|FILE|-|-|2017-04-03T16:59:47+00:00; mtime; OS:/tmp/test/test_data/syslog Type: file
+1491238788|FILE|-|-|2017-04-03T16:59:48+00:00; atime; OS:/tmp/test/test_data/syslog Type: file
