@@ -37,9 +37,20 @@ import plaso.dependencies
 
 
 version_tuple = (sys.version_info[0], sys.version_info[1])
-if version_tuple < (2, 7) or version_tuple >= (3, 0):
-  print(('Unsupported Python version: {0:s}, version 2.7 or higher and '
-         'lower than 3.x required.').format(sys.version))
+if version_tuple[0] not in (2, 3):
+  print('Unsupported Python version: {0:s}.'.format(sys.version))
+  sys.exit(1)
+
+elif version_tuple[0] == 2 and version_tuple < (2, 7):
+  print((
+      'Unsupported Python 2 version: {0:s}, version 2.7 or higher '
+      'required.').format(sys.version))
+  sys.exit(1)
+
+elif version_tuple[0] == 3 and version_tuple < (3, 4):
+  print((
+      'Unsupported Python 3 version: {0:s}, version 3.4 or higher '
+      'required.').format(sys.version))
   sys.exit(1)
 
 
@@ -142,16 +153,18 @@ class TestCommand(Command):
     test_results = run_tests.RunTests()
 
 
-encoding = sys.stdin.encoding
+if version_tuple[0] == 2:
+  encoding = sys.stdin.encoding
 
-# Note that sys.stdin.encoding can be None.
-if not encoding:
-  encoding = locale.getpreferredencoding()
+  # Note that sys.stdin.encoding can be None.
+  if not encoding:
+    encoding = locale.getpreferredencoding()
 
-# Make sure the default encoding is set correctly otherwise
-# setup.py sdist will fail to include filenames with Unicode characters.
-reload(sys)
-sys.setdefaultencoding(encoding)
+  # Make sure the default encoding is set correctly otherwise
+  # setup.py sdist will fail to include filenames with Unicode characters.
+  reload(sys)
+
+  sys.setdefaultencoding(encoding)
 
 # Unicode in the description will break python-setuptools, hence
 # "Plaso Langar Að Safna Öllu" was removed.
