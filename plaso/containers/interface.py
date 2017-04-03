@@ -4,8 +4,29 @@
 from efilter.protocols import structured
 
 
+class AttributeContainerIdentifier(object):
+  """The attribute container identifier.
+
+  The identifier is used to uniquely identify attribute containers.
+  The value should be unique at runtime and in storage.
+  """
+
+  def __init__(self):
+    """Initializes an attribute container identifier."""
+    super(AttributeContainerIdentifier, self).__init__()
+    self._identifier = id(self)
+
+  def CopyToString(self):
+    """Copies the identifier to a string representation.
+
+    Returns:
+      str: unique identifier or None.
+    """
+    return u'{0:d}'.format(self._identifier)
+
+
 class AttributeContainer(object):
-  """Class that defines the attribute container interface.
+  """The attribute container interface.
 
   This is the the base class for those object that exists primarily as
   a container of attributes with basic accessors and mutators.
@@ -13,22 +34,41 @@ class AttributeContainer(object):
   The CONTAINER_TYPE class attribute contains a string that identifies
   the container type e.g. the container type "event" identifiers an event
   object.
+
+  Attributes are public class members of an serializable type. Protected
+  and private class members are not to be serialized.
   """
   CONTAINER_TYPE = None
+
+  def __init__(self):
+    """Initializes an attribute container."""
+    super(AttributeContainer, self).__init__()
+    self._identifier = AttributeContainerIdentifier()
+    self._session_identifier = None
 
   def CopyToDict(self):
     """Copies the attribute container to a dictionary.
 
     Returns:
-      A dictionary containing the attribute container attributes.
+      dict[str, object]: attribute values per name.
     """
-    dictionary = {}
-    for attribute_name in iter(self.__dict__.keys()):
-      attribute_value = getattr(self, attribute_name, None)
-      if attribute_value is not None:
-        dictionary[attribute_name] = attribute_value
+    return {
+        attribute_name: attribute_value
+        for attribute_name, attribute_value in self.GetAttributes()}
 
-    return dictionary
+  def GetAttributeNames(self):
+    """Retrieves the names of all attributes.
+
+    Returns:
+      list[str]: attribute names.
+    """
+    attribute_names = []
+    for attribute_name in iter(self.__dict__.keys()):
+      if attribute_name.startswith(u'_'):
+        continue
+      attribute_names.append(attribute_name)
+
+    return attribute_names
 
   def GetAttributes(self):
     """Retrieves the attribute names and values.
@@ -36,22 +76,55 @@ class AttributeContainer(object):
     Attributes that are set to None are ignored.
 
     Yields:
-      A tuple containing an attribute name and value.
+      tuple[str, object]: attribute name and value.
     """
-    for attribute_name in iter(self.__dict__.keys()):
-      attribute_value = getattr(self, attribute_name, None)
-      if attribute_value is not None:
-        yield attribute_name, attribute_value
+    for attribute_name, attribute_value in iter(self.__dict__.items()):
+      if attribute_name.startswith(u'_') or attribute_value is None:
+        continue
 
-  def GetAttributeNames(self):
-    """Retrieves the names of all attributes.
+      yield attribute_name, attribute_value
 
-    Attributes that are set to None are ignored.
+  def GetIdentifier(self):
+    """Retrieves the identifier.
+
+    The identifier is a storage specific value that should not be serialized.
 
     Returns:
-      A list containing the attribute container attribute names.
+      AttributeContainerIdentifier: an unique identifier for the container.
     """
-    return [name for name, _ in list(self.GetAttributes())]
+    return self._identifier
+
+  def GetSessionIdentifier(self):
+    """Retrieves the session identifier.
+
+    The session identifier is a storage specific value that should not
+    be serialized.
+
+    Returns:
+      str: session identifier.
+    """
+    return self._session_identifier
+
+  def SetIdentifier(self, identifier):
+    """Sets the identifier.
+
+    The identifier is a storage specific value that should not be serialized.
+
+    Args:
+      identifier (AttributeContainerIdentifier): identifier.
+    """
+    self._identifier = identifier
+
+  def SetSessionIdentifier(self, session_identifier):
+    """Sets the session identifier.
+
+    The session identifier is a storage specific value that should not
+    be serialized.
+
+    Args:
+      session_identifier (str): session identifier.
+    """
+    self._session_identifier = session_identifier
 
 
 # Efilter protocol definition to enable filtering of containers.

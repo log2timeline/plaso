@@ -94,11 +94,11 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
     test_tool = pinfo.PinfoTool(output_writer=output_writer)
 
     test_filename = u'pinfo_test.json.plaso'
-    format_version = u'20160715'
-    plaso_version = u'1.5.1_20161013'
-    session_identifier = u'3c552fe3-4e64-4871-8a7f-0f4c95dfc1fe'
-    session_start_time = u'2016-10-16T15:13:58.171984+00:00'
-    session_completion_time = u'2016-10-16T15:13:58.957462+00:00'
+    format_version = u'20170121'
+    plaso_version = u'1.5.2_20170119'
+    session_identifier = u'98d1caaa-5224-4cf0-90bb-cb766ffb4d6a'
+    session_start_time = u'2017-01-22T12:50:47.479205+00:00'
+    session_completion_time = u'2017-01-22T12:50:48.275535+00:00'
 
     command_line_arguments = (
         u'./tools/log2timeline.py --partition=all --quiet '
@@ -148,7 +148,8 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
         u'winreg/windows_timezone', u'winreg/windows_typed_urls',
         u'winreg/windows_usb_devices', u'winreg/windows_usbstor_devices',
         u'winreg/windows_version', u'winreg/winlogon', u'winreg/winrar_mru',
-        u'winreg/winreg_default', u'xchatlog', u'xchatscrollback'])
+        u'winreg/winreg_default', u'xchatlog', u'xchatscrollback',
+        u'zsh_extended_history'])
 
     table_view = cli_views.ViewsFactory.GetTableView(
         cli_views.ViewsFactory.FORMAT_TYPE_CLI,
@@ -215,9 +216,9 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
   def testPrintStorageInformationAsJSON(self):
     """Tests the _PrintStorageInformationAsJSON function."""
     test_filename = u'pinfo_test.json.plaso'
-    session_identifier = u'3c552fe34e6448718a7f0f4c95dfc1fe'
+    session_identifier = u'98d1caaa52244cf090bbcb766ffb4d6a'
     session_start_time = timelib.Timestamp.CopyFromString(
-        u'2016-10-16 15:13:58.171984+00:00')
+        u'2017-01-22 12:50:47.479205+00:00')
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_tool = pinfo.PinfoTool(output_writer=output_writer)
     test_file = self._GetTestFilePath([test_filename])
@@ -231,7 +232,11 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
     test_tool.PrintStorageInformation()
     output = output_writer.ReadOutput()
     json_output = json.loads(output)
-    first_session = json_output[u'session_3c552fe34e6448718a7f0f4c95dfc1fe']
+
+    first_session_identifier = u'session_{0:s}'.format(session_identifier)
+    first_session = json_output.get(first_session_identifier, None)
+    self.assertIsNotNone(first_session)
+
     self.assertEqual(first_session[u'identifier'], session_identifier)
     self.assertEqual(first_session[u'start_time'], session_start_time)
 

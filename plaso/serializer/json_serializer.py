@@ -4,6 +4,7 @@
 import binascii
 import collections
 import json
+import logging
 
 from dfvfs.path import path_spec as dfvfs_path_spec
 from dfvfs.path import factory as dfvfs_path_spec_factory
@@ -60,9 +61,6 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
     }
 
     for attribute_name, attribute_value in attribute_container.GetAttributes():
-      if attribute_value is None:
-        continue
-
       json_dict[attribute_name] = cls._ConvertAttributeValueToDict(
           attribute_value)
 
@@ -218,19 +216,14 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
           container_type))
 
     container_object = container_class()
+    supported_attribute_names = container_object.GetAttributeNames()
     for attribute_name, attribute_value in iter(json_dict.items()):
-      if attribute_name.startswith(u'__'):
-        continue
-
-      # Event tags should be serialized separately.
-      # TODO: remove when analysis report no longer defines event tags.
-      if (container_type == u'analysis_report' and
-          attribute_name == u'_event_tags'):
-        continue
-
-      # Be strict about which attributes to set in non event data containers.
-      if (container_type not in (u'event', u'event_data') and
-          attribute_name not in container_object.__dict__):
+      # Be strict about which attributes to set in non events.
+      if (container_type != u'event' and
+          attribute_name not in supported_attribute_names):
+        logging.debug(
+            u'Unusuppored attribute name: {0:s}.{1:s}'.format(
+                container_type, attribute_name))
         continue
 
       if isinstance(attribute_value, dict):
@@ -280,7 +273,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
       json_list: a list of the JSON serialized objects.
 
     Returns:
-      A deserialized list.
+      list[object]: a deserialized list.
     """
     list_value = []
     for json_list_element in json_list:

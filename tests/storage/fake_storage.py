@@ -87,17 +87,17 @@ class FakeStorageWriterTest(test_lib.StorageTestCase):
   def testAddEventTag(self):
     """Tests the AddEventTag function."""
     session = sessions.Session()
-    test_events = self._CreateTestEvents()
-    event_tags = self._CreateTestEventTags()
 
     storage_writer = fake_storage.FakeStorageWriter(session)
     storage_writer.Open()
 
+    test_events = self._CreateTestEvents()
     for event in test_events:
       storage_writer.AddEvent(event)
 
     event_tag = None
-    for event_tag in event_tags:
+    test_event_tags = self._CreateTestEventTags(test_events)
+    for event_tag in test_event_tags:
       storage_writer.AddEventTag(event_tag)
 
     storage_writer.Close()

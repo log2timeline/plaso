@@ -238,12 +238,10 @@ class EventTagTest(shared_test_lib.BaseTestCase):
   def testCopyToDict(self):
     """Tests the CopyToDict function."""
     event_tag = events.EventTag(
-        comment=u'This is a test event tag.',
-        event_uuid=u'11fca043ea224a688137deaa8d162807')
+        comment=u'This is a test event tag.')
 
     expected_dict = {
         u'comment': u'This is a test event tag.',
-        u'event_uuid': u'11fca043ea224a688137deaa8d162807',
         u'labels': []}
 
     test_dict = event_tag.CopyToDict()
