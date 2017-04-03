@@ -16,7 +16,6 @@ class EventSource(interface.AttributeContainer):
     data_type (str): attribute container type indicator.
     file_entry_type (str): dfVFS file entry type.
     path_spec (dfvfs.PathSpec): path specification.
-    storage_session (int): storage session number or 0 if not set.
   """
   CONTAINER_TYPE = u'event_source'
   DATA_TYPE = None
@@ -31,7 +30,6 @@ class EventSource(interface.AttributeContainer):
     self.data_type = self.DATA_TYPE
     self.file_entry_type = None
     self.path_spec = path_spec
-    self.storage_session = 0
 
 
 class FileEntryEventSource(EventSource):

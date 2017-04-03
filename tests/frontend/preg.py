@@ -214,9 +214,9 @@ class PregFrontendTest(shared_test_lib.BaseTestCase):
     event_objects = data.get(usb_plugin, [])
 
     self.assertEqual(len(event_objects), 5)
-    event_object = event_objects[2]
+    event = event_objects[2]
 
-    self.assertEqual(event_object.data_type, u'windows:registry:key_value')
+    self.assertEqual(event.data_type, u'windows:registry:key_value')
 
     parse_key_data = front_end.ParseRegistryKey(
         usb_key, registry_helper, use_plugins=u'windows_usbstor_devices')
@@ -224,10 +224,15 @@ class PregFrontendTest(shared_test_lib.BaseTestCase):
     self.assertEqual(len(parse_key_data.keys()), 1)
     parsed_key_value = parse_key_data.values()[0]
 
-    for index, event_object in enumerate(event_objects):
+    for index, event in enumerate(event_objects):
       parsed_key_event = parsed_key_value[index]
-      self.assertEqual(
-          event_object.EqualityString(), parsed_key_event.EqualityString())
+      event_values = event.CopyToDict()
+      del event_values[u'uuid']
+
+      parsed_key_event_values = parsed_key_event.CopyToDict()
+      del parsed_key_event_values[u'uuid']
+
+      self.assertEqual(event_values, parsed_key_event_values)
 
 
 if __name__ == '__main__':
