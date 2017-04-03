@@ -8,7 +8,7 @@ class AttributeContainerIdentifier(object):
   """The attribute container identifier.
 
   The identifier is used to uniquely identify attribute containers.
-  The value should be unique at runtime an in storage.
+  The value should be unique at runtime and in storage.
   """
 
   def __init__(self):
