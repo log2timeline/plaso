@@ -13,6 +13,7 @@ if sys.version_info[0] < 3:
 else:
   import queue as Queue  # pylint: disable=import-error
 
+# pylint: disable=wrong-import-position
 import requests
 
 # Some distributions unvendor urllib3 from the requests module, and we need to

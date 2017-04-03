@@ -63,6 +63,7 @@ load-plugins=
 # W1201: Specify string format arguments as logging function parameters
 #
 # Disabled:
+# consider-iterating-dictionary
 # locally-enabled
 # logging-format-interpolation
 # no-member
@@ -72,7 +73,7 @@ load-plugins=
 # too-many-nested-blocks (N/5)
 # ungrouped-imports
 
-disable=C0103,C0302,I0010,I0011,R0201,R0801,R0901,R0902,R0903,R0904,R0911,R0912,R0913,R0914,R0915,R0921,R0922,W0141,W0142,W0402,W0404,W0511,W1201,locally-enabled,logging-format-interpolation,no-member,redefined-variable-type,simplifiable-if-statement,too-many-boolean-expressions,too-many-nested-blocks,ungrouped-imports
+disable=C0103,C0302,I0010,I0011,R0201,R0801,R0901,R0902,R0903,R0904,R0911,R0912,R0913,R0914,R0915,R0921,R0922,W0141,W0142,W0402,W0404,W0511,W1201,consider-iterating-dictionary,locally-enabled,logging-format-interpolation,no-member,redefined-variable-type,simplifiable-if-statement,too-many-boolean-expressions,too-many-nested-blocks,ungrouped-imports
 
 
 [REPORTS]
