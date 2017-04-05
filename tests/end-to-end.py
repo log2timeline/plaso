@@ -1033,6 +1033,9 @@ class OutputTestCase(TestCase):
               reference_output_file.readlines(), output_file.readlines(),
               fromfile=reference_output_file_path, tofile=output_file_path))
 
+      if differences:
+        logging.error(u'Differences: {0:s}'.format(u'\n'.join(differences)))
+
       if not differences:
         result = True
 
