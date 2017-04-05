@@ -1035,7 +1035,7 @@ class OutputTestCase(TestCase):
 
       if differences:
         differences_output = u'\n'.join([
-            difference.decode(u'ascii', error=u'replace')
+            difference.decode(u'ascii', errors=u'replace')
             for difference in differences])
         logging.error(u'Differences: {0:s}'.format(u'\n'.join(differences_output)))
 
