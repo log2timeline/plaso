@@ -1034,7 +1034,10 @@ class OutputTestCase(TestCase):
               fromfile=reference_output_file_path, tofile=output_file_path))
 
       if differences:
-        logging.error(u'Differences: {0:s}'.format(u'\n'.join(differences)))
+        differences_output = u'\n'.join([
+            difference.decode(u'ascii', error=u'replace')
+            for difference in differences])
+        logging.error(u'Differences: {0:s}'.format(u'\n'.join(differences_output)))
 
       if not differences:
         result = True
