@@ -41,9 +41,9 @@ class _EventsHeap(object):
       event (EventObject): event.
     """
     event_identifier = event.GetIdentifier()
-    event_identifier = event_identifier.CopyToString()
+    event_identifier_string = event_identifier.CopyToString()
     heap_values = (
-        event.timestamp, event.timestamp_desc, event_identifier, event)
+        event.timestamp, event.timestamp_desc, event_identifier_string, event)
     heapq.heappush(self._heap, heap_values)
 
   def PushEvents(self, events):
@@ -81,8 +81,7 @@ class EventBuffer(object):
       u'parser',
       u'pathspec',
       u'tag',
-      u'timestamp',
-      u'uuid'])
+      u'timestamp'])
 
   def __init__(self, output_module, check_dedups=True):
     """Initializes an event buffer object.

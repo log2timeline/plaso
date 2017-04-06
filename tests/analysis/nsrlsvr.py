@@ -53,7 +53,6 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
       {u'timestamp': timelib.Timestamp.CopyFromString(u'2015-01-01 17:00:00'),
        u'timestamp_desc': eventdata.EventTimestamp.CREATION_TIME,
        u'sha256_hash': EVENT_1_HASH,
-       u'uuid': u'8',
        u'data_type': u'fs:stat',
        u'pathspec': fake_path_spec.FakePathSpec(
            location=u'C:\\WINDOWS\\system32\\good.exe')
@@ -61,7 +60,6 @@ class NsrlSvrTest(test_lib.AnalysisPluginTestCase):
       {u'timestamp': timelib.Timestamp.CopyFromString(u'2016-01-01 17:00:00'),
        u'timestamp_desc': eventdata.EventTimestamp.CREATION_TIME,
        u'sha256_hash': _EVENT_2_HASH,
-       u'uuid': u'9',
        u'data_type': u'fs:stat:ntfs',
        u'pathspec': fake_path_spec.FakePathSpec(
            location=u'C:\\WINDOWS\\system32\\evil.exe')}]

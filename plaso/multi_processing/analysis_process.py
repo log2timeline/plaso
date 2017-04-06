@@ -208,6 +208,8 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
       self._analysis_plugin.ExamineEvent(mediator, event)
 
     except Exception as exception:  # pylint: disable=broad-except
+      self.SignalAbort()
+
       # TODO: write analysis error.
 
       if self._debug_output:
@@ -219,3 +221,5 @@ class AnalysisProcess(base_process.MultiProcessBaseProcess):
     self._abort = True
     if self._foreman_status_wait_event:
       self._foreman_status_wait_event.set()
+    if self._analysis_mediator:
+      self._analysis_mediator.SignalAbort()
