@@ -18,6 +18,7 @@ from plaso.lib import errors
 from plaso.multi_processing import task_engine as multi_process_engine
 from plaso.parsers import manager as parsers_manager
 from plaso.parsers import presets as parsers_presets
+from plaso.storage import sqlite_file as storage_sqlite_file
 from plaso.storage import zip_file as storage_zip_file
 
 
@@ -36,6 +37,8 @@ class ExtractionFrontend(frontend.Frontend):
     super(ExtractionFrontend, self).__init__()
     self._collection_process = None
     self._debug_mode = False
+    # TODO: remove after testing.
+    self._experimental = False
     self._filter_expression = None
     self._filter_object = None
     self._mount_path = None
@@ -213,6 +216,10 @@ class ExtractionFrontend(frontend.Frontend):
       StorageWriter: storage writer.
     """
     self._CheckStorageFile(storage_file_path)
+
+    if self._experimental:
+      return storage_sqlite_file.SQLiteStorageFileWriter(
+          session, storage_file_path)
 
     return storage_zip_file.ZIPStorageFileWriter(session, storage_file_path)
 

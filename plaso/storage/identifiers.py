@@ -36,3 +36,34 @@ class SerializedStreamIdentifier(
     """
     if self.stream_number is not None and self.entry_index is not None:
       return u'{0:d}.{1:d}'.format(self.stream_number, self.entry_index)
+
+
+class SQLTableIdentifier(containers_interface.AttributeContainerIdentifier):
+  """Class that defines the SQL table attribute container identifier.
+
+  The identifier is used to uniquely identify attribute containers.
+
+  Attributes:
+    name (str): name of the table.
+    row_identifier (int): unique identifier of the row in the table.
+  """
+
+  def __init__(self, name, row_identifier):
+    """Initializes a SQL table attribute container identifier.
+
+    Args:
+      name (str): name of the table.
+      row_identifier (int): unique identifier fo the row in the table.
+    """
+    super(SQLTableIdentifier, self).__init__()
+    self.name = name
+    self.row_identifier = row_identifier
+
+  def CopyToString(self):
+    """Copies the identifier to a string representation.
+
+    Returns:
+      str: unique identifier or None.
+    """
+    if self.name is not None and self.row_identifier is not None:
+      return u'{0:a}.{1:d}'.format(self.name, self.row_identifier)
