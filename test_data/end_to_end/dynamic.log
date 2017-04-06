@@ -7,9 +7,9 @@ datetime,timestamp_desc,source,source_long,message,parser,display_name,tag
 2012-01-22T07:54:32+00:00,Content Modification Time,LOG,Log File,[Job] `cron.daily' terminated,syslog,OS:/tmp/test/test_data/syslog,-
 2012-02-29T01:15:43+00:00,Content Modification Time,LOG,Log File,[---] testing leap year in parsing  events take place in 2012 ---,syslog,OS:/tmp/test/test_data/syslog,-
 2012-12-18T17:54:32+00:00,Content Modification Time,LOG,Log File,[anacron  pid: 1234] No true exit can exist (124 job run),syslog,OS:/tmp/test/test_data/syslog,exit
-2013-03-23T23:01:18+00:00,Content Modification Time,LOG,Log File,[somrandomexe  pid: 1915] This syslog message is brought to you by me (and not the other guy),syslog,OS:/tmp/test/test_data/syslog,-
 2013-03-23T23:01:18+00:00,Content Modification Time,LOG,Log File,[somrandomexe  pid: 19] This syslog message has a fractional value for seconds.,syslog,OS:/tmp/test/test_data/syslog,-
-2014-11-18T01:15:20+00:00,Content Modification Time,LOG,Log File,[aprocess  pid: 10100] This is a multi-line message that screws up	many syslog parsers.,syslog,OS:/tmp/test/test_data/syslog,-
+2013-03-23T23:01:18+00:00,Content Modification Time,LOG,Log File,[somrandomexe  pid: 1915] This syslog message is brought to you by me (and not the other guy),syslog,OS:/tmp/test/test_data/syslog,-
+2013-11-18T01:15:20+00:00,Content Modification Time,LOG,Log File,[aprocess  pid: 10100] This is a multi-line message that screws up	many syslog parsers.,syslog,OS:/tmp/test/test_data/syslog,-
 2013-12-31T17:54:32+00:00,Content Modification Time,LOG,Log File,[/sbin/anacron  pid: 1234] Another one just like this (124 job run),syslog,OS:/tmp/test/test_data/syslog,-
 2014-02-06T15:16:30+00:00,Content Modification Time,LOG,Log File,[process  pid: 2085] Test message with single character day,syslog,OS:/tmp/test/test_data/syslog,-
 2014-11-18T01:15:43+00:00,Content Modification Time,LOG,Log File,[---] last message repeated 5 times ---,syslog,OS:/tmp/test/test_data/syslog,repeated

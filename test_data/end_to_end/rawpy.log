@@ -196,29 +196,6 @@
   
 
 [Reserved attributes]:
-  {body} This syslog message is brought to you by me (and not the other guy)
-  {data_type} syslog:line
-  {display_name} OS:/tmp/test/test_data/syslog
-  {filename} /tmp/test/test_data/syslog
-  {hostname} myhostname.myhost.com
-  {offset} 0
-  {parser} syslog
-  {timestamp} 1364079678000000
-  {timestamp_desc} Content Modification Time
-
-[Additional attributes]:
-  {pid} 1915
-  {reporter} somrandomexe
-  {severity} 
-  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
-[Timestamp]:
-  2013-03-23T23:01:18+00:00
-[Pathspec]:
-  type: OS, location: /tmp/test/test_data/syslog
-  
-
-[Reserved attributes]:
   {body} This syslog message has a fractional value for seconds.
   {data_type} syslog:line
   {display_name} OS:/tmp/test/test_data/syslog
@@ -231,6 +208,29 @@
 
 [Additional attributes]:
   {pid} 19
+  {reporter} somrandomexe
+  {severity} 
+  {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+[Timestamp]:
+  2013-03-23T23:01:18+00:00
+[Pathspec]:
+  type: OS, location: /tmp/test/test_data/syslog
+  
+
+[Reserved attributes]:
+  {body} This syslog message is brought to you by me (and not the other guy)
+  {data_type} syslog:line
+  {display_name} OS:/tmp/test/test_data/syslog
+  {filename} /tmp/test/test_data/syslog
+  {hostname} myhostname.myhost.com
+  {offset} 0
+  {parser} syslog
+  {timestamp} 1364079678000000
+  {timestamp_desc} Content Modification Time
+
+[Additional attributes]:
+  {pid} 1915
   {reporter} somrandomexe
   {severity} 
   {sha256_hash} 1f0105612f6ad2d225d6bd9ba631148740e312598878adcd2b74098a3dab50c4

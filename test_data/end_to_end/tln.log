@@ -7,8 +7,8 @@ Time|Source|Host|User|Description
 1327218872|LOG|myhostname.myhost.com|-|2012-01-22T07:54:32+00:00; Content Modification Time; [Job] `cron.daily' terminated
 1330478143|LOG|:|-|2012-02-29T01:15:43+00:00; Content Modification Time; [---] testing leap year in parsing, events take place in 2012 ---
 1355853272|LOG|myhostname.myhost.com|-|2012-12-18T17:54:32+00:00; Content Modification Time; [anacron, pid: 1234] No true exit can exist (124 job run)
-1364079678|LOG|myhostname.myhost.com|-|2013-03-23T23:01:18+00:00; Content Modification Time; [somrandomexe, pid: 1915] This syslog message is brought to you by me (and not the other guy)
 1364079678|LOG|myhostname.myhost.com|-|2013-03-23T23:01:18+00:00; Content Modification Time; [somrandomexe, pid: 19] This syslog message has a fractional value for seconds.
+1364079678|LOG|myhostname.myhost.com|-|2013-03-23T23:01:18+00:00; Content Modification Time; [somrandomexe, pid: 1915] This syslog message is brought to you by me (and not the other guy)
 1384737320|LOG|myhostname.myhost.com|-|2013-11-18T01:15:20+00:00; Content Modification Time; [aprocess, pid: 10100] This is a multi-line message that screws up	many syslog parsers.
 1388512472|LOG|myhostname.myhost.com|-|2013-12-31T17:54:32+00:00; Content Modification Time; [/sbin/anacron, pid: 1234] Another one just like this (124 job run)
 1391699790|LOG|victoria|-|2014-02-06T15:16:30+00:00; Content Modification Time; [process, pid: 2085] Test message with single character day
