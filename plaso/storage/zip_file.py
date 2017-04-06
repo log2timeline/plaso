@@ -335,7 +335,7 @@ class _SerializedDataStream(object):
 
     Args:
       zip_file (zipfile.ZipFile): ZIP file that contains the stream.
-      storage_file_path (str): path of the storage file.
+      storage_file_path (str): path to the storage file.
       stream_name (str): name of the stream.
       maximum_data_size (Optional[int]): maximum data size of the stream.
     """
@@ -1672,7 +1672,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     """Opens the ZIP file.
 
     Args:
-      path (str): path of the ZIP file.
+      path (str): path to the ZIP file.
       read_only (bool): True if the file should be opened in read-only mode.
 
     Raises:
@@ -2676,7 +2676,7 @@ class ZIPStorageFile(interface.BaseFileStorage):
     """Opens the storage.
 
     Args:
-      path (Optional[str]): path of the storage file.
+      path (Optional[str]): path to the storage file.
       read_only (Optional[bool]): True if the file should be opened in
           read-only mode.
 
@@ -2881,7 +2881,7 @@ class ZIPStorageFileWriter(interface.FileStorageWriter):
     """Creates a task storage merge reader.
 
     Args:
-      path (str): path of the task storage file that should be merged.
+      path (str): path to the task storage file that should be merged.
 
     Returns:
       StorageMergeReader: storage merge reader.
@@ -2892,7 +2892,7 @@ class ZIPStorageFileWriter(interface.FileStorageWriter):
     """Creates a task storage writer.
 
     Args:
-      path (str): path of the storage file.
+      path (str): path to the storage file.
       task (Task): task.
 
     Returns:

@@ -69,6 +69,9 @@ class BaseStorage(object):
   def GetEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
 
+    This includes all events written to the storage including those pending
+    being flushed (written) to the storage.
+
     Args:
       time_range (Optional[TimeRange]): time range used to filter events
           that fall in a specific period.
@@ -319,6 +322,9 @@ class StorageReader(object):
   def GetEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
 
+    This includes all events written to the storage including those pending
+    being flushed (written) to the storage.
+
     Args:
       time_range (Optional[TimeRange]): time range used to filter events
           that fall in a specific period.
@@ -402,6 +408,9 @@ class FileStorageReader(StorageReader):
 
   def GetEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
+
+    This includes all events written to the storage including those pending
+    being flushed (written) to the storage.
 
     Args:
       time_range (Optional[TimeRange]): time range used to filter events
@@ -544,6 +553,9 @@ class StorageWriter(object):
   def GetEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
 
+    This includes all events written to the storage including those pending
+    being flushed (written) to the storage.
+
     Args:
       time_range (Optional[TimeRange]): time range used to filter events
           that fall in a specific period.
@@ -663,7 +675,7 @@ class StorageWriter(object):
 
 
 class FileStorageWriter(StorageWriter):
-  """Class that implements a file-based storage writer."""
+  """Defines an interface for a file-based storage writer."""
 
   def __init__(
       self, session, output_file,
@@ -697,7 +709,7 @@ class FileStorageWriter(StorageWriter):
     """Creates a task storage merge reader.
 
     Args:
-      path (str): path of the task storage file that should be merged.
+      path (str): path to the task storage file that should be merged.
 
     Returns:
       StorageMergeReader: storage merge reader.
@@ -708,7 +720,7 @@ class FileStorageWriter(StorageWriter):
     """Creates a task storage writer.
 
     Args:
-      path (str): path of the storage file.
+      path (str): path to the storage file.
       task (Task): task.
 
     Returns:
@@ -734,7 +746,7 @@ class FileStorageWriter(StorageWriter):
     """Adds an analysis report.
 
     Args:
-      analysis_report: an analysis report object (instance of AnalysisReport).
+      analysis_report (AnalysisReport): analysis report.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -753,7 +765,7 @@ class FileStorageWriter(StorageWriter):
     """Adds an error.
 
     Args:
-      error: an error object (instance of AnalysisError or ExtractionError).
+      error (AnalysisError|ExtractionError): an analysis or extraction error.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -768,7 +780,7 @@ class FileStorageWriter(StorageWriter):
     """Adds an event.
 
     Args:
-      event: an event (instance of EventObject).
+      event (EventObject): an event.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -785,7 +797,7 @@ class FileStorageWriter(StorageWriter):
     """Adds an event source.
 
     Args:
-      event_source: an event source object (instance of EventSource).
+      event_source (EventSource): an event source.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -800,7 +812,7 @@ class FileStorageWriter(StorageWriter):
     """Adds an event tag.
 
     Args:
-      event_tag: an event tag object (instance of EventTag).
+      event_tag (EventTag): an event tag.
 
     Raises:
       IOError: when the storage writer is closed.
@@ -885,6 +897,9 @@ class FileStorageWriter(StorageWriter):
 
   def GetEvents(self, time_range=None):
     """Retrieves the events in increasing chronological order.
+
+    This includes all events written to the storage including those pending
+    being flushed (written) to the storage.
 
     Args:
       time_range (Optional[TimeRange]): time range used to filter events
@@ -1072,8 +1087,10 @@ class FileStorageWriter(StorageWriter):
   def StopTaskStorage(self, abort=False):
     """Removes the temporary path for the task storage.
 
+    The results of tasks will be lost on abort.
+
     Args:
-      abort (bool): True to indicated the stop is issued on abort.
+      abort (bool): True to indicate the stop is issued on abort.
 
     Raises:
       IOError: if the storage type is not supported or

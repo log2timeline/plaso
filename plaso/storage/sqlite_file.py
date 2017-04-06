@@ -91,6 +91,8 @@ class SQLiteStorageFile(interface.BaseFileStorage):
   def _WriteAttributeContainer(self, attribute_container):
     """Writes an attribute container.
 
+    The table for the container type must exist.
+
     Args:
       attribute_container (AttributeContainer): attribute container.
 
@@ -221,9 +223,6 @@ class SQLiteStorageFile(interface.BaseFileStorage):
 
     Returns:
       EventSource: event source or None.
-
-    Raises:
-      IOError: if a stream is missing.
     """
     query = u'SELECT _data FROM {0:s} WHERE rowid = {1:d}'.format(
         u'event_source', index + 1)
@@ -309,12 +308,13 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     """Opens the storage.
 
     Args:
-      path (Optional[str]): path of the storage file.
+      path (Optional[str]): path to the storage file.
       read_only (Optional[bool]): True if the file should be opened in
           read-only mode.
 
     Raises:
-      IOError: if the storage file is already opened.
+      IOError: if the storage file is already opened or if the database
+          cannot be connected.
       ValueError: if path is missing.
     """
     if self._is_open:
@@ -326,7 +326,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     self._connection = sqlite3.connect(
         path, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
     if not self._connection:
-      return False
+      raise IOError(u'Unable to create database connection.')
 
     self._cursor = self._connection.cursor()
     if not self._cursor:
@@ -354,6 +354,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
       knowledge_base (KnowledgeBase): is used to store the preprocessing
           information.
     """
+    # TODO: implement.
     pass
 
   def WritePreprocessingInformation(self, knowledge_base):
@@ -367,6 +368,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
           information or the storage file is closed or read-only or
           if the preprocess information stream already exists.
     """
+    # TODO: implement.
     pass
 
   def WriteSessionCompletion(self, session_completion):
@@ -491,6 +493,7 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
         row = cursor.fetchone()
 
       # pylint: disable=protected-access
+      # TODO: fix this hack.
       self._storage_writer._storage_file._connection.commit()
 
     connection.close()
@@ -518,7 +521,7 @@ class SQLiteStorageFileWriter(interface.FileStorageWriter):
     """Creates a task storage merge reader.
 
     Args:
-      path (str): path of the task storage file that should be merged.
+      path (str): path to the task storage file that should be merged.
 
     Returns:
       StorageMergeReader: storage merge reader.
@@ -529,7 +532,7 @@ class SQLiteStorageFileWriter(interface.FileStorageWriter):
     """Creates a task storage writer.
 
     Args:
-      path (str): path of the storage file.
+      path (str): path to the storage file.
       task (Task): task.
 
     Returns:

@@ -39,9 +39,11 @@ class SerializedStreamIdentifier(
 
 
 class SQLTableIdentifier(containers_interface.AttributeContainerIdentifier):
-  """Class that defines the SQL table attribute container identifier.
+  """The SQL table attribute container identifier.
 
-  The identifier is used to uniquely identify attribute containers.
+  The identifier is used to uniquely identify attribute containers. Where
+  for example an attribute container is stored as a JSON serialized data in
+  a SQLite database file.
 
   Attributes:
     name (str): name of the table.
@@ -53,7 +55,7 @@ class SQLTableIdentifier(containers_interface.AttributeContainerIdentifier):
 
     Args:
       name (str): name of the table.
-      row_identifier (int): unique identifier fo the row in the table.
+      row_identifier (int): unique identifier of the row in the table.
     """
     super(SQLTableIdentifier, self).__init__()
     self.name = name

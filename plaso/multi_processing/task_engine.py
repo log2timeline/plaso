@@ -440,9 +440,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     logging.debug(u'Starting worker process {0:s}'.format(process_name))
 
     if self._use_zeromq:
-      task_name = u'{0:s} task queue'.format(process_name)
+      queue_name = u'{0:s} task queue'.format(process_name)
       task_queue = zeromq_queue.ZeroMQRequestConnectQueue(
-          delay_open=True, linger_seconds=0, name=task_name,
+          delay_open=True, linger_seconds=0, name=queue_name,
           port=self._task_queue_port,
           timeout_seconds=self._TASK_QUEUE_TIMEOUT_SECONDS)
     else:
