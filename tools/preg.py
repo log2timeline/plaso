@@ -117,16 +117,14 @@ class PregTool(storage_media_tool.StorageMediaTool):
   RUN_MODE_REG_KEY = 5
 
   _EXCLUDED_ATTRIBUTE_NAMES = frozenset([
-      u'_store_index',
-      u'_store_number',
       u'data_type',
       u'display_name',
       u'filename',
       u'inode',
+      u'parser',
       u'pathspec',
       u'tag',
-      u'timestamp',
-      u'uuid'])
+      u'timestamp'])
 
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.

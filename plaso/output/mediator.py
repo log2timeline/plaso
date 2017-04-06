@@ -133,8 +133,7 @@ class OutputMediator(object):
     if hostname:
       return hostname
 
-    # TODO: replace store_number by session_identifier.
-    session_identifier = getattr(event, u'_store_number', None)
+    session_identifier = event.GetSessionIdentifier()
     if session_identifier is None:
       return default_hostname
 
@@ -234,8 +233,7 @@ class OutputMediator(object):
     if username and username != u'-':
       return username
 
-    # TODO: replace store_number by session_identifier.
-    session_identifier = getattr(event, u'_store_number', None)
+    session_identifier = event.GetSessionIdentifier()
     if session_identifier is None:
       return default_username
 
