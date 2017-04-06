@@ -10,7 +10,7 @@ class AnalysisReport(interface.AttributeContainer):
   """Class to represent an analysis report attribute container.
 
   Attributes:
-    filter_string (str): ???
+    filter_string (str): event filter expression.
     plugin_name (str): name of the analysis plugin that generated the report.
     report_array (array[str]): ???
     report_dict (dict[str]): ???
