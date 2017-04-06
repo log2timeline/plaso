@@ -1033,6 +1033,14 @@ class OutputTestCase(TestCase):
               reference_output_file.readlines(), output_file.readlines(),
               fromfile=reference_output_file_path, tofile=output_file_path))
 
+      if differences:
+        differences_output = []
+        for difference in differences:
+          difference_output = difference.decode(u'ascii', errors=u'replace')
+          differences_output.append(difference_output)
+        differences_output = u'\n'.join(differences_output)
+        logging.error(u'Differences: {0:s}'.format(differences_output))
+
       if not differences:
         result = True
 

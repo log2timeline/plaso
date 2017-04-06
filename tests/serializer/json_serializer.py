@@ -138,8 +138,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         parent=volume_path_spec)
 
     expected_event_object = events.EventObject()
-    expected_event_object.uuid = u'c7a85a1cdf1740f5a3bf6d05f89fe474'
-
     expected_event_object.data_type = u'test:event2'
     expected_event_object.pathspec = path_spec
     expected_event_object.timestamp = 1234124
@@ -190,7 +188,6 @@ class JSONAttributeContainerSerializerTest(JSONSerializerTestCase):
         u'timestamp_desc': u'Written',
         u'timestamp': 1234124,
         u'unicode_string': u'And I am a unicorn.',
-        u'uuid': u'c7a85a1cdf1740f5a3bf6d05f89fe474',
         u'zero_integer': 0
     }
 

@@ -95,17 +95,17 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
 
     test_filename = u'pinfo_test.json.plaso'
     format_version = u'20170121'
-    plaso_version = u'1.5.2_20170119'
-    session_identifier = u'98d1caaa-5224-4cf0-90bb-cb766ffb4d6a'
-    session_start_time = u'2017-01-22T12:50:47.479205+00:00'
-    session_completion_time = u'2017-01-22T12:50:48.275535+00:00'
+    plaso_version = u'1.5.2_20170403'
+    session_identifier = u'61d9fdf4-b68f-4ff3-9bd3-f937a616d588'
+    session_start_time = u'2017-04-03T17:00:12.148946+00:00'
+    session_completion_time = u'2017-04-03T17:00:12.943051+00:00'
 
     command_line_arguments = (
         u'./tools/log2timeline.py --partition=all --quiet '
         u'pinfo_test.json.plaso test_data/tsk_volume_system.raw')
 
     enabled_parser_names = u', '.join([
-        u'android_app_usage', u'asl_log', u'bencode',
+        u'android_app_usage', u'asl_log', u'bash', u'bencode',
         u'bencode/bencode_transmission', u'bencode/bencode_utorrent',
         u'binary_cookies', u'bsm_log', u'chrome_cache', u'chrome_preferences',
         u'cups_ipp', u'custom_destinations', u'dockerjson', u'dpkg', u'esedb',
@@ -132,13 +132,14 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
         u'sqlite/mac_document_versions', u'sqlite/mackeeper_cache',
         u'sqlite/skype', u'sqlite/twitter_ios', u'sqlite/zeitgeist',
         u'symantec_scanlog', u'syslog', u'syslog/cron', u'syslog/ssh',
-        u'usnjrnl', u'utmp', u'utmpx', u'winevt', u'winevtx', u'winfirewall',
-        u'winiis', u'winjob', u'winreg', u'winreg/appcompatcache',
-        u'winreg/bagmru', u'winreg/ccleaner', u'winreg/explorer_mountpoints2',
-        u'winreg/explorer_programscache', u'winreg/microsoft_office_mru',
-        u'winreg/microsoft_outlook_mru', u'winreg/mrulist_shell_item_list',
-        u'winreg/mrulist_string', u'winreg/mrulistex_shell_item_list',
-        u'winreg/mrulistex_string', u'winreg/mrulistex_string_and_shell_item',
+        u'systemd_journal', u'usnjrnl', u'utmp', u'utmpx', u'winevt',
+        u'winevtx', u'winfirewall', u'winiis', u'winjob', u'winreg',
+        u'winreg/appcompatcache', u'winreg/bagmru', u'winreg/ccleaner',
+        u'winreg/explorer_mountpoints2', u'winreg/explorer_programscache',
+        u'winreg/microsoft_office_mru', u'winreg/microsoft_outlook_mru',
+        u'winreg/mrulist_shell_item_list', u'winreg/mrulist_string',
+        u'winreg/mrulistex_shell_item_list', u'winreg/mrulistex_string',
+        u'winreg/mrulistex_string_and_shell_item',
         u'winreg/mrulistex_string_and_shell_item_list', u'winreg/msie_zone',
         u'winreg/mstsc_rdp', u'winreg/mstsc_rdp_mru', u'winreg/network_drives',
         u'winreg/userassist', u'winreg/windows_boot_execute',
@@ -216,9 +217,9 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
   def testPrintStorageInformationAsJSON(self):
     """Tests the _PrintStorageInformationAsJSON function."""
     test_filename = u'pinfo_test.json.plaso'
-    session_identifier = u'98d1caaa52244cf090bbcb766ffb4d6a'
+    session_identifier = u'61d9fdf4b68f4ff39bd3f937a616d588'
     session_start_time = timelib.Timestamp.CopyFromString(
-        u'2017-01-22 12:50:47.479205+00:00')
+        u'2017-04-03 17:00:12.148946+00:00')
     output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
     test_tool = pinfo.PinfoTool(output_writer=output_writer)
     test_file = self._GetTestFilePath([test_filename])
