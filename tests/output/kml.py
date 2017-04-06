@@ -66,7 +66,7 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
           os.path.sep, os.path.join(u'cases', u'image.dd'))
 
     expected_event_body = (
-        b'<Placemark><name>79028cc28d324634a85533d0fbc49275</name><description>'
+        b'<Placemark><name>PLACEHOLDER FOR EVENT IDENTIFIER</name><description>'
         b'+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-'
         b'+-+-+-+-+-+-\n'
         b'[Timestamp]:\n'
@@ -83,7 +83,6 @@ class KMLOutputTest(test_lib.OutputModuleTestCase):
         b'  {{inode}} 12345678\n'
         b'  {{timestamp}} 1340821021000000\n'
         b'  {{username}} root\n'
-        b'  {{uuid}} 79028cc28d324634a85533d0fbc49275\n'
         b'\n'
         b'[Additional attributes]:\n'
         b'  {{latitude}} 37.4222899014\n'

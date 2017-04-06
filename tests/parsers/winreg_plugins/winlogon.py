@@ -278,16 +278,12 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
 
     self.assertEqual(len(storage_writer.events), 14)
 
-    # Because the order the subkeys are parsed are not guaranteed we will sort
-    # the events.
-    # TODO: look into this.
-    event_objects = sorted(
-        storage_writer.events, key=lambda evt: evt.EqualityString())
+    events = self._GetSortedEvents(storage_writer.events)
 
-    event_object = event_objects[0]
+    event = events[3]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         u'[{0:s}\\Notify\\NavLogon] '
@@ -297,13 +293,12 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
         u'Trigger: Logoff').format(key_path)
     expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    event_object = event_objects[13]
+    event = events[2]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(time_string)
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
         u'[{0:s}] '
@@ -312,8 +307,7 @@ class WinlogonPluginTest(test_lib.RegistryPluginTestCase):
         u'Trigger: Logon').format(key_path)
     expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

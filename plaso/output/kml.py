@@ -31,7 +31,8 @@ class KMLOutputModule(interface.LinearOutputModule):
       placemark_xml_element = ElementTree.Element(u'Placemark')
 
       name_xml_element = ElementTree.SubElement(placemark_xml_element, u'name')
-      name_xml_element.text = event_object.uuid
+
+      name_xml_element.text = u'PLACEHOLDER FOR EVENT IDENTIFIER'
 
       description_xml_element = ElementTree.SubElement(
           placemark_xml_element, u'description')

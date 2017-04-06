@@ -71,7 +71,6 @@ class L2TCSVTest(test_lib.OutputModuleTestCase):
         L2TTestEventFormatter)
 
     event_tag = events.EventTag()
-    event_tag.uuid = self._event_object.uuid
     event_tag.AddLabels([u'Malware', u'Printed'])
 
     self._event_object.tag = event_tag
