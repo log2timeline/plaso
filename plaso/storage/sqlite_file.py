@@ -323,14 +323,17 @@ class SQLiteStorageFile(interface.BaseFileStorage):
     if not path:
       raise ValueError(u'Missing path.')
 
-    self._connection = sqlite3.connect(
+    connection = sqlite3.connect(
         path, detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
-    if not self._connection:
-      raise IOError(u'Unable to create database connection.')
 
-    self._cursor = self._connection.cursor()
-    if not self._cursor:
+    cursor = connection.cursor()
+    if not cursor:
       return False
+
+    self._connection = connection
+    self._cursor = cursor
+    self._is_open = True
+    self._read_only = read_only
 
     if not read_only:
       for container_type in self._CONTAINER_TYPES:
@@ -339,9 +342,6 @@ class SQLiteStorageFile(interface.BaseFileStorage):
           self._cursor.execute(query)
 
       self._connection.commit()
-
-    self._is_open = True
-    self._read_only = read_only
 
   def ReadPreprocessingInformation(self, knowledge_base):
     """Reads preprocessing information.
@@ -478,6 +478,9 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
 
     number_of_containers = 0
     for container_type in self._CONTAINER_TYPES:
+      if not self._HasTable(container_type):
+        continue
+
       query = u'SELECT _data FROM {0:s}'.format(container_type)
       cursor.execute(query)
 
