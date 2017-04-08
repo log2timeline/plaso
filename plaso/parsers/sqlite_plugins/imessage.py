@@ -61,6 +61,69 @@ class IMessagePlugin(interface.SQLitePlugin):
   REQUIRED_TABLES = frozenset([
       u'message', u'handle', u'attachment', u'message_attachment_join'])
 
+  SCHEMAS = [
+      {u'_SqliteDatabaseProperties':
+       u'CREATE TABLE _SqliteDatabaseProperties (key TEXT, value TEXT, '
+       u'UNIQUE(key))',
+       u'attachment':
+       u'CREATE TABLE attachment (ROWID INTEGER PRIMARY KEY AUTOINCREMENT, '
+       u'guid TEXT UNIQUE NOT NULL, created_date INTEGER DEFAULT 0, '
+       u'start_date INTEGER DEFAULT 0, filename TEXT, uti TEXT, mime_type '
+       u'TEXT, transfer_state INTEGER DEFAULT 0, is_outgoing INTEGER DEFAULT '
+       u'0, user_info BLOB, transfer_name TEXT, total_bytes INTEGER DEFAULT '
+       u'0)',
+       u'chat':
+       u'CREATE TABLE chat (ROWID INTEGER PRIMARY KEY AUTOINCREMENT, guid '
+       u'TEXT UNIQUE NOT NULL, style INTEGER, state INTEGER, account_id '
+       u'TEXT, properties BLOB, chat_identifier TEXT, service_name TEXT, '
+       u'room_name TEXT, account_login TEXT, is_archived INTEGER DEFAULT 0, '
+       u'last_addressed_handle TEXT, display_name TEXT, group_id TEXT, '
+       u'is_filtered INTEGER, successful_query INTEGER)',
+       u'chat_handle_join':
+       u'CREATE TABLE chat_handle_join (chat_id INTEGER REFERENCES chat '
+       u'(ROWID) ON DELETE CASCADE, handle_id INTEGER REFERENCES handle '
+       u'(ROWID) ON DELETE CASCADE, UNIQUE(chat_id, handle_id))',
+       u'chat_message_join':
+       u'CREATE TABLE chat_message_join (chat_id INTEGER REFERENCES chat '
+       u'(ROWID) ON DELETE CASCADE, message_id INTEGER REFERENCES message '
+       u'(ROWID) ON DELETE CASCADE, PRIMARY KEY (chat_id, message_id))',
+       u'deleted_messages':
+       u'CREATE TABLE deleted_messages (ROWID INTEGER PRIMARY KEY '
+       u'AUTOINCREMENT UNIQUE, guid TEXT NOT NULL)',
+       u'handle':
+       u'CREATE TABLE handle (ROWID INTEGER PRIMARY KEY AUTOINCREMENT '
+       u'UNIQUE, id TEXT NOT NULL, country TEXT, service TEXT NOT NULL, '
+       u'uncanonicalized_id TEXT, UNIQUE (id, service) )',
+       u'message':
+       u'CREATE TABLE message (ROWID INTEGER PRIMARY KEY AUTOINCREMENT, guid '
+       u'TEXT UNIQUE NOT NULL, text TEXT, replace INTEGER DEFAULT 0, '
+       u'service_center TEXT, handle_id INTEGER DEFAULT 0, subject TEXT, '
+       u'country TEXT, attributedBody BLOB, version INTEGER DEFAULT 0, type '
+       u'INTEGER DEFAULT 0, service TEXT, account TEXT, account_guid TEXT, '
+       u'error INTEGER DEFAULT 0, date INTEGER, date_read INTEGER, '
+       u'date_delivered INTEGER, is_delivered INTEGER DEFAULT 0, is_finished '
+       u'INTEGER DEFAULT 0, is_emote INTEGER DEFAULT 0, is_from_me INTEGER '
+       u'DEFAULT 0, is_empty INTEGER DEFAULT 0, is_delayed INTEGER DEFAULT '
+       u'0, is_auto_reply INTEGER DEFAULT 0, is_prepared INTEGER DEFAULT 0, '
+       u'is_read INTEGER DEFAULT 0, is_system_message INTEGER DEFAULT 0, '
+       u'is_sent INTEGER DEFAULT 0, has_dd_results INTEGER DEFAULT 0, '
+       u'is_service_message INTEGER DEFAULT 0, is_forward INTEGER DEFAULT 0, '
+       u'was_downgraded INTEGER DEFAULT 0, is_archive INTEGER DEFAULT 0, '
+       u'cache_has_attachments INTEGER DEFAULT 0, cache_roomnames TEXT, '
+       u'was_data_detected INTEGER DEFAULT 0, was_deduplicated INTEGER '
+       u'DEFAULT 0, is_audio_message INTEGER DEFAULT 0, is_played INTEGER '
+       u'DEFAULT 0, date_played INTEGER, item_type INTEGER DEFAULT 0, '
+       u'other_handle INTEGER DEFAULT 0, group_title TEXT, group_action_type '
+       u'INTEGER DEFAULT 0, share_status INTEGER DEFAULT 0, share_direction '
+       u'INTEGER DEFAULT 0, is_expirable INTEGER DEFAULT 0, expire_state '
+       u'INTEGER DEFAULT 0, message_action_type INTEGER DEFAULT 0, '
+       u'message_source INTEGER DEFAULT 0)',
+       u'message_attachment_join':
+       u'CREATE TABLE message_attachment_join (message_id INTEGER REFERENCES '
+       u'message (ROWID) ON DELETE CASCADE, attachment_id INTEGER REFERENCES '
+       u'attachment (ROWID) ON DELETE CASCADE, UNIQUE(message_id, '
+       u'attachment_id))'}]
+
   def ParseMessageRow(self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a message row.
 

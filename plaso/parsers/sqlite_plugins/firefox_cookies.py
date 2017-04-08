@@ -57,6 +57,15 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
   # The required tables common to Archived History and History.
   REQUIRED_TABLES = frozenset([u'moz_cookies'])
 
+  SCHEMAS = [
+      {u'moz_cookies':
+       u'CREATE TABLE moz_cookies (id INTEGER PRIMARY KEY, baseDomain TEXT, '
+       u'appId INTEGER DEFAULT 0, inBrowserElement INTEGER DEFAULT 0, name '
+       u'TEXT, value TEXT, host TEXT, path TEXT, expiry INTEGER, '
+       u'lastAccessed INTEGER, creationTime INTEGER, isSecure INTEGER, '
+       u'isHttpOnly INTEGER, CONSTRAINT moz_uniqueid UNIQUE (name, host, '
+       u'path, appId, inBrowserElement))'}]
+
   # Point to few sources for URL information.
   URLS = [
       (u'https://hg.mozilla.org/mozilla-central/file/349a2f003529/netwerk/'

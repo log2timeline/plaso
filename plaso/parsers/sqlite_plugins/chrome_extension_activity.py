@@ -62,6 +62,18 @@ class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
   REQUIRED_TABLES = frozenset([
       u'activitylog_compressed', u'string_ids', u'url_ids'])
 
+  SCHEMAS = [
+      {u'activitylog_compressed':
+       u'CREATE TABLE activitylog_compressed (count INTEGER NOT NULL DEFAULT '
+       u'1, extension_id_x INTEGER NOT NULL, time INTEGER, action_type '
+       u'INTEGER, api_name_x INTEGER, args_x INTEGER, page_url_x INTEGER, '
+       u'page_title_x INTEGER, arg_url_x INTEGER, other_x INTEGER)',
+       u'string_ids':
+       u'CREATE TABLE string_ids (id INTEGER PRIMARY KEY, value TEXT NOT '
+       u'NULL)',
+       u'url_ids':
+       u'CREATE TABLE url_ids (id INTEGER PRIMARY KEY, value TEXT NOT NULL)'}]
+
   def ParseActivityLogUncompressedRow(
       self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses an activity log row.

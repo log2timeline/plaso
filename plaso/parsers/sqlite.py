@@ -86,6 +86,12 @@ class SQLiteDatabase(object):
 
   _READ_BUFFER_SIZE = 65536
 
+  SCHEMA_QUERY = (
+      u'SELECT tbl_name, sql '
+      u'FROM sqlite_master '
+      u'WHERE type = "table" AND tbl_name != "xp_proc" '
+      u'AND tbl_name != "sqlite_sequence"')
+
   def __init__(self, filename, temporary_directory=None):
     """Initializes the database object.
 
@@ -97,7 +103,7 @@ class SQLiteDatabase(object):
     self._database = None
     self._filename = filename
     self._is_open = False
-    self._table_names = []
+    self.schema = {}
     self._temp_db_file_path = u''
     self._temporary_directory = temporary_directory
     self._temp_wal_file_path = u''
@@ -105,7 +111,7 @@ class SQLiteDatabase(object):
   @property
   def tables(self):
     """list[str]: names of all the tables."""
-    return self._table_names
+    return self.schema.keys()
 
   def _CopyFileObjectToTemporaryFile(self, file_object, temporary_file):
     """Copies the contents of the file-like object to a temporary file.
@@ -122,7 +128,7 @@ class SQLiteDatabase(object):
 
   def Close(self):
     """Closes the database connection and clean up the temporary file."""
-    self._table_names = []
+    self.schema = {}
 
     if self._is_open:
       self._database.close()
@@ -221,10 +227,11 @@ class SQLiteDatabase(object):
       self._database.row_factory = sqlite3.Row
       cursor = self._database.cursor()
 
-      sql_results = cursor.execute(
-          u'SELECT name FROM sqlite_master WHERE type="table"')
+      sql_results = cursor.execute(self.SCHEMA_QUERY)
 
-      self._table_names = [row[0] for row in sql_results]
+      self.schema = {
+          table_name: u' '.join(query.split())
+          for table_name, query in sql_results}
 
     except sqlite3.DatabaseError as exception:
       self._database.close()
