@@ -16,6 +16,7 @@ except ImportError:
 
 import plaso
 from plaso.cli import views
+from plaso.engine import engine
 from plaso.lib import errors
 from plaso.lib import py2to3
 
@@ -35,6 +36,8 @@ class CLITool(object):
 
   # The fall back preferred encoding.
   _PREFERRED_ENCODING = u'utf-8'
+
+  _DEFAULT_PROFILING_SAMPLE_RATE = 1000
 
   NAME = u''
 
@@ -65,6 +68,9 @@ class CLITool(object):
     self._log_file = None
     self._output_writer = output_writer
     self._preferred_time_zone = None
+    self._profilers = set()
+    self._profiling_directory = None
+    self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
     self._quiet_mode = False
     self._views_format_type = views.ViewsFactory.FORMAT_TYPE_CLI
 
@@ -209,6 +215,47 @@ class CLITool(object):
           u'Cannot use debug and quiet mode at the same time, defaulting to '
           u'debug output.')
 
+  def _ParseProfilingOptions(self, options):
+    """Parses the profiling options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    profilers = getattr(options, u'profilers', u'')
+    profilers = set(profilers.split(u','))
+
+    supported_profilers = [
+        u'memory', u'parsers', u'processing', u'serializers']
+    if engine.BaseEngine.SupportsGuppyMemoryProfiling():
+      supported_profilers.append(u'guppy')
+
+    unsupported_profilers = profilers.difference(supported_profilers)
+    if unsupported_profilers:
+      unsupported_profilers = u', '.join(unsupported_profilers)
+      raise errors.BadConfigOption(
+          u'Unsupported profilers: {0:s}'.format(unsupported_profilers))
+
+    self._profilers = profilers
+
+    self._profiling_directory = getattr(options, u'profiling_directory', None)
+    if (self._profiling_directory and
+        not os.path.isdir(self._profiling_directory)):
+      raise errors.BadConfigOption(
+          u'No such profiling directory: {0:s}'.format(
+              self._profiling_directory))
+
+    profiling_sample_rate = getattr(options, u'profiling_sample_rate', None)
+    if profiling_sample_rate:
+      try:
+        self._profiling_sample_rate = int(profiling_sample_rate, 10)
+      except ValueError:
+        raise errors.BadConfigOption(
+            u'Invalid profile sample rate: {0:s}.'.format(
+                profiling_sample_rate))
+
   def _ParseTimezoneOption(self, options):
     """Parses the timezone options.
 
@@ -285,6 +332,34 @@ class CLITool(object):
         metavar=u'FILENAME', dest=u'log_file', type=str, default=u'', help=(
             u'If defined all log messages will be redirected to this file '
             u'instead the default STDERR.'))
+
+  def AddProfilingOptions(self, argument_group):
+    """Adds the profiling options to the argument group.
+
+    Args:
+      argument_group (argparse._ArgumentGroup): argparse argument group.
+    """
+    argument_group.add_argument(
+        u'--profilers', dest=u'profilers', type=str, action=u'store',
+        default=u'none', metavar=u'PROFILERS_LIST', help=(
+            u'Define a list of profiles to use by the tool. This is a comma '
+            u'separated list where each entry is the name of a profiler.'
+            u'Use "--profilers list" to list the available profilers.'))
+
+    argument_group.add_argument(
+        u'--profiling_directory', u'--profiling-directory',
+        dest=u'profiling_directory', type=str, action=u'store',
+        metavar=u'DIRECTORY', help=(
+            u'Path to the directory that should be used to store the profiling '
+            u'sample files. By default the sample files are stored in the '
+            u'current working directory.'))
+
+    argument_group.add_argument(
+        u'--profiling_sample_rate', u'--profiling-sample-rate',
+        dest=u'profiling_sample_rate', action=u'store', metavar=u'SAMPLE_RATE',
+        default=0, help=(
+            u'The profiling sample rate (defaults to a sample every {0:d} '
+            u'files).').format(self._DEFAULT_PROFILING_SAMPLE_RATE))
 
   def AddTimezoneOption(self, argument_group):
     """Adds the timezone option to the argument group.

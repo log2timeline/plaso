@@ -107,35 +107,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       u'                        (defaults to 125000)',
       u''])
 
-  _EXPECTED_PROFILING_OPTIONS = u'\n'.join([
-      (u'usage: extraction_tool_test.py [--profile] '
-       u'[--profiling_directory DIRECTORY]'),
-      u'                               [--profiling_sample_rate SAMPLE_RATE]',
-      u'                               [--profiling_type TYPE]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      (u'  --profile             Enable profiling. Intended usage is to '
-       u'troubleshoot'),
-      u'                        memory and performance issues.',
-      u'  --profiling_directory DIRECTORY, --profiling-directory DIRECTORY',
-      (u'                        Path to the directory that should be used '
-       u'to store the'),
-      (u'                        profiling sample files. By default the '
-       u'sample files'),
-      u'                        are stored in the current working directory.',
-      (u'  --profiling_sample_rate SAMPLE_RATE, '
-       u'--profiling-sample-rate SAMPLE_RATE'),
-      (u'                        The profiling sample rate (defaults to a '
-       u'sample every'),
-      u'                        1000 files).',
-      u'  --profiling_type TYPE, --profiling-type TYPE',
-      (u'                        The profiling type: "all", "memory", '
-       u'"parsers",'),
-      u'                        "processing" or "serializers".',
-      u''])
-
   def testAddExtractionOptions(self):
     """Tests the AddExtractionOptions function."""
     argument_parser = argparse.ArgumentParser(
@@ -159,18 +130,6 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
 
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_PERFORMANCE_OPTIONS)
-
-  def testAddProfilingOptions(self):
-    """Tests the AddProfilingOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog=u'extraction_tool_test.py', description=u'Test argument parser.',
-        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
-
-    test_tool = extraction_tool.ExtractionTool()
-    test_tool.AddProfilingOptions(argument_parser)
-
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_PROFILING_OPTIONS)
 
   @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
   def testParseOptions(self):

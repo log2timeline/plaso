@@ -46,6 +46,35 @@ class CLIToolTest(test_lib.CLIToolTestCase):
       u'  -q, --quiet  disable informational output.',
       u''])
 
+  _EXPECTED_PROFILING_OPTIONS = u'\n'.join([
+      u'usage: tool_test.py [--profilers PROFILERS_LIST]',
+      u'                    [--profiling_directory DIRECTORY]',
+      u'                    [--profiling_sample_rate SAMPLE_RATE]',
+      u'',
+      u'Test argument parser.',
+      u'',
+      u'optional arguments:',
+      u'  --profilers PROFILERS_LIST',
+      (u'                        Define a list of profiles to use by the '
+       u'tool. This is'),
+      (u'                        a comma separated list where each entry is '
+       u'the name of'),
+      (u'                        a profiler.Use "--profilers list" to list '
+       u'the'),
+      u'                        available profilers.',
+      u'  --profiling_directory DIRECTORY, --profiling-directory DIRECTORY',
+      (u'                        Path to the directory that should be used '
+       u'to store the'),
+      (u'                        profiling sample files. By default the '
+       u'sample files'),
+      u'                        are stored in the current working directory.',
+      (u'  --profiling_sample_rate SAMPLE_RATE, '
+       u'--profiling-sample-rate SAMPLE_RATE'),
+      (u'                        The profiling sample rate (defaults to a '
+       u'sample every'),
+      u'                        1000 files).',
+      u''])
+
   _EXPECTED_TIMEZONE_OPTION = u'\n'.join([
       u'usage: tool_test.py [-z TIMEZONE]',
       u'',
@@ -95,6 +124,18 @@ class CLIToolTest(test_lib.CLIToolTestCase):
 
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_INFORMATIONAL_OPTIONS)
+
+  def testAddProfilingOptions(self):
+    """Tests the AddProfilingOptions function."""
+    argument_parser = argparse.ArgumentParser(
+        prog=u'tool_test.py', description=u'Test argument parser.',
+        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
+
+    test_tool = tools.CLITool()
+    test_tool.AddProfilingOptions(argument_parser)
+
+    output = self._RunArgparseFormatHelp(argument_parser)
+    self.assertEqual(output, self._EXPECTED_PROFILING_OPTIONS)
 
   def testAddTimezoneOption(self):
     """Tests the AddTimezoneOption function."""
