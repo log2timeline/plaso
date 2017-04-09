@@ -59,7 +59,7 @@ class CLIToolTest(test_lib.CLIToolTestCase):
        u'tool. This is'),
       (u'                        a comma separated list where each entry is '
        u'the name of'),
-      (u'                        a profiler.Use "--profilers list" to list '
+      (u'                        a profiler. Use "--profilers list" to list '
        u'the'),
       u'                        available profilers.',
       u'  --profiling_directory DIRECTORY, --profiling-directory DIRECTORY',
@@ -137,14 +137,14 @@ class CLIToolTest(test_lib.CLIToolTestCase):
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_PROFILING_OPTIONS)
 
-  def testAddTimezoneOption(self):
-    """Tests the AddTimezoneOption function."""
+  def testAddTimeZoneOption(self):
+    """Tests the AddTimeZoneOption function."""
     argument_parser = argparse.ArgumentParser(
         prog=u'tool_test.py', description=u'Test argument parser.',
         add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
 
     test_tool = tools.CLITool()
-    test_tool.AddTimezoneOption(argument_parser)
+    test_tool.AddTimeZoneOption(argument_parser)
 
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_TIMEZONE_OPTION)

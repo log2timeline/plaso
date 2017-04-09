@@ -111,9 +111,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     super(TaskMultiProcessEngine, self).__init__()
     self._enable_sigsegv_handler = False
     self._filter_find_specs = None
+    self._guppy_memory_profiler = None
     self._last_worker_number = 0
     self._maximum_number_of_tasks = maximum_number_of_tasks
-    self._memory_profiler = None
     self._merge_task = None
     self._merge_task_on_hold = None
     self._number_of_consumed_errors = 0
@@ -282,8 +282,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
   def _ProfilingSampleMemory(self):
     """Creates a memory profiling sample."""
-    if self._memory_profiler:
-      self._memory_profiler.Sample()
+    if self._guppy_memory_profiler:
+      self._guppy_memory_profiler.Sample()
 
   def _ScheduleTask(self, task):
     """Schedules a task.
@@ -391,8 +391,8 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
           self._number_of_consumed_sources += 1
 
-          if self._memory_profiler:
-            self._memory_profiler.Sample()
+          if self._guppy_memory_profiler:
+            self._guppy_memory_profiler.Sample()
 
         if task:
           if self._ScheduleTask(task):
@@ -460,13 +460,13 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if not self._processing_configuration:
       return
 
-    if self._processing_configuration.profiling.HaveProfileMemory():
+    if self._processing_configuration.profiling.HaveProfileMemoryGuppy():
       identifier = u'{0:s}-memory'.format(self._name)
-      self._memory_profiler = profiler.GuppyMemoryProfiler(
+      self._guppy_memory_profiler = profiler.GuppyMemoryProfiler(
           identifier, path=self._processing_configuration.profiling.directory,
           profiling_sample_rate=(
               self._processing_configuration.profiling.sample_rate))
-      self._memory_profiler.Start()
+      self._guppy_memory_profiler.Start()
 
     if self._processing_configuration.profiling.HaveProfileProcessing():
       identifier = u'{0:s}-processing'.format(self._name)
@@ -548,9 +548,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
   def _StopProfiling(self):
     """Stops profiling."""
-    if self._memory_profiler:
-      self._memory_profiler.Sample()
-      self._memory_profiler = None
+    if self._guppy_memory_profiler:
+      self._guppy_memory_profiler.Sample()
+      self._guppy_memory_profiler = None
 
     if self._processing_profiler:
       self._processing_profiler.Write()

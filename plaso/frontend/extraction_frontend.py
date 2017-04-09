@@ -36,7 +36,6 @@ class ExtractionFrontend(frontend.Frontend):
     super(ExtractionFrontend, self).__init__()
     self._collection_process = None
     self._debug_mode = False
-    self._enable_profiling = False
     self._filter_expression = None
     self._filter_object = None
     self._mount_path = None
@@ -216,10 +215,6 @@ class ExtractionFrontend(frontend.Frontend):
     self._CheckStorageFile(storage_file_path)
 
     return storage_zip_file.ZIPStorageFileWriter(session, storage_file_path)
-
-  def DisableProfiling(self):
-    """Disabled profiling."""
-    self._enable_profiling = False
 
   def GetHashersInformation(self):
     """Retrieves the hashers information.

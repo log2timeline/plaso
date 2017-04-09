@@ -27,6 +27,7 @@ class CLITool(object):
   """Class that implements a CLI tool.
 
   Attributes:
+    list_profilers (bool): True if the profilers should be listed.
     list_timezones (bool): True if the time zones should be listed.
     preferred_encoding (str): preferred encoding of single-byte or multi-byte
         character strings, sometimes referred to as extended ASCII.
@@ -36,6 +37,16 @@ class CLITool(object):
 
   # The fall back preferred encoding.
   _PREFERRED_ENCODING = u'utf-8'
+
+  _PROFILERS_INFORMATION = {
+      u'memory': u'Profile memory usage per process',
+      u'parsers': u'Profile CPU time per parser',
+      u'processing': u'Profile CPU time of processing phases',
+      u'serializers': u'Profile CPU time of serialization'}
+
+  if engine.BaseEngine.SupportsGuppyMemoryProfiling():
+    _PROFILERS_INFORMATION[u'guppy'] = (
+        u'Profile memory usage per process using guppy')
 
   _DEFAULT_PROFILING_SAMPLE_RATE = 1000
 
@@ -74,6 +85,7 @@ class CLITool(object):
     self._quiet_mode = False
     self._views_format_type = views.ViewsFactory.FORMAT_TYPE_CLI
 
+    self.list_profilers = False
     self.list_timezones = False
     self.preferred_encoding = preferred_encoding
 
@@ -224,21 +236,22 @@ class CLITool(object):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    profilers = getattr(options, u'profilers', u'')
-    profilers = set(profilers.split(u','))
+    profilers_string = self.ParseStringOption(options, u'profilers')
+    if isinstance(profilers_string, py2to3.STRING_TYPES):
+      if profilers_string.lower() == u'list':
+        self.list_profilers = True
 
-    supported_profilers = [
-        u'memory', u'parsers', u'processing', u'serializers']
-    if engine.BaseEngine.SupportsGuppyMemoryProfiling():
-      supported_profilers.append(u'guppy')
+      elif profilers_string:
+        profilers = set(profilers_string.split(u','))
 
-    unsupported_profilers = profilers.difference(supported_profilers)
-    if unsupported_profilers:
-      unsupported_profilers = u', '.join(unsupported_profilers)
-      raise errors.BadConfigOption(
-          u'Unsupported profilers: {0:s}'.format(unsupported_profilers))
+        supported_profilers = set(self._PROFILERS_INFORMATION.keys())
+        unsupported_profilers = profilers.difference(supported_profilers)
+        if unsupported_profilers:
+          unsupported_profilers = u', '.join(unsupported_profilers)
+          raise errors.BadConfigOption(
+              u'Unsupported profilers: {0:s}'.format(unsupported_profilers))
 
-    self._profilers = profilers
+        self._profilers = profilers
 
     self._profiling_directory = getattr(options, u'profiling_directory', None)
     if (self._profiling_directory and
@@ -343,7 +356,7 @@ class CLITool(object):
         u'--profilers', dest=u'profilers', type=str, action=u'store',
         default=u'none', metavar=u'PROFILERS_LIST', help=(
             u'Define a list of profiles to use by the tool. This is a comma '
-            u'separated list where each entry is the name of a profiler.'
+            u'separated list where each entry is the name of a profiler. '
             u'Use "--profilers list" to list the available profilers.'))
 
     argument_group.add_argument(
@@ -361,8 +374,8 @@ class CLITool(object):
             u'The profiling sample rate (defaults to a sample every {0:d} '
             u'files).').format(self._DEFAULT_PROFILING_SAMPLE_RATE))
 
-  def AddTimezoneOption(self, argument_group):
-    """Adds the timezone option to the argument group.
+  def AddTimeZoneOption(self, argument_group):
+    """Adds the time zone option to the argument group.
 
     Args:
       argument_group (argparse._ArgumentGroup): argparse argument group.
@@ -406,6 +419,16 @@ class CLITool(object):
             for argument in command_line_arguments]
 
     return u' '.join(command_line_arguments)
+
+  def ListProfilers(self):
+    """Lists information about the available profilers."""
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Name', u'Description'],
+        title=u'Profilers')
+
+    for name, description in sorted(self._PROFILERS_INFORMATION.items()):
+      table_view.AddRow([name, description])
+    table_view.Write(self._output_writer)
 
   def ListTimeZones(self):
     """Lists the timezones."""

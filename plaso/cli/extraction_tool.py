@@ -257,5 +257,4 @@ class ExtractionTool(status_view_tool.StatusViewTool):
     self._ParseDataLocationOption(options)
     self._ParseFilterOptions(options)
     self._ParsePerformanceOptions(options)
-    self._ParseProfilingOptions(options)
     self._ParseStorageOptions(options)
