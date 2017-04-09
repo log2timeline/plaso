@@ -47,9 +47,6 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
     """Tests the WriteEventBody function."""
     self._output_module.WriteEventBody(self._event_object)
 
-    # The dict comparison is very picky on Windows hence we
-    # have to make sure the UUID is a Unicode string.
-    expected_uuid = u'{0:s}'.format(self._event_object.uuid)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-06-27 18:17:01')
 
@@ -86,7 +83,6 @@ class JSONOutputTest(test_lib.OutputModuleTestCase):
                 u'session\n closed for user root)'),
             u'timestamp': expected_timestamp,
             u'username': u'root',
-            u'uuid': expected_uuid
         }
     }
     event_body = self._output_writer.ReadOutput()

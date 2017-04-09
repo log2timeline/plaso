@@ -13,6 +13,7 @@ if sys.version_info[0] < 3:
 else:
   import queue as Queue  # pylint: disable=import-error
 
+# pylint: disable=wrong-import-position
 import requests
 
 # Some distributions unvendor urllib3 from the requests module, and we need to
@@ -69,13 +70,15 @@ class AnalysisPlugin(object):
       comment (str): event tag comment.
       labels (list[str]): event tag labels.
     """
-    event_uuid = getattr(event, u'uuid', None)
-    event_tag = events.EventTag(
-        comment=comment, event_uuid=event_uuid)
+    event_identifier = event.GetIdentifier()
+
+    event_tag = events.EventTag(comment=comment)
+    event_tag.SetEventIdentifier(event_identifier)
     event_tag.AddLabels(labels)
 
+    event_identifier_string = event_identifier.CopyToString()
     logging.debug(u'Created event tag: {0:s} for event: {1:s}'.format(
-        comment, event_uuid))
+        comment, event_identifier_string))
 
     return event_tag
 
@@ -136,7 +139,8 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     super(HashTaggingAnalysisPlugin, self).__init__()
     self._analysis_queue_timeout = self.DEFAULT_QUEUE_TIMEOUT
     self._analyzer_started = False
-    self._event_uuids_by_pathspec = collections.defaultdict(list)
+    self._comment = u'Tag applied by {0:s} analysis plugin'.format(self.NAME)
+    self._event_identifiers_by_pathspec = collections.defaultdict(list)
     self._hash_pathspecs = collections.defaultdict(list)
     self._requester_class = None
     self._time_of_last_status_log = time.time()
@@ -144,22 +148,6 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     self.hash_queue = Queue.Queue()
 
     self._analyzer = analyzer_class(self.hash_queue, self.hash_analysis_queue)
-
-  def _CreateTag(self, event_uuid, labels):
-    """Creates an event tag.
-
-    Args:
-      event_uuid (uuid.UUID): identifier of the event that should be tagged.
-      labels (list[str]): labels for the gag.
-
-    Returns:
-      EventTag: event tag.
-    """
-    event_tag = events.EventTag(
-        comment=u'Tag applied by {0:s} analysis plugin'.format(self.NAME),
-        event_uuid=event_uuid)
-    event_tag.AddLabels(labels)
-    return event_tag
 
   def _HandleHashAnalysis(self, hash_analysis):
     """Deals with the results of the analysis of a hash.
@@ -181,14 +169,22 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     """
     tags = []
     labels = self.GenerateLabels(hash_analysis.hash_information)
-    pathspecs = self._hash_pathspecs.pop(hash_analysis.subject_hash)
-    for pathspec in pathspecs:
-      event_uuids = self._event_uuids_by_pathspec.pop(pathspec, [])
-      if labels:
-        for event_uuid in event_uuids:
-          tag = self._CreateTag(event_uuid, labels)
-          tags.append(tag)
-    return pathspecs, labels, tags
+    path_specifications = self._hash_pathspecs.pop(hash_analysis.subject_hash)
+    for path_specification in path_specifications:
+      event_identifiers = self._event_identifiers_by_pathspec.pop(
+          path_specification, [])
+
+      if not labels:
+        continue
+
+      for event_identifier in event_identifiers:
+        event_tag = events.EventTag(comment=self._comment)
+        event_tag.SetEventIdentifier(event_identifier)
+        event_tag.AddLabels(labels)
+
+        tags.append(event_tag)
+
+    return path_specifications, labels, tags
 
   def _EnsureRequesterStarted(self):
     """Checks if the analyzer is running and starts it if not."""
@@ -207,12 +203,13 @@ class HashTaggingAnalysisPlugin(AnalysisPlugin):
     self._EnsureRequesterStarted()
 
     path_spec = event.pathspec
-    event_uuids = self._event_uuids_by_pathspec[path_spec]
-    event_uuids.append(event.uuid)
-    if event.data_type not in self.DATA_TYPES:
-      return
+    event_identifiers = self._event_identifiers_by_pathspec[path_spec]
 
-    if not self._analyzer.lookup_hash:
+    event_identifier = event.GetIdentifier()
+    lookup_key = event_identifier.CopyToString()
+    event_identifiers.append(lookup_key)
+
+    if event.data_type not in self.DATA_TYPES or not self._analyzer.lookup_hash:
       return
 
     lookup_hash = u'{0:s}_hash'.format(self._analyzer.lookup_hash)
