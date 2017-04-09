@@ -151,7 +151,7 @@ class BaseEngine(object):
     if platforms:
       logging.info(u'Preprocessing detected platforms: {0:s}'.format(
           u', '.join(platforms)))
-      self.knowledge_base.platform = platform[0]
+      self.knowledge_base.platform = platforms[0]
 
   @classmethod
   def SupportsMemoryProfiling(cls):
