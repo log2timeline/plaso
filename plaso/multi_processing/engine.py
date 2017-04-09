@@ -157,7 +157,14 @@ class MultiProcessEngine(engine.BaseEngine):
       logging.info(u'Starting replacement worker process for {0:s}'.format(
           process.name))
       replacement_process = self._StartWorkerProcess(self._storage_writer)
-      self._StartMonitoringProcess(replacement_process.pid)
+
+      try:
+        self._StartMonitoringProcess(replacement_process.pid)
+      except (IOError, KeyError) as exception:
+        logging.error((
+            u'Unable to monitor replacement worker process: {0:s} '
+            u'(PID: {1:d})').format(
+                replacement_process.name, replacement_process.pid))
 
   def _GetProcessStatus(self, process):
     """Queries a process to determine its status.
