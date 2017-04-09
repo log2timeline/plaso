@@ -125,7 +125,7 @@ class BaseEngine(object):
           the sources to process.
       resolver_context (dfvfs.Context): resolver context.
     """
-    platform = None
+    platforms = []
     for source_path_spec in source_path_specs:
       try:
         file_system, mount_point = self.GetSourceFileSystem(
@@ -139,19 +139,19 @@ class BaseEngine(object):
             file_system, mount_point)
 
         platform = self._GuessOS(searcher)
-        logging.info(u'Preprocessing detected platform: {0:s}'.format(platform))
-        if platform:
-          self.knowledge_base.platform = platform
+        if platform != definitions.OPERATING_SYSTEM_UNKNOWN:
+          preprocess_manager.PreprocessPluginsManager.RunPlugins(
+              file_system, mount_point, self.knowledge_base)
 
-        preprocess_manager.PreprocessPluginsManager.RunPlugins(
-            file_system, mount_point, self.knowledge_base)
+          platforms.append(platform)
 
       finally:
         file_system.Close()
 
-      if platform:
-        self.knowledge_base.platform = platform
-        break
+    if platforms:
+      logging.info(u'Preprocessing detected platforms: {0:s}'.format(
+          u', '.join(platforms)))
+      self.knowledge_base.platform = platform[0]
 
   @classmethod
   def SupportsMemoryProfiling(cls):
