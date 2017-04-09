@@ -82,7 +82,11 @@ class SQLiteCache(plugins.BasePluginCache):
 
 
 class SQLiteDatabase(object):
-  """A simple wrapper for opening up a SQLite database."""
+  """SQLite database.
+
+  Attributes:
+    schema (dict[str, str]): schema as an SQL query per table name.
+  """
 
   _READ_BUFFER_SIZE = 65536
 
@@ -103,10 +107,11 @@ class SQLiteDatabase(object):
     self._database = None
     self._filename = filename
     self._is_open = False
-    self.schema = {}
     self._temp_db_file_path = u''
     self._temporary_directory = temporary_directory
     self._temp_wal_file_path = u''
+
+    self.schema = {}
 
   @property
   def tables(self):

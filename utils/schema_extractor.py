@@ -1,68 +1,27 @@
 # -*- coding: utf-8 -*-
-"""A helper script used to get and format the database schema for sqlite
-plugins. The resulting schema will be placed into your clipboard which can then
+"""Script to extract the database schema from SQLite database files.
+
+The resulting schema will be placed into your clipboard which can then
 be pasted directly into your plugin.
 
-Requires jinja2 and pyperclip python modules.
+This script requires the jinja2 and pyperclip Python modules.
 """
 
+from __future__ import print_function
 import argparse
 import os
+import sys
+
 import jinja2  # pylint: disable=import-error
 import pyperclip  # pylint: disable=import-error
 
 from plaso.parsers import sqlite
 
 
-def _existing_path(path):
-  """Validates an existing file path."""
-  if not os.path.exists(path):
-    raise argparse.ArgumentTypeError(
-        u'Could not find path: {0:s}'.format(path))
-  return path
+class SQLiteSchemaExtractor(object):
+  """SQLite database file schema extractor."""
 
-
-def GetDatabaseSchema(database_path, wal_path=None):
-  """Retrieves schema from given database.
-
-  Args:
-    database_path (str): file path to database.
-    wal_path (Optional[str]): file path to wal file.
-
-  Returns:
-    database schema as a dictionary of {table_name: SQLCommand}
-  """
-  database = sqlite.SQLiteDatabase('database.db')
-  with open(database_path, u'rb') as file_object:
-    if wal_path:
-      wal_file_object = open(wal_path, u'rb')
-    else:
-      wal_file_object = None
-
-    try:
-      database.Open(file_object, wal_file_object=wal_file_object)
-      schema = database.schema
-    finally:
-      database.Close()
-      if wal_file_object:
-        wal_file_object.close()
-  return schema
-
-
-def GetFormattedSchema(schema):
-  """Formats schema into a properly wordwrapped string.
-
-  Args:
-    schema (dict): database schema
-
-  Returns:
-    formatted string
-  """
-  schema = {
-      table: u' '.join(query.split()).replace(u'\'', u'\\\'')
-      for table, query in schema.items()}
-  env = jinja2.Environment(trim_blocks=True, lstrip_blocks=True)
-  template = env.from_string('''
+  _JINJA2_TEMPLATE = ('''
   {% for table, query in schema|dictsort %}
     {% if loop.first %}
       {u'{{ table }}':
@@ -76,19 +35,82 @@ def GetFormattedSchema(schema):
           }
          {%- endif %}
   {%- endfor %}''')
-  return template.render(schema=schema)
+
+  def GetDatabaseSchema(self, database_path, wal_path=None):
+    """Retrieves schema from given database.
+
+    Args:
+      database_path (str): file path to database.
+      wal_path (Optional[str]): file path to wal file.
+
+    Returns:
+      dict[str, str]: schema as an SQL query per table name.
+    """
+    database = sqlite.SQLiteDatabase('database.db')
+
+    with open(database_path, u'rb') as file_object:
+      wal_file_object = None
+      if wal_path:
+        wal_file_object = open(wal_path, u'rb')
+
+      try:
+        database.Open(file_object, wal_file_object=wal_file_object)
+        schema = database.schema
+
+      finally:
+        database.Close()
+
+        if wal_file_object:
+          wal_file_object.close()
+
+    return schema
+
+  def FormatSchema(self, schema):
+    """Formats a schema into a word-wrapped string.
+
+    Args:
+      schema (dict[str, str]): schema as an SQL query per table name.
+
+    Returns:
+      str: schema formated as word-wrapped string.
+    """
+    schema = {
+        table: u' '.join(query.split()).replace(u'\'', u'\\\'')
+        for table, query in schema.items()}
+
+    environment = jinja2.Environment(trim_blocks=True, lstrip_blocks=True)
+    template = environment.from_string(self._JINJA2_TEMPLATE)
+    return template.render(schema=schema)
 
 
 if __name__ == u'__main__':
-  arg_parser = argparse.ArgumentParser()
-  arg_parser.add_argument(
-      u'database_path', type=_existing_path,
-      help=u'The path to the database file to extract schema from.')
-  arg_parser.add_argument(
-      u'wal_path', type=_existing_path, nargs=u'?', default=None,
-      help=u'Optional path to a wal file to commit into the database.')
-  options = arg_parser.parse_args()
+  argument_parser = argparse.ArgumentParser()
 
-  database_schema = GetDatabaseSchema(options.database_path, options.wal_path)
-  database_schema = GetFormattedSchema(database_schema)
+  argument_parser.add_argument(
+      u'database_path', type=str,
+      help=u'The path to the database file to extract schema from.')
+
+  argument_parser.add_argument(
+      u'wal_path', type=str, nargs=u'?', default=None,
+      help=u'Optional path to a wal file to commit into the database.')
+
+  options = argument_parser.parse_args()
+
+  if not os.path.exists(options.database_path):
+    print(u'No such database file: {0:s}'.format(options.database_path))
+    sys.exit(1)
+
+  if not os.path.exists(options.wal_path):
+    print(u'No such wal file: {0:s}'.format(options.wal_path))
+    sys.exit(1)
+
+  extractor = SQLiteSchemaExtractor()
+
+  database_schema = extractor.GetDatabaseSchema(
+      options.database_path, options.wal_path)
+
+  database_schema = extractor.FormatSchema(database_schema)
+
   pyperclip.copy(database_schema)
+
+  sys.exit(0)
