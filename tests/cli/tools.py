@@ -157,6 +157,23 @@ class CLIToolTest(test_lib.CLIToolTestCase):
     command_line_arguments = cli_tool.GetCommandLineArguments()
     self.assertIsNotNone(command_line_arguments)
 
+  def testListProfilers(self):
+    """Tests the ListProfilers function."""
+    output_writer = test_lib.TestOutputWriter()
+    cli_tool = tools.CLITool(output_writer=output_writer)
+
+    cli_tool.ListProfilers()
+
+    string = output_writer.ReadOutput()
+    expected_string = (
+        b'\n'
+        b'********************************** Profilers '
+        b'***********************************\n'
+        b'       Name : Description\n'
+        b'----------------------------------------'
+        b'----------------------------------------\n')
+    self.assertTrue(string.startswith(expected_string))
+
   def testListTimeZones(self):
     """Tests the ListTimeZones function."""
     output_writer = test_lib.TestOutputWriter()

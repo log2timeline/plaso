@@ -39,7 +39,6 @@ class CLITool(object):
   _PREFERRED_ENCODING = u'utf-8'
 
   _PROFILERS_INFORMATION = {
-      u'memory': u'Profile memory usage per process',
       u'parsers': u'Profile CPU time per parser',
       u'processing': u'Profile CPU time of processing phases',
       u'serializers': u'Profile CPU time of serialization'}
