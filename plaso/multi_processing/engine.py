@@ -163,8 +163,9 @@ class MultiProcessEngine(engine.BaseEngine):
       except (IOError, KeyError) as exception:
         logging.error((
             u'Unable to monitor replacement worker process: {0:s} '
-            u'(PID: {1:d})').format(
-                replacement_process.name, replacement_process.pid))
+            u'(PID: {1:d}) with error: {2:s}').format(
+                replacement_process.name, replacement_process.pid,
+                exception))
 
   def _GetProcessStatus(self, process):
     """Queries a process to determine its status.

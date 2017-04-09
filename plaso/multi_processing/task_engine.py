@@ -753,8 +753,9 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
       except (IOError, KeyError) as exception:
         logging.error((
             u'Unable to monitor extraction worker process: {0:s} '
-            u'(PID: {1:d})').format(
-                extraction_process.name, extraction_process.pid))
+            u'(PID: {1:d}) with error: {2:s}').format(
+                extraction_process.name, extraction_process.pid,
+                exception))
 
     self._StartStatusUpdateThread()
 

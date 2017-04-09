@@ -391,9 +391,9 @@ class PsortMultiProcessEngine(multi_process_engine.MultiProcessEngine):
       try:
         self._StartMonitoringProcess(process.pid)
       except (IOError, KeyError) as exception:
-        logging.error(
-            u'Unable to monitor analysis plugin: {0:s} (PID: {1:d})'.format(
-                process.name, process.pid))
+        logging.error((
+            u'Unable to monitor analysis plugin: {0:s} (PID: {1:d}) '
+            u'with error: {2:s}').format(process.name, process.pid, exception))
 
     logging.info(u'Analysis plugins running')
 
