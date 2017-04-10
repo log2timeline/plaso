@@ -224,7 +224,7 @@ class JSONAttributeContainerSerializer(interface.AttributeContainerSerializer):
 
         if attribute_name not in (u'__container_type__', u'__type__'):
           logging.debug(
-              u'Unusuppored attribute name: {0:s}.{1:s}'.format(
+              u'Unsupported attribute name: {0:s}.{1:s}'.format(
                   container_type, attribute_name))
 
         continue
