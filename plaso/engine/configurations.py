@@ -93,15 +93,15 @@ class ProfilingConfiguration(interface.AttributeContainer):
   Attributes:
     directory (str): path to the directory where the profiling sample files
         should be stored.
-    profilers (str): profilers.
+    profilers (set(str)): names of the profilers to enable.
         Supported profilers are:
 
-        * 'guppy' to profile memory usage using guppy;
-        * 'memory' to profile memory usage;
-        * 'parsers' to profile CPU time consumed by individual parsers;
-        * 'processing' to profile CPU time consumed by different parts of
-          the processing;
-        * 'serializers' to profile CPU time consumed by individual
+        * 'guppy', which profiles memory usage using guppy;
+        * 'memory', which profiles memory usage;
+        * 'parsers', which profiles CPU time consumed by individual parsers;
+        * 'processing', which profiles CPU time consumed by different parts of
+          processing;
+        * 'serializers', which profiles CPU time consumed by individual
           serializers.
     sample_rate (int): the profiling sample rate. Contains the number of event
         sources processed.

@@ -353,8 +353,8 @@ class CLITool(object):
     """
     argument_group.add_argument(
         u'--profilers', dest=u'profilers', type=str, action=u'store',
-        default=u'none', metavar=u'PROFILERS_LIST', help=(
-            u'Define a list of profiles to use by the tool. This is a comma '
+        default=u'', metavar=u'PROFILERS_LIST', help=(
+            u'Define a list of profilers to use by the tool. This is a comma '
             u'separated list where each entry is the name of a profiler. '
             u'Use "--profilers list" to list the available profilers.'))
 

@@ -55,7 +55,7 @@ class CLIToolTest(test_lib.CLIToolTestCase):
       u'',
       u'optional arguments:',
       u'  --profilers PROFILERS_LIST',
-      (u'                        Define a list of profiles to use by the '
+      (u'                        Define a list of profilers to use by the '
        u'tool. This is'),
       (u'                        a comma separated list where each entry is '
        u'the name of'),
