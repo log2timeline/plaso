@@ -229,9 +229,12 @@ class SQLitePlugin(plugins.BasePlugin):
       wal_file_entry=None, **kwargs):
     """Determine if this is the right plugin for this database.
 
-    This function takes a SQLiteDatabase object and use the SQLite plugins
-    to extract events. A suitable plugin is determined based on the database
-    schema defined in the SCHEMA class constant.
+    This function takes a SQLiteDatabase object and compares the list
+    of required tables against the available tables in the database.
+    If all the tables defined in REQUIRED_TABLES are present in the
+    database then this plugin is considered to be the correct plugin
+    and the function will return back a generator that yields event
+    objects.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
