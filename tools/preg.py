@@ -226,8 +226,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     return u'{{0:>{0:d}s}} : {{1!s}}'.format(align_length)
 
   def _GetTSKPartitionIdentifiers(
-      self, scan_node, partition_string=None, partition_offset=None,
-      partitions=None):
+      self, scan_node, partition_offset=None, partitions=None):
     """Determines the TSK partition identifiers.
 
     This method first checks for the preferred partition number, then for
