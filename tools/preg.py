@@ -226,7 +226,8 @@ class PregTool(storage_media_tool.StorageMediaTool):
     return u'{{0:>{0:d}s}} : {{1!s}}'.format(align_length)
 
   def _GetTSKPartitionIdentifiers(
-      self, scan_node, partition_string=None, partition_offset=None):
+      self, scan_node, partition_string=None, partition_offset=None,
+      partitions=None):
     """Determines the TSK partition identifiers.
 
     This method first checks for the preferred partition number, then for
@@ -234,20 +235,18 @@ class PregTool(storage_media_tool.StorageMediaTool):
     no usable preferences were specified.
 
     Args:
-      scan_node: the scan node (instance of dfvfs.ScanNode).
-      partition_string: optional preferred partition number string. The default
-                        is None.
-      partition_offset: optional preferred partition byte offset. The default
-                        is None.
+      scan_node (dfvfs.SourceScanNode): scan node.
+      partition_offset (Optional[int]): preferred partition byte offset.
+      paritions (Optional[list[str]]): preferred partition identifiers.
 
     Returns:
-      A list of partition identifiers.
+      list[str]: partition identifiers.
 
     Raises:
       RuntimeError: if the volume for a specific identifier cannot be
-                    retrieved.
+          retrieved.
       SourceScannerError: if the format of or within the source
-                          is not supported or the the scan node is invalid.
+          is not supported or the the scan node is invalid.
     """
     if not scan_node or not scan_node.path_spec:
       raise errors.SourceScannerError(u'Invalid scan node.')
