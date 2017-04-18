@@ -272,7 +272,10 @@ class PregTool(storage_media_tool.StorageMediaTool):
     if partitions == [u'all']:
       return windows_volume_identifiers
 
-    partition_string = partitions[0]
+    partition_string = None
+    if partitions:
+      partition_string = partitions[0]
+
     if partition_string is not None and not partition_string.startswith(u'p'):
       return windows_volume_identifiers
 
