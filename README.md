@@ -26,9 +26,9 @@ And is moving to support:
 * allowing more targeted approach to the collection/parsing.
 
 ### Project status
-[Travis-CI](https://travis-ci.org/) | [AppVeyor](https://ci.appveyor.com) | [Coveralls](https://coveralls.io/)
---- | --- | --- 
-[![Build Status](https://travis-ci.org/log2timeline/plaso.svg?branch=master)](https://travis-ci.org/log2timeline/plaso) | [![Build status](https://ci.appveyor.com/api/projects/status/g3x5ylegjjo61p4m?svg=true)](https://ci.appveyor.com/project/joachimmetz/plaso) | [![Coverage Status](https://img.shields.io/coveralls/log2timeline/plaso.svg)](https://coveralls.io/r/log2timeline/plaso?branch=master)
+[Travis-CI](https://travis-ci.org/) | [AppVeyor](https://ci.appveyor.com) | [Coveralls](https://coveralls.io/) | [Rager](http://rager.io)
+--- | --- | --- | --- 
+[![Build Status](https://travis-ci.org/log2timeline/plaso.svg?branch=master)](https://travis-ci.org/log2timeline/plaso) | [![Build status](https://ci.appveyor.com/api/projects/status/g3x5ylegjjo61p4m?svg=true)](https://ci.appveyor.com/project/joachimmetz/plaso) | [![Coverage Status](https://img.shields.io/coveralls/log2timeline/plaso.svg)](https://coveralls.io/r/log2timeline/plaso?branch=master) | [![Rager Releases](http://rager.io/badge.svg?url=https%3A%2F%2Fgithub.com%2Flog2timeline%2Fplaso)](http://rager.io/projects/search?badge=1&query=github.com/log2timeline/plaso)
 
 ### Also see
 
