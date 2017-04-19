@@ -148,7 +148,7 @@ class AndroidCallPlugin(interface.SQLitePlugin):
           u'NOT NULL)'),
       u'properties': (
           u'CREATE TABLE properties (property_key TEXT PRIMARY KEY, '
-          u'property_value TEXT )'}]
+          u'property_value TEXT )')}]
 
   CALL_TYPE = {
       1: u'INCOMING',
