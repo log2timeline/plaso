@@ -1,40 +1,29 @@
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 """Script to extract the database schema from SQLite database files.
 
 The resulting schema will be placed into your clipboard which can then
 be pasted directly into your plugin.
 
-This script requires the jinja2 and pyperclip Python modules.
+This script requires the pyperclip Python module.
 """
 
 from __future__ import print_function
 import argparse
 import os
 import sys
+import textwrap
 
-import jinja2  # pylint: disable=import-error
-import pyperclip  # pylint: disable=import-error
+#import pyperclip  # pylint: disable=import-error
+
+# Change PYTHONPATH to include plaso.
+sys.path.insert(0, u'.')
 
 from plaso.parsers import sqlite
 
 
 class SQLiteSchemaExtractor(object):
   """SQLite database file schema extractor."""
-
-  _JINJA2_TEMPLATE = ('''
-  {% for table, query in schema|dictsort %}
-    {% if loop.first %}
-      {u'{{ table }}':
-    {% else %}
-       u'{{ table }}':
-    {% endif %}
-       u'{{ query|wordwrap(67, wrapstring=" '\n       u'") }}'
-         {%- if not loop.last -%}
-          ,
-         {% else -%}
-          }
-         {%- endif %}
-  {%- endfor %}''')
 
   def GetDatabaseSchema(self, database_path, wal_path=None):
     """Retrieves schema from given database.
@@ -74,13 +63,31 @@ class SQLiteSchemaExtractor(object):
     Returns:
       str: schema formated as word-wrapped string.
     """
-    schema = {
-        table: u' '.join(query.split()).replace(u'\'', u'\\\'')
-        for table, query in schema.items()}
+    textwrapper = textwrap.TextWrapper()
+    textwrapper.break_long_words = False
+    textwrapper.drop_whitespace = True
+    textwrapper.width = 80 - (10 + 4)
 
-    environment = jinja2.Environment(trim_blocks=True, lstrip_blocks=True)
-    template = environment.from_string(self._JINJA2_TEMPLATE)
-    return template.render(schema=schema)
+    lines = []
+    table_index = 1
+    number_of_tables = len(schema)
+    for table_name, query in schema.items():
+      line = u'      u\'{0:s}\': ('.format(table_name)
+      lines.append(line)
+
+      query = query.replace(u'\'', u'\\\'')
+      query = textwrapper.wrap(query)
+      query = [u'{0:s}u\'{1:s} \''.format(u' ' * 10, line) for line in query]
+
+      if table_index == number_of_tables:
+        query[-1] = u'{0:s}\')}}]'.format(query[-1][:-2])
+      else:
+        query[-1] = u'{0:s}\'),'.format(query[-1][:-2])
+
+      lines.extend(query)
+      table_index += 1
+
+    return u'\n'.join(lines)
 
 
 if __name__ == u'__main__':
@@ -100,7 +107,7 @@ if __name__ == u'__main__':
     print(u'No such database file: {0:s}'.format(options.database_path))
     sys.exit(1)
 
-  if not os.path.exists(options.wal_path):
+  if options.wal_path and not os.path.exists(options.wal_path):
     print(u'No such wal file: {0:s}'.format(options.wal_path))
     sys.exit(1)
 
@@ -111,6 +118,7 @@ if __name__ == u'__main__':
 
   database_schema = extractor.FormatSchema(database_schema)
 
-  pyperclip.copy(database_schema)
+  #pyperclip.copy(database_schema)
+  print(database_schema)
 
   sys.exit(0)
