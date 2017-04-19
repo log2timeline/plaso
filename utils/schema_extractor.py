@@ -19,7 +19,7 @@ import textwrap
 # Change PYTHONPATH to include plaso.
 sys.path.insert(0, u'.')
 
-from plaso.parsers import sqlite
+from plaso.parsers import sqlite  # pylint: disable=wrong-import-position
 
 
 class SQLiteSchemaExtractor(object):
