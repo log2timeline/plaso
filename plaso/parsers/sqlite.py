@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a SQLite parser."""
+"""SQLite parser."""
 
 import logging
 import os
@@ -20,7 +20,7 @@ from plaso.parsers import plugins
 
 
 class SQLiteCache(plugins.BasePluginCache):
-  """A cache storing query results for SQLite plugins."""
+  """Cache for storing results of SQL queries."""
 
   def CacheQueryResults(
       self, sql_results, attribute_name, key_name, column_names):
@@ -85,7 +85,8 @@ class SQLiteDatabase(object):
   """SQLite database.
 
   Attributes:
-    schema (dict[str, str]): schema as an SQL query per table name.
+    schema (dict[str, str]): schema as an SQL query per table name, for
+        example {'Users': 'CREATE TABLE Users ("id" INTEGER PRIMARY KEY, ...)'}.
   """
 
   _READ_BUFFER_SIZE = 65536
@@ -116,7 +117,8 @@ class SQLiteDatabase(object):
   @property
   def tables(self):
     """list[str]: names of all the tables."""
-    return self.schema.keys()
+    if self._is_open:
+      return self.schema.keys()
 
   def _CopyFileObjectToTemporaryFile(self, file_object, temporary_file):
     """Copies the contents of the file-like object to a temporary file.
