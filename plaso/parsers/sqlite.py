@@ -134,7 +134,7 @@ class SQLiteDatabase(object):
       data = file_object.read(self._READ_BUFFER_SIZE)
 
   def Close(self):
-    """Closes the database connection and clean up the temporary file."""
+    """Closes the database connection and cleans up the temporary file."""
     self.schema = {}
 
     if self._is_open:
@@ -265,6 +265,9 @@ class SQLiteDatabase(object):
 
     Returns:
       sqlite3.Cursor: results.
+
+    Raises:
+      sqlite3.DatabaseError: if querying the database fails.
     """
     cursor = self._database.cursor()
     cursor.execute(query)
