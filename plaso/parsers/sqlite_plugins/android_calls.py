@@ -43,7 +43,7 @@ class AndroidCallPlugin(interface.SQLitePlugin):
   REQUIRED_TABLES = frozenset([u'calls'])
 
   # Define the needed queries.
-  QUERIES = [(
+  QUERIES = [
       (u'SELECT _id AS id, date, number, name, duration, type FROM calls',
        u'ParseCallsRow')]
 
