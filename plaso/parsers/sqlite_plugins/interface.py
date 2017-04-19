@@ -87,6 +87,8 @@ class SQLitePlugin(plugins.BasePlugin):
         parser_mediator.ProduceExtractionError((
             u'unable to parse row: {0:d} of results of query: {1:s} on '
             u'database with error: {2!s}').format(index, query, exception))
+        # TODO: consider removing return.
+        return
 
   def _ParseQueryWithWAL(
       self, parser_mediator, database_wal, query, callback, row_cache,
@@ -130,6 +132,8 @@ class SQLitePlugin(plugins.BasePlugin):
             u'unable to parse row: {0:d} of results of query: {1:s} on '
             u'database with WAL with error: {2!s}').format(
                 index, query, exception))
+        # TODO: consider removing return.
+        return
 
   def GetEntries(
       self, parser_mediator, cache=None, database=None, database_wal=None,
