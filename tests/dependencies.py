@@ -48,10 +48,17 @@ class DependenciesTest(unittest.TestCase):
     """Tests the CheckModuleVersion function."""
     dependencies.CheckModuleVersion(u'dfdatetime')
 
+    dependencies.CheckModuleVersion(u'pyregf')
+
+    dependencies.CheckModuleVersion(u'os')
+
     with self.assertRaises(ImportError):
       dependencies.CheckModuleVersion(u'bogus')
 
-  # CheckTestDependencies is tested in ./run_tests.py
+  def testCheckTestDependencies(self):
+    """Tests the CheckTestDependencies function."""
+    result = dependencies.CheckTestDependencies(verbose_output=False)
+    self.assertTrue(result)
 
   def testGetDPKGDepends(self):
     """Tests the GetDPKGDepends function."""
@@ -70,6 +77,9 @@ class DependenciesTest(unittest.TestCase):
     """Tests the GetRPMRequires function."""
     install_requires = dependencies.GetRPMRequires()
     self.assertIn(u'libbde-python >= 20140531', install_requires)
+
+    install_requires = dependencies.GetRPMRequires(exclude_version=True)
+    self.assertIn(u'libregf-python', install_requires)
 
 
 if __name__ == '__main__':
