@@ -8,6 +8,7 @@ import sys
 # Change PYTHONPATH to include plaso.
 sys.path.insert(0, u'.')
 
+# pylint: disable=wrong-import-position
 import plaso.dependencies
 
 
@@ -60,11 +61,10 @@ class DPKGControlWriter(object):
       file_object.write(file_content)
 
 
-class GIFTInstallScriptWriter(object):
-  """Class to help write the install_gift_and_dependencies.sh file."""
+class GIFTCOPRInstallScriptWriter(object):
+  """Class to help write the gift_copr_install.sh file."""
 
-  _PATH = os.path.join(
-      u'config', u'linux', u'install_gift_and_dependencies.sh')
+  _PATH = os.path.join(u'config', u'linux', u'gift_copr_install.sh')
 
   _FILE_HEADER = [
       u'#!/usr/bin/env bash',
@@ -74,20 +74,108 @@ class GIFTInstallScriptWriter(object):
       (u'# This should not include packages only required for testing or '
        u'development.')]
 
-  _FILE_FOOTER = [
+  _ADDITIONAL_DEPENDENCIES = [
       u'',
       u'# Additional dependencies for running Plaso tests, alphabetized,',
       u'# one per line.',
       u'TEST_DEPENDENCIES="python-mock";',
       u'',
-      u'# Additional dependencies for doing Plaso debugging, alphabetized,',
+      u'# Additional dependencies for doing Plaso development, alphabetized,',
       u'# one per line.',
-      u'DEBUG_DEPENDENCIES="python-guppy";',
+      u'DEVELOPMENT_DEPENDENCIES="python-sphinx',
+      u'                          pylint";',
+      u'',
+      u'# Additional dependencies for doing Plaso debugging, alphabetized,',
+      u'# one per line.']
+
+  _FILE_FOOTER = [
+      u'',
+      u'sudo dnf install dnf-plugins-core',
+      u'sudo dnf copr enable @gift/dev',
+      u'sudo dnf install -y ${PLASO_DEPENDENCIES}',
+      u'',
+      u'if [[ "$*" =~ "include-debug" ]]; then',
+      u'    sudo dnf install -y ${DEBUG_DEPENDENCIES}',
+      u'fi',
+      u'',
+      u'if [[ "$*" =~ "include-development" ]]; then',
+      u'    sudo dnf install -y ${DEVELOPMENT_DEPENDENCIES}',
+      u'fi',
+      u'',
+      u'if [[ "$*" =~ "include-test" ]]; then',
+      u'    sudo dnf install -y ${TEST_DEPENDENCIES}',
+      u'fi',
+      u'']
+
+  def Write(self):
+    """Writes a gift_copr_install.sh file."""
+    file_content = []
+    file_content.extend(self._FILE_HEADER)
+
+    dependencies = plaso.dependencies.GetRPMRequires(exclude_version=True)
+    libyal_dependencies = []
+    for index, dependency in enumerate(dependencies):
+      if index == 0:
+        file_content.append(u'PLASO_DEPENDENCIES="{0:s}'.format(dependency))
+      elif index + 1 == len(dependencies):
+        file_content.append(u'                    {0:s}";'.format(dependency))
+      else:
+        file_content.append(u'                    {0:s}'.format(dependency))
+
+      if dependency.startswith(u'lib') and dependency.endswith(u'-python'):
+        dependency, _, _ = dependency.partition(u'-')
+        libyal_dependencies.append(dependency)
+
+    file_content.extend(self._ADDITIONAL_DEPENDENCIES)
+
+    for index, dependency in enumerate(libyal_dependencies):
+      if index == 0:
+        file_content.append(u'DEBUG_DEPENDENCIES="{0:s}-debuginfo'.format(
+            dependency))
+      elif index + 1 == len(libyal_dependencies):
+        file_content.append(u'                    {0:s}-debuginfo";'.format(
+            dependency))
+      else:
+        file_content.append(u'                    {0:s}-debuginfo'.format(
+            dependency))
+
+    file_content.extend(self._FILE_FOOTER)
+
+    file_content = u'\n'.join(file_content)
+    file_content = file_content.encode(u'utf-8')
+
+    with open(self._PATH, 'wb') as file_object:
+      file_object.write(file_content)
+
+
+class GIFTPPAInstallScriptWriter(object):
+  """Class to help write the gift_ppa_install.sh file."""
+
+  _PATH = os.path.join(u'config', u'linux', u'gift_ppa_install.sh')
+
+  _FILE_HEADER = [
+      u'#!/usr/bin/env bash',
+      u'set -e',
+      u'',
+      u'# Dependencies for running Plaso, alphabetized, one per line.',
+      (u'# This should not include packages only required for testing or '
+       u'development.')]
+
+  _ADDITIONAL_DEPENDENCIES = [
+      u'',
+      u'# Additional dependencies for running Plaso tests, alphabetized,',
+      u'# one per line.',
+      u'TEST_DEPENDENCIES="python-mock";',
       u'',
       u'# Additional dependencies for doing Plaso development, alphabetized,',
       u'# one per line.',
       u'DEVELOPMENT_DEPENDENCIES="python-sphinx',
       u'                          pylint";',
+      u'',
+      u'# Additional dependencies for doing Plaso debugging, alphabetized,',
+      u'# one per line.']
+
+  _FILE_FOOTER = [
       u'',
       u'sudo add-apt-repository ppa:gift/dev -y',
       u'sudo apt-get update -q',
@@ -107,11 +195,12 @@ class GIFTInstallScriptWriter(object):
       u'']
 
   def Write(self):
-    """Writes a install_gift_and_dependencies.sh file."""
+    """Writes a gift_ppa_install.sh file."""
     file_content = []
     file_content.extend(self._FILE_HEADER)
 
     dependencies = plaso.dependencies.GetDPKGDepends(exclude_version=True)
+    libyal_dependencies = []
     for index, dependency in enumerate(dependencies):
       if index == 0:
         file_content.append(u'PLASO_DEPENDENCIES="{0:s}'.format(dependency))
@@ -119,6 +208,23 @@ class GIFTInstallScriptWriter(object):
         file_content.append(u'                    {0:s}";'.format(dependency))
       else:
         file_content.append(u'                    {0:s}'.format(dependency))
+
+      if dependency.startswith(u'lib') and dependency.endswith(u'-python'):
+        dependency, _, _ = dependency.partition(u'-')
+        libyal_dependencies.append(dependency)
+
+    file_content.extend(self._ADDITIONAL_DEPENDENCIES)
+
+    for index, dependency in enumerate(libyal_dependencies):
+      if index == 0:
+        file_content.append(u'DEBUG_DEPENDENCIES="{0:s}-dbg'.format(dependency))
+      else:
+        file_content.append(u'                    {0:s}-dbg'.format(dependency))
+
+      file_content.append(u'                    {0:s}-python-dbg'.format(
+          dependency))
+
+    file_content.append(u'                    python-guppy";')
 
     file_content.extend(self._FILE_FOOTER)
 
@@ -279,7 +385,10 @@ if __name__ == u'__main__':
   writer = DPKGControlWriter()
   writer.Write()
 
-  writer = GIFTInstallScriptWriter()
+  writer = GIFTCOPRInstallScriptWriter()
+  writer.Write()
+
+  writer = GIFTPPAInstallScriptWriter()
   writer.Write()
 
   writer = RequirementsWriter()

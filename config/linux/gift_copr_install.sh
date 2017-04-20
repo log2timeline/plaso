@@ -3,7 +3,7 @@ set -e
 
 # Dependencies for running Plaso, alphabetized, one per line.
 # This should not include packages only required for testing or development.
-PLASO_DEPENDENCIES="ipython
+PLASO_DEPENDENCIES="PyYAML
                     libbde-python
                     libesedb-python
                     libevt-python
@@ -26,6 +26,8 @@ PLASO_DEPENDENCIES="ipython
                     libvmdk-python
                     libvshadow-python
                     libvslvm-python
+                    pyliblzma
+                    python-XlsxWriter
                     python-artifacts
                     python-bencode
                     python-binplist
@@ -40,44 +42,63 @@ PLASO_DEPENDENCIES="ipython
                     python-hachoir-core
                     python-hachoir-metadata
                     python-hachoir-parser
-                    python-lzma
+                    python-ipython
                     python-pefile
                     python-psutil
                     python-pyparsing
                     python-pytsk3
                     python-requests
                     python-six
-                    python-tz
-                    python-xlsxwriter
-                    python-yaml
-                    python-yara
-                    python-zmq";
+                    python2-yara
+                    python2-zmq
+                    pytz";
 
 # Additional dependencies for running Plaso tests, alphabetized,
 # one per line.
 TEST_DEPENDENCIES="python-mock";
-
-# Additional dependencies for doing Plaso debugging, alphabetized,
-# one per line.
-DEBUG_DEPENDENCIES="python-guppy";
 
 # Additional dependencies for doing Plaso development, alphabetized,
 # one per line.
 DEVELOPMENT_DEPENDENCIES="python-sphinx
                           pylint";
 
-sudo add-apt-repository ppa:gift/dev -y
-sudo apt-get update -q
-sudo apt-get install -y ${PLASO_DEPENDENCIES}
+# Additional dependencies for doing Plaso debugging, alphabetized,
+# one per line.
+DEBUG_DEPENDENCIES="libbde-debuginfo
+                    libesedb-debuginfo
+                    libevt-debuginfo
+                    libevtx-debuginfo
+                    libewf-debuginfo
+                    libfsntfs-debuginfo
+                    libfvde-debuginfo
+                    libfwnt-debuginfo
+                    libfwsi-debuginfo
+                    liblnk-debuginfo
+                    libmsiecf-debuginfo
+                    libolecf-debuginfo
+                    libqcow-debuginfo
+                    libregf-debuginfo
+                    libscca-debuginfo
+                    libsigscan-debuginfo
+                    libsmdev-debuginfo
+                    libsmraw-debuginfo
+                    libvhdi-debuginfo
+                    libvmdk-debuginfo
+                    libvshadow-debuginfo
+                    libvslvm-debuginfo";
+
+sudo dnf install dnf-plugins-core
+sudo dnf copr enable @gift/dev
+sudo dnf install -y ${PLASO_DEPENDENCIES}
 
 if [[ "$*" =~ "include-debug" ]]; then
-    sudo apt-get install -y ${DEBUG_DEPENDENCIES}
+    sudo dnf install -y ${DEBUG_DEPENDENCIES}
 fi
 
 if [[ "$*" =~ "include-development" ]]; then
-    sudo apt-get install -y ${DEVELOPMENT_DEPENDENCIES}
+    sudo dnf install -y ${DEVELOPMENT_DEPENDENCIES}
 fi
 
 if [[ "$*" =~ "include-test" ]]; then
-    sudo apt-get install -y ${TEST_DEPENDENCIES}
+    sudo dnf install -y ${TEST_DEPENDENCIES}
 fi
