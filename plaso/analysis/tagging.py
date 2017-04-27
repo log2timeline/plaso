@@ -208,6 +208,7 @@ class TaggingAnalysisPlugin(interface.AnalysisPlugin):
 
     labels = list(efilter_api.getvalues(matched_labels))
     event_tag = self._CreateEventTag(event, self._EVENT_TAG_COMMENT, labels)
+
     mediator.ProduceEventTag(event_tag)
     self._number_of_event_tags += 1
 

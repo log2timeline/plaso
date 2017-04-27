@@ -28,6 +28,14 @@ plaso.storage.gzip_file module
     :undoc-members:
     :show-inheritance:
 
+plaso.storage.identifiers module
+--------------------------------
+
+.. automodule:: plaso.storage.identifiers
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 plaso.storage.interface module
 ------------------------------
 

@@ -200,19 +200,15 @@ class NetworksPluginTest(test_lib.RegistryPluginTestCase):
 
     self.assertEqual(len(storage_writer.events), 4)
 
-    # Because the order the subkeys are parsed are not guaranteed we will sort
-    # the events.
-    # TODO: this should not be needed, look into this.
-    event_objects = sorted(
-        storage_writer.events, key=lambda evt: evt.EqualityString())
+    events = self._GetSortedEvents(storage_writer.events)
 
-    event_object = event_objects[0]
+    event = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-05-06 17:02:19.795')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
 
     expected_message = (
         u'SSID: Network '
@@ -222,16 +218,15 @@ class NetworksPluginTest(test_lib.RegistryPluginTestCase):
         u'DNS Suffix: localdomain')
     expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
-    event_object = event_objects[3]
+    event = events[3]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-01-27 15:15:27.965')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.LAST_CONNECTED)
+        event.timestamp_desc, eventdata.EventTimestamp.LAST_CONNECTED)
 
     expected_message = (
         u'SSID: My Awesome Wifi Hotspot '
@@ -239,8 +234,7 @@ class NetworksPluginTest(test_lib.RegistryPluginTestCase):
         u'Connection Type: Wireless')
     expected_short_message = u'{0:s}...'.format(expected_message[:77])
 
-    self._TestGetMessageStrings(
-        event_object, expected_message, expected_short_message)
+    self._TestGetMessageStrings(event, expected_message, expected_short_message)
 
 
 if __name__ == '__main__':

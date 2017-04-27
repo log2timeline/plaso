@@ -141,8 +141,9 @@ class TestEventBuffer(output_event_buffer.EventBuffer):
     Args:
       event (EventObject): event.
     """
-    key = event.EqualityString()
-    self._events_per_key[key] = event
+    event_identifier = event.GetIdentifier()
+    lookup_key = event_identifier.CopyToString()
+    self._events_per_key[lookup_key] = event
     self.record_count += 1
 
   def End(self):
@@ -365,7 +366,6 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     counter = test_engine.ExportEvents(
         knowledge_base_object, storage_reader, output_module)
 
-    # TODO: refactor preprocessing object.
     self.assertEqual(counter[u'Stored Events'], 0)
 
     lines = []
@@ -373,16 +373,17 @@ class PsortMultiProcessEngineTest(shared_test_lib.BaseTestCase):
     for line in output.split(b'\n'):
       lines.append(line)
 
-    self.assertEqual(len(lines), 24)
+    self.assertEqual(len(lines), 22)
 
     expected_line = (
-        u'2016-10-16T15:13:43+00:00,'
-        u'mtime,'
-        u'FILE,'
-        u'OS mtime,'
-        u'OS:/tmp/test/test_data/syslog Type: file,'
-        u'filestat,'
-        u'OS:/tmp/test/test_data/syslog,-')
+        u'2014-11-18T01:15:43+00:00,'
+        u'Content Modification Time,'
+        u'LOG,'
+        u'Log File,'
+        u'[---] last message repeated 5 times ---,'
+        u'syslog,'
+        u'OS:/tmp/test/test_data/syslog,'
+        u'repeated')
     self.assertEqual(lines[14], expected_line)
 
 

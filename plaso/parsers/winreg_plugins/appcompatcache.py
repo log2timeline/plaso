@@ -209,10 +209,10 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
   _CACHED_ENTRY_SIGNATURE_8_1 = b'10ts'
 
   # AppCompatCache format used in Windows 10
-  _HEADER_SIGNATURE_10 = 0x00000030
+  _HEADER_SIGNATURES_10 = (0x00000030, 0x00000034)
 
   _HEADER_10_STRUCT = construct.Struct(
-      u'appcompatcache_header_8',
+      u'appcompatcache_header_10',
       construct.ULInt32(u'signature'),
       construct.ULInt32(u'unknown1'),
       construct.Padding(28),
@@ -240,11 +240,11 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
       return self._FORMAT_TYPE_7
 
     elif signature == self._HEADER_SIGNATURE_8:
-      if value_data[signature:signature + 4] in [
-          self._CACHED_ENTRY_SIGNATURE_8_0, self._CACHED_ENTRY_SIGNATURE_8_1]:
+      if value_data[signature:signature + 4] in (
+          self._CACHED_ENTRY_SIGNATURE_8_0, self._CACHED_ENTRY_SIGNATURE_8_1):
         return self._FORMAT_TYPE_8
 
-    elif signature == self._HEADER_SIGNATURE_10:
+    elif signature in self._HEADER_SIGNATURES_10:
       # Windows 10 uses the same cache entry signature as Windows 8.1
       if value_data[signature:signature + 4] in [
           self._CACHED_ENTRY_SIGNATURE_8_1]:
@@ -266,9 +266,9 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
     Raises:
       RuntimeError: if the format type is not supported.
     """
-    if format_type not in [
+    if format_type not in (
         self._FORMAT_TYPE_XP, self._FORMAT_TYPE_2003, self._FORMAT_TYPE_VISTA,
-        self._FORMAT_TYPE_7, self._FORMAT_TYPE_8, self._FORMAT_TYPE_10]:
+        self._FORMAT_TYPE_7, self._FORMAT_TYPE_8, self._FORMAT_TYPE_10):
       raise RuntimeError(
           u'[{0:s}] Unsupported format type: {1:d}'.format(
               self.NAME, format_type))
@@ -279,8 +279,8 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
     if format_type == self._FORMAT_TYPE_XP:
       cached_entry_size = self._CACHED_ENTRY_XP_32BIT_STRUCT.sizeof()
 
-    elif format_type in [
-        self._FORMAT_TYPE_2003, self._FORMAT_TYPE_VISTA, self._FORMAT_TYPE_7]:
+    elif format_type in (
+        self._FORMAT_TYPE_2003, self._FORMAT_TYPE_VISTA, self._FORMAT_TYPE_7):
       path_size = construct.ULInt16(u'path_size').parse(cached_entry_data[0:2])
       maximum_path_size = construct.ULInt16(u'maximum_path_size').parse(
           cached_entry_data[2:4])
@@ -318,7 +318,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
         elif format_type == self._FORMAT_TYPE_7:
           cached_entry_size = self._CACHED_ENTRY_7_32BIT_STRUCT.sizeof()
 
-    elif format_type in [self._FORMAT_TYPE_8, self._FORMAT_TYPE_10]:
+    elif format_type in (self._FORMAT_TYPE_8, self._FORMAT_TYPE_10):
       cached_entry_size = self._CACHED_ENTRY_HEADER_8_STRUCT.sizeof()
 
     return cached_entry_size
@@ -336,9 +336,9 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
     Raises:
       RuntimeError: if the format type is not supported.
     """
-    if format_type not in [
+    if format_type not in (
         self._FORMAT_TYPE_XP, self._FORMAT_TYPE_2003, self._FORMAT_TYPE_VISTA,
-        self._FORMAT_TYPE_7, self._FORMAT_TYPE_8, self._FORMAT_TYPE_10]:
+        self._FORMAT_TYPE_7, self._FORMAT_TYPE_8, self._FORMAT_TYPE_10):
       raise RuntimeError(
           u'[{0:s}] Unsupported format type: {1:d}'.format(
               self.NAME, format_type))
@@ -348,32 +348,32 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
     header_object = AppCompatCacheHeader()
 
     if format_type == self._FORMAT_TYPE_XP:
-      header_object.header_size = self._HEADER_XP_32BIT_STRUCT.sizeof()
       header_struct = self._HEADER_XP_32BIT_STRUCT.parse(value_data)
+      header_object.header_size = self._HEADER_XP_32BIT_STRUCT.sizeof()
 
     elif format_type == self._FORMAT_TYPE_2003:
-      header_object.header_size = self._HEADER_2003_STRUCT.sizeof()
       header_struct = self._HEADER_2003_STRUCT.parse(value_data)
+      header_object.header_size = self._HEADER_2003_STRUCT.sizeof()
 
     elif format_type == self._FORMAT_TYPE_VISTA:
-      header_object.header_size = self._HEADER_VISTA_STRUCT.sizeof()
       header_struct = self._HEADER_VISTA_STRUCT.parse(value_data)
+      header_object.header_size = self._HEADER_VISTA_STRUCT.sizeof()
 
     elif format_type == self._FORMAT_TYPE_7:
-      header_object.header_size = self._HEADER_7_STRUCT.sizeof()
       header_struct = self._HEADER_7_STRUCT.parse(value_data)
+      header_object.header_size = self._HEADER_7_STRUCT.sizeof()
 
     elif format_type == self._FORMAT_TYPE_8:
-      header_object.header_size = self._HEADER_8_STRUCT.sizeof()
       header_struct = self._HEADER_8_STRUCT.parse(value_data)
+      header_object.header_size = self._HEADER_8_STRUCT.sizeof()
 
     elif format_type == self._FORMAT_TYPE_10:
-      header_object.header_size = self._HEADER_10_STRUCT.sizeof()
       header_struct = self._HEADER_10_STRUCT.parse(value_data)
+      header_object.header_size = header_struct.signature
 
-    if format_type in [
+    if format_type in (
         self._FORMAT_TYPE_XP, self._FORMAT_TYPE_2003, self._FORMAT_TYPE_VISTA,
-        self._FORMAT_TYPE_7, self._FORMAT_TYPE_10]:
+        self._FORMAT_TYPE_7, self._FORMAT_TYPE_10):
       header_object.number_of_cached_entries = header_struct.get(
           u'number_of_cached_entries')
 
@@ -396,9 +396,9 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
     Raises:
       RuntimeError: if the format type is not supported.
     """
-    if format_type not in [
+    if format_type not in (
         self._FORMAT_TYPE_XP, self._FORMAT_TYPE_2003, self._FORMAT_TYPE_VISTA,
-        self._FORMAT_TYPE_7, self._FORMAT_TYPE_8, self._FORMAT_TYPE_10]:
+        self._FORMAT_TYPE_7, self._FORMAT_TYPE_8, self._FORMAT_TYPE_10):
       raise RuntimeError(
           u'[{0:s}] Unsupported format type: {1:d}'.format(
               self.NAME, format_type))
@@ -440,11 +440,12 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
         cached_entry_struct = self._CACHED_ENTRY_7_64BIT_STRUCT.parse(
             cached_entry_data)
 
-    elif format_type in [self._FORMAT_TYPE_8, self._FORMAT_TYPE_10]:
-      if cached_entry_data[0:4] not in [
-          self._CACHED_ENTRY_SIGNATURE_8_0, self._CACHED_ENTRY_SIGNATURE_8_1]:
-        raise RuntimeError(
-            u'[{0:s}] Unsupported cache entry signature'.format(self.NAME))
+    elif format_type in (self._FORMAT_TYPE_8, self._FORMAT_TYPE_10):
+      if cached_entry_data[0:4] not in (
+          self._CACHED_ENTRY_SIGNATURE_8_0, self._CACHED_ENTRY_SIGNATURE_8_1):
+        raise RuntimeError((
+            u'[{0:s}] Unsupported cache entry signature at offset: '
+            u'0x{1:08x}').format(self.NAME, cached_entry_offset))
 
       if cached_entry_size == self._CACHED_ENTRY_HEADER_8_STRUCT.sizeof():
         cached_entry_struct = self._CACHED_ENTRY_HEADER_8_STRUCT.parse(
@@ -479,12 +480,12 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
       cached_entry_object.path = binary.UTF16StreamCopyToString(
           cached_entry_data[0:string_size])
 
-    elif format_type in [
-        self._FORMAT_TYPE_2003, self._FORMAT_TYPE_VISTA, self._FORMAT_TYPE_7]:
+    elif format_type in (
+        self._FORMAT_TYPE_2003, self._FORMAT_TYPE_VISTA, self._FORMAT_TYPE_7):
       path_size = cached_entry_struct.get(u'path_size')
       path_offset = cached_entry_struct.get(u'path_offset')
 
-    elif format_type in [self._FORMAT_TYPE_8, self._FORMAT_TYPE_10]:
+    elif format_type in (self._FORMAT_TYPE_8, self._FORMAT_TYPE_10):
       path_size = cached_entry_struct.get(u'path_size')
 
       cached_entry_data_offset = 14 + path_size
@@ -507,20 +508,20 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
 
       remaining_data = cached_entry_data[cached_entry_data_offset:]
 
-    if format_type in [
+    if format_type in (
         self._FORMAT_TYPE_XP, self._FORMAT_TYPE_2003, self._FORMAT_TYPE_VISTA,
-        self._FORMAT_TYPE_7]:
+        self._FORMAT_TYPE_7):
       cached_entry_object.last_modification_time = cached_entry_struct.get(
           u'last_modification_time')
 
-    elif format_type in [self._FORMAT_TYPE_8, self._FORMAT_TYPE_10]:
+    elif format_type in (self._FORMAT_TYPE_8, self._FORMAT_TYPE_10):
       cached_entry_object.last_modification_time = construct.ULInt64(
           u'last_modification_time').parse(remaining_data[0:8])
 
-    if format_type in [self._FORMAT_TYPE_XP, self._FORMAT_TYPE_2003]:
+    if format_type in (self._FORMAT_TYPE_XP, self._FORMAT_TYPE_2003):
       cached_entry_object.file_size = cached_entry_struct.get(u'file_size')
 
-    elif format_type in [self._FORMAT_TYPE_VISTA, self._FORMAT_TYPE_7]:
+    elif format_type in (self._FORMAT_TYPE_VISTA, self._FORMAT_TYPE_7):
       cached_entry_object.insertion_flags = cached_entry_struct.get(
           u'insertion_flags')
       cached_entry_object.shim_flags = cached_entry_struct.get(u'shim_flags')
@@ -533,7 +534,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
       data_offset = cached_entry_struct.get(u'data_offset')
       data_size = cached_entry_struct.get(u'data_size')
 
-    elif format_type in [self._FORMAT_TYPE_8, self._FORMAT_TYPE_10]:
+    elif format_type in (self._FORMAT_TYPE_8, self._FORMAT_TYPE_10):
       data_offset = cached_entry_offset + cached_entry_data_offset + 12
       data_size = construct.ULInt32(u'data_size').parse(remaining_data[8:12])
 

@@ -116,6 +116,16 @@ class PregTool(storage_media_tool.StorageMediaTool):
   RUN_MODE_REG_PLUGIN = 4
   RUN_MODE_REG_KEY = 5
 
+  _EXCLUDED_ATTRIBUTE_NAMES = frozenset([
+      u'data_type',
+      u'display_name',
+      u'filename',
+      u'inode',
+      u'parser',
+      u'pathspec',
+      u'tag',
+      u'timestamp'])
+
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
 
@@ -199,7 +209,8 @@ class PregTool(storage_media_tool.StorageMediaTool):
       attributes = event_object.regvalue.keys()
     else:
       attribute_names = set(event_object.GetAttributeNames())
-      attributes = attribute_names.difference(event_object.COMPARE_EXCLUDE)
+      attributes = attribute_names.difference(
+          self._EXCLUDED_ATTRIBUTE_NAMES)
 
     align_length = self._DEFAULT_FORMAT_ALIGN_LENGTH
     for attribute in attributes:
@@ -215,7 +226,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     return u'{{0:>{0:d}s}} : {{1!s}}'.format(align_length)
 
   def _GetTSKPartitionIdentifiers(
-      self, scan_node, partition_string=None, partition_offset=None):
+      self, scan_node, partition_offset=None, partitions=None):
     """Determines the TSK partition identifiers.
 
     This method first checks for the preferred partition number, then for
@@ -223,20 +234,18 @@ class PregTool(storage_media_tool.StorageMediaTool):
     no usable preferences were specified.
 
     Args:
-      scan_node: the scan node (instance of dfvfs.ScanNode).
-      partition_string: optional preferred partition number string. The default
-                        is None.
-      partition_offset: optional preferred partition byte offset. The default
-                        is None.
+      scan_node (dfvfs.SourceScanNode): scan node.
+      partition_offset (Optional[int]): preferred partition byte offset.
+      paritions (Optional[list[str]]): preferred partition identifiers.
 
     Returns:
-      A list of partition identifiers.
+      list[str]: partition identifiers.
 
     Raises:
       RuntimeError: if the volume for a specific identifier cannot be
-                    retrieved.
+          retrieved.
       SourceScannerError: if the format of or within the source
-                          is not supported or the the scan node is invalid.
+          is not supported or the the scan node is invalid.
     """
     if not scan_node or not scan_node.path_spec:
       raise errors.SourceScannerError(u'Invalid scan node.')
@@ -260,8 +269,12 @@ class PregTool(storage_media_tool.StorageMediaTool):
       logging.error(u'No Windows partitions discovered.')
       return windows_volume_identifiers
 
-    if partition_string == u'all':
+    if partitions == [u'all']:
       return windows_volume_identifiers
+
+    partition_string = None
+    if partitions:
+      partition_string = partitions[0]
 
     if partition_string is not None and not partition_string.startswith(u'p'):
       return windows_volume_identifiers
@@ -353,7 +366,7 @@ class PregTool(storage_media_tool.StorageMediaTool):
     else:
       # TODO: Add a function for this to avoid repeating code.
       attribute_names = set(event_object.GetAttributeNames())
-      keys = attribute_names.difference(event_object.COMPARE_EXCLUDE)
+      keys = attribute_names.difference(self._EXCLUDED_ATTRIBUTE_NAMES)
       keys.discard(u'offset')
       keys.discard(u'timestamp_desc')
       attributes = {}

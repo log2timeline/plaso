@@ -25,28 +25,31 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         [u'mac_cups_ipp'], parser_object)
 
     self.assertEqual(len(storage_writer.events), 3)
-    event_object = storage_writer.events[0]
+
+    events = self._GetSortedEvents(storage_writer.events)
+
+    event = events[0]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-03 18:07:21')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     self.assertEqual(
-        event_object.timestamp_desc,
+        event.timestamp_desc,
         eventdata.EventTimestamp.CREATION_TIME)
 
-    self.assertEqual(event_object.application, u'LibreOffice')
-    self.assertEqual(event_object.job_name, u'Assignament 1')
-    self.assertEqual(event_object.computer_name, u'localhost')
-    self.assertEqual(event_object.copies, 1)
-    self.assertEqual(event_object.doc_type, u'application/pdf')
+    self.assertEqual(event.application, u'LibreOffice')
+    self.assertEqual(event.job_name, u'Assignament 1')
+    self.assertEqual(event.computer_name, u'localhost')
+    self.assertEqual(event.copies, 1)
+    self.assertEqual(event.doc_type, u'application/pdf')
     expected_job = u'urn:uuid:d51116d9-143c-3863-62aa-6ef0202de49a'
-    self.assertEqual(event_object.job_id, expected_job)
-    self.assertEqual(event_object.owner, u'Joaquin Moreno Garijo')
-    self.assertEqual(event_object.user, u'moxilo')
-    self.assertEqual(event_object.printer_id, u'RHULBW')
+    self.assertEqual(event.job_id, expected_job)
+    self.assertEqual(event.owner, u'Joaquin Moreno Garijo')
+    self.assertEqual(event.user, u'moxilo')
+    self.assertEqual(event.printer_id, u'RHULBW')
     expected_uri = u'ipp://localhost:631/printers/RHULBW'
-    self.assertEqual(event_object.uri, expected_uri)
+    self.assertEqual(event.uri, expected_uri)
     expected_msg = (
         u'User: moxilo '
         u'Owner: Joaquin Moreno Garijo '
@@ -55,26 +58,26 @@ class CupsIppParserTest(test_lib.ParserTestCase):
         u'Printer: RHULBW')
     expected_msg_short = (
         u'Job Name: Assignament 1')
-    self._TestGetMessageStrings(event_object, expected_msg, expected_msg_short)
+    self._TestGetMessageStrings(event, expected_msg, expected_msg_short)
 
-    event_object = storage_writer.events[1]
+    event = events[1]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-03 18:07:21')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     self.assertEqual(
-        event_object.timestamp_desc,
+        event.timestamp_desc,
         eventdata.EventTimestamp.START_TIME)
 
-    event_object = storage_writer.events[2]
+    event = events[2]
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-11-03 18:07:32')
-    self.assertEqual(event_object.timestamp, expected_timestamp)
+    self.assertEqual(event.timestamp, expected_timestamp)
 
     self.assertEqual(
-        event_object.timestamp_desc,
+        event.timestamp_desc,
         eventdata.EventTimestamp.END_TIME)
 
 

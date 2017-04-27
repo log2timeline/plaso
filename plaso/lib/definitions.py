@@ -36,8 +36,6 @@ PROCESSING_ERROR_STATUS = frozenset([
     PROCESSING_STATUS_KILLED])
 
 RESERVED_VARIABLE_NAMES = frozenset([
-    u'_store_index',
-    u'_store_number',
     u'body',
     u'data_type',
     u'display_name',
@@ -59,8 +57,7 @@ RESERVED_VARIABLE_NAMES = frozenset([
     u'timestamp',
     u'timestamp_desc',
     u'timezone',
-    u'username',
-    u'uuid'])
+    u'username'])
 
 SERIALIZER_FORMAT_JSON = u'json'
 
