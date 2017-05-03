@@ -3,6 +3,8 @@
 
 from plaso.parsers.sqlite_plugins import android_calls
 from plaso.parsers.sqlite_plugins import android_sms
+from plaso.parsers.sqlite_plugins import android_webview
+from plaso.parsers.sqlite_plugins import android_webviewcache
 from plaso.parsers.sqlite_plugins import appusage
 from plaso.parsers.sqlite_plugins import chrome
 from plaso.parsers.sqlite_plugins import chrome_cookies
