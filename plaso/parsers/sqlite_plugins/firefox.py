@@ -185,100 +185,101 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       u'moz_places', u'moz_historyvisits', u'moz_bookmarks',
       u'moz_items_annos'])
 
-  SCHEMAS = [
-      {u'moz_anno_attributes':
-       u'CREATE TABLE moz_anno_attributes ( id INTEGER PRIMARY KEY, name '
-       u'VARCHAR(32) UNIQUE NOT NULL)',
-       u'moz_annos':
-       u'CREATE TABLE moz_annos ( id INTEGER PRIMARY KEY, place_id INTEGER '
-       u'NOT NULL, anno_attribute_id INTEGER, mime_type VARCHAR(32) DEFAULT '
-       u'NULL, content LONGVARCHAR, flags INTEGER DEFAULT 0, expiration '
-       u'INTEGER DEFAULT 0, type INTEGER DEFAULT 0, dateAdded INTEGER '
-       u'DEFAULT 0, lastModified INTEGER DEFAULT 0)',
-       u'moz_bookmarks':
-       u'CREATE TABLE moz_bookmarks ( id INTEGER PRIMARY KEY, type INTEGER, '
-       u'fk INTEGER DEFAULT NULL, parent INTEGER, position INTEGER, title '
-       u'LONGVARCHAR, keyword_id INTEGER, folder_type TEXT, dateAdded '
-       u'INTEGER, lastModified INTEGER)',
-       u'moz_bookmarks_roots':
-       u'CREATE TABLE moz_bookmarks_roots ( root_name VARCHAR(16) UNIQUE, '
-       u'folder_id INTEGER)',
-       u'moz_favicons':
-       u'CREATE TABLE moz_favicons ( id INTEGER PRIMARY KEY, url LONGVARCHAR '
-       u'UNIQUE, data BLOB, mime_type VARCHAR(32), expiration LONG)',
-       u'moz_historyvisits':
-       u'CREATE TABLE moz_historyvisits ( id INTEGER PRIMARY KEY, from_visit '
-       u'INTEGER, place_id INTEGER, visit_date INTEGER, visit_type INTEGER, '
-       u'session INTEGER)',
-       u'moz_inputhistory':
-       u'CREATE TABLE moz_inputhistory ( place_id INTEGER NOT NULL, input '
-       u'LONGVARCHAR NOT NULL, use_count INTEGER, PRIMARY KEY (place_id, '
-       u'input))',
-       u'moz_items_annos':
-       u'CREATE TABLE moz_items_annos ( id INTEGER PRIMARY KEY, item_id '
-       u'INTEGER NOT NULL, anno_attribute_id INTEGER, mime_type VARCHAR(32) '
-       u'DEFAULT NULL, content LONGVARCHAR, flags INTEGER DEFAULT 0, '
-       u'expiration INTEGER DEFAULT 0, type INTEGER DEFAULT 0, dateAdded '
-       u'INTEGER DEFAULT 0, lastModified INTEGER DEFAULT 0)',
-       u'moz_keywords':
-       u'CREATE TABLE moz_keywords ( id INTEGER PRIMARY KEY AUTOINCREMENT, '
-       u'keyword TEXT UNIQUE)',
-       u'moz_places':
-       u'CREATE TABLE moz_places ( id INTEGER PRIMARY KEY, url LONGVARCHAR, '
-       u'title LONGVARCHAR, rev_host LONGVARCHAR, visit_count INTEGER '
-       u'DEFAULT 0, hidden INTEGER DEFAULT 0 NOT NULL, typed INTEGER DEFAULT '
-       u'0 NOT NULL, favicon_id INTEGER, frecency INTEGER DEFAULT -1 NOT '
-       u'NULL, last_visit_date INTEGER )'},
-      {u'moz_anno_attributes':
-       u'CREATE TABLE moz_anno_attributes ( id INTEGER PRIMARY KEY, name '
-       u'VARCHAR(32) UNIQUE NOT NULL)',
-       u'moz_annos':
-       u'CREATE TABLE moz_annos ( id INTEGER PRIMARY KEY, place_id INTEGER '
-       u'NOT NULL, anno_attribute_id INTEGER, mime_type VARCHAR(32) DEFAULT '
-       u'NULL, content LONGVARCHAR, flags INTEGER DEFAULT 0, expiration '
-       u'INTEGER DEFAULT 0, type INTEGER DEFAULT 0, dateAdded INTEGER '
-       u'DEFAULT 0, lastModified INTEGER DEFAULT 0)',
-       u'moz_bookmarks':
-       u'CREATE TABLE moz_bookmarks ( id INTEGER PRIMARY KEY, type INTEGER, '
-       u'fk INTEGER DEFAULT NULL, parent INTEGER, position INTEGER, title '
-       u'LONGVARCHAR, keyword_id INTEGER, folder_type TEXT, dateAdded '
-       u'INTEGER, lastModified INTEGER, guid TEXT)',
-       u'moz_bookmarks_roots':
-       u'CREATE TABLE moz_bookmarks_roots ( root_name VARCHAR(16) UNIQUE, '
-       u'folder_id INTEGER)',
-       u'moz_favicons':
-       u'CREATE TABLE moz_favicons ( id INTEGER PRIMARY KEY, url LONGVARCHAR '
-       u'UNIQUE, data BLOB, mime_type VARCHAR(32), expiration LONG, guid '
-       u'TEXT)',
-       u'moz_historyvisits':
-       u'CREATE TABLE moz_historyvisits ( id INTEGER PRIMARY KEY, from_visit '
-       u'INTEGER, place_id INTEGER, visit_date INTEGER, visit_type INTEGER, '
-       u'session INTEGER)',
-       u'moz_hosts':
-       u'CREATE TABLE moz_hosts ( id INTEGER PRIMARY KEY, host TEXT NOT NULL '
-       u'UNIQUE, frecency INTEGER, typed INTEGER NOT NULL DEFAULT 0, prefix '
-       u'TEXT)',
-       u'moz_inputhistory':
-       u'CREATE TABLE moz_inputhistory ( place_id INTEGER NOT NULL, input '
-       u'LONGVARCHAR NOT NULL, use_count INTEGER, PRIMARY KEY (place_id, '
-       u'input))',
-       u'moz_items_annos':
-       u'CREATE TABLE moz_items_annos ( id INTEGER PRIMARY KEY, item_id '
-       u'INTEGER NOT NULL, anno_attribute_id INTEGER, mime_type VARCHAR(32) '
-       u'DEFAULT NULL, content LONGVARCHAR, flags INTEGER DEFAULT 0, '
-       u'expiration INTEGER DEFAULT 0, type INTEGER DEFAULT 0, dateAdded '
-       u'INTEGER DEFAULT 0, lastModified INTEGER DEFAULT 0)',
-       u'moz_keywords':
-       u'CREATE TABLE moz_keywords ( id INTEGER PRIMARY KEY AUTOINCREMENT, '
-       u'keyword TEXT UNIQUE)',
-       u'moz_places':
-       u'CREATE TABLE moz_places ( id INTEGER PRIMARY KEY, url LONGVARCHAR, '
-       u'title LONGVARCHAR, rev_host LONGVARCHAR, visit_count INTEGER '
-       u'DEFAULT 0, hidden INTEGER DEFAULT 0 NOT NULL, typed INTEGER DEFAULT '
-       u'0 NOT NULL, favicon_id INTEGER, frecency INTEGER DEFAULT -1 NOT '
-       u'NULL, last_visit_date INTEGER , guid TEXT)',
-       u'sqlite_stat1':
-       u'CREATE TABLE sqlite_stat1(tbl,idx,stat)'}]
+  SCHEMAS = [{
+      u'moz_anno_attributes': (
+          u'CREATE TABLE moz_anno_attributes ( id INTEGER PRIMARY KEY, name '
+          u'VARCHAR(32) UNIQUE NOT NULL)'),
+      u'moz_annos': (
+          u'CREATE TABLE moz_annos ( id INTEGER PRIMARY KEY, place_id INTEGER '
+          u'NOT NULL, anno_attribute_id INTEGER, mime_type VARCHAR(32) DEFAULT '
+          u'NULL, content LONGVARCHAR, flags INTEGER DEFAULT 0, expiration '
+          u'INTEGER DEFAULT 0, type INTEGER DEFAULT 0, dateAdded INTEGER '
+          u'DEFAULT 0, lastModified INTEGER DEFAULT 0)'),
+      u'moz_bookmarks': (
+          u'CREATE TABLE moz_bookmarks ( id INTEGER PRIMARY KEY, type INTEGER, '
+          u'fk INTEGER DEFAULT NULL, parent INTEGER, position INTEGER, title '
+          u'LONGVARCHAR, keyword_id INTEGER, folder_type TEXT, dateAdded '
+          u'INTEGER, lastModified INTEGER)'),
+      u'moz_bookmarks_roots': (
+          u'CREATE TABLE moz_bookmarks_roots ( root_name VARCHAR(16) UNIQUE, '
+          u'folder_id INTEGER)'),
+      u'moz_favicons': (
+          u'CREATE TABLE moz_favicons ( id INTEGER PRIMARY KEY, url '
+          u'LONGVARCHAR UNIQUE, data BLOB, mime_type VARCHAR(32), expiration '
+          u'LONG)'),
+      u'moz_historyvisits': (
+          u'CREATE TABLE moz_historyvisits ( id INTEGER PRIMARY KEY, '
+          u'from_visit INTEGER, place_id INTEGER, visit_date INTEGER, '
+          u'visit_type INTEGER, session INTEGER)'),
+      u'moz_inputhistory': (
+          u'CREATE TABLE moz_inputhistory ( place_id INTEGER NOT NULL, input '
+          u'LONGVARCHAR NOT NULL, use_count INTEGER, PRIMARY KEY (place_id, '
+          u'input))'),
+      u'moz_items_annos': (
+          u'CREATE TABLE moz_items_annos ( id INTEGER PRIMARY KEY, item_id '
+          u'INTEGER NOT NULL, anno_attribute_id INTEGER, mime_type VARCHAR(32) '
+          u'DEFAULT NULL, content LONGVARCHAR, flags INTEGER DEFAULT 0, '
+          u'expiration INTEGER DEFAULT 0, type INTEGER DEFAULT 0, dateAdded '
+          u'INTEGER DEFAULT 0, lastModified INTEGER DEFAULT 0)'),
+      u'moz_keywords': (
+          u'CREATE TABLE moz_keywords ( id INTEGER PRIMARY KEY AUTOINCREMENT, '
+          u'keyword TEXT UNIQUE)'),
+      u'moz_places': (
+          u'CREATE TABLE moz_places ( id INTEGER PRIMARY KEY, url LONGVARCHAR, '
+          u'title LONGVARCHAR, rev_host LONGVARCHAR, visit_count INTEGER '
+          u'DEFAULT 0, hidden INTEGER DEFAULT 0 NOT NULL, typed INTEGER '
+          u'DEFAULT 0 NOT NULL, favicon_id INTEGER, frecency INTEGER DEFAULT '
+          u'-1 NOT NULL, last_visit_date INTEGER )'),
+      {u'moz_anno_attributes': (
+          u'CREATE TABLE moz_anno_attributes ( id INTEGER PRIMARY KEY, name '
+          u'VARCHAR(32) UNIQUE NOT NULL)'),
+      u'moz_annos': (
+          u'CREATE TABLE moz_annos ( id INTEGER PRIMARY KEY, place_id INTEGER '
+          u'NOT NULL, anno_attribute_id INTEGER, mime_type VARCHAR(32) DEFAULT '
+          u'NULL, content LONGVARCHAR, flags INTEGER DEFAULT 0, expiration '
+          u'INTEGER DEFAULT 0, type INTEGER DEFAULT 0, dateAdded INTEGER '
+          u'DEFAULT 0, lastModified INTEGER DEFAULT 0)'),
+      u'moz_bookmarks': (
+          u'CREATE TABLE moz_bookmarks ( id INTEGER PRIMARY KEY, type INTEGER, '
+          u'fk INTEGER DEFAULT NULL, parent INTEGER, position INTEGER, title '
+          u'LONGVARCHAR, keyword_id INTEGER, folder_type TEXT, dateAdded '
+          u'INTEGER, lastModified INTEGER, guid TEXT)'),
+      u'moz_bookmarks_roots': (
+          u'CREATE TABLE moz_bookmarks_roots ( root_name VARCHAR(16) UNIQUE, '
+          u'folder_id INTEGER)'),
+      u'moz_favicons': (
+          u'CREATE TABLE moz_favicons ( id INTEGER PRIMARY KEY, url '
+          u'LONGVARCHAR UNIQUE, data BLOB, mime_type VARCHAR(32), expiration '
+          u'LONG, guid TEXT)'),
+      u'moz_historyvisits': (
+          u'CREATE TABLE moz_historyvisits ( id INTEGER PRIMARY KEY, '
+          u'from_visit INTEGER, place_id INTEGER, visit_date INTEGER, '
+          u'visit_type INTEGER, session INTEGER)'),
+      u'moz_hosts': (
+          u'CREATE TABLE moz_hosts ( id INTEGER PRIMARY KEY, host TEXT NOT '
+          u'NULL UNIQUE, frecency INTEGER, typed INTEGER NOT NULL DEFAULT 0, '
+          u'prefix TEXT)'),
+      u'moz_inputhistory': (
+          u'CREATE TABLE moz_inputhistory ( place_id INTEGER NOT NULL, input '
+          u'LONGVARCHAR NOT NULL, use_count INTEGER, PRIMARY KEY (place_id, '
+          u'input))'),
+      u'moz_items_annos': (
+          u'CREATE TABLE moz_items_annos ( id INTEGER PRIMARY KEY, item_id '
+          u'INTEGER NOT NULL, anno_attribute_id INTEGER, mime_type VARCHAR(32) '
+          u'DEFAULT NULL, content LONGVARCHAR, flags INTEGER DEFAULT 0, '
+          u'expiration INTEGER DEFAULT 0, type INTEGER DEFAULT 0, dateAdded '
+          u'INTEGER DEFAULT 0, lastModified INTEGER DEFAULT 0)'),
+      u'moz_keywords': (
+          u'CREATE TABLE moz_keywords ( id INTEGER PRIMARY KEY AUTOINCREMENT, '
+          u'keyword TEXT UNIQUE)'),
+      u'moz_places': (
+          u'CREATE TABLE moz_places ( id INTEGER PRIMARY KEY, url LONGVARCHAR, '
+          u'title LONGVARCHAR, rev_host LONGVARCHAR, visit_count INTEGER '
+          u'DEFAULT 0, hidden INTEGER DEFAULT 0 NOT NULL, typed INTEGER '
+          u'DEFAULT 0 NOT NULL, favicon_id INTEGER, frecency INTEGER DEFAULT '
+          u'-1 NOT NULL, last_visit_date INTEGER , guid TEXT)'),
+      u'sqlite_stat1': (
+          u'CREATE TABLE sqlite_stat1(tbl, idx, stat)')}]
 
   # Cache queries.
   URL_CACHE_QUERY = (

@@ -204,7 +204,7 @@ class ParserMediator(object):
       attribute_value (str): value of the attribute to add.
 
     Raises:
-      KeyError: if the event attribute with is already set.
+      KeyError: if the event attribute is already set.
     """
     if attribute_name in self._extra_event_attributes:
       raise KeyError(u'Event attribute {0:s} already set'.format(
@@ -512,7 +512,7 @@ class ParserMediator(object):
       attribute_name (str): name of the attribute to remove.
 
     Raises:
-      KeyError: if the event attribute with is not set.
+      KeyError: if the event attribute is not set.
     """
     if attribute_name not in self._extra_event_attributes:
       raise KeyError(u'Event attribute: {0:s} not set'.format(attribute_name))

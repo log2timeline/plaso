@@ -62,11 +62,11 @@ class ApplicationUsagePlugin(interface.SQLitePlugin):
   # The required tables.
   REQUIRED_TABLES = frozenset([u'application_usage'])
 
-  SCHEMAS = [
-      {u'application_usage':
-       u'CREATE TABLE application_usage (event TEXT,bundle_id '
-       u'TEXT,app_version TEXT,app_path TEXT,last_time INTEGER DEFAULT '
-       u'0,number_times INTEGER DEFAULT 0,PRIMARY KEY (event, bundle_id))'}]
+  SCHEMAS = [{
+      u'application_usage': (
+          u'CREATE TABLE application_usage (event TEXT, bundle_id TEXT, '
+          u'app_version TEXT, app_path TEXT, last_time INTEGER DEFAULT 0, '
+          u'number_times INTEGER DEFAULT 0, PRIMARY KEY (event, bundle_id))')}]
 
   def ParseApplicationUsageRow(
       self, parser_mediator, row, query=None, **unused_kwargs):

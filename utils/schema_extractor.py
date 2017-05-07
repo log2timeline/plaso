@@ -30,7 +30,7 @@ class SQLiteSchemaExtractor(object):
 
     Args:
       database_path (str): file path to database.
-      wal_path (Optional[str]): file path to wal file.
+      wal_path (Optional[str]): file path to WAL file.
 
     Returns:
       dict[str, str]: schema as an SQL query per table name.
@@ -99,7 +99,7 @@ if __name__ == u'__main__':
 
   argument_parser.add_argument(
       u'wal_path', type=str, nargs=u'?', default=None,
-      help=u'Optional path to a wal file to commit into the database.')
+      help=u'Optional path to a WAL file to commit into the database.')
 
   options = argument_parser.parse_args()
 
@@ -108,7 +108,7 @@ if __name__ == u'__main__':
     sys.exit(1)
 
   if options.wal_path and not os.path.exists(options.wal_path):
-    print(u'No such wal file: {0:s}'.format(options.wal_path))
+    print(u'No such WAL file: {0:s}'.format(options.wal_path))
     sys.exit(1)
 
   extractor = SQLiteSchemaExtractor()
@@ -118,7 +118,6 @@ if __name__ == u'__main__':
 
   database_schema = extractor.FormatSchema(database_schema)
 
-  #pyperclip.copy(database_schema)
-  print(database_schema)
+  pyperclip.copy(database_schema)
 
   sys.exit(0)
