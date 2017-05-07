@@ -185,7 +185,7 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
       u'moz_places', u'moz_historyvisits', u'moz_bookmarks',
       u'moz_items_annos'])
 
-  SCHEMAS = [{
+  _SCHEMA_V24 = {
       u'moz_anno_attributes': (
           u'CREATE TABLE moz_anno_attributes ( id INTEGER PRIMARY KEY, name '
           u'VARCHAR(32) UNIQUE NOT NULL)'),
@@ -229,8 +229,10 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
           u'title LONGVARCHAR, rev_host LONGVARCHAR, visit_count INTEGER '
           u'DEFAULT 0, hidden INTEGER DEFAULT 0 NOT NULL, typed INTEGER '
           u'DEFAULT 0 NOT NULL, favicon_id INTEGER, frecency INTEGER DEFAULT '
-          u'-1 NOT NULL, last_visit_date INTEGER )'),
-      {u'moz_anno_attributes': (
+          u'-1 NOT NULL, last_visit_date INTEGER )')}
+
+  _SCHEMA_V25 = {
+      u'moz_anno_attributes': (
           u'CREATE TABLE moz_anno_attributes ( id INTEGER PRIMARY KEY, name '
           u'VARCHAR(32) UNIQUE NOT NULL)'),
       u'moz_annos': (
@@ -279,7 +281,9 @@ class FirefoxHistoryPlugin(interface.SQLitePlugin):
           u'DEFAULT 0 NOT NULL, favicon_id INTEGER, frecency INTEGER DEFAULT '
           u'-1 NOT NULL, last_visit_date INTEGER , guid TEXT)'),
       u'sqlite_stat1': (
-          u'CREATE TABLE sqlite_stat1(tbl, idx, stat)')}]
+          u'CREATE TABLE sqlite_stat1(tbl, idx, stat)')}
+
+  SCHEMAS = [_SCHEMA_V24, _SCHEMA_V25]
 
   # Cache queries.
   URL_CACHE_QUERY = (

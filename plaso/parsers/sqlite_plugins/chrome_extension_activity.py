@@ -73,7 +73,8 @@ class ChromeExtensionActivityPlugin(interface.SQLitePlugin):
           u'CREATE TABLE string_ids (id INTEGER PRIMARY KEY, value TEXT NOT '
           u'NULL)'),
       u'url_ids': (
-          u'CREATE TABLE url_ids (id INTEGER PRIMARY KEY, value TEXT NOT NULL)')}]
+          u'CREATE TABLE url_ids (id INTEGER PRIMARY KEY, value TEXT NOT '
+          u'NULL)')}]
 
   def ParseActivityLogUncompressedRow(
       self, parser_mediator, row, query=None, **unused_kwargs):

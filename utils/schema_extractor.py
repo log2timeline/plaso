@@ -14,7 +14,7 @@ import os
 import sys
 import textwrap
 
-#import pyperclip  # pylint: disable=import-error
+import pyperclip  # pylint: disable=import-error
 
 # Change PYTHONPATH to include plaso.
 sys.path.insert(0, u'.')

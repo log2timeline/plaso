@@ -96,9 +96,11 @@ class ZeitgeistActivityDatabasePlugin(interface.SQLitePlugin):
           u'CREATE TABLE storage ( id INTEGER PRIMARY KEY, value VARCHAR '
           u'UNIQUE, state INTEGER, icon VARCHAR, display_name VARCHAR )'),
       u'text': (
-          u'CREATE TABLE text ( id INTEGER PRIMARY KEY, value VARCHAR UNIQUE )'),
+          u'CREATE TABLE text ( id INTEGER PRIMARY KEY, value VARCHAR '
+          u'UNIQUE )'),
       u'uri': (
-          u'CREATE TABLE uri ( id INTEGER PRIMARY KEY, value VARCHAR UNIQUE )')}]
+          u'CREATE TABLE uri ( id INTEGER PRIMARY KEY, value VARCHAR '
+          u'UNIQUE )')}]
 
   def ParseZeitgeistEventRow(
       self, parser_mediator, row, query=None, **unused_kwargs):
