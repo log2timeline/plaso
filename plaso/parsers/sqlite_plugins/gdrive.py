@@ -84,6 +84,37 @@ class GoogleDrivePlugin(interface.SQLitePlugin):
       u'cloud_entry', u'cloud_relations', u'local_entry', u'local_relations',
       u'mapping', u'overlay_status'])
 
+  SCHEMAS = [{
+      u'cloud_entry': (
+          u'CREATE TABLE cloud_entry (resource_id TEXT, filename TEXT, '
+          u'modified INTEGER, created INTEGER, acl_role INTEGER, doc_type '
+          u'INTEGER, removed INTEGER, url TEXT, size INTEGER, checksum TEXT, '
+          u'shared INTEGER, PRIMARY KEY (resource_id))'),
+      u'cloud_relations': (
+          u'CREATE TABLE cloud_relations (child_resource_id TEXT, '
+          u'parent_resource_id TEXT, UNIQUE (child_resource_id, '
+          u'parent_resource_id), FOREIGN KEY (child_resource_id) REFERENCES '
+          u'cloud_entry(resource_id), FOREIGN KEY (parent_resource_id) '
+          u'REFERENCES cloud_entry(resource_id))'),
+      u'local_entry': (
+          u'CREATE TABLE local_entry (inode_number INTEGER, filename TEXT, '
+          u'modified INTEGER, checksum TEXT, size INTEGER, PRIMARY KEY '
+          u'(inode_number))'),
+      u'local_relations': (
+          u'CREATE TABLE local_relations (child_inode_number INTEGER, '
+          u'parent_inode_number INTEGER, UNIQUE (child_inode_number), FOREIGN '
+          u'KEY (parent_inode_number) REFERENCES local_entry(inode_number), '
+          u'FOREIGN KEY (child_inode_number) REFERENCES '
+          u'local_entry(inode_number))'),
+      u'mapping': (
+          u'CREATE TABLE mapping (inode_number INTEGER, resource_id TEXT, '
+          u'UNIQUE (inode_number), FOREIGN KEY (inode_number) REFERENCES '
+          u'local_entry(inode_number), FOREIGN KEY (resource_id) REFERENCES '
+          u'cloud_entry(resource_id))'),
+      u'overlay_status': (
+          u'CREATE TABLE overlay_status (path TEXT, overlay_status INTEGER, '
+          u'PRIMARY KEY (path))')}]
+
   # Queries used to build cache.
   LOCAL_PATH_CACHE_QUERY = (
       u'SELECT local_relations.child_inode_number, '
