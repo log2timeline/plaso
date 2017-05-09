@@ -623,6 +623,8 @@ class EventExtractionWorker(object):
       file_entry (dfvfs.FileEntry): file entry containing the data stream.
       data_stream_name (str): name of the data stream.
     """
+    mediator.ClearEventAttributes()
+
     # Not every file entry has a data stream. In such cases we want to
     # extract the metadata only.
     has_data_stream = file_entry.HasDataStream(data_stream_name)

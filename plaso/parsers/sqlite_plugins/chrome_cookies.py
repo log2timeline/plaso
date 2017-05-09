@@ -59,6 +59,18 @@ class ChromeCookiePlugin(interface.SQLitePlugin):
   # The required tables common to Archived History and History.
   REQUIRED_TABLES = frozenset([u'cookies', u'meta'])
 
+  SCHEMAS = [{
+      u'cookies': (
+          u'CREATE TABLE cookies (creation_utc INTEGER NOT NULL UNIQUE PRIMARY '
+          u'KEY, host_key TEXT NOT NULL, name TEXT NOT NULL, value TEXT NOT '
+          u'NULL, path TEXT NOT NULL, expires_utc INTEGER NOT NULL, secure '
+          u'INTEGER NOT NULL, httponly INTEGER NOT NULL, last_access_utc '
+          u'INTEGER NOT NULL, has_expires INTEGER DEFAULT 1, persistent '
+          u'INTEGER DEFAULT 1)'),
+      u'meta': (
+          u'CREATE TABLE meta(key LONGVARCHAR NOT NULL UNIQUE PRIMARY KEY, '
+          u'value LONGVARCHAR)')}]
+
   # Point to few sources for URL information.
   URLS = [
       u'http://src.chromium.org/svn/trunk/src/net/cookies/',
