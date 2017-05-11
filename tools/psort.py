@@ -596,7 +596,7 @@ class PsortTool(analysis_tool.AnalysisTool):
         u'-w', u'--write', metavar=u'OUTPUTFILE', dest=u'write',
         help=u'Output filename.')
 
-    self.AddTimezoneOption(output_group)
+    self.AddTimeZoneOption(output_group)
 
     # TODO: refactor how arguments is used in a more argparse way.
     arguments = sys.argv[1:]

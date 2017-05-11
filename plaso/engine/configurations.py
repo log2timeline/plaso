@@ -93,15 +93,15 @@ class ProfilingConfiguration(interface.AttributeContainer):
   Attributes:
     directory (str): path to the directory where the profiling sample files
         should be stored.
-    enable (bool): True if profiling should be enabled.
-    profiling_type (str): type of profiling.
-        Supported types are:
+    profilers (set(str)): names of the profilers to enable.
+        Supported profilers are:
 
-        * 'memory' to profile memory usage;
-        * 'parsers' to profile CPU time consumed by individual parsers;
-        * 'processing' to profile CPU time consumed by different parts of
-          the processing;
-        * 'serializers' to profile CPU time consumed by individual
+        * 'guppy', which profiles memory usage using guppy;
+        * 'memory', which profiles memory usage;
+        * 'parsers', which profiles CPU time consumed by individual parsers;
+        * 'processing', which profiles CPU time consumed by different parts of
+          processing;
+        * 'serializers', which profiles CPU time consumed by individual
           serializers.
     sample_rate (int): the profiling sample rate. Contains the number of event
         sources processed.
@@ -112,9 +112,16 @@ class ProfilingConfiguration(interface.AttributeContainer):
     """Initializes a profiling configuration object."""
     super(ProfilingConfiguration, self).__init__()
     self.directory = None
-    self.enable = False
-    self.profiling_type = u'all'
+    self.profilers = set()
     self.sample_rate = 1000
+
+  def HaveProfileMemoryGuppy(self):
+    """Determines if memory profiling with guppy is configured.
+
+    Returns:
+      bool: True if memory profiling with guppy is configured.
+    """
+    return u'guppy' in self.profilers
 
   def HaveProfileMemory(self):
     """Determines if memory profiling is configured.
@@ -122,7 +129,7 @@ class ProfilingConfiguration(interface.AttributeContainer):
     Returns:
       bool: True if memory profiling is configured.
     """
-    return self.enable and self.profiling_type in (u'all', u'memory')
+    return u'memory' in self.profilers
 
   def HaveProfileParsers(self):
     """Determines if parsers profiling is configured.
@@ -130,7 +137,7 @@ class ProfilingConfiguration(interface.AttributeContainer):
     Returns:
       bool: True if parsers profiling is configured.
     """
-    return self.enable and self.profiling_type in (u'all', u'parsers')
+    return u'parsers' in self.profilers
 
   def HaveProfileProcessing(self):
     """Determines if processing profiling is configured.
@@ -138,7 +145,7 @@ class ProfilingConfiguration(interface.AttributeContainer):
     Returns:
       bool: True if processing profiling is configured.
     """
-    return self.enable and self.profiling_type in (u'all', u'processing')
+    return u'processing' in self.profilers
 
   def HaveProfileSerializers(self):
     """Determines if serializers profiling is configured.
@@ -146,7 +153,7 @@ class ProfilingConfiguration(interface.AttributeContainer):
     Returns:
       bool: True if serializers profiling is configured.
     """
-    return self.enable and self.profiling_type in (u'all', u'serializers')
+    return u'serializers' in self.profilers
 
 
 class ProcessingConfiguration(interface.AttributeContainer):
