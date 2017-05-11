@@ -29,7 +29,6 @@ class PsortFrontend(analysis_frontend.AnalysisFrontend):
     super(PsortFrontend, self).__init__()
     self._abort = False
     self._debug_mode = False
-    self._enable_profiling = False
     # Instance of EventObjectFilter.
     self._event_filter = None
     self._event_filter_expression = None

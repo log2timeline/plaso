@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 """The extraction CLI tool."""
 
-import os
-
 import yara
 
 from plaso.cli import status_view_tool
-from plaso.engine import engine
 from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import py2to3
@@ -20,8 +17,6 @@ class ExtractionTool(status_view_tool.StatusViewTool):
     list_parsers_and_plugins (bool): True if the parsers and plugins should
         be listed.
   """
-
-  _DEFAULT_PROFILING_SAMPLE_RATE = 1000
 
   # Approximately 250 MB of queued items per worker.
   _DEFAULT_QUEUE_SIZE = 125000
@@ -43,7 +38,6 @@ class ExtractionTool(status_view_tool.StatusViewTool):
     super(ExtractionTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
     self._buffer_size = 0
-    self._enable_profiling = False
     self._filter_object = None
     self._force_preprocessing = False
     self._hasher_names_string = None
@@ -54,9 +48,6 @@ class ExtractionTool(status_view_tool.StatusViewTool):
     self._preferred_year = None
     self._process_archives = False
     self._process_compressed_streams = True
-    self._profiling_directory = None
-    self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
-    self._profiling_type = u'all'
     self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._single_process_mode = False
     self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
@@ -154,35 +145,6 @@ class ExtractionTool(status_view_tool.StatusViewTool):
       except ValueError:
         raise errors.BadConfigOption(
             u'Invalid queue size: {0:s}.'.format(queue_size))
-
-  def _ParseProfilingOptions(self, options):
-    """Parses the profiling options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    self._enable_profiling = getattr(options, u'enable_profiling', False)
-
-    self._profiling_directory = getattr(options, u'profiling_directory', None)
-    if (self._profiling_directory and
-        not os.path.isdir(self._profiling_directory)):
-      raise errors.BadConfigOption(
-          u'No such profiling directory: {0:s}'.format(
-              self._profiling_directory))
-
-    profiling_sample_rate = getattr(options, u'profiling_sample_rate', None)
-    if profiling_sample_rate:
-      try:
-        self._profiling_sample_rate = int(profiling_sample_rate, 10)
-      except ValueError:
-        raise errors.BadConfigOption(
-            u'Invalid profile sample rate: {0:s}.'.format(
-                profiling_sample_rate))
-
-    self._profiling_type = getattr(options, u'profiling_type', u'all')
 
   def _ParseStorageOptions(self, options):
     """Parses the storage options.
@@ -282,44 +244,6 @@ class ExtractionTool(status_view_tool.StatusViewTool):
             u'The maximum number of queued items per worker '
             u'(defaults to {0:d})').format(self._DEFAULT_QUEUE_SIZE))
 
-  def AddProfilingOptions(self, argument_group):
-    """Adds the profiling options to the argument group.
-
-    Args:
-      argument_group (argparse._ArgumentGroup): argparse argument group.
-    """
-    argument_group.add_argument(
-        u'--profile', dest=u'enable_profiling', action=u'store_true',
-        default=False, help=(
-            u'Enable profiling. Intended usage is to troubleshoot memory '
-            u'and performance issues.'))
-
-    argument_group.add_argument(
-        u'--profiling_directory', u'--profiling-directory',
-        dest=u'profiling_directory', type=str, action=u'store',
-        metavar=u'DIRECTORY', help=(
-            u'Path to the directory that should be used to store the profiling '
-            u'sample files. By default the sample files are stored in the '
-            u'current working directory.'))
-
-    argument_group.add_argument(
-        u'--profiling_sample_rate', u'--profiling-sample-rate',
-        dest=u'profiling_sample_rate', action=u'store', metavar=u'SAMPLE_RATE',
-        default=0, help=(
-            u'The profiling sample rate (defaults to a sample every {0:d} '
-            u'files).').format(self._DEFAULT_PROFILING_SAMPLE_RATE))
-
-    profiling_types = [u'all', u'parsers', u'processing', u'serializers']
-    if engine.BaseEngine.SupportsMemoryProfiling():
-      profiling_types.append(u'memory')
-
-    argument_group.add_argument(
-        u'--profiling_type', u'--profiling-type', dest=u'profiling_type',
-        choices=sorted(profiling_types), action=u'store',
-        metavar=u'TYPE', default=None, help=(
-            u'The profiling type: "all", "memory", "parsers", "processing" '
-            u'or "serializers".'))
-
   def ParseOptions(self, options):
     """Parses tool specific options.
 
@@ -333,5 +257,4 @@ class ExtractionTool(status_view_tool.StatusViewTool):
     self._ParseDataLocationOption(options)
     self._ParseFilterOptions(options)
     self._ParsePerformanceOptions(options)
-    self._ParseProfilingOptions(options)
     self._ParseStorageOptions(options)

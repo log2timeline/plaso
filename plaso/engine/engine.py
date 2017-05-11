@@ -154,10 +154,10 @@ class BaseEngine(object):
       self.knowledge_base.platform = platforms[0]
 
   @classmethod
-  def SupportsMemoryProfiling(cls):
-    """Determines if memory profiling is supported.
+  def SupportsGuppyMemoryProfiling(cls):
+    """Determines if memory profiling with guppy is supported.
 
     Returns:
-      bool: True if memory profiling is supported.
+      bool: True if memory profiling with guppy is supported.
     """
     return profiler.GuppyMemoryProfiler.IsSupported()

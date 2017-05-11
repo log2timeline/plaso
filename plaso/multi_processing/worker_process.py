@@ -42,8 +42,8 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     self._buffer_size = 0
     self._current_display_name = u''
     self._extraction_worker = None
+    self._guppy_memory_profiler = None
     self._knowledge_base = knowledge_base
-    self._memory_profiler = None
     self._number_of_consumed_events = 0
     self._number_of_consumed_sources = 0
     self._parser_mediator = None
@@ -250,8 +250,8 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
           self._extraction_worker, self._parser_mediator, task.path_spec)
       self._number_of_consumed_sources += 1
 
-      if self._memory_profiler:
-        self._memory_profiler.Sample()
+      if self._guppy_memory_profiler:
+        self._guppy_memory_profiler.Sample()
 
     finally:
       storage_writer.WriteTaskCompletion(aborted=self._abort)
@@ -272,13 +272,13 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
     if not self._processing_configuration:
       return
 
-    if self._processing_configuration.profiling.HaveProfileMemory():
+    if self._processing_configuration.profiling.HaveProfileMemoryGuppy():
       identifier = u'{0:s}-memory'.format(self._name)
-      self._memory_profiler = profiler.GuppyMemoryProfiler(
+      self._guppy_memory_profiler = profiler.GuppyMemoryProfiler(
           identifier, path=self._processing_configuration.profiling.directory,
           profiling_sample_rate=(
               self._processing_configuration.profiling.sample_rate))
-      self._memory_profiler.Start()
+      self._guppy_memory_profiler.Start()
 
     if self._processing_configuration.profiling.HaveProfileParsers():
       identifier = u'{0:s}-parsers'.format(self._name)
@@ -299,9 +299,9 @@ class WorkerProcess(base_process.MultiProcessBaseProcess):
 
   def _StopProfiling(self):
     """Stops profiling."""
-    if self._memory_profiler:
-      self._memory_profiler.Sample()
-      self._memory_profiler = None
+    if self._guppy_memory_profiler:
+      self._guppy_memory_profiler.Sample()
+      self._guppy_memory_profiler = None
 
     if self._parsers_profiler:
       self._extraction_worker.SetParsersProfiler(None)
