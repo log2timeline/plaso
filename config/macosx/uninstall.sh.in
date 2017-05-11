@@ -53,7 +53,7 @@ VOLUME_NAME="/Volumes/@VOLUMENAME@";
 
 if ! test -d ${VOLUME_NAME};
 then
-  echo "Unable to find installation media: ${VOLUME_NAME}";
+  echo "Unable to find installation volume: ${VOLUME_NAME}";
 
   exit ${EXIT_FAILURE};
 fi
