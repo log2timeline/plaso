@@ -193,21 +193,21 @@ class ParserMediator(object):
       return
 
   def AddEventAttribute(self, attribute_name, attribute_value):
-    """Add an attribute that will be set on all events produced.
+    """Adds an attribute that will be set on all events produced.
 
     Setting attributes using this method will cause events produced via this
     mediator to have an attribute with the provided name set with the
     provided value.
 
     Args:
-      attribute_name (str): name of the attribute to set.
-      attribute_value (str): value of the attribute to set.
+      attribute_name (str): name of the attribute to add.
+      attribute_value (str): value of the attribute to add.
 
     Raises:
-      KeyError: If an attribute with the given name is already set.
+      KeyError: if the event attribute is already set.
     """
-    if hasattr(self._extra_event_attributes, attribute_name):
-      raise KeyError(u'Value already set for attribute {0:s}'.format(
+    if attribute_name in self._extra_event_attributes:
+      raise KeyError(u'Event attribute {0:s} already set'.format(
           attribute_name))
 
     self._extra_event_attributes[attribute_name] = attribute_value
@@ -504,6 +504,20 @@ class ParserMediator(object):
         message=message, parser_chain=parser_chain, path_spec=path_spec)
     self._storage_writer.AddError(extraction_error)
     self._number_of_errors += 1
+
+  def RemoveEventAttribute(self, attribute_name):
+    """Removes an attribute from being set on all events produced.
+
+    Args:
+      attribute_name (str): name of the attribute to remove.
+
+    Raises:
+      KeyError: if the event attribute is not set.
+    """
+    if attribute_name not in self._extra_event_attributes:
+      raise KeyError(u'Event attribute: {0:s} not set'.format(attribute_name))
+
+    del self._extra_event_attributes[attribute_name]
 
   def ResetFileEntry(self):
     """Resets the active file entry."""

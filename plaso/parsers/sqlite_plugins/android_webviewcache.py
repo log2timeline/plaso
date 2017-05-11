@@ -39,6 +39,16 @@ class AndroidWebViewCachePlugin(interface.SQLitePlugin):
       (u'SELECT url, contentlength, expires, lastmodify FROM cache',
        u'ParseRow')])
 
+  SCHEMAS = [{
+      u'android_metadata': (
+          u'CREATE TABLE android_metadata (locale TEXT)'),
+      u'cache': (
+          u'CREATE TABLE cache (_id INTEGER PRIMARY KEY, url TEXT, filepath '
+          u'TEXT, lastmodify TEXT, etag TEXT, expires INTEGER, expiresstring '
+          u'TEXT, mimetype TEXT, encoding TEXT, httpstatus INTEGER, location '
+          u'TEXT, contentlength INTEGER, contentdisposition TEXT, UNIQUE (url) '
+          u'ON CONFLICT REPLACE)')}]
+
   def ParseRow(self, parser_mediator, row, query=None, **unused_kwargs):
     """Parses a row from the database.
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""This file contains a SQLite parser."""
+"""The SQLite parser plugin interface."""
 
 import logging
 import sys
@@ -14,7 +14,7 @@ from plaso.parsers import plugins
 
 
 class SQLitePlugin(plugins.BasePlugin):
-  """A SQLite plugin for Plaso."""
+  """SQLite parser plugin."""
 
   NAME = u'sqlite'
   DESCRIPTION = u'Parser for SQLite database files.'
@@ -26,6 +26,10 @@ class SQLitePlugin(plugins.BasePlugin):
 
   # List of tables that should be present in the database, for verification.
   REQUIRED_TABLES = frozenset([])
+
+  # Database schemas this plugin was originally designed for.
+  # Should be a list of dictionaries with {table_name: SQLCommand} format.
+  SCHEMAS = []
 
   @classmethod
   def _HashRow(cls, row):
@@ -47,20 +51,113 @@ class SQLitePlugin(plugins.BasePlugin):
       hash_value ^= hash(column_value)
     return hash_value
 
-  def GetEntries(
-      self, parser_mediator, cache=None, database=None, database_wal=None,
-      wal_file_entry=None, **unused_kwargs):
-    """Extracts event from a SQLite database.
+  def _ParseQuery(
+      self, parser_mediator, database, query, callback, row_cache, cache=None):
+    """Queries a database and parses the results.
 
     Args:
       parser_mediator (ParserMediator): parser mediator.
-      cache (SQLiteCache): cache.
       database (SQLiteDatabase): database.
+      query (str): query.
+      callback (function): function to invoke to parse an individual row.
+      row_cache (set): hashes of the rows that have been parsed.
+      cache (Optional[SQLiteCache]): cache.
+    """
+    try:
+      rows = database.Query(query)
+
+    except sqlite3.DatabaseError as exception:
+      parser_mediator.ProduceExtractionError(
+          u'unable to run query: {0:s} on database with error: {1!s}'.format(
+              query, exception))
+      return
+
+    for index, row in enumerate(rows):
+      if parser_mediator.abort:
+        break
+
+      try:
+        callback(
+            parser_mediator, row, cache=cache, database=database, query=query)
+
+        row_hash = self._HashRow(row)
+        row_cache.add(row_hash)
+
+      except sqlite3.DatabaseError as exception:
+        parser_mediator.ProduceExtractionError((
+            u'unable to parse row: {0:d} of results of query: {1:s} on '
+            u'database with error: {2!s}').format(index, query, exception))
+        # TODO: consider removing return.
+        return
+
+  def _ParseQueryWithWAL(
+      self, parser_mediator, database_wal, query, callback, row_cache,
+      cache=None):
+    """Queries a database with WAL and parses the results.
+
+    Note that cached rows will be ignored.
+
+    Args:
+      parser_mediator (ParserMediator): parser mediator.
+      database_wal (SQLiteDatabase): database with WAL.
+      query (str): query.
+      callback (function): function to invoke to parse an individual row.
+      row_cache (set): hashes of the rows that have been parsed.
+      cache (Optional[SQLiteCache]): cache.
+    """
+    try:
+      rows = database_wal.Query(query)
+
+    except sqlite3.DatabaseError as exception:
+      parser_mediator.ProduceExtractionError((
+          u'unable to run query: {0:s} on database with WAL with error: '
+          u'{1!s}').format(query, exception))
+      return
+
+    for index, row in enumerate(rows):
+      if parser_mediator.abort:
+        break
+
+      row_hash = self._HashRow(row)
+      if row_hash in row_cache:
+        continue
+
+      try:
+        callback(
+            parser_mediator, row, cache=cache, database=database_wal,
+            query=query)
+
+      except sqlite3.DatabaseError as exception:
+        parser_mediator.ProduceExtractionError((
+            u'unable to parse row: {0:d} of results of query: {1:s} on '
+            u'database with WAL with error: {2!s}').format(
+                index, query, exception))
+        # TODO: consider removing return.
+        return
+
+  def GetEntries(
+      self, parser_mediator, cache=None, database=None, database_wal=None,
+      wal_file_entry=None, **unused_kwargs):
+    """Extracts events from a SQLite database.
+
+    Args:
+      parser_mediator (ParserMediator): parser mediator.
+      cache (Optional[SQLiteCache]): cache.
+      database (Optional[SQLiteDatabase]): database.
       database_wal (Optional[SQLiteDatabase]): database object with WAL file
           commited.
       wal_file_entry (Optional[dfvfs.FileEntry]): file entry for the database
           with WAL file commited.
     """
+    schema_match = None
+    if database:
+      schema_match = any(schema == database.schema for schema in self.SCHEMAS)
+
+    wal_schema_match = None
+    if database_wal:
+      wal_schema_match = any(
+          schema == database_wal.schema for schema in self.SCHEMAS)
+
     for query, callback_method in self.QUERIES:
       if parser_mediator.abort:
         break
@@ -72,46 +169,33 @@ class SQLitePlugin(plugins.BasePlugin):
                 self.NAME, callback_method, query))
         continue
 
-      try:
-        sql_results = database.Query(query)
-        if database_wal:
-          wal_sql_results = database_wal.Query(query)
-        else:
-          wal_sql_results = None
+      row_cache = set()
 
-        # Process database with WAL file.
-        if database_wal and wal_sql_results:
-          row_cache = set()
-          for row in sql_results:
-            if parser_mediator.abort:
-              break
-            callback(
-                parser_mediator, row, query=query, cache=cache,
-                database=database)
-            row_cache.add(self._HashRow(row))
+      if database:
+        try:
+          parser_mediator.AddEventAttribute(u'schema_match', schema_match)
 
-          # Process unique rows in WAL file.
-          file_entry = parser_mediator.GetFileEntry()
+          self._ParseQuery(
+              parser_mediator, database, query, callback, row_cache,
+              cache=cache)
+
+        finally:
+          parser_mediator.RemoveEventAttribute(u'schema_match')
+
+      if database_wal:
+        file_entry = parser_mediator.GetFileEntry()
+
+        try:
+          parser_mediator.AddEventAttribute(u'schema_match', wal_schema_match)
           parser_mediator.SetFileEntry(wal_file_entry)
-          for row in wal_sql_results:
-            if self._HashRow(row) not in row_cache:
-              callback(
-                  parser_mediator, row, query=query, cache=cache,
-                  database=database_wal)
+
+          self._ParseQueryWithWAL(
+              parser_mediator, database_wal, query, callback, row_cache,
+              cache=cache)
+
+        finally:
+          parser_mediator.RemoveEventAttribute(u'schema_match')
           parser_mediator.SetFileEntry(file_entry)
-
-        # Process database without WAL file.
-        else:
-          for row in sql_results:
-            if parser_mediator.abort:
-              break
-            callback(
-                parser_mediator, row, query=query, cache=cache,
-                database=database)
-
-      except sqlite3.DatabaseError as exception:
-        logging.debug(
-            u'SQLite error occurred: {0:s}'.format(exception))
 
   def Process(
       self, parser_mediator, cache=None, database=None, database_wal=None,
