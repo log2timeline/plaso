@@ -169,35 +169,43 @@ class CupsIppParser(interface.FileObjectParser):
       construct.Padding(1))
 
   # Specific CUPS IPP to generic name.
-  NAME_PAIR_TRANSLATION = {
-      u'printer-uri': u'uri',
-      u'job-uuid': u'job_id',
-      u'DestinationPrinterID': u'printer_id',
-      u'job-originating-user-name': u'user',
-      u'job-name': u'job_name',
-      u'document-format': u'doc_type',
-      u'job-originating-host-name': u'computer_name',
+  _NAME_PAIR_TRANSLATION = {
       u'com.apple.print.JobInfo.PMApplicationName': u'application',
-      u'com.apple.print.JobInfo.PMJobOwner': u'owner'}
+      u'com.apple.print.JobInfo.PMJobOwner': u'owner',
+      u'DestinationPrinterID': u'printer_id',
+      u'document-format': u'doc_type',
+      u'job-name': u'job_name',
+      u'job-originating-host-name': u'computer_name',
+      u'job-originating-user-name': u'user',
+      u'job-uuid': u'job_id',
+      u'printer-uri': u'uri'}
 
-  def _ListToString(self, values):
-    """Returns a string from a list value using comma as a delimiter.
+  _POSIX_TIME_IN_MICROSECOND_VALUES = {
+      u'date-time-at-creation': eventdata.EventTimestamp.CREATION_TIME,
+      u'date-time-at-processing': eventdata.EventTimestamp.START_TIME,
+      u'date-time-at-completed': eventdata.EventTimestamp.END_TIME}
 
-    If any value inside the list contains comma, which is the delimiter,
-    the entire field is surrounded with double quotes.
+  _POSIX_TIME_VALUES = {
+      u'time-at-creation': eventdata.EventTimestamp.CREATION_TIME,
+      u'time-at-processing': eventdata.EventTimestamp.START_TIME,
+      u'time-at-completed': eventdata.EventTimestamp.END_TIME}
+
+  _POSIX_TIME_VALUE_NAMES = _POSIX_TIME_IN_MICROSECOND_VALUES.keys()
+  _POSIX_TIME_VALUE_NAMES.extend(_POSIX_TIME_VALUES.keys())
+
+  def _GetStringValue(self, data_dict, name, default_value=None):
+    """Retrieves a specific string value from the data dict.
 
     Args:
-      values: A list or tuple containing the values.
+      data_dict (dict[str, list[str]): values per name.
+      name (str): name of the value to retrieve.
 
     Returns:
-      A string containing all the values joined using comma as a delimiter
-      or None.
+      str: value represented as a string.
     """
-    if values is None:
-      return
-
-    if not isinstance(values, (list, tuple)):
-      return
+    values = data_dict.get(name, None)
+    if not values:
+      return default_value
 
     for index, value in enumerate(values):
       if u',' in value:
@@ -277,6 +285,28 @@ class CupsIppParser(interface.FileObjectParser):
 
     return name, value
 
+  def _ReadPairs(self, parser_mediator, file_object):
+    """Reads the attribute name and value pairs from a CUPS IPP event.
+
+    Args:
+      parser_mediator (ParserMediator): mediates interactions between parsers
+          and other components, such as storage and dfvfs.
+      file_object (dfvfs.FileIO): file-like object.
+
+    Returns:
+      dict[str, list[str]]: values per name.
+    """
+    data_dict = {}
+
+    name, value = self._ReadPair(parser_mediator, file_object)
+    while name or value:
+      # Translate the known "name" CUPS IPP to a generic name value.
+      pretty_name = self._NAME_PAIR_TRANSLATION.get(name, name)
+      data_dict.setdefault(pretty_name, []).append(value)
+      name, value = self._ReadPair(parser_mediator, file_object)
+
+    return data_dict
+
   def ParseFileObject(self, parser_mediator, file_object, **kwargs):
     """Parses a CUPS IPP file-like object.
 
@@ -307,83 +337,43 @@ class CupsIppParser(interface.FileObjectParser):
           u'[{0:s}] Unsupported operation identifier in file: {1:s}.'.format(
               self.NAME, parser_mediator.GetDisplayName()))
 
-    # Read the pairs extracting the name and the value.
-    data_dict = {}
-    name, value = self._ReadPair(parser_mediator, file_object)
-    while name or value:
-      # Translate the known "name" CUPS IPP to a generic name value.
-      pretty_name = self.NAME_PAIR_TRANSLATION.get(name, name)
-      data_dict.setdefault(pretty_name, []).append(value)
-      name, value = self._ReadPair(parser_mediator, file_object)
+    data_dict = self._ReadPairs(parser_mediator, file_object)
 
-    # TODO: Refactor to use a lookup table to do event production.
     time_dict = {}
-    for key, value in data_dict.items():
-      if key.startswith(u'date-time-') or key.startswith(u'time-'):
-        time_dict[key] = value
-        del data_dict[key]
 
-    # TODO: Find a better solution than to have join for each attribute.
+    for name in self._POSIX_TIME_VALUE_NAMES:
+      value = data_dict.get(name, None)
+      if value is not None:
+        time_dict[name] = value
+        del data_dict[name]
+
     event_data = CupsIppEventData()
-    event_data.application = self._ListToString(data_dict.get(
-        u'application', None))
-    event_data.computer_name = self._ListToString(data_dict.get(
-        u'computer_name', None))
-    event_data.copies = data_dict.get(u'copies', 0)[0]
+    event_data.application = self._GetStringValue(data_dict, u'application')
+    event_data.computer_name = self._GetStringValue(data_dict, u'computer_name')
+    event_data.copies = data_dict.get(u'copies', [0])[0]
     event_data.data_dict = data_dict
-    event_data.doc_type = self._ListToString(data_dict.get(u'doc_type', None))
-    event_data.job_id = self._ListToString(data_dict.get(u'job_id', None))
-    event_data.job_name = self._ListToString(data_dict.get(u'job_name', None))
-    event_data.user = self._ListToString(data_dict.get(u'user', None))
-    event_data.owner = self._ListToString(data_dict.get(u'owner', None))
-    event_data.printer_id = self._ListToString(data_dict.get(
-        u'printer_id', None))
-    event_data.uri = self._ListToString(data_dict.get(u'uri', None))
+    event_data.doc_type = self._GetStringValue(data_dict, u'doc_type')
+    event_data.job_id = self._GetStringValue(data_dict, u'job_id')
+    event_data.job_name = self._GetStringValue(data_dict, u'job_name')
+    event_data.user = self._GetStringValue(data_dict, u'user')
+    event_data.owner = self._GetStringValue(data_dict, u'owner')
+    event_data.printer_id = self._GetStringValue(data_dict, u'printer_id')
+    event_data.uri = self._GetStringValue(data_dict, u'uri')
 
-    time_value = time_dict.get(u'date-time-at-creation', None)
-    if time_value is not None:
-      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-          timestamp=time_value[0])
-      event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.CREATION_TIME)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    for name, usage in iter(self._POSIX_TIME_IN_MICROSECOND_VALUES.items()):
+      time_values = time_dict.get(name, [])
+      for time_value in time_values:
+        date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
+            timestamp=time_value)
+        event = time_events.DateTimeValuesEvent(date_time, usage)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
-    time_value = time_dict.get(u'date-time-at-processing', None)
-    if time_value is not None:
-      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-          timestamp=time_value[0])
-      event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.START_TIME)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    time_value = time_dict.get(u'date-time-at-completed', None)
-    if time_value is not None:
-      date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
-          timestamp=time_value[0])
-      event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.END_TIME)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    time_value = time_dict.get(u'time-at-creation', None)
-    if time_value is not None:
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=time_value[0])
-      event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.CREATION_TIME)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    time_value = time_dict.get(u'time-at-processing', None)
-    if time_value is not None:
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=time_value[0])
-      event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.START_TIME)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
-
-    time_value = time_dict.get(u'time-at-completed', None)
-    if time_value is not None:
-      date_time = dfdatetime_posix_time.PosixTime(timestamp=time_value[0])
-      event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.END_TIME)
-      parser_mediator.ProduceEventWithEventData(event, event_data)
+    for name, usage in iter(self._POSIX_TIME_VALUES.items()):
+      time_values = time_dict.get(name, [])
+      for time_value in time_values:
+        date_time = dfdatetime_posix_time.PosixTime(timestamp=time_value)
+        event = time_events.DateTimeValuesEvent(date_time, usage)
+        parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
 manager.ParsersManager.RegisterParser(CupsIppParser)
