@@ -1,6 +1,6 @@
 Acknowledgements: plaso
 
-Copyright 2012 The Plaso Project Authors.
+Copyright (C) 2012, Log2Timeline maintainers <log2timeline-maintainers@googlegroups.com>
 Please see the AUTHORS file for details on individual authors.
 
 Plaso is a Python rewrite of the log2timeline Perl version.
