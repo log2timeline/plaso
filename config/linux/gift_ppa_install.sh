@@ -3,8 +3,7 @@ set -e
 
 # Dependencies for running Plaso, alphabetized, one per line.
 # This should not include packages only required for testing or development.
-PLASO_DEPENDENCIES="ipython
-                    libbde-python
+PLASO_DEPENDENCIES="libbde-python
                     libesedb-python
                     libevt-python
                     libevtx-python
@@ -26,6 +25,7 @@ PLASO_DEPENDENCIES="ipython
                     libvmdk-python
                     libvshadow-python
                     libvslvm-python
+                    python-IPython
                     python-artifacts
                     python-bencode
                     python-binplist
