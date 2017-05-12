@@ -29,7 +29,6 @@ PYTHON_DEPENDENCIES = {
     u'hachoir_core': (u'__version__', u'1.3.3', None, True),
     u'hachoir_metadata': (u'__version__', u'1.3.3', None, True),
     u'hachoir_parser': (u'__version__', u'1.3.4', None, True),
-    u'IPython': (u'__version__', u'1.2.1', None, True),
     u'lzma': (u'__version__', u'0.5.3', None, False),
     u'pefile': (u'__version__', u'1.2.10-139', None, True),
     u'psutil': (u'__version__', u'1.2.1', None, True),

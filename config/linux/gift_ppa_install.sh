@@ -25,7 +25,6 @@ PLASO_DEPENDENCIES="libbde-python
                     libvmdk-python
                     libvshadow-python
                     libvslvm-python
-                    python-IPython
                     python-artifacts
                     python-bencode
                     python-binplist

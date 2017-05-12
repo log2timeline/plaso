@@ -27,7 +27,6 @@ PLASO_DEPENDENCIES="PyYAML
                     libvshadow-python
                     libvslvm-python
                     pyliblzma
-                    python-IPython
                     python-XlsxWriter
                     python-artifacts
                     python-bencode

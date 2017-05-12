@@ -13,7 +13,6 @@ Plaso depends on various other projects. So thanks to the authors
 and others involved with these projects:
 * Python and modules
 * libyaml
-* iPython
 * PyInstaller
 * the SleuthKit
 * pytsk
