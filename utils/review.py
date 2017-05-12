@@ -29,7 +29,7 @@ else:
 # Change PYTHONPATH to include utils.
 sys.path.insert(0, u'.')
 
-import utils.upload
+import utils.upload  # pylint: disable=wrong-import-position
 
 
 class CLIHelper(object):
