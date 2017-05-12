@@ -42,7 +42,6 @@ PLASO_DEPENDENCIES="PyYAML
                     python-hachoir-core
                     python-hachoir-metadata
                     python-hachoir-parser
-                    python-ipython
                     python-pefile
                     python-psutil
                     python-pyparsing

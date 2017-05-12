@@ -108,12 +108,12 @@ class BaseEngineTest(shared_test_lib.BaseTestCase):
 
     test_engine.PreprocessSources([None])
 
-  def testSupportsMemoryProfiling(self):
-    """Tests the SupportsMemoryProfiling function."""
+  def testSupportsGuppyMemoryProfiling(self):
+    """Tests the SupportsGuppyMemoryProfiling function."""
     test_engine = engine.BaseEngine()
 
     expected_result = hpy is not None
-    result = test_engine.SupportsMemoryProfiling()
+    result = test_engine.SupportsGuppyMemoryProfiling()
     self.assertEqual(result, expected_result)
 
 

@@ -327,7 +327,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self.AddExtractionOptions(extraction_group)
     self.AddFilterOptions(extraction_group)
     self.AddStorageMediaImageOptions(extraction_group)
-    self.AddTimezoneOption(extraction_group)
+    self.AddTimeZoneOption(extraction_group)
     self.AddVSSProcessingOptions(extraction_group)
     self.AddCredentialOptions(extraction_group)
 
@@ -457,6 +457,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     # Check the list options first otherwise required options will raise.
     self._ParseExtractionOptions(options)
     self._ParseOutputOptions(options)
+    self._ParseProfilingOptions(options)
     self._ParseTimezoneOption(options)
 
     self.show_info = getattr(options, u'show_info', False)
@@ -467,8 +468,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self.dependencies_check = getattr(options, u'dependencies_check', True)
 
     if (self.list_hashers or self.list_output_modules or
-        self.list_parsers_and_plugins or self.list_timezones or
-        self.show_info):
+        self.list_parsers_and_plugins or self.list_profilers or
+        self.list_timezones or self.show_info):
       return
 
     super(Log2TimelineTool, self).ParseOptions(options)
@@ -561,9 +562,8 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     configuration.parser_filter_expression = self._parser_filter_expression
     configuration.preferred_year = self._preferred_year
     configuration.profiling.directory = self._profiling_directory
-    configuration.profiling.enable = self._enable_profiling
     configuration.profiling.sample_rate = self._profiling_sample_rate
-    configuration.profiling.profiling_type = self._profiling_type
+    configuration.profiling.profilers = self._profilers
     configuration.temporary_directory = self._temporary_directory
 
     processing_status = self._front_end.ProcessSources(
@@ -648,6 +648,10 @@ def Main():
 
   if tool.list_output_modules:
     tool.ListOutputModules()
+    have_list_option = True
+
+  if tool.list_profilers:
+    tool.ListProfilers()
     have_list_option = True
 
   if tool.list_timezones:

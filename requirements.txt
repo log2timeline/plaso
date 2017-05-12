@@ -1,7 +1,6 @@
 pip >= 7.0.0
 pytest
 mock
-IPython >= 1.2.1
 PyYAML >= 3.10
 XlsxWriter >= 0.9.3
 artifacts >= 20150409
