@@ -5,7 +5,6 @@
 # docker run <container_id> image_export
 # docker run <container_id> log2timeline
 # docker run <container_id> pinfo
-# docker run <container_id> preg
 # docker run <container_id> psort
 #
 # or to run it on actual data:
@@ -21,8 +20,6 @@ case "$1" in
     /usr/bin/log2timeline.py "${@:2}" ;;
   pinfo|pinfo.py)
     /usr/bin/pinfo.py "${@:2}" ;;
-  preg|preg.py)
-    /usr/bin/preg.py "${@:2}" ;;
   psort|psort.py)
     /usr/bin/psort.py "${@:2}" ;;
   "")
