@@ -194,11 +194,12 @@ class PinfoTool(analysis_tool.AnalysisTool):
 
       table_view.AddRow([u'Message', error.message])
       table_view.AddRow([u'Parser chain', error.parser_chain])
-      for index, line in enumerate(error.path_spec.comparable.split(u'\n')):
+      for pathspec_index, line in enumerate(
+          error.path_spec.comparable.split(u'\n')):
         if not line:
           continue
 
-        if index == 0:
+        if pathspec_index == 0:
           table_view.AddRow([u'Path specification', line])
         else:
           table_view.AddRow([u'', line])
