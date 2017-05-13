@@ -9,7 +9,6 @@ from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 from dfdatetime import uuid_time as dfdatetime_uuid_time
 
-from plaso import dependencies
 from plaso.containers import time_events
 from plaso.containers import windows_events
 from plaso.lib import eventdata
@@ -17,9 +16,6 @@ from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 from plaso.parsers.shared import shell_items
-
-
-dependencies.CheckModuleVersion(u'pylnk')
 
 
 class WinLnkLinkEvent(time_events.DateTimeValuesEvent):

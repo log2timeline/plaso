@@ -5,13 +5,9 @@ import pyfwsi
 
 from dfdatetime import fat_date_time as dfdatetime_fat_date_time
 
-from plaso import dependencies
 from plaso.containers import shell_item_events
 from plaso.lib import eventdata
 from plaso.winnt import shell_folder_ids
-
-
-dependencies.CheckModuleVersion(u'pyfwsi')
 
 
 class ShellItemsParser(object):

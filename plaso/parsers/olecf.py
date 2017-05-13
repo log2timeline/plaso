@@ -3,13 +3,9 @@
 
 import pyolecf
 
-from plaso import dependencies
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
-
-
-dependencies.CheckModuleVersion(u'pyolecf')
 
 
 class OLECFParser(interface.FileObjectParser):
