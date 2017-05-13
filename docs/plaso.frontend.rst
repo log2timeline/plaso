@@ -44,14 +44,6 @@ plaso.frontend.log2timeline module
     :undoc-members:
     :show-inheritance:
 
-plaso.frontend.preg module
---------------------------
-
-.. automodule:: plaso.frontend.preg
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.frontend.psort module
 ---------------------------
 

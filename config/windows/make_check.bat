@@ -4,6 +4,5 @@
 dist\plaso\image_export.exe -h
 dist\plaso\log2timeline.exe --info
 dist\plaso\pinfo.exe -v test_data\psort_test.json.plaso
-dist\plaso\preg.exe -h
 dist\plaso\psort.exe
 
