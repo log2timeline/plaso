@@ -7,15 +7,14 @@ install:
   - ps: (new-object net.webclient).DownloadFile('https://bootstrap.pypa.io/get-pip.py', 'C:\Projects\get-pip.py')
   - ps: (new-object net.webclient).DownloadFile('https://github.com/log2timeline/l2tbinaries/raw/master/win32/pywin32-220.win32-py2.7.exe', 'C:\Projects\pywin32-220.win32-py2.7.exe')
   - ps: (new-object net.webclient).DownloadFile('https://github.com/log2timeline/l2tbinaries/raw/master/win32/WMI-1.4.9.win32.exe', 'C:\Projects\WMI-1.4.9.win32.exe')
-  - ps: (new-object net.webclient).DownloadFile('https://www.sqlite.org/2015/sqlite-dll-win32-x86-3081002.zip', 'C:\Projects\sqlite-dll-win32-x86-3081002.zip')
   - cmd: "%PYTHON%\\python.exe C:\\Projects\\get-pip.py"
   - cmd: "%PYTHON%\\Scripts\\easy_install.exe C:\\Projects\\pywin32-220.win32-py2.7.exe"
   - cmd: "%PYTHON%\\Scripts\\easy_install.exe C:\\Projects\\WMI-1.4.9.win32.exe"
-  - cmd: "%PYTHON%\\Scripts\\pip.exe install python-dateutil"
-  - ps: $Output = Invoke-Expression -Command "& 'C:\\Program Files\\7-Zip\\7z.exe' -y -oC:\\Projects\\ x C:\\Projects\\sqlite-dll-win32-x86-3081002.zip 2>&1"
-  - cmd: copy C:\Projects\sqlite3.dll C:\Python27\DLLs\
   - cmd: git clone https://github.com/log2timeline/l2tdevtools.git && move l2tdevtools ..\
-  - cmd: mkdir dependencies && set PYTHONPATH=..\l2tdevtools && "%PYTHON%\\python.exe" ..\l2tdevtools\tools\update.py --download-directory dependencies --machine-type x86 --msi-targetdir "%PYTHON%" --preset plaso
+  - ps: (new-object net.webclient).DownloadFile('https://www.sqlite.org/2017/sqlite-dll-win32-x86-3180000.zip', 'C:\Projects\sqlite-dll-win32-x86-3180000.zip')
+  - ps: $Output = Invoke-Expression -Command "& 'C:\\Program Files\\7-Zip\\7z.exe' -y -oC:\\Projects\\ x C:\\Projects\\sqlite-dll-win32-x86-3180000.zip 2>&1"
+  - cmd: copy C:\Projects\sqlite3.dll C:\Python27\DLLs\
+  - cmd: mkdir dependencies && set PYTHONPATH=..\l2tdevtools && "%PYTHON%\\python.exe" ..\l2tdevtools\tools\update.py --download-directory dependencies --machine-type x86 --msi-targetdir "%PYTHON%" PyYAML XlsxWriter artifacts bencode binplist construct dfdatetime dfvfs dfwinreg dpkt efilter hachoir_core hachoir_metadata hachoir_parser libbde libesedb libevt libevtx libewf libfsntfs libfvde libfwnt libfwsi liblnk libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm lzma pefile psutil pycrypto pyparsing pysqlite python-dateutil pytsk3 pytz pyzmq requests six yara-python funcsigs mock pbr
 
 build: off
 

@@ -43,6 +43,7 @@ PLASO_DEPENDENCIES="libbde-python
                     python-pefile
                     python-psutil
                     python-pyparsing
+                    python-pysqlite
                     python-pytsk3
                     python-requests
                     python-six

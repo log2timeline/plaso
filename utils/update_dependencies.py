@@ -31,7 +31,7 @@ class AppveyorYmlWriter(DependencyFileWriter):
 
   _VERSION_PYWIN32 = u'220'
   _VERSION_WMI = u'1.4.9'
-  _VERSION_SQLITE = u'3080803'
+  _VERSION_SQLITE = u'3180000'
 
   _DOWNLOAD_PIP = (
       u'  - ps: (new-object net.webclient).DownloadFile('
@@ -65,7 +65,7 @@ class AppveyorYmlWriter(DependencyFileWriter):
 
   _DOWNLOAD_SQLITE = (
       u'  - ps: (new-object net.webclient).DownloadFile('
-      u'\'https://www.sqlite.org/2015/sqlite-dll-win32-x86-{0:s}.zip\', '
+      u'\'https://www.sqlite.org/2017/sqlite-dll-win32-x86-{0:s}.zip\', '
       u'\'C:\\Projects\\sqlite-dll-win32-x86-{0:s}.zip\')').format(
           _VERSION_SQLITE)
 
@@ -155,7 +155,6 @@ class DPKGControlWriter(DependencyFileWriter):
        u'python-setuptools'),
       u'Standards-Version: 3.9.5',
       u'X-Python-Version: >= 2.7',
-      u'X-Python3-Version: >= 3.4',
       u'Homepage: https://github.com/log2timeline/plaso',
       u'',
       u'Package: plaso-data',
@@ -165,8 +164,10 @@ class DPKGControlWriter(DependencyFileWriter):
       u' Plaso (log2timeline) is a framework to create super timelines. Its',
       u' purpose is to extract timestamps from various files found on typical',
       u' computer systems and aggregate them.',
-      u'',
-      u'Package: python-plaso',
+      u'']
+
+  _PYTHON2_PACKAGE_HEADER = [
+      u'Package: python-{0:s}'.format(_PROJECT_NAME),
       u'Architecture: all']
 
   _FILE_DESCRIPTION = [
@@ -487,6 +488,8 @@ class TravisBeforeInstallScriptWriter(DependencyFileWriter):
       u'',
       u'elif test `uname -s` = "Linux";',
       u'then',
+      u'\tsudo rm -f /etc/apt/sources.list.d/travis_ci_zeromq3-source.list;',
+      u'',
       u'\tsudo add-apt-repository ppa:gift/dev -y;',
       u'\tsudo apt-get update -q;',
       (u'\tsudo apt-get install -y ${COVERALL_DEPENDENCIES} '
@@ -521,8 +524,6 @@ class TravisBeforeInstallScriptWriter(DependencyFileWriter):
     file_content.append(u'')
 
     dependencies = self._dependency_helper.GetDPKGDepends(exclude_version=True)
-    if u'python-backports.lzma' in dependencies:
-      dependencies.remove(u'python-backports.lzma')
     if u'python-pysqlite' in dependencies:
       dependencies.remove(u'python-pysqlite')
 
