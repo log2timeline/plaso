@@ -12,7 +12,7 @@ PYTHON2_DEPENDENCIES="libbde-python libesedb-python libevt-python libevtx-python
 
 PYTHON2_TEST_DEPENDENCIES="python-mock";
 
-PYTHON3_DEPENDENCIES="libbde-python3 libesedb-python3 libevt-python3 libevtx-python3 libewf-python3 libfsntfs-python3 libfvde-python3 libfwnt-python3 libfwsi-python3 liblnk-python3 libmsiecf-python3 libolecf-python3 libqcow-python3 libregf-python3 libscca-python3 libsigscan-python3 libsmdev-python3 libsmraw-python3 libvhdi-python3 libvmdk-python3 libvshadow-python3 libvslvm-python3 python3-artifacts python3-bencode python3-binplist python3-construct python3-crypto python3-dateutil python3-dfdatetime python3-dfvfs python3-dfwinreg python3-dpkt python3-efilter python3-hachoir-core python3-hachoir-metadata python3-hachoir-parser python3-lzma python3-pefile python3-psutil python3-pyparsing python3-pytsk3 python3-requests python3-six python3-tz python3-xlsxwriter python3-yaml python3-yara python3-zmq";
+PYTHON3_DEPENDENCIES="libbde-python3 libesedb-python3 libevt-python3 libevtx-python3 libewf-python3 libfsntfs-python3 libfvde-python3 libfwnt-python3 libfwsi-python3 liblnk-python3 libmsiecf-python3 libolecf-python3 libqcow-python3 libregf-python3 libscca-python3 libsigscan-python3 libsmdev-python3 libsmraw-python3 libvhdi-python3 libvmdk-python3 libvshadow-python3 libvslvm-python3 python3-artifacts python3-bencode python3-construct python3-crypto python3-dateutil python3-dfdatetime python3-dfvfs python3-dfwinreg python3-dpkt python3-efilter python3-psutil python3-pyparsing python3-pytsk3 python3-requests python3-six python3-tz python3-xlsxwriter python3-yaml python3-yara python3-zmq";
 
 PYTHON3_TEST_DEPENDENCIES="python3-mock";
 

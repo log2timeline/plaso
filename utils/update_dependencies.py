@@ -524,6 +524,24 @@ class TravisBeforeInstallScriptWriter(DependencyFileWriter):
     file_content.append(u'')
 
     dependencies = self._dependency_helper.GetDPKGDepends(exclude_version=True)
+    if u'python-binplist' in dependencies:
+      dependencies.remove(u'python-binplist')
+
+    if u'python-hachoir-core' in dependencies:
+      dependencies.remove(u'python-hachoir-core')
+
+    if u'python-hachoir-metadata' in dependencies:
+      dependencies.remove(u'python-hachoir-metadata')
+
+    if u'python-hachoir-parser' in dependencies:
+      dependencies.remove(u'python-hachoir-parser')
+
+    if u'python-lzma' in dependencies:
+      dependencies.remove(u'python-lzma')
+
+    if u'python-pefile' in dependencies:
+      dependencies.remove(u'python-pefile')
+
     if u'python-pysqlite' in dependencies:
       dependencies.remove(u'python-pysqlite')
 
