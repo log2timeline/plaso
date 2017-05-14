@@ -27,11 +27,12 @@ from plaso.cli import extract_analyze_tool
 from plaso.cli import tools as cli_tools
 from plaso.cli import views as cli_views
 from plaso.cli.helpers import manager as helpers_manager
-from plaso.frontend import log2timeline
+from plaso.frontend import extraction_frontend
 from plaso.frontend import psort
 from plaso.engine import configurations
 from plaso.output import interface as output_interface
 from plaso.lib import errors
+from plaso.storage import zip_file as storage_zip_file
 
 
 class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
@@ -89,7 +90,7 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     self._command_line_arguments = None
     self._deduplicate_events = True
     self._enable_sigsegv_handler = False
-    self._extraction_front_end = log2timeline.Log2TimelineFrontend()
+    self._extraction_front_end = extraction_frontend.ExtractionFrontend()
     self._force_preprocessing = False
     self._hasher_names_string = None
     self._number_of_extraction_workers = 0
@@ -105,6 +106,78 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     self._time_slice = None
     self._use_time_slicer = False
     self._yara_rules_string = None
+
+  def _CheckStorageFile(self, storage_file_path):
+    """Checks if the storage file path is valid.
+
+    Args:
+      storage_file_path (str): path of the storage file.
+
+    Raises:
+      BadConfigOption: if the storage file path is invalid.
+    """
+    if os.path.exists(storage_file_path):
+      if not os.path.isfile(storage_file_path):
+        raise errors.BadConfigOption(
+            u'Storage file: {0:s} already exists and is not a file.'.format(
+                storage_file_path))
+      logging.warning(u'Appending to an already existing storage file.')
+
+    dirname = os.path.dirname(storage_file_path)
+    if not dirname:
+      dirname = u'.'
+
+    # TODO: add a more thorough check to see if the storage file really is
+    # a plaso storage file.
+
+    if not os.access(dirname, os.W_OK):
+      raise errors.BadConfigOption(
+          u'Unable to write to storage file: {0:s}'.format(storage_file_path))
+
+  def _CreateOutputModule(self):
+    """Creates a default output module
+
+    Raises:
+      BadConfigOption: when the output_filename already exists or hasn't been
+          set.
+    """
+    self._output_module = self._analysis_front_end.CreateOutputModule(
+        self._output_format, preferred_encoding=self.preferred_encoding,
+        timezone=self._preferred_time_zone)
+
+    if isinstance(self._output_module, output_interface.LinearOutputModule):
+      if not self._output_filename:
+        raise errors.BadConfigOption(
+            u'Output format: {0:s} requires an output file.'.format(
+                self._output_format))
+
+      if self._output_filename and os.path.exists(self._output_filename):
+        raise errors.BadConfigOption(
+            u'Output file already exists: {0:s}. Aborting.'.format(
+                self._output_filename))
+
+      output_file_object = open(self._output_filename, u'wb')
+      output_writer = cli_tools.FileObjectOutputWriter(output_file_object)
+
+      self._output_module.SetOutputWriter(output_writer)
+
+  def _CreateProcessingConfiguration(self):
+    """Creates a processing configuration.
+
+    Returns:
+      ProcessingConfiguration: processing configuration.
+    """
+    # TODO: pass preferred_encoding.
+    configuration = configurations.ProcessingConfiguration()
+    configuration.credentials = self._credential_configurations
+    configuration.debug_output = self._debug_mode
+    configuration.extraction.hasher_names_string = self._hasher_names_string
+    configuration.extraction.yara_rules_string = self._yara_rules_string
+    configuration.filter_file = self._filter_file
+    configuration.parser_filter_expression = self._parser_filter_expression
+    configuration.preferred_year = self._preferred_year
+
+    return configuration
 
   def _DetermineSourceType(self):
     """Determines the source type."""
@@ -139,56 +212,12 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     elif self._status_view_mode == u'window':
       return self._PrintStatusUpdate
 
-  def ExtractEventsFromSources(self):
-    """Processes the sources and extract events.
+  def _PrintProcessingSummary(self, processing_status):
+    """Prints a summary of the processing.
 
-    This is a stripped down copy of tools/log2timeline.py that doesn't support
-    the full set of flags. The defaults for these are hard coded in the
-    constructor of this class.
-
-    Raises:
-      SourceScannerError: if the source scanner could not find a supported
-          file system.
-      UserAbort: if the user initiated an abort.
+    Args:
+      processing_status (ProcessingStatus): processing status.
     """
-    self._DetermineSourceType()
-
-    self._output_writer.Write(u'\n')
-    self._PrintStatusHeader()
-
-    self._output_writer.Write(u'Processing started.\n')
-
-    status_update_callback = self._GetStatusUpdateCallback()
-
-    session = self._extraction_front_end.CreateSession(
-        command_line_arguments=self._command_line_arguments,
-        filter_file=self._filter_file,
-        preferred_encoding=self.preferred_encoding,
-        preferred_time_zone=self._preferred_time_zone,
-        preferred_year=self._preferred_year)
-
-    storage_writer = self._extraction_front_end.CreateStorageWriter(
-        session, self._storage_file_path)
-    # TODO: handle errors.BadConfigOption
-
-    # TODO: pass preferred_encoding.
-    configuration = configurations.ProcessingConfiguration()
-    configuration.credentials = self._credential_configurations
-    configuration.debug_output = self._debug_mode
-    configuration.extraction.hasher_names_string = self._hasher_names_string
-    configuration.extraction.yara_rules_string = self._yara_rules_string
-    configuration.filter_file = self._filter_file
-    configuration.parser_filter_expression = self._parser_filter_expression
-    configuration.preferred_year = self._preferred_year
-
-    processing_status = self._extraction_front_end.ProcessSources(
-        session, storage_writer, self._source_path_specs, self._source_type,
-        configuration, enable_sigsegv_handler=self._enable_sigsegv_handler,
-        force_preprocessing=self._force_preprocessing,
-        number_of_extraction_workers=self._number_of_extraction_workers,
-        single_process_mode=self._single_process_mode,
-        status_update_callback=status_update_callback)
-
     if not processing_status:
       self._output_writer.Write(
           u'WARNING: missing processing status information.\n')
@@ -222,33 +251,6 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
           self._output_writer.Write(u'\n')
 
     self._output_writer.Write(u'\n')
-
-  def _CreateOutputModule(self):
-    """Creates a default output module
-
-    Raises:
-      BadConfigOption: when the output_filename already exists or hasn't been
-          set.
-    """
-    self._output_module = self._analysis_front_end.CreateOutputModule(
-        self._output_format, preferred_encoding=self.preferred_encoding,
-        timezone=self._preferred_time_zone)
-
-    if isinstance(self._output_module, output_interface.LinearOutputModule):
-      if not self._output_filename:
-        raise errors.BadConfigOption(
-            u'Output format: {0:s} requires an output file.'.format(
-                self._output_format))
-
-      if self._output_filename and os.path.exists(self._output_filename):
-        raise errors.BadConfigOption(
-            u'Output file already exists: {0:s}. Aborting.'.format(
-                self._output_filename))
-
-      output_file_object = open(self._output_filename, u'wb')
-      output_writer = cli_tools.FileObjectOutputWriter(output_file_object)
-
-      self._output_module.SetOutputWriter(output_writer)
 
   def AnalyzeEvents(self):
     """Analyzes events from a plaso storage file and generate a report.
@@ -308,6 +310,53 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
 
     self._output_writer.Write(u'Storage file is {0:s}\n'.format(
         self._storage_file_path))
+
+  def ExtractEventsFromSources(self):
+    """Processes the sources and extract events.
+
+    This is a stripped down copy of tools/log2timeline.py that doesn't support
+    the full set of flags. The defaults for these are hard coded in the
+    constructor of this class.
+
+    Raises:
+      SourceScannerError: if the source scanner could not find a supported
+          file system.
+      UserAbort: if the user initiated an abort.
+    """
+    self._DetermineSourceType()
+
+    self._output_writer.Write(u'\n')
+    self._PrintStatusHeader()
+
+    self._output_writer.Write(u'Processing started.\n')
+
+    status_update_callback = self._GetStatusUpdateCallback()
+
+    session = self._extraction_front_end.CreateSession(
+        command_line_arguments=self._command_line_arguments,
+        filter_file=self._filter_file,
+        preferred_encoding=self.preferred_encoding,
+        preferred_time_zone=self._preferred_time_zone,
+        preferred_year=self._preferred_year)
+
+    self._CheckStorageFile(self._storage_file_path)
+
+    storage_writer = storage_zip_file.ZIPStorageFileWriter(
+        session, self._storage_file_path)
+
+    # TODO: handle errors.BadConfigOption
+
+    configuration = self._CreateProcessingConfiguration()
+
+    processing_status = self._extraction_front_end.ProcessSources(
+        session, storage_writer, self._source_path_specs, self._source_type,
+        configuration, enable_sigsegv_handler=self._enable_sigsegv_handler,
+        force_preprocessing=self._force_preprocessing,
+        number_of_extraction_workers=self._number_of_extraction_workers,
+        single_process_mode=self._single_process_mode,
+        status_update_callback=status_update_callback)
+
+    self._PrintProcessingSummary(processing_status)
 
   def ParseArguments(self):
     """Parses the command line arguments.
@@ -373,7 +422,7 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     self._single_process_mode = getattr(options, u'single_process', False)
     self._status_view_mode = getattr(options, u'status_view_mode', u'window')
 
-    self.SetSourcePath(getattr(options, u'source', None))
+    self._source_path = getattr(options, u'source', None)
     self._output_filename = getattr(options, u'analysis_output_file', None)
     self._ParseStorageFileOptions(options)
 

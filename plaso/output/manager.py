@@ -75,7 +75,7 @@ class OutputManager(object):
     """Retrieves the available output classes its associated name.
 
     Yields:
-      A tuple of output class name and type object (subclass of OutputModule).
+      tuple[str, type]: output class name and type object.
     """
     for _, output_class in iter(cls._output_classes.items()):
       yield output_class.NAME, output_class

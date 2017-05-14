@@ -2,24 +2,18 @@
 """The extraction front-end."""
 
 import logging
-import os
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 
 from plaso import parsers   # pylint: disable=unused-import
-from plaso.analyzers.hashers import manager as hashers_manager
+
 from plaso.containers import sessions
 from plaso.engine import single_process
 from plaso.frontend import frontend
 from plaso.frontend import utils
-from plaso.lib import definitions
-from plaso.lib import errors
 from plaso.multi_processing import task_engine as multi_process_engine
 from plaso.parsers import manager as parsers_manager
-from plaso.parsers import presets as parsers_presets
-from plaso.storage import sqlite_file as storage_sqlite_file
-from plaso.storage import zip_file as storage_zip_file
 
 
 class ExtractionFrontend(frontend.Frontend):
@@ -45,43 +39,16 @@ class ExtractionFrontend(frontend.Frontend):
     self._profiling_directory = None
     self._profiling_sample_rate = self._DEFAULT_PROFILING_SAMPLE_RATE
     self._profiling_type = u'all'
-    self._use_zeromq = True
     self._resolver_context = context.Context()
     self._text_prepend = None
 
-  def _CheckStorageFile(self, storage_file_path):
-    """Checks if the storage file path is valid.
-
-    Args:
-      storage_file_path (str): path of the storage file.
-
-    Raises:
-      BadConfigOption: if the storage file path is invalid.
-    """
-    if os.path.exists(storage_file_path):
-      if not os.path.isfile(storage_file_path):
-        raise errors.BadConfigOption(
-            u'Storage file: {0:s} already exists and is not a file.'.format(
-                storage_file_path))
-      logging.warning(u'Appending to an already existing storage file.')
-
-    dirname = os.path.dirname(storage_file_path)
-    if not dirname:
-      dirname = u'.'
-
-    # TODO: add a more thorough check to see if the storage file really is
-    # a plaso storage file.
-
-    if not os.access(dirname, os.W_OK):
-      raise errors.BadConfigOption(
-          u'Unable to write to storage file: {0:s}'.format(storage_file_path))
-
-  def _CreateEngine(self, single_process_mode):
+  def _CreateEngine(self, single_process_mode, use_zeromq=True):
     """Creates an engine based on the front end settings.
 
     Args:
       single_process_mode (bool): True if the front-end should run in single
           process mode.
+      use_zeromq (Optional[bool]): True if ZeroMQ should be used for queuing.
 
     Returns:
       BaseEngine: engine.
@@ -90,71 +57,9 @@ class ExtractionFrontend(frontend.Frontend):
       engine = single_process.SingleProcessEngine()
     else:
       engine = multi_process_engine.TaskMultiProcessEngine(
-          use_zeromq=self._use_zeromq)
+          use_zeromq=use_zeromq)
 
     return engine
-
-  def _GetParserFilterPreset(
-      self, operating_system, operating_system_product,
-      operating_system_version):
-    """Determines the parser filter preset.
-
-    Args:
-      operating_system (str): operating system for example "Windows". This
-          should be one of the values in definitions.OPERATING_SYSTEMS.
-      operating_system_product (str): operating system product for
-          example "Windows XP" as determined by preprocessing.
-      operating_system_version (str): operating system version for
-          example "5.1" as determined by preprocessing.
-
-    Returns:
-      str: parser filter preset, where None represents all parsers and plugins.
-    """
-    # TODO: Make this more sane. Currently we are only checking against
-    # one possible version of Windows, and then making the assumption if
-    # that is not correct we default to Windows 7. Same thing with other
-    # OS's, no assumption or checks are really made there.
-    # Also this is done by default, and no way for the user to turn off
-    # this behavior, need to add a parameter to the frontend that takes
-    # care of overwriting this behavior.
-
-    if operating_system == definitions.OPERATING_SYSTEM_LINUX:
-      return u'linux'
-
-    if operating_system == definitions.OPERATING_SYSTEM_MACOSX:
-      return u'macosx'
-
-    if operating_system_product:
-      operating_system_product = operating_system_product.lower()
-    else:
-      operating_system_product = u''
-
-    if operating_system_version:
-      operating_system_version = operating_system_version.split(u'.')
-    else:
-      operating_system_version = [u'0', u'0']
-
-    # Windows NT 5 (2000, XP and 2003).
-    if (u'windows' in operating_system_product and
-        operating_system_version[0] == u'5'):
-      return u'winxp'
-
-    # TODO: Improve this detection, this should be more 'intelligent', since
-    # there are quite a lot of versions out there that would benefit from
-    # loading up the set of 'winxp' parsers.
-    if (u'windows xp' in operating_system_product or
-        u'windows server 2000' in operating_system_product or
-        u'windows server 2003' in operating_system_product):
-      return u'winxp'
-
-    # Fallback for other Windows versions.
-    if u'windows' in operating_system_product:
-      return u'win7'
-
-    if operating_system == definitions.OPERATING_SYSTEM_WINDOWS:
-      return u'win7'
-
-    return
 
   def _PreprocessSources(self, engine, source_path_specs):
     """Preprocesses the sources.
@@ -205,91 +110,12 @@ class ExtractionFrontend(frontend.Frontend):
 
     return session
 
-  def CreateStorageWriter(self, session, storage_file_path):
-    """Creates a storage writer.
-
-    Args:
-      session (Session): session the storage changes are part of.
-      storage_file_path (str): path of the storage file.
-
-    Returns:
-      StorageWriter: storage writer.
-    """
-    self._CheckStorageFile(storage_file_path)
-
-    if self._experimental:
-      return storage_sqlite_file.SQLiteStorageFileWriter(
-          session, storage_file_path)
-
-    return storage_zip_file.ZIPStorageFileWriter(session, storage_file_path)
-
-  def GetHashersInformation(self):
-    """Retrieves the hashers information.
-
-    Returns:
-      list[tuple]: contains:
-
-        str: hasher name
-        str: hahser description
-    """
-    return hashers_manager.HashersManager.GetHashersInformation()
-
-  def GetParserPluginsInformation(self, parser_filter_expression=None):
-    """Retrieves the parser plugins information.
-
-    Args:
-      parser_filter_expression (str): parser filter expression, where None
-          represents all parsers and plugins.
-
-    Returns:
-      list[tuple]: contains:
-
-        str: parser plugin name
-        str: parser plugin description
-    """
-    return parsers_manager.ParsersManager.GetParserPluginsInformation(
-        parser_filter_expression=parser_filter_expression)
-
-  def GetParserPresetsInformation(self):
-    """Retrieves the parser presets information.
-
-    Returns:
-      list[tuple]: contains:
-
-        str: parser preset name
-        str: parsers names corresponding to the preset
-    """
-    parser_presets_information = []
-    for preset_name, parser_names in sorted(parsers_presets.CATEGORIES.items()):
-      parser_presets_information.append((preset_name, u', '.join(parser_names)))
-
-    return parser_presets_information
-
-  def GetParsersInformation(self):
-    """Retrieves the parsers information.
-
-    Returns:
-      list[tuple]: contains:
-
-        str: parser name
-        str: parser description
-    """
-    return parsers_manager.ParsersManager.GetParsersInformation()
-
-  def GetNamesOfParsersWithPlugins(self):
-    """Retrieves the names of parser with plugins.
-
-    Returns:
-      list[str]: parser names.
-    """
-    return parsers_manager.ParsersManager.GetNamesOfParsersWithPlugins()
-
   def ProcessSources(
       self, session, storage_writer, source_path_specs, source_type,
       processing_configuration, enable_sigsegv_handler=False,
       force_preprocessing=False, number_of_extraction_workers=0,
       single_process_mode=False, status_update_callback=None,
-      worker_memory_limit=None):
+      use_zeromq=True, worker_memory_limit=None):
     """Processes the sources.
 
     Args:
@@ -310,6 +136,7 @@ class ExtractionFrontend(frontend.Frontend):
           run in single process mode.
       status_update_callback (Optional[function]): callback function for status
           updates.
+      use_zeromq (Optional[bool]): True if ZeroMQ should be used for queuing.
       worker_memory_limit (Optional[int]): maximum amount of memory a worker is
           allowed to consume, where None represents 2 GiB.
 
@@ -325,7 +152,7 @@ class ExtractionFrontend(frontend.Frontend):
       # No need to multi process a single file source.
       single_process_mode = True
 
-    engine = self._CreateEngine(single_process_mode)
+    engine = self._CreateEngine(single_process_mode, use_zeromq=use_zeromq)
 
     # If the source is a directory or a storage media image
     # run pre-processing.
@@ -339,8 +166,10 @@ class ExtractionFrontend(frontend.Frontend):
           u'operating_system_product')
       operating_system_version = engine.knowledge_base.GetValue(
           u'operating_system_version')
-      parser_filter_expression = self._GetParserFilterPreset(
-          operating_system, operating_system_product, operating_system_version)
+      parser_filter_expression = (
+          parsers_manager.ParsersManager.GetPresetForOperatingSystem(
+              operating_system, operating_system_product,
+              operating_system_version))
 
       if parser_filter_expression:
         logging.info(u'Parser filter expression changed to: {0:s}'.format(
@@ -393,11 +222,3 @@ class ExtractionFrontend(frontend.Frontend):
           worker_memory_limit=worker_memory_limit)
 
     return processing_status
-
-  def SetUseZeroMQ(self, use_zeromq=True):
-    """Sets whether the frontend is using ZeroMQ for queueing or not.
-
-    Args:
-      use_zeromq (Optional[bool]): True if ZeroMQ should be used for queuing.
-    """
-    self._use_zeromq = use_zeromq

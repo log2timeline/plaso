@@ -45,36 +45,31 @@ class ExtractionAndAnalysisToolTest(test_lib.CLIToolTestCase):
     """Tests the _GenerateStorageFileName function."""
     test_tool = extract_analyze_tool.ExtractionAndAnalysisTool()
 
-    source_path = u'/test/storage/path'
-    test_tool.SetSourcePath(source_path)
+    test_tool._source_path = u'/test/storage/path'
     storage_filename = test_tool._GenerateStorageFileName()
     expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
         filename=u'path')
     self.assertRegexpMatches(storage_filename, expected_storage_filename)
 
-    source_path = u'/test/storage/path/'
-    test_tool.SetSourcePath(source_path)
+    test_tool._source_path = u'/test/storage/path/'
     storage_filename = test_tool._GenerateStorageFileName()
     expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
         filename=u'path')
     self.assertRegexpMatches(storage_filename, expected_storage_filename)
 
-    source_path = u'/'
-    test_tool.SetSourcePath(source_path)
+    test_tool._source_path = u'/'
     storage_filename = test_tool._GenerateStorageFileName()
     expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
         filename=u'ROOT')
     self.assertRegexpMatches(storage_filename, expected_storage_filename)
 
-    source_path = u'/foo/..'
-    test_tool.SetSourcePath(source_path)
+    test_tool._source_path = u'/foo/..'
     storage_filename = test_tool._GenerateStorageFileName()
     expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
         filename=u'ROOT')
     self.assertRegexpMatches(storage_filename, expected_storage_filename)
 
-    source_path = u'foo/../bar'
-    test_tool.SetSourcePath(source_path)
+    test_tool._source_path = u'foo/../bar'
     storage_filename = test_tool._GenerateStorageFileName()
     expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
         filename=u'bar')
