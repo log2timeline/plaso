@@ -6,4 +6,4 @@ on a typical computer system(s) and aggregate them. Plaso is the Python rewrite
 of log2timeline.
 """
 
-__version__ = '20170513'
+__version__ = '20170515'
