@@ -8,7 +8,8 @@ try:
 except ImportError:
   win32console = None
 
-from plaso import GetVersion
+import plaso
+
 from plaso.lib import definitions
 from plaso.cli import storage_media_tool
 from plaso.cli import tools as cli_tools
@@ -126,10 +127,9 @@ class StatusViewTool(storage_media_tool.StorageMediaTool):
     if self._stdout_output_writer:
       self._ClearScreen()
 
-    self._output_writer.Write(
-        u'plaso - {0:s} version {1:s}\n'.format(
-            self.NAME, GetVersion()))
-    self._output_writer.Write(u'\n')
+    output_text = u'plaso - {0:s} version {1:s}\n\n'.format(
+        self.NAME, plaso.__version__)
+    self._output_writer.Write(output_text)
 
     self._PrintStatusHeader()
 

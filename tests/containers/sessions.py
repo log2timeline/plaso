@@ -33,7 +33,7 @@ class SessionTest(shared_test_lib.BaseTestCase):
         u'preferred_encoding': u'utf-8',
         u'preferred_time_zone': u'UTC',
         u'product_name': u'plaso',
-        u'product_version': plaso.GetVersion(),
+        u'product_version': plaso.__version__,
         u'start_time': session.start_time}
 
     test_dict = session.CopyToDict()
@@ -78,7 +78,7 @@ class SessionStartTest(shared_test_lib.BaseTestCase):
     session_start = sessions.SessionStart(identifier=session_identifier)
     session_start.timestamp = timestamp
     session_start.product_name = u'plaso'
-    session_start.product_version = plaso.GetVersion()
+    session_start.product_version = plaso.__version__
 
     self.assertEqual(session_start.identifier, session_identifier)
 
@@ -86,7 +86,7 @@ class SessionStartTest(shared_test_lib.BaseTestCase):
         u'debug_mode': False,
         u'identifier': session_start.identifier,
         u'product_name': u'plaso',
-        u'product_version': plaso.GetVersion(),
+        u'product_version': plaso.__version__,
         u'timestamp': timestamp}
 
     test_dict = session_start.CopyToDict()
