@@ -300,10 +300,9 @@ class PsortTool(analysis_tool.AnalysisTool):
     if self._stdout_output_writer:
       self._ClearScreen()
 
-    self._output_writer.Write(
-        u'plaso - {0:s} version {1:s}\n'.format(
-            self.NAME, plaso.GetVersion()))
-    self._output_writer.Write(u'\n')
+    output_text = u'plaso - {0:s} version {1:s}\n\n'.format(
+        self.NAME, plaso.__version__)
+    self._output_writer.Write(output_text)
 
     self._PrintStatusHeader()
 

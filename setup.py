@@ -165,9 +165,18 @@ if version_tuple[0] == 2:
 
   sys.setdefaultencoding(encoding)
 
+
+plaso_version = plaso.__version__
+
+# Command bdist_msi does not support the library version, neither a date
+# as a version but if we suffix it with .1 everything is fine.
+if 'bdist_msi' in sys.argv:
+  plaso_version += '.1'
+
 # Unicode in the description will break python-setuptools, hence
 # "Plaso Langar Að Safna Öllu" was removed.
 plaso_description = 'Super timeline all the things'
+
 plaso_long_description = (
     'Log2Timeline is a framework to create super timelines. Its purpose '
     'is to extract timestamps from various files found on typical computer '
@@ -175,7 +184,7 @@ plaso_long_description = (
 
 setup(
     name='plaso',
-    version=plaso.GetVersion(),
+    version=plaso_version,
     description=plaso_description,
     long_description=plaso_long_description,
     license='Apache License, Version 2.0',

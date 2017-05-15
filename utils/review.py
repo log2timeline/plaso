@@ -29,7 +29,7 @@ else:
 # Change PYTHONPATH to include utils.
 sys.path.insert(0, u'.')
 
-import utils.upload
+import utils.upload  # pylint: disable=wrong-import-position
 
 
 class CLIHelper(object):
@@ -1069,13 +1069,7 @@ class ProjectHelper(CLIHelper):
     date_version = time.strftime(u'%Y%m%d')
     lines = version_file_contents.split(u'\n')
     for line_index, line in enumerate(lines):
-      if (self.project_name == u'plaso' and
-          line.startswith(u'VERSION_DATE = ')):
-        version_string = u'VERSION_DATE = \'{0:s}\''.format(date_version)
-        lines[line_index] = version_string
-
-      elif (self.project_name != u'plaso' and
-            line.startswith(u'__version__ = ')):
+      if line.startswith(u'__version__ = '):
         version_string = u'__version__ = \'{0:s}\''.format(date_version)
         lines[line_index] = version_string
 
