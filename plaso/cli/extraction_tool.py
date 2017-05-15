@@ -7,6 +7,12 @@ from artifacts import errors as artifacts_errors
 from artifacts import reader as artifacts_reader
 from artifacts import registry as artifacts_registry
 
+# The following import makes sure the analyzers are registered.
+from plaso import analyzers  # pylint: disable=unused-import
+
+# The following import makes sure the parsers are registered.
+from plaso import parsers  # pylint: disable=unused-import
+
 from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.cli import status_view_tool
 from plaso.cli import views

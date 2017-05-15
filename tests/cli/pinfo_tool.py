@@ -6,15 +6,14 @@ import json
 import unittest
 
 from plaso.cli import views as cli_views
+from plaso.cli import pinfo_tool
 from plaso.lib import errors
 from plaso.lib import timelib
 
-from tests.cli import test_lib as cli_test_lib
-
-from tools import pinfo
+from tests.cli import test_lib
 
 
-class PinfoToolTest(cli_test_lib.CLIToolTestCase):
+class PinfoToolTest(test_lib.CLIToolTestCase):
   """Tests for the pinfo CLI tool."""
 
   # TODO: add test for _CalculateStorageCounters.
@@ -32,13 +31,13 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
 
   def testCompareStorages(self):
     """Tests the CompareStorages function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = pinfo.PinfoTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
     test_file1 = self._GetTestFilePath([u'psort_test.json.plaso'])
     test_file2 = self._GetTestFilePath([u'pinfo_test.json.plaso'])
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.compare_storage_file = test_file1
     options.storage_file = test_file1
 
@@ -49,7 +48,7 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
     output = output_writer.ReadOutput()
     self.assertEqual(output, b'Storages are identical.\n')
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.compare_storage_file = test_file1
     options.storage_file = test_file2
 
@@ -62,8 +61,8 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
 
   def testParseArguments(self):
     """Tests the ParseArguments function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = pinfo.PinfoTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
     result = test_tool.ParseArguments()
     self.assertFalse(result)
@@ -73,15 +72,15 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
 
   def testParseOptions(self):
     """Tests the ParseOptions function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = pinfo.PinfoTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.storage_file = self._GetTestFilePath([u'pinfo_test.json.plaso'])
 
     test_tool.ParseOptions(options)
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
 
     with self.assertRaises(errors.BadConfigOption):
       test_tool.ParseOptions(options)
@@ -90,8 +89,8 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
 
   def testPrintStorageInformationAsText(self):
     """Tests the _PrintStorageInformationAsText function."""
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = pinfo.PinfoTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
 
     test_filename = u'pinfo_test.json.plaso'
     format_version = u'20170121'
@@ -200,7 +199,7 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
 
     test_file = self._GetTestFilePath([test_filename])
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.storage_file = test_file
     options.output_format = u'text'
 
@@ -220,11 +219,11 @@ class PinfoToolTest(cli_test_lib.CLIToolTestCase):
     session_identifier = u'61d9fdf4b68f4ff39bd3f937a616d588'
     session_start_time = timelib.Timestamp.CopyFromString(
         u'2017-04-03 17:00:12.148946+00:00')
-    output_writer = cli_test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = pinfo.PinfoTool(output_writer=output_writer)
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = pinfo_tool.PinfoTool(output_writer=output_writer)
     test_file = self._GetTestFilePath([test_filename])
 
-    options = cli_test_lib.TestOptions()
+    options = test_lib.TestOptions()
     options.storage_file = test_file
     options.output_format = u'json'
 
