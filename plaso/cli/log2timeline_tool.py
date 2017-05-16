@@ -225,7 +225,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     return_dict = {}
 
     return_dict[u'Versions'] = [
-        (u'plaso engine', plaso.GetVersion()),
+        (u'plaso engine', plaso.__version__),
         (u'python', sys.version)]
 
     hashers_information = self._hashers_manager.GetHashersInformation()
