@@ -22,3 +22,11 @@ Description: Python bindings for plaso (log2timeline)
  Plaso (log2timeline) is a framework to create super timelines. Its
  purpose is to extract timestamps from various files found on typical
  computer systems and aggregate them.
+
+Package: plaso-tools
+Architecture: all
+Depends: python-plaso, python (>= 2.7~), ${python:Depends}, ${misc:Depends}
+Description: Tools for plaso (log2timeline)
+ Plaso (log2timeline) is a framework to create super timelines. Its
+ purpose is to extract timestamps from various files found on typical
+ computer systems and aggregate them.
