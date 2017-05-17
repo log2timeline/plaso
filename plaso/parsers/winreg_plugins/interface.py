@@ -223,23 +223,6 @@ class WindowsRegistryPlugin(plugins.BasePlugin):
       registry_key (dfwinreg.WinRegistryKey): Windows Registry key.
     """
 
-  # TODO: remove after preg refactor.
-  @classmethod
-  def GetKeyPaths(cls):
-    """Retrieves a list of Windows Registry key paths.
-
-    Returns:
-      list[str]: Windows Registry key paths.
-    """
-    key_paths = []
-    for registry_key_filter in cls.FILTERS:
-      plugin_key_paths = getattr(registry_key_filter, u'key_paths', [])
-      for plugin_key_path in plugin_key_paths:
-        if plugin_key_path not in key_paths:
-          key_paths.append(plugin_key_path)
-
-    return sorted(key_paths)
-
   # TODO: merge with UpdateChainAndProcess, also requires changes to tests.
   def Process(self, parser_mediator, registry_key, **kwargs):
     """Processes a Windows Registry key or value.
