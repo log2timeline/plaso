@@ -25,20 +25,28 @@ class DPKGControlWriter(object):
       u'Section: python',
       u'Priority: extra',
       u'Maintainer: {0:s}'.format(_MAINTAINER),
-      u'Build-Depends: debhelper (>= 7.0.0), python, python-setuptools',
+      (u'Build-Depends: debhelper (>= 7), python-all (>= 2.7~), '
+       u'python-setuptools'),
       u'Standards-Version: 3.9.5',
       u'X-Python-Version: >= 2.7',
       u'Homepage: https://github.com/log2timeline/plaso',
+      u'',
+      u'Package: plaso-data',
+      u'Architecture: all',
+      u'Depends: ${misc:Depends}',
+      u'Description: Data files for plaso (log2timeline)',
+      u' Plaso (log2timeline) is a framework to create super timelines. Its',
+      u' purpose is to extract timestamps from various files found on typical',
+      u' computer systems and aggregate them.',
       u'',
       u'Package: python-plaso',
       u'Architecture: all']
 
   _FILE_FOOTER = [
-      u'Description: Super timeline all the things',
-      u' Log2Timeline is a framework to create super timelines. Its purpose',
-      u' is to extract timestamps from various files found on typical computer',
-      (u' systems and aggregate them. Plaso is the Python rewrite of '
-       u'log2timeline.'),
+      u'Description: Python bindings for plaso (log2timeline)',
+      u' Plaso (log2timeline) is a framework to create super timelines. Its',
+      u' purpose is to extract timestamps from various files found on typical',
+      u' computer systems and aggregate them.',
       u'']
 
   def Write(self):
@@ -48,9 +56,9 @@ class DPKGControlWriter(object):
 
     dependencies = plaso.dependencies.GetDPKGDepends()
     dependencies = u', '.join(dependencies)
-    file_content.append(
-        u'Depends: {0:s}, ${{python:Depends}}, ${{misc:Depends}}'.format(
-            dependencies))
+    file_content.append((
+        u'Depends: plaso-data, {0:s}, ${{python:Depends}}, '
+        u'${{misc:Depends}}').format(dependencies))
 
     file_content.extend(self._FILE_FOOTER)
 
