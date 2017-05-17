@@ -1,10 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""This is the setup file for the project. The standard setup rules apply:
-
-   python setup.py build
-   sudo python setup.py install
-"""
+"""Installation and deployment script."""
 
 from __future__ import print_function
 import glob
@@ -178,9 +174,9 @@ if 'bdist_msi' in sys.argv:
 plaso_description = 'Super timeline all the things'
 
 plaso_long_description = (
-    'Log2Timeline is a framework to create super timelines. Its purpose '
-    'is to extract timestamps from various files found on typical computer '
-    'systems and aggregate them. Plaso is the Python rewrite of log2timeline.')
+    'Plaso (log2timeline) is a framework to create super timelines. Its '
+    'purpose is to extract timestamps from various files found on typical '
+    'computer systems and aggregate them.')
 
 setup(
     name='plaso',
@@ -188,7 +184,7 @@ setup(
     description=plaso_description,
     long_description=plaso_long_description,
     license='Apache License, Version 2.0',
-    url='https://sites.google.com/a/kiddaland.net/plaso',
+    url='https://github.com/log2timeline/plaso',
     maintainer='Log2Timeline maintainers',
     maintainer_email='log2timeline-maintainers@googlegroups.com',
     scripts=GetScripts(),
