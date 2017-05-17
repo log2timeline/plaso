@@ -208,21 +208,20 @@ class ParsersManager(object):
 
     return parser_plugins_information
 
-  # Note this is only used by plaso/frontend/preg.py
+  # Note this method is used by l2tpreg.
   @classmethod
   def GetParserObjectByName(cls, parser_name):
     """Retrieves a specific parser object by its name.
 
     Args:
-      parser_name: a string containing the name of the parser.
+      parser_name (str): name of the parser.
 
     Returns:
-      A parser object (instance of BaseParser) or None.
+      BaseParser: parser object or None.
     """
     parser_class = cls._parser_classes.get(parser_name, None)
-    if not parser_class:
-      return
-    return parser_class()
+    if parser_class:
+      return parser_class()
 
   @classmethod
   def GetParserObjects(cls, parser_filter_expression=None):
