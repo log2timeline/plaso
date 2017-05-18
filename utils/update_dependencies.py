@@ -42,8 +42,19 @@ class DPKGControlWriter(object):
       u'Package: python-plaso',
       u'Architecture: all']
 
-  _FILE_FOOTER = [
+  _FILE_DESCRIPTION = [
       u'Description: Python bindings for plaso (log2timeline)',
+      u' Plaso (log2timeline) is a framework to create super timelines. Its',
+      u' purpose is to extract timestamps from various files found on typical',
+      u' computer systems and aggregate them.',
+      u'']
+
+  _FILE_FOOTER = [
+      u'Package: plaso-tools',
+      u'Architecture: all',
+      (u'Depends: python-plaso, python (>= 2.7~), ${python:Depends}, '
+       u'${misc:Depends}'),
+      u'Description: Tools for plaso (log2timeline)',
       u' Plaso (log2timeline) is a framework to create super timelines. Its',
       u' purpose is to extract timestamps from various files found on typical',
       u' computer systems and aggregate them.',
@@ -60,6 +71,7 @@ class DPKGControlWriter(object):
         u'Depends: plaso-data, {0:s}, ${{python:Depends}}, '
         u'${{misc:Depends}}').format(dependencies))
 
+    file_content.extend(self._FILE_DESCRIPTION)
     file_content.extend(self._FILE_FOOTER)
 
     file_content = u'\n'.join(file_content)
