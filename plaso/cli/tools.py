@@ -15,6 +15,7 @@ except ImportError:
   win32console = None
 
 import plaso
+
 from plaso.cli import views
 from plaso.engine import engine
 from plaso.lib import errors
@@ -298,7 +299,7 @@ class CLITool(object):
       argument_group (argparse._ArgumentGroup): argparse argument group.
     """
     version_string = u'plaso - {0:s} version {1:s}'.format(
-        self.NAME, plaso.GetVersion())
+        self.NAME, plaso.__version__)
 
     # We want a custom help message and not the default argparse one.
     argument_group.add_argument(

@@ -1,10 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""This is the setup file for the project. The standard setup rules apply:
-
-   python setup.py build
-   sudo python setup.py install
-"""
+"""Installation and deployment script."""
 
 from __future__ import print_function
 import glob
@@ -62,7 +58,6 @@ def GetScripts():
       'image_export.py',
       'log2timeline.py',
       'pinfo.py',
-      'preg.py',
       'psort.py',
       'psteal.py'])
 
@@ -166,21 +161,30 @@ if version_tuple[0] == 2:
 
   sys.setdefaultencoding(encoding)
 
+
+plaso_version = plaso.__version__
+
+# Command bdist_msi does not support the library version, neither a date
+# as a version but if we suffix it with .1 everything is fine.
+if 'bdist_msi' in sys.argv:
+  plaso_version += '.1'
+
 # Unicode in the description will break python-setuptools, hence
 # "Plaso Langar Að Safna Öllu" was removed.
 plaso_description = 'Super timeline all the things'
+
 plaso_long_description = (
-    'Log2Timeline is a framework to create super timelines. Its purpose '
-    'is to extract timestamps from various files found on typical computer '
-    'systems and aggregate them. Plaso is the Python rewrite of log2timeline.')
+    'Plaso (log2timeline) is a framework to create super timelines. Its '
+    'purpose is to extract timestamps from various files found on typical '
+    'computer systems and aggregate them.')
 
 setup(
     name='plaso',
-    version=plaso.GetVersion(),
+    version=plaso_version,
     description=plaso_description,
     long_description=plaso_long_description,
     license='Apache License, Version 2.0',
-    url='https://sites.google.com/a/kiddaland.net/plaso',
+    url='https://github.com/log2timeline/plaso',
     maintainer='Log2Timeline maintainers',
     maintainer_email='log2timeline-maintainers@googlegroups.com',
     scripts=GetScripts(),

@@ -1,10 +1,12 @@
 ## plaso (Plaso Langar Að Safna Öllu)
+
 *super timeline all the things*
 
 In short, plaso is a Python-based backend engine for the tool 
 [log2timeline](http://plaso.kiddaland.net "Plaso home of the super timeline").
 
 ### A longer version
+
 log2timeline is a tool designed to extract timestamps from various files found 
 on a typical computer system(s) and aggregate them.
 
@@ -26,13 +28,14 @@ And is moving to support:
 * allowing more targeted approach to the collection/parsing.
 
 ### Project status
+
 [Travis-CI](https://travis-ci.org/) | [AppVeyor](https://ci.appveyor.com) | [Coveralls](https://coveralls.io/)
 --- | --- | --- 
 [![Build Status](https://travis-ci.org/log2timeline/plaso.svg?branch=master)](https://travis-ci.org/log2timeline/plaso) | [![Build status](https://ci.appveyor.com/api/projects/status/g3x5ylegjjo61p4m?svg=true)](https://ci.appveyor.com/project/joachimmetz/plaso) | [![Coverage Status](https://img.shields.io/coveralls/log2timeline/plaso.svg)](https://coveralls.io/r/log2timeline/plaso?branch=master)
 
 ### Also see
 
-* [log2timeline](http://plaso.kiddaland.net/usage/log2timeline/ "Usage for log2timeline")
-* [Project documentation](http://plaso.kiddaland.net/ "Tool's main documentation site")
-* [Downloads](https://googledrive.com/host/0B30H7z4S52FleW5vUHBnblJfcjg/ "Download the latest version")
+* [Homepage](https://github.com/log2timeline/plaso)
+* [Downloads](https://github.com/log2timeline/plaso/releases)
+* [Documentation](https://github.com/log2timeline/plaso/wiki)
 

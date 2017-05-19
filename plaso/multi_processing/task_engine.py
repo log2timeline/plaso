@@ -747,7 +747,15 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
 
     for _ in range(number_of_worker_processes):
       extraction_process = self._StartWorkerProcess(storage_writer)
-      self._StartMonitoringProcess(extraction_process.pid)
+
+      try:
+        self._StartMonitoringProcess(extraction_process.pid)
+      except (IOError, KeyError) as exception:
+        logging.error((
+            u'Unable to monitor extraction worker process: {0:s} '
+            u'(PID: {1:d}) with error: {2:s}').format(
+                extraction_process.name, extraction_process.pid,
+                exception))
 
     self._StartStatusUpdateThread()
 

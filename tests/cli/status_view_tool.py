@@ -39,6 +39,7 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
 
     status_view_tool = TestStatusViewTool(
         input_reader=input_reader, output_writer=output_writer)
+    status_view_tool.NAME = u'test'
 
     status_view_tool._PrintStatusHeader()
 
@@ -51,8 +52,6 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
 
     string = output_writer.ReadOutput()
 
-    plaso_version = plaso.GetVersion()
-
     table_header = (
         b'Identifier\tPID\tStatus\t\tMemory\t\tSources\t\tEvents\t\tFile')
     if not sys.platform.startswith(u'win'):
@@ -62,7 +61,7 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
         b'Source path\t: /test/source/path',
         b'Source type\t: TESTSOURCE',
         b'',
-        b'plaso -  version {0:s}'.format(plaso_version),
+        b'plaso - test version {0:s}'.format(plaso.__version__),
         b'',
         b'Source path\t: /test/source/path',
         b'Source type\t: TESTSOURCE',
@@ -82,7 +81,7 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
     string = output_writer.ReadOutput()
 
     expected_lines = [
-        b'plaso -  version {0:s}'.format(plaso_version),
+        b'plaso - test version {0:s}'.format(plaso.__version__),
         b'',
         b'Source path\t: /test/source/path',
         b'Source type\t: TESTSOURCE',
@@ -102,6 +101,7 @@ class StatusViewToolTest(test_lib.CLIToolTestCase):
 
     status_view_tool = TestStatusViewTool(
         input_reader=input_reader, output_writer=output_writer)
+    status_view_tool.NAME = u'test'
 
     status_view_tool._PrintStatusHeader()
 

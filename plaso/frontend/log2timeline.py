@@ -92,7 +92,7 @@ class Log2TimelineFrontend(extraction_frontend.ExtractionFrontend):
     return_dict = {}
 
     return_dict[u'Versions'] = [
-        (u'plaso engine', plaso.GetVersion()),
+        (u'plaso engine', plaso.__version__),
         (u'python', sys.version)]
 
     return_dict[u'Hashers'] = self.GetHashersInformation()
