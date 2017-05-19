@@ -309,8 +309,8 @@ class ProcessingStatus(object):
 
   Attributes:
     aborted (bool): True if processing was aborted.
-    error_path_specs (list[str]): path specification strings that caused
-        critical errors during processing.
+    error_path_specs (list[dfvfs.PathSpec]): path specifications that
+        caused critical errors during processing.
     foreman_status (ProcessingStatus): foreman processing status.
   """
 

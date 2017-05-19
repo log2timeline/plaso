@@ -11,6 +11,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.resolver import context
 
 from plaso.containers import event_sources
+from plaso.containers import errors as error_containers
 from plaso.engine import extractors
 from plaso.engine import plaso_queue
 from plaso.engine import profiler
@@ -170,7 +171,7 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
     if not self._storage_merge_reader_on_hold:
       task = self._task_manager.GetTaskPendingMerge(self._merge_task)
 
-    # Limit the number of attributes containers from a single task-based
+    # Limit the number of attribute containers from a single task-based
     # storage file that are merged per loop to keep tasks flowing.
     if task or self._storage_merge_reader:
       self._status = definitions.PROCESSING_STATUS_MERGING
@@ -413,6 +414,10 @@ class TaskMultiProcessEngine(engine.MultiProcessEngine):
           self._status_update_callback(self._processing_status)
 
     for task in self._task_manager.GetAbandonedTasks():
+      error = error_containers.ExtractionError(
+          message=u'Worker failed to process pathspec',
+          path_spec=task.path_spec)
+      self._storage_writer.AddError(error)
       self._processing_status.error_path_specs.append(task.path_spec)
 
     self._status = definitions.PROCESSING_STATUS_IDLE
