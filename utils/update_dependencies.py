@@ -475,7 +475,7 @@ class TravisBeforeInstallScriptWriter(DependencyFileWriter):
       u'# Exit on error.',
       u'set -e;',
       u'',
-      u'if test `uname -s` = "Darwin";',
+      u'if test ${TRAVIS_OS_NAME} = "osx";',
       u'then',
       u'\tgit clone https://github.com/log2timeline/l2tdevtools.git;',
       u'',
@@ -486,15 +486,17 @@ class TravisBeforeInstallScriptWriter(DependencyFileWriter):
        u'--download-directory=dependencies ${L2TBINARIES_DEPENDENCIES} '
        u'${L2TBINARIES_TEST_DEPENDENCIES};'),
       u'',
-      u'elif test `uname -s` = "Linux";',
+      u'elif test ${TRAVIS_OS_NAME} = "linux";',
       u'then',
       u'\tsudo rm -f /etc/apt/sources.list.d/travis_ci_zeromq3-source.list;',
       u'',
       u'\tsudo add-apt-repository ppa:gift/dev -y;',
       u'\tsudo apt-get update -q;',
+      u'\t# Only install the Python 2 dependencies.',
+      (u'\t# Also see: https://docs.travis-ci.com/user/languages/python/'
+       u'#Travis-CI-Uses-Isolated-virtualenvs'),
       (u'\tsudo apt-get install -y ${COVERALL_DEPENDENCIES} '
-       u'${PYTHON2_DEPENDENCIES} ${PYTHON2_TEST_DEPENDENCIES} '
-       u'${PYTHON3_DEPENDENCIES} ${PYTHON3_TEST_DEPENDENCIES};'),
+       u'${PYTHON2_DEPENDENCIES} ${PYTHON2_TEST_DEPENDENCIES};'),
       u'fi',
       u'']
 
@@ -520,37 +522,6 @@ class TravisBeforeInstallScriptWriter(DependencyFileWriter):
 
     file_content.append(u'')
     file_content.append(u'PYTHON2_TEST_DEPENDENCIES="python-mock";')
-
-    file_content.append(u'')
-
-    dependencies = self._dependency_helper.GetDPKGDepends(exclude_version=True)
-    if u'python-binplist' in dependencies:
-      dependencies.remove(u'python-binplist')
-
-    if u'python-hachoir-core' in dependencies:
-      dependencies.remove(u'python-hachoir-core')
-
-    if u'python-hachoir-metadata' in dependencies:
-      dependencies.remove(u'python-hachoir-metadata')
-
-    if u'python-hachoir-parser' in dependencies:
-      dependencies.remove(u'python-hachoir-parser')
-
-    if u'python-lzma' in dependencies:
-      dependencies.remove(u'python-lzma')
-
-    if u'python-pefile' in dependencies:
-      dependencies.remove(u'python-pefile')
-
-    if u'python-pysqlite' in dependencies:
-      dependencies.remove(u'python-pysqlite')
-
-    dependencies = u' '.join(dependencies)
-    dependencies = dependencies.replace(u'python', u'python3')
-    file_content.append(u'PYTHON3_DEPENDENCIES="{0:s}";'.format(dependencies))
-
-    file_content.append(u'')
-    file_content.append(u'PYTHON3_TEST_DEPENDENCIES="python3-mock";')
 
     file_content.extend(self._FILE_FOOTER)
 
