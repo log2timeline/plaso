@@ -405,7 +405,7 @@ class SQLiteStorageFile(interface.BaseFileStorage):
 
 
 class SQLiteStorageMergeReader(interface.StorageMergeReader):
-  """Class that implements a SQLite-based storage file reader for merging."""
+  """SQLite-based storage file reader for merging."""
 
   _CONTAINER_TYPES = (
       u'event_source', u'event', u'extraction_error', u'analysis_report',
@@ -510,13 +510,13 @@ class SQLiteStorageMergeReader(interface.StorageMergeReader):
 
 
 class SQLiteStorageFileWriter(interface.FileStorageWriter):
-  """Class that implements the SQLite-based storage file writer."""
+  """SQLite-based storage file writer."""
 
   def _CreateStorageFile(self):
     """Creates a storage file.
 
     Returns:
-      BaseFileStorage: storage file.
+      SQLiteStorageFile: storage file.
     """
     return SQLiteStorageFile(storage_type=self._storage_type)
 
@@ -527,7 +527,7 @@ class SQLiteStorageFileWriter(interface.FileStorageWriter):
       path (str): path to the task storage file that should be merged.
 
     Returns:
-      StorageMergeReader: storage merge reader.
+      SQLiteStorageMergeReader: storage merge reader.
     """
     return SQLiteStorageMergeReader(self, path)
 
@@ -539,7 +539,7 @@ class SQLiteStorageFileWriter(interface.FileStorageWriter):
       task (Task): task.
 
     Returns:
-      StorageWriter: storage writer.
+      SQLiteStorageFileWriter: storage writer.
     """
     return SQLiteStorageFileWriter(
         self._session, path,

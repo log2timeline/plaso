@@ -6,7 +6,7 @@ from plaso.containers import interface as containers_interface
 
 class SerializedStreamIdentifier(
     containers_interface.AttributeContainerIdentifier):
-  """The serialized stream attribute container identifier.
+  """Serialized stream attribute container identifier.
 
   The identifier is used to uniquely identify attribute containers. Where
   for example an attribute container is stored as a JSON serialized data in
@@ -39,7 +39,7 @@ class SerializedStreamIdentifier(
 
 
 class SQLTableIdentifier(containers_interface.AttributeContainerIdentifier):
-  """The SQL table attribute container identifier.
+  """SQL table attribute container identifier.
 
   The identifier is used to uniquely identify attribute containers. Where
   for example an attribute container is stored as a JSON serialized data in
