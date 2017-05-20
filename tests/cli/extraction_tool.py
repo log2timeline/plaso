@@ -7,7 +7,6 @@ import unittest
 
 from plaso.cli import extraction_tool
 
-from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
 
 
