@@ -264,7 +264,10 @@ class PsortToolTest(test_lib.CLIToolTestCase):
       u'                        to consume. [defaults to 2 GiB]',
       u''])
 
+  # TODO: add test for _CheckStorageFile.
+  # TODO: add test for _CreateOutputModule.
   # TODO: add test for _FormatStatusTableRow.
+  # TODO: add test for _GetAnalysisPlugins.
   # TODO: add test for _ParseAnalysisPluginOptions.
   # TODO: add test for _ParseProcessingOptions.
   # TODO: add test for _ParseFilterOptions.
@@ -417,8 +420,9 @@ class PsortToolTest(test_lib.CLIToolTestCase):
 
     # pylint: disable=protected-access
     lines = frozenset(lines)
-    disabled_outputs = list(test_tool._front_end.GetDisabledOutputClasses())
-    enabled_outputs = list(test_tool._front_end.GetOutputClasses())
+    disabled_outputs = list(
+        output_manager.OutputManager.GetDisabledOutputClasses())
+    enabled_outputs = list(output_manager.OutputManager.GetOutputClasses())
 
     expected_number_of_tables = 0
     if disabled_outputs:

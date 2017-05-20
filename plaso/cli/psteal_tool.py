@@ -5,7 +5,11 @@ import argparse
 import collections
 import logging
 import os
+import sys
 import textwrap
+
+from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.resolver import context as dfvfs_context
 
 # The following import makes sure the filters are registered.
 from plaso import filters  # pylint: disable=unused-import
@@ -18,11 +22,18 @@ from plaso.cli import status_view
 from plaso.cli import tools as cli_tools
 from plaso.cli import views as cli_views
 from plaso.cli.helpers import manager as helpers_manager
-from plaso.frontend import extraction_frontend
-from plaso.frontend import psort
 from plaso.engine import configurations
-from plaso.output import interface as output_interface
+from plaso.engine import engine
+from plaso.engine import knowledge_base
+from plaso.engine import single_process as single_process_engine
+from plaso.formatters import mediator as formatters_mediator
+from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
+from plaso.multi_processing import psort
+from plaso.multi_processing import task_engine as multi_process_engine
+from plaso.output import interface as output_interface
+from plaso.output import manager as output_manager
+from plaso.output import mediator as output_mediator
 from plaso.storage import zip_file as storage_zip_file
 
 
@@ -66,6 +77,18 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
       u'And that is how you build a timeline using psteal...',
       u'']))
 
+  # The window status-view mode has an annoying flicker on Windows,
+  # hence we default to linear status-view mode instead.
+  if sys.platform.startswith(u'win'):
+    _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_LINEAR
+  else:
+    _DEFAULT_STATUS_VIEW_MODE = status_view.StatusView.MODE_WINDOW
+
+  _SOURCE_TYPES_TO_PREPROCESS = frozenset([
+      dfvfs_definitions.SOURCE_TYPE_DIRECTORY,
+      dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
+      dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE])
+
   def __init__(self, input_reader=None, output_writer=None):
     """Initializes the CLI tool object.
 
@@ -77,27 +100,27 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     """
     super(PstealTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
-    self._analysis_front_end = psort.PsortFrontend()
     self._command_line_arguments = None
     self._deduplicate_events = True
     self._enable_sigsegv_handler = False
-    self._extraction_front_end = extraction_frontend.ExtractionFrontend()
     self._force_preprocessing = False
     self._hasher_names_string = None
+    self._knowledge_base = knowledge_base.KnowledgeBase()
     self._number_of_analysis_reports = 0
     self._number_of_extraction_workers = 0
-    self._options = None
     self._output_format = u'dynamic'
     self._output_filename = None
     self._output_module = None
     self._parser_filter_expression = None
+    self._preferred_language = u'en-US'
     self._preferred_year = None
+    self._resolver_context = dfvfs_context.Context()
     self._single_process_mode = False
-    self._source_type = None
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
-    self._status_view_mode = status_view.StatusView.MODE_WINDOW
+    self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
     self._time_slice = None
     self._use_time_slicer = False
+    self._use_zeromq = True
     self._yara_rules_string = None
 
   def _CheckStorageFile(self, storage_file_path):
@@ -127,33 +150,6 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
       raise errors.BadConfigOption(
           u'No write access to storage file: {0:s}'.format(storage_file_path))
 
-  def _CreateOutputModule(self):
-    """Creates a default output module
-
-    Raises:
-      BadConfigOption: when the output_filename already exists or hasn't been
-          set.
-    """
-    self._output_module = self._analysis_front_end.CreateOutputModule(
-        self._output_format, preferred_encoding=self.preferred_encoding,
-        timezone=self._preferred_time_zone)
-
-    if isinstance(self._output_module, output_interface.LinearOutputModule):
-      if not self._output_filename:
-        raise errors.BadConfigOption(
-            u'Output format: {0:s} requires an output file.'.format(
-                self._output_format))
-
-      if self._output_filename and os.path.exists(self._output_filename):
-        raise errors.BadConfigOption(
-            u'Output file already exists: {0:s}. Aborting.'.format(
-                self._output_filename))
-
-      output_file_object = open(self._output_filename, u'wb')
-      output_writer = cli_tools.FileObjectOutputWriter(output_file_object)
-
-      self._output_module.SetOutputWriter(output_writer)
-
   def _CreateProcessingConfiguration(self):
     """Creates a processing configuration.
 
@@ -172,45 +168,78 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
 
     return configuration
 
-  def _PrintProcessingSummary(self, processing_status):
-    """Prints a summary of the processing.
+  def _PreprocessSources(self, extraction_engine):
+    """Preprocesses the sources.
 
     Args:
-      processing_status (ProcessingStatus): processing status.
+      extraction_engine (BaseEngine): extraction engine to preprocess
+          the sources.
     """
-    if not processing_status:
-      self._output_writer.Write(
-          u'WARNING: missing processing status information.\n')
+    logging.debug(u'Starting preprocessing.')
 
-    elif not processing_status.aborted:
-      if processing_status.error_path_specs:
-        self._output_writer.Write(u'Processing completed with errors.\n')
-      else:
-        self._output_writer.Write(u'Processing completed.\n')
+    try:
+      extraction_engine.PreprocessSources(
+          self._source_path_specs, resolver_context=self._resolver_context)
 
-      number_of_errors = (
-          processing_status.foreman_status.number_of_produced_errors)
-      if number_of_errors:
-        output_text = u'\n'.join([
-            u'',
-            (u'Number of errors encountered while extracting events: '
-             u'{0:d}.').format(number_of_errors),
-            u'',
-            u'Use pinfo to inspect errors in more detail.',
-            u''])
-        self._output_writer.Write(output_text)
+    except IOError as exception:
+      logging.error(u'Unable to preprocess with error: {0:s}'.format(exception))
 
-      if processing_status.error_path_specs:
-        output_text = u'\n'.join([
-            u'',
-            u'Path specifications that could not be processed:',
-            u''])
-        self._output_writer.Write(output_text)
-        for path_spec in processing_status.error_path_specs:
-          self._output_writer.Write(path_spec.comparable)
-          self._output_writer.Write(u'\n')
+    logging.debug(u'Preprocessing done.')
 
-    self._output_writer.Write(u'\n')
+  def _ParseOutputModuleOptions(self, options):
+    """Parses the output module options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    preferred_time_zone = self._preferred_time_zone or u'UTC'
+
+    formatter_mediator = formatters_mediator.FormatterMediator(
+        data_location=self._data_location)
+
+    try:
+      formatter_mediator.SetPreferredLanguageIdentifier(
+          self._preferred_language)
+    except (KeyError, TypeError) as exception:
+      raise RuntimeError(exception)
+
+    output_mediator_object = output_mediator.OutputMediator(
+        self._knowledge_base, formatter_mediator,
+        preferred_encoding=self.preferred_encoding)
+    output_mediator_object.SetTimezone(preferred_time_zone)
+
+    try:
+      self._output_module = output_manager.OutputManager.NewOutputModule(
+          self._output_format, output_mediator_object)
+
+    except IOError as exception:
+      raise RuntimeError(
+          u'Unable to create output module with error: {0:s}'.format(
+              exception))
+
+    if not self._output_module:
+      raise RuntimeError(u'Missing output module.')
+
+    if isinstance(self._output_module, output_interface.LinearOutputModule):
+      if not self._output_filename:
+        raise errors.BadConfigOption((
+            u'Output format: {0:s} requires an output file').format(
+                self._output_format))
+
+      if os.path.exists(self._output_filename):
+        raise errors.BadConfigOption(
+            u'Output file already exists: {0:s}.'.format(self._output_filename))
+
+      output_file_object = open(self._output_filename, u'wb')
+      output_writer = cli_tools.FileObjectOutputWriter(output_file_object)
+
+      self._output_module.SetOutputWriter(output_writer)
+
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self._output_module)
 
   def AnalyzeEvents(self):
     """Analyzes events from a plaso storage file and generate a report.
@@ -219,31 +248,36 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
       BadConfigOption: when a configuration parameter fails validation.
       RuntimeError: if a non-recoverable situation is encountered.
     """
-    helpers_manager.ArgumentHelperManager.ParseOptions(
-        self._options, self._output_module)
-
-    # No analysis plugin
-
-    session = self._analysis_front_end.CreateSession(
+    session = engine.BaseEngine.CreateSession(
         command_line_arguments=self._command_line_arguments,
         preferred_encoding=self.preferred_encoding)
 
-    storage_reader = self._analysis_front_end.CreateStorageReader(
+    storage_reader = storage_zip_file.ZIPStorageFileReader(
         self._storage_file_path)
     self._number_of_analysis_reports = (
         storage_reader.GetNumberOfAnalysisReports())
     storage_reader.Close()
 
-    configuration = configurations.ProcessingConfiguration()
-
     counter = collections.Counter()
     if self._output_format != u'null':
-      storage_reader = self._analysis_front_end.CreateStorageReader(
+      self._status_view.SetMode(self._status_view_mode)
+      self._status_view.SetStorageFileInformation(self._storage_file_path)
+
+      status_update_callback = (
+          self._status_view.GetAnalysisStatusUpdateCallback())
+
+      storage_reader = storage_zip_file.ZIPStorageFileReader(
           self._storage_file_path)
 
-      events_counter = self._analysis_front_end.ExportEvents(
-          storage_reader, self._output_module, configuration,
+      # TODO: add single processing support.
+      analysis_engine = psort.PsortMultiProcessEngine(
+          use_zeromq=self._use_zeromq)
+
+      # TODO: pass configuration object.
+      events_counter = analysis_engine.ExportEvents(
+          self._knowledge_base, storage_reader, self._output_module,
           deduplicate_events=self._deduplicate_events,
+          status_update_callback=status_update_callback,
           time_slice=self._time_slice, use_time_slicer=self._use_time_slicer)
 
       counter += events_counter
@@ -264,7 +298,7 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
       table_view.AddRow([element, count])
     table_view.Write(self._output_writer)
 
-    storage_reader = self._analysis_front_end.CreateStorageReader(
+    storage_reader = storage_zip_file.ZIPStorageFileReader(
         self._storage_file_path)
     self._status_view.PrintAnalysisReportsDetails(
         storage_reader, self._number_of_analysis_reports)
@@ -287,20 +321,20 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     self._CheckStorageFile(self._storage_file_path)
 
     scan_context = self.ScanSource()
-    self._source_type = scan_context.source_type
+    source_type = scan_context.source_type
 
     self._status_view.SetMode(self._status_view_mode)
     self._status_view.SetSourceInformation(
-        self._source_path, self._source_type, filter_file=self._filter_file)
+        self._source_path, source_type, filter_file=self._filter_file)
+
+    status_update_callback = (
+        self._status_view.GetExtractionStatusUpdateCallback())
 
     self._output_writer.Write(u'\n')
     self._status_view.PrintExtractionStatusHeader()
     self._output_writer.Write(u'Processing started.\n')
 
-    status_update_callback = (
-        self._status_view.GetExtractionStatusUpdateCallback())
-
-    session = self._extraction_front_end.CreateSession(
+    session = engine.BaseEngine.CreateSession(
         command_line_arguments=self._command_line_arguments,
         filter_file=self._filter_file,
         preferred_encoding=self.preferred_encoding,
@@ -312,15 +346,84 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
 
     configuration = self._CreateProcessingConfiguration()
 
-    processing_status = self._extraction_front_end.ProcessSources(
-        session, storage_writer, self._source_path_specs, self._source_type,
-        configuration, enable_sigsegv_handler=self._enable_sigsegv_handler,
-        force_preprocessing=self._force_preprocessing,
-        number_of_extraction_workers=self._number_of_extraction_workers,
-        single_process_mode=self._single_process_mode,
-        status_update_callback=status_update_callback)
+    single_process_mode = self._single_process_mode
+    if source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
+      # No need to multi process a single file source.
+      single_process_mode = True
 
-    self._PrintProcessingSummary(processing_status)
+    if single_process_mode:
+      extraction_engine = single_process_engine.SingleProcessEngine()
+    else:
+      extraction_engine = multi_process_engine.TaskMultiProcessEngine(
+          use_zeromq=self._use_zeromq)
+
+    # If the source is a directory or a storage media image
+    # run pre-processing.
+    if (self._force_preprocessing or
+        source_type in self._SOURCE_TYPES_TO_PREPROCESS):
+      self._PreprocessSources(extraction_engine)
+
+    if not configuration.parser_filter_expression:
+      operating_system = extraction_engine.knowledge_base.GetValue(
+          u'operating_system')
+      operating_system_product = extraction_engine.knowledge_base.GetValue(
+          u'operating_system_product')
+      operating_system_version = extraction_engine.knowledge_base.GetValue(
+          u'operating_system_version')
+      parser_filter_expression = (
+          self._parsers_manager.GetPresetForOperatingSystem(
+              operating_system, operating_system_product,
+              operating_system_version))
+
+      if parser_filter_expression:
+        logging.info(u'Parser filter expression changed to: {0:s}'.format(
+            parser_filter_expression))
+
+      configuration.parser_filter_expression = parser_filter_expression
+      session.enabled_parser_names = list(
+          self._parsers_manager.GetParserAndPluginNames(
+              parser_filter_expression=configuration.parser_filter_expression))
+      session.parser_filter_expression = configuration.parser_filter_expression
+
+    if session.preferred_time_zone:
+      try:
+        extraction_engine.knowledge_base.SetTimeZone(
+            session.preferred_time_zone)
+      except ValueError:
+        logging.warning(
+            u'Unsupported time zone: {0:s}, defaulting to {1:s}'.format(
+                session.preferred_time_zone,
+                extraction_engine.knowledge_base.time_zone.zone))
+
+    filter_find_specs = None
+    if configuration.filter_file:
+      environment_variables = (
+          extraction_engine.knowledge_base.GetEnvironmentVariables())
+      filter_find_specs = frontend_utils.BuildFindSpecsFromFile(
+          configuration.filter_file,
+          environment_variables=environment_variables)
+
+    processing_status = None
+    if single_process_mode:
+      logging.debug(u'Starting extraction in single process mode.')
+
+      processing_status = extraction_engine.ProcessSources(
+          self._source_path_specs, storage_writer, self._resolver_context,
+          configuration, filter_find_specs=filter_find_specs,
+          status_update_callback=status_update_callback)
+
+    else:
+      logging.debug(u'Starting extraction in multi process mode.')
+
+      processing_status = extraction_engine.ProcessSources(
+          session.identifier, self._source_path_specs, storage_writer,
+          configuration,
+          enable_sigsegv_handler=self._enable_sigsegv_handler,
+          filter_find_specs=filter_find_specs,
+          number_of_worker_processes=self._number_of_extraction_workers,
+          status_update_callback=status_update_callback)
+
+    self._status_view.PrintExtractionSummary(processing_status)
 
   def ParseArguments(self):
     """Parses the command line arguments.
@@ -385,12 +488,10 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     # tests consistents with the log2timeline/psort ones.
     self._single_process_mode = getattr(options, u'single_process', False)
     self._status_view_mode = getattr(
-        options, u'status_view_mode', status_view.StatusView.MODE_WINDOW)
+        options, u'status_view_mode', self._DEFAULT_STATUS_VIEW_MODE)
 
     self._source_path = getattr(options, u'source', None)
     self._output_filename = getattr(options, u'analysis_output_file', None)
     self._ParseStorageFileOptions(options)
 
-    self._options = options
-
-    self._CreateOutputModule()
+    self._ParseOutputModuleOptions(options)

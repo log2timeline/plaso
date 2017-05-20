@@ -46,7 +46,62 @@ class StatusView(object):
     self._source_type = None
     self._stdout_output_writer = isinstance(
         output_writer, cli_tools.StdoutOutputWriter)
+    self._storage_file_path = None
     self._tool_name = tool_name
+
+  def _FormatAnalysisStatusTableRow(self, process_status):
+    """Formats an analysis status table row.
+
+    Args:
+      process_status (ProcessStatus): processing status.
+    """
+    # This check makes sure the columns are tab aligned.
+    identifier = process_status.identifier
+    if len(identifier) < 8:
+      identifier = u'{0:s}\t\t'.format(identifier)
+    elif len(identifier) < 16:
+      identifier = u'{0:s}\t'.format(identifier)
+
+    status = process_status.status
+    if len(status) < 8:
+      status = u'{0:s}\t'.format(status)
+
+    events = u''
+    if (process_status.number_of_consumed_events is not None and
+        process_status.number_of_consumed_events_delta is not None):
+      events = u'{0:d} ({1:d})'.format(
+          process_status.number_of_consumed_events,
+          process_status.number_of_consumed_events_delta)
+
+    # This check makes sure the columns are tab aligned.
+    if len(events) < 8:
+      events = u'{0:s}\t'.format(events)
+
+    event_tags = u''
+    if (process_status.number_of_produced_event_tags is not None and
+        process_status.number_of_produced_event_tags_delta is not None):
+      event_tags = u'{0:d} ({1:d})'.format(
+          process_status.number_of_produced_event_tags,
+          process_status.number_of_produced_event_tags_delta)
+
+    # This check makes sure the columns are tab aligned.
+    if len(event_tags) < 8:
+      event_tags = u'{0:s}\t'.format(event_tags)
+
+    reports = u''
+    if (process_status.number_of_produced_reports is not None and
+        process_status.number_of_produced_reports_delta is not None):
+      reports = u'{0:d} ({1:d})'.format(
+          process_status.number_of_produced_reports,
+          process_status.number_of_produced_reports_delta)
+
+    # This check makes sure the columns are tab aligned.
+    if len(reports) < 8:
+      reports = u'{0:s}\t'.format(reports)
+
+    # TODO: shorten display name to fit in 80 chars and show the filename.
+    return u'{0:s}\t{1:d}\t{2:s}\t{3:s}\t{4:s}\t{5:s}'.format(
+        identifier, process_status.pid, status, events, event_tags, reports)
 
   def _FormatExtractionStatusTableRow(self, process_status):
     """Formats an extraction status table row.
@@ -115,6 +170,74 @@ class StatusView(object):
 
     return u'{0:d} B'.format(size)
 
+  def _PrintAnalysisStatusHeader(self):
+    """Prints the analysis status header."""
+    self._output_writer.Write(
+        u'Storage file\t: {0:s}\n'.format(self._storage_file_path))
+
+    self._output_writer.Write(u'\n')
+
+  def _PrintAnalysisStatusUpdateLinear(self, processing_status):
+    """Prints an analysis status update in linear mode.
+
+    Args:
+      processing_status (ProcessingStatus): processing status.
+    """
+    for worker_status in processing_status.workers_status:
+      status_line = (
+          u'{0:s} (PID: {1:d}) - events consumed: {2:d} - running: '
+          u'{3!s}\n').format(
+              worker_status.identifier, worker_status.pid,
+              worker_status.number_of_consumed_events,
+              worker_status.status not in definitions.PROCESSING_ERROR_STATUS)
+      self._output_writer.Write(status_line)
+
+  def _PrintAnalysisStatusUpdateWindow(self, processing_status):
+    """Prints an analysis status update in window mode.
+
+    Args:
+      processing_status (ProcessingStatus): processing status.
+    """
+    if self._stdout_output_writer:
+      self._ClearScreen()
+
+    output_text = u'plaso - {0:s} version {1:s}\n\n'.format(
+        self._tool_name, plaso.__version__)
+    self._output_writer.Write(output_text)
+
+    self._PrintAnalysisStatusHeader()
+
+    # TODO: for win32console get current color and set intensity,
+    # write the header separately then reset intensity.
+    status_header = u'Identifier\t\tPID\tStatus\t\tEvents\t\tTags\t\tReports'
+    if not win32console:
+      status_header = u'\x1b[1m{0:s}\x1b[0m'.format(status_header)
+
+    status_table = [status_header]
+
+    status_row = self._FormatAnalysisStatusTableRow(
+        processing_status.foreman_status)
+    status_table.append(status_row)
+
+    for worker_status in processing_status.workers_status:
+      status_row = self._FormatAnalysisStatusTableRow(worker_status)
+      status_table.append(status_row)
+
+    status_table.append(u'')
+    self._output_writer.Write(u'\n'.join(status_table))
+    self._output_writer.Write(u'\n')
+
+    if processing_status.aborted:
+      self._output_writer.Write(
+          u'Processing aborted - waiting for clean up.\n\n')
+
+    # TODO: remove update flicker. For win32console we could set the cursor
+    # top left, write the table, clean the remainder of the screen buffer
+    # and set the cursor at the end of the table.
+    if self._stdout_output_writer:
+      # We need to explicitly flush stdout to prevent partial status updates.
+      sys.stdout.flush()
+
   def _PrintExtractionStatusUpdateLinear(self, processing_status):
     """Prints an extraction status update in linear mode.
 
@@ -178,6 +301,17 @@ class StatusView(object):
       # We need to explicitly flush stdout to prevent partial status updates.
       sys.stdout.flush()
 
+  def GetAnalysisStatusUpdateCallback(self):
+    """Retrieves the analysis status update callback function.
+
+    Returns:
+      function: status update callback function or None.
+    """
+    if self._mode == self.MODE_LINEAR:
+      return self._PrintAnalysisStatusUpdateLinear
+    elif self._mode == self.MODE_WINDOW:
+      return self._PrintAnalysisStatusUpdateWindow
+
   def GetExtractionStatusUpdateCallback(self):
     """Retrieves the extraction status update callback function.
 
@@ -222,6 +356,46 @@ class StatusView(object):
 
     self._output_writer.Write(u'\n')
 
+  def PrintExtractionSummary(self, processing_status):
+    """Prints a summary of the extraction.
+
+    Args:
+      processing_status (ProcessingStatus): processing status.
+    """
+    if not processing_status:
+      self._output_writer.Write(
+          u'WARNING: missing processing status information.\n')
+
+    elif not processing_status.aborted:
+      if processing_status.error_path_specs:
+        self._output_writer.Write(u'Processing completed with errors.\n')
+      else:
+        self._output_writer.Write(u'Processing completed.\n')
+
+      number_of_errors = (
+          processing_status.foreman_status.number_of_produced_errors)
+      if number_of_errors:
+        output_text = u'\n'.join([
+            u'',
+            (u'Number of errors encountered while extracting events: '
+             u'{0:d}.').format(number_of_errors),
+            u'',
+            u'Use pinfo to inspect errors in more detail.',
+            u''])
+        self._output_writer.Write(output_text)
+
+      if processing_status.error_path_specs:
+        output_text = u'\n'.join([
+            u'',
+            u'Path specifications that could not be processed:',
+            u''])
+        self._output_writer.Write(output_text)
+        for path_spec in processing_status.error_path_specs:
+          self._output_writer.Write(path_spec.comparable)
+          self._output_writer.Write(u'\n')
+
+    self._output_writer.Write(u'\n')
+
   def SetMode(self, mode):
     """Sets the mode.
 
@@ -241,3 +415,11 @@ class StatusView(object):
     self._filter_file = filter_file
     self._source_path = source_path
     self._source_type = self._SOURCE_TYPES.get(source_type, u'UNKNOWN')
+
+  def SetStorageFileInformation(self, storage_file_path):
+    """Sets the storage file information.
+
+    Args:
+      storage_file_path (str): path to the storage file.
+    """
+    self._storage_file_path = storage_file_path
