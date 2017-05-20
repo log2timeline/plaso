@@ -4,7 +4,7 @@
 
 COVERALL_DEPENDENCIES="python-coverage python-coveralls python-docopt";
 
-L2TBINARIES_DEPENDENCIES="PyYAML XlsxWriter artifacts bencode binplist construct dateutil dfdatetime dfvfs dfwinreg dpkt efilter hachoir_core hachoir_metadata hachoir_parser libbde libesedb libevt libevtx libewf libfsntfs libfvde libfwnt libfwsi liblnk libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm lzma pefile psutil pycrypto pyparsing pysqlite pytsk3 pytz pyzmq requests six yara-python";
+L2TBINARIES_DEPENDENCIES="PyYAML XlsxWriter artifacts bencode binplist construct dateutil dfdatetime dfvfs dfwinreg dpkt efilter hachoir-core hachoir-metadata hachoir-parser libbde libesedb libevt libevtx libewf libfsntfs libfvde libfwnt libfwsi liblnk libmsiecf libolecf libqcow libregf libscca libsigscan libsmdev libsmraw libvhdi libvmdk libvshadow libvslvm lzma pefile psutil pycrypto pyparsing pysqlite pytsk3 pytz pyzmq requests six yara-python";
 
 L2TBINARIES_TEST_DEPENDENCIES="funcsigs mock pbr";
 
