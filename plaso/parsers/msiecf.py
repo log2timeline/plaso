@@ -7,16 +7,12 @@ from dfdatetime import fat_date_time as dfdatetime_fat_date_time
 from dfdatetime import filetime as dfdatetime_filetime
 from dfdatetime import semantic_time as dfdatetime_semantic_time
 
-from plaso import dependencies
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import eventdata
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
-
-
-dependencies.CheckModuleVersion(u'pymsiecf')
 
 
 class MSIECFLeakEventData(events.EventData):
