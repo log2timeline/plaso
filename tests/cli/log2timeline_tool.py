@@ -41,7 +41,7 @@ class Log2TimelineToolTest(test_lib.CLIToolTestCase):
       u'  --temporary_directory DIRECTORY, --temporary-directory DIRECTORY',
       (u'                        Path to the directory that should be used to '
        u'store'),
-      u'                        temporary files created during extraction.',
+      u'                        temporary files created during processing.',
       u'  --worker-memory-limit SIZE, --worker_memory_limit SIZE',
       (u'                        Maximum amount of memory a worker process is '
        u'allowed'),

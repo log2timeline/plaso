@@ -3,7 +3,6 @@
 
 import argparse
 import logging
-import os
 import sys
 import time
 import textwrap
@@ -217,12 +216,8 @@ class Log2TimelineTool(
 
     self._single_process_mode = getattr(options, u'single_process', False)
 
-    self._temporary_directory = getattr(options, u'temporary_directory', None)
-    if (self._temporary_directory and
-        not os.path.isdir(self._temporary_directory)):
-      raise errors.BadConfigOption(
-          u'No such temporary directory: {0:s}'.format(
-              self._temporary_directory))
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'temporary_directory'])
 
     self._worker_memory_limit = getattr(options, u'worker_memory_limit', None)
     self._number_of_extraction_workers = getattr(options, u'workers', 0)
@@ -269,12 +264,8 @@ class Log2TimelineTool(
         action=u'store_true', default=False, help=(
             u'Indicate that the tool should run in a single process.'))
 
-    argument_group.add_argument(
-        u'--temporary_directory', u'--temporary-directory',
-        dest=u'temporary_directory', type=str, action=u'store',
-        metavar=u'DIRECTORY', help=(
-            u'Path to the directory that should be used to store temporary '
-            u'files created during extraction.'))
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        argument_group, names=[u'temporary_directory'])
 
     argument_group.add_argument(
         u'--worker-memory-limit', u'--worker_memory_limit',

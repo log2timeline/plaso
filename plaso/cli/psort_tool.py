@@ -118,12 +118,8 @@ class PsortTool(
     """
     self._use_zeromq = getattr(options, u'use_zeromq', True)
 
-    self._temporary_directory = getattr(options, u'temporary_directory', None)
-    if (self._temporary_directory and
-        not os.path.isdir(self._temporary_directory)):
-      raise errors.BadConfigOption(
-          u'No such temporary directory: {0:s}'.format(
-              self._temporary_directory))
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'temporary_directory'])
 
     self._worker_memory_limit = getattr(options, u'worker_memory_limit', None)
 
@@ -157,12 +153,8 @@ class PsortTool(
             u'Disable queueing using ZeroMQ. A Multiprocessing queue will be '
             u'used instead.'))
 
-    argument_group.add_argument(
-        u'--temporary_directory', u'--temporary-directory',
-        dest=u'temporary_directory', type=str, action=u'store',
-        metavar=u'DIRECTORY', help=(
-            u'Path to the directory that should be used to store temporary '
-            u'files created during analysis.'))
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        argument_group, names=[u'temporary_directory'])
 
     argument_group.add_argument(
         u'--worker-memory-limit', u'--worker_memory_limit',

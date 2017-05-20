@@ -2,6 +2,7 @@
 """CLI argument helpers."""
 
 from plaso.cli.helpers import analysis_plugins
+from plaso.cli.helpers import artifact_definitions
 from plaso.cli.helpers import data_location
 from plaso.cli.helpers import dynamic_output
 from plaso.cli.helpers import elastic_output
@@ -15,8 +16,10 @@ from plaso.cli.helpers import sqlite_4n6time_output
 from plaso.cli.helpers import status_view
 from plaso.cli.helpers import storage_file
 from plaso.cli.helpers import tagging_analysis
+from plaso.cli.helpers import temporary_directory
 from plaso.cli.helpers import timesketch_output
 from plaso.cli.helpers import viper_analysis
 from plaso.cli.helpers import virustotal_analysis
 from plaso.cli.helpers import windows_services_analysis
 from plaso.cli.helpers import xlsx_output
+from plaso.cli.helpers import yara_rules
