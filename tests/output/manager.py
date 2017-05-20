@@ -105,6 +105,8 @@ class OutputManagerTest(unittest.TestCase):
 
     manager.OutputManager.DeregisterOutput(TestOutput)
 
+  # TODO: add tests for IsLinearOutputModule.
+
   def testNewOutputModule(self):
     """Tests the NewOutputModule function."""
     manager.OutputManager.RegisterOutput(TestOutput)

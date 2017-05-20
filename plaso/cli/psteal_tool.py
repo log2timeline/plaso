@@ -40,7 +40,6 @@ from plaso.storage import zip_file as storage_zip_file
 class PstealTool(
     storage_media_tool.StorageMediaTool,
     tool_options.AnalysisPluginOptions,
-    tool_options.LanguageOptions,
     tool_options.OutputModuleOptions,
     tool_options.StorageFileOptions):
   """Psteal CLI tool.
@@ -54,6 +53,12 @@ class PstealTool(
   Attributes:
     dependencies_check (bool): True if the availability and versions of
         dependencies should be checked.
+    list_analysis_plugins (bool): True if information about the analysis
+        plugins should be shown.
+    list_language_identifiers (bool): True if information about the language
+        identifiers should be shown.
+    list_output_modules (bool): True if information about the output modules
+        should be shown.
   """
 
   NAME = u'psteal'
@@ -103,6 +108,7 @@ class PstealTool(
     """
     super(PstealTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
+    self._analysis_plugins = None
     self._command_line_arguments = None
     self._deduplicate_events = True
     self._enable_sigsegv_handler = False
@@ -113,15 +119,21 @@ class PstealTool(
     self._number_of_extraction_workers = 0
     self._parser_filter_expression = None
     self._parsers_manager = parsers_manager.ParsersManager
+    self._preferred_language = u'en-US'
     self._preferred_year = None
     self._resolver_context = dfvfs_context.Context()
     self._single_process_mode = False
     self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
+    self._storage_file_path = None
     self._time_slice = None
     self._use_time_slicer = False
     self._use_zeromq = True
     self._yara_rules_string = None
+
+    self.list_analysis_plugins = False
+    self.list_language_identifiers = False
+    self.list_output_modules = False
 
   def _CreateProcessingConfiguration(self):
     """Creates a processing configuration.
@@ -456,27 +468,40 @@ class PstealTool(
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     self.AddBasicOptions(argument_parser)
-    self.AddStorageFileOptions(argument_parser)
+
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        argument_parser, names=[u'storage_file'])
 
     extraction_group = argument_parser.add_argument_group(
         u'Extraction Arguments')
 
     self.AddCredentialOptions(extraction_group)
 
+    info_group = argument_parser.add_argument_group(u'Informational Arguments')
+
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        info_group, names=[u'status_view'])
+
     input_group = argument_parser.add_argument_group(u'Input Arguments')
     input_group.add_argument(
         u'--source', dest=u'source', action=u'store',
         type=str, help=u'The source to process')
 
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        input_group, names=[u'data_location'])
+
     output_group = argument_parser.add_argument_group(u'Output Arguments')
 
-    self.AddLanguageOptions(output_group)
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        output_group, names=[u'language'])
+
     self.AddTimeZoneOption(output_group)
 
     output_format_group = argument_parser.add_argument_group(
         u'Output Format Arguments')
 
-    self.AddOutputModuleOptions(output_format_group)
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        output_format_group, names=[u'output_modules'])
 
     try:
       options = argument_parser.parse_args()
@@ -507,15 +532,29 @@ class PstealTool(
       BadConfigOption: if the options are invalid.
     """
     # Check the list options first otherwise required options will raise.
-    self._ParseLanguageOptions(options)
+
+    # The output modules options are dependent on the preferred language
+    # and preferred time zone options.
     self._ParseTimezoneOption(options)
+
+    names = [u'analysis_plugins', u'language', u'output_modules']
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=names)
+
+    if self._output_format == u'list':
+      self.list_output_modules = True
+    if self._preferred_language == u'list':
+      self.list_language_identifiers = True
 
     if (self.list_analysis_plugins or self.list_language_identifiers or
         self.list_output_modules or self.list_timezones):
       return
 
     self._ParseInformationalOptions(options)
-    self._ParseDataLocationOption(options)
+
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'data_location'])
+
     self._ParseLogFileOptions(options)
 
     self._ParseStorageMediaOptions(options)
@@ -523,14 +562,12 @@ class PstealTool(
     # These arguments are parsed from argparse.Namespace, so we can make
     # tests consistents with the log2timeline/psort ones.
     self._single_process_mode = getattr(options, u'single_process', False)
-    self._status_view_mode = getattr(
-        options, u'status_view_mode', self._DEFAULT_STATUS_VIEW_MODE)
 
-    self._ParseStorageFileOptions(options)
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'status_view', u'storage_file'])
+
     if not self._storage_file_path:
       self._storage_file_path = self._GenerateStorageFileName()
 
-    self._ParseOutputModuleOptions(
-        options, self._knowledge_base,
-        preferred_language=self._preferred_language,
-        preferred_time_zone=self._preferred_time_zone)
+    self._analysis_plugins = self._CreateAnalysisPlugins(options)
+    self._output_module = self._CreateOutputModule(options)

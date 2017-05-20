@@ -315,32 +315,6 @@ class StorageMediaTool(tools.CLITool):
 
       self._credentials.append((credential_type, credential_data))
 
-  def _ParseFilterOptions(self, options):
-    """Parses the filter options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    filter_file = self.ParseStringOption(options, u'file_filter')
-    if not filter_file:
-      return
-
-    if self._data_location:
-      filter_file_base = os.path.basename(filter_file)
-      filter_file_check = os.path.join(self._data_location, filter_file_base)
-      if os.path.isfile(filter_file_check):
-        self._filter_file = filter_file_check
-        return
-
-    if not os.path.isfile(filter_file):
-      raise errors.BadConfigOption(
-          u'No such collection filter file: {0:s}.'.format(filter_file))
-
-    self._filter_file = filter_file
-
   def _ParsePartitionsString(self, partitions):
     """Parses the user specified partitions string.
 
@@ -1008,20 +982,6 @@ class StorageMediaTool(tools.CLITool):
             u'encoding (hexadecimal). WARNING credentials passed via command '
             u'line arguments can end up in logs, so use this option with '
             u'care.').format(u', '.join(self._SUPPORTED_CREDENTIAL_TYPES)))
-
-  def AddFilterOptions(self, argument_group):
-    """Adds the filter options to the argument group.
-
-    Args:
-      argument_group (argparse._ArgumentGroup): argparse argument group.
-    """
-    argument_group.add_argument(
-        u'-f', u'--file_filter', u'--file-filter', dest=u'file_filter',
-        action=u'store', type=str, default=None, help=(
-            u'List of files to include for targeted collection of files to '
-            u'parse, one line per file path, setup is /path|file - where each '
-            u'element can contain either a variable set in the preprocessing '
-            u'stage or a regular expression.'))
 
   def AddStorageMediaImageOptions(self, argument_group):
     """Adds the storage media image options to the argument group.

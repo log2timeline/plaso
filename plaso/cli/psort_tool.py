@@ -21,22 +21,31 @@ from plaso.cli import status_view
 from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
+from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.engine import knowledge_base
 from plaso.lib import errors
 from plaso.multi_processing import psort
 from plaso.storage import zip_file as storage_zip_file
+from plaso.winnt import language_ids
 
 
 class PsortTool(
     tools.CLITool,
     tool_options.AnalysisPluginOptions,
-    tool_options.FilterOptions,
-    tool_options.LanguageOptions,
     tool_options.OutputModuleOptions,
     tool_options.StorageFileOptions):
-  """Psort CLI tool."""
+  """Psort CLI tool.
+
+  Attributes:
+    list_analysis_plugins (bool): True if information about the analysis
+        plugins should be shown.
+    list_language_identifiers (bool): True if information about the language
+        identifiers should be shown.
+    list_output_modules (bool): True if information about the output modules
+        should be shown.
+  """
 
   NAME = u'psort'
   DESCRIPTION = (
@@ -61,18 +70,29 @@ class PsortTool(
     """
     super(PsortTool, self).__init__(
         input_reader=input_reader, output_writer=output_writer)
+    self._analysis_plugins = None
     self._analysis_plugins_output_format = None
     self._command_line_arguments = None
     self._deduplicate_events = True
-    self._number_of_analysis_reports = 0
+    self._event_filter_expression = None
+    self._event_filter = None
     self._knowledge_base = knowledge_base.KnowledgeBase()
-    self._status_view = status_view.StatusView(self._output_writer, self.NAME)
+    self._number_of_analysis_reports = 0
+    self._preferred_language = u'en-US'
     self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
+    self._status_view = status_view.StatusView(self._output_writer, self.NAME)
     self._stdout_output_writer = isinstance(
         self._output_writer, tools.StdoutOutputWriter)
+    self._storage_file_path = None
     self._temporary_directory = None
+    self._time_slice = None
+    self._use_time_slicer = False
     self._use_zeromq = True
     self._worker_memory_limit = None
+
+    self.list_analysis_plugins = False
+    self.list_language_identifiers = False
+    self.list_output_modules = False
 
   def _ParseInformationalOptions(self, options):
     """Parses the informational options.
@@ -87,8 +107,8 @@ class PsortTool(
 
     self._quiet_mode = getattr(options, u'quiet', False)
 
-    self._status_view_mode = getattr(
-        options, u'status_view_mode', self._DEFAULT_STATUS_VIEW_MODE)
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'status_view'])
 
   def _ParseProcessingOptions(self, options):
     """Parses the processing options.
@@ -151,6 +171,16 @@ class PsortTool(
             u'Maximum amount of memory a worker process is allowed to consume. '
             u'[defaults to 2 GiB]'))
 
+  def ListLanguageIdentifiers(self):
+    """Lists the language identifiers."""
+    table_view = views.ViewsFactory.GetTableView(
+        self._views_format_type, column_names=[u'Identifier', u'Language'],
+        title=u'Language identifiers')
+    for language_id, value_list in sorted(
+        language_ids.LANGUAGE_IDENTIFIERS.items()):
+      table_view.AddRow([language_id, value_list[1]])
+    table_view.Write(self._output_writer)
+
   def ParseArguments(self):
     """Parses the command line arguments.
 
@@ -165,15 +195,14 @@ class PsortTool(
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     self.AddBasicOptions(argument_parser)
-    self.AddStorageFileOptions(argument_parser)
+
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        argument_parser, names=[u'storage_file'])
 
     analysis_group = argument_parser.add_argument_group(u'Analysis Arguments')
 
-    analysis_group.add_argument(
-        u'--analysis', metavar=u'PLUGIN_LIST', dest=u'analysis_plugins',
-        default=u'', action=u'store', type=str, help=(
-            u'A comma separated list of analysis plugin names to be loaded '
-            u'or "--analysis list" to see a list of available plugins.'))
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        analysis_group, names=[u'analysis_plugins'])
 
     processing_group = argument_parser.add_argument_group(u'Processing')
     self.AddProcessingOptions(processing_group)
@@ -183,19 +212,18 @@ class PsortTool(
     self.AddLogFileOptions(info_group)
     self.AddInformationalOptions(info_group)
 
-    info_group.add_argument(
-        u'--status_view', u'--status-view', dest=u'status_view_mode',
-        choices=[u'linear', u'none', u'window'], action=u'store',
-        metavar=u'TYPE', default=self._DEFAULT_STATUS_VIEW_MODE, help=(
-            u'The processing status view mode: "linear", "none" or "window".'))
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        info_group, names=[u'status_view'])
 
     filter_group = argument_parser.add_argument_group(u'Filter Arguments')
 
-    self.AddFilterOptions(filter_group)
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        filter_group, names=[u'event_filters'])
 
     input_group = argument_parser.add_argument_group(u'Input Arguments')
 
-    self.AddDataLocationOption(input_group)
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        input_group, names=[u'data_location'])
 
     output_group = argument_parser.add_argument_group(u'Output Arguments')
 
@@ -206,41 +234,20 @@ class PsortTool(
             u'output. This parameter changes that behavior so all events '
             u'are included.'))
 
-    self.AddLanguageOptions(output_group)
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        output_group, names=[u'language'])
+
     self.AddTimeZoneOption(output_group)
 
     output_format_group = argument_parser.add_argument_group(
         u'Output Format Arguments')
 
-    self.AddOutputModuleOptions(output_format_group)
-
-    # TODO: refactor how arguments is used in a more argparse way.
-    arguments = sys.argv[1:]
-
-    # Add the analysis plugin options.
-    if u'--analysis' in arguments:
-      argument_index = arguments.index(u'--analysis') + 1
-
-      # Get the names of the analysis plugins that should be loaded.
-      if len(arguments) > argument_index:
-        plugin_names = arguments[argument_index]
-      else:
-        plugin_names = u'list'
-
-      if plugin_names == u'list':
-        self.list_analysis_plugins = True
-      else:
-        try:
-          self.AddAnalysisPluginOptions(analysis_group, plugin_names)
-        except errors.BadConfigOption as exception:
-          logging.error(u'{0:s}'.format(exception))
-          self._output_writer.Write(u'\n')
-          self._output_writer.Write(argument_parser.format_usage())
-          return False
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        output_format_group, names=[u'output_modules'])
 
     try:
       # TODO: refactor how arguments is used in a more argparse way.
-      options = argument_parser.parse_args(args=arguments)
+      options = argument_parser.parse_args()
     except UnicodeEncodeError:
       # If we get here we are attempting to print help in a non-Unicode
       # terminal.
@@ -281,20 +288,35 @@ class PsortTool(
       BadConfigOption: if the options are invalid.
     """
     # Check the list options first otherwise required options will raise.
-    self._ParseLanguageOptions(options)
+
+    # The output modules options are dependent on the preferred language
+    # and preferred time zone options.
     self._ParseTimezoneOption(options)
+
+    names = [u'analysis_plugins', u'language', u'output_modules']
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=names)
+
+    if self._output_format == u'list':
+      self.list_output_modules = True
+    if self._preferred_language == u'list':
+      self.list_language_identifiers = True
 
     if (self.list_analysis_plugins or self.list_language_identifiers or
         self.list_output_modules or self.list_timezones):
       return
 
     self._ParseInformationalOptions(options)
-    self._ParseDataLocationOption(options)
+
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'data_location'])
+
     self._ParseLogFileOptions(options)
 
-    self._ParseAnalysisPluginOptions(options)
     self._ParseProcessingOptions(options)
-    self._ParseFilterOptions(options)
+
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'event_filters'])
 
     format_string = (
         u'%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
@@ -321,7 +343,9 @@ class PsortTool(
 
     self._command_line_arguments = self.GetCommandLineArguments()
 
-    self._ParseStorageFileOptions(options)
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'storage_file'])
+
     # TODO: move check into _CheckStorageFile.
     if not self._storage_file_path:
       raise errors.BadConfigOption(u'Missing storage file option.')
@@ -330,10 +354,8 @@ class PsortTool(
       raise errors.BadConfigOption(
           u'No such storage file: {0:s}.'.format(self._storage_file_path))
 
-    self._ParseOutputModuleOptions(
-        options, self._knowledge_base,
-        preferred_language=self._preferred_language,
-        preferred_time_zone=self._preferred_time_zone)
+    self._analysis_plugins = self._CreateAnalysisPlugins(options)
+    self._output_module = self._CreateOutputModule(options)
 
   def ProcessStorage(self):
     """Processes a plaso storage file.

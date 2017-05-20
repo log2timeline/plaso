@@ -2,17 +2,12 @@
 # -*- coding: utf-8 -*-
 """Tests for the CLI tool options mix-ins."""
 
-import argparse
-import os
 import unittest
 
 from plaso.cli import tool_options
 from plaso.cli import tools
-from plaso.engine import knowledge_base
-from plaso.lib import errors
 from plaso.output import manager as output_manager
 
-from tests import test_lib as shared_test_lib
 from tests.cli import test_lib
 
 
@@ -23,88 +18,6 @@ class TestToolWithAnalysisPluginOptions(
 
 class AnalysisPluginOptionsTest(test_lib.CLIToolTestCase):
   """Tests for the analysis plugin options."""
-
-  # pylint: disable=protected-access
-
-  _EXPECTED_ANALYSIS_PLUGIN_OPTIONS = u'\n'.join([
-      (u'usage: test_tool.py [--nsrlsvr-hash HASH] '
-       u'[--nsrlsvr-host HOST]'),
-      (u'                    [--nsrlsvr-port PORT] '
-       u'[--tagging-file TAGGING_FILE]'),
-      u'                    [--viper-hash HASH] [--viper-host HOST]',
-      u'                    [--viper-port PORT] [--viper-protocol PROTOCOL]',
-      u'                    [--virustotal-api-key API_KEY]',
-      (u'                    [--virustotal-free-rate-limit] '
-       u'[--virustotal-hash HASH]'),
-      u'                    [--windows-services-output {text,yaml}]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --nsrlsvr-hash HASH, --nsrlsvr_hash HASH',
-      (u'                        Type of hash to use to query nsrlsvr '
-       u'instance, the'),
-      (u'                        default is: md5. Supported options: md5, '
-       u'sha1'),
-      u'  --nsrlsvr-host HOST, --nsrlsvr_host HOST',
-      (u'                        Hostname or IP address of the nsrlsvr '
-       u'instance to'),
-      u'                        query, the default is: localhost',
-      u'  --nsrlsvr-port PORT, --nsrlsvr_port PORT',
-      (u'                        Port number of the nsrlsvr instance to '
-       u'query, the'),
-      u'                        default is: 9120.',
-      u'  --tagging-file TAGGING_FILE, --tagging_file TAGGING_FILE',
-      u'                        Specify a file to read tagging criteria from.',
-      u'  --viper-hash HASH, --viper_hash HASH',
-      (u'                        Type of hash to use to query the Viper '
-       u'server, the'),
-      (u'                        default is: sha256. Supported options: md5, '
-       u'sha256'),
-      u'  --viper-host HOST, --viper_host HOST',
-      (u'                        Hostname of the Viper server to query, the '
-       u'default is:'),
-      u'                        localhost',
-      u'  --viper-port PORT, --viper_port PORT',
-      (u'                        Port of the Viper server to query, the '
-       u'default is:'),
-      u'                        8080.',
-      u'  --viper-protocol PROTOCOL, --viper_protocol PROTOCOL',
-      (u'                        Protocol to use to query Viper, the '
-       u'default is: http.'),
-      u'                        Supported options: http, https',
-      u'  --virustotal-api-key API_KEY, --virustotal_api_key API_KEY',
-      u'                        Specify the API key for use with VirusTotal.',
-      u'  --virustotal-free-rate-limit, --virustotal_free_rate_limit',
-      (u'                        Limit Virustotal requests to the default '
-       u'free API key'),
-      (u'                        rate of 4 requests per minute. Set this to '
-       u'false if'),
-      u'                        you have an key for the private API.',
-      u'  --virustotal-hash HASH, --virustotal_hash HASH',
-      (u'                        Type of hash to query VirusTotal, the '
-       u'default is:'),
-      u'                        sha256',
-      u'  --windows-services-output {text,yaml}',
-      (u'                        Specify how the results should be displayed. '
-       u'Options'),
-      u'                        are text and yaml.',
-      u''])
-
-  # TODO: add test for _GetAnalysisPlugins
-  # TODO: add test for _ParseAnalysisPluginOptions
-
-  def testAddAnalysisPluginOptions(self):
-    """Tests the AddAnalysisPluginOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog=u'test_tool.py', description=u'Test argument parser.',
-        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
-
-    test_tool = TestToolWithAnalysisPluginOptions()
-    test_tool.AddAnalysisPluginOptions(argument_parser, [])
-
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_ANALYSIS_PLUGIN_OPTIONS)
 
   def testListAnalysisPlugins(self):
     """Tests the ListAnalysisPlugins function."""
@@ -135,158 +48,6 @@ class AnalysisPluginOptionsTest(test_lib.CLIToolTestCase):
     self.assertIn(expected_line, lines)
 
 
-class TestToolWithFilterOptions(
-    tools.CLITool, tool_options.FilterOptions):
-  """Tool to test the filter options."""
-
-
-class FilterOptionsTest(test_lib.CLIToolTestCase):
-  """Tests for the filter options."""
-
-  # pylint: disable=protected-access
-
-  _EXPECTED_FILTER_OPTIONS = u'\n'.join([
-      (u'usage: test_tool.py [--slice DATE] [--slice_size SLICE_SIZE] '
-       u'[--slicer]'),
-      u'                    [FILTER]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'positional arguments:',
-      (u'  FILTER                A filter that can be used to filter the '
-       u'dataset before'),
-      (u'                        it is written into storage. More information '
-       u'about the'),
-      (u'                        filters and how to use them can be found '
-       u'here:'),
-      (u'                        '
-       u'https://github.com/log2timeline/plaso/wiki/Filters'),
-      u'',
-      u'optional arguments:',
-      (u'  --slice DATE          Create a time slice around a certain date. '
-       u'This'),
-      (u'                        parameter, if defined will display all '
-       u'events that'),
-      (u'                        happened X minutes before and after the '
-       u'defined date.'),
-      (u'                        X is controlled by the parameter '
-       u'--slice_size but'),
-      u'                        defaults to 5 minutes.',
-      u'  --slice_size SLICE_SIZE, --slice-size SLICE_SIZE',
-      (u'                        Defines the slice size. In the case of a '
-       u'regular time'),
-      (u'                        slice it defines the number of minutes the '
-       u'slice size'),
-      (u'                        should be. In the case of the --slicer it '
-       u'determines'),
-      (u'                        the number of events before and after a '
-       u'filter match'),
-      (u'                        has been made that will be included in the '
-       u'result set.'),
-      (u'                        The default value is 5]. See --slice or '
-       u'--slicer for'),
-      u'                        more details about this option.',
-      (u'  --slicer              Create a time slice around every filter '
-       u'match. This'),
-      (u'                        parameter, if defined will save all X '
-       u'events before'),
-      (u'                        and after a filter match has been made. X '
-       u'is defined'),
-      u'                        by the --slice_size parameter.',
-      u''])
-
-  # TODO: add test for _ParseFilterOptions.
-
-  def testAddFilterOptions(self):
-    """Tests the AddFilterOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog=u'test_tool.py', description=u'Test argument parser.',
-        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
-
-    test_tool = TestToolWithFilterOptions()
-    test_tool.AddFilterOptions(argument_parser)
-
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_FILTER_OPTIONS)
-
-
-class TestToolWithLanguageOptions(
-    tools.CLITool, tool_options.LanguageOptions):
-  """Tool to test the language options."""
-
-
-class LanguageOptionsTest(test_lib.CLIToolTestCase):
-  """Tests for the language options."""
-
-  # pylint: disable=protected-access
-
-  _EXPECTED_LANGUAGE_OPTIONS = u'\n'.join([
-      u'usage: test_tool.py [--language LANGUAGE]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      (u'  --language LANGUAGE  The preferred language identifier for Windows '
-       u'Event Log'),
-      (u'                       message strings. Use "--language list" to see '
-       u'a list of'),
-      (u'                       available language identifiers. Note that '
-       u'formatting'),
-      (u'                       will fall back on en-US (LCID 0x0409) if the '
-       u'preferred'),
-      (u'                       language is not available in the database of '
-       u'message'),
-      u'                       string templates.',
-      u''])
-
-  def testParseLanguageOptions(self):
-    """Tests the _ParseLanguageOptions function."""
-    test_tool = TestToolWithLanguageOptions()
-
-    options = test_lib.TestOptions()
-
-    test_tool._ParseLanguageOptions(options)
-
-  def testAddLanguageOptions(self):
-    """Tests the AddLanguageOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog=u'test_tool.py', description=u'Test argument parser.',
-        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
-
-    test_tool = TestToolWithLanguageOptions()
-    test_tool.AddLanguageOptions(argument_parser)
-
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_LANGUAGE_OPTIONS)
-
-  def testListLanguageIdentifiers(self):
-    """Tests the ListLanguageIdentifiers function."""
-    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
-    test_tool = TestToolWithLanguageOptions(output_writer=output_writer)
-
-    test_tool.ListLanguageIdentifiers()
-
-    output = output_writer.ReadOutput()
-
-    number_of_tables = 0
-    lines = []
-    for line in output.split(b'\n'):
-      line = line.strip()
-      lines.append(line)
-
-      if line.startswith(b'*****') and line.endswith(b'*****'):
-        number_of_tables += 1
-
-    self.assertIn(u'Language identifiers', lines[1])
-
-    lines = frozenset(lines)
-
-    self.assertEqual(number_of_tables, 1)
-
-    expected_line = b'en : English'
-    self.assertIn(expected_line, lines)
-
-
 class TestToolWithOutputModuleOptions(
     tools.CLITool, tool_options.OutputModuleOptions):
   """Tool to test the output module options."""
@@ -296,31 +57,6 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
   """Tests for the output module options."""
 
   # pylint: disable=protected-access
-
-  _EXPECTED_OUTPUT_MODULE_OPTIONS = u'\n'.join([
-      u'usage: test_tool.py [-o FORMAT] [-w OUTPUT_FILE] [--fields FIELDS]',
-      u'                    [--additional_fields ADDITIONAL_FIELDS]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  --additional_fields ADDITIONAL_FIELDS',
-      (u'                        Defines extra fields to be included in the '
-       u'output, in'),
-      (u'                        addition to the default fields, which are '
-       u'datetime,'),
-      (u'                        timestamp_desc, source, source_long, message, '
-       u'parser,'),
-      u'                        display_name, tag.',
-      (u'  --fields FIELDS       Defines which fields should be included in '
-       u'the output.'),
-      u'  -o FORMAT, --output_format FORMAT, --output-format FORMAT',
-      (u'                        The output format. Use "-o list" to see a '
-       u'list of'),
-      u'                        available output formats.',
-      u'  -w OUTPUT_FILE, --write OUTPUT_FILE',
-      u'                        Output filename.',
-      u''])
 
   def testGetOutputModulesInformation(self):
     """Tests the _GetOutputModulesInformation function."""
@@ -332,38 +68,6 @@ class OutputModuleOptionsTest(test_lib.CLIToolTestCase):
     available_module_names = [name for name, _ in modules_info]
     self.assertIn(u'dynamic', available_module_names)
     self.assertIn(u'json', available_module_names)
-
-  def testParseOutputModuleOptions(self):
-    """Tests the _ParseOutputModuleOptions function."""
-    test_knowledge_base = knowledge_base.KnowledgeBase()
-    test_tool = TestToolWithOutputModuleOptions()
-
-    options = test_lib.TestOptions()
-
-    with self.assertRaises(errors.BadConfigOption):
-      test_tool._ParseOutputModuleOptions(options, test_knowledge_base)
-
-    options.output_format = u'dynamic'
-
-    with self.assertRaises(errors.BadConfigOption):
-      test_tool._ParseOutputModuleOptions(options, test_knowledge_base)
-
-    with shared_test_lib.TempDirectory() as temp_directory:
-      options.write = os.path.join(temp_directory, u'output.dynamic')
-
-      test_tool._ParseOutputModuleOptions(options, test_knowledge_base)
-
-  def testAddOutputModuleOptions(self):
-    """Tests the AddOutputModuleOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog=u'test_tool.py', description=u'Test argument parser.',
-        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
-
-    test_tool = TestToolWithOutputModuleOptions()
-    test_tool.AddOutputModuleOptions(argument_parser)
-
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT_MODULE_OPTIONS)
 
   def testListOutputModules(self):
     """Tests the ListOutputModules function."""
@@ -409,39 +113,7 @@ class TestToolWithStorageFileOptions(
 class StorageFileOptionsTest(test_lib.CLIToolTestCase):
   """Tests for the storage file options."""
 
-  # pylint: disable=protected-access
-
-  _EXPECTED_OUTPUT_STORAGE_FILE_OPTIONS = u'\n'.join([
-      u'usage: test_tool.py [STORAGE_FILE]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'positional arguments:',
-      u'  STORAGE_FILE  The path of the storage file.',
-      u''])
-
   # TODO: add test for _CheckStorageFile
-
-  def testParseStorageFileOptions(self):
-    """Tests the _ParseStorageFileOptions function."""
-    test_tool = TestToolWithStorageFileOptions()
-
-    options = test_lib.TestOptions()
-    options.storage_file = self._GetTestFilePath([u'test.plaso'])
-
-    test_tool._ParseStorageFileOptions(options)
-
-  def testAddStorageFileOptions(self):
-    """Tests the AddStorageFileOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog=u'test_tool.py', description=u'Test argument parser.',
-        add_help=False, formatter_class=test_lib.SortedArgumentsHelpFormatter)
-
-    test_tool = TestToolWithStorageFileOptions()
-    test_tool.AddStorageFileOptions(argument_parser)
-
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT_STORAGE_FILE_OPTIONS)
 
 
 if __name__ == '__main__':

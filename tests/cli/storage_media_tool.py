@@ -48,24 +48,6 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
       u'                        with care.',
       u''])
 
-  _EXPECTED_OUTPUT_FILTER_OPTIONS = u'\n'.join([
-      u'usage: storage_media_tool_test.py [-f FILE_FILTER]',
-      u'',
-      u'Test argument parser.',
-      u'',
-      u'optional arguments:',
-      u'  -f FILE_FILTER, --file_filter FILE_FILTER, --file-filter FILE_FILTER',
-      (u'                        List of files to include for targeted '
-       u'collection of'),
-      (u'                        files to parse, one line per file path, '
-       u'setup is'),
-      (u'                        /path|file - where each element can contain '
-       u'either a'),
-      (u'                        variable set in the preprocessing stage or '
-       u'a regular'),
-      u'                        expression.',
-      u''])
-
   _EXPECTED_OUTPUT_STORAGE_MEDIA_OPTIONS = u'\n'.join([
       u'usage: storage_media_tool_test.py [--partition PARTITION]',
       (u'                                  [--partitions PARTITIONS] '
@@ -391,16 +373,6 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
 
     # TODO: improve test coverage.
 
-  def testParseFilterOptions(self):
-    """Tests the _ParseFilterOptions function."""
-    test_tool = storage_media_tool.StorageMediaTool()
-
-    options = test_lib.TestOptions()
-
-    test_tool._ParseFilterOptions(options)
-
-    # TODO: improve test coverage.
-
   @shared_test_lib.skipUnlessHasTestFile([u'ímynd.dd'])
   def testParseSourcePathOption(self):
     """Tests the _ParseSourcePathOption function."""
@@ -496,19 +468,6 @@ class StorageMediaToolTest(test_lib.CLIToolTestCase):
 
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_OUTPUT_CREDENTIAL_OPTIONS)
-
-  def testAddFilterOptions(self):
-    """Tests the AddFilterOptions function."""
-    argument_parser = argparse.ArgumentParser(
-        prog=u'storage_media_tool_test.py',
-        description=u'Test argument parser.', add_help=False,
-        formatter_class=test_lib.SortedArgumentsHelpFormatter)
-
-    test_tool = storage_media_tool.StorageMediaTool()
-    test_tool.AddFilterOptions(argument_parser)
-
-    output = self._RunArgparseFormatHelp(argument_parser)
-    self.assertEqual(output, self._EXPECTED_OUTPUT_FILTER_OPTIONS)
 
   def testAddStorageMediaImageOptions(self):
     """Tests the AddStorageMediaImageOptions function."""

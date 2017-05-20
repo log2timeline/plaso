@@ -68,32 +68,35 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
     test_tool = psteal_tool.PstealTool(output_writer=output_writer)
 
-    # Test when no source nor output file specified.
     options = test_lib.TestOptions()
-    expected_error = u'Missing source path.'
-    with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
-      test_tool.ParseOptions(options)
 
     # Test when the output file is missing.
-    options.source = self._GetTestFilePath([u'testdir'])
     expected_error = (u'Output format: dynamic requires an output file')
     with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
       test_tool.ParseOptions(options)
 
+    options.write = u'dynamic.out'
+
     # Test when the source is missing.
-    options = test_lib.TestOptions()
     expected_error = u'Missing source path.'
+    with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
+      test_tool.ParseOptions(options)
+
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.write = os.path.join(temp_directory, u'unused_output.txt')
+      options.source = self._GetTestFilePath([u'testdir'])
+      options.write = os.path.join(temp_directory, u'dynamic.out')
+
+      # Test when both source and output are specified.
+      test_tool.ParseOptions(options)
+
+      with open(options.write, 'w') as file_object:
+        file_object.write(u'bogus')
+
+      # Test when output file already exists.
+      expected_error = u'Output file already exists: {0:s}.'.format(
+          options.write)
       with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
         test_tool.ParseOptions(options)
-
-    # Test when both source and output are specified.
-    options = test_lib.TestOptions()
-    options.source = self._GetTestFilePath([u'testdir'])
-    with shared_test_lib.TempDirectory() as temp_directory:
-      options.write = os.path.join(temp_directory, u'unused_output.txt')
-      test_tool.ParseOptions(options)
 
   def testParseArguments(self):
     """Tests the ParseArguments function"""
@@ -104,7 +107,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     result = test_tool.ParseArguments()
     self.assertFalse(result)
     output = output_writer.ReadOutput()
-    expected_error = u'ERROR: Missing source path'
+    expected_error = u'ERROR: Output format: dynamic requires an output file'
     self.assertIn(expected_error, output)
 
   def testExtractEventsFromSourceDirectory(self):

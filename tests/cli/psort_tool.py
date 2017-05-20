@@ -115,7 +115,6 @@ class PsortToolTest(test_lib.CLIToolTestCase):
   # TODO: add test for _ParseAnalysisPluginOptions.
   # TODO: add test for _ParseProcessingOptions.
   # TODO: add test for _ParseInformationalOptions.
-  # TODO: add test for _ParseLanguageOptions.
   # TODO: add test for _PrintStatusHeader.
   # TODO: add test for _PrintStatusUpdate.
   # TODO: add test for _PrintStatusUpdateStream.
@@ -132,6 +131,33 @@ class PsortToolTest(test_lib.CLIToolTestCase):
 
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_PROCESSING_OPTIONS)
+
+  def testListLanguageIdentifiers(self):
+    """Tests the ListLanguageIdentifiers function."""
+    output_writer = test_lib.TestOutputWriter(encoding=u'utf-8')
+    test_tool = psort_tool.PsortTool(output_writer=output_writer)
+
+    test_tool.ListLanguageIdentifiers()
+
+    output = output_writer.ReadOutput()
+
+    number_of_tables = 0
+    lines = []
+    for line in output.split(b'\n'):
+      line = line.strip()
+      lines.append(line)
+
+      if line.startswith(b'*****') and line.endswith(b'*****'):
+        number_of_tables += 1
+
+    self.assertIn(u'Language identifiers', lines[1])
+
+    lines = frozenset(lines)
+
+    self.assertEqual(number_of_tables, 1)
+
+    expected_line = b'en : English'
+    self.assertIn(expected_line, lines)
 
   def testParseArguments(self):
     """Tests the ParseArguments function."""

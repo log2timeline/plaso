@@ -10,6 +10,7 @@ import uuid
 from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
+from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import knowledge_base
 from plaso.lib import definitions
 from plaso.lib import errors
@@ -20,7 +21,6 @@ from plaso.serializer import json_serializer
 
 class PinfoTool(
     tools.CLITool,
-    tool_options.LanguageOptions,
     tool_options.StorageFileOptions):
   """Pinfo CLI tool."""
 
@@ -44,6 +44,7 @@ class PinfoTool(
         input_reader=input_reader, output_writer=output_writer)
     self._compare_storage_file_path = None
     self._output_format = None
+    self._storage_file_path = None
 
     self._verbose = False
     self.compare_storage_information = False
@@ -527,7 +528,9 @@ class PinfoTool(
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     self.AddBasicOptions(argument_parser)
-    self.AddStorageFileOptions(argument_parser)
+
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        argument_parser, names=[u'storage_file'])
 
     argument_parser.add_argument(
         u'-v', u'--verbose', dest=u'verbose', action=u'store_true',
@@ -584,7 +587,9 @@ class PinfoTool(
 
     self._verbose = getattr(options, u'verbose', False)
 
-    self._ParseStorageFileOptions(options)
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'storage_file'])
+
     # TODO: move check into _CheckStorageFile.
     if not self._storage_file_path:
       raise errors.BadConfigOption(u'Missing storage file option.')

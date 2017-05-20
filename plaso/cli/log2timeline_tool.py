@@ -28,6 +28,7 @@ from plaso.cli import logging_filter as logging_filter
 from plaso.cli import tool_options
 from plaso.cli import tools
 from plaso.cli import views
+from plaso.cli.helpers import manager as helpers_manager
 from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.engine import single_process as single_process_engine
@@ -47,6 +48,8 @@ class Log2TimelineTool(
   Attributes:
     dependencies_check (bool): True if the availability and versions of
         dependencies should be checked.
+    list_output_modules (bool): True if information about the output modules
+        should be shown.
     show_info (bool): True if information about hashers, parsers, plugins,
         etc. should be shown.
   """
@@ -111,12 +114,14 @@ class Log2TimelineTool(
     self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
     self._stdout_output_writer = isinstance(
         self._output_writer, tools.StdoutOutputWriter)
+    self._storage_file_path = None
     self._temporary_directory = None
     self._text_prepend = None
     self._use_zeromq = True
     self._worker_memory_limit = None
 
     self.dependencies_check = True
+    self.list_output_modules = False
     self.show_info = False
 
   def _CreateProcessingConfiguration(self):
@@ -297,11 +302,17 @@ class Log2TimelineTool(
 
     self.AddBasicOptions(argument_parser)
 
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        argument_parser, names=[u'storage_file'])
+
     extraction_group = argument_parser.add_argument_group(
         u'Extraction Arguments')
 
     self.AddExtractionOptions(extraction_group)
-    self.AddFilterOptions(extraction_group)
+
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        argument_parser, names=[u'filter_file'])
+
     self.AddStorageMediaImageOptions(extraction_group)
     self.AddTimeZoneOption(extraction_group)
     self.AddVSSProcessingOptions(extraction_group)
@@ -328,11 +339,8 @@ class Log2TimelineTool(
 
     self.AddLogFileOptions(info_group)
 
-    info_group.add_argument(
-        u'--status_view', u'--status-view', dest=u'status_view_mode',
-        choices=[u'linear', u'none', u'window'], action=u'store',
-        metavar=u'TYPE', default=self._DEFAULT_STATUS_VIEW_MODE, help=(
-            u'The processing status view mode: "linear", "none" or "window".'))
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        info_group, names=[u'status_view'])
 
     output_group = argument_parser.add_argument_group(u'Output Arguments')
 
@@ -341,7 +349,9 @@ class Log2TimelineTool(
     processing_group = argument_parser.add_argument_group(
         u'Processing Arguments')
 
-    self.AddDataLocationOption(processing_group)
+    helpers_manager.ArgumentHelperManager.AddCommandLineArguments(
+        processing_group, names=[u'data_location'])
+
     self.AddPerformanceOptions(processing_group)
     self.AddProfilingOptions(processing_group)
     self.AddProcessingOptions(processing_group)
@@ -434,12 +444,17 @@ class Log2TimelineTool(
       return
 
     self._ParseInformationalOptions(options)
-    self._ParseDataLocationOption(options)
+
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'data_location'])
+
     self._ParseLogFileOptions(options)
 
     self._ParseStorageMediaOptions(options)
 
-    self._ParseFilterOptions(options)
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'filter_file'])
+
     self._ParsePerformanceOptions(options)
     self._ParseOutputOptions(options)
     self._ParseProcessingOptions(options)
@@ -464,7 +479,9 @@ class Log2TimelineTool(
       root_logger = logging.getLogger()
       root_logger.addFilter(log_filter)
 
-    self._ParseStorageFileOptions(options)
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'storage_file'])
+
     if not self._storage_file_path:
       raise errors.BadConfigOption(u'Missing storage file option.')
 
@@ -482,8 +499,8 @@ class Log2TimelineTool(
     if self._operating_system:
       self._mount_path = getattr(options, u'filename', None)
 
-    self._status_view_mode = getattr(
-        options, u'status_view_mode', self._DEFAULT_STATUS_VIEW_MODE)
+    helpers_manager.ArgumentHelperManager.ParseOptions(
+        options, self, names=[u'status_view'])
 
     self._enable_sigsegv_handler = getattr(options, u'sigsegv_handler', False)
 

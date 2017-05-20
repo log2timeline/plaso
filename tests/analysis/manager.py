@@ -74,6 +74,8 @@ class AnalysisPluginManagerTest(shared_test_lib.BaseTestCase):
 
     manager.AnalysisPluginManager.DeregisterPlugin(TestAnalysisPlugin)
 
+  # TODO: add tests for GetPluginNames.
+
 
 if __name__ == '__main__':
   unittest.main()

@@ -171,48 +171,6 @@ class CLITool(object):
 
     return encoded_string
 
-  def _ParseDataLocationOption(self, options):
-    """Parses the data location option.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-    """
-    data_location = self.ParseStringOption(options, u'data_location')
-    if not data_location:
-      # Determine if we are running from the source directory.
-      # This should get us the path to the "plaso/cli" directory.
-      data_location = os.path.dirname(__file__)
-
-      # In order to get to the main path of the egg file we need to traverse
-      # two directories up.
-      data_location = os.path.dirname(data_location)
-      data_location = os.path.dirname(data_location)
-
-      # There are multiple options to run a tool e.g. running from source or
-      # from an egg file.
-      data_location_egg = os.path.join(data_location, u'share', u'plaso')
-      data_location_source = os.path.join(data_location, u'data')
-      data_location_system = os.path.join(sys.prefix, u'share', u'plaso')
-      data_location_system_local = os.path.join(
-          sys.prefix, u'local', u'share', u'plaso')
-
-      if os.path.exists(data_location_egg):
-        data_location = data_location_egg
-      elif os.path.exists(data_location_source):
-        data_location = data_location_source
-      elif os.path.exists(data_location_system):
-        data_location = data_location_system
-      elif os.path.exists(data_location_system_local):
-        data_location = data_location_system_local
-      else:
-        data_location = None
-
-    if not data_location:
-      self._output_writer.Write(
-          u'WARNING: unable to determine location of data files.\n')
-
-    self._data_location = data_location
-
   def _ParseInformationalOptions(self, options):
     """Parses the informational options.
 
@@ -329,16 +287,6 @@ class CLITool(object):
     argument_group.add_argument(
         u'-V', u'--version', dest=u'version', action=u'version',
         version=version_string, help=u'show the version information.')
-
-  def AddDataLocationOption(self, argument_group):
-    """Adds the data location option to the argument group.
-
-    Args:
-      argument_group (argparse._ArgumentGroup): argparse argument group.
-    """
-    argument_group.add_argument(
-        u'--data', action=u'store', dest=u'data_location', type=str,
-        metavar=u'PATH', default=None, help=u'the location of the data files.')
 
   def AddInformationalOptions(self, argument_group):
     """Adds the informational options to the argument group.
