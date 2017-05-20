@@ -5,14 +5,16 @@
 from __future__ import print_function
 import sys
 
-# Change PYTHONPATH to include plaso.
+# Change PYTHONPATH to include dependencies.
 sys.path.insert(0, u'.')
 
-import plaso.dependencies
+import utils.dependencies  # pylint: disable=wrong-import-position
 
 
 if __name__ == u'__main__':
-  if not plaso.dependencies.CheckDependencies():
+  dependency_helper = utils.dependencies.DependencyHelper()
+
+  if not dependency_helper.CheckDependencies():
     build_instructions_url = (
         u'https://github.com/log2timeline/plaso/wiki/Users-Guide')
 

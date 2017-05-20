@@ -8,8 +8,6 @@ import locale
 import os
 import sys
 
-import run_tests
-
 try:
   from setuptools import find_packages, setup, Command
 except ImportError:
@@ -134,20 +132,6 @@ class BdistRPMCommand(bdist_rpm):
     return python_spec_file
 
 
-class TestCommand(Command):
-  """Run tests, implementing an interface."""
-  user_options = []
-
-  def initialize_options(self):
-    self._dir = os.getcwd()
-
-  def finalize_options(self):
-    pass
-
-  def run(self):
-    test_results = run_tests.RunTests()
-
-
 if version_tuple[0] == 2:
   encoding = sys.stdin.encoding
 
@@ -190,8 +174,7 @@ setup(
     scripts=GetScripts(),
     cmdclass={
         'bdist_rpm': BdistRPMCommand,
-        'sdist_test_data': sdist,
-        'test': TestCommand},
+        'sdist_test_data': sdist},
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',

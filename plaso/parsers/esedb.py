@@ -3,14 +3,10 @@
 
 import pyesedb
 
-from plaso import dependencies
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
 from plaso.parsers import plugins
-
-
-dependencies.CheckModuleVersion(u'pyesedb')
 
 
 class ESEDBCache(plugins.BasePluginCache):

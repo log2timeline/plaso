@@ -1,5 +1,5 @@
 include ACKNOWLEDGEMENTS AUTHORS LICENSE README
-include run_tests.py
+include dependencies.ini run_tests.py utils/dependencies.py
 include utils/check_dependencies.py
 recursive-include config *
 recursive-include data *

@@ -5,10 +5,10 @@
 import sys
 import unittest
 
-# Change PYTHONPATH to include plaso.
+# Change PYTHONPATH to include dependencies.
 sys.path.insert(0, u'.')
 
-import plaso.dependencies
+import utils.dependencies  # pylint: disable=wrong-import-position
 
 
 if __name__ == '__main__':
@@ -19,7 +19,9 @@ if __name__ == '__main__':
     # the argparse tests.
     sys.argv.remove('--fail-unless-has-test-file')
 
-  if not plaso.dependencies.CheckTestDependencies():
+  dependency_helper = utils.dependencies.DependencyHelper()
+
+  if not dependency_helper.CheckTestDependencies():
     sys.exit(1)
 
   test_suite = unittest.TestLoader().discover('tests', pattern='*.py')
