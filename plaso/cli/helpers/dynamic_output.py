@@ -14,9 +14,9 @@ class DynamicOutputArgumentsHelper(interface.ArgumentsHelper):
   CATEGORY = u'output'
   DESCRIPTION = u'Argument helper for the dynamic output module.'
 
-  _DEFAULT_FIELDS = u','.join([
+  _DEFAULT_FIELDS = [
       u'datetime', u'timestamp_desc', u'source', u'source_long',
-      u'message', u'parser', u'display_name', u'tag'])
+      u'message', u'parser', u'display_name', u'tag']
 
   @classmethod
   def AddArguments(cls, argument_group):
@@ -29,16 +29,18 @@ class DynamicOutputArgumentsHelper(interface.ArgumentsHelper):
       argument_group (argparse._ArgumentGroup|argparse.ArgumentParser):
           argparse group.
     """
+    default_fields = u','.join(cls._DEFAULT_FIELDS)
     argument_group.add_argument(
         u'--fields', dest=u'fields', type=str, action=u'store',
-        default=cls._DEFAULT_FIELDS, help=(
+        default=default_fields, help=(
             u'Defines which fields should be included in the output.'))
+
+    default_fields = u', '.join(cls._DEFAULT_FIELDS)
     argument_group.add_argument(
         u'--additional_fields', dest=u'additional_fields', type=str,
         action=u'store', default=u'', help=(
             u'Defines extra fields to be included in the output, in addition to'
-            u' the default fields, which are {0:s}.'.format(
-                cls._DEFAULT_FIELDS)))
+            u' the default fields, which are {0:s}.'.format(default_fields)))
 
   @classmethod
   def ParseOptions(cls, options, output_module):
@@ -56,8 +58,9 @@ class DynamicOutputArgumentsHelper(interface.ArgumentsHelper):
       raise errors.BadConfigObject(
           u'Output module is not an instance of DynamicOutputModule')
 
+    default_fields = u','.join(cls._DEFAULT_FIELDS)
     fields = cls._ParseStringOption(
-        options, u'fields', default_value=cls._DEFAULT_FIELDS)
+        options, u'fields', default_value=default_fields)
 
     additional_fields = cls._ParseStringOption(
         options, u'additional_fields')

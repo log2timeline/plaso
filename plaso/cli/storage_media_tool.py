@@ -37,6 +37,7 @@ class StorageMediaTool(tools.CLITool):
 
   _DEFAULT_BYTES_PER_SECTOR = 512
 
+  # TODO: remove this redirect.
   _SOURCE_OPTION = u'source'
 
   _BINARY_DATA_CREDENTIAL_TYPES = [u'key_data']
@@ -392,6 +393,35 @@ class StorageMediaTool(tools.CLITool):
           partition_numbers.append(partition_number)
 
     return sorted(partition_numbers)
+
+  def _ParseSourcePathOption(self, options):
+    """Parses the source path option.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    self._source_path = self.ParseStringOption(options, self._SOURCE_OPTION)
+    if not self._source_path:
+      raise errors.BadConfigOption(u'Missing source path.')
+
+    self._source_path = os.path.abspath(self._source_path)
+
+  def _ParseStorageMediaOptions(self, options):
+    """Parses the storage media options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+
+    Raises:
+      BadConfigOption: if the options are invalid.
+    """
+    self._ParseStorageMediaImageOptions(options)
+    self._ParseVSSProcessingOptions(options)
+    self._ParseCredentialOptions(options)
+    self._ParseSourcePathOption(options)
 
   def _ParseStorageMediaImageOptions(self, options):
     """Parses the storage media image options.
@@ -1065,26 +1095,6 @@ class StorageMediaTool(tools.CLITool):
             u'separated values). Ranges and lists can also be combined as: '
             u'"1,3..5". The first store is 1. All stores can be defined as: '
             u'"all".'))
-
-  def ParseOptions(self, options):
-    """Parses tool specific options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    super(StorageMediaTool, self).ParseOptions(options)
-    self._ParseStorageMediaImageOptions(options)
-    self._ParseVSSProcessingOptions(options)
-    self._ParseCredentialOptions(options)
-
-    self._source_path = self.ParseStringOption(options, self._SOURCE_OPTION)
-    if not self._source_path:
-      raise errors.BadConfigOption(u'Missing source path.')
-
-    self._source_path = os.path.abspath(self._source_path)
 
   def ScanSource(self):
     """Scans the source path for volume and file systems.

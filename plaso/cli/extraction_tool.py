@@ -16,7 +16,6 @@ from plaso import parsers  # pylint: disable=unused-import
 from plaso.analyzers.hashers import manager as hashers_manager
 from plaso.cli import storage_media_tool
 from plaso.cli import views
-from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.lib import py2to3
 from plaso.parsers import manager as parsers_manager
@@ -24,7 +23,7 @@ from plaso.parsers import presets as parsers_presets
 
 
 class ExtractionTool(storage_media_tool.StorageMediaTool):
-  """Class that implements an extraction CLI tool.
+  """Extraction CLI tool.
 
   Attributes:
     list_hashers (bool): True if the hashers should be listed.
@@ -41,7 +40,7 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
   _BYTES_IN_A_MIB = 1024 * 1024
 
   def __init__(self, input_reader=None, output_writer=None):
-    """Initializes the CLI tool object.
+    """Initializes an CLI tool.
 
     Args:
       input_reader (Optional[InputReader]): input reader, where None indicates
@@ -66,7 +65,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     self._process_compressed_streams = True
     self._queue_size = self._DEFAULT_QUEUE_SIZE
     self._single_process_mode = False
-    self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
     self._text_prepend = None
     self._yara_rules_string = None
 
@@ -173,23 +171,6 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
             u'Invalid buffer size: {0:s}.'.format(self._buffer_size))
 
     self._queue_size = self.ParseNumericOption(options, u'queue_size')
-
-  def _ParseStorageOptions(self, options):
-    """Parses the storage options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    serializer_format = getattr(
-        options, u'serializer_format', definitions.SERIALIZER_FORMAT_JSON)
-    if serializer_format not in definitions.SERIALIZER_FORMATS:
-      raise errors.BadConfigOption(
-          u'Unsupported storage serializer format: {0:s}.'.format(
-              serializer_format))
-    self._storage_serializer_format = serializer_format
 
   def _ParseYaraRulesOption(self, options):
     """Parses the yara rules option.
@@ -359,18 +340,3 @@ class ExtractionTool(storage_media_tool.StorageMediaTool):
     for name, description in sorted(presets_information):
       table_view.AddRow([name, description])
     table_view.Write(self._output_writer)
-
-  def ParseOptions(self, options):
-    """Parses tool specific options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-
-    Raises:
-      BadConfigOption: if the options are invalid.
-    """
-    super(ExtractionTool, self).ParseOptions(options)
-    self._ParseDataLocationOption(options)
-    self._ParseFilterOptions(options)
-    self._ParsePerformanceOptions(options)
-    self._ParseStorageOptions(options)

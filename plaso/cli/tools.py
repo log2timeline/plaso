@@ -25,7 +25,7 @@ import pytz  # pylint: disable=wrong-import-order
 
 
 class CLITool(object):
-  """Class that implements a CLI tool.
+  """CLI tool.
 
   Attributes:
     list_profilers (bool): True if the profilers should be listed.
@@ -227,6 +227,14 @@ class CLITool(object):
           u'Cannot use debug and quiet mode at the same time, defaulting to '
           u'debug output.')
 
+  def _ParseLogFileOptions(self, options):
+    """Parses the log file options.
+
+    Args:
+      options (argparse.Namespace): command line arguments.
+    """
+    self._log_file = self.ParseStringOption(options, u'log_file')
+
   def _ParseProfilingOptions(self, options):
     """Parses the profiling options.
 
@@ -291,6 +299,18 @@ class CLITool(object):
               u'Unknown time zone: {0:s}'.format(time_zone_string))
 
         self._preferred_time_zone = time_zone_string
+
+  def _PromptUserForInput(self, input_text):
+    """Prompts user for an input.
+
+    Args:
+      input_text (str): text used for prompting the user for input.
+
+    Returns:
+      str: input read from the user.
+    """
+    self._output_writer.Write(u'{0:s}: '.format(input_text))
+    return self._input_reader.Read()
 
   def AddBasicOptions(self, argument_group):
     """Adds the basic options to the argument group.
@@ -488,22 +508,6 @@ class CLITool(object):
           u'Unsupported numeric value {0:s}: {1!s}.'.format(
               name, numeric_value))
 
-  def ParseOptions(self, options):
-    """Parses tool specific options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-    """
-    self._ParseInformationalOptions(options)
-
-  def ParseLogFileOptions(self, options):
-    """Parses the log file options.
-
-    Args:
-      options (argparse.Namespace): command line arguments.
-    """
-    self._log_file = self.ParseStringOption(options, u'log_file')
-
   def ParseStringOption(self, options, argument_name, default_value=None):
     """Parses a string command line argument.
 
@@ -553,7 +557,7 @@ class CLITool(object):
 
 
 class CLIInputReader(object):
-  """Class that implements the CLI input reader interface."""
+  """CLI input reader interface."""
 
   def __init__(self, encoding=u'utf-8'):
     """Initializes the input reader object.
@@ -574,7 +578,7 @@ class CLIInputReader(object):
 
 
 class CLIOutputWriter(object):
-  """Class that implements the CLI output writer interface."""
+  """CLI output writer interface."""
 
   def __init__(self, encoding=u'utf-8'):
     """Initializes the output writer object.
@@ -595,7 +599,7 @@ class CLIOutputWriter(object):
 
 
 class FileObjectInputReader(CLIInputReader):
-  """Class that implements a file-like object input reader.
+  """File-like object input reader.
 
   This input reader relies on the file-like object having a readline method.
   """
@@ -636,7 +640,7 @@ class FileObjectInputReader(CLIInputReader):
 
 
 class StdinInputReader(FileObjectInputReader):
-  """Class that implements a stdin input reader."""
+  """Stdin input reader."""
 
   def __init__(self, encoding=u'utf-8'):
     """Initializes the input reader object.
@@ -648,7 +652,7 @@ class StdinInputReader(FileObjectInputReader):
 
 
 class FileObjectOutputWriter(CLIOutputWriter):
-  """Class that implements a file-like object output writer.
+  """File-like object output writer.
 
   This output writer relies on the file-like object having a write method.
   """
@@ -689,7 +693,7 @@ class FileObjectOutputWriter(CLIOutputWriter):
 
 
 class StdoutOutputWriter(FileObjectOutputWriter):
-  """Class that implements a stdout output writer."""
+  """Stdout output writer."""
 
   def __init__(self, encoding=u'utf-8'):
     """Initializes the output writer object.

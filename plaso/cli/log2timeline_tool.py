@@ -20,28 +20,33 @@ from plaso import filters  # pylint: disable=unused-import
 from plaso import output  # pylint: disable=unused-import
 
 from plaso.cli import extraction_tool
+from plaso.cli import logging_filter
 from plaso.cli import status_view
 from plaso.cli import tools as cli_tools
 from plaso.cli import views as cli_views
 from plaso.cli import logging_filter as logging_filter
+from plaso.cli import tool_options
+from plaso.cli import tools
+from plaso.cli import views
 from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.engine import single_process as single_process_engine
 from plaso.frontend import utils as frontend_utils
+from plaso.lib import definitions
 from plaso.lib import errors
 from plaso.multi_processing import task_engine as multi_process_engine
-from plaso.output import manager as output_manager
 from plaso.storage import zip_file as storage_zip_file
 
 
-class Log2TimelineTool(extraction_tool.ExtractionTool):
-  """Class that implements the log2timeline CLI tool.
+class Log2TimelineTool(
+    extraction_tool.ExtractionTool,
+    tool_options.OutputModuleOptions,
+    tool_options.StorageFileOptions):
+  """Log2timeline CLI tool.
 
   Attributes:
     dependencies_check (bool): True if the availability and versions of
         dependencies should be checked.
-    list_output_modules (bool): True if information about the output modules
-        should be shown.
     show_info (bool): True if information about hashers, parsers, plugins,
         etc. should be shown.
   """
@@ -100,47 +105,19 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self._enable_sigsegv_handler = False
     self._number_of_extraction_workers = 0
     self._resolver_context = dfvfs_context.Context()
+    self._storage_serializer_format = definitions.SERIALIZER_FORMAT_JSON
     self._source_type = None
     self._status_view = status_view.StatusView(self._output_writer, self.NAME)
     self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
     self._stdout_output_writer = isinstance(
-        self._output_writer, cli_tools.StdoutOutputWriter)
-    self._storage_file_path = None
+        self._output_writer, tools.StdoutOutputWriter)
     self._temporary_directory = None
     self._text_prepend = None
     self._use_zeromq = True
     self._worker_memory_limit = None
 
     self.dependencies_check = True
-    self.list_output_modules = False
     self.show_info = False
-
-  def _CheckStorageFile(self, storage_file_path):
-    """Checks if the storage file path is valid.
-
-    Args:
-      storage_file_path (str): path of the storage file.
-
-    Raises:
-      BadConfigOption: if the storage file path is invalid.
-    """
-    if os.path.exists(storage_file_path):
-      if not os.path.isfile(storage_file_path):
-        raise errors.BadConfigOption(
-            u'Storage file: {0:s} already exists and is not a file.'.format(
-                storage_file_path))
-      logging.warning(u'Appending to an already existing storage file.')
-
-    dirname = os.path.dirname(storage_file_path)
-    if not dirname:
-      dirname = u'.'
-
-    # TODO: add a more thorough check to see if the storage file really is
-    # a plaso storage file.
-
-    if not os.access(dirname, os.W_OK):
-      raise errors.BadConfigOption(
-          u'Unable to write to storage file: {0:s}'.format(storage_file_path))
 
   def _CreateProcessingConfiguration(self):
     """Creates a processing configuration.
@@ -306,28 +283,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         help=(u'The number of worker processes [defaults to available system '
               u'CPUs minus one].'))
 
-  def ListOutputModules(self):
-    """Lists the output modules."""
-    table_view = cli_views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=[u'Name', u'Description'],
-        title=u'Output Modules')
-
-    for name, output_class in output_manager.OutputManager.GetOutputClasses():
-      table_view.AddRow([name, output_class.DESCRIPTION])
-    table_view.Write(self._output_writer)
-
-    disabled_classes = list(
-        output_manager.OutputManager.GetDisabledOutputClasses())
-    if not disabled_classes:
-      return
-
-    table_view = cli_views.ViewsFactory.GetTableView(
-        self._views_format_type, column_names=[u'Name', u'Description'],
-        title=u'Disabled Output Modules')
-    for name, output_class in disabled_classes:
-      table_view.AddRow([name, output_class.DESCRIPTION])
-    table_view.Write(self._output_writer)
-
   def ParseArguments(self):
     """Parses the command line arguments.
 
@@ -469,7 +424,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     self.show_info = getattr(options, u'show_info', False)
 
     if getattr(options, u'use_markdown', False):
-      self._views_format_type = cli_views.ViewsFactory.FORMAT_TYPE_MARKDOWN
+      self._views_format_type = views.ViewsFactory.FORMAT_TYPE_MARKDOWN
 
     self.dependencies_check = getattr(options, u'dependencies_check', True)
 
@@ -478,7 +433,14 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
         self.list_timezones or self.show_info):
       return
 
-    super(Log2TimelineTool, self).ParseOptions(options)
+    self._ParseInformationalOptions(options)
+    self._ParseDataLocationOption(options)
+    self._ParseLogFileOptions(options)
+
+    self._ParseStorageMediaOptions(options)
+
+    self._ParseFilterOptions(options)
+    self._ParsePerformanceOptions(options)
     self._ParseOutputOptions(options)
     self._ParseProcessingOptions(options)
 
@@ -493,7 +455,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     else:
       logging_level = logging.INFO
 
-    self.ParseLogFileOptions(options)
     self._ConfigureLogging(
         filename=self._log_file, format_string=format_string,
         log_level=logging_level)
@@ -503,9 +464,17 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
       root_logger = logging.getLogger()
       root_logger.addFilter(log_filter)
 
-    self._storage_file_path = self.ParseStringOption(options, u'output')
+    self._ParseStorageFileOptions(options)
     if not self._storage_file_path:
-      raise errors.BadConfigOption(u'No storage file path defined.')
+      raise errors.BadConfigOption(u'Missing storage file option.')
+
+    serializer_format = getattr(
+        options, u'serializer_format', definitions.SERIALIZER_FORMAT_JSON)
+    if serializer_format not in definitions.SERIALIZER_FORMATS:
+      raise errors.BadConfigOption(
+          u'Unsupported storage serializer format: {0:s}.'.format(
+              serializer_format))
+    self._storage_serializer_format = serializer_format
 
     # TODO: where is this defined?
     self._operating_system = getattr(options, u'os', None)
@@ -662,7 +631,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
 
     plugin_list = self._GetPluginData()
     for header, data in plugin_list.items():
-      table_view = cli_views.ViewsFactory.GetTableView(
+      table_view = views.ViewsFactory.GetTableView(
           self._views_format_type, column_names=[u'Name', u'Description'],
           title=header)
       for entry_header, entry_data in sorted(data):

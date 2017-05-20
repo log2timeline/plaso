@@ -29,6 +29,7 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
 
   EPILOG = u'And that is how you export files, plaso style.'
 
+  # TODO: remove this redirect.
   _SOURCE_OPTION = u'image'
 
   def __init__(self, input_reader=None, output_writer=None):
@@ -201,7 +202,10 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     if self.list_signature_identifiers:
       return
 
-    super(ImageExportTool, self).ParseOptions(options)
+    self._ParseInformationalOptions(options)
+    self._ParseLogFileOptions(options)
+
+    self._ParseStorageMediaOptions(options)
 
     format_string = (
         u'%(asctime)s [%(levelname)s] (%(processName)-10s) PID:%(process)d '
@@ -214,7 +218,6 @@ class ImageExportTool(storage_media_tool.StorageMediaTool):
     else:
       logging_level = logging.INFO
 
-    self.ParseLogFileOptions(options)
     self._ConfigureLogging(
         filename=self._log_file, format_string=format_string,
         log_level=logging_level)

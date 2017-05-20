@@ -3,6 +3,7 @@
 
 import argparse
 import collections
+import datetime
 import logging
 import os
 import sys
@@ -17,7 +18,9 @@ from plaso import filters  # pylint: disable=unused-import
 # The following import makes sure the output modules are registered.
 from plaso import output  # pylint: disable=unused-import
 
-from plaso.cli import extract_analyze_tool
+# The following import makes sure the output modules are registered.
+from plaso import output   # pylint: disable=unused-import
+
 from plaso.cli import status_view
 from plaso.cli import tools
 from plaso.cli import views
@@ -26,19 +29,21 @@ from plaso.engine import configurations
 from plaso.engine import engine
 from plaso.engine import knowledge_base
 from plaso.engine import single_process as single_process_engine
-from plaso.formatters import mediator as formatters_mediator
 from plaso.frontend import utils as frontend_utils
 from plaso.lib import errors
 from plaso.multi_processing import psort
 from plaso.multi_processing import task_engine as multi_process_engine
-from plaso.output import interface as output_interface
-from plaso.output import manager as output_manager
-from plaso.output import mediator as output_mediator
+from plaso.parsers import manager as parsers_manager
 from plaso.storage import zip_file as storage_zip_file
 
 
-class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
-  """Implements the psteal CLI tool.
+class PstealTool(
+    storage_media_tool.StorageMediaTool,
+    tool_options.AnalysisPluginOptions,
+    tool_options.LanguageOptions,
+    tool_options.OutputModuleOptions,
+    tool_options.StorageFileOptions):
+  """Psteal CLI tool.
 
   Psteal extract events from the provided source and stores them in an
   intermediate storage file. After extraction an output log file is created.
@@ -49,8 +54,6 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
   Attributes:
     dependencies_check (bool): True if the availability and versions of
         dependencies should be checked.
-    list_output_modules (bool): True if information about the output modules
-        should be shown.
   """
 
   NAME = u'psteal'
@@ -108,47 +111,17 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     self._knowledge_base = knowledge_base.KnowledgeBase()
     self._number_of_analysis_reports = 0
     self._number_of_extraction_workers = 0
-    self._output_format = u'dynamic'
-    self._output_filename = None
-    self._output_module = None
     self._parser_filter_expression = None
-    self._preferred_language = u'en-US'
+    self._parsers_manager = parsers_manager.ParsersManager
     self._preferred_year = None
     self._resolver_context = dfvfs_context.Context()
     self._single_process_mode = False
-    self._status_view = status_view.StatusView(self._output_writer, self.NAME)
     self._status_view_mode = self._DEFAULT_STATUS_VIEW_MODE
+    self._status_view = status_view.StatusView(self._output_writer, self.NAME)
     self._time_slice = None
     self._use_time_slicer = False
     self._use_zeromq = True
     self._yara_rules_string = None
-
-  def _CheckStorageFile(self, storage_file_path):
-    """Checks if the storage file path is valid.
-
-    Args:
-      storage_file_path (str): path of the storage file.
-
-    Raises:
-      BadConfigOption: if the storage file path is invalid.
-    """
-    if os.path.exists(storage_file_path):
-      if not os.path.isfile(storage_file_path):
-        raise errors.BadConfigOption(
-            u'Storage file: {0:s} already exists and is not a file.'.format(
-                storage_file_path))
-      logging.warning(u'Appending to an already existing storage file.')
-
-    dirname = os.path.dirname(storage_file_path)
-    if not dirname:
-      dirname = u'.'
-
-    # TODO: add a more thorough check to see if the storage file really is
-    # a plaso storage file.
-
-    if not os.access(dirname, os.W_OK):
-      raise errors.BadConfigOption(
-          u'No write access to storage file: {0:s}'.format(storage_file_path))
 
   def _CreateProcessingConfiguration(self):
     """Creates a processing configuration.
@@ -167,6 +140,34 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     configuration.preferred_year = self._preferred_year
 
     return configuration
+
+  def _GenerateStorageFileName(self):
+    """Generates a name for the storage file.
+
+    The result use a timestamp and the basename of the source path.
+
+    Raises:
+      BadConfigOption: raised if the source path is not set.
+    """
+    if not self._source_path:
+      raise errors.BadConfigOption(u'Please define a source (--source).')
+
+    timestamp = datetime.datetime.now()
+    datetime_string = timestamp.strftime(u'%Y%m%dT%H%M%S')
+
+    source_path = os.path.abspath(self._source_path)
+    source_name = os.path.basename(source_path)
+
+    if source_path.endswith(os.path.sep):
+      source_path = os.path.dirname(source_path)
+
+    source_name = os.path.basename(source_path)
+
+    if not source_name or source_name in (u'/', u'\\'):
+      # The user passed the filesystem's root as source
+      source_name = u'ROOT'
+
+    return u'{0:s}-{1:s}.plaso'.format(datetime_string, source_name)
 
   def _PreprocessSources(self, extraction_engine):
     """Preprocesses the sources.
@@ -468,10 +469,14 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
         type=str, help=u'The source to process')
 
     output_group = argument_parser.add_argument_group(u'Output Arguments')
-    output_group.add_argument(
-        u'-w', u'--write', dest=u'analysis_output_file', action=u'store',
-        type=str, default=None, help=(
-            u'The destination file, storing the output of analysis'))
+
+    self.AddLanguageOptions(output_group)
+    self.AddTimeZoneOption(output_group)
+
+    output_format_group = argument_parser.add_argument_group(
+        u'Output Format Arguments')
+
+    self.AddOutputModuleOptions(output_format_group)
 
     try:
       options = argument_parser.parse_args()
@@ -501,7 +506,19 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     Raises:
       BadConfigOption: if the options are invalid.
     """
-    super(PstealTool, self).ParseOptions(options)
+    # Check the list options first otherwise required options will raise.
+    self._ParseLanguageOptions(options)
+    self._ParseTimezoneOption(options)
+
+    if (self.list_analysis_plugins or self.list_language_identifiers or
+        self.list_output_modules or self.list_timezones):
+      return
+
+    self._ParseInformationalOptions(options)
+    self._ParseDataLocationOption(options)
+    self._ParseLogFileOptions(options)
+
+    self._ParseStorageMediaOptions(options)
 
     # These arguments are parsed from argparse.Namespace, so we can make
     # tests consistents with the log2timeline/psort ones.
@@ -509,8 +526,11 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     self._status_view_mode = getattr(
         options, u'status_view_mode', self._DEFAULT_STATUS_VIEW_MODE)
 
-    self._source_path = getattr(options, u'source', None)
-    self._output_filename = getattr(options, u'analysis_output_file', None)
     self._ParseStorageFileOptions(options)
+    if not self._storage_file_path:
+      self._storage_file_path = self._GenerateStorageFileName()
 
-    self._ParseOutputModuleOptions(options)
+    self._ParseOutputModuleOptions(
+        options, self._knowledge_base,
+        preferred_language=self._preferred_language,
+        preferred_time_zone=self._preferred_time_zone)

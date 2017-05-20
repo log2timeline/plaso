@@ -17,6 +17,8 @@ from tests.cli import test_lib
 class PstealToolTest(test_lib.CLIToolTestCase):
   """Tests for the psteal CLI tool."""
 
+  # pylint: disable=protected-access
+
   _BDE_PASSWORD = u'bde-TEST'
 
   _EXPECTED_PROCESSING_OPTIONS = u'\n'.join([
@@ -24,6 +26,42 @@ class PstealToolTest(test_lib.CLIToolTestCase):
       u'',
       u'Test argument parser.',
       u''])
+
+  _STORAGE_FILENAME_TEMPLATE = ur'\d{{8}}T\d{{6}}-{filename}.plaso'
+
+  def testGenerateStorageFileName(self):
+    """Tests the _GenerateStorageFileName function."""
+    test_tool = psteal_tool.PstealTool()
+
+    test_tool._source_path = u'/test/storage/path'
+    storage_filename = test_tool._GenerateStorageFileName()
+    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
+        filename=u'path')
+    self.assertRegexpMatches(storage_filename, expected_storage_filename)
+
+    test_tool._source_path = u'/test/storage/path/'
+    storage_filename = test_tool._GenerateStorageFileName()
+    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
+        filename=u'path')
+    self.assertRegexpMatches(storage_filename, expected_storage_filename)
+
+    test_tool._source_path = u'/'
+    storage_filename = test_tool._GenerateStorageFileName()
+    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
+        filename=u'ROOT')
+    self.assertRegexpMatches(storage_filename, expected_storage_filename)
+
+    test_tool._source_path = u'/foo/..'
+    storage_filename = test_tool._GenerateStorageFileName()
+    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
+        filename=u'ROOT')
+    self.assertRegexpMatches(storage_filename, expected_storage_filename)
+
+    test_tool._source_path = u'foo/../bar'
+    storage_filename = test_tool._GenerateStorageFileName()
+    expected_storage_filename = self._STORAGE_FILENAME_TEMPLATE.format(
+        filename=u'bar')
+    self.assertRegexpMatches(storage_filename, expected_storage_filename)
 
   def testParseOptions(self):
     """Tests the ParseOptions function."""
@@ -46,8 +84,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options = test_lib.TestOptions()
     expected_error = u'Missing source path.'
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.analysis_output_file = os.path.join(
-          temp_directory, u'unused_output.txt')
+      options.write = os.path.join(temp_directory, u'unused_output.txt')
       with self.assertRaisesRegexp(errors.BadConfigOption, expected_error):
         test_tool.ParseOptions(options)
 
@@ -55,8 +92,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options = test_lib.TestOptions()
     options.source = self._GetTestFilePath([u'testdir'])
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.analysis_output_file = os.path.join(
-          temp_directory, u'unused_output.txt')
+      options.write = os.path.join(temp_directory, u'unused_output.txt')
       test_tool.ParseOptions(options)
 
   def testParseArguments(self):
@@ -82,8 +118,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath([u'testdir'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.analysis_output_file = os.path.join(
-          temp_directory, u'unused_output.txt')
+      options.write = os.path.join(temp_directory, u'unused_output.txt')
       options.storage_file = os.path.join(temp_directory, u'storage.plaso')
 
       test_tool.ParseOptions(options)
@@ -118,8 +153,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.status_view_mode = u'none'
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.analysis_output_file = os.path.join(
-          temp_directory, u'unused_output.txt')
+      options.write = os.path.join(temp_directory, u'unused_output.txt')
       options.storage_file = os.path.join(temp_directory, u'storage.plaso')
 
       test_tool.ParseOptions(options)
@@ -150,8 +184,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath([u'ímynd.dd'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.analysis_output_file = os.path.join(
-          temp_directory, u'unused_output.txt')
+      options.write = os.path.join(temp_directory, u'unused_output.txt')
       options.storage_file = os.path.join(temp_directory, u'storage.plaso')
 
       test_tool.ParseOptions(options)
@@ -185,8 +218,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath([u'multi_partition_image.vmdk'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.analysis_output_file = os.path.join(
-          temp_directory, u'unused_output.txt')
+      options.write = os.path.join(temp_directory, u'unused_output.txt')
       options.storage_file = os.path.join(temp_directory, u'storage.plaso')
 
       test_tool.ParseOptions(options)
@@ -219,8 +251,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.vss_stores = u'all'
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.analysis_output_file = os.path.join(
-          temp_directory, u'unused_output.txt')
+      options.write = os.path.join(temp_directory, u'unused_output.txt')
       options.storage_file = os.path.join(temp_directory, u'storage.plaso')
 
       test_tool.ParseOptions(options)
@@ -255,8 +286,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.source = self._GetTestFilePath([u'System.evtx'])
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      options.analysis_output_file = os.path.join(
-          temp_directory, u'unused_output.txt')
+      options.write = os.path.join(temp_directory, u'unused_output.txt')
       options.storage_file = os.path.join(temp_directory, u'storage.plaso')
 
       test_tool.ParseOptions(options)
@@ -286,8 +316,7 @@ class PstealToolTest(test_lib.CLIToolTestCase):
     options.source = u'unused_source'
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      result_file_name = os.path.join(temp_directory, u'output.txt')
-      options.analysis_output_file = result_file_name
+      options.write = os.path.join(temp_directory, u'output.txt')
 
       test_tool.ParseOptions(options)
       test_tool.AnalyzeEvents()

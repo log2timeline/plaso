@@ -89,6 +89,17 @@ class CLIToolTest(test_lib.CLIToolTestCase):
       u'                        list" to see a list of available timezones.',
       u''])
 
+  # TODO: add test for _ClearScreen
+  # TODO: add test for _ConfigureLogging
+  # TODO: add test for _EncodeString
+  # TODO: add test for _ParseDataLocationOption
+  # TODO: add test for _ParseInformationalOptions
+  # TODO: add test for _ParseLogFileOptions
+  # TODO: add test for _ParseProfilingOptions
+  # TODO: add test for _ParseTimezoneOption
+
+  # TODO: add test for _PromptUserForInput
+
   def testAddBasicOptions(self):
     """Tests the AddBasicOptions function."""
     argument_parser = argparse.ArgumentParser(
@@ -124,6 +135,8 @@ class CLIToolTest(test_lib.CLIToolTestCase):
 
     output = self._RunArgparseFormatHelp(argument_parser)
     self.assertEqual(output, self._EXPECTED_INFORMATIONAL_OPTIONS)
+
+  # TODO: add test for AddLogFileOptions
 
   def testAddProfilingOptions(self):
     """Tests the AddProfilingOptions function."""
