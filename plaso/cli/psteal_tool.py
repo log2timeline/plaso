@@ -7,10 +7,14 @@ import logging
 import os
 import textwrap
 
-from dfvfs.lib import definitions as dfvfs_definitions
-
 # The following import makes sure the filters are registered.
+from plaso import filters  # pylint: disable=unused-import
+
+# The following import makes sure the output modules are registered.
+from plaso import output  # pylint: disable=unused-import
+
 from plaso.cli import extract_analyze_tool
+from plaso.cli import status_view
 from plaso.cli import tools as cli_tools
 from plaso.cli import views as cli_views
 from plaso.cli.helpers import manager as helpers_manager
@@ -80,6 +84,7 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     self._extraction_front_end = extraction_frontend.ExtractionFrontend()
     self._force_preprocessing = False
     self._hasher_names_string = None
+    self._number_of_analysis_reports = 0
     self._number_of_extraction_workers = 0
     self._options = None
     self._output_format = u'dynamic'
@@ -89,7 +94,8 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     self._preferred_year = None
     self._single_process_mode = False
     self._source_type = None
-    self._status_view_mode = u'window'
+    self._status_view = status_view.StatusView(self._output_writer, self.NAME)
+    self._status_view_mode = status_view.StatusView.MODE_WINDOW
     self._time_slice = None
     self._use_time_slicer = False
     self._yara_rules_string = None
@@ -165,39 +171,6 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     configuration.preferred_year = self._preferred_year
 
     return configuration
-
-  def _DetermineSourceType(self):
-    """Determines the source type."""
-    scan_context = self.ScanSource()
-    self._source_type = scan_context.source_type
-
-    if self._source_type == dfvfs_definitions.SOURCE_TYPE_DIRECTORY:
-      self._source_type_string = u'directory'
-
-    elif self._source_type == dfvfs_definitions.SOURCE_TYPE_FILE:
-      self._source_type_string = u'single file'
-
-    elif self._source_type == (
-        dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_DEVICE):
-      self._source_type_string = u'storage media device'
-
-    elif self._source_type == (
-        dfvfs_definitions.SOURCE_TYPE_STORAGE_MEDIA_IMAGE):
-      self._source_type_string = u'storage media image'
-
-    else:
-      self._source_type_string = u'UNKNOWN'
-
-  def _GetStatusUpdateCallback(self):
-    """Retrieves the status update callback function.
-
-    Returns:
-      function: status update callback function or None.
-    """
-    if self._status_view_mode == u'linear':
-      return self._PrintStatusUpdateStream
-    elif self._status_view_mode == u'window':
-      return self._PrintStatusUpdate
 
   def _PrintProcessingSummary(self, processing_status):
     """Prints a summary of the processing.
@@ -293,7 +266,8 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
 
     storage_reader = self._analysis_front_end.CreateStorageReader(
         self._storage_file_path)
-    self._PrintAnalysisReportsDetails(storage_reader)
+    self._status_view.PrintAnalysisReportsDetails(
+        storage_reader, self._number_of_analysis_reports)
 
     self._output_writer.Write(u'Storage file is {0:s}\n'.format(
         self._storage_file_path))
@@ -310,14 +284,21 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
           file system.
       UserAbort: if the user initiated an abort.
     """
-    self._DetermineSourceType()
+    self._CheckStorageFile(self._storage_file_path)
+
+    scan_context = self.ScanSource()
+    self._source_type = scan_context.source_type
+
+    self._status_view.SetMode(self._status_view_mode)
+    self._status_view.SetSourceInformation(
+        self._source_path, self._source_type, filter_file=self._filter_file)
 
     self._output_writer.Write(u'\n')
-    self._PrintStatusHeader()
-
+    self._status_view.PrintExtractionStatusHeader()
     self._output_writer.Write(u'Processing started.\n')
 
-    status_update_callback = self._GetStatusUpdateCallback()
+    status_update_callback = (
+        self._status_view.GetExtractionStatusUpdateCallback())
 
     session = self._extraction_front_end.CreateSession(
         command_line_arguments=self._command_line_arguments,
@@ -326,12 +307,8 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
         preferred_time_zone=self._preferred_time_zone,
         preferred_year=self._preferred_year)
 
-    self._CheckStorageFile(self._storage_file_path)
-
     storage_writer = storage_zip_file.ZIPStorageFileWriter(
         session, self._storage_file_path)
-
-    # TODO: handle errors.BadConfigOption
 
     configuration = self._CreateProcessingConfiguration()
 
@@ -407,7 +384,8 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
     # These arguments are parsed from argparse.Namespace, so we can make
     # tests consistents with the log2timeline/psort ones.
     self._single_process_mode = getattr(options, u'single_process', False)
-    self._status_view_mode = getattr(options, u'status_view_mode', u'window')
+    self._status_view_mode = getattr(
+        options, u'status_view_mode', status_view.StatusView.MODE_WINDOW)
 
     self._source_path = getattr(options, u'source', None)
     self._output_filename = getattr(options, u'analysis_output_file', None)
