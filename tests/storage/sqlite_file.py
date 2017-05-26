@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-"""Tests for the gzip-based storage."""
+"""Tests for the SQLite-based storage."""
 
 import os
 import unittest
@@ -11,14 +11,14 @@ from plaso.containers import reports
 from plaso.containers import sessions
 from plaso.containers import tasks
 from plaso.lib import definitions
-from plaso.storage import gzip_file
+from plaso.storage import sqlite_file
 
 from tests import test_lib as shared_test_lib
 from tests.storage import test_lib
 
 
-class GZIPStorageFileTest(test_lib.StorageTestCase):
-  """Tests for the gzip-based storage file object."""
+class SQLiteStorageFileTest(test_lib.StorageTestCase):
+  """Tests for the SQLite-based storage file object."""
 
   # pylint: disable=protected-access
 
@@ -28,8 +28,8 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
         plugin_name=u'test', text=u'test report')
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_file = gzip_file.GZIPStorageFile()
+      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
       storage_file.AddAnalysisReport(analysis_report)
@@ -42,8 +42,8 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
         message=u'Test extraction error')
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_file = gzip_file.GZIPStorageFile()
+      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
       storage_file.AddError(extraction_error)
@@ -55,8 +55,8 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
     test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_file = gzip_file.GZIPStorageFile()
+      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
       for event in test_events:
@@ -69,8 +69,8 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
     event_source = event_sources.EventSource()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_file = gzip_file.GZIPStorageFile()
+      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
       storage_file.AddEventSource(event_source)
@@ -82,8 +82,8 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
     test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_file = gzip_file.GZIPStorageFile()
+      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
       for event in test_events:
@@ -101,15 +101,15 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
         plugin_name=u'test', text=u'test report')
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_file = gzip_file.GZIPStorageFile()
+      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
       storage_file.AddAnalysisReport(analysis_report)
 
       storage_file.Close()
 
-      storage_file = gzip_file.GZIPStorageFile()
+      storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file)
 
       test_reports = list(storage_file.GetAnalysisReports())
@@ -123,15 +123,15 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
         message=u'Test extraction error')
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_file = gzip_file.GZIPStorageFile()
+      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
       storage_file.AddError(extraction_error)
 
       storage_file.Close()
 
-      storage_file = gzip_file.GZIPStorageFile()
+      storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file)
 
       test_errors = list(storage_file.GetErrors())
@@ -144,8 +144,8 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
     test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_file = gzip_file.GZIPStorageFile()
+      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
       for event in test_events:
@@ -153,7 +153,7 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
-      storage_file = gzip_file.GZIPStorageFile()
+      storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file)
 
       test_events = list(storage_file.GetEvents())
@@ -166,15 +166,15 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
     event_source = event_sources.EventSource()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_file = gzip_file.GZIPStorageFile()
+      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
       storage_file.AddEventSource(event_source)
 
       storage_file.Close()
 
-      storage_file = gzip_file.GZIPStorageFile()
+      storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file)
 
       test_event_sources = list(storage_file.GetEventSources())
@@ -187,8 +187,8 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
     test_events = self._CreateTestEvents()
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_file = gzip_file.GZIPStorageFile()
+      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file, read_only=False)
 
       for event in test_events:
@@ -200,11 +200,29 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
 
       storage_file.Close()
 
-      storage_file = gzip_file.GZIPStorageFile()
+      storage_file = sqlite_file.SQLiteStorageFile()
       storage_file.Open(path=temp_file)
 
       test_event_tags = list(storage_file.GetEventTags())
       self.assertEqual(len(test_event_tags), 4)
+
+      storage_file.Close()
+
+  def testWriteSessionStartAndCompletion(self):
+    """Tests the WriteSessionStart and WriteSessionCompletion functions."""
+    session = sessions.Session()
+    session_start = sessions.SessionStart(identifier=session.identifier)
+    session_completion = sessions.SessionCompletion(
+        identifier=session.identifier)
+
+    with shared_test_lib.TempDirectory() as temp_directory:
+      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile(
+          storage_type=definitions.STORAGE_TYPE_TASK)
+      storage_file.Open(path=temp_file, read_only=False)
+
+      storage_file.WriteSessionStart(session_start)
+      storage_file.WriteSessionCompletion(session_completion)
 
       storage_file.Close()
 
@@ -217,8 +235,8 @@ class GZIPStorageFileTest(test_lib.StorageTestCase):
         session_identifier=session.identifier)
 
     with shared_test_lib.TempDirectory() as temp_directory:
-      temp_file = os.path.join(temp_directory, u'storage.plaso')
-      storage_file = gzip_file.GZIPStorageFile(
+      temp_file = os.path.join(temp_directory, u'plaso.sqlite')
+      storage_file = sqlite_file.SQLiteStorageFile(
           storage_type=definitions.STORAGE_TYPE_TASK)
       storage_file.Open(path=temp_file, read_only=False)
 
