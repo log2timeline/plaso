@@ -181,14 +181,14 @@ class CupsIppParser(interface.FileObjectParser):
       u'printer-uri': u'uri'}
 
   _POSIX_TIME_IN_MICROSECOND_VALUES = {
-      u'date-time-at-creation': definitions.TIME_DESCRIPTION_CREATION_TIME,
-      u'date-time-at-processing': definitions.TIME_DESCRIPTION_START_TIME,
-      u'date-time-at-completed': definitions.TIME_DESCRIPTION_END_TIME}
+      u'date-time-at-creation': definitions.TIME_DESCRIPTION_CREATION,
+      u'date-time-at-processing': definitions.TIME_DESCRIPTION_START,
+      u'date-time-at-completed': definitions.TIME_DESCRIPTION_END}
 
   _POSIX_TIME_VALUES = {
-      u'time-at-creation': definitions.TIME_DESCRIPTION_CREATION_TIME,
-      u'time-at-processing': definitions.TIME_DESCRIPTION_START_TIME,
-      u'time-at-completed': definitions.TIME_DESCRIPTION_END_TIME}
+      u'time-at-creation': definitions.TIME_DESCRIPTION_CREATION,
+      u'time-at-processing': definitions.TIME_DESCRIPTION_START,
+      u'time-at-completed': definitions.TIME_DESCRIPTION_END}
 
   _POSIX_TIME_VALUE_NAMES = _POSIX_TIME_IN_MICROSECOND_VALUES.keys()
   _POSIX_TIME_VALUE_NAMES.extend(_POSIX_TIME_VALUES.keys())
