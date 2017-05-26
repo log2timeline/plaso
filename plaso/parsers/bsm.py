@@ -12,12 +12,12 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import errors
 from plaso.lib import definitions
+from plaso.lib import errors
 from plaso.lib import timelib
-from plaso.unix import bsmtoken
 from plaso.parsers import interface
 from plaso.parsers import manager
+from plaso.unix import bsmtoken
 
 import pytz  # pylint: disable=wrong-import-order
 
