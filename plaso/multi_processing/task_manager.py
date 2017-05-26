@@ -65,7 +65,6 @@ class _PendingMergeTaskHeap(object):
     else:
       weight = storage_file_size
 
-
     task.merge_priority = weight
 
     heap_values = (weight, task)
@@ -114,8 +113,10 @@ class TaskManager(object):
       task = self._abandoned_tasks.get(task.identifier, None)
       if not task:
         raise KeyError(u'Task {0:s} is not abandoned.'.format(task.identifier))
+
       logging.debug(u'Task {0:s} has been adopted'.format(task.identifier))
       task.UpdateProcessingTime()
+
       del self._abandoned_tasks[task.identifier]
       self._active_tasks[task.identifier] = task
       self._tasks_processing[task.identifier] = task
@@ -150,8 +151,8 @@ class TaskManager(object):
     with self._lock:
       if task.identifier not in self._active_tasks:
         raise KeyError(u'Task {0:s} is not active'.format(task.identifier))
-      logging.debug(u'Task {0:s} is complete'.format(
-          task.identifier))
+
+      logging.debug(u'Task {0:s} is complete'.format(task.identifier))
       del self._active_tasks[task.identifier]
 
   def GetAbandonedTask(self, task_identifier):
@@ -237,7 +238,6 @@ class TaskManager(object):
 
     return bool(self._active_tasks)
 
-
   def UpdateTaskByIdentifier(self, task_identifier):
     """Updates a task.
 
@@ -267,8 +267,7 @@ class TaskManager(object):
       raise KeyError(u'Task {0:s} is not processing'.format(task.identifier))
 
     with self._lock:
-      logging.debug(u'Task {0:s} is pending merge'.format(
-          task.identifier))
+      logging.debug(u'Task {0:s} is pending merge'.format(task.identifier))
       self._tasks_pending_merge.PushTask(task)
       del self._tasks_processing[task.identifier]
 
@@ -285,7 +284,6 @@ class TaskManager(object):
       raise KeyError(u'Task {0:s} already processing'.format(task.identifier))
 
     with self._lock:
-      logging.debug(u'Task {0:s} is processing'.format(
-          task.identifier))
+      logging.debug(u'Task {0:s} is processing'.format(task.identifier))
       task.UpdateProcessingTime()
       self._tasks_processing[task.identifier] = task
