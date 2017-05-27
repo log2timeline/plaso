@@ -119,7 +119,7 @@ class PstealTool(extract_analyze_tool.ExtractionAndAnalysisTool):
 
     if not os.access(dirname, os.W_OK):
       raise errors.BadConfigOption(
-          u'Unable to write to storage file: {0:s}'.format(storage_file_path))
+          u'No write access to storage file: {0:s}'.format(storage_file_path))
 
   def _CreateOutputModule(self):
     """Creates a default output module

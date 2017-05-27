@@ -235,7 +235,10 @@ class ExtractionTool(status_view_tool.StatusViewTool):
         u'--artifact_definitions', u'--artifact-definitions',
         dest=u'artifact_definitions_path', type=str, metavar=u'PATH',
         action=u'store', help=(
-            u'Path to a directory containing artifact definitions.'))
+            u'Path to a directory containing artifact definitions. Artifact '
+            u'definitions can be used to describe and quickly collect data '
+            u'data of interest, such as specific files or Windows Registry '
+            u'keys.'))
 
     argument_group.add_argument(
         u'--hashers', dest=u'hashers', type=str, action=u'store',

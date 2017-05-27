@@ -664,7 +664,7 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     logging.debug(u'Preprocessing done.')
 
   def ExtractEventsFromSources(self):
-    """Processes the sources and extract events.
+    """Processes the sources and extracts events.
 
     Raises:
       BadConfigOption: if the storage file path is invalid.
@@ -703,8 +703,6 @@ class Log2TimelineTool(extraction_tool.ExtractionTool):
     storage_writer = storage_zip_file.ZIPStorageFileWriter(
         session, self._storage_file_path)
 
-    # If the source is a directory or a storage media image
-    # run pre-processing.
     if (self._force_preprocessing or
         self._source_type in self._SOURCE_TYPES_TO_PREPROCESS):
       self._PreprocessSources(engine)
