@@ -5,7 +5,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import bencode_parser
 from plaso.parsers.bencode_plugins import interface
 
@@ -64,21 +64,21 @@ class TransmissionPlugin(interface.BencodePlugin):
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.ADDED_TIME)
+          date_time, definitions.TIME_DESCRIPTION_ADDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     timestamp = data.get(u'done-date', None)
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.FILE_DOWNLOADED)
+          date_time, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     timestamp = data.get(u'activity-date', None)
     if timestamp:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.ACCESS_TIME)
+          date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

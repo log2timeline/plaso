@@ -11,7 +11,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -63,10 +63,10 @@ class MactimeParser(text_parser.TextCSVParser):
   # Mapping according to:
   # http://wiki.sleuthkit.org/index.php?title=Mactime_output
   _TIMESTAMP_DESC_MAP = {
-      u'atime': eventdata.EventTimestamp.ACCESS_TIME,
-      u'btime': eventdata.EventTimestamp.CREATION_TIME,
-      u'ctime': eventdata.EventTimestamp.CHANGE_TIME,
-      u'mtime': eventdata.EventTimestamp.MODIFICATION_TIME,
+      u'atime': definitions.TIME_DESCRIPTION_LAST_ACCESS,
+      u'btime': definitions.TIME_DESCRIPTION_CREATION,
+      u'ctime': definitions.TIME_DESCRIPTION_CHANGE,
+      u'mtime': definitions.TIME_DESCRIPTION_MODIFICATION,
   }
 
   def _GetIntegerValue(self, row, value_name):

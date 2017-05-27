@@ -16,7 +16,7 @@ from dfdatetime import java_time as dfdatetime_java_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -208,12 +208,12 @@ class JavaIDXParser(interface.FileObjectParser):
         date_time = dfdatetime_java_time.JavaTime(
             timestamp=expiration_date)
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.EXPIRATION_TIME)
+            date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if download_date:
       event = time_events.TimestampEvent(
-          download_date, eventdata.EventTimestamp.FILE_DOWNLOADED)
+          download_date, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import ganalytics  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers.cookie_plugins import ganalytics
 from plaso.parsers.sqlite_plugins import chrome_cookies
@@ -110,7 +110,7 @@ class GoogleAnalyticsPluginTest(sqlite_plugins_test_lib.SQLitePluginTestCase):
     # Check the UTMB Google Analytics event.
     event = test_events[34]
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.LAST_VISITED_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_VISITED)
     self.assertEqual(event.cookie_name, u'__utmb')
     self.assertEqual(event.domain_hash, u'154523900')
     self.assertEqual(event.pages_viewed, 1)

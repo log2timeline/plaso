@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import winrestore  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import winrestore
 
@@ -29,7 +29,7 @@ class RestorePointLogParserTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-03-23 18:38:14.246954')
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     self.assertEqual(event_object.restore_point_event_type, 102)

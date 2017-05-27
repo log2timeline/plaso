@@ -7,7 +7,7 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 # Register the cookie plugins.
 from plaso.parsers import cookie_plugins  # pylint: disable=unused-import
 from plaso.parsers import sqlite
@@ -129,7 +129,7 @@ class WebViewPlugin(interface.SQLitePlugin):
     event_data.url = url
 
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.EXPIRATION_TIME)
+        date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     # Go through all cookie plugins to see if there are is any specific parsing

@@ -10,7 +10,7 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -166,7 +166,7 @@ class MacAppFirewallParser(text_parser.PyparsingSingleLineTextParser):
     event_data.status = structure.status
 
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.ADDED_TIME)
+        date_time, definitions.TIME_DESCRIPTION_ADDED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseRecord(self, parser_mediator, key, structure):

@@ -11,7 +11,7 @@ from dfdatetime import webkit_time as dfdatetime_webkit_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import interface
 
@@ -287,7 +287,7 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     timestamp = row['start_time']
     date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.FILE_DOWNLOADED)
+        date_time, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseNewFileDownloadedRow(
@@ -314,7 +314,7 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     timestamp = row['start_time']
     date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.FILE_DOWNLOADED)
+        date_time, definitions.TIME_DESCRIPTION_FILE_DOWNLOADED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseLastVisitedRow(
@@ -373,7 +373,7 @@ class ChromeHistoryPlugin(interface.SQLitePlugin):
     timestamp = row['visit_time']
     date_time = dfdatetime_webkit_time.WebKitTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.PAGE_VISITED)
+        date_time, definitions.TIME_DESCRIPTION_LAST_VISITED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

@@ -15,7 +15,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -256,7 +256,7 @@ class SystemdJournalParser(interface.FileObjectParser):
     date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
         timestamp=entry_object.realtime)
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.WRITTEN_TIME)
+        date_time, definitions.TIME_DESCRIPTION_WRITTEN)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def _ParseEntries(self, file_object, offset):

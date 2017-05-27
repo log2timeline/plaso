@@ -8,7 +8,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import specification
 from plaso.parsers import interface
 from plaso.parsers import manager
@@ -194,7 +194,7 @@ class PEParser(interface.FileObjectParser):
     # TODO: handle timestamp is None.
     date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.CREATION_TIME)
+        date_time, definitions.TIME_DESCRIPTION_CREATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     for dll_name, timestamp in self._GetImportTimestamps(pefile_object):
@@ -204,7 +204,7 @@ class PEParser(interface.FileObjectParser):
 
         date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+            date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
     for dll_name, timestamp in self._GetDelayImportTimestamps(pefile_object):
@@ -214,7 +214,7 @@ class PEParser(interface.FileObjectParser):
 
         date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+            date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
     event_data.dll_name = None
@@ -225,7 +225,7 @@ class PEParser(interface.FileObjectParser):
 
         date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+            date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
     timestamp = self._GetLoadConfigTimestamp(pefile_object)
@@ -234,7 +234,7 @@ class PEParser(interface.FileObjectParser):
 
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+          date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

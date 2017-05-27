@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import winlnk  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import winlnk
 
@@ -54,7 +54,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-13 23:29:02.849131')
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     self.assertEqual(event.timestamp, expected_timestamp)
 
     # The creation timestamp.
@@ -63,7 +63,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-13 23:29:02.849131')
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
     self.assertEqual(event.timestamp, expected_timestamp)
 
     # The last modification timestamp.
@@ -72,7 +72,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-14 01:39:18.220000')
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_message = (
@@ -95,7 +95,7 @@ class WinLnkParserTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-07-14 05:45:20.500012')
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
     self.assertEqual(event.timestamp, expected_timestamp)
 
     expected_uuid = u'846ee3bb-7039-11de-9d20-001d09fa5a1c'

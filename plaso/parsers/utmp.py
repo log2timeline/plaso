@@ -12,7 +12,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -175,7 +175,7 @@ class UtmpParser(interface.FileObjectParser):
     date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
         timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.START_TIME)
+        date_time, definitions.TIME_DESCRIPTION_START)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     return True

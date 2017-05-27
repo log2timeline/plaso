@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import imessage  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers.sqlite_plugins import imessage
 
@@ -30,7 +30,7 @@ class IMessageTest(test_lib.SQLitePluginTestCase):
     event = storage_writer.events[7]
 
     self.assertEqual(
-        event.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2015-11-30 10:48:40.000')

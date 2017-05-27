@@ -9,7 +9,7 @@ from dfwinreg import definitions as dfwinreg_definitions
 from dfwinreg import fake as dfwinreg_fake
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import windows_version
 
@@ -105,7 +105,7 @@ class WindowsVersionPluginTest(test_lib.RegistryPluginTestCase):
 
     event_object = storage_writer.events[1]
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.INSTALLATION_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_INSTALLATION)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2012-08-31 20:09:55')
     self.assertEqual(event_object.timestamp, expected_timestamp)

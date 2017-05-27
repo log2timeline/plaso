@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import winjob  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import winjob
 
@@ -30,7 +30,7 @@ class WinJobTest(test_lib.ParserTestCase):
         u'2013-08-24 12:42:00.112')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.LAST_RUNTIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_RUN)
 
     expected_application = (
         u'C:\\Program Files (x86)\\Google\\Update\\GoogleUpdate.exe')

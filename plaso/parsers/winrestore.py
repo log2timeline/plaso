@@ -10,7 +10,7 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -106,7 +106,7 @@ class RestorePointLogParser(interface.FileObjectParser):
     event_data.sequence_number = file_header_struct.sequence_number
 
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.CREATION_TIME)
+        date_time, definitions.TIME_DESCRIPTION_CREATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

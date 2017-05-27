@@ -3,7 +3,7 @@
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 
 
@@ -31,7 +31,7 @@ class PlistEvent(time_events.TimestampEvent):
     """
     timestamp = timelib.Timestamp.FromPythonDatetime(datetime_time)
     super(PlistEvent, self).__init__(
-        timestamp, eventdata.EventTimestamp.WRITTEN_TIME)
+        timestamp, definitions.TIME_DESCRIPTION_WRITTEN)
 
     self.root = root
     self.key = key

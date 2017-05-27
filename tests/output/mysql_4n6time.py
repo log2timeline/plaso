@@ -6,7 +6,7 @@ import unittest
 
 from plaso.containers import events
 from plaso import formatters   # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.output import mysql_4n6time
 
@@ -33,7 +33,7 @@ class MySQL4n6TimeTestEvent(events.EventObject):
     self.text = (
         u'Reporter <CRON> PID: 8442 (pam_unix(cron:session): session '
         u'closed for user root)')
-    self.timestamp_desc = eventdata.EventTimestamp.WRITTEN_TIME
+    self.timestamp_desc = definitions.TIME_DESCRIPTION_WRITTEN
     self.timestamp = event_timestamp
 
 

@@ -5,7 +5,7 @@ from dfdatetime import filetime as dfdatetime_filetime
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import olecf
 from plaso.parsers.olecf_plugins import interface
 
@@ -291,14 +291,14 @@ class DocumentSummaryInformationOLECFPlugin(interface.OLECFPlugin):
         date_time = dfdatetime_filetime.Filetime(
             timestamp=root_creation_time)
         event = OLECFDocumentSummaryInformationEvent(
-            date_time, eventdata.EventTimestamp.CREATION_TIME)
+            date_time, definitions.TIME_DESCRIPTION_CREATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       if root_modification_time:
         date_time = dfdatetime_filetime.Filetime(
             timestamp=root_modification_time)
         event = OLECFDocumentSummaryInformationEvent(
-            date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+            date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
@@ -348,7 +348,7 @@ class SummaryInformationOLECFPlugin(interface.OLECFPlugin):
       for property_name, date_time in iter(
           summary_information.date_time_properties.items()):
         date_time_description = self._DATE_TIME_DESCRIPTIONS.get(
-            property_name, eventdata.EventTimestamp.UNKNOWN)
+            property_name, definitions.TIME_DESCRIPTION_UNKNOWN)
         event = OLECFSummaryInformationEvent(date_time, date_time_description)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
@@ -356,14 +356,14 @@ class SummaryInformationOLECFPlugin(interface.OLECFPlugin):
         date_time = dfdatetime_filetime.Filetime(
             timestamp=root_creation_time)
         event = OLECFSummaryInformationEvent(
-            date_time, eventdata.EventTimestamp.CREATION_TIME)
+            date_time, definitions.TIME_DESCRIPTION_CREATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       if root_modification_time:
         date_time = dfdatetime_filetime.Filetime(
             timestamp=root_modification_time)
         event = OLECFSummaryInformationEvent(
-            date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+            date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

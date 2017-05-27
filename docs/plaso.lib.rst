@@ -36,14 +36,6 @@ plaso.lib.errors module
     :undoc-members:
     :show-inheritance:
 
-plaso.lib.eventdata module
---------------------------
-
-.. automodule:: plaso.lib.eventdata
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 plaso.lib.lexer module
 ----------------------
 

@@ -89,7 +89,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 
 from plaso.containers import events
 from plaso.containers import time_events
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import manager
 from plaso.parsers import text_parser
@@ -213,13 +213,13 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
       # probably it could be better to check for the expected values.
       date_time = dfdatetime_posix_time.PosixTime(timestamp=structure.atime)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.ACCESS_TIME)
+          date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     if structure.ctime:
       date_time = dfdatetime_posix_time.PosixTime(timestamp=structure.ctime)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME)
+          date_time, definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseRecord(self, parser_mediator, key, structure):
@@ -260,7 +260,7 @@ class PopularityContestParser(text_parser.PyparsingSingleLineTextParser):
 
       date_time = dfdatetime_posix_time.PosixTime(timestamp=structure.timestamp)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.ADDED_TIME)
+          date_time, definitions.TIME_DESCRIPTION_ADDED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def VerifyStructure(self, parser_mediator, line):
