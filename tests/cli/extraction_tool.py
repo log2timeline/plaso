@@ -32,6 +32,10 @@ class ExtractionToolTest(test_lib.CLIToolTestCase):
       u'  --artifact_definitions PATH, --artifact-definitions PATH',
       (u'                        Path to a directory containing artifact '
        u'definitions.'),
+      (u'                        Artifact definitions can be used to '
+       u'describe and'),
+      u'                        quickly collect data data of interest, such as',
+      u'                        specific files or Windows Registry keys.',
       u'  --hashers HASHER_LIST',
       (u'                        Define a list of hashers to use by the tool. '
        u'This is a'),
