@@ -8,7 +8,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 
 from plaso.formatters import file_system  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import ntfs
 
@@ -38,7 +38,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2007-06-30 12:58:40.500004')
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_message = (
@@ -82,7 +82,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-03 06:30:41.807907')
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # The last modification timestamp.
@@ -95,7 +95,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-03 06:30:41.807907')
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # The last accessed timestamp.
@@ -108,7 +108,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-03 06:30:41.807907')
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     # The entry modification timestamp.
@@ -122,7 +122,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
         u'2013-12-03 06:30:41.807907')
     self.assertEqual(
         event_object.timestamp_desc,
-        eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME)
+        definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_message = (
@@ -146,7 +146,7 @@ class NTFSMFTParserTest(test_lib.ParserTestCase):
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2013-12-03 06:30:41.807907')
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_message = (
@@ -207,7 +207,7 @@ class NTFSUsnJrnlParser(test_lib.ParserTestCase):
         u'2015-11-30 21:15:27.203125')
     self.assertEqual(
         event_object.timestamp_desc,
-        eventdata.EventTimestamp.ENTRY_MODIFICATION_TIME)
+        definitions.TIME_DESCRIPTION_ENTRY_MODIFICATION)
     self.assertEqual(event_object.timestamp, expected_timestamp)
 
     expected_message = (

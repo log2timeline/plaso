@@ -6,7 +6,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 # Register the cookie plugins.
 from plaso.parsers import cookie_plugins  # pylint: disable=unused-import
 from plaso.parsers import sqlite
@@ -121,7 +121,7 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.CREATION_TIME)
+          date_time, definitions.TIME_DESCRIPTION_CREATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     timestamp = row['lastAccessed']
@@ -129,7 +129,7 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
       date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
           timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.ACCESS_TIME)
+          date_time, definitions.TIME_DESCRIPTION_LAST_ACCESS)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     timestamp = row['expiry']
@@ -144,7 +144,7 @@ class FirefoxCookiePlugin(interface.SQLitePlugin):
       date_time = dfdatetime_posix_time.PosixTime(
           timestamp=timestamp)
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.EXPIRATION_TIME)
+          date_time, definitions.TIME_DESCRIPTION_EXPIRATION)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     # Go through all cookie plugins to see if there are is any specific parsing

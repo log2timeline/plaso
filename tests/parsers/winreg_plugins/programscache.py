@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import programscache
 
@@ -40,7 +40,7 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, expected_parser)
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-08-04 15:12:24')
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -69,7 +69,7 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, expected_parser)
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.WRITTEN_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-08-04 15:22:18.419625')
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -113,7 +113,7 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, expected_parser)
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.WRITTEN_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2009-08-04 15:22:18.419625')
     self.assertEqual(event_object.timestamp, expected_timestamp)
@@ -144,7 +144,7 @@ class ExplorerProgramCachePluginTest(test_lib.RegistryPluginTestCase):
     self.assertEqual(event_object.parser, expected_parser)
 
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2010-11-10 07:50:38')
     self.assertEqual(event_object.timestamp, expected_timestamp)

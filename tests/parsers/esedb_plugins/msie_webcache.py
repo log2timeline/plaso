@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import msie_webcache  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers.esedb_plugins import msie_webcache
 
@@ -37,7 +37,7 @@ class MsieWebCacheESEDBPluginTest(test_lib.ESEDBPluginTestCase):
         u'2014-05-12 07:30:25.486198')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.ACCESS_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_ACCESS)
 
     expected_msg = (
         u'Container identifier: 1 '

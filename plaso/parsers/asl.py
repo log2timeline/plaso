@@ -10,7 +10,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import py2to3
 from plaso.lib import specification
 from plaso.parsers import interface
@@ -437,7 +437,7 @@ class ASLParser(interface.FileObjectParser):
     date_time = dfdatetime_posix_time.PosixTimeInMicroseconds(
         timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.CREATION_TIME)
+        date_time, definitions.TIME_DESCRIPTION_CREATION)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     return event, record_struct.next_offset

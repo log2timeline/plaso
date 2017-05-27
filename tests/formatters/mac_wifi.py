@@ -8,7 +8,7 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 
 from plaso.containers import time_events
 from plaso.formatters import mac_wifi
-from plaso.lib import eventdata
+from plaso.lib import definitions
 
 from tests.formatters import test_lib
 
@@ -42,7 +42,7 @@ class MacWifiLogFormatterTest(test_lib.EventFormatterTestCase):
     date_time.CopyFromString(u'2016-11-14 20:36:37.222')
 
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+        date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
     event.data_type = u'mac:wifilog:line'
     event.action = u'Interface en0 turn up.'
     event.agent = u'airportd[88]'
@@ -63,7 +63,7 @@ class MacWifiLogFormatterTest(test_lib.EventFormatterTestCase):
     date_time.CopyFromString(u'2017-01-02 00:10:15')
 
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.MODIFICATION_TIME)
+        date_time, definitions.TIME_DESCRIPTION_MODIFICATION)
     event.data_type = u'mac:wifilog:line'
     event.text = u'test-macbookpro newsyslog[50498]: logfile turned over'
 

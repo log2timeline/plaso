@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import mac_keychain  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import mac_keychain
 
@@ -30,7 +30,7 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
         u'2014-01-26 14:51:48')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.CREATION_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_CREATION)
 
     self.assertEqual(event_object.entry_name, u'Secret Application')
     self.assertEqual(event_object.account_name, u'moxilo')
@@ -46,7 +46,7 @@ class MacKeychainParserTest(test_lib.ParserTestCase):
 
     self.assertEqual(
         event_object.timestamp_desc,
-        eventdata.EventTimestamp.MODIFICATION_TIME)
+        definitions.TIME_DESCRIPTION_MODIFICATION)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
         u'2014-01-26 14:52:29')

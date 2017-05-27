@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import gdrive  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import sqlite
 from plaso.parsers.sqlite_plugins import gdrive
@@ -63,7 +63,7 @@ class GoogleDrivePluginTest(test_lib.SQLitePluginTestCase):
 
     self.assertEqual(event_object.document_type, 6)
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.MODIFICATION_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_MODIFICATION)
 
     expected_url = (
         u'https://docs.google.com/document/d/'

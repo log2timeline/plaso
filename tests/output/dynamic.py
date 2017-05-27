@@ -7,7 +7,7 @@ import unittest
 from plaso.containers import events
 from plaso.formatters import interface as formatters_interface
 from plaso.formatters import manager as formatters_manager
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.output import dynamic
 
@@ -23,7 +23,7 @@ class TestEvent(events.EventObject):
     """Initializes an event object."""
     super(TestEvent, self).__init__()
     self.timestamp = timelib.Timestamp.CopyFromString(u'2012-06-27 18:17:01')
-    self.timestamp_desc = eventdata.EventTimestamp.CHANGE_TIME
+    self.timestamp_desc = definitions.TIME_DESCRIPTION_CHANGE
     self.hostname = u'ubuntu'
     self.filename = u'log/syslog.1'
     self.text = (

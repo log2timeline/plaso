@@ -11,7 +11,7 @@ from dfdatetime import semantic_time as dfdatetime_semantic_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import binary
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import winreg
 from plaso.parsers.winreg_plugins import interface
 
@@ -622,7 +622,7 @@ class AppCompatCachePlugin(interface.WindowsRegistryPlugin):
 
         # TODO: refactor to process run event.
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.LAST_RUNTIME)
+            date_time, definitions.TIME_DESCRIPTION_LAST_RUN)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
       cached_entry_offset += cached_entry_object.cached_entry_size

@@ -12,7 +12,7 @@ from dfdatetime import posix_time as dfdatetime_posix_time
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -807,13 +807,13 @@ class PcapParser(interface.FileObjectParser):
       date_time = dfdatetime_posix_time.PosixTime(
           timestamp=min(stream_object.timestamps))
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.START_TIME)
+          date_time, definitions.TIME_DESCRIPTION_START)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
       date_time = dfdatetime_posix_time.PosixTime(
           timestamp=max(stream_object.timestamps))
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.END_TIME)
+          date_time, definitions.TIME_DESCRIPTION_END)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
     for stream_object in other_streams:
@@ -834,13 +834,13 @@ class PcapParser(interface.FileObjectParser):
       date_time = dfdatetime_posix_time.PosixTime(
           timestamp=min(stream_object.timestamps))
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.START_TIME)
+          date_time, definitions.TIME_DESCRIPTION_START)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
       date_time = dfdatetime_posix_time.PosixTime(
           timestamp=max(stream_object.timestamps))
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.END_TIME)
+          date_time, definitions.TIME_DESCRIPTION_END)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 

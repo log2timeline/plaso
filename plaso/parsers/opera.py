@@ -11,6 +11,7 @@ if sys.version_info[0] < 3:
 else:
   from urllib import parse as urlparse  # pylint: disable=no-name-in-module
 
+# pylint: disable=wrong-import-position
 from dfdatetime import posix_time as dfdatetime_posix_time
 from dfdatetime import time_elements as dfdatetime_time_elements
 from dfdatetime import semantic_time as dfdatetime_semantic_time
@@ -19,7 +20,7 @@ from dfvfs.helpers import text_file
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -127,7 +128,7 @@ class OperaTypedHistoryParser(interface.FileObjectParser):
         continue
 
       event = time_events.DateTimeValuesEvent(
-          date_time, eventdata.EventTimestamp.LAST_VISITED_TIME)
+          date_time, definitions.TIME_DESCRIPTION_LAST_VISITED)
       parser_mediator.ProduceEventWithEventData(event, event_data)
 
 
@@ -216,7 +217,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
       date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
 
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.PAGE_VISITED)
+        date_time, definitions.TIME_DESCRIPTION_LAST_VISITED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     return True
@@ -286,7 +287,7 @@ class OperaGlobalHistoryParser(interface.FileObjectParser):
 
     date_time = dfdatetime_posix_time.PosixTime(timestamp=timestamp)
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.PAGE_VISITED)
+        date_time, definitions.TIME_DESCRIPTION_LAST_VISITED)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
     return True

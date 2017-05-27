@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import winreg  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers.winreg_plugins import sam_users
 
@@ -44,7 +44,7 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         u'2014-09-24 03:36:06.358837')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.WRITTEN_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_WRITTEN)
 
     expected_message = (
         u'[{0:s}] '
@@ -68,7 +68,7 @@ class SAMUsersWindowsRegistryPluginTest(test_lib.RegistryPluginTestCase):
         u'2010-11-20 21:48:12.569244')
     self.assertEqual(event_object.timestamp, expected_timestamp)
     self.assertEqual(
-        event_object.timestamp_desc, eventdata.EventTimestamp.LAST_LOGIN_TIME)
+        event_object.timestamp_desc, definitions.TIME_DESCRIPTION_LAST_LOGIN)
 
     expected_message = (
         u'[{0:s}] '

@@ -5,7 +5,7 @@
 import unittest
 
 from plaso.formatters import java_idx  # pylint: disable=unused-import
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.lib import timelib
 from plaso.parsers import java_idx
 
@@ -49,7 +49,7 @@ class IDXTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.ip_address, ip_address_expected)
     self.assertEqual(event_object.url, url_expected)
 
-    description_expected = eventdata.EventTimestamp.FILE_DOWNLOADED
+    description_expected = definitions.TIME_DESCRIPTION_FILE_DOWNLOADED
     self.assertEqual(event_object.timestamp_desc, description_expected)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(
@@ -91,7 +91,7 @@ class IDXTest(test_lib.ParserTestCase):
     self.assertEqual(event_object.ip_address, ip_address_expected)
     self.assertEqual(event_object.url, url_expected)
 
-    description_expected = eventdata.EventTimestamp.FILE_DOWNLOADED
+    description_expected = definitions.TIME_DESCRIPTION_FILE_DOWNLOADED
     self.assertEqual(event_object.timestamp_desc, description_expected)
 
     expected_timestamp = timelib.Timestamp.CopyFromString(

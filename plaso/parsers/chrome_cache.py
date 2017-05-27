@@ -12,7 +12,7 @@ from dfvfs.path import factory as path_spec_factory
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import interface
 from plaso.parsers import manager
 
@@ -384,7 +384,7 @@ class ChromeCacheParser(interface.FileEntryParser):
         date_time = dfdatetime_webkit_time.WebKitTime(
             timestamp=cache_entry.creation_time)
         event = time_events.DateTimeValuesEvent(
-            date_time, eventdata.EventTimestamp.PAGE_VISITED)
+            date_time, definitions.TIME_DESCRIPTION_LAST_VISITED)
         parser_mediator.ProduceEventWithEventData(event, event_data)
 
         cache_address = cache_entry.next

@@ -8,7 +8,7 @@ from dfdatetime import time_elements as dfdatetime_time_elements
 from plaso.containers import events
 from plaso.containers import time_events
 from plaso.lib import errors
-from plaso.lib import eventdata
+from plaso.lib import definitions
 from plaso.parsers import manager
 from plaso.parsers import text_parser
 
@@ -179,7 +179,7 @@ class WinFirewallParser(text_parser.PyparsingSingleLineTextParser):
       time_zone = pytz.UTC
 
     event = time_events.DateTimeValuesEvent(
-        date_time, eventdata.EventTimestamp.WRITTEN_TIME, time_zone=time_zone)
+        date_time, definitions.TIME_DESCRIPTION_WRITTEN, time_zone=time_zone)
     parser_mediator.ProduceEventWithEventData(event, event_data)
 
   def ParseRecord(self, parser_mediator, key, structure):
